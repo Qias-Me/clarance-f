@@ -1,0 +1,11 @@
+# Task ID: 22
+# Title: Implement PDF version tracking
+# Status: pending
+# Dependencies: 2
+# Priority: low
+# Description: Create a system to track the version of the SF-86 PDF being used.
+# Details:
+Implement a system to track the version of the SF-86 PDF being used by the application. Store the PDF hash or version number and check it when the application starts. If the PDF has changed, trigger a warning or re-run the parser to update the field metadata. This will help mitigate the risk of schema drift when the PDF is updated.
+
+# Test Strategy:
+Test the version tracking by using different versions of the SF-86 PDF and verifying that the system correctly identifies changes. Ensure the appropriate actions are taken when a change is detected.

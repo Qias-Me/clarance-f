@@ -1,0 +1,11 @@
+# Task ID: 14
+# Title: Implement Section 11-15 UI components
+# Status: pending
+# Dependencies: 13
+# Priority: high
+# Description: Create UI components for sections 11-15 of the SF-86 form.
+# Details:
+Implement UI components for Sections 11-15 of the SF-86 form (Where You Have Lived, Where You Went to School, Employment Activities, Selective Service Record, Military History). Each component should use the base form components and integrate with the field mapping service. Ensure the components match the layout and behavior of the corresponding sections in the PDF.
+
+# Test Strategy:
+Test the components by entering valid and invalid data and verifying that the data is correctly validated and written to the PDF. Test the round-trip functionality by writing data and then reading it back to ensure consistency.

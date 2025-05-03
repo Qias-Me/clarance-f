@@ -1,0 +1,11 @@
+# Task ID: 9
+# Title: Generate validation schemas from PDF constraints
+# Status: pending
+# Dependencies: 3
+# Priority: medium
+# Description: Create validation schemas based on the constraints extracted from the PDF.
+# Details:
+Develop a utility that generates validation schemas (using Yup or Joi) from the constraints extracted from the PDF. The schemas should enforce all constraints such as required fields, character limits, allowed options, and any other restrictions defined in the PDF. These schemas will be used to validate user input before writing to the PDF.
+
+# Test Strategy:
+Test the generated validation schemas with valid and invalid values to ensure they correctly enforce the constraints. Verify that all constraints from the PDF are represented in the schemas.

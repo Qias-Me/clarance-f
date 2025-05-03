@@ -1,0 +1,37 @@
+# Task ID: 3
+# Title: Generate section-based JSON schemas from PDF metadata
+# Status: in-progress
+# Dependencies: 2
+# Priority: high
+# Description: Create JSON schemas for all 29 sections based on the extracted PDF field metadata.
+# Details:
+Process the extracted PDF field metadata to generate JSON schemas for each of the 29 sections. Each schema should include the section ID, name, and a complete list of fields with their constraints. Map the PDF field IDs to human-readable keys following the naming convention in the PRD (e.g., section1.fullName). Store these schemas in a structured format that can be used for validation and UI generation. Enhance the implementation to ensure proper field mapping to human-readable keys and provide confidence scores for mapping accuracy.
+
+# Test Strategy:
+Validate that each schema correctly represents its corresponding section in the PDF. Ensure all fields are included and properly mapped to human-readable keys. Verify the schemas are valid JSON and follow the expected structure. Test the confidence scoring mechanism to ensure it accurately reflects the reliability of field mappings.
+
+# Subtasks:
+## 3.1. Basic JSON schema generation [done]
+### Dependencies: None
+### Description: Create initial JSON schemas for all 29 sections of the SF-86 form
+### Details:
+
+
+## 3.2. Enhance field mapping to human-readable keys [pending]
+### Dependencies: None
+### Description: Review and improve the mapping of PDF field IDs to human-readable keys to ensure consistency with PRD naming conventions
+### Details:
+
+
+## 3.3. Implement confidence scoring system [done]
+### Dependencies: None
+### Description: Develop a mechanism to assign confidence scores to field mappings, indicating the reliability of the automated mapping process
+### Details:
+
+
+## 3.4. Validate enhanced schemas [pending]
+### Dependencies: None
+### Description: Perform comprehensive validation of the enhanced schemas to ensure accuracy and completeness
+### Details:
+
+

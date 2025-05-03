@@ -1,0 +1,11 @@
+# Task ID: 15
+# Title: Implement Section 16-20 UI components
+# Status: pending
+# Dependencies: 14
+# Priority: high
+# Description: Create UI components for sections 16-20 of the SF-86 form.
+# Details:
+Implement UI components for Sections 16-20 of the SF-86 form (People Who Know You Well, Marital/Relationship Status, Relatives, Foreign Contacts, Foreign Business/Professional Activities). Each component should use the base form components and integrate with the field mapping service. Ensure the components match the layout and behavior of the corresponding sections in the PDF.
+
+# Test Strategy:
+Test the components by entering valid and invalid data and verifying that the data is correctly validated and written to the PDF. Test the round-trip functionality by writing data and then reading it back to ensure consistency.
