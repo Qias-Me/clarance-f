@@ -1,44 +1,28 @@
-import { Form, json, useLoaderData, useOutletContext } from "@remix-run/react";
-import { FormEvent, Suspense, useState } from "react";
-import { useEmployee } from "../state/contexts/new-context";
+import type { Route } from "./+types/startForm._index";
+import { Form } from "react-router";
+import { useState, Suspense } from "react";
+import { useEmployee } from "~/state/contexts/new-context";
 import { useDispatch, useTypedSelector } from "~/state/hooks";
-import { RootState } from "~/state/store";
+import type { RootState } from "~/state/store";
 import { closeModal, openModal } from "~/state/user/userSlice";
 import DynamicService from "../../api/service/dynamicService";
 import { RenderPrintPDF } from "~/components/RenderPrintPDF";
-import Utils from "~/utils/utils";
-import FormInfo from "api/interfaces/FormInfo";
-import { ApplicantFormValues } from "api/interfaces/formDefinition";
+import type { FormEvent } from "react";
+import type { ApplicantFormValues } from "api/interfaces/formDefinition";
 
-interface ActionData {
-  success: boolean;
-  message: string;
-}
-
-interface RouteContextData {
-  action: ActionData;
-}
-
-type LoaderData = {
-  formInfo: FormInfo;
-  isLoading: boolean;
-};
-
-// Assuming this is part of a Remix loader function
-export async function loader() {
+export function loader({}: Route.LoaderArgs) {
   try {
-    return json({ isLoading: false });
+    return { isLoading: false };
   } catch (e) {
     console.error("Failed to load employee data:", e);
-    return json({ isLoading: false });
+    return { isLoading: false };
   }
 }
 
-export default function EmployeeIDPage() {
+export default function EmployeeIDPage({ loaderData }: Route.ComponentProps) {
   const [personalInfoVisible, setPersonalInfoVisible] = useState(false);
   const dispatch = useDispatch();
-  const loaderData = useLoaderData<LoaderData>();
-  const routeContextData = useOutletContext<RouteContextData>();
+  const routeContextData = loaderData;
 
   const isModalOpen = useTypedSelector(
     (state: RootState) => state.user.value.context.isModalOpen
@@ -47,7 +31,9 @@ export default function EmployeeIDPage() {
   const { loadEmployee, isLoading, data, getChanges } = useEmployee();
 
   const handleStartClick = async () => {
-    const newUserID = Utils.generateUUIDv2();
+    if (!data) return;
+    
+    const newUserID = crypto.randomUUID();
     const updatedData = {
       ...data,
       personalInfo: {
@@ -74,10 +60,6 @@ export default function EmployeeIDPage() {
 
   if (isLoading)
     return <div className="animate-pulse flex space-x-4">Loading ...</div>;
-
-  const handleChange = (newData: ApplicantFormValues) => {
-    // console.log("Updated Data:", newData);
-  };
 
   const handleUpdateClick = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -110,8 +92,8 @@ export default function EmployeeIDPage() {
   };
 
   const toggleEditMode = () => {
-    dispatch(openModal()); // Set isModalOpen to true to show the form
-    window.scrollTo(0, 0); // Scrolls to the top each time mode is toggled
+    dispatch(openModal()); 
+    window.scrollTo(0, 0);
   };
 
   return (

@@ -1,4 +1,4 @@
-import { Field } from "../formDefinition";
+import {type Field } from "../formDefinition";
 
 interface CitizenshipInfo {
 citizenship_status_code: Field<'birth' | 'naturalized' | 'derived' | 'nonCitizen' | 'citizen' | string>;

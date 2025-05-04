@@ -1,4 +1,4 @@
-import { AknowledgeInfo } from "api/interfaces/sections/aknowledgement";
+import type { AknowledgeInfo } from "api/interfaces/sections/aknowledgement";
 
 // aknowledgementInfo covers first radio question in the pdf. It also covers section 4, and the ssn field at the bottm of each page. 
 

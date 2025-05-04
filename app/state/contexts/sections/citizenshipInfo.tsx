@@ -1,4 +1,4 @@
-import { CitizenshipInfo } from "api/interfaces/sections/citizenship";
+import { type CitizenshipInfo } from "api/interfaces/sections/citizenship";
 
 // citizenshipInfo covers section 9
 

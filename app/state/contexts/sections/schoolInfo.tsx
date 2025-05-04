@@ -1,4 +1,4 @@
-import { SchoolInfo } from "api/interfaces/sections/schoolInfo";
+import { type SchoolInfo } from "api/interfaces/sections/schoolInfo";
 
 // schoolInfo covers section 12
 

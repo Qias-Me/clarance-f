@@ -1,4 +1,4 @@
-import { ForeignContacts } from "api/interfaces/sections/foreignContacts";
+import { type ForeignContacts } from "api/interfaces/sections/foreignContacts";
 
 // foreignContacts covers section 19
 

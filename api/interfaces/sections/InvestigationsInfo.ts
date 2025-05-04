@@ -1,4 +1,4 @@
-import { Field } from "api/interfaces/formDefinition";
+import { type Field } from "api/interfaces/formDefinition";
 
 interface InvestigationsInfo {
   _id: number;

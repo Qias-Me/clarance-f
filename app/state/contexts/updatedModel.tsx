@@ -1,4 +1,4 @@
-import { ApplicantFormValues } from "../../../api/interfaces/formDefinition";
+import  {type ApplicantFormValues } from "../../../api/interfaces/formDefinition";
 import { aknowledgementInfo } from "./sections/aknowledgementInfo";
 import { alcoholUse } from "./sections/alcoholUse";
 import { association } from "./sections/association";

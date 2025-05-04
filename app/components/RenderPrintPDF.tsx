@@ -1,7 +1,7 @@
 import React, { useState, useRef } from "react";
-import { ApplicantFormValues } from "../../api/interfaces/formDefinition";
+import type { ApplicantFormValues } from "../../api/interfaces/formDefinition";
 import DynamicService from "../../api/service/dynamicService";
-import { Form } from "@remix-run/react";
+import { Form } from "react-router";
 
 interface ActionData {
   success: boolean;

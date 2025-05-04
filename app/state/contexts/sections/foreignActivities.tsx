@@ -1,4 +1,4 @@
-import { ForeignActivities } from "api/interfaces/sections/foreignActivities";
+import { type ForeignActivities } from "api/interfaces/sections/foreignActivities";
 
 // foreignActivities covers section 20
 

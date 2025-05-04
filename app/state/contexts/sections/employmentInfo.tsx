@@ -1,4 +1,4 @@
-import { EmploymentInfo } from "api/interfaces/sections/employmentInfo";
+import { type EmploymentInfo } from "api/interfaces/sections/employmentInfo";
 
 // employmentInfo covers section 13
 

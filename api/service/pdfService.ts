@@ -12,7 +12,7 @@ import {
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import fs from "fs";
-import { ApplicantFormValues } from "../interfaces/formDefinition";
+import  {type ApplicantFormValues } from "../interfaces/formDefinition";
 
 // Handle __dirname in ES Module
 const __filename = fileURLToPath(import.meta.url);

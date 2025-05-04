@@ -1,4 +1,4 @@
-import { MentalHealth } from "api/interfaces/sections/mentalHealth";
+import { type MentalHealth } from "api/interfaces/sections/mentalHealth";
 
 // mentalHealth covers msection 21
 

@@ -1,4 +1,4 @@
-import { Technology } from "api/interfaces/sections/technology";
+import { type Technology } from "api/interfaces/sections/technology";
 
 // technology covers section 27
 

@@ -1,4 +1,4 @@
-import { Field } from "../formDefinition";
+import {type Field } from "../formDefinition";
 
 interface PassportInfo {
   hasPassport: Field<"YES" | "NO (If NO, proceed to Section 9)">;

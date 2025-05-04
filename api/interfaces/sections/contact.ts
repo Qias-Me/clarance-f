@@ -1,4 +1,4 @@
-import { Field } from "../formDefinition";
+import {type Field } from "../formDefinition";
 
 interface ContactNumber {
   _id: number;

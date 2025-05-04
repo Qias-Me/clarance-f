@@ -1,4 +1,4 @@
-import { RelationshipInfo } from "api/interfaces/sections/relationshipInfo";
+import { type RelationshipInfo } from "api/interfaces/sections/relationshipInfo";
 
 // relationshipInfo covers secton 17
 

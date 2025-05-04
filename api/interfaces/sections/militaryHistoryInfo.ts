@@ -1,4 +1,4 @@
-import { Field } from "../formDefinition";
+import {type Field } from "../formDefinition";
 
   interface MilitaryHistoryInfo {
     everServedInUSMilitary: Field<"YES" | "NO (If NO, proceed to Section 15.2) "> ; // null to represent unanswered state

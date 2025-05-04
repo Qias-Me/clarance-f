@@ -1,4 +1,4 @@
-import { PersonalInfo } from "api/interfaces/sections/personalInfo";
+import { type PersonalInfo } from "api/interfaces/sections/personalInfo";
 
 
 // pearsonalInfo Cover section 1

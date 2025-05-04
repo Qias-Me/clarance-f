@@ -1,4 +1,4 @@
-import { DualCitizenshipInfo } from "api/interfaces/sections/duelCitizenship";
+import {type DualCitizenshipInfo } from "api/interfaces/sections/duelCitizenship";
 
 // dualCitizenshipInfo covers section 10
 

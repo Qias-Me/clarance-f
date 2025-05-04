@@ -1,4 +1,4 @@
-import { RelativesInfo } from "api/interfaces/sections/relativesInfo";
+import { type RelativesInfo } from "api/interfaces/sections/relativesInfo";
 
 //relativesInfo covers section 18
 

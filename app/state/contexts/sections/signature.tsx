@@ -1,4 +1,4 @@
-import { Signature } from "api/interfaces/sections/signature";
+import { type Signature } from "api/interfaces/sections/signature";
 
 export const signature: Signature = {
   _id: Math.random(),

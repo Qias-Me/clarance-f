@@ -1,4 +1,4 @@
-import { ServiceInfo } from "api/interfaces/sections/service";
+import { type ServiceInfo } from "api/interfaces/sections/service";
 
 // serviceInfo covers section 14
 

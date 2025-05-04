@@ -1,4 +1,4 @@
-import { NamesInfo } from "api/interfaces/sections/namesInfo";
+import {type  NamesInfo } from "api/interfaces/sections/namesInfo";
 
 // namesInfo covers section 5
 

@@ -1,4 +1,4 @@
-import {PhysicalAttributes} from "../../../../api/interfaces/sections/physicalAttributes"
+import {type PhysicalAttributes} from "../../../../api/interfaces/sections/physicalAttributes"
 
 
 // physicalAttributes section 6

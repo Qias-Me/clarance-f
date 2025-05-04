@@ -1,4 +1,4 @@
-import { Association } from "api/interfaces/sections/association";
+import { type Association } from "api/interfaces/sections/association";
 
 // association covers section 30
 

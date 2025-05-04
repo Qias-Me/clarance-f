@@ -1,4 +1,4 @@
-import { Field } from "../formDefinition";
+import {type Field } from "../formDefinition";
 
 interface ServiceInfo {
   bornAfter1959: Field<"YES" | "NO (Proceed to Section 15)">; // null to represent unanswered state

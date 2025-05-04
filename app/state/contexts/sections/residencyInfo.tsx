@@ -1,4 +1,4 @@
-import { ResidencyInfo } from "api/interfaces/sections/residency";
+import { type ResidencyInfo } from "api/interfaces/sections/residency";
 
 // residencyInfo covers section 11
 

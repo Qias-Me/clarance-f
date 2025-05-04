@@ -6,7 +6,7 @@ import React, {
   useEffect,
   useCallback,
 } from "react";
-import { ApplicantFormValues } from "../../../api/interfaces/formDefinition";
+import  {type ApplicantFormValues } from "../../../api/interfaces/formDefinition";
 import DynamicService from "../../../api/service/dynamicService";
 import defaultFormData from "./updatedModel";
 import cloneDeep from "lodash/cloneDeep";

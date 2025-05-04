@@ -1,4 +1,4 @@
-import { InvestigationsInfo } from "api/interfaces/sections/InvestigationsInfo";
+import { type InvestigationsInfo } from "api/interfaces/sections/InvestigationsInfo";
 
 // investigationsInfo covers section 25
 

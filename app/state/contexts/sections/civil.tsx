@@ -1,4 +1,4 @@
-import { Civil } from "api/interfaces/sections/civil";
+import {type  Civil } from "api/interfaces/sections/civil";
 // civil covers section 28
 
 export const civil: Civil = {

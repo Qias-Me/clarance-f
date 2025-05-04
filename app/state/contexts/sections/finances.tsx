@@ -1,4 +1,4 @@
-import { Finances } from "api/interfaces/sections/finances";
+import { type Finances } from "api/interfaces/sections/finances";
 
 // finances covers section 26
 

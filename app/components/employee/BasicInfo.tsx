@@ -1,4 +1,4 @@
-import { ApplicantFormValues } from "../../../api/interfaces2.0/formDefinition";
+import  {type ApplicantFormValues } from "../../../api/interfaces2.0/formDefinition";
 
 interface BasicInfoProps {
   user: ApplicantFormValues;

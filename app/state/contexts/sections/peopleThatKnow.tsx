@@ -1,4 +1,4 @@
-import { PeopleThatKnow } from "api/interfaces/sections/peopleThatKnow";
+import {type PeopleThatKnow } from "api/interfaces/sections/peopleThatKnow";
 
 // peopleThatKnow covers section 16
 

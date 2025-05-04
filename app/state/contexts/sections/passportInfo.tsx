@@ -1,4 +1,4 @@
-import { PassportInfo } from "api/interfaces/sections/passport";
+import {type PassportInfo } from "api/interfaces/sections/passport";
 
 //passportInfo covers section 8
 

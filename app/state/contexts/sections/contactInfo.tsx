@@ -1,4 +1,4 @@
-import { ContactInfo } from "api/interfaces/sections/contact";
+import { type ContactInfo } from "api/interfaces/sections/contact";
 
 //ContactInfo covers section 7
 

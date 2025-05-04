@@ -1,4 +1,4 @@
-import { DrugActivity } from "api/interfaces/sections/drugsActivity";
+import { type DrugActivity } from "api/interfaces/sections/drugsActivity";
 
 // drugActivity covers section 23
 

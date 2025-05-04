@@ -1,4 +1,4 @@
-import { AlcoholUse } from "api/interfaces/sections/alcoholUse";
+import { type AlcoholUse } from "api/interfaces/sections/alcoholUse";
 
 // alcoholUse covers section 24
 

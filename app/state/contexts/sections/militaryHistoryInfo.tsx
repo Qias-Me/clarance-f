@@ -1,4 +1,4 @@
-import { MilitaryHistoryInfo } from "api/interfaces/sections/militaryHistoryInfo";
+import { type MilitaryHistoryInfo } from "api/interfaces/sections/militaryHistoryInfo";
 
 // militaryHistoryInfo covers section 15
 

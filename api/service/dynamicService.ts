@@ -1,4 +1,4 @@
-import { ApplicantFormValues } from "../interfaces/formDefinition";
+import  {type ApplicantFormValues } from "../interfaces/formDefinition";
 import DynamicRepository from "../repository/formDataRepository";
 import cloneDeep from "lodash/cloneDeep";
 

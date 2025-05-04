@@ -1,4 +1,4 @@
-import { PoliceRecord } from "api/interfaces/sections/policeRecord";
+import { type PoliceRecord } from "api/interfaces/sections/policeRecord";
 
 // policeRecord covers section 22
 

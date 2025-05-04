@@ -1,4 +1,4 @@
-import { BirthInfo } from "api/interfaces/sections/birthnfo";
+import { type BirthInfo } from "api/interfaces/sections/birthnfo";
 
 // BirthInfo Covers Sections 2 and 3
 
