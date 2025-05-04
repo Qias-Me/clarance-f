@@ -135,8 +135,8 @@ export default function EmployeeIDPage({ loaderData }: Route.ComponentProps) {
                     onChange={(updatedData) => console.log("Form data updated:", updatedData)} 
                     FormInfo={{
                       employee_id: { 
-                        value: 12345, // Using a numeric ID as placeholder since the interface requires a number
-                        id: "employee_id",
+                        value: 1, // Using a numeric ID as placeholder since the interface requires a number
+                        id: data.personalInfo.applicantID,
                         type: "text",
                         label: "Employee ID" 
                       },
