@@ -1,4 +1,4 @@
-import { NamesInfo } from "../../../api/interfaces2.0/formDefinition";
+import { type NamesInfo } from "../../../api/interfaces/sections/namesInfo";
 
 interface FormProps {
   data: NamesInfo;

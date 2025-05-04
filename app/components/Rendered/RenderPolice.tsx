@@ -1,6 +1,7 @@
 import React from "react";
-import FormInfo from "api_v2/interfaces/FormInfo";
-import { PoliceRecord } from "api_v2/interfaces/policeRecord";
+import {type FormInfo} from "api/interfaces/FormInfo";
+
+import { type PoliceRecord } from "api/interfaces/sections/policeRecord";
 
 import { RenderSection22_1 } from "../_police/section22_1";
 import { RenderSection22_2 } from "../_police/section22_2";

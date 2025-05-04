@@ -1,7 +1,7 @@
 import {
-  Section21D1,
-  HealthCareProfessional,
-} from "api_v2/interfaces/mentalHealth";
+  type Section21D1,
+  type HealthCareProfessional,
+} from "api/interfaces/sections/mentalHealth";
 import React from "react";
 
 interface Section21D1Props {

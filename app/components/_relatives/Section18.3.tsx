@@ -1,4 +1,7 @@
-import { Section18_3Details, CitizenshipDocumentType } from "api_v2/interfaces/relativesInfo";
+import {
+  type CitizenshipDocumentType,
+  type Section18_3Details,
+} from "api/interfaces/sections/relativesInfo";
 import React from "react";
 
 interface RenderSection18_3Props {

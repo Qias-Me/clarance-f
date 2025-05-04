@@ -1,4 +1,4 @@
-import { Section18_1Details } from "api_v2/interfaces/relativesInfo";
+import { type Section18_1Details } from "api/interfaces/sections/relativesInfo";
 import React from "react";
 
 interface Section18_1Props {

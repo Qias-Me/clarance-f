@@ -1,5 +1,5 @@
 import React from "react";
-import { Section28_1 } from "api_v2/interfaces/civil";
+import { type Section28_1 } from "api/interfaces/sections/civil";
 
 interface Section28_1Props {
   data: Section28_1[];

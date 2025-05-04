@@ -1,9 +1,10 @@
 import React from "react";
-import FormInfo from "api_v2/interfaces/FormInfo";
-import { ApplicantResidency, Phone } from "api_v2/interfaces/Residency";
+import {type FormInfo} from "api/interfaces/FormInfo";
+
+import type { ResidencyInfo, Phone } from "api/interfaces/sections/residency";
 
 interface FormProps {
-  data: ApplicantResidency[];
+  data: ResidencyInfo[];
   onInputChange: (path: string, value: any) => void;
   onAddEntry: (path: string, newItem: any) => void;
   onRemoveEntry: (path: string, index: number) => void;
@@ -44,7 +45,7 @@ const RenderResidencyInfo: React.FC<FormProps> = ({
 
       <select
         id={`phoneType-${index}-${phoneIndex}`}
-        value={phone.type}
+        value={phone.number?.value}
         onChange={(e) =>
           onInputChange(
             `${path}[${index}].contact.phone[${phoneIndex}].type`,

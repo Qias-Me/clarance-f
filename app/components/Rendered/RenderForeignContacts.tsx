@@ -1,11 +1,12 @@
 import React from "react";
-import FormInfo from "api_v2/interfaces/FormInfo";
+import {type FormInfo} from "api/interfaces/FormInfo";
+
 import {
-  ForeignContacts,
-  ContactEntry,
-  NameAlias,
-} from "api_v2/interfaces/foreignContacts";
-import { Citizenship } from "api_v2/interfaces/relationshipInfo";
+  type ForeignContacts,
+  type ContactEntry,
+  type NameAlias,
+  type Citizenship
+} from "api/interfaces/sections/foreignContacts";
 
 type FormProps = {
   data: ForeignContacts;

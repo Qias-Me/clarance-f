@@ -1,8 +1,8 @@
 import {
-  Section18_4Details,
-  ContactMethod,
-  USDocumentationType,
-} from "api_v2/interfaces/relativesInfo";
+ type  Section18_4Details,
+ type  ContactMethod,
+ type  USDocumentationType,
+} from "api/interfaces/sections/relativesInfo";
 import React from "react";
 
 interface Section18_4Props {

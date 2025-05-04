@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import FormInfo from "api_v2/interfaces/FormInfo";
-import { EmploymentInfo } from "api_v2/interfaces/employmentInfo";
+import {type FormInfo} from "api/interfaces/FormInfo";
+
+import { type EmploymentInfo } from "api/interfaces/sections/employmentInfo";
 import { RenderSection13A1 } from "../_employment/Section13A1";
 import { RenderSection13A4 } from "../_employment/Section13A4";
 import { RenderSection13A5 } from "../_employment/Section13A5";

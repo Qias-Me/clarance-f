@@ -1,5 +1,5 @@
 import React from "react";
-import { CitizenshipInfo } from "api_v2/interfaces/form";
+import { type CitizenshipInfo } from "api/interfaces/sections/citizenship";
 
 interface CitizenshipStatusThreeProps {
   documentDetails: CitizenshipInfo;

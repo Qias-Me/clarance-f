@@ -1,4 +1,4 @@
-import { Section13C } from "api_v2/interfaces/employmentInfo";
+import { type Section13C } from "api/interfaces/sections/employmentInfo";
 import React from "react";
 
 interface Section13CProps {

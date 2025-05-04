@@ -1,5 +1,5 @@
 import React from "react";
-import { Section17_3 } from "api_v2/interfaces/relationshipInfo";
+import { type Section17_3 } from "api/interfaces/sections/relationshipInfo";
 
 interface Section17_3Props {
   data: Section17_3;

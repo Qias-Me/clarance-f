@@ -1,7 +1,7 @@
 import React from "react";
-import { Form, useActionData } from "@remix-run/react";
+import { Form, useActionData } from "react-router";
 import { useEmployee } from "~/state/contexts/new-context";
-import  {type ApplicantFormValues } from "../../../api/interfaces2.0/formDefinition";
+import  {type ApplicantFormValues } from "../../../api/interfaces/formDefinition";
 import DynamicService from "api/service/dynamicService";
 
 interface FormProps {

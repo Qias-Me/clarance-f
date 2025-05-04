@@ -1,14 +1,11 @@
 import React from "react";
-import FormInfo from "api_v2/interfaces/FormInfo";
-import {
-  CitizenshipDetail,
-  DualCitizenshipFormData,
-  PassportDetail,
-  PassportUse,
-} from "api_v2/interfaces/DuelCitizenship";
+import {type FormInfo} from "api/interfaces/FormInfo";
+import { type DualCitizenshipInfo } from "api/interfaces/sections/duelCitizenship";
+
+
 
 interface FormProps {
-  data: DualCitizenshipFormData;
+  data: DualCitizenshipInfo;
   onInputChange: (path: string, value: any) => void;
   onAddEntry: (path: string, newItem: any) => void;
   onRemoveEntry: (path: string, inpersonalInfodex: number) => void;

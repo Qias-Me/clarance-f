@@ -1,6 +1,7 @@
 import React from "react";
-import FormInfo from "api_v2/interfaces/FormInfo";
-import { Technology } from "api_v2/interfaces/technology";
+import {type FormInfo} from "api/interfaces/FormInfo";
+
+import { type Technology } from "api/interfaces/sections/technology";
 
 import { RenderSection27_1 } from "../_technology/section27_1";
 import { RenderSection27_2 } from "../_technology/section27_2";

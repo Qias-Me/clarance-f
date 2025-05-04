@@ -6,13 +6,14 @@ import { RenderSection18_4 } from "../_relatives/Section18.4";
 import { RenderSection18_5 } from "../_relatives/Section18.5";
 import pkg from "lodash";
 import {
-  RelativeEntry,
-  RelativesInfo,
-  RelativeCheckbox,
-  RelativeType,
-  RelativeDetails,
-} from "api_v2/interfaces/relativesInfo";
-import FormInfo from "api_v2/interfaces/FormInfo";
+  type RelativeEntry,
+  type RelativesInfo,
+  type RelativeCheckbox,
+  type RelativeType,
+  type RelativeDetails,
+} from "api/interfaces/sections/relativesInfo";
+import {type FormInfo} from "api/interfaces/FormInfo";
+
 
 interface FormProps {
   data: RelativesInfo;

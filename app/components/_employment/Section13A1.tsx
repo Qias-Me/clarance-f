@@ -1,11 +1,11 @@
 import {
-  Address,
-  ApoFpoAddress,
-  EmploymentStatus,
-  Section13A1,
-  Supervisor,
-  Telephone,
-} from "api_v2/interfaces/employmentInfo";
+  type Address,
+  type ApoFpoAddress,
+  type EmploymentStatus,
+  type Section13A1,
+  type Supervisor,
+  type Telephone,
+} from "api/interfaces/sections/employmentInfo";
 import React from "react";
 
 interface Section13A1Props {

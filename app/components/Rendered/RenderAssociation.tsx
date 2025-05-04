@@ -1,6 +1,7 @@
 import React from "react";
-import FormInfo from "api_v2/interfaces/FormInfo";
-import { Association } from "api_v2/interfaces/association";
+import {type FormInfo} from "api/interfaces/FormInfo";
+
+import { type Association } from "api/interfaces/sections/association";
 
 import { RenderSection29_1 } from "../_association/section29_1";
 import { RenderSection29_2 } from "../_association/section29_2";

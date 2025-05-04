@@ -1,8 +1,7 @@
 import React from "react";
-import FormInfo from "api_v2/interfaces/FormInfo";
-import {
-  SchoolInfo
-} from "api_v2/interfaces/schoolInfo";
+import {type FormInfo} from "api/interfaces/FormInfo";
+
+import { type SchoolInfo } from "api/interfaces/sections/schoolInfo";
 
 interface FormProps {
   data: SchoolInfo;

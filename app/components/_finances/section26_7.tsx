@@ -1,5 +1,5 @@
 import React from "react";
-import { Section26_7 } from "api_v2/interfaces/finances";
+import type { Section26_7 } from "api/interfaces/sections/finances";
 
 interface Section26_7Props {
   data: Section26_7[];

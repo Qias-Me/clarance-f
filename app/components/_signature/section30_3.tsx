@@ -1,5 +1,5 @@
 import React from "react";
-import { Section30_3 } from "api_v2/interfaces/signature";
+import { type Section30_3 } from "api/interfaces/sections/signature";
 
 interface Section30_3Props {
   data: Section30_3[];

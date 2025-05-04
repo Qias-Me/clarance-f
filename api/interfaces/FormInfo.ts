@@ -1,6 +1,6 @@
-import { Field } from "./formDefinition";
+import type { Field } from "./formDefinition";
 
-enum SuffixOptions {
+export enum SuffixOptions {
   MakeASelection = "Make A Selection",
   Jr = "Jr.",
   Sr = "Sr.",
@@ -9,9 +9,18 @@ enum SuffixOptions {
   None = "None", // Assuming you want to give an option for no suffix
 }
 
+export interface DropdownOption {
+  value: string;
+  label: string;
+}
+
+export enum StateOptions {
+  // Add state options here if they don't already exist
+}
+
 interface FormInfo {
   employee_id: Field<number>;
   suffix: SuffixOptions;
 }
 
-export default FormInfo;
+export type { FormInfo };

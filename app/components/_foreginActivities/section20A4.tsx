@@ -1,10 +1,10 @@
 import React from "react";
 import {
-  BenefitDetail,
-  OwnershipType,
-  Section20A4,
-  SpecifyType,
-} from "api_v2/interfaces/foreignActivities";
+  type BenefitDetail,
+  type OwnershipType,
+  type Section20A4,
+  type SpecifyType,
+} from "api/interfaces/sections/foreignActivities";
 
 interface Section20A4Props {
   data: Section20A4[];

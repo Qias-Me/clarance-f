@@ -1,6 +1,6 @@
 import { SuffixOptions } from "api/enums/enums";
-import FormInfo from "api/interfaces2.0/FormInfo";
-import { PersonalInfo } from "api/interfaces2.0/sections/personalInfo";
+import type { FormInfo } from "api/interfaces/FormInfo";
+import { type PersonalInfo } from "api/interfaces/sections/personalInfo";
 
 
 type FormProps = {
@@ -45,7 +45,7 @@ const RenderBasicInfo = ({
         First Name:
         <input
           type="text"
-          defaultValue={personalInfo.firstName || ""}
+          defaultValue={personalInfo.firstName.value || ""}
           onChange={(e) => {
             if (isValidValue(`${path}.firstName`, e.target.value)) {
               onInputChange(`${path}.firstName`, e.target.value);
@@ -59,7 +59,7 @@ const RenderBasicInfo = ({
         Last Name:
         <input
           type="text"
-          defaultValue={personalInfo.lastName || ""}
+          defaultValue={personalInfo.lastName.value || ""}
           onChange={(e) => {
             if (isValidValue(`${path}.lastName`, e.target.value)) {
               onInputChange(`${path}.lastName`, e.target.value);
@@ -73,7 +73,7 @@ const RenderBasicInfo = ({
         Middle Name:
         <input
           type="text"
-          defaultValue={personalInfo.middleName || ""}
+          defaultValue={personalInfo.middleName.value || ""}
           onChange={(e) => {
             if (isValidValue(`${path}.middleName`, e.target.value)) {
               onInputChange(`${path}.middleName`, e.target.value);
@@ -87,7 +87,7 @@ const RenderBasicInfo = ({
         Suffix:
         <select
           name={`${path}.suffix`}
-          defaultValue={personalInfo.suffix}
+          defaultValue={personalInfo.suffix.value}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
           onChange={(e) => {
             if (isValidValue(`${path}.suffix`, e.target.value)) {

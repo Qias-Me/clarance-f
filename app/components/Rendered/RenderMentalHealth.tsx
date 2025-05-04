@@ -1,6 +1,7 @@
 import React from "react";
-import FormInfo from "api_v2/interfaces/FormInfo";
-import { MentalHealth } from "api_v2/interfaces/mentalHealth";
+import {type FormInfo} from "api/interfaces/FormInfo";
+
+import { type MentalHealth } from "api/interfaces/sections/mentalHealth";
 
 import { RenderSection21A } from "../_mental/section21A";
 import { RenderSection21B } from "../_mental/section21B";

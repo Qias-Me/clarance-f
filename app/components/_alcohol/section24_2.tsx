@@ -1,5 +1,5 @@
 import React from "react";
-import { Section24_2 } from "api_v2/interfaces/alcoholUse";
+import { type Section24_2 } from "api/interfaces/sections/alcoholUse";
 
 interface Section24_2Props {
   data: Section24_2[];

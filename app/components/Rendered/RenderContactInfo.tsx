@@ -1,9 +1,9 @@
 import {
-  ApplicantContactInfo,
-} from "../../../api/interfaces2.0/formDefinition"; // Ensure the path and exports are correct
+  type ContactInfo,
+} from "api/interfaces/sections/contact"; // Ensure the path and exports are correct
 
 interface FormProps {
-  data: ApplicantContactInfo;
+  data: ContactInfo;
   onInputChange: (path: string, value: any) => void;
   onAddEntry: (path: string, newItem: any) => void; // Adds a new item
   onRemoveEntry: (path: string, index: number) => void; // Removes an item

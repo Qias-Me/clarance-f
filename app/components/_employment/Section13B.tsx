@@ -1,6 +1,6 @@
 // RenderSection13B.tsx
 import React from "react";
-import { Section13B } from "api_v2/interfaces/employmentInfo";
+import { type Section13B } from "api/interfaces/sections/employmentInfo";
 
 interface Section13BProps {
   data: Section13B;

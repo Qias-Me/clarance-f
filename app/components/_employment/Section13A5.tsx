@@ -1,4 +1,4 @@
-import { IncidentDetails, Section13A5 } from "api_v2/interfaces/employmentInfo";
+import { type IncidentDetails, type Section13A5 } from "api/interfaces/sections/employmentInfo";
 import React from "react";
 
 interface Section13A5Props {

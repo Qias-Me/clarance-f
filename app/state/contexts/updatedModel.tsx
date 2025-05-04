@@ -31,14 +31,14 @@ import { technology } from "./sections/technology";
 import { print } from "./sections/print";
 
 const defaultFormData: ApplicantFormValues = {
-  // personalInfo: personalInfo,
-  // namesInfo: namesInfo,
-  // physicalAttributes: physicalAttributes,
+  personalInfo: personalInfo,
+  namesInfo: namesInfo,
+  physicalAttributes: physicalAttributes,
   // relationshipInfo: relationshipInfo,
-  // aknowledgementInfo: aknowledgementInfo,
-  // birthInfo: birthInfo,
-  // contactInfo: contactInfo,
-  // passportInfo: passportInfo,
+  aknowledgementInfo: aknowledgementInfo,
+  birthInfo: birthInfo,
+  contactInfo: contactInfo,
+  passportInfo: passportInfo,
   // citizenshipInfo: citizenshipInfo,
   // dualCitizenshipInfo: dualCitizenshipInfo,
   // residencyInfo: residencyInfo,
@@ -47,7 +47,7 @@ const defaultFormData: ApplicantFormValues = {
   // serviceInfo: serviceInfo,
   // militaryHistoryInfo: militaryHistoryInfo,
   // peopleThatKnow: peopleThatKnow,
-  relativesInfo: relativesInfo,
+  // relativesInfo: relativesInfo,
   // foreignContacts: foreignContacts,
   // foreignActivities: foreignActivities,
   // mentalHealth: mentalHealth,
@@ -60,7 +60,7 @@ const defaultFormData: ApplicantFormValues = {
   // civil: civil,
   // association: association,
   // signature: signature,
-  // print: print
+  print: print
 };
 
 export default defaultFormData;

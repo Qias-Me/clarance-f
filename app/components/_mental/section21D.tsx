@@ -1,4 +1,4 @@
-import { Section21D, HealthCareProfessional, AgencyOrFacility } from "api_v2/interfaces/mentalHealth";
+import { type Section21D, type HealthCareProfessional, type AgencyOrFacility } from "api/interfaces/sections/mentalHealth";
 import React from "react";
 
 interface Section21DProps {

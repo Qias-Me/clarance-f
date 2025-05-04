@@ -1,8 +1,9 @@
 import React from "react";
 import {
-  MilitaryHistoryInfo,
-} from "api_v2/interfaces/militaryHistoryInfo";
-import FormInfo from "api_v2/interfaces/FormInfo";
+  type MilitaryHistoryInfo,
+} from "api/interfaces/sections/militaryHistoryInfo";
+import {type FormInfo} from "api/interfaces/FormInfo";
+
 
 type FormProps = {
   data: MilitaryHistoryInfo;

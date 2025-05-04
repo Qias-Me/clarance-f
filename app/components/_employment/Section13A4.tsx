@@ -1,11 +1,11 @@
 import React from "react";
 import {
-  Section13A4,
-  Verifier,
-  ApoFpoAddress,
-  Address,
-  Telephone,
-} from "api_v2/interfaces/employmentInfo";
+  type Section13A4,
+  type Verifier,
+  type ApoFpoAddress,
+  type Address,
+  type Telephone,
+} from "api/interfaces/sections/employmentInfo";
 
 interface Section13A4Props {
   data: Section13A4;

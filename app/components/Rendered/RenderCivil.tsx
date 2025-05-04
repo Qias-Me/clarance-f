@@ -1,6 +1,7 @@
 import React from "react";
-import FormInfo from "api_v2/interfaces/FormInfo";
-import { Civil } from "api_v2/interfaces/civil";
+import {type FormInfo} from "api/interfaces/FormInfo";
+
+import { type Civil } from "api/interfaces/sections/civil";
 
 import { RenderSection28_1 } from "../_civil/section28_1";
 

@@ -1,8 +1,9 @@
-import { ApplicantAknowledgeInfo } from "../../../api/interfaces2.0/formDefinition"; // Assuming this import path is correct
-import FormInfo from "api_v2/interfaces/FormInfo";
+import { type AknowledgeInfo } from "api/interfaces/sections/aknowledgement"; // Assuming this import path is correct
+import {type FormInfo} from "api/interfaces/FormInfo";
+
 
 interface FormProps {
-  data: ApplicantAknowledgeInfo; // Use the correct data type
+  data: AknowledgeInfo; // Use the correct data type
   onInputChange: (path: string, value: any) => void;
   isValidValue: (path: string, value: any) => boolean;
   path: string;

@@ -1,4 +1,7 @@
-import { OwnershipType, Section20A2 } from "api_v2/interfaces/foreignActivities";
+import {
+  type OwnershipType,
+  type Section20A2,
+} from "api/interfaces/sections/foreignActivities";
 import React from "react";
 
 interface Section20A2Props {

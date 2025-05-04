@@ -1,8 +1,8 @@
-import { ApplicantBirthInfo } from "../../../api/interfaces2.0/formDefinition";
-import FormInfo from "api_v2/interfaces/FormInfo";
+import {type FormInfo} from "api/interfaces/FormInfo";
+import { type BirthInfo } from "api/interfaces/sections/birthnfo";
 
 interface FormProps {
-  data: ApplicantBirthInfo;
+  data: BirthInfo;
   onInputChange: (path: string, value: any) => void;
   isValidValue: (path: string, value: any) => boolean;
   path: string;
@@ -25,7 +25,7 @@ const RenderBirthInfo = ({
         Birth City:
         <input
           type="text"
-          defaultValue={data.birthCity || ""}
+          defaultValue={data.birthCity.value || ""}
           onChange={(e) => {
             const newValue = e.target.value;
             if (isValidValue(`${path}.birthCity`, newValue)) {
@@ -40,7 +40,7 @@ const RenderBirthInfo = ({
         Birth State:
         <input
           type="text"
-          defaultValue={data.birthState || ""}
+          defaultValue={data.birthState.value || ""}
           onChange={(e) => {
             const newValue = e.target.value;
             if (isValidValue(`${path}.birthState`, newValue)) {
@@ -55,7 +55,7 @@ const RenderBirthInfo = ({
         Birth Country:
         <input
           type="text"
-          defaultValue={data.birthCountry || ""}
+          defaultValue={data.birthCountry.value || ""}
           onChange={(e) => {
             const newValue = e.target.value;
             if (isValidValue(`${path}.birthCountry`, newValue)) {
@@ -70,7 +70,7 @@ const RenderBirthInfo = ({
         Is Birth Date Estimate:
         <input
           type="checkbox"
-          checked={data.isBirthDateEstimate}
+          checked={data.isBirthDateEstimate.value === "Yes"}
           onChange={(e) => {
             const newValue = e.target.checked;
             if (isValidValue(`${path}.isBirthDateEstimate`, newValue)) {

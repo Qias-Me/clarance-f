@@ -1,6 +1,7 @@
 import React from "react";
-import FormInfo from "api_v2/interfaces/FormInfo";
-import { DrugActivity } from "api_v2/interfaces/drugsActivity";
+import {type FormInfo} from "api/interfaces/FormInfo";
+
+import { type DrugActivity } from "api/interfaces/sections/drugsActivity";
 
 import { RenderSection23_1 } from "../_drugs/section23_1";
 import { RenderSection23_2 } from "../_drugs/section23_2";

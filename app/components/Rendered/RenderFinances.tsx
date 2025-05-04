@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import FormInfo from "api_v2/interfaces/FormInfo";
-import { Finances } from "api_v2/interfaces/finances";
+import {type FormInfo} from "api/interfaces/FormInfo";
+
+import { type Finances } from "api/interfaces/sections/finances";
 
 import { RenderSection26_1 } from "../_finances/section26_1";
 import { RenderSection26_2 } from "../_finances/section26_2";

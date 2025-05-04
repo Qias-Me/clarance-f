@@ -1,12 +1,12 @@
 import React from "react";
 import {
-  Section13A2,
-  EmploymentStatus,
-  Telephone,
-  AdditionalPeriod,
-  PhysicalWorkAddress,
-  Address,
-} from "api_v2/interfaces/employmentInfo";
+  type Section13A2,
+  type EmploymentStatus,
+  type Telephone,
+  type AdditionalPeriod,
+  type PhysicalWorkAddress,
+  type Address,
+} from "api/interfaces/sections/employmentInfo";
 
 interface Section13A2Props {
   onAddEntry: (path: string, newItem: any) => void;

@@ -1,5 +1,5 @@
-import FormInfo from "api/interfaces2.0/FormInfo";
-import { CitizenshipByBirthInfo, CitizenshipInfo } from "api/interfaces2.0/sections/citizenship";
+import {type FormInfo}  from "api/interfaces/FormInfo";
+import { type CitizenshipByBirthInfo, type CitizenshipInfo } from "api/interfaces/sections/citizenship";
 
 
 type FormProps = {

@@ -1,5 +1,6 @@
-import { Section22_1 } from "api_v2/interfaces/policeRecord";
+
 import React from "react";
+import { type Section22_1 } from "api/interfaces/sections/policeRecord";
 
 interface Section22_1Props {
   data: Section22_1[];

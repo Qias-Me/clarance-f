@@ -1,6 +1,7 @@
 import React from "react";
-import FormInfo from "api_v2/interfaces/FormInfo";
-import { AlcoholUse } from "api_v2/interfaces/alcoholUse";
+import {type FormInfo} from "api/interfaces/FormInfo";
+
+import { type AlcoholUse } from "api/interfaces/sections/alcoholUse";
 
 import { RenderSection24_1 } from "../_alcohol/section24_1";
 import { RenderSection24_2 } from "../_alcohol/section24_2";

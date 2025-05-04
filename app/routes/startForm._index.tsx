@@ -9,6 +9,8 @@ import DynamicService from "../../api/service/dynamicService";
 import { RenderPrintPDF } from "~/components/RenderPrintPDF";
 import type { FormEvent } from "react";
 import type { ApplicantFormValues } from "api/interfaces/formDefinition";
+import DynamicForm3 from "~/utils/formHandler";
+import { SuffixOptions } from "api/interfaces/FormInfo";
 
 export function loader({}: Route.LoaderArgs) {
   try {
@@ -127,7 +129,21 @@ export default function EmployeeIDPage({ loaderData }: Route.ComponentProps) {
               className="space-y-4"
             >
               <div className="bg-white p-4 rounded shadow">
-                <p className="text-gray-700">Form editing is not available - the DynamicForm3 component wasn't found.</p>
+                {data && (
+                  <DynamicForm3 
+                    data={data} 
+                    onChange={(updatedData) => console.log("Form data updated:", updatedData)} 
+                    FormInfo={{
+                      employee_id: { 
+                        value: 12345, // Using a numeric ID as placeholder since the interface requires a number
+                        id: "employee_id",
+                        type: "text",
+                        label: "Employee ID" 
+                      },
+                      suffix: SuffixOptions.None
+                    }}
+                  />
+                )}
               </div>
 
               <button

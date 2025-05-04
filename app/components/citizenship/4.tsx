@@ -1,4 +1,4 @@
-import { CitizenshipInfo } from "api_v2/interfaces/form";
+import { type CitizenshipInfo } from "api/interfaces/sections/citizenship";
 import React from "react";
 
 interface CitizenshipStatusOneProps {

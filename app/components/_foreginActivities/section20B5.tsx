@@ -1,4 +1,4 @@
-import { Section20B5 } from "api_v2/interfaces/foreignActivities";
+import { type Section20B5 } from "api/interfaces/sections/foreignActivities";
 import React from "react";
 
 interface Section20B5Props {

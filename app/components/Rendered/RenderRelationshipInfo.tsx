@@ -1,6 +1,7 @@
 import React from "react";
-import FormInfo from "api_v2/interfaces/FormInfo";
-import { RelationshipInfo } from "api_v2/interfaces/relationshipInfo";
+import {type FormInfo} from "api/interfaces/FormInfo";
+
+import { type RelationshipInfo } from "api/interfaces/sections/relationshipInfo";
 import pkg from "lodash";
 import { RenderSection17_1 } from "../_relationship/Section17_1";
 import { RenderSection17_2 } from "../_relationship/Section17_2";

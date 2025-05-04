@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import FormInfo from "api_v2/interfaces/FormInfo";
-import { Signature } from "api_v2/interfaces/signature";
+import {type FormInfo} from "api/interfaces/FormInfo";
+
+import { type Signature } from "api/interfaces/sections/signature";
 
 import { RenderSection30_1 } from "../_signature/section30_1";
 import { RenderSection30_2 } from "../_signature/section30_2";

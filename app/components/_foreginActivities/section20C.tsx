@@ -1,4 +1,4 @@
-import { Section20C } from "api_v2/interfaces/foreignActivities";
+import { type Section20C } from "api/interfaces/sections/foreignActivities";
 import React from "react";
 
 interface Section20CProps {

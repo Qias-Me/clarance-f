@@ -1,8 +1,9 @@
-import FormInfo from "api_v2/interfaces/FormInfo";
-import { ApplicantPhysicalAttributes } from "../../../api/interfaces2.0/formDefinition";
+import {type FormInfo} from "api/interfaces/FormInfo";
+
+import { type PhysicalAttributes } from "api/interfaces/sections/physicalAttributes";
 
 type FormProps = {
-  data: ApplicantPhysicalAttributes;
+  data: PhysicalAttributes;
   onInputChange: (path: string, value: any) => void;
   isValidValue: (path: string, value: any) => boolean;
   isReadOnlyField: (fieldName: string) => boolean;

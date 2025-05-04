@@ -1,4 +1,7 @@
-import { Appeal, Section21A } from "api_v2/interfaces/mentalHealth";
+import {
+  type Appeal,
+  type Section21A,
+} from "api/interfaces/sections/mentalHealth";
 import React from "react";
 
 interface Section21AProps {

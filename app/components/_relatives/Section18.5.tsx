@@ -1,7 +1,7 @@
 import {
-  Section18_5Details,
-  ContactMethod,
-} from "api_v2/interfaces/relativesInfo";
+  type  Section18_5Details,
+  type ContactMethod,
+} from "api/interfaces/sections/relativesInfo";
 import React from "react";
 
 interface Section18_5Props {

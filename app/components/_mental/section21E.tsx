@@ -1,4 +1,4 @@
-import { Section21E } from "api_v2/interfaces/mentalHealth";
+import { type Section21E } from "api/interfaces/sections/mentalHealth";
 import React from "react";
 
 interface Section21EProps {

@@ -1,6 +1,7 @@
 import React from "react";
-import FormInfo from "api_v2/interfaces/FormInfo";
-import { ForeignActivities } from "api_v2/interfaces/foreignActivities";
+import {type FormInfo} from "api/interfaces/FormInfo";
+
+import { type ForeignActivities } from "api/interfaces/sections/foreignActivities";
 import { RenderSection20A1 } from "../_foreginActivities/section20A1";
 import { RenderSection20A2 } from "../_foreginActivities/section20A2";
 import { RenderSection20A3 } from "../_foreginActivities/section20A3";

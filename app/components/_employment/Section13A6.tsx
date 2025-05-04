@@ -1,5 +1,5 @@
 import React from "react";
-import { Section13A6, WarningDetails } from "api_v2/interfaces/employmentInfo";
+import { type Section13A6, type WarningDetails } from "api/interfaces/sections/employmentInfo";
 
 
 interface Section13A6Props {

@@ -1,6 +1,7 @@
 import React from "react";
-import { PeopleThatKnow } from "api_v2/interfaces/peopleThatKnow";
-import FormInfo from "api_v2/interfaces/FormInfo";
+import { type PeopleThatKnow } from "api/interfaces/sections/peopleThatKnow";
+import {type FormInfo} from "api/interfaces/FormInfo";
+
 
 interface FormProps {
   data: PeopleThatKnow[];
