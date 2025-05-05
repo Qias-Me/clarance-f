@@ -26,63 +26,31 @@ const RenderNames = ({
   path,
 }: FormProps) => {
   const handleHasNamesChange = (checked: boolean) => {
-    const currentNames = [];
-    const nextIndex = currentNames.length;
-
-    if (
-      namesInfoContext &&
-      namesInfoContext.names &&
-      nextIndex < namesInfoContext.names.length
-    ) {
-      // If we have a predefined name for this index, add it
-      currentNames.push(namesInfoContext.names[nextIndex]);
-      // Replace the entire names array
-      onInputChange(`${path}.names`, currentNames);
-    }
-
     onInputChange(`${path}.hasNames.value`, checked ? "YES" : "NO");
 
-    if (checked && (!data.names || data.names.length === 0)) {
-      // Get default names from context or fallback to template
-      const templateNames = getDefaultNewItem("names");
-      onAddEntry(`${path}.names`, templateNames);
+    // If checked and no names exist, add the first name from context
+    if (checked && (!data.names || data.names.length === 0) && 
+        namesInfoContext && namesInfoContext.names && namesInfoContext.names.length > 0) {
+      // Add the first name from context
+      onInputChange(`${path}.names`, [namesInfoContext.names[0]]);
     }
   };
 
   const hasMaxNames = data.names && data.names.length >= 4;
 
   const handleAddName = () => {
-    // When adding a new name, we need to find the right template and add it to the existing names
-    if (!data.names || data.names.length === 0) {
-      // Get the current length and use it to determine which pre-defined name to add next
-      const currentNames = [];
-      const nextIndex = currentNames.length;
-
-      if (
-        namesInfoContext &&
-        namesInfoContext.names &&
-        nextIndex < namesInfoContext.names.length
-      ) {
-        // If we have a predefined name for this index, add it
-        currentNames.push(namesInfoContext.names[nextIndex]);
-        // Replace the entire names array
-        onInputChange(`${path}.names`, currentNames);
-      }
-    } else {
-      // Get the current length and use it to determine which pre-defined name to add next
-      const currentNames = [...data.names];
-      const nextIndex = currentNames.length;
-
-      if (
-        namesInfoContext &&
-        namesInfoContext.names &&
-        nextIndex < namesInfoContext.names.length
-      ) {
-        // If we have a predefined name for this index, add it
-        currentNames.push(namesInfoContext.names[nextIndex]);
-        // Replace the entire names array
-        onInputChange(`${path}.names`, currentNames);
-      }
+    if (!namesInfoContext || !namesInfoContext.names) return;
+    
+    // Create a new current names array - empty or from existing data
+    const currentNames = data.names ? [...data.names] : [];
+    const nextIndex = currentNames.length;
+    
+    // Only proceed if we have this index in the context
+    if (nextIndex < namesInfoContext.names.length) {
+      // Add the next name template from context
+      currentNames.push(namesInfoContext.names[nextIndex]);
+      // Update the entire names array
+      onInputChange(`${path}.names`, currentNames);
     }
   };
 
