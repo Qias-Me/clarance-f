@@ -13,7 +13,7 @@ export const namesInfo: NamesInfo = {
       {
         _id: 1,
         lastName: {
-          value: "lastName",
+          value: "lastName#1",
           id: "9500",
           type: "PDFTextField",
           label: "Complete the following if you have responded 'Yes' to having used other names. Provide your other name(s) used and the period of time you used it/them [for example: your maiden name(s), name(s) by a former marriage, former name(s), alias(es), or nickname(es)]. If you have only initials in your name(s), provide them and indicate \"Initial only.\" If you do not have a middle name (s), indicate \"No Middle Name\" (NMN). If you are a \"Jr.,\" \"Sr.,\" etc. enter this under Suffix. #1. Last name.",
@@ -86,7 +86,7 @@ export const namesInfo: NamesInfo = {
       {
         _id: 2,
         lastName: {
-          value: "lastName",
+          value: "lastName#2",
           id: "9486",
           type: "PDFTextField",
           label: "#2. Last name.",
@@ -159,13 +159,13 @@ export const namesInfo: NamesInfo = {
       {
         _id: 3,
         lastName: {
-          value: "lastName",
+          value: "lastName#3",
           id: "9474",
           type: "PDFTextField",
           label: "#3. Last name.",
         },
         firstName: {
-          value: "YES",
+          value: "firstName3",
           id: "9475",
           type: "PDFTextField",
           label: "First Name",
@@ -232,7 +232,7 @@ export const namesInfo: NamesInfo = {
       {
         _id: 4,
         lastName: {
-          value: "lastName",
+          value: "lastName#4",
           id: "9462",
           type: "PDFTextField",
           label: "#4. Last name.",

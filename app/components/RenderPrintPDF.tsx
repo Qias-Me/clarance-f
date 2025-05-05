@@ -47,6 +47,8 @@ const RenderPrintPDF: React.FC<FormProps> = ({ data, actionData }) => {
       try {
         setDownloadStatus("Loading PDF template...");
         await clientPdfService.loadPdf();
+
+        console.log(data, "data")
         
         setDownloadStatus("Generating PDF...");
         const pdfBytes = await clientPdfService.generateFilledPdf(data);

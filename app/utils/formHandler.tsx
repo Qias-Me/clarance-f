@@ -37,7 +37,7 @@ import { RenderTechnology } from "~/components/Rendered/RenderTechnology";
 import { RenderCivil } from "~/components/Rendered/RenderCivil";
 import { RenderAssociation } from "~/components/Rendered/RenderAssociation";
 import { RenderSignature } from "~/components/Rendered/RenderSignature";
-import { RenderPrintPDF } from "~/components/Rendered/RenderPrintPDF";
+import { RenderPrintPDF } from "~/components/RenderPrintPDF";
 
 import { useEmployee } from "~/state/contexts/new-context";
 import { type ApplicantFormValues } from "api/interfaces/formDefinition";
@@ -194,6 +194,12 @@ const DynamicForm3: React.FC<DynamicFormProps> = ({
       set(updatedFormData, path, mergedData);
     }
 
+    console.log("updatedFormData", updatedFormData);
+    console.log("path", path);
+    console.log("updatedItem", updatedItem);
+    console.log("currentData", currentData);
+    console.log("path", path);
+
     setFormData(updatedFormData);
     onChange(updatedFormData);
     updateField(path, updatedItem);
@@ -219,18 +225,77 @@ const DynamicForm3: React.FC<DynamicFormProps> = ({
       names: [
         {
           _id: Math.random(),
-          hasNames: false,
-          lastName: "",
-          firstName: "",
-          middleName: "",
-          suffix: "",
-          nameStarted: "",
-          isStartDateEst: false,
-          nameEnded: "",
-          isNamePresent: false,
-          isEndDateEst: false,
-          isMaidenName: false,
-          reasonChanged: "",
+          lastName: {
+            value: "lastName",
+            id: "9500",
+            type: "PDFTextField",
+            label:
+              'Complete the following if you have responded \'Yes\' to having used other names. Provide your other name(s) used and the period of time you used it/them [for example: your maiden name(s), name(s) by a former marriage, former name(s), alias(es), or nickname(es)]. If you have only initials in your name(s), provide them and indicate "Initial only." If you do not have a middle name (s), indicate "No Middle Name" (NMN). If you are a "Jr.," "Sr.," etc. enter this under Suffix. #1. Last name.',
+          },
+          firstName: {
+            value: "firstName",
+            id: "9501",
+            type: "PDFTextField",
+            label: "First Name",
+          },
+          middleName: {
+            value: "middleName",
+            id: "9502",
+            type: "PDFTextField",
+            label: "Middle Name",
+          },
+          suffix: {
+            value: "III",
+            id: "9494",
+            type: "PDFDropdown",
+            label: "Suffix",
+          },
+          startDate: {
+            date: {
+              value: "startDate",
+              id: "9498",
+              type: "PDFTextField",
+              label: "Time name used. From (month/year)",
+            },
+            estimated: {
+              value: "YES",
+              id: "9493",
+              type: "PDFCheckBox",
+              label: "Estimate",
+            },
+          },
+          endDate: {
+            date: {
+              value: "endDate",
+              id: "9497",
+              type: "PDFTextField",
+              label: "Time name used. To (month/year)",
+            },
+            estimated: {
+              value: "YES",
+              id: "9492",
+              type: "PDFCheckBox",
+              label: "Estimate",
+            },
+            isPresent: {
+              value: "YES",
+              id: "9491",
+              type: "PDFCheckBox",
+              label: "Present",
+            },
+          },
+          isMaidenName: {
+            value: "YES",
+            id: "17240",
+            type: "PDFRadioGroup",
+            label: "RadioButtonList",
+          },
+          reasonChanged: {
+            value: "reasonChanged",
+            id: "9499",
+            type: "PDFTextField",
+            label: "Provide the reason(s) why the name changed",
+          },
         },
       ],
       residencyInfo: {

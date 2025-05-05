@@ -28,8 +28,8 @@ const RenderBirthInfo = ({
           defaultValue={data.birthCity.value || ""}
           onChange={(e) => {
             const newValue = e.target.value;
-            if (isValidValue(`${path}.birthCity`, newValue)) {
-              onInputChange(`${path}.birthCity`, newValue);
+            if (isValidValue(`${path}.birthCity.value`, newValue)) {
+              onInputChange(`${path}.birthCity.value`, newValue);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -43,8 +43,8 @@ const RenderBirthInfo = ({
           defaultValue={data.birthState.value || ""}
           onChange={(e) => {
             const newValue = e.target.value;
-            if (isValidValue(`${path}.birthState`, newValue)) {
-              onInputChange(`${path}.birthState`, newValue);
+            if (isValidValue(`${path}.birthState.value`, newValue)) {
+              onInputChange(`${path}.birthState.value`, newValue);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -58,8 +58,8 @@ const RenderBirthInfo = ({
           defaultValue={data.birthCountry.value || ""}
           onChange={(e) => {
             const newValue = e.target.value;
-            if (isValidValue(`${path}.birthCountry`, newValue)) {
-              onInputChange(`${path}.birthCountry`, newValue);
+            if (isValidValue(`${path}.birthCountry.value`, newValue)) {
+              onInputChange(`${path}.birthCountry.value`, newValue);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -73,8 +73,8 @@ const RenderBirthInfo = ({
           checked={data.isBirthDateEstimate.value === "Yes"}
           onChange={(e) => {
             const newValue = e.target.checked;
-            if (isValidValue(`${path}.isBirthDateEstimate`, newValue)) {
-              onInputChange(`${path}.isBirthDateEstimate`, newValue);
+            if (isValidValue(`${path}.isBirthDateEstimate.value`, newValue)) {
+              onInputChange(`${path}.isBirthDateEstimate.value`, newValue);
             }
           }}
           className="ml-2"

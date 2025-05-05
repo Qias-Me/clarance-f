@@ -31,8 +31,8 @@ const RenderPhysicalsInfo = ({
           type="number"
           defaultValue={data.heightFeet.value || ""}
           onChange={(e) => {
-            if (isValidValue(`${path}.heightFeet`, e.target.value)) {
-              onInputChange(`${path}.heightFeet`, e.target.value);
+            if (isValidValue(`${path}.heightFeet.value`, e.target.value)) {
+              onInputChange(`${path}.heightFeet.value`, e.target.value);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -47,8 +47,8 @@ const RenderPhysicalsInfo = ({
           type="number"
           defaultValue={data.heightInch.value || ""}
           onChange={(e) => {
-            if (isValidValue(`${path}.heightInch`, e.target.value)) {
-              onInputChange(`${path}.heightInch`, e.target.value);
+            if (isValidValue(`${path}.heightInch.value`, e.target.value)) {
+              onInputChange(`${path}.heightInch.value`, e.target.value);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -63,12 +63,12 @@ const RenderPhysicalsInfo = ({
           type="number"
           defaultValue={data.weight.value || ""}
           onChange={(e) => {
-            if (isValidValue(`${path}.weight`, e.target.value)) {
-              onInputChange(`${path}.weight`, e.target.value);
+            if (isValidValue(`${path}.weight.value`, e.target.value)) {
+              onInputChange(`${path}.weight.value`, e.target.value);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-          readOnly={isReadOnlyField(`${path}.weight`)}
+          readOnly={isReadOnlyField(`${path}.weight.value`)}
         />
       </label>
 
@@ -79,8 +79,8 @@ const RenderPhysicalsInfo = ({
           type="text"
           defaultValue={data.hairColor.value || ""}
           onChange={(e) => {
-            if (isValidValue(`${path}.hairColor`, e.target.value)) {
-              onInputChange(`${path}.hairColor`, e.target.value);
+            if (isValidValue(`${path}.hairColor.value`, e.target.value)) {
+              onInputChange(`${path}.hairColor.value`, e.target.value);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -95,8 +95,8 @@ const RenderPhysicalsInfo = ({
           type="text"
           defaultValue={data.eyeColor.value || ""}
           onChange={(e) => {
-            if (isValidValue(`${path}.eyeColor`, e.target.value)) {
-              onInputChange(`${path}.eyeColor`, e.target.value);
+            if (isValidValue(`${path}.eyeColor.value`, e.target.value)) {
+              onInputChange(`${path}.eyeColor.value`, e.target.value);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"

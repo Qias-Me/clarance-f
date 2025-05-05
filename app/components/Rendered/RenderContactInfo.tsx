@@ -35,9 +35,9 @@ const RenderContactInfo = ({
           <input
             type="email"
             defaultValue={data.homeEmail.value || ""}
-            onChange={(e) => onInputChange(`${path}.homeEmail`, e.target.value)}
+            onChange={(e) => onInputChange(`${path}.homeEmail.value`, e.target.value)}
             className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
-            readOnly={isReadOnlyField(`${path}.homeEmail`)}
+            readOnly={isReadOnlyField(`${path}.homeEmail.value`)}
           />
         </label>
         <label className="block">
@@ -45,9 +45,9 @@ const RenderContactInfo = ({
           <input
             type="email"
             defaultValue={data.workEmail.value || ""}
-            onChange={(e) => onInputChange(`${path}.workEmail`, e.target.value)}
+            onChange={(e) => onInputChange(`${path}.workEmail.value`, e.target.value)}
             className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
-            readOnly={isReadOnlyField(`${path}.workEmail`)}
+            readOnly={isReadOnlyField(`${path}.workEmail.value`)}
           />
         </label>
       </div>
@@ -63,13 +63,13 @@ const RenderContactInfo = ({
               defaultValue={contact.phoneNumber.value || ""}
               onChange={(e) =>
                 onInputChange(
-                  `${path}.contactNumbers[${index}].phoneNumber`,
+                  `${path}.contactNumbers[${index}].phoneNumber.value`,
                   e.target.value
                 )
               }
               className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
               readOnly={isReadOnlyField(
-                `${path}.contactNumbers[${index}].phoneNumber`
+                `${path}.contactNumbers[${index}].phoneNumber.value`
               )}
             />
           </label>
@@ -80,13 +80,13 @@ const RenderContactInfo = ({
               defaultValue={contact.extension.value || ""}
               onChange={(e) =>
                 onInputChange(
-                  `${path}.contactNumbers[${index}].phoneExtension`,
+                  `${path}.contactNumbers[${index}].phoneExtension.value`,
                   e.target.value
                 )
               }
               className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
               readOnly={isReadOnlyField(
-                `${path}.contactNumbers[${index}].phoneExtension`
+                `${path}.contactNumbers[${index}].phoneExtension.value`
               )}
             />
           </label>
@@ -97,7 +97,7 @@ const RenderContactInfo = ({
                 defaultChecked={contact.isUsableDay.value === "YES"}
                 onChange={(e) =>
                   onInputChange(
-                    `${path}.contactNumbers[${index}].isUsableDay`,
+                    `${path}.contactNumbers[${index}].isUsableDay.value`,
                     e.target.checked
                   )
                 }
@@ -111,7 +111,7 @@ const RenderContactInfo = ({
                 defaultChecked={contact.isUsableNight.value === "YES"}
                 onChange={(e) =>
                   onInputChange(
-                    `${path}.contactNumbers[${index}].isUsableNight`,
+                    `${path}.contactNumbers[${index}].isUsableNight.value`,
                     e.target.checked
                   )
                 }

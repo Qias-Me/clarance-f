@@ -29,8 +29,8 @@ const RenderAcknowledgementInfo = ({
           checked={data.notApplicable.value === "Yes"}
           onChange={(e) => {
             const newValue = e.target.checked;
-            if (isValidValue(`${path}.notApplicable`, newValue)) {
-              onInputChange(`${path}.notApplicable`, newValue);
+            if (isValidValue(`${path}.notApplicable.value`, newValue)) {
+              onInputChange(`${path}.notApplicable.value`, newValue);
             }
           }}
           className="mt-1 p-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -44,8 +44,8 @@ const RenderAcknowledgementInfo = ({
           defaultValue={data.ssn?.value || ""}
           onChange={(e) => {
             const newValue = e.target.value;
-            if (isValidValue(`${path}.ssn`, newValue)) {
-              onInputChange(`${path}.ssn`, newValue);
+            if (isValidValue(`${path}.ssn.value`, newValue)) {
+              onInputChange(`${path}.ssn.value`, newValue);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"

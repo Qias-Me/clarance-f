@@ -47,8 +47,8 @@ const RenderBasicInfo = ({
           type="text"
           defaultValue={personalInfo.firstName.value || ""}
           onChange={(e) => {
-            if (isValidValue(`${path}.firstName`, e.target.value)) {
-              onInputChange(`${path}.firstName`, e.target.value);
+            if (isValidValue(`${path}.firstName.value`, e.target.value)) {
+              onInputChange(`${path}.firstName.value`, e.target.value);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -61,8 +61,8 @@ const RenderBasicInfo = ({
           type="text"
           defaultValue={personalInfo.lastName.value || ""}
           onChange={(e) => {
-            if (isValidValue(`${path}.lastName`, e.target.value)) {
-              onInputChange(`${path}.lastName`, e.target.value);
+            if (isValidValue(`${path}.lastName.value`, e.target.value)) {
+              onInputChange(`${path}.lastName.value`, e.target.value);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -75,8 +75,8 @@ const RenderBasicInfo = ({
           type="text"
           defaultValue={personalInfo.middleName.value || ""}
           onChange={(e) => {
-            if (isValidValue(`${path}.middleName`, e.target.value)) {
-              onInputChange(`${path}.middleName`, e.target.value);
+            if (isValidValue(`${path}.middleName.value`, e.target.value)) {
+              onInputChange(`${path}.middleName.value`, e.target.value);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -86,12 +86,12 @@ const RenderBasicInfo = ({
       <label className="block">
         Suffix:
         <select
-          name={`${path}.suffix`}
+          name={`${path}.suffix.value`}
           defaultValue={personalInfo.suffix.value}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
           onChange={(e) => {
-            if (isValidValue(`${path}.suffix`, e.target.value)) {
-              onInputChange(`${path}.suffix`, e.target.value);
+            if (isValidValue(`${path}.suffix.value`, e.target.value)) {
+              onInputChange(`${path}.suffix.value`, e.target.value);
             }
           }}
         >
