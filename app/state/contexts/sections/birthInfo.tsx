@@ -22,7 +22,7 @@ export const birthInfo: BirthInfo = {
         label: "Section 3. Place of Birth. Provide your place of birth. City.",
     },
     birthState: {
-        value: "sect3State",
+        value: "TX",
         id: "9443",
         type: "PDFTextField",
         label: "State",
