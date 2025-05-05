@@ -1712,7 +1712,7 @@ async function main() {
     }
     
     // Specify PDF path
-    const pdfPath = path.resolve(__dirname, "../tools/externalTools/sf862.pdf");
+    const pdfPath = path.resolve(__dirname, "./externalTools/sf862.pdf");
     console.log(`Checking PDF at: ${pdfPath}`);
     
     // Verify file exists before attempting to read

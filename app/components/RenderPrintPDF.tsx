@@ -6,6 +6,10 @@ import { Form } from "react-router";
 interface ActionData {
   success: boolean;
   message: string;
+  response?: {
+    pdfBytes?: Uint8Array;
+    jsonData?: any;
+  };
 }
 
 interface FormProps {
@@ -39,7 +43,7 @@ const RenderPrintPDF: React.FC<FormProps> = ({ data, actionData }) => {
     try {
       // Simulate an async action with a promise (replace with actual logic)
       await new Promise((resolve, reject) => {
-        const timeoutId = setTimeout(() => resolve(true), 5000); // Simulate a process
+        const timeoutId = setTimeout(() => resolve(true), 1000); // Reduced timeout for better UX
 
         abortController.signal.addEventListener("abort", () => {
           clearTimeout(timeoutId);
@@ -74,11 +78,47 @@ const RenderPrintPDF: React.FC<FormProps> = ({ data, actionData }) => {
     }
   };
 
+  // Handle downloading PDF when response contains PDF bytes
+  const handleDownloadPDF = () => {
+    if (actionData?.response?.pdfBytes) {
+      try {
+        // Convert the pdfBytes to a proper Uint8Array if it's not already
+        const pdfData = 
+          actionData.response.pdfBytes instanceof Uint8Array 
+            ? actionData.response.pdfBytes 
+            : new Uint8Array(Object.values(actionData.response.pdfBytes));
+        
+        const blob = new Blob([pdfData], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'filled_form.pdf';
+        document.body.appendChild(a);
+        a.click();
+        URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        console.log('PDF download initiated successfully');
+      } catch (error) {
+        console.error('Error downloading PDF:', error);
+      }
+    } else {
+      console.warn('No PDF bytes found in the response');
+    }
+  };
+
+  // Check if PDF is available to download from the response
+  React.useEffect(() => {
+    if (actionData?.success && actionType === "submitPDF" && actionData?.response?.pdfBytes) {
+      console.log('Initiating PDF download for submitPDF action');
+      handleDownloadPDF();
+    }
+  }, [actionData, actionType]);
+
   return (
     <div className="p-4 sm:p-6 grid grid-cols-1 gap-6 sm:grid-cols-3">
       <div className="col-span-3 sm:col-span-2 md:col-span-full">
         <h1 className="text-lg sm:text-2xl font-semibold text-gray-800 mb-4">
-          {actionData?.message}
+          {actionData?.response?.jsonData}
         </h1>
         {actionData?.message && (
           <p className="text-gray-600 mb-6">{actionData.message}</p>
@@ -120,6 +160,14 @@ const RenderPrintPDF: React.FC<FormProps> = ({ data, actionData }) => {
           </div>
         ) : (
           <>
+
+<button
+              type="button"
+              onClick={() => handleActionClick("submitPDF")}
+              className="w-full sm:w-auto px-4 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition duration-150 ease-in-out shadow-md"
+            >
+              Submit PDF
+            </button>
             <button
               type="button"
               onClick={() => handleActionClick("generatePDF")}

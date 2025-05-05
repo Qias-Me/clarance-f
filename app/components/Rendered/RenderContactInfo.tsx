@@ -34,7 +34,7 @@ const RenderContactInfo = ({
           Home e-mail address:
           <input
             type="email"
-            defaultValue={data.homeEmail || ""}
+            defaultValue={data.homeEmail.value || ""}
             onChange={(e) => onInputChange(`${path}.homeEmail`, e.target.value)}
             className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
             readOnly={isReadOnlyField(`${path}.homeEmail`)}
@@ -44,7 +44,7 @@ const RenderContactInfo = ({
           Work e-mail address:
           <input
             type="email"
-            defaultValue={data.workEmail || ""}
+            defaultValue={data.workEmail.value || ""}
             onChange={(e) => onInputChange(`${path}.workEmail`, e.target.value)}
             className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
             readOnly={isReadOnlyField(`${path}.workEmail`)}
@@ -57,10 +57,10 @@ const RenderContactInfo = ({
         
         <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <label className="block col-span-1">
-            {contact.numberType} telephone number:
+            {contact.numberType.value} telephone number:
             <input
               type="tel"
-              defaultValue={contact.phoneNumber || ""}
+              defaultValue={contact.phoneNumber.value || ""}
               onChange={(e) =>
                 onInputChange(
                   `${path}.contactNumbers[${index}].phoneNumber`,
@@ -77,7 +77,7 @@ const RenderContactInfo = ({
             Extension:
             <input
               type="text"
-              defaultValue={contact.phoneExtension || ""}
+              defaultValue={contact.extension.value || ""}
               onChange={(e) =>
                 onInputChange(
                   `${path}.contactNumbers[${index}].phoneExtension`,
@@ -94,7 +94,7 @@ const RenderContactInfo = ({
             <label className="inline-flex items-center">
               <input
                 type="checkbox"
-                defaultChecked={contact.isUsableDay}
+                defaultChecked={contact.isUsableDay.value === "YES"}
                 onChange={(e) =>
                   onInputChange(
                     `${path}.contactNumbers[${index}].isUsableDay`,
@@ -108,7 +108,7 @@ const RenderContactInfo = ({
             <label className="inline-flex items-center">
               <input
                 type="checkbox"
-                defaultChecked={contact.isUsableNight}
+                defaultChecked={contact.isUsableNight.value === "YES"}
                 onChange={(e) =>
                   onInputChange(
                     `${path}.contactNumbers[${index}].isUsableNight`,

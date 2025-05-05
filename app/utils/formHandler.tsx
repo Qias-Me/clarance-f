@@ -1,6 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import lodash from "lodash";
-import { goToStep, selectCurrentStep } from "../state/user/formSlice";
+import {
+  goToStep,
+  selectCurrentStep,
+  setTotalSteps,
+} from "../state/user/formSlice";
 import StepperFooter from "../components/form86/samples/stepperFooter";
 import { useDispatch, useTypedSelector } from "~/state/hooks/index";
 
@@ -33,7 +37,7 @@ import { RenderTechnology } from "~/components/Rendered/RenderTechnology";
 import { RenderCivil } from "~/components/Rendered/RenderCivil";
 import { RenderAssociation } from "~/components/Rendered/RenderAssociation";
 import { RenderSignature } from "~/components/Rendered/RenderSignature";
-import {RenderPrintPDF} from "~/components/Rendered/RenderPrintPDF";
+import { RenderPrintPDF } from "~/components/Rendered/RenderPrintPDF";
 
 import { useEmployee } from "~/state/contexts/new-context";
 import { type ApplicantFormValues } from "api/interfaces/formDefinition";
@@ -47,25 +51,85 @@ interface DynamicFormProps {
   FormInfo: FormInfo;
 }
 
+// Define the ordered form sections for consistent step navigation
+const ORDERED_FORM_SECTIONS = [
+  "personalInfo", // Step 1
+  "birthInfo", // Step 2
+  "aknowledgementInfo", // Step 3
+  "namesInfo", // Step 4
+  "physicalAttributes", // Step 5
+  "contactInfo", // Step 6
+  "passportInfo", // Step 7
+  "citizenshipInfo", // Step 8
+  "dualCitizenshipInfo", // Step 9
+  "residencyInfo", // Step 10
+  "schoolInfo", // Step 11
+  "employmentInfo", // Step 12
+  "serviceInfo", // Step 13
+  "militaryHistoryInfo", // Step 14
+  "peopleThatKnow", // Step 15
+  "relationshipInfo", // Step 16
+  "relativesInfo", // Step 17
+  "foreignContacts", // Step 18
+  "foreignActivities", // Step 19
+  "mentalHealth", // Step 20
+  "policeRecord", // Step 21
+  "drugActivity", // Step 22
+  "alcoholUse", // Step 23
+  "investigationsInfo", // Step 24
+  "finances", // Step 25
+  "technology", // Step 26
+  "civil", // Step 27
+  "association", // Step 28
+  "signature", // Step 29
+  "print", // Step 30
+];
+
 const DynamicForm3: React.FC<DynamicFormProps> = ({
   data,
   onChange,
   FormInfo,
 }) => {
-  const [formData, setFormData] = useState<ApplicantFormValues>(
-    cloneDeep(data)
-  );
+  const [formData, setFormData] = useState<ApplicantFormValues | null>(null);
+  const [formSections, setFormSections] = useState<string[]>([]);
   const dispatch = useDispatch();
   const currentStep = useTypedSelector(selectCurrentStep);
 
   const { updateField } = useEmployee();
 
-  const formSections = Object.keys(formData);
+  // Initialize form data and sections when data is available
+  useEffect(() => {
+    if (data) {
+      setFormData(cloneDeep(data));
+
+      // Filter the ordered sections to only include those that exist in the data
+      const availableSections = ORDERED_FORM_SECTIONS.filter(
+        (section) => section in data
+      );
+
+      setFormSections(availableSections);
+
+      // Update the total steps in the Redux store
+      dispatch(setTotalSteps(availableSections.length));
+
+      // Set initial step to 0 if current step is out of range
+      if (currentStep >= availableSections.length) {
+        dispatch(goToStep(0));
+      }
+    }
+  }, [data, dispatch, currentStep]);
+
+  // If data is not yet loaded, show a loading indicator
+  if (!formData) {
+    return (
+      <div className="animate-pulse flex space-x-4">Loading form data...</div>
+    );
+  }
 
   const handleInputChange = (path: string, value: any) => {
-    // console.log("Before update:", { ...formData.employmentInfo });
+    if (!formData) return;
+
     const updatedFormData = set({ ...formData }, path, value);
-    // console.log("After update:", updatedFormData.employmentInfo);
     setFormData(updatedFormData);
     onChange(updatedFormData);
     updateField(path, value);
@@ -105,22 +169,16 @@ const DynamicForm3: React.FC<DynamicFormProps> = ({
   };
 
   const handleAddEntry = (path: string, updatedItem: any) => {
+    if (!formData) return;
+
     const updatedFormData = cloneDeep(formData);
     let currentData = get(updatedFormData, path);
 
-    console.log(`Path: ${path}`);
-    console.log(`Current Data before push: ${JSON.stringify(currentData)}`);
-    console.log(`Updated Item to be added: ${JSON.stringify(updatedItem)}`);
-
     if (Array.isArray(updatedItem)) {
-      console.log("THIS IS AN ARRAY");
-
       // Ensure updatedItem is not an array itself
       const itemToPush = Array.isArray(updatedItem)
         ? updatedItem[0]
         : updatedItem;
-
-      console.log(`Item to be pushed: ${JSON.stringify(itemToPush)}`);
 
       // Initialize currentData as an array if it is undefined
       if (!Array.isArray(currentData)) {
@@ -130,8 +188,6 @@ const DynamicForm3: React.FC<DynamicFormProps> = ({
       // Push the itemToPush into the currentData array
       currentData.push(itemToPush);
       set(updatedFormData, path, currentData);
-
-      console.log(`Current Data after push: ${JSON.stringify(currentData)}`);
     } else {
       // If currentData is an object or undefined, set or merge the updatedItem
       const mergedData = merge(currentData || {}, updatedItem);
@@ -144,18 +200,16 @@ const DynamicForm3: React.FC<DynamicFormProps> = ({
   };
 
   const handleRemoveEntry = (path: string, index: number) => {
+    if (!formData) return;
+
     const updatedFormData = cloneDeep(formData);
     const list = get(updatedFormData, path, []);
 
-    console.log(list, "LIST");
-    console.log(path, "path");
-
-    console.log(updatedFormData.foreignActivities.section20A1, "HELP");
     if (list && Array.isArray(list)) {
       list.splice(index, 1);
       set(updatedFormData, path, list);
       setFormData(updatedFormData);
-      updateField(path, list);
+      updateField(path, list as any); // Type assertion to resolve TypeScript error
       onChange(updatedFormData);
     }
   };
@@ -2754,7 +2808,7 @@ const DynamicForm3: React.FC<DynamicFormProps> = ({
               zipCode: "",
               country: "",
             },
-            telephoneNumber: ""
+            telephoneNumber: "",
           },
         ],
         section30_2: [
@@ -2770,198 +2824,20 @@ const DynamicForm3: React.FC<DynamicFormProps> = ({
               zipCode: "",
               country: "",
             },
-            telephoneNumber: ""
+            telephoneNumber: "",
           },
         ],
         section30_3: [
           {
             _id: 0,
             fullName: "",
-            dateSigned: ""
+            dateSigned: "",
           },
         ],
       },
     };
 
-    console.log(`Path: ${path}`);
-
-    const pathSegments = path.split(".");
-    const lastSegment = pathSegments.slice(-1)[0];
-    const isNestedPath = pathSegments.length > 1;
-
-    console.log(`Path segments: ${pathSegments}`);
-    console.log(`Last segment: ${lastSegment}`);
-    console.log(`Is nested path: ${isNestedPath}`);
-
-    const nestedTemplates = {
-      dualCitizenshipInfo: ["citizenships", "passports", "passportUses"],
-      residencyInfo: ["residenceAddress", "contact"],
-      contactInfo: ["contactNumbers"],
-      schoolInfo: ["degrees", "schoolEntry"],
-      employmentInfo: [
-        "section13A1",
-        "section13A2",
-        "section13A3",
-        "section13A4",
-        "section13A5",
-        "section13A6",
-        "additionalPeriods",
-        "section13B",
-        "section13C",
-        "employmentEntries",
-        "contacts",
-      ],
-      militaryHistoryInfo: ["section15_1", "section15_2", "section15_3"],
-      relationshipInfo: ["section17_1", "otherNames"],
-      relativesInfo: ["entries", "section18_1", "section18_2", "section18_3"],
-      foreignContacts: ["entries", "otherNames", "citizenships"],
-      foreignActivities: [
-        "section20A1",
-        "section20A2",
-        "section20A3",
-        "section20A4",
-        "section20A5",
-        "section20B1",
-        "section20B2",
-        "section20B3",
-        "section20B4",
-        "section20B5",
-        "section20B6",
-        "section20B7",
-        "section20B8",
-        "section20B9",
-        "section20C",
-        "coOwners",
-        "ownershipType",
-        "subsequentContacts",
-      ],
-      mentalHealth: [
-        "section21A",
-        "section21B",
-        "section21C",
-        "section21D",
-        "section21D1",
-        "section21E",
-      ],
-      policeRecord: [
-        "section22A",
-        "section22B",
-        "section22C",
-        "section22D",
-        "charges",
-      ],
-      drugActivity: [
-        "section23_1",
-        "section23_2",
-        "section23_3",
-        "section23_4",
-      ],
-      alcoholUse: ["section24_1", "section24_2", "section24_3", "section24_4"],
-      investigationsInfo: ["section25_1", "section25_2", "section25_3"],
-      finances: [
-        "section26_1",
-        "section26_2",
-        "section26_3",
-        "section26_4",
-        "section26_5",
-        "section26_6",
-        "section26_7",
-      ],
-      technology: ["section27_1", "section27_2", "section27_3"],
-      civil: ["section28_1"],
-      association: [
-        "section29_1",
-        "section29_2",
-        "section29_3",
-        "section29_4",
-        "section29_5",
-        "section29_6",
-        "section29_7",
-      ],
-    };
-
-    const findNestedTemplate = (pathSegments, templates) => {
-      let currentTemplate = templates;
-      console.log(`Initial template: ${JSON.stringify(currentTemplate)}`);
-      for (const segment of pathSegments) {
-        console.log(`Current segment: ${segment}`);
-        if (Array.isArray(currentTemplate)) {
-          console.log(`Current template is array, selecting first element.`);
-          currentTemplate = currentTemplate[0];
-        }
-        if (currentTemplate[segment]) {
-          console.log(`Found segment in template: ${segment}`);
-          currentTemplate = currentTemplate[segment];
-        } else {
-          console.log(`Segment not found, checking nested templates.`);
-          // Handle the case where the segment is part of nested templates
-          for (const [templateKey, nestedKeys] of Object.entries(
-            nestedTemplates
-          )) {
-            if (
-              pathSegments.includes(templateKey) &&
-              nestedKeys.includes(segment)
-            ) {
-              console.log(`Nested template key matched: ${templateKey}`);
-              currentTemplate = currentTemplate[templateKey];
-            }
-          }
-        }
-        console.log(`Updated template: ${JSON.stringify(currentTemplate)}`);
-      }
-      return cloneDeep(currentTemplate);
-    };
-
-    if (isNestedPath) {
-      const nestedTemplate = findNestedTemplate(pathSegments, templates);
-      if (nestedTemplate) {
-        console.log(`Nested template found: ${JSON.stringify(nestedTemplate)}`);
-        return nestedTemplate;
-      } else {
-        console.log(`No nested template found for path: ${path}`);
-      }
-    }
-
-    console.log(
-      isNestedPath,
-      lastSegment,
-      path,
-      templates[lastSegment as keyof typeof templates],
-      "LOG TESTING"
-    );
-
-    if (path === "employmentInfo") {
-      return {
-        _id: templates.employmentInfo._id,
-        employmentActivity: templates.employmentInfo.employmentActivity,
-      };
-    }
-
-    if (path.startsWith("citizenshipInfo.")) {
-      const citizenshipType = pathSegments[1];
-      console.log(`Citizenship type: ${citizenshipType}`);
-      const citizenshipTemplate = templates.citizenshipInfo[citizenshipType];
-      if (citizenshipTemplate) {
-        // console.log(
-        //   `Citizenship template found: ${JSON.stringify(citizenshipTemplate)}`
-        // );
-        return cloneDeep(citizenshipTemplate);
-      } else {
-        console.error(
-          `No template found for citizenship type: ${citizenshipType}`
-        );
-        return {};
-      }
-    }
-
-    const defaultItem = cloneDeep(templates[lastSegment]);
-    console.log(`Default item: ${JSON.stringify(defaultItem)}`);
-
-    if (Object.keys(defaultItem).length === 0) {
-      console.error(`No template found for path: ${path}`);
-    }
-
-    return defaultItem;
+    return templates[path as keyof typeof templates] || {};
   };
 
   const isReadOnlyField = (key: string) => {
@@ -2969,10 +2845,9 @@ const DynamicForm3: React.FC<DynamicFormProps> = ({
   };
 
   const renderField = (key: string, value: any, path: string) => {
-    if (!value) return null;
+    if (!value || !formData) return null;
 
     const props = {
-      key: path,
       data: value,
       onInputChange: handleInputChange,
       onAddEntry: handleAddEntry,
@@ -2984,78 +2859,72 @@ const DynamicForm3: React.FC<DynamicFormProps> = ({
       formInfo: FormInfo,
     };
 
-    const employeeId = data.personalInfo.applicantID;
-
+    // Ensure applicantID exists
+    const employeeId = formData.personalInfo?.applicantID;
     if (!employeeId) {
       return null;
     }
 
-    // console.log("Rendering field for key:", key, "with data:", value);
-
     switch (key) {
       case "personalInfo":
-        return <RenderBasicInfo {...props} />;
+        return <RenderBasicInfo key={path} {...props} />;
       case "birthInfo":
-        return <RenderBirthInfo {...props} />;
-      case "namesInfo":
-        return <RenderNames {...props} />;
+        return <RenderBirthInfo key={path} {...props} />;
       case "aknowledgementInfo":
-        return <RenderAcknowledgementInfo {...props} />;
+        return <RenderAcknowledgementInfo key={path} {...props} />;
+      case "namesInfo":
+        return <RenderNames key={path} {...props} />;
       case "physicalAttributes":
-        return <RenderPhysicalsInfo {...props} />;
+        return <RenderPhysicalsInfo key={path} {...props} />;
       case "contactInfo":
-        return <RenderContactInfo {...props} />;
+        return <RenderContactInfo key={path} {...props} />;
       case "passportInfo":
-        return <RenderPassportInfo {...props} />;
-      // case "citizenshipInfo":
-      //   return <RenderCitizenshipInfo {...props} />;
-      // case "dualCitizenshipInfo":
-      //   return <RenderDualCitizenshipInfo {...props} />;
-      // case "residencyInfo":
-      //   return <RenderResidencyInfo {...props} />;
-      // case "schoolInfo":
-      //   return <RenderSchoolInfo {...props} />;
-      // case "employmentInfo":
-      //   return <RenderEmploymentInfo {...props} />;
-      // case "serviceInfo":
-      //   return <RenderServiceInfo {...props} />;
-      // case "militaryHistoryInfo":
-      //   return <RenderMilitaryInfo {...props} />;
-      // case "peopleThatKnow":
-      //   return <RenderPeopleThatKnow {...props} />;
-      // case "relationshipInfo":
-      //   return <RenderRelationshipInfo {...props} />;
-      // case "relativesInfo":
-      //   return <RenderRelativesInfo {...props} />;
-      // case "foreignContacts":
-      //   return <RenderForeignContacts {...props} />;
-      // case "foreignActivities":
-      //   return <RenderForeignActivities {...props} />;
-      // case "mentalHealth":
-      //   return <RenderMentalHealth {...props} />;
-      // case "policeRecord":
-      //   return <RenderPolice {...props} />;
-      // case "drugActivity":
-      //   return <RenderDrugActivity {...props} />;
-      // case "alcoholUse":
-      //   return <RenderAlcoholUse {...props} />;
-      // case "investigationsInfo":
-      //   return <RenderInvestigationsInfo {...props} />;
-      // case "finances":
-      //   return <RenderFinances {...props} />;
-      // case "technology":
-      //   return <RenderTechnology {...props} />;
-      // case "civil":
-      //   return <RenderCivil {...props} />;
-      // case "association":
-      //   return <RenderAssociation {...props} />;
-      // case "signature":
-      //   return <RenderSignature {...props} />;
+        return <RenderPassportInfo key={path} {...props} />;
+
+      //   case "citizenshipInfo":
+      //     return <RenderCitizenshipInfo  key={path} {...props} />;
+      //   case "dualCitizenshipInfo":
+      //     return <RenderDualCitizenshipInfo  key={path} {...props} />;
+      //   case "residencyInfo":
+      //     return <RenderResidencyInfo  key={path} {...props} />;
+      //   case "schoolInfo":
+      //     return <RenderSchoolInfo  key={path} {...props} />;
+      //   case "employmentInfo":
+      //     return <RenderEmploymentInfo  key={path} {...props} />;
+      //   case "serviceInfo":
+      //     return <RenderServiceInfo  key={path} {...props} />;
+      //   case "militaryHistoryInfo":
+      //     return <RenderMilitaryInfo  key={path} {...props} />;
+      //   case "peopleThatKnow":
+      //     return <RenderPeopleThatKnow  key={path} {...props} />;
+      //   case "relationshipInfo":
+      //     return <RenderRelationshipInfo  key={path} {...props} />;
+      //   case "relativesInfo":
+      //     return <RenderRelativesInfo  key={path} {...props} />;
+      //   case "foreignContacts":
+      //     return <RenderForeignContacts  key={path} {...props} />;
+      //   case "foreignActivities":
+      //     return <RenderForeignActivities  key={path} {...props} />;
+      //   case "mentalHealth":
+      //     return <RenderMentalHealth  key={path} {...props} />;
+      //   case "policeRecord":
+      //     return <RenderPolice  key={path} {...props} />;
+      //   case "drugActivity":
+      //     return <RenderDrugActivity  key={path} {...props} />;
+      //   case "alcoholUse":
+      //     return <RenderAlcoholUse  key={path} {...props} />;
+      //   case "investigationsInfo":
+      //     return <RenderInvestigationsInfo  key={path} {...props} />;
+      //   case "finances":
+      //     return <RenderFinances  key={path} {...props} />;
+      //   case "technology":
+      //     return <RenderTechnology  key={path} {...props} />;
+      //   case "civil":
+      //     return <RenderCivil  key={path} {...props} />;
+      //   case "association":
+      //     return <RenderAssociation  key={path} {...props} />;
       case "print":
-        return <RenderPrintPDF {...props} />;
-
-
-
+        return <RenderPrintPDF key={path} {...props} />;
       default:
         return (
           <div key={path} className="text-gray-500 p-4">
@@ -3063,22 +2932,35 @@ const DynamicForm3: React.FC<DynamicFormProps> = ({
           </div>
         );
     }
-    
   };
 
   const handleStepChange = (step: number) => {
     dispatch(goToStep(step));
   };
 
+  // Only render form when formData and currentStep are valid
+  if (
+    !formData ||
+    formSections.length === 0 ||
+    currentStep >= formSections.length
+  ) {
+    return (
+      <div className="text-gray-500 p-4">Loading form or invalid step...</div>
+    );
+  }
+
+  // For debugging - logs the current step and section
+  console.log(
+    `Rendering step ${currentStep} - Section: ${formSections[currentStep]}`
+  );
+
   return (
     <>
-      {formData &&
-        formSections.length > currentStep &&
-        renderField(
-          formSections[currentStep],
-          formData[formSections[currentStep] as keyof typeof formData],
-          formSections[currentStep]
-        )}
+      {renderField(
+        formSections[currentStep],
+        formData[formSections[currentStep] as keyof typeof formData],
+        formSections[currentStep]
+      )}
       <StepperFooter
         onStepChange={handleStepChange}
         totalSteps={formSections.length}

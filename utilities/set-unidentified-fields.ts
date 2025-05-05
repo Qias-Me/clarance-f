@@ -21,8 +21,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // File paths
-const SOURCE_PDF_PATH = path.join(__dirname, '../tools/externalTools/sf861.pdf');
-const TARGET_PDF_PATH = path.join(__dirname, '../tools/externalTools/sf86v2pointOh.pdf');
+const SOURCE_PDF_PATH = path.join(__dirname, './externalTools/sf861.pdf');
+const TARGET_PDF_PATH = path.join(__dirname, './externalTools/sf86v2pointOh.pdf');
 const UNIDENTIFIED_FIELDS_PATH = path.join(__dirname, '../reports/unidentified-fields.json');
 
 interface UnidentifiedField {

@@ -35,25 +35,24 @@ const RenderPassportInfo = ({
         <label className="mr-2">
           <input
             type="checkbox"
-            checked={passportInfo.hasPassport}
-            onChange={(e) => onInputChange(`${path}.hasPassport`, e.target.checked)}
+            checked={passportInfo.hasPassport?.value === "YES"}
+            onChange={(e) => onInputChange(`${path}.hasPassport.value`, e.target.checked ? "YES" : "NO")}
             className="mr-2"
           />
           Do you possess a U.S. passport (current or expired)?
         </label>
-        {passportInfo.hasPassport ? null : <span></span>}
       </div>
 
-      {passportInfo.hasPassport && (
+      {passportInfo.hasPassport?.value === "YES" && (
         <>
           <label className="block">
             Passport Number:
             <input
               type="text"
-              defaultValue={passportInfo.passportNum || ""}
+              value={passportInfo.section8?.passportNum?.value || ""}
               onChange={(e) => {
-                if (isValidValue(`${path}.passportNum`, e.target.value)) {
-                  onInputChange(`${path}.passportNum`, e.target.value);
+                if (isValidValue(`${path}.section8.passportNum.value`, e.target.value)) {
+                  onInputChange(`${path}.section8.passportNum.value`, e.target.value);
                 }
               }}
               className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -64,10 +63,10 @@ const RenderPassportInfo = ({
             Issue Date (Month/Day/Year):
             <input
               type="text"
-              defaultValue={passportInfo.issueDate || ""}
+              value={passportInfo.section8?.issueDate?.value || ""}
               onChange={(e) => {
-                if (isValidValue(`${path}.issueDate`, e.target.value)) {
-                  onInputChange(`${path}.issueDate`, e.target.value);
+                if (isValidValue(`${path}.section8.issueDate.value`, e.target.value)) {
+                  onInputChange(`${path}.section8.issueDate.value`, e.target.value);
                 }
               }}
               className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -75,8 +74,8 @@ const RenderPassportInfo = ({
             <label className="inline-flex items-center ml-2">
               <input
                 type="checkbox"
-                checked={passportInfo.isIssuedEst}
-                onChange={(e) => onInputChange(`${path}.isIssuedEst`, e.target.checked)}
+                checked={passportInfo.section8?.isIssuedEst?.value === "YES"}
+                onChange={(e) => onInputChange(`${path}.section8.isIssuedEst.value`, e.target.checked ? "YES" : "NO")}
                 className="mr-2"
               />
               Est.
@@ -87,10 +86,10 @@ const RenderPassportInfo = ({
             Expiration Date (Month/Day/Year):
             <input
               type="text"
-              defaultValue={passportInfo.expirationDate || ""}
+              value={passportInfo.section8?.expirationDate?.value || ""}
               onChange={(e) => {
-                if (isValidValue(`${path}.expirationDate`, e.target.value)) {
-                  onInputChange(`${path}.expirationDate`, e.target.value);
+                if (isValidValue(`${path}.section8.expirationDate.value`, e.target.value)) {
+                  onInputChange(`${path}.section8.expirationDate.value`, e.target.value);
                 }
               }}
               className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -98,8 +97,8 @@ const RenderPassportInfo = ({
             <label className="inline-flex items-center ml-2">
               <input
                 type="checkbox"
-                checked={passportInfo.isExpirationEst}
-                onChange={(e) => onInputChange(`${path}.isExpirationEst`, e.target.checked)}
+                checked={passportInfo.section8?.isExpirationEst?.value === "YES"}
+                onChange={(e) => onInputChange(`${path}.section8.isExpirationEst.value`, e.target.checked ? "YES" : "NO")}
                 className="mr-2"
               />
               Est.
@@ -110,10 +109,10 @@ const RenderPassportInfo = ({
             Last Name:
             <input
               type="text"
-              defaultValue={passportInfo.passportLName || ""}
+              value={passportInfo.section8?.passportLName?.value || ""}
               onChange={(e) => {
-                if (isValidValue(`${path}.passportLName`, e.target.value)) {
-                  onInputChange(`${path}.passportLName`, e.target.value);
+                if (isValidValue(`${path}.section8.passportLName.value`, e.target.value)) {
+                  onInputChange(`${path}.section8.passportLName.value`, e.target.value);
                 }
               }}
               className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -124,10 +123,10 @@ const RenderPassportInfo = ({
             First Name:
             <input
               type="text"
-              defaultValue={passportInfo.passportFName || ""}
+              value={passportInfo.section8?.passportFName?.value || ""}
               onChange={(e) => {
-                if (isValidValue(`${path}.passportFName`, e.target.value)) {
-                  onInputChange(`${path}.passportFName`, e.target.value);
+                if (isValidValue(`${path}.section8.passportFName.value`, e.target.value)) {
+                  onInputChange(`${path}.section8.passportFName.value`, e.target.value);
                 }
               }}
               className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -138,10 +137,10 @@ const RenderPassportInfo = ({
             Middle Name:
             <input
               type="text"
-              defaultValue={passportInfo.passportMName || ""}
+              value={passportInfo.section8?.passportMName?.value || ""}
               onChange={(e) => {
-                if (isValidValue(`${path}.passportMName`, e.target.value)) {
-                  onInputChange(`${path}.passportMName`, e.target.value);
+                if (isValidValue(`${path}.section8.passportMName.value`, e.target.value)) {
+                  onInputChange(`${path}.section8.passportMName.value`, e.target.value);
                 }
               }}
               className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -151,12 +150,11 @@ const RenderPassportInfo = ({
           <label className="block">
             Suffix:
             <select
-              name={`${path}.passportSuffix`}
-              defaultValue={passportInfo.passportSuffix}
+              value={passportInfo.section8?.passportSuffix?.value || ""}
               className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
               onChange={(e) => {
-                if (isValidValue(`${path}.passportSuffix`, e.target.value)) {
-                  onInputChange(`${path}.passportSuffix`, e.target.value);
+                if (isValidValue(`${path}.section8.passportSuffix.value`, e.target.value)) {
+                  onInputChange(`${path}.section8.passportSuffix.value`, e.target.value);
                 }
               }}
             >

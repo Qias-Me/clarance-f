@@ -13,11 +13,10 @@ export interface StepperState {
 
 const initialStateValue: StepperState = {
   stepper: {
-    currentStep: 29,
-    totalSteps: 30, // Assuming there are 5 steps by default, adjust as necessary
+    currentStep: 0,
+    totalSteps: 1, // Will be updated dynamically based on form sections
   }
 };
-
 
 const stepperSlice = createSlice({
   name: "stepper",
@@ -39,10 +38,16 @@ const stepperSlice = createSlice({
     resetStepper: (state) => {
       state.value.stepper.currentStep = 0;
     },
-    goToStep(state, action) {
+    goToStep(state, action: PayloadAction<number>) {
       const step = action.payload;
       if (step >= 0 && step < state.value.stepper.totalSteps) { // Ensure the step is within valid range
         state.value.stepper.currentStep = step;
+      } else if (step >= state.value.stepper.totalSteps && state.value.stepper.totalSteps > 0) {
+        // If step is out of range but we have steps, set to the last valid step
+        state.value.stepper.currentStep = state.value.stepper.totalSteps - 1;
+      } else {
+        // Default to 0 if no valid steps
+        state.value.stepper.currentStep = 0;
       }
     },
   },

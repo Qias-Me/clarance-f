@@ -23,7 +23,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import * as glob from "glob";
-import { PdfService } from "../api/service/pdfService";
+import { PdfService } from "../api/service/pdfService2";
 import {
   enhancedMultiDimensionalCategorization,
   groupFieldsBySection,
@@ -450,7 +450,7 @@ const __dirname = dirname(__filename);
 // Default PDF path if not specified
 const DEFAULT_PDF_PATH = path.join(
   __dirname,
-  "../tools/externalTools/sf862.pdf"
+  "../utilities/externalTools/sf862.pdf"
 );
 
 // Command line args

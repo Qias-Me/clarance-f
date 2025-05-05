@@ -247,8 +247,8 @@ export class FieldMappingService {
   private async loadPdfFieldsForSection(sectionId: number): Promise<void> {
     try {
       // Load actual field data from the JSON files
-      const labelsPath = path.join(__dirname, '../../tools/externalTools/Labels.json');
-      const allFieldsPath = path.join(__dirname, '../../tools/externalTools/allFieldsTo_JSON.json');
+      const labelsPath = path.join(__dirname, '../../utilities/externalTools/Labels.json');
+      const allFieldsPath = path.join(__dirname, '../../utilities/externalTools/allFieldsTo_JSON.json');
       
       let labelData: any[] = [];
       let allFieldsData: any[] = [];

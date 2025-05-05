@@ -1,80 +1,63 @@
-import React from "react";
-import { Form, useActionData } from "react-router";
-import { useEmployee } from "~/state/contexts/new-context";
-import  {type ApplicantFormValues } from "../../../api/interfaces/formDefinition";
-import DynamicService from "api/service/dynamicService";
+import React, { useState, useRef } from "react";
+import type { ApplicantFormValues } from "api/interfaces/formDefinition";
+import { useNavigate } from "react-router";
 
-interface FormProps {
+interface RenderPrintPDFProps {
   data: ApplicantFormValues;
+  actionData?: any;
+  onInputChange?: (path: string, value: any) => void;
+  onAddEntry?: (path: string, value: any) => void;
+  onRemoveEntry?: (path: string, index: number) => void;
+  isValidValue?: (path: string, value: any) => boolean;
+  getDefaultNewItem?: (path: string) => any;
+  isReadOnlyField?: (key: string) => boolean;
+  path?: string;
 }
 
-interface ActionData {
-  success: boolean;
-  message: string;
-}
+const RenderPrintPDF: React.FC<RenderPrintPDFProps> = ({
+  data,
+  actionData,
+}) => {
+  const navigate = useNavigate();
+  
+  const handlePrintClick = () => {
+    if (!data?.personalInfo?.applicantID) {
+      console.error("No employee ID found");
+      return;
+    }
 
-const RenderPrintPDF: React.FC<FormProps> = () => {
-  const actionData = useActionData<ActionData>();
-  const { data } = useEmployee();
-
-  // Convert data to JSON string for the hidden input field
-  const dataJSON = JSON.stringify(data);
-
-  const ClearForm = async () => {
-    // Clear the form data from the IndexedDB
-    const dynamicService = new DynamicService();
-    await dynamicService.deleteFormData();
-
-    window.location.reload();
+    const employeeId = data.personalInfo.applicantID;
+    // Navigate to the print route with the employee ID
+    navigate(`/print/${employeeId}`);
   };
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold text-gray-800 mb-4">
-        {actionData?.message}
-      </h1>
-      {actionData?.message && (
-        <p className="text-gray-600 mb-6">{actionData.message}</p>
-      )}
+    <div className="p-4 sm:p-6 bg-white shadow-sm rounded-lg">
+      <div>
+        <div className="col-span-3 grid grid-cols-1 gap-6 sm:grid-cols-3">
+          <div className="col-span-3">
+            <h2 className="text-xl font-bold mb-4">
+              Form Completion and Review
+            </h2>
+            <p className="text-gray-700 mb-4">
+              You have completed the electronic questionnaire for background
+              investigations. Please review the information you've provided for
+              accuracy and completeness. Once you're satisfied, you can generate
+              a PDF document by clicking the button below.
+            </p>
+          </div>
 
-      <Form method="post" action="/printPDF">
-        <input type="hidden" name="data" value={dataJSON} />
-        <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-          Form Actions
-        </h2>
-        <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
-          <button
-            type="submit"
-            name="actionType"
-            value="generatePDF"
-            className="px-6 py-3 bg-red-500 text-white font-semibold rounded-lg hover:bg-red-600 transition duration-150 ease-in-out shadow-md"
-          >
-            Generate PDF
-          </button>
-          <button
-            type="submit"
-            name="actionType"
-            value="generateJSON"
-            className="px-6 py-3 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition duration-150 ease-in-out shadow-md"
-          >
-            Generate JSON
-          </button>
-          <button
-            type="submit"
-            name="actionType"
-            value="mapToMulti"
-            className="px-6 py-3 bg-pink-500 text-white font-semibold rounded-lg hover:bg-pink-600 transition duration-150 ease-in-out shadow-md"
-          >
-           Map to: Excel | CSV | JSON
-          </button>
-          <button
-            onClick={() => ClearForm()}
-            className="px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition duration-150 ease-in-out shadow-md"
-          >
-            Clear IndexDB
-          </button>
+          <div className="col-span-3">
+            <button
+              type="button"
+              onClick={handlePrintClick}
+              className="px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition duration-150 ease-in-out"
+            >
+              Generate PDF
+            </button>
+          </div>
         </div>
-      </Form>
+      </div>
     </div>
   );
 };

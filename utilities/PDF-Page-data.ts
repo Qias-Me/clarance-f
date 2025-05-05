@@ -31,7 +31,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Default PDF path if not specified
-const DEFAULT_PDF_PATH = path.join(__dirname, '../tools/externalTools/sf862.pdf');
+const DEFAULT_PDF_PATH = path.join(__dirname, './externalTools/sf862.pdf');
 
 // Define types for our script
 interface FieldMetadata {

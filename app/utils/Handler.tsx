@@ -33,7 +33,7 @@
 // import { RenderCivil } from "~/components/Rendered/RenderCivil";
 // import { RenderAssociation } from "~/components/Rendered/RenderAssociation";
 // import { RenderSignature } from "~/components/Rendered/RenderSignature";
-// import { RenderPrintPDF } from "~/components/Rendered/RenderPrintPDF";
+// import { RenderPrintPDF } from "~/components/RenderPrintPDF";
 // import templates from "../state/contexts/updatedModel"
 // import { useEmployee } from "~/state/contexts/new-context";
 // import { type ApplicantFormValues } from "api/interfaces/formDefinition";
@@ -364,7 +364,7 @@
 //       formInfo: FormInfo,
 //     };
 
-//     const employeeId = data.personalInfo.applicantID;
+//     const employeeId = data.personalInfo?.applicantID;
 
 //     if (!employeeId) {
 //       return null;
@@ -387,48 +387,48 @@
 //         return <RenderContactInfo {...props} />;
 //       case "passportInfo":
 //         return <RenderPassportInfo {...props} />;
-//       case "citizenshipInfo":
-//         return <RenderCitizenshipInfo {...props} />;
-//       case "dualCitizenshipInfo":
-//         return <RenderDualCitizenshipInfo {...props} />;
-//       case "residencyInfo":
-//         return <RenderResidencyInfo {...props} />;
-//       case "schoolInfo":
-//         return <RenderSchoolInfo {...props} />;
-//       case "employmentInfo":
-//         return <RenderEmploymentInfo {...props} />;
-//       case "serviceInfo":
-//         return <RenderServiceInfo {...props} />;
-//       case "militaryHistoryInfo":
-//         return <RenderMilitaryInfo {...props} />;
-//       case "peopleThatKnow":
-//         return <RenderPeopleThatKnow {...props} />;
-//       case "relationshipInfo":
-//         return <RenderRelationshipInfo {...props} />;
-//       case "relativesInfo":
-//         return <RenderRelativesInfo {...props} />;
-//       case "foreignContacts":
-//         return <RenderForeignContacts {...props} />;
-//       case "foreignActivities":
-//         return <RenderForeignActivities {...props} />;
-//       case "mentalHealth":
-//         return <RenderMentalHealth {...props} />;
-//       case "policeRecord":
-//         return <RenderPolice {...props} />;
-//       case "drugActivity":
-//         return <RenderDrugActivity {...props} />;
-//       case "alcoholUse":
-//         return <RenderAlcoholUse {...props} />;
-//       case "investigationsInfo":
-//         return <RenderInvestigationsInfo {...props} />;
-//       case "finances":
-//         return <RenderFinances {...props} />;
-//       case "technology":
-//         return <RenderTechnology {...props} />;
-//       case "civil":
-//         return <RenderCivil {...props} />;
-//       case "association":
-//         return <RenderAssociation {...props} />;
+//     //   case "citizenshipInfo":
+//     //     return <RenderCitizenshipInfo {...props} />;
+//     //   case "dualCitizenshipInfo":
+//     //     return <RenderDualCitizenshipInfo {...props} />;
+//     //   case "residencyInfo":
+//     //     return <RenderResidencyInfo {...props} />;
+//     //   case "schoolInfo":
+//     //     return <RenderSchoolInfo {...props} />;
+//     //   case "employmentInfo":
+//     //     return <RenderEmploymentInfo {...props} />;
+//     //   case "serviceInfo":
+//     //     return <RenderServiceInfo {...props} />;
+//     //   case "militaryHistoryInfo":
+//     //     return <RenderMilitaryInfo {...props} />;
+//     //   case "peopleThatKnow":
+//     //     return <RenderPeopleThatKnow {...props} />;
+//     //   case "relationshipInfo":
+//     //     return <RenderRelationshipInfo {...props} />;
+//     //   case "relativesInfo":
+//     //     return <RenderRelativesInfo {...props} />;
+//     //   case "foreignContacts":
+//     //     return <RenderForeignContacts {...props} />;
+//     //   case "foreignActivities":
+//     //     return <RenderForeignActivities {...props} />;
+//     //   case "mentalHealth":
+//     //     return <RenderMentalHealth {...props} />;
+//     //   case "policeRecord":
+//     //     return <RenderPolice {...props} />;
+//     //   case "drugActivity":
+//     //     return <RenderDrugActivity {...props} />;
+//     //   case "alcoholUse":
+//     //     return <RenderAlcoholUse {...props} />;
+//     //   case "investigationsInfo":
+//     //     return <RenderInvestigationsInfo {...props} />;
+//     //   case "finances":
+//     //     return <RenderFinances {...props} />;
+//     //   case "technology":
+//     //     return <RenderTechnology {...props} />;
+//     //   case "civil":
+//     //     return <RenderCivil {...props} />;
+//     //   case "association":
+//     //     return <RenderAssociation {...props} />;
 //       case "signature":
 //         return <RenderSignature {...props} />;
 //       case "print":
