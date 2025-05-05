@@ -12,6 +12,7 @@ export default [
       }
     ]
   }, 
+  route("api/pdf-proxy", "routes/api/pdf-proxy.tsx"),
 //    route("download-pdf/:id", "routes/download-pdf.ts"),
 
 ] satisfies RouteConfig;

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import type { ApplicantFormValues } from "../../api/interfaces/formDefinition";
 import DynamicService from "../../api/service/dynamicService";
 import { Form } from "react-router";
+import { clientPdfService } from "../../api/service/clientpdfService";
 
 interface ActionData {
   success: boolean;
@@ -40,6 +41,30 @@ const RenderPrintPDF: React.FC<FormProps> = ({ data, actionData }) => {
     setLoading(true);
     setIsCancelled(false);
     setDownloadStatus("");
+    
+    // For client-side PDF generation, handle it directly without the server
+    if (action === "clientPDF") {
+      try {
+        setDownloadStatus("Loading PDF template...");
+        await clientPdfService.loadPdf();
+        
+        setDownloadStatus("Generating PDF...");
+        const pdfBytes = await clientPdfService.generateFilledPdf(data);
+        
+        setDownloadStatus("Downloading PDF...");
+        clientPdfService.downloadPdf(pdfBytes);
+        
+        setDownloadStatus("PDF downloaded successfully!");
+        setTimeout(() => setDownloadStatus(""), 3000);
+      } catch (error) {
+        console.error("Error generating PDF client-side:", error);
+        setDownloadStatus(`Error: ${error instanceof Error ? error.message : String(error)}`);
+      } finally {
+        setLoading(false);
+        return; // Skip the rest of the function
+      }
+    }
+    
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
@@ -199,13 +224,33 @@ const RenderPrintPDF: React.FC<FormProps> = ({ data, actionData }) => {
         ) : (
           <>
 
-<button
+            <button
+              type="button"
+              onClick={() => handleActionClick("clientPDF")}
+              className="w-full sm:w-auto px-4 py-3 bg-purple-500 text-white font-semibold rounded-lg hover:bg-purple-600 transition duration-150 ease-in-out shadow-md"
+              title="Process PDF in browser to avoid server timeouts"
+            >
+              Generate PDF (Client-side)
+            </button>
+            <div className="col-span-3 sm:col-span-2 text-sm text-gray-500 mb-4">
+              <p><strong>Client-side PDF generation:</strong> Use this option if the server-side PDF generation is timing out.</p>
+              <p>This processes the form in your browser without sending data to the server. Key benefits:</p>
+              <ul className="list-disc pl-5 mt-1">
+                <li>Avoids worker CPU time limits</li>
+                <li>Keeps your data private - never leaves your browser</li>
+                <li>Works even with poor network connection</li>
+              </ul>
+              <p className="mt-1">If you see "Failed to fetch" errors, your browser might be blocking the PDF download due to CORS restrictions.</p>
+            </div>
+
+            <button
               type="button"
               onClick={() => handleActionClick("submitPDF")}
               className="w-full sm:w-auto px-4 py-3 bg-orange-500 text-white font-semibold rounded-lg hover:bg-orange-600 transition duration-150 ease-in-out shadow-md"
             >
               Submit PDF
             </button>
+
             <button
               type="button"
               onClick={() => handleActionClick("generatePDF")}
@@ -221,7 +266,6 @@ const RenderPrintPDF: React.FC<FormProps> = ({ data, actionData }) => {
             >
               Generate JSON
             </button>
-
 
             <button
               type="button"
