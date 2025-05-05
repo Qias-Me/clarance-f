@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import type { ApplicantFormValues } from "../../api/interfaces/formDefinition";
 import DynamicService from "../../api/service/dynamicService";
 import { Form } from "react-router";
@@ -7,6 +7,7 @@ interface ActionData {
   success: boolean;
   message: string;
   response?: {
+    pdfId?: string;
     pdfBytes?: Uint8Array;
     jsonData?: any;
   };
@@ -21,6 +22,7 @@ const RenderPrintPDF: React.FC<FormProps> = ({ data, actionData }) => {
   const [loading, setLoading] = useState(false);
   const [isCancelled, setIsCancelled] = useState(false);
   const [actionType, setActionType] = useState("");
+  const [downloadStatus, setDownloadStatus] = useState<string>("");
   const abortControllerRef = useRef<AbortController | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -37,6 +39,7 @@ const RenderPrintPDF: React.FC<FormProps> = ({ data, actionData }) => {
     setActionType(action);
     setLoading(true);
     setIsCancelled(false);
+    setDownloadStatus("");
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
@@ -78,7 +81,31 @@ const RenderPrintPDF: React.FC<FormProps> = ({ data, actionData }) => {
     }
   };
 
-  // Handle downloading PDF when response contains PDF bytes
+  // Handle downloading PDF using PDF ID
+  const downloadPDFFromId = async (pdfId: string) => {
+    try {
+      setDownloadStatus("Downloading PDF...");
+      
+      // Create a direct link to the PDF download endpoint
+      const url = `/download-pdf?id=${pdfId}`;
+      
+      // Create an anchor element and trigger download
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'sf86-form.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      
+      setDownloadStatus("PDF download initiated!");
+      console.log('PDF download initiated with ID:', pdfId);
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      setDownloadStatus("Failed to download PDF");
+    }
+  };
+
+  // Legacy method for backward compatibility
   const handleDownloadPDF = () => {
     if (actionData?.response?.pdfBytes) {
       try {
@@ -107,10 +134,18 @@ const RenderPrintPDF: React.FC<FormProps> = ({ data, actionData }) => {
   };
 
   // Check if PDF is available to download from the response
-  React.useEffect(() => {
-    if (actionData?.success && actionType === "submitPDF" && actionData?.response?.pdfBytes) {
-      console.log('Initiating PDF download for submitPDF action');
-      handleDownloadPDF();
+  useEffect(() => {
+    if (actionData?.success && (actionType === "generatePDF" || actionType === "submitPDF")) {
+      if (actionData?.response?.pdfId) {
+        console.log('Initiating PDF download using pdfId');
+        downloadPDFFromId(actionData.response.pdfId);
+      } else if (actionData?.response?.pdfBytes) {
+        console.log('Initiating PDF download using legacy pdfBytes');
+        handleDownloadPDF();
+      } else {
+        console.warn('No PDF ID or bytes found in the response');
+        setDownloadStatus("No PDF data found");
+      }
     }
   }, [actionData, actionType]);
 
@@ -122,6 +157,9 @@ const RenderPrintPDF: React.FC<FormProps> = ({ data, actionData }) => {
         </h1>
         {actionData?.message && (
           <p className="text-gray-600 mb-6">{actionData.message}</p>
+        )}
+        {downloadStatus && (
+          <p className="text-blue-600 mb-6">{downloadStatus}</p>
         )}
         {isCancelled && (
           <div className="col-span-3 text-center text-red-500">

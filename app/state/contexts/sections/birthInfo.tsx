@@ -4,33 +4,39 @@ import { type BirthInfo } from "api/interfaces/sections/birthnfo";
 
 export const birthInfo: BirthInfo = {
     birthDate: {
-        value: "section 2 value",
-        id: "12345",
+        value: "sect2DateofBirth",
+        id: "9432",
         type: "PDFTextField",
+        label: "Section 2. Date of Birth. Provide your date of birth (month/day/year).",
     },
     isBirthDateEstimate: {
         value: "Yes",
-        id: "12348",
+        id: "9431",
         type: "PDFCheckBox",
+        label: "Estimate",
     },
     birthCity: {
-        value: "section 3 value",
-        id: "12346",
+        value: "sect3BirthCity",
+        id: "9446",
         type: "PDFTextField",
+        label: "Section 3. Place of Birth. Provide your place of birth. City.",
     },
     birthState: {
-        value: "section 3 value",
-        id: "12348",
+        value: "sect3State",
+        id: "9443",
         type: "PDFTextField",
+        label: "State",
     },
     birthCounty: {
-        value: "section 3 value",
-        id: "12348",
+        value: "sect3County",
+        id: "9445",
         type: "PDFTextField",
+        label: "County",
     },
     birthCountry: {
-        value: "section 3 value",
-        id: "12347",
-        type: "PDFTextField",
+        value: "United States",
+        id: "9444",
+        type: "PDFDropdown",
+        label: "Country (Required)",
     }
 };

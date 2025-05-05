@@ -1549,6 +1549,7 @@ function organizeFieldsHierarchically(
               confidence: number;
               fields: Array<{
                 name: string;
+                id: string;
                 label?: string;
                 value?: string | string[] | boolean;
                 section: number;
@@ -1580,6 +1581,7 @@ function organizeFieldsHierarchically(
     const fieldName = field.name;
     const fieldValue = field.value;
     const fieldLabel = field.label;
+    const fieldId = field.id;
 
     // Skip if the field is not in fieldCategories
     if (!fieldCategories[fieldName]) return;
@@ -1660,6 +1662,7 @@ function organizeFieldsHierarchically(
       regexPattern
     ].fields.push({
       name: fieldName,
+      id: fieldId,
       label: fieldLabel,
       value: fieldValue,
       section,

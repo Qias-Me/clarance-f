@@ -86,6 +86,8 @@ export async function action({ request }: Route.ActionArgs): Promise<ActionRespo
       };
     }  else if (actionType === "submitPDF") {
       // Handle PDF submission logic here
+
+      // console.log(formValues, "formvalues")
       const response = await pdfService.applyValues_toPDF(formValues);
       return {
         success: true,

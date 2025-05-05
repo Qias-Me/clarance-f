@@ -23,10 +23,10 @@ const RenderNames = ({
 }: FormProps) => {
 
   
-  const handleHasNamesChange = (checked) => {
+  const handleHasNamesChange = (checked: boolean) => {
     onInputChange(`${path}.hasNames`, checked);
 
-    if (checked && data.names.length === 0) {
+    if (checked && data.names?.length === 0) {
       onAddEntry(`${path}.names`, getDefaultNewItem("names"));
     }
   };
@@ -41,7 +41,7 @@ const RenderNames = ({
           <span className="text-sm text-gray-700">Has Names:</span>
           <input
             type="checkbox"
-            checked={data.hasNames}
+            checked={data.hasNames.value === "YES"}
             onChange={(e) => handleHasNamesChange(e.target.checked)}
             className="form-checkbox h-5 w-5 text-blue-600"
           />
@@ -49,13 +49,13 @@ const RenderNames = ({
       </div>
       {data.hasNames && (
         <div className="space-y-6">
-          {data.names.map((name, index) => (
+          {data.names?.map((name, index) => (
             <div key={index} className="p-6  shadow-md rounded-lg">
               <div className="grid grid-cols-1 md:grid-cols-6 gap-6 items-start">
                 {/** Text Inputs with more padding and subtle shadow */}
                 <input
                   type="text"
-                  value={name.firstName}
+                  value={name.firstName.value}
                   onChange={(e) =>
                     onInputChange(
                       `${path}.names[${index}].firstName`,
@@ -68,7 +68,7 @@ const RenderNames = ({
                 />
                 <input
                   type="text"
-                  value={name.lastName}
+                  value={name.lastName.value}
                   onChange={(e) =>
                     onInputChange(
                       `${path}.names[${index}].lastName`,
@@ -81,7 +81,7 @@ const RenderNames = ({
                 />
                 <input
                   type="text"
-                  value={name.middleName}
+                  value={name.middleName.value}
                   onChange={(e) =>
                     onInputChange(
                       `${path}.names[${index}].middleName`,
@@ -94,7 +94,7 @@ const RenderNames = ({
                 />
                 <input
                   type="text"
-                  value={name.suffix}
+                  value={name.suffix.value}
                   onChange={(e) =>
                     onInputChange(
                       `${path}.names[${index}].suffix`,
@@ -110,7 +110,7 @@ const RenderNames = ({
                 <div className="md:col-span-1 flex items-center space-x-2">
                   <input
                     type="checkbox"
-                    checked={name.isNamePresent}
+                    checked={name.endDate.isPresent?.value === "YES"}
                     onChange={(e) =>
                       onInputChange(
                         `${path}.names[${index}].isNamePresent`,
@@ -124,7 +124,7 @@ const RenderNames = ({
                 <div className="md:col-span-1 flex items-center space-x-2">
                   <input
                     type="checkbox"
-                    checked={name.isStartDateEst}
+                    checked={name.startDate.estimated?.value === "YES"}
                     onChange={(e) =>
                       onInputChange(
                         `${path}.names[${index}].isStartDateEst`,
@@ -138,7 +138,7 @@ const RenderNames = ({
                 <div className="md:col-span-1 flex items-center space-x-2">
                   <input
                     type="checkbox"
-                    checked={name.isEndDateEst}
+                    checked={name.endDate.estimated?.value === "YES"}
                     onChange={(e) =>
                       onInputChange(
                         `${path}.names[${index}].isEndDateEst`,
@@ -152,7 +152,7 @@ const RenderNames = ({
                 <div className="md:col-span-1 flex items-center space-x-2">
                   <input
                     type="checkbox"
-                    checked={name.isMaidenName}
+                    checked={name.isMaidenName.value === "YES"}
                     onChange={(e) =>
                       onInputChange(
                         `${path}.names[${index}].isMaidenName`,
@@ -166,7 +166,7 @@ const RenderNames = ({
 
                 <input
                   type="text"
-                  value={name.reasonChanged}
+                  value={name.reasonChanged.value}
                   onChange={(e) =>
                     onInputChange(
                       `${path}.names[${index}].reasonChanged`,

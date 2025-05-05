@@ -26,7 +26,7 @@ const RenderAcknowledgementInfo = ({
         Not Applicable
         <input
           type="checkbox"
-          checked={data.notApplicable}
+          checked={data.notApplicable.value === "Yes"}
           onChange={(e) => {
             const newValue = e.target.checked;
             if (isValidValue(`${path}.notApplicable`, newValue)) {
@@ -41,7 +41,7 @@ const RenderAcknowledgementInfo = ({
         SSN 
         <input
           type="text"
-          defaultValue={data.ssn || ""}
+          defaultValue={data.ssn?.value || ""}
           onChange={(e) => {
             const newValue = e.target.value;
             if (isValidValue(`${path}.ssn`, newValue)) {

@@ -29,7 +29,7 @@ const RenderPhysicalsInfo = ({
         Height (Feet):
         <input
           type="number"
-          defaultValue={data.heightFeet || ""}
+          defaultValue={data.heightFeet.value || ""}
           onChange={(e) => {
             if (isValidValue(`${path}.heightFeet`, e.target.value)) {
               onInputChange(`${path}.heightFeet`, e.target.value);
@@ -45,7 +45,7 @@ const RenderPhysicalsInfo = ({
         Height (Inches):
         <input
           type="number"
-          defaultValue={data.heightInch || ""}
+          defaultValue={data.heightInch.value || ""}
           onChange={(e) => {
             if (isValidValue(`${path}.heightInch`, e.target.value)) {
               onInputChange(`${path}.heightInch`, e.target.value);
@@ -61,7 +61,7 @@ const RenderPhysicalsInfo = ({
         Weight:
         <input
           type="number"
-          defaultValue={data.weight || ""}
+          defaultValue={data.weight.value || ""}
           onChange={(e) => {
             if (isValidValue(`${path}.weight`, e.target.value)) {
               onInputChange(`${path}.weight`, e.target.value);
@@ -77,7 +77,7 @@ const RenderPhysicalsInfo = ({
         Hair Color:
         <input
           type="text"
-          defaultValue={data.hairColor || ""}
+          defaultValue={data.hairColor.value || ""}
           onChange={(e) => {
             if (isValidValue(`${path}.hairColor`, e.target.value)) {
               onInputChange(`${path}.hairColor`, e.target.value);
@@ -93,7 +93,7 @@ const RenderPhysicalsInfo = ({
         Eye Color:
         <input
           type="text"
-          defaultValue={data.eyeColor || ""}
+          defaultValue={data.eyeColor.value || ""}
           onChange={(e) => {
             if (isValidValue(`${path}.eyeColor`, e.target.value)) {
               onInputChange(`${path}.eyeColor`, e.target.value);

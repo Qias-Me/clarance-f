@@ -77,23 +77,39 @@ export class PdfService {
   async mapFormValuesToJsonData(json: any[], formValues: ApplicantFormValues) {
     const idValueMap = new Map<string, string>();
   
-    const flattenFormValues = (data: any) => {
-      Object.values(data).forEach((val: any) => {
+    const flattenFormValues = (data: any, prefix = '') => {
+      if (!data || typeof data !== 'object') return;
+      
+      Object.entries(data).forEach(([key, val]) => {
+        const path = prefix ? `${prefix}.${key}` : key;
+        
         if (val && typeof val === "object") {
-          if (val.id && "value" in val) {
-            idValueMap.set(`${val.id} 0 R`, val.value);
+          // Type guard to check for expected structure
+          if ('id' in val && 'value' in val && val.id && val.value !== undefined && val.value !== '') {
+            const idStr = String(val.id);
+            const valueStr = String(val.value);
+            console.log(`Mapping field ${path}: ID=${idStr}, value=${valueStr}`);
+            idValueMap.set(`${idStr} 0 R`, valueStr);
           } else {
-            flattenFormValues(val);
+            flattenFormValues(val, path);
           }
         }
       });
     };
   
+    console.log("Starting form value mapping with form data:", Object.keys(formValues));
     flattenFormValues(formValues);
+    console.log(`Found ${idValueMap.size} form values to map`);
   
+    let mappedCount = 0;
     json.forEach((item) => {
-      if (idValueMap.has(item.id)) item.value = idValueMap.get(item.id);
+      if (idValueMap.has(item.id)) {
+        item.value = idValueMap.get(item.id);
+        mappedCount++;
+      }
     });
+    
+    console.log(`Successfully mapped ${mappedCount} values to PDF fields`);
   
     return json;
   }
@@ -151,6 +167,8 @@ export class PdfService {
 
 async applyValues_toPDF(formData: ApplicantFormValues): Promise<UserServiceResponse> {
   try {
+    console.log("Starting PDF generation with data:", Object.keys(formData));
+    
     // Fetch the PDF from the OPM website instead of reading from filesystem
     const response = await fetch(SF86_PDF_URL);
     if (!response.ok) {
@@ -161,7 +179,10 @@ async applyValues_toPDF(formData: ApplicantFormValues): Promise<UserServiceRespo
     const pdfDoc = await PDFDocument.load(pdfBytes);
 
     const fieldMapping = await this.mapFormFields(pdfDoc);
+    console.log(`Found ${fieldMapping.length} fields in PDF`);
+    
     const finalForm = await this.mapFormValuesToJsonData(fieldMapping, formData);
+    console.log(`Applied form values to ${finalForm.filter(f => f.value).length} fields`);
 
     const appliedFields = finalForm.filter(field => {
       // Skip fields with no value
@@ -177,16 +198,30 @@ async applyValues_toPDF(formData: ApplicantFormValues): Promise<UserServiceRespo
       return true;
     });
     
+    console.log(`Final applied fields count: ${appliedFields.length}`);
+    
+    // Log a sample of fields being applied
+    if (appliedFields.length > 0) {
+      console.log("Sample of fields being applied:", 
+        appliedFields.slice(0, 5).map(f => ({name: f.name, value: f.value}))
+      );
+    }
+    
     const form = pdfDoc.getForm();
     const fieldMap = new Map(form.getFields().map((f) => [f.getName(), f]));
 
+    // Directly apply values to the PDF form
+    let appliedCount = 0;
     await Promise.all(
       finalForm.map(async ({ name, value }) => {
         if (value && fieldMap.has(name)) {
           await this.setFieldValue(fieldMap.get(name), value as string);
+          appliedCount++;
         }
       })
     );
+    
+    console.log(`Successfully applied ${appliedCount} values to the PDF form`);
 
     const modifiedPdfBytes = await pdfDoc.save();
     
@@ -209,9 +244,10 @@ async applyValues_toPDF(formData: ApplicantFormValues): Promise<UserServiceRespo
       success: true, 
       formData, 
       pdfId, // Return the ID instead of the PDF data
-      message: "PDF filled successfully. Use the pdfId to retrieve the PDF." 
+      message: `PDF filled successfully with ${appliedCount} fields. Use the pdfId to retrieve the PDF.` 
     };
   } catch (error) {
+    console.error("Error in applyValues_toPDF:", error);
     return { success: false, message: `Error processing PDF: ${error}` };
   }
 }
