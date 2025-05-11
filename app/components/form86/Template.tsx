@@ -32,7 +32,6 @@ const PageTemplate: React.FC<PageTemplateProps> = ({
 
   return (
     <div className="font-sans">
-      <Header /> {/* Small Header */}
       {children}
       <StepperFooter
         currentStep={currentStep}

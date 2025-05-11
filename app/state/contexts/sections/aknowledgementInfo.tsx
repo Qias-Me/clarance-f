@@ -7,16 +7,19 @@ export const aknowledgementInfo: AknowledgeInfo = {
       value: "YES",
       id: "17237",
       type: "PDFRadioGroup",
+      label: "Acknowledgement statement agreement",
     },
     ssn: {
       value: "ssn",
       id: "9441",
       type: "PDFTextField",
+      label: "Social Security Number",
     },
     notApplicable: {
       value: "Yes",
       id: "9442",
       type: "PDFCheckBox",
+      label: "Not Applicable for SSN",
     },
     pageSSN: [
       {
@@ -24,6 +27,7 @@ export const aknowledgementInfo: AknowledgeInfo = {
               value: "page1 SSN",
               id: "",
               type: "PDFTextField",
+              label: "SSN on page 1",
           }
       },
       {
@@ -31,6 +35,7 @@ export const aknowledgementInfo: AknowledgeInfo = {
               value: "page2 SSN",
               id: "",
               type: "PDFTextField",
+              label: "SSN on page 2",
           }
       }
   ]

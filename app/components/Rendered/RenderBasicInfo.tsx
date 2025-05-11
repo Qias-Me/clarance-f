@@ -95,6 +95,7 @@ const RenderBasicInfo = ({
             }
           }}
         >
+          <option value="">Select a suffix</option>
           {Object.entries(SuffixOptions).map(([key, value]) => (
             <option key={key} value={value}>
               {value}

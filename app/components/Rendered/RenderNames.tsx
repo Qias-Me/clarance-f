@@ -3,6 +3,7 @@ import {
   type NamesInfo,
 } from "../../../api/interfaces/sections/namesInfo";
 import { namesInfo as namesInfoContext } from "../../../app/state/contexts/sections/namesInfo";
+import { SuffixOptions } from "api/enums/enums";
 
 interface FormProps {
   data: NamesInfo;
@@ -28,15 +29,22 @@ const RenderNames = ({
   const handleHasNamesChange = (checked: boolean) => {
     onInputChange(`${path}.hasNames.value`, checked ? "YES" : "NO");
 
-    // If checked and no names exist, add the first name from context
-    if (checked && (!data.names || data.names.length === 0) && 
-        namesInfoContext && namesInfoContext.names && namesInfoContext.names.length > 0) {
-      // Add the first name from context
-      onInputChange(`${path}.names`, [namesInfoContext.names[0]]);
+    // If toggling to YES and no names exist, add the first name from context
+    if (checked) {
+      if (!data.names || data.names.length === 0) {
+        if (namesInfoContext && namesInfoContext.names && namesInfoContext.names.length > 0) {
+          // Add the first name from context
+          onInputChange(`${path}.names`, [namesInfoContext.names[0]]);
+        }
+      }
+    } 
+    // If toggling to NO, clear the names array
+    else if (data.names && data.names.length > 0) {
+      onInputChange(`${path}.names`, []);
     }
   };
 
-  const hasMaxNames = data.names && data.names.length >= 4;
+  const hasMaxNames = data.hasNames && data.hasNames.value === "YES" && data.names && data.names.length >= 4;
 
   const handleAddName = () => {
     if (!namesInfoContext || !namesInfoContext.names) return;
@@ -70,7 +78,7 @@ const RenderNames = ({
           />
         </label>
       </div>
-      {data.hasNames && (
+      {data.hasNames && data.hasNames.value === "YES" && (
         <div className="space-y-6">
           {data.names?.map((name: ApplicantNames, index: number) => (
             <div key={index} className="p-6  shadow-md rounded-lg">
@@ -115,8 +123,7 @@ const RenderNames = ({
                   className="col-span-2 p-3 border border-gray-300 rounded shadow-sm"
                   readOnly={isReadOnlyField("middleName")}
                 />
-                <input
-                  type="text"
+                <select
                   value={name.suffix.value}
                   onChange={(e) =>
                     onInputChange(
@@ -124,10 +131,16 @@ const RenderNames = ({
                       e.target.value
                     )
                   }
-                  placeholder="Suffix"
                   className="md:col-span-1 p-3 border border-gray-300 rounded shadow-sm"
-                  readOnly={isReadOnlyField("suffix")}
-                />
+                  disabled={isReadOnlyField("suffix")}
+                >
+                  <option value="">Select a suffix</option>
+                  {Object.entries(SuffixOptions).map(([key, value]) => (
+                    <option key={key} value={value}>
+                      {value}
+                    </option>
+                  ))}
+                </select>
 
                 {/** Redesigned compact checkbox layout */}
                 <div className="md:col-span-1 flex items-center space-x-2">
@@ -213,7 +226,7 @@ const RenderNames = ({
         </div>
       )}
 
-      {data.hasNames && !hasMaxNames && (
+      {data.hasNames && data.hasNames.value === "YES" && !hasMaxNames && (
         <button
           type="button"
           onClick={handleAddName}
@@ -223,7 +236,7 @@ const RenderNames = ({
         </button>
       )}
 
-      {data.hasNames && hasMaxNames && (
+      {data.hasNames && data.hasNames.value === "YES" && hasMaxNames && (
         <div className="text-sm text-gray-600 italic mt-2">
           Maximum of 4 names reached
         </div>

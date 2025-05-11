@@ -21,6 +21,15 @@ const RenderContactInfo = ({
   isReadOnlyField,
   path,
 }: FormProps) => {
+  // Initialize with one contact number if none exist
+  if (!data.contactNumbers || data.contactNumbers.length === 0) {
+    // Add default first contact entry
+    const defaultContact = getDefaultNewItem("contactInfo.contactNumbers");
+    onAddEntry(`${path}.contactNumbers`, defaultContact);
+  }
+
+  // Check if we've reached the maximum allowed contacts (3)
+  const hasMaxContacts = data.contactNumbers && data.contactNumbers.length >= 3;
 
   return (
     <div className="p-4 bg-gray-100 rounded mb-2 grid grid-cols-1 gap-4">
@@ -53,96 +62,104 @@ const RenderContactInfo = ({
       </div>
 
       {/* Contact Numbers */}
-      {data.contactNumbers.map((contact, index) => (
-        
-        <div key={index} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <label className="block col-span-1">
-            {contact.numberType.value} telephone number:
-            <input
-              type="tel"
-              defaultValue={contact.phoneNumber.value || ""}
-              onChange={(e) =>
-                onInputChange(
-                  `${path}.contactNumbers[${index}].phoneNumber.value`,
-                  e.target.value
-                )
-              }
-              className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
-              readOnly={isReadOnlyField(
-                `${path}.contactNumbers[${index}].phoneNumber.value`
-              )}
-            />
-          </label>
-          <label className="block col-span-1">
-            Extension:
-            <input
-              type="text"
-              defaultValue={contact.extension.value || ""}
-              onChange={(e) =>
-                onInputChange(
-                  `${path}.contactNumbers[${index}].phoneExtension.value`,
-                  e.target.value
-                )
-              }
-              className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
-              readOnly={isReadOnlyField(
-                `${path}.contactNumbers[${index}].phoneExtension.value`
-              )}
-            />
-          </label>
-          <div className="col-span-1 md:col-span-2 grid grid-cols-2 gap-4">
-            <label className="inline-flex items-center">
+      {data.contactNumbers && data.contactNumbers.map((contact, index) => (
+        <div key={index} className="p-4 border border-gray-200 rounded-lg shadow-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <label className="block col-span-1">
+              {contact.numberType.value} telephone number:
               <input
-                type="checkbox"
-                defaultChecked={contact.isUsableDay.value === "YES"}
+                type="tel"
+                defaultValue={contact.phoneNumber.value || ""}
                 onChange={(e) =>
                   onInputChange(
-                    `${path}.contactNumbers[${index}].isUsableDay.value`,
-                    e.target.checked
+                    `${path}.contactNumbers[${index}].phoneNumber.value`,
+                    e.target.value
                   )
                 }
-                className="form-checkbox h-5 w-5 text-blue-600"
+                className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+                readOnly={isReadOnlyField(
+                  `${path}.contactNumbers[${index}].phoneNumber.value`
+                )}
               />
-              <span className="ml-2">Usable Day</span>
             </label>
-            <label className="inline-flex items-center">
+            <label className="block col-span-1">
+              Extension:
               <input
-                type="checkbox"
-                defaultChecked={contact.isUsableNight.value === "YES"}
+                type="text"
+                defaultValue={contact.extension.value || ""}
                 onChange={(e) =>
                   onInputChange(
-                    `${path}.contactNumbers[${index}].isUsableNight.value`,
-                    e.target.checked
+                    `${path}.contactNumbers[${index}].extension.value`,
+                    e.target.value
                   )
                 }
-                className="form-checkbox h-5 w-5 text-blue-600"
+                className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+                readOnly={isReadOnlyField(
+                  `${path}.contactNumbers[${index}].extension.value`
+                )}
               />
-              <span className="ml-2">Usable Night</span>
             </label>
+            <div className="col-span-1 md:col-span-2 grid grid-cols-2 gap-4">
+              <label className="inline-flex items-center">
+                <input
+                  type="checkbox"
+                  defaultChecked={contact.isUsableDay.value === "YES"}
+                  onChange={(e) =>
+                    onInputChange(
+                      `${path}.contactNumbers[${index}].isUsableDay.value`,
+                      e.target.checked ? "YES" : "NO"
+                    )
+                  }
+                  className="form-checkbox h-5 w-5 text-blue-600"
+                />
+                <span className="ml-2">Usable Day</span>
+              </label>
+              <label className="inline-flex items-center">
+                <input
+                  type="checkbox"
+                  defaultChecked={contact.isUsableNight.value === "YES"}
+                  onChange={(e) =>
+                    onInputChange(
+                      `${path}.contactNumbers[${index}].isUsableNight.value`,
+                      e.target.checked ? "YES" : "NO"
+                    )
+                  }
+                  className="form-checkbox h-5 w-5 text-blue-600"
+                />
+                <span className="ml-2">Usable Night</span>
+              </label>
+            </div>
+            <button
+              type="button"
+              onClick={() => onRemoveEntry(`${path}.contactNumbers`, index)}
+              className="py-2 px-4 bg-red-500 text-white rounded hover:bg-red-700 transition duration-150"
+              disabled={data.contactNumbers.length <= 1}
+            >
+              Remove Contact
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={() => onRemoveEntry(`${path}.contactNumbers`, index)}
-            className="py-2 px-4 bg-red-500 text-white rounded hover:bg-red-700 transition duration-150"
-          >
-            Remove Contact
-          </button>
-
-          <button
-            type="button"
-            onClick={(event) =>{
-              event.preventDefault();
-              onAddEntry(
-                `${path}.contactNumbers`,
-                getDefaultNewItem("contactInfo.contactNumbers")
-              )
-            }}
-            className="py-2 px-4 bg-green-500 text-white rounded hover:bg-green-600 transition duration-150"
-          >
-            Add New Contact
-          </button>
         </div>
       ))}
+
+      {/* Add New Contact button - only show if under max limit */}
+      {!hasMaxContacts && (
+        <button
+          type="button"
+          onClick={() => onAddEntry(
+            `${path}.contactNumbers`,
+            getDefaultNewItem("contactInfo.contactNumbers")
+          )}
+          className="py-2 px-4 bg-green-500 text-white rounded hover:bg-green-600 transition duration-150"
+        >
+          Add New Contact
+        </button>
+      )}
+
+      {hasMaxContacts && (
+        <div className="text-sm text-gray-600 italic">
+          Maximum of 3 contact numbers reached
+        </div>
+      )}
     </div>
   );
 };

@@ -1,5 +1,6 @@
 import {type FormInfo} from "api/interfaces/FormInfo";
 import { type BirthInfo } from "api/interfaces/sections/birthnfo";
+import { StateOptions, CountryOptions } from "api/enums/enums";
 
 interface FormProps {
   data: BirthInfo;
@@ -38,8 +39,7 @@ const RenderBirthInfo = ({
 
       <label className="block">
         Birth State:
-        <input
-          type="text"
+        <select
           defaultValue={data.birthState.value || ""}
           onChange={(e) => {
             const newValue = e.target.value;
@@ -48,13 +48,19 @@ const RenderBirthInfo = ({
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
+        >
+          <option value="">Select a state</option>
+          {Object.entries(StateOptions).map(([key, value]) => (
+            <option key={key} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
       </label>
 
       <label className="block">
         Birth Country:
-        <input
-          type="text"
+        <select
           defaultValue={data.birthCountry.value || ""}
           onChange={(e) => {
             const newValue = e.target.value;
@@ -63,7 +69,14 @@ const RenderBirthInfo = ({
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
+        >
+          <option value="">Select a country</option>
+          {Object.entries(CountryOptions).map(([key, value]) => (
+            <option key={key} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
       </label>
 
       <label className="block">
@@ -72,7 +85,7 @@ const RenderBirthInfo = ({
           type="checkbox"
           checked={data.isBirthDateEstimate.value === "Yes"}
           onChange={(e) => {
-            const newValue = e.target.checked;
+            const newValue = e.target.checked ? "Yes" : "No";
             if (isValidValue(`${path}.isBirthDateEstimate.value`, newValue)) {
               onInputChange(`${path}.isBirthDateEstimate.value`, newValue);
             }

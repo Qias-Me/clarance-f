@@ -1,6 +1,12 @@
 import {type FormInfo} from "api/interfaces/FormInfo";
-
 import { type PhysicalAttributes } from "api/interfaces/sections/physicalAttributes";
+import { 
+  HeightFeetOptions, 
+  HeightInchOptions, 
+  HairColorOptions, 
+  EyeColorOptions,
+  GenderOptions 
+} from "api/enums/enums";
 
 type FormProps = {
   data: PhysicalAttributes;
@@ -27,33 +33,45 @@ const RenderPhysicalsInfo = ({
       {/* Height in Feet */}
       <label className="block">
         Height (Feet):
-        <input
-          type="number"
-          defaultValue={data.heightFeet.value || ""}
+        <select
+          value={data.heightFeet.value || ""}
           onChange={(e) => {
             if (isValidValue(`${path}.heightFeet.value`, e.target.value)) {
               onInputChange(`${path}.heightFeet.value`, e.target.value);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-          readOnly={isReadOnlyField(`${path}.heightFeet`)}
-        />
+          disabled={isReadOnlyField(`${path}.heightFeet`)}
+        >
+          <option value="">Select feet</option>
+          {Object.entries(HeightFeetOptions).map(([key, value]) => (
+            <option key={key} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
       </label>
 
       {/* Height in Inches */}
       <label className="block">
         Height (Inches):
-        <input
-          type="number"
-          defaultValue={data.heightInch.value || ""}
+        <select
+          value={data.heightInch.value || ""}
           onChange={(e) => {
             if (isValidValue(`${path}.heightInch.value`, e.target.value)) {
               onInputChange(`${path}.heightInch.value`, e.target.value);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-          readOnly={isReadOnlyField(`${path}.heightInch`)}
-        />
+          disabled={isReadOnlyField(`${path}.heightInch`)}
+        >
+          <option value="">Select inches</option>
+          {Object.entries(HeightInchOptions).map(([key, value]) => (
+            <option key={key} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
       </label>
 
       {/* Weight */}
@@ -61,7 +79,7 @@ const RenderPhysicalsInfo = ({
         Weight:
         <input
           type="number"
-          defaultValue={data.weight.value || ""}
+          value={data.weight.value || ""}
           onChange={(e) => {
             if (isValidValue(`${path}.weight.value`, e.target.value)) {
               onInputChange(`${path}.weight.value`, e.target.value);
@@ -75,33 +93,67 @@ const RenderPhysicalsInfo = ({
       {/* Hair Color */}
       <label className="block">
         Hair Color:
-        <input
-          type="text"
-          defaultValue={data.hairColor.value || ""}
+        <select
+          value={data.hairColor.value || ""}
           onChange={(e) => {
             if (isValidValue(`${path}.hairColor.value`, e.target.value)) {
               onInputChange(`${path}.hairColor.value`, e.target.value);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-          readOnly={isReadOnlyField(`${path}.hairColor`)}
-        />
+          disabled={isReadOnlyField(`${path}.hairColor`)}
+        >
+          <option value="">Select hair color</option>
+          {Object.entries(HairColorOptions).map(([key, value]) => (
+            <option key={key} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
       </label>
 
       {/* Eye Color */}
       <label className="block">
         Eye Color:
-        <input
-          type="text"
-          defaultValue={data.eyeColor.value || ""}
+        <select
+          value={data.eyeColor.value || ""}
           onChange={(e) => {
             if (isValidValue(`${path}.eyeColor.value`, e.target.value)) {
               onInputChange(`${path}.eyeColor.value`, e.target.value);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-          readOnly={isReadOnlyField(`${path}.eyeColor`)}
-        />
+          disabled={isReadOnlyField(`${path}.eyeColor`)}
+        >
+          <option value="">Select eye color</option>
+          {Object.entries(EyeColorOptions).map(([key, value]) => (
+            <option key={key} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      {/* Gender */}
+      <label className="block">
+        Gender:
+        <select
+          value={data.gender.value || ""}
+          onChange={(e) => {
+            if (isValidValue(`${path}.gender.value`, e.target.value)) {
+              onInputChange(`${path}.gender.value`, e.target.value);
+            }
+          }}
+          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
+          disabled={isReadOnlyField(`${path}.gender`)}
+        >
+          <option value="">Select gender</option>
+          {Object.entries(GenderOptions).map(([key, value]) => (
+            <option key={key} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
       </label>
     </div>
   );

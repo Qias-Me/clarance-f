@@ -368,13 +368,6 @@ const DynamicForm3: React.FC<DynamicFormProps> = ({
           },
         },
       },
-      physicalAttributes: {
-        heightFeet: 0,
-        heightInch: 0,
-        weight: 0,
-        hairColor: "None",
-        eyeColor: "None",
-      },
       citizenshipInfo: {
         birth: {
           doc_type: "FS240",
@@ -503,15 +496,125 @@ const DynamicForm3: React.FC<DynamicFormProps> = ({
         },
       },
       contactInfo: {
-        contactNumbers: {
-          _id: Math.random(),
-          numberType: "Home", // Default type, can be changed by the user
-          phoneNumber: "",
-          phoneExtension: "",
-          isUsableDay: false,
-          isUsableNight: false,
-          internationalOrDSN: false,
-        },
+        contactNumbers: [
+          {
+            _id: 1,
+            numberType: {
+              value: "DSN",
+              id: "9511",
+              type: "PDFTextField",
+              label: "Home telephone number",
+            },
+            phoneNumber: {
+              value: "phoneNumber1",
+              id: "9511",
+              type: "PDFTextField",
+              label: "Home telephone number",
+            },
+            extension: {
+              value: "1",
+              id: "9510",
+              type: "PDFTextField",
+              label: "Extension",
+            },
+            isUsableDay: {
+              value: "YES",
+              id: "9507",
+              type: "PDFCheckBox",
+              label: "Day",
+            },
+            isUsableNight: {
+              value: "YES",
+              id: "9508",
+              type: "PDFCheckBox",
+              label: "Night",
+            },
+            internationalOrDSN: {
+              value: "YES",
+              id: "9509",
+              type: "PDFCheckBox",
+              label: "Home telephone number: International or D S N phone number",
+            },
+          },
+          {
+            _id: 2,
+            numberType: {
+              value: "International",
+              id: "",
+              type: "PDFTextField",
+              label: "Work telephone number",
+            },
+            phoneNumber: {
+              value: "phoneNumber2",
+              id: "9506",
+              type: "PDFTextField",
+              label: "Work telephone number",
+            },
+            extension: {
+              value: "2",
+              id: "9505",
+              type: "PDFTextField",
+              label: "Extension",
+            },
+            isUsableDay: {
+              value: "YES",
+              id: "9562",
+              type: "PDFCheckBox",
+              label: "Day",
+            },
+            isUsableNight: {
+              value: "YES",
+              id: "9503",
+              type: "PDFCheckBox",
+              label: "Night",
+            },
+            internationalOrDSN: {
+              value: "YES",
+              id: "9504",
+              type: "PDFCheckBox",
+              label: "Work telephone number: International or D S N phone number",
+            },
+          },
+          {
+            _id: 3,
+            numberType: {
+              value: "Home",
+              id: "",
+              type: "PDFTextField",
+              label: "Mobile/Cell telephone number",
+            },
+            phoneNumber: {
+              value: "phoneNumber3",
+              id: "9561",
+              type: "PDFTextField",
+              label: "Mobile/Cell telephone number",
+            },
+            extension: {
+              value: "3",
+              id: "9560",
+              type: "PDFTextField",
+              label: "Extension",
+            },
+            isUsableDay: {
+              value: "YES",
+              id: "9557",
+              type: "PDFCheckBox",
+              label: "Day",
+            },
+            isUsableNight: {
+              value: "YES",
+              id: "9558",
+              type: "PDFCheckBox",
+              label: "Night",
+            },
+            internationalOrDSN: {
+              value: "YES",
+              id: "9559",
+              type: "PDFCheckBox",
+              label: "Mobile/Cell telephone number: International or D S N phone number",
+            },
+          },
+        ]
       },
       schoolInfo: {
         schoolEntry: {

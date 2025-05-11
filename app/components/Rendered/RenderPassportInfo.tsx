@@ -25,6 +25,16 @@ const RenderPassportInfo = ({
 }: FormProps) => {
   const passportInfo = data as PassportInfo;
 
+  const handleHasPassportChange = (checked: boolean) => {
+    onInputChange(`${path}.hasPassport.value`, checked ? "YES" : "NO");
+    
+    // If toggling to NO, remove the entire section8 object
+    if (!checked && passportInfo.section8) {
+      // Using undefined to remove the property entirely from the data object
+      onInputChange(`${path}.section8`, {});
+    }
+  };
+
   return (
     <div className="p-4 bg-gray-50 rounded-lg shadow space-y-4">
       <h3 className="text-lg font-semibold">
@@ -36,7 +46,7 @@ const RenderPassportInfo = ({
           <input
             type="checkbox"
             checked={passportInfo.hasPassport?.value === "YES"}
-            onChange={(e) => onInputChange(`${path}.hasPassport.value`, e.target.checked ? "YES" : "NO")}
+            onChange={(e) => handleHasPassportChange(e.target.checked)}
             className="mr-2"
           />
           Do you possess a U.S. passport (current or expired)?
@@ -158,6 +168,7 @@ const RenderPassportInfo = ({
                 }
               }}
             >
+              <option value="">Select a suffix</option>
               {Object.entries(SuffixOptions).map(([key, value]) => (
                 <option key={key} value={value}>
                   {value}

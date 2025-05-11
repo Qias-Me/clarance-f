@@ -1552,6 +1552,7 @@ function organizeFieldsHierarchically(
                 id: string;
                 label?: string;
                 value?: string | string[] | boolean;
+                type?: string;
                 section: number;
                 sectionName: string;
                 confidence: number;
@@ -1582,7 +1583,7 @@ function organizeFieldsHierarchically(
     const fieldValue = field.value;
     const fieldLabel = field.label;
     const fieldId = field.id;
-
+    const fieldType = field.type;
     // Skip if the field is not in fieldCategories
     if (!fieldCategories[fieldName]) return;
 
@@ -1665,6 +1666,7 @@ function organizeFieldsHierarchically(
       id: fieldId,
       label: fieldLabel,
       value: fieldValue,
+      type: fieldType,
       section,
       sectionName,
       confidence,
