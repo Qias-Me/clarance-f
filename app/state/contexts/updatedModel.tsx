@@ -39,7 +39,7 @@ const defaultFormData: ApplicantFormValues = {
   birthInfo: birthInfo,
   contactInfo: contactInfo,
   passportInfo: passportInfo,
-  // citizenshipInfo: citizenshipInfo,
+  citizenshipInfo: citizenshipInfo,
   // dualCitizenshipInfo: dualCitizenshipInfo,
   // residencyInfo: residencyInfo,
   // employmentInfo: employmentInfo,

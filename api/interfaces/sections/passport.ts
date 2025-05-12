@@ -2,19 +2,17 @@ import {type Field } from "../formDefinition";
 
 interface PassportInfo {
   hasPassport: Field<"YES" | "NO (If NO, proceed to Section 9)">;
-  section8?: Section8;
-  }
+  passports: PassportEntry[];
+}
 
-  interface Section8 {
-    passportNum: Field<string>;
-    issueDate: Field<string>;
-    isIssuedEst: Field<"YES" | "NO">;
-    expirationDate: Field<string>;
-    isExpirationEst: Field<"YES" | "NO">;
-    passportLName: Field<string>;
-    passportFName: Field<string>;
-    passportMName: Field<string>;
-    passportSuffix: Field<string>;
-  }
+interface PassportEntry {
+  _id?: number;
+  type?: Field<string>;
+  number?: Field<string>;
+  issueDate?: Field<string>;
+  expirationDate?: Field<string>;
+  issueCountry?: Field<string>;
+  placeOfIssue?: Field<string>;
+}
 
-  export type { PassportInfo };
+export type { PassportInfo, PassportEntry };
