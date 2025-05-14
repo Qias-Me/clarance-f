@@ -16,7 +16,7 @@ import { RenderPhysicalsInfo } from "~/components/Rendered/RenderPhysicals";
 import { RenderContactInfo } from "~/components/Rendered/RenderContactInfo";
 import { RenderPassportInfo } from "~/components/Rendered/RenderPassportInfo";
 import { RenderCitizenshipInfo } from "~/components/Rendered/RenderCitizenshipInfo";
-import { RenderDualCitizenshipInfo } from "~/components/Rendered/RenderDuelCitizenship";
+import { RenderDualCitizenshipInfo } from "~/components/Rendered/RenderDualCitizenship";
 import { RenderResidencyInfo } from "~/components/Rendered/RenderResidencyInfo";
 import { RenderSchoolInfo } from "~/components/Rendered/RenderSchoolInfo";
 import { RenderEmploymentInfo } from "~/components/Rendered/RenderEmployementInfo";

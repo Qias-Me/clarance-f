@@ -2,7 +2,6 @@ import {type Field } from "../formDefinition";
 
 interface ContactNumber {
   _id: number;
-  numberType: Field<"Home" | "DSN" | "International">; // Assuming these are the three types
   phoneNumber: Field<string>;
   extension: Field<string>;
   isUsableDay: Field<"YES" | "NO">;

@@ -10,7 +10,7 @@ export const aknowledgementInfo: AknowledgeInfo = {
       label: "Acknowledgement statement agreement",
     },
     ssn: {
-      value: "ssn",
+      value: "",
       id: "9441",
       type: "PDFTextField",
       label: "Social Security Number",

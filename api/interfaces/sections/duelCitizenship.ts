@@ -34,25 +34,25 @@ interface DualCitizenshipInfo {
     passportCountry: Field<string>;
     passportLName: Field<string>;
     passportFName: Field<string>;
-    passportMName?: Field<string>;
-    passportSuffix?: Field<string>;
+    passportMName: Field<string>;
+    passportSuffix: Field<string>;
     passportNumber: Field<string>;
     passportExpiration: Field<string>;
     isExpirationEst: Field<"Yes" | "No">;
     isPassportUsed: Field<"YES" | "NO">;
-    passportUses?: PassportUse[];
+    passportUses?: PassportUseDetail[];
   }
   
-  interface PassportUse {
+  interface PassportUseDetail {
     _id: number;
     passportCountry: Field<string>;
     fromDate: Field<string>;
-    toDate?: Field<string>;
     isFromDateEst: Field<"Yes" | "No">;
-    isToDateEst?: Field<"Yes" | "No">;
+    toDate: Field<string>;
     isVisitCurrent: Field<"Yes" | "No">;
+    isToDateEst: Field<"Yes" | "No">;
   }
 
   
 
-  export type { DualCitizenshipInfo}; 
+  export type { DualCitizenshipInfo, CitizenshipDetail, PassportDetail, PassportUseDetail }; 

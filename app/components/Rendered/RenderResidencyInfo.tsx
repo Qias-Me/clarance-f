@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, memo } from 'react';
 import {type FormInfo} from "api/interfaces/FormInfo";
 
 import type { ResidencyInfo, Phone } from "api/interfaces/sections/residency";
@@ -36,7 +36,7 @@ const RenderResidencyInfo: React.FC<FormProps> = ({
     index: number,
     phoneIndex: number
   ) => (
-    <div key={phoneIndex} className="space-y-2">
+    <div key={`phone-${index}-${phoneIndex}-${phone._id}`} className="space-y-2">
       <h4 className="text-md font-semibold">Phone Entry #{phoneIndex + 1}</h4>
 
       <label htmlFor={`phoneType-${index}-${phoneIndex}`} className="block">
@@ -65,11 +65,11 @@ const RenderResidencyInfo: React.FC<FormProps> = ({
       <input
         type="checkbox"
         id={`knowsNumber-${index}-${phoneIndex}`}
-        checked={phone.knowsNumber}
+        checked={phone.dontKnowNumber?.value === "Yes"}
         onChange={(e) =>
           onInputChange(
-            `${path}[${index}].contact.phone[${phoneIndex}].knowsNumber`,
-            e.target.checked
+            `${path}[${index}].contact.phone[${phoneIndex}].dontKnowNumber.value`,
+            e.target.checked ? "Yes" : "No"
           )
         }
         className="mt-1 mr-2"
@@ -84,11 +84,11 @@ const RenderResidencyInfo: React.FC<FormProps> = ({
       <input
         type="checkbox"
         id={`isInternationalOrDSN-${index}-${phoneIndex}`}
-        checked={phone.isInternationalOrDSN}
+        checked={phone.isInternationalOrDSN?.value === "Yes"}
         onChange={(e) =>
           onInputChange(
-            `${path}[${index}].contact.phone[${phoneIndex}].isInternationalOrDSN`,
-            e.target.checked
+            `${path}[${index}].contact.phone[${phoneIndex}].isInternationalOrDSN.value`,
+            e.target.checked ? "Yes" : "No"
           )
         }
         className="mt-1 mr-2"
@@ -100,10 +100,10 @@ const RenderResidencyInfo: React.FC<FormProps> = ({
       <input
         type="text"
         id={`phoneNumber-${index}-${phoneIndex}`}
-        value={phone.number}
+        value={phone.number?.value || ""}
         onChange={(e) =>
           onInputChange(
-            `${path}[${index}].contact.phone[${phoneIndex}].number`,
+            `${path}[${index}].contact.phone[${phoneIndex}].number.value`,
             e.target.value
           )
         }
@@ -119,10 +119,10 @@ const RenderResidencyInfo: React.FC<FormProps> = ({
       <input
         type="text"
         id={`phoneExtension-${index}-${phoneIndex}`}
-        value={phone.extension}
+        value={phone.extension?.value || ""}
         onChange={(e) =>
           onInputChange(
-            `${path}[${index}].contact.phone[${phoneIndex}].extension`,
+            `${path}[${index}].contact.phone[${phoneIndex}].extension.value`,
             e.target.value
           )
         }
@@ -151,7 +151,7 @@ const RenderResidencyInfo: React.FC<FormProps> = ({
               "Landlord",
               "Business associate",
               "Other",
-            ].map((relation) => (
+            ].map((relation, relationIndex) => (
               <label
                 key={relation}
                 htmlFor={`relationship-${index}-${relation}`}
@@ -161,18 +161,19 @@ const RenderResidencyInfo: React.FC<FormProps> = ({
                   type="checkbox"
                   id={`relationship-${index}-${relation}`}
                   value={relation}
-                  checked={residency.contact.relationship.includes(relation)}
+                  checked={residency.contact.relationship.checkboxes[relationIndex]?.value === "Yes"}
                   onChange={(e) => {
-                    const newRelations = [...residency.contact.relationship];
-                    if (e.target.checked) {
-                      newRelations.push(relation);
-                    } else {
-                      const relIndex = newRelations.indexOf(relation);
-                      newRelations.splice(relIndex, 1);
-                    }
+                    // Create a copy of the checkboxes array
+                    const newCheckboxes = [...residency.contact.relationship.checkboxes];
+                    // Update the checkbox at the corresponding index
+                    newCheckboxes[relationIndex] = {
+                      ...newCheckboxes[relationIndex],
+                      value: e.target.checked ? "Yes" : "No"
+                    };
+                    // Update the relationship field
                     onInputChange(
-                      `${path}[${index}].contact.relationship`,
-                      newRelations
+                      `${path}[${index}].contact.relationship.checkboxes`,
+                      newCheckboxes
                     );
                   }}
                   className="mr-2"
@@ -182,15 +183,15 @@ const RenderResidencyInfo: React.FC<FormProps> = ({
             ))}
           </div>
 
-          {residency.contact.relationship.includes("Other") && (
+          {residency.contact.relationship.checkboxes[4]?.value === "Yes" && (
             <input
               type="text"
               id={`relationshipOtherDetail-${index}`}
-              value={residency.contact.relationshipOtherDetail}
+              value={residency.contact.relationshipOtherDetail?.value || ""}
               placeholder="Provide explanation"
               onChange={(e) =>
                 onInputChange(
-                  `${path}[${index}].contact.relationshipOtherDetail`,
+                  `${path}[${index}].contact.relationshipOtherDetail.value`,
                   e.target.value
                 )
               }
@@ -240,4 +241,7 @@ const RenderResidencyInfo: React.FC<FormProps> = ({
   );
 };
 
-export { RenderResidencyInfo };
+// Use memo to optimize rendering performance
+const MemoizedRenderResidencyInfo = memo(RenderResidencyInfo);
+
+export { MemoizedRenderResidencyInfo as RenderResidencyInfo };

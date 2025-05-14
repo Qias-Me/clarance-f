@@ -154922,7 +154922,7 @@
       "A medical professional",
       "A mental health professional",
       "A court official / judge",
-      " I have not been ordered, advised, or asked to seek counseling or treatment by any of the above."
+      "  I have not been ordered, advised, or asked to seek counseling or treatment by any of the above."
     ],
     "required": false,
     "page": 109
@@ -155494,7 +155494,7 @@
       "A medical professional",
       "A mental health professional",
       "A court official / judge",
-      " I have not been ordered, advised, or asked to seek counseling or treatment by any of the above."
+      "  I have not been ordered, advised, or asked to seek counseling or treatment by any of the above."
     ],
     "required": false,
     "page": 110

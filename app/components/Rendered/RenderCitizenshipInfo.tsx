@@ -1,8 +1,32 @@
-import {type FormInfo}  from "api/interfaces/FormInfo";
-import { type CitizenshipByBirthInfo, type CitizenshipInfo } from "api/interfaces/sections/citizenship";
+import { useState } from 'react';
+import { type FormInfo } from "api/interfaces/FormInfo";
+import {
+  type CitizenshipInfo,
+  type CitizenshipByBirthInfo,
+  type NaturalizedCitizenInfo,
+  type DerivedCitizenInfo,
+  type NonCitizenInfo
+} from "api/interfaces/sections/citizenship";
+import { SuffixOptions, CountryOptions, StateOptions } from "api/enums/enums";
 
+// Define suffixes for dropdown options
+// const SuffixOptions = {
+//   "": "None",
+//   "Jr.": "Jr.",
+//   "Sr.": "Sr.",
+//   "I": "I",
+//   "II": "II",
+//   "III": "III",
+//   "IV": "IV",
+//   "V": "V",
+//   "VI": "VI",
+//   "VII": "VII",
+//   "VIII": "VIII",
+//   "IX": "IX",
+//   "X": "X",
+// };
 
-type FormProps = {
+interface FormProps {
   data: CitizenshipInfo;
   onInputChange: (path: string, value: any) => void;
   onAddEntry: (path: string, newItem: any) => void;
@@ -16,14 +40,50 @@ type FormProps = {
 };
 
 // Mapping descriptions to their corresponding status codes
-const citizenshipStatusMapping = {
-  "I am a U.S. citizen or national by birth in the U.S. or U.S. territory/commonwealth. (Proceed to Section 10)":
-    "birth",
-  "I am a U.S. citizen or national by birth, born to U.S. parent(s), in a foreign country. (Complete 9.1)":
-    "citizen",
-  "I am a naturalized U.S. citizen. (Complete 9.2)": "naturalized",
-  "I am a derived U.S. citizen. (Complete 9.3)": "derived",
-  "I am not a U.S. citizen. (Complete 9.4)": "nonCitizen",
+const citizenshipStatusMapping: Record<string, string> = {
+  "I am a U.S. citizen or national by birth in the U.S. or U.S. territory/commonwealth. (Proceed to Section 10)   ": "birth",
+  "I am a U.S. citizen or national by birth, born to U.S. parent(s), in a foreign country. (Complete 9.1) ": "citizen",
+  "I am a naturalized U.S. citizen. (Complete 9.2) ": "naturalized",
+  "I am a derived U.S. citizen. (Complete 9.3) ": "derived",
+  "I am not a U.S. citizen. (Complete 9.4) ": "nonCitizen",
+};
+
+// Helper function to format dates as mm/dd/yyyy
+const formatDateInput = (value: string) => {
+  if (!value) return "";
+  
+  // Remove non-numeric characters
+  let numericValue = value.replace(/\D/g, '');
+  
+  // Limit to 8 digits
+  if (numericValue.length > 8) {
+    numericValue = numericValue.substring(0, 8);
+  }
+  
+  // Format as mm/dd/yyyy
+  if (numericValue.length >= 5) {
+    return `${numericValue.substring(0, 2)}/${numericValue.substring(2, 4)}/${numericValue.substring(4)}`;
+  } else if (numericValue.length >= 3) {
+    return `${numericValue.substring(0, 2)}/${numericValue.substring(2)}`;
+  } else if (numericValue.length > 0) {
+    return numericValue;
+  }
+  
+  return "";
+};
+
+// Helper function to handle date input changes
+const handleDateChange = (
+  value: string, 
+  path: string, 
+  fieldPath: string, 
+  onInputChange: (path: string, value: any) => void,
+  isValidValue: (path: string, value: any) => boolean
+) => {
+  const formattedDate = formatDateInput(value);
+  if (isValidValue(`${path}.${fieldPath}.value`, formattedDate)) {
+    onInputChange(`${path}.${fieldPath}.value`, formattedDate);
+  }
 };
 
 const RenderCitizenshipInfo: React.FC<FormProps> = ({
@@ -33,25 +93,30 @@ const RenderCitizenshipInfo: React.FC<FormProps> = ({
   path,
   getDefaultNewItem,
 }) => {
-  const citizenshipInfo = data as CitizenshipInfo;
+  const citizenshipInfo = data;
 
   const handleCitizenshipChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newStatusDescription = e.target.value;
-    const newStatusCode =
-      citizenshipStatusMapping[
-        newStatusDescription as keyof typeof citizenshipStatusMapping
-      ];
+    const newStatusCode = citizenshipStatusMapping[newStatusDescription] || "";
 
-    if (isValidValue(`${path}.citizenship_status_code`, newStatusDescription)) {
-      onInputChange(`${path}.citizenship_status_code`, newStatusDescription);
-      if (newStatusCode !== "citizen") {
-        onInputChange(
-          `${path}.details`,
-          getDefaultNewItem(`citizenshipInfo.${newStatusCode}`)
-        );
-      }
-      if (newStatusCode !== "None") {
-        onInputChange(`${path}.details`, undefined);
+    if (isValidValue(`${path}.citizenship_status_code.value`, newStatusDescription)) {
+      onInputChange(`${path}.citizenship_status_code.value`, newStatusDescription);
+      
+      // Clear previous section data
+      onInputChange(`${path}.section9_1`, undefined);
+      onInputChange(`${path}.section9_2`, undefined);
+      onInputChange(`${path}.section9_3`, undefined);
+      onInputChange(`${path}.section9_4`, undefined);
+      
+      // Set the appropriate section data based on citizenship type
+      if (newStatusCode === "citizen") {
+        onInputChange(`${path}.section9_1`, getDefaultNewItem("citizenshipInfo.section9_1"));
+      } else if (newStatusCode === "naturalized") {
+        onInputChange(`${path}.section9_2`, getDefaultNewItem("citizenshipInfo.section9_2"));
+      } else if (newStatusCode === "derived") {
+        onInputChange(`${path}.section9_3`, getDefaultNewItem("citizenshipInfo.section9_3"));
+      } else if (newStatusCode === "nonCitizen") {
+        onInputChange(`${path}.section9_4`, getDefaultNewItem("citizenshipInfo.section9_4"));
       }
     }
   };
@@ -61,30 +126,32 @@ const RenderCitizenshipInfo: React.FC<FormProps> = ({
       <label className="block">
         Document Type:
         <select
-          name={`${path}.details.doc_type`}
-          defaultValue={info.doc_type}
+          name={`${path}.section9_1.doc_type.value`}
+          value={info?.doc_type?.value || ""}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
           onChange={(e) => {
-            if (isValidValue(`${path}.details.doc_type`, e.target.value)) {
-              onInputChange(`${path}.details.doc_type`, e.target.value);
+            if (isValidValue(`${path}.section9_1.doc_type.value`, e.target.value)) {
+              onInputChange(`${path}.section9_1.doc_type.value`, e.target.value);
             }
           }}
         >
+          <option value="">Select document type</option>
           <option value="FS240">FS 240</option>
           <option value="DS1350">DS 1350</option>
           <option value="FS545">FS 545</option>
-          <option value="Other">Other</option>
+          <option value="Other (Provide explanation)">Other (Provide explanation)</option>
         </select>
       </label>
-      {info.doc_type === "Other" && (
+      
+      {info?.doc_type?.value === "Other (Provide explanation)" && (
         <label className="block">
           Other Document:
           <input
             type="text"
-            defaultValue={info.other_doc || ""}
+            value={info?.other_doc?.value || ""}
             onChange={(e) => {
-              if (isValidValue(`${path}.details.other_doc`, e.target.value)) {
-                onInputChange(`${path}.details.other_doc`, e.target.value);
+              if (isValidValue(`${path}.section9_1.other_doc.value`, e.target.value)) {
+                onInputChange(`${path}.section9_1.other_doc.value`, e.target.value);
               }
             }}
             className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -96,37 +163,41 @@ const RenderCitizenshipInfo: React.FC<FormProps> = ({
         Document Number:
         <input
           type="text"
-          defaultValue={info.doc_num || ""}
+          value={info?.doc_num?.value || ""}
           onChange={(e) => {
-            if (isValidValue(`${path}.details.doc_num`, e.target.value)) {
-              onInputChange(`${path}.details.doc_num`, e.target.value);
+            if (isValidValue(`${path}.section9_1.doc_num.value`, e.target.value)) {
+              onInputChange(`${path}.section9_1.doc_num.value`, e.target.value);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
         />
       </label>
+      
       <label className="block">
-        Document Issue Date:
+        Document Issue Date (MM/DD/YYYY):
         <input
           type="text"
-          defaultValue={info.doc_issue_date || ""}
+          value={info?.doc_issue_date?.value || ""}
           onChange={(e) => {
-            if (
-              isValidValue(`${path}.details.doc_issue_date`, e.target.value)
-            ) {
-              onInputChange(`${path}.details.doc_issue_date`, e.target.value);
-            }
+            handleDateChange(
+              e.target.value,
+              path,
+              "section9_1.doc_issue_date",
+              onInputChange,
+              isValidValue
+            );
           }}
+          placeholder="MM/DD/YYYY"
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
         />
         <label className="inline-flex items-center ml-2">
           <input
             type="checkbox"
-            checked={info.is_issue_date_est || false}
+            checked={info?.is_issue_date_est?.value === "Yes"}
             onChange={(e) =>
               onInputChange(
-                `${path}.details.is_issue_date_est`,
-                e.target.checked
+                `${path}.section9_1.is_issue_date_est.value`,
+                e.target.checked ? "Yes" : "No"
               )
             }
             className="mr-2"
@@ -134,231 +205,17 @@ const RenderCitizenshipInfo: React.FC<FormProps> = ({
           Est.
         </label>
       </label>
+      
       <label className="block">
-        Issue City:
-        <input
-          type="text"
-          defaultValue={info.issue_city || ""}
-          onChange={(e) => {
-            if (isValidValue(`${path}.details.issue_city`, e.target.value)) {
-              onInputChange(`${path}.details.issue_city`, e.target.value);
-            }
-          }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
-      </label>
-      <label className="block">
-        Issued State:
-        <input
-          type="text"
-          defaultValue={info.issued_state || ""}
-          onChange={(e) => {
-            if (isValidValue(`${path}.details.issued_state`, e.target.value)) {
-              onInputChange(`${path}.details.issued_state`, e.target.value);
-            }
-          }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
-      </label>
-      <label className="block">
-        Issued Country:
-        <input
-          type="text"
-          defaultValue={info.issued_country || ""}
-          onChange={(e) => {
-            if (
-              isValidValue(`${path}.details.issued_country`, e.target.value)
-            ) {
-              onInputChange(`${path}.details.issued_country`, e.target.value);
-            }
-          }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
-      </label>
-      <label className="block">
-        Issued First Name:
-        <input
-          type="text"
-          defaultValue={info.issued_fname || ""}
-          onChange={(e) => {
-            if (isValidValue(`${path}.details.issued_fname`, e.target.value)) {
-              onInputChange(`${path}.details.issued_fname`, e.target.value);
-            }
-          }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
-      </label>
-      <label className="block">
-        Issued Last Name:
-        <input
-          type="text"
-          defaultValue={info.issued_lname || ""}
-          onChange={(e) => {
-            if (isValidValue(`${path}.details.issued_lname`, e.target.value)) {
-              onInputChange(`${path}.details.issued_lname`, e.target.value);
-            }
-          }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
-      </label>
-      <label className="block">
-        Issued Middle Name:
-        <input
-          type="text"
-          defaultValue={info.issued_mname || ""}
-          onChange={(e) => {
-            if (isValidValue(`${path}.details.issued_mname`, e.target.value)) {
-              onInputChange(`${path}.details.issued_mname`, e.target.value);
-            }
-          }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
-      </label>
-      <label className="block">
-        Issued Suffix:
-        <input
-          type="text"
-          defaultValue={info.issued_suffix || ""}
-          onChange={(e) => {
-            if (isValidValue(`${path}.details.issued_suffix`, e.target.value)) {
-              onInputChange(`${path}.details.issued_suffix`, e.target.value);
-            }
-          }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
-      </label>
-      <label className="block">
-        Citizenship Number:
-        <input
-          type="text"
-          defaultValue={info.citizenship_num || ""}
-          onChange={(e) => {
-            if (
-              isValidValue(`${path}.details.citizenship_num`, e.target.value)
-            ) {
-              onInputChange(`${path}.details.citizenship_num`, e.target.value);
-            }
-          }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
-      </label>
-      <label className="block">
-        Certificate Issue Date:
-        <input
-          type="text"
-          defaultValue={info.certificate_issue_date || ""}
-          onChange={(e) => {
-            if (
-              isValidValue(
-                `${path}.details.certificate_issue_date`,
-                e.target.value
-              )
-            ) {
-              onInputChange(
-                `${path}.details.certificate_issue_date`,
-                e.target.value
-              );
-            }
-          }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
+        Born on Military Installation:
         <label className="inline-flex items-center ml-2">
           <input
             type="checkbox"
-            checked={info.is_certificate_date_est || false}
+            checked={info?.is_born_installation?.value === "YES"}
             onChange={(e) =>
               onInputChange(
-                `${path}.details.is_certificate_date_est`,
-                e.target.checked
-              )
-            }
-            className="mr-2"
-          />
-          Est.
-        </label>
-      </label>
-      <label className="block">
-        Certificate First Name:
-        <input
-          type="text"
-          defaultValue={info.certificate_fname || ""}
-          onChange={(e) => {
-            if (
-              isValidValue(`${path}.details.certificate_fname`, e.target.value)
-            ) {
-              onInputChange(
-                `${path}.details.certificate_fname`,
-                e.target.value
-              );
-            }
-          }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
-      </label>
-      <label className="block">
-        Certificate Last Name:
-        <input
-          type="text"
-          defaultValue={info.certificate_lname || ""}
-          onChange={(e) => {
-            if (
-              isValidValue(`${path}.details.certificate_lname`, e.target.value)
-            ) {
-              onInputChange(
-                `${path}.details.certificate_lname`,
-                e.target.value
-              );
-            }
-          }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
-      </label>
-      <label className="block">
-        Certificate Middle Name:
-        <input
-          type="text"
-          defaultValue={info.certificate_mname || ""}
-          onChange={(e) => {
-            if (
-              isValidValue(`${path}.details.certificate_mname`, e.target.value)
-            ) {
-              onInputChange(
-                `${path}.details.certificate_mname`,
-                e.target.value
-              );
-            }
-          }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
-      </label>
-      <label className="block">
-        Certificate Suffix:
-        <input
-          type="text"
-          defaultValue={info.certificate_suffix || ""}
-          onChange={(e) => {
-            if (
-              isValidValue(`${path}.details.certificate_suffix`, e.target.value)
-            ) {
-              onInputChange(
-                `${path}.details.certificate_suffix`,
-                e.target.value
-              );
-            }
-          }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
-      </label>
-      <label className="block">
-        Born on Installation:
-        <label className="inline-flex items-center ml-2">
-          <input
-            type="checkbox"
-            checked={info.is_born_installation || false}
-            onChange={(e) =>
-              onInputChange(
-                `${path}.details.is_born_installation`,
-                e.target.checked
+                `${path}.section9_1.is_born_installation.value`,
+                e.target.checked ? "YES" : "NO (If NO, proceed to Section 10)"
               )
             }
             className="mr-2"
@@ -366,15 +223,56 @@ const RenderCitizenshipInfo: React.FC<FormProps> = ({
           Yes
         </label>
       </label>
-      {info.is_born_installation && (
+      
+      <label className="block mt-2">
+        Country of Issuance:
+        <select
+          value={info?.issued_country?.value || ""}
+          onChange={(e) => {
+            if (isValidValue(`${path}.section9_1.issued_country.value`, e.target.value)) {
+              onInputChange(`${path}.section9_1.issued_country.value`, e.target.value);
+            }
+          }}
+          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+        >
+          <option value="">Select country</option>
+          {Object.entries(CountryOptions).map(([key, value]) => (
+            <option key={key} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
+      </label>
+
+      <label className="block mt-2">
+        State of Issuance (if in U.S.):
+        <select
+          value={info?.issued_state?.value || ""}
+          onChange={(e) => {
+            if (isValidValue(`${path}.section9_1.issued_state.value`, e.target.value)) {
+              onInputChange(`${path}.section9_1.issued_state.value`, e.target.value);
+            }
+          }}
+          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+        >
+          <option value="">Select state</option>
+          {Object.entries(StateOptions).map(([key, value]) => (
+            <option key={key} value={key}>
+              {value}
+            </option>
+          ))}
+        </select>
+      </label>
+      
+      {info?.is_born_installation?.value === "YES" && (
         <label className="block">
           Base Name:
           <input
             type="text"
-            defaultValue={info.base_name || ""}
+            value={info?.base_name?.value || ""}
             onChange={(e) => {
-              if (isValidValue(`${path}.details.base_name`, e.target.value)) {
-                onInputChange(`${path}.details.base_name`, e.target.value);
+              if (isValidValue(`${path}.section9_1.base_name.value`, e.target.value)) {
+                onInputChange(`${path}.section9_1.base_name.value`, e.target.value);
               }
             }}
             className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -384,28 +282,37 @@ const RenderCitizenshipInfo: React.FC<FormProps> = ({
     </>
   );
 
-  const renderNaturalizedCitizenInfo = (info: NaturalizedCitizenInfo) => (
+  const renderNaturalizedCitizenInfo = (info: NaturalizedCitizenInfo) => {
+    // Null check on the info object
+    if (!info) return null;
+    
+    return (
     <>
       <label className="block">
-        U.S. Entry Date:
+        U.S. Entry Date (MM/DD/YYYY):
         <input
           type="text"
-          defaultValue={info.us_entry_date || ""}
+          value={info?.us_entry_date?.value || ""}
           onChange={(e) => {
-            if (isValidValue(`${path}.details.us_entry_date`, e.target.value)) {
-              onInputChange(`${path}.details.us_entry_date`, e.target.value);
-            }
+            handleDateChange(
+              e.target.value,
+              path,
+              "section9_2.us_entry_date",
+              onInputChange,
+              isValidValue
+            );
           }}
+          placeholder="MM/DD/YYYY"
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
         />
         <label className="inline-flex items-center ml-2">
           <input
             type="checkbox"
-            checked={info.is_us_entry_date_est}
+            checked={info?.is_us_entry_date_est?.value === "Yes"}
             onChange={(e) =>
               onInputChange(
-                `${path}.details.is_us_entry_date_est`,
-                e.target.checked
+                `${path}.section9_2.is_us_entry_date_est.value`,
+                e.target.checked ? "Yes" : "No"
               )
             }
             className="mr-2"
@@ -418,10 +325,10 @@ const RenderCitizenshipInfo: React.FC<FormProps> = ({
         Entry City:
         <input
           type="text"
-          defaultValue={info.entry_city || ""}
+          value={info?.entry_city?.value || ""}
           onChange={(e) => {
-            if (isValidValue(`${path}.details.entry_city`, e.target.value)) {
-              onInputChange(`${path}.details.entry_city`, e.target.value);
+            if (isValidValue(`${path}.section9_2.entry_city.value`, e.target.value)) {
+              onInputChange(`${path}.section9_2.entry_city.value`, e.target.value);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -430,94 +337,91 @@ const RenderCitizenshipInfo: React.FC<FormProps> = ({
 
       <label className="block">
         Entry State:
-        <input
-          type="text"
-          defaultValue={info.entry_state || ""}
+        <select
+          value={info?.entry_state?.value || ""}
           onChange={(e) => {
-            if (isValidValue(`${path}.details.entry_state`, e.target.value)) {
-              onInputChange(`${path}.details.entry_state`, e.target.value);
+            if (isValidValue(`${path}.section9_2.entry_state.value`, e.target.value)) {
+              onInputChange(`${path}.section9_2.entry_state.value`, e.target.value);
             }
           }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
+          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+        >
+          <option value="">Select state</option>
+          {Object.entries(StateOptions).map(([key, value]) => (
+            <option key={key} value={key}>
+              {value}
+            </option>
+          ))}
+        </select>
       </label>
 
       <label className="block">
         Country of Citizenship 1:
-        <input
-          type="text"
-          defaultValue={info.country_of_citizenship_1 || ""}
+        <select
+          value={info?.country_of_citizenship_1?.value || ""}
           onChange={(e) => {
-            if (
-              isValidValue(
-                `${path}.details.country_of_citizenship_1`,
-                e.target.value
-              )
-            ) {
-              onInputChange(
-                `${path}.details.country_of_citizenship_1`,
-                e.target.value
-              );
+            if (isValidValue(`${path}.section9_2.country_of_citizenship_1.value`, e.target.value)) {
+              onInputChange(`${path}.section9_2.country_of_citizenship_1.value`, e.target.value);
             }
           }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
+          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+        >
+          <option value="">Select country</option>
+          {Object.entries(CountryOptions).map(([key, value]) => (
+            <option key={key} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
       </label>
 
       <label className="block">
         Country of Citizenship 2:
-        <input
-          type="text"
-          defaultValue={info.country_of_citizenship_2 || ""}
+        <select
+          value={info?.country_of_citizenship_2?.value || ""}
           onChange={(e) => {
-            if (
-              isValidValue(
-                `${path}.details.country_of_citizenship_2`,
-                e.target.value
-              )
-            ) {
-              onInputChange(
-                `${path}.details.country_of_citizenship_2`,
-                e.target.value
-              );
+            if (isValidValue(`${path}.section9_2.country_of_citizenship_2.value`, e.target.value)) {
+              onInputChange(`${path}.section9_2.country_of_citizenship_2.value`, e.target.value);
             }
           }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
+          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+        >
+          <option value="">Select country</option>
+          {Object.entries(CountryOptions).map(([key, value]) => (
+            <option key={key} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
       </label>
 
       <label className="block">
         Has Alien Registration:
-        <input
-          type="checkbox"
-          checked={info.has_alien_registration || false}
-          onChange={(e) =>
-            onInputChange(
-              `${path}.details.has_alien_registration`,
-              e.target.checked
-            )
-          }
-          className="mr-2"
-        />
+        <label className="inline-flex items-center ml-2">
+          <input
+            type="checkbox"
+            checked={info?.has_alien_registration?.value === "YES"}
+            onChange={(e) =>
+              onInputChange(
+                `${path}.section9_2.has_alien_registration.value`,
+                e.target.checked ? "YES" : "NO"
+              )
+            }
+            className="mr-2"
+          />
+          Yes
+        </label>
       </label>
 
-      {info.has_alien_registration && (
+      {info?.has_alien_registration?.value === "YES" && (
         <label className="block">
           Alien Registration Number:
           <input
             type="text"
-            defaultValue={info.alien_registration_num || ""}
+            value={info?.alien_registration_num?.value || ""}
             onChange={(e) => {
-              if (
-                isValidValue(
-                  `${path}.details.alien_registration_num`,
-                  e.target.value
-                )
-              ) {
-                onInputChange(
-                  `${path}.details.alien_registration_num`,
-                  e.target.value
-                );
+              if (isValidValue(`${path}.section9_2.alien_registration_num.value`, e.target.value)) {
+                onInputChange(`${path}.section9_2.alien_registration_num.value`, e.target.value);
               }
             }}
             className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -529,15 +433,10 @@ const RenderCitizenshipInfo: React.FC<FormProps> = ({
         Naturalization Number:
         <input
           type="text"
-          defaultValue={info.naturalization_num || ""}
+          value={info?.naturalization_num?.value || ""}
           onChange={(e) => {
-            if (
-              isValidValue(`${path}.details.naturalization_num`, e.target.value)
-            ) {
-              onInputChange(
-                `${path}.details.naturalization_num`,
-                e.target.value
-              );
+            if (isValidValue(`${path}.section9_2.naturalization_num.value`, e.target.value)) {
+              onInputChange(`${path}.section9_2.naturalization_num.value`, e.target.value);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -545,33 +444,30 @@ const RenderCitizenshipInfo: React.FC<FormProps> = ({
       </label>
 
       <label className="block">
-        Naturalization Issue Date:
+        Naturalization Issue Date (MM/DD/YYYY):
         <input
           type="text"
-          defaultValue={info.naturalization_issue_date || ""}
+          value={info?.naturalization_issue_date?.value || ""}
           onChange={(e) => {
-            if (
-              isValidValue(
-                `${path}.details.naturalization_issue_date`,
-                e.target.value
-              )
-            ) {
-              onInputChange(
-                `${path}.details.naturalization_issue_date`,
-                e.target.value
-              );
-            }
+            handleDateChange(
+              e.target.value,
+              path,
+              "section9_2.naturalization_issue_date",
+              onInputChange,
+              isValidValue
+            );
           }}
+          placeholder="MM/DD/YYYY"
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
         />
         <label className="inline-flex items-center ml-2">
           <input
             type="checkbox"
-            checked={info.is_natural_issue_est}
+            checked={info?.is_natural_issue_est?.value === "Yes"}
             onChange={(e) =>
               onInputChange(
-                `${path}.details.is_natural_issue_est`,
-                e.target.checked
+                `${path}.section9_2.is_natural_issue_est.value`,
+                e.target.checked ? "Yes" : "No"
               )
             }
             className="mr-2"
@@ -581,18 +477,32 @@ const RenderCitizenshipInfo: React.FC<FormProps> = ({
       </label>
 
       <label className="block">
-        Court Issued Date:
+        Court Issued Date (MM/DD/YYYY):
         <input
           type="text"
-          defaultValue={info.court_issued_date || ""}
+          value={info?.court_issued_date?.value || ""}
           onChange={(e) => {
-            if (
-              isValidValue(`${path}.details.court_issued_date`, e.target.value)
-            ) {
-              onInputChange(
-                `${path}.details.court_issued_date`,
-                e.target.value
-              );
+            handleDateChange(
+              e.target.value,
+              path,
+              "section9_2.court_issued_date",
+              onInputChange,
+              isValidValue
+            );
+          }}
+          placeholder="MM/DD/YYYY"
+          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
+        />
+      </label>
+
+      <label className="block">
+        Court Name:
+        <input
+          type="text"
+          value={info?.court_name?.value || ""}
+          onChange={(e) => {
+            if (isValidValue(`${path}.section9_2.court_name.value`, e.target.value)) {
+              onInputChange(`${path}.section9_2.court_name.value`, e.target.value);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -600,138 +510,107 @@ const RenderCitizenshipInfo: React.FC<FormProps> = ({
       </label>
 
       <label className="block">
-        Court Street:
+        Court Address:
         <input
           type="text"
-          defaultValue={info.court_street || ""}
+          value={info?.court_street?.value || ""}
           onChange={(e) => {
-            if (isValidValue(`${path}.details.court_street`, e.target.value)) {
-              onInputChange(`${path}.details.court_street`, e.target.value);
+            if (isValidValue(`${path}.section9_2.court_street.value`, e.target.value)) {
+              onInputChange(`${path}.section9_2.court_street.value`, e.target.value);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
+          placeholder="Street"
         />
+        <div className="grid grid-cols-3 gap-2 mt-1">
+          <input
+            type="text"
+            value={info?.court_city?.value || ""}
+            onChange={(e) => {
+              if (isValidValue(`${path}.section9_2.court_city.value`, e.target.value)) {
+                onInputChange(`${path}.section9_2.court_city.value`, e.target.value);
+              }
+            }}
+            className="p-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+            placeholder="City"
+          />
+          <select
+            value={info?.court_state?.value || ""}
+            onChange={(e) => {
+              if (isValidValue(`${path}.section9_2.court_state.value`, e.target.value)) {
+                onInputChange(`${path}.section9_2.court_state.value`, e.target.value);
+              }
+            }}
+            className="p-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+          >
+            <option value="">Select state</option>
+            {Object.entries(StateOptions).map(([key, value]) => (
+              <option key={key} value={key}>
+                {value}
+              </option>
+            ))}
+          </select>
+          <input
+            type="text"
+            value={info?.court_zip?.value || ""}
+            onChange={(e) => {
+              if (isValidValue(`${path}.section9_2.court_zip.value`, e.target.value)) {
+                onInputChange(`${path}.section9_2.court_zip.value`, e.target.value);
+              }
+            }}
+            className="p-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+            placeholder="ZIP Code"
+          />
+        </div>
       </label>
 
-      <label className="block">
-        Court City:
-        <input
-          type="text"
-          defaultValue={info.court_city || ""}
-          onChange={(e) => {
-            if (isValidValue(`${path}.details.court_city`, e.target.value)) {
-              onInputChange(`${path}.details.court_city`, e.target.value);
-            }
-          }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
-      </label>
-
-      <label className="block">
-        Court State:
-        <input
-          type="text"
-          defaultValue={info.court_state || ""}
-          onChange={(e) => {
-            if (isValidValue(`${path}.details.court_state`, e.target.value)) {
-              onInputChange(`${path}.details.court_state`, e.target.value);
-            }
-          }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
-      </label>
-
-      <label className="block">
-        Court Zip Code:
-        <input
-          type="text"
-          defaultValue={info.court_zip || ""}
-          onChange={(e) => {
-            if (isValidValue(`${path}.details.court_zip`, e.target.value)) {
-              onInputChange(`${path}.details.court_zip`, e.target.value);
-            }
-          }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
-      </label>
-
-      <label className="block">
-        Court Issued First Name:
-        <input
-          type="text"
-          defaultValue={info.court_issued_fname || ""}
-          onChange={(e) => {
-            if (
-              isValidValue(`${path}.details.court_issued_fname`, e.target.value)
-            ) {
-              onInputChange(
-                `${path}.details.court_issued_fname`,
-                e.target.value
-              );
-            }
-          }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
-      </label>
-
-      <label className="block">
-        Court Issued Last Name:
-        <input
-          type="text"
-          defaultValue={info.court_issued_lname || ""}
-          onChange={(e) => {
-            if (
-              isValidValue(`${path}.details.court_issued_lname`, e.target.value)
-            ) {
-              onInputChange(
-                `${path}.details.court_issued_lname`,
-                e.target.value
-              );
-            }
-          }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
-      </label>
-
-      <label className="block">
-        Court Issued Middle Name:
-        <input
-          type="text"
-          defaultValue={info.court_issued_mname || ""}
-          onChange={(e) => {
-            if (
-              isValidValue(`${path}.details.court_issued_mname`, e.target.value)
-            ) {
-              onInputChange(
-                `${path}.details.court_issued_mname`,
-                e.target.value
-              );
-            }
-          }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
-      </label>
-
-      <label className="block">
-        Court Issued Suffix:
+      <label className="block mt-2">
+        Court Document Name Information:
+        <div className="grid grid-cols-3 gap-2 mt-1">
+          <input
+            type="text"
+            value={info?.court_issued_fname?.value || ""}
+            onChange={(e) => {
+              if (isValidValue(`${path}.section9_2.court_issued_fname.value`, e.target.value)) {
+                onInputChange(`${path}.section9_2.court_issued_fname.value`, e.target.value);
+              }
+            }}
+            className="p-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+            placeholder="First Name"
+          />
+          <input
+            type="text"
+            value={info?.court_issued_mname?.value || ""}
+            onChange={(e) => {
+              if (isValidValue(`${path}.section9_2.court_issued_mname.value`, e.target.value)) {
+                onInputChange(`${path}.section9_2.court_issued_mname.value`, e.target.value);
+              }
+            }}
+            className="p-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+            placeholder="Middle Name"
+          />
+          <input
+            type="text"
+            value={info?.court_issued_lname?.value || ""}
+            onChange={(e) => {
+              if (isValidValue(`${path}.section9_2.court_issued_lname.value`, e.target.value)) {
+                onInputChange(`${path}.section9_2.court_issued_lname.value`, e.target.value);
+              }
+            }}
+            className="p-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+            placeholder="Last Name"
+          />
+        </div>
         <select
-          name={`${path}.details.court_issued_suffix`}
-          defaultValue={info.court_issued_suffix}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
+          value={info?.court_issued_suffix?.value || ""}
           onChange={(e) => {
-            if (
-              isValidValue(
-                `${path}.details.court_issued_suffix`,
-                e.target.value
-              )
-            ) {
-              onInputChange(
-                `${path}.details.court_issued_suffix`,
-                e.target.value
-              );
+            if (isValidValue(`${path}.section9_2.court_issued_suffix.value`, e.target.value)) {
+              onInputChange(`${path}.section9_2.court_issued_suffix.value`, e.target.value);
             }
           }}
+          className="mt-1 p-2 w-1/3 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
         >
+          <option value="">Select suffix</option>
           {Object.entries(SuffixOptions).map(([key, value]) => (
             <option key={key} value={value}>
               {value}
@@ -740,175 +619,135 @@ const RenderCitizenshipInfo: React.FC<FormProps> = ({
         </select>
       </label>
 
-      <label className="block">
-        Basis of Naturalization:
+      <label className="block mt-2">
         <input
-          type="text"
-          defaultValue={info.basis_of_naturalization || ""}
-          onChange={(e) => {
-            if (
-              isValidValue(
-                `${path}.details.basis_of_naturalization`,
-                e.target.value
-              )
-            ) {
-              onInputChange(
-                `${path}.details.basis_of_naturalization`,
-                e.target.value
-              );
-            }
-          }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
+          type="checkbox"
+          checked={info?.is_other?.value === "Yes"}
+          onChange={(e) =>
+            onInputChange(
+              `${path}.section9_2.is_other.value`,
+              e.target.checked ? "Yes" : "No"
+            )
+          }
+          className="mr-2"
         />
+        Other Basis of Naturalization
       </label>
 
-      <label className="block">
-        Other Basis Detail:
-        <input
-          type="text"
-          defaultValue={info.other_basis_detail || ""}
-          onChange={(e) => {
-            if (
-              isValidValue(`${path}.details.other_basis_detail`, e.target.value)
-            ) {
-              onInputChange(
-                `${path}.details.other_basis_detail`,
-                e.target.value
-              );
-            }
-          }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
-      </label>
+      {info?.is_other?.value === "Yes" && (
+        <label className="block">
+          Explanation:
+          <input
+            type="text"
+            value={info?.other_basis_detail?.value || ""}
+            onChange={(e) => {
+              if (isValidValue(`${path}.section9_2.other_basis_detail.value`, e.target.value)) {
+                onInputChange(`${path}.section9_2.other_basis_detail.value`, e.target.value);
+              }
+            }}
+            className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
+          />
+        </label>
+      )}
     </>
   );
+  };
 
-  const renderDerivedCitizenInfo = (info: DerivedCitizenInfo) => (
+  const renderDerivedCitizenInfo = (info: DerivedCitizenInfo) => {
+    // Null check on the info object
+    if (!info) return null;
+    
+    return (
     <>
-      {info.alien_registration_num !== undefined && (
         <label className="block">
           Alien Registration Number:
           <input
             type="text"
-            defaultValue={info.alien_registration_num || ""}
+          value={info?.alien_registration_num?.value || ""}
             onChange={(e) => {
-              if (
-                isValidValue(
-                  `${path}.details.alien_registration_num`,
-                  e.target.value
-                )
-              ) {
-                onInputChange(
-                  `${path}.details.alien_registration_num`,
-                  e.target.value
-                );
+            if (isValidValue(`${path}.section9_3.alien_registration_num.value`, e.target.value)) {
+              onInputChange(`${path}.section9_3.alien_registration_num.value`, e.target.value);
               }
             }}
             className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
           />
         </label>
-      )}
 
-      {info.permanent_resident_num !== undefined && (
         <label className="block">
-          Permanent Resident Number:
+        Permanent Resident Card Number:
           <input
             type="text"
-            defaultValue={info.permanent_resident_num || ""}
+          value={info?.permanent_resident_num?.value || ""}
             onChange={(e) => {
-              if (
-                isValidValue(
-                  `${path}.details.permanent_resident_num`,
-                  e.target.value
-                )
-              ) {
-                onInputChange(
-                  `${path}.details.permanent_resident_num`,
-                  e.target.value
-                );
+            if (isValidValue(`${path}.section9_3.permanent_resident_num.value`, e.target.value)) {
+              onInputChange(`${path}.section9_3.permanent_resident_num.value`, e.target.value);
               }
             }}
             className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
           />
         </label>
-      )}
 
       <label className="block">
         Certificate of Citizenship Number:
         <input
           type="text"
-          defaultValue={info.certificate_of_citizenship_num || ""}
+          value={info?.certificate_of_citizenship_num?.value || ""}
           onChange={(e) => {
-            if (
-              isValidValue(
-                `${path}.details.certificate_of_citizenship_num`,
-                e.target.value
-              )
-            ) {
-              onInputChange(
-                `${path}.details.certificate_of_citizenship_num`,
-                e.target.value
-              );
+            if (isValidValue(`${path}.section9_3.certificate_of_citizenship_num.value`, e.target.value)) {
+              onInputChange(`${path}.section9_3.certificate_of_citizenship_num.value`, e.target.value);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
         />
       </label>
 
-      <label className="block">
-        Document First Name:
+      <label className="block mt-2">
+        Document Name Information:
+        <div className="grid grid-cols-3 gap-2 mt-1">
         <input
           type="text"
-          defaultValue={info.doc_fname || ""}
+            value={info?.doc_fname?.value || ""}
           onChange={(e) => {
-            if (isValidValue(`${path}.details.doc_fname`, e.target.value)) {
-              onInputChange(`${path}.details.doc_fname`, e.target.value);
+              if (isValidValue(`${path}.section9_3.doc_fname.value`, e.target.value)) {
+                onInputChange(`${path}.section9_3.doc_fname.value`, e.target.value);
             }
           }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
+            className="p-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+            placeholder="First Name"
         />
-      </label>
-
-      <label className="block">
-        Document Last Name:
         <input
           type="text"
-          defaultValue={info.doc_lname || ""}
+            value={info?.doc_mname?.value || ""}
           onChange={(e) => {
-            if (isValidValue(`${path}.details.doc_lname`, e.target.value)) {
-              onInputChange(`${path}.details.doc_lname`, e.target.value);
+              if (isValidValue(`${path}.section9_3.doc_mname.value`, e.target.value)) {
+                onInputChange(`${path}.section9_3.doc_mname.value`, e.target.value);
             }
           }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
+            className="p-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+            placeholder="Middle Name"
         />
-      </label>
-
-      <label className="block">
-        Document Middle Name:
         <input
           type="text"
-          defaultValue={info.doc_mname || ""}
+            value={info?.doc_lname?.value || ""}
           onChange={(e) => {
-            if (isValidValue(`${path}.details.doc_mname`, e.target.value)) {
-              onInputChange(`${path}.details.doc_mname`, e.target.value);
+              if (isValidValue(`${path}.section9_3.doc_lname.value`, e.target.value)) {
+                onInputChange(`${path}.section9_3.doc_lname.value`, e.target.value);
             }
           }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
+            className="p-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+            placeholder="Last Name"
         />
-      </label>
-
-      <label className="block">
-        Document Suffix:
+        </div>
         <select
-          name={`${path}.details.doc_suffix`}
-          defaultValue={info.doc_suffix}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
+          value={info?.doc_suffix?.value || ""}
           onChange={(e) => {
-            if (isValidValue(`${path}.details.doc_suffix`, e.target.value)) {
-              onInputChange(`${path}.details.doc_suffix`, e.target.value);
+            if (isValidValue(`${path}.section9_3.doc_suffix.value`, e.target.value)) {
+              onInputChange(`${path}.section9_3.doc_suffix.value`, e.target.value);
             }
           }}
+          className="mt-1 p-2 w-1/3 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
         >
+          <option value="">Select suffix</option>
           {Object.entries(SuffixOptions).map(([key, value]) => (
             <option key={key} value={value}>
               {value}
@@ -918,25 +757,31 @@ const RenderCitizenshipInfo: React.FC<FormProps> = ({
       </label>
 
       <label className="block">
-        Document Issue Date:
+        Document Issue Date (MM/DD/YYYY):
         <input
           type="text"
-          defaultValue={info.doc_issue_date || ""}
+          value={info?.doc_issue_date?.value || ""}
           onChange={(e) => {
-            if (
-              isValidValue(`${path}.details.doc_issue_date`, e.target.value)
-            ) {
-              onInputChange(`${path}.details.doc_issue_date`, e.target.value);
-            }
+            handleDateChange(
+              e.target.value,
+              path,
+              "section9_3.doc_issue_date",
+              onInputChange,
+              isValidValue
+            );
           }}
+          placeholder="MM/DD/YYYY"
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
         />
         <label className="inline-flex items-center ml-2">
           <input
             type="checkbox"
-            checked={info.is_doc_date_est}
+            checked={info?.is_doc_date_est?.value === "Yes"}
             onChange={(e) =>
-              onInputChange(`${path}.details.is_doc_date_est`, e.target.checked)
+              onInputChange(
+                `${path}.section9_3.is_doc_date_est.value`,
+                e.target.checked ? "Yes" : "No"
+              )
             }
             className="mr-2"
           />
@@ -944,69 +789,69 @@ const RenderCitizenshipInfo: React.FC<FormProps> = ({
         </label>
       </label>
 
-      <label className="block">
-        Basis of Citizenship:
-        <select
-          name={`${path}.details.basis_of_citizenship`}
-          defaultValue={info.basis_of_citizenship}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-          onChange={(e) => {
-            if (
-              isValidValue(
-                `${path}.details.basis_of_citizenship`,
-                e.target.value
-              )
-            ) {
+      <label className="block mt-2">
+        <input
+          type="checkbox"
+          checked={info?.is_other?.value === "Yes"}
+          onChange={(e) =>
               onInputChange(
-                `${path}.details.basis_of_citizenship`,
-                e.target.value
-              );
-            }
-          }}
-        >
-          <option value="other">Other</option>
-          <option value="byOp">By Operation of Law</option>
-        </select>
+              `${path}.section9_3.is_other.value`,
+              e.target.checked ? "Yes" : "No"
+            )
+          }
+          className="mr-2"
+        />
+        Other Basis of Citizenship
       </label>
 
-      {info.basis_of_citizenship === "other" && (
+      {info?.is_other?.value === "Yes" && (
         <label className="block">
-          Basis of Citizenship Explanation:
+          Explanation:
           <input
             type="text"
-            defaultValue={info.basis_of_citizenship_explanation || ""}
+            value={info?.basis_of_citizenship_explanation?.value || ""}
             onChange={(e) => {
-              if (
-                isValidValue(
-                  `${path}.details.basis_of_citizenship_explanation`,
-                  e.target.value
-                )
-              ) {
-                onInputChange(
-                  `${path}.details.basis_of_citizenship_explanation`,
-                  e.target.value
-                );
+              if (isValidValue(`${path}.section9_3.basis_of_citizenship_explanation.value`, e.target.value)) {
+                onInputChange(`${path}.section9_3.basis_of_citizenship_explanation.value`, e.target.value);
               }
             }}
             className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
           />
         </label>
       )}
+
+      <label className="block mt-2">
+        <input
+          type="checkbox"
+          checked={info?.is_basedOn_naturalization?.value === "Yes"}
+          onChange={(e) =>
+            onInputChange(
+              `${path}.section9_3.is_basedOn_naturalization.value`,
+              e.target.checked ? "Yes" : "No"
+            )
+          }
+          className="mr-2"
+        />
+        Based on parent's naturalization
+      </label>
     </>
   );
+  };
 
-  const renderNonCitizenInfo = (info: NonCitizenInfo) => (
+  const renderNonCitizenInfo = (info: NonCitizenInfo) => {
+    // Null check on the info object
+    if (!info) return null;
+    
+    return (
     <>
       <label className="block">
         Residence Status:
         <input
           type="text"
-          defaultValue={info.residence_status || ""}
+          value={info?.residence_status?.value || ""}
           onChange={(e) => {
-            if (
-              isValidValue(`${path}.details.residence_status`, e.target.value)
-            ) {
-              onInputChange(`${path}.details.residence_status`, e.target.value);
+            if (isValidValue(`${path}.section9_4.residence_status.value`, e.target.value)) {
+              onInputChange(`${path}.section9_4.residence_status.value`, e.target.value);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -1014,25 +859,30 @@ const RenderCitizenshipInfo: React.FC<FormProps> = ({
       </label>
 
       <label className="block">
-        U.S. Entry Date:
+        U.S. Entry Date (MM/DD/YYYY):
         <input
           type="text"
-          defaultValue={info.us_entry_date || ""}
+          value={info?.us_entry_date?.value || ""}
           onChange={(e) => {
-            if (isValidValue(`${path}.details.us_entry_date`, e.target.value)) {
-              onInputChange(`${path}.details.us_entry_date`, e.target.value);
-            }
+            handleDateChange(
+              e.target.value,
+              path,
+              "section9_4.us_entry_date",
+              onInputChange,
+              isValidValue
+            );
           }}
+          placeholder="MM/DD/YYYY"
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
         />
         <label className="inline-flex items-center ml-2">
           <input
             type="checkbox"
-            checked={info.is_entry_date_est}
+            checked={info?.is_entry_date_est?.value === "Yes"}
             onChange={(e) =>
               onInputChange(
-                `${path}.details.is_entry_date_est`,
-                e.target.checked
+                `${path}.section9_4.is_entry_date_est.value`,
+                e.target.checked ? "Yes" : "No"
               )
             }
             className="mr-2"
@@ -1043,56 +893,52 @@ const RenderCitizenshipInfo: React.FC<FormProps> = ({
 
       <label className="block">
         Country of Citizenship 1:
-        <input
-          type="text"
-          defaultValue={info.country_of_citizenship1 || ""}
+        <select
+          value={info?.country_of_citizenship1?.value || ""}
           onChange={(e) => {
-            if (
-              isValidValue(
-                `${path}.details.country_of_citizenship1`,
-                e.target.value
-              )
-            ) {
-              onInputChange(
-                `${path}.details.country_of_citizenship1`,
-                e.target.value
-              );
+            if (isValidValue(`${path}.section9_4.country_of_citizenship1.value`, e.target.value)) {
+              onInputChange(`${path}.section9_4.country_of_citizenship1.value`, e.target.value);
             }
           }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
+          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+        >
+          <option value="">Select country</option>
+          {Object.entries(CountryOptions).map(([key, value]) => (
+            <option key={key} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
       </label>
 
       <label className="block">
         Country of Citizenship 2:
-        <input
-          type="text"
-          defaultValue={info.country_of_citizenship2 || ""}
+        <select
+          value={info?.country_of_citizenship2?.value || ""}
           onChange={(e) => {
-            if (
-              isValidValue(
-                `${path}.details.country_of_citizenship2`,
-                e.target.value
-              )
-            ) {
-              onInputChange(
-                `${path}.details.country_of_citizenship2`,
-                e.target.value
-              );
+            if (isValidValue(`${path}.section9_4.country_of_citizenship2.value`, e.target.value)) {
+              onInputChange(`${path}.section9_4.country_of_citizenship2.value`, e.target.value);
             }
           }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
+          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+        >
+          <option value="">Select country</option>
+          {Object.entries(CountryOptions).map(([key, value]) => (
+            <option key={key} value={value}>
+              {value}
+            </option>
+          ))}
+        </select>
       </label>
 
       <label className="block">
         Entry City:
         <input
           type="text"
-          defaultValue={info.entry_city || ""}
+          value={info?.entry_city?.value || ""}
           onChange={(e) => {
-            if (isValidValue(`${path}.details.entry_city`, e.target.value)) {
-              onInputChange(`${path}.details.entry_city`, e.target.value);
+            if (isValidValue(`${path}.section9_4.entry_city.value`, e.target.value)) {
+              onInputChange(`${path}.section9_4.entry_city.value`, e.target.value);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -1101,34 +947,32 @@ const RenderCitizenshipInfo: React.FC<FormProps> = ({
 
       <label className="block">
         Entry State:
-        <input
-          type="text"
-          defaultValue={info.entry_state || ""}
+        <select
+          value={info?.entry_state?.value || ""}
           onChange={(e) => {
-            if (isValidValue(`${path}.details.entry_state`, e.target.value)) {
-              onInputChange(`${path}.details.entry_state`, e.target.value);
+            if (isValidValue(`${path}.section9_4.entry_state.value`, e.target.value)) {
+              onInputChange(`${path}.section9_4.entry_state.value`, e.target.value);
             }
           }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
+          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+        >
+          <option value="">Select state</option>
+          {Object.entries(StateOptions).map(([key, value]) => (
+            <option key={key} value={key}>
+              {value}
+            </option>
+          ))}
+        </select>
       </label>
 
       <label className="block">
         Alien Registration Number:
         <input
           type="text"
-          defaultValue={info.alien_registration_num || ""}
+          value={info?.alien_registration_num?.value || ""}
           onChange={(e) => {
-            if (
-              isValidValue(
-                `${path}.details.alien_registration_num`,
-                e.target.value
-              )
-            ) {
-              onInputChange(
-                `${path}.details.alien_registration_num`,
-                e.target.value
-              );
+            if (isValidValue(`${path}.section9_4.alien_registration_num.value`, e.target.value)) {
+              onInputChange(`${path}.section9_4.alien_registration_num.value`, e.target.value);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -1136,27 +980,30 @@ const RenderCitizenshipInfo: React.FC<FormProps> = ({
       </label>
 
       <label className="block">
-        Expiration Date:
+        Expiration Date (MM/DD/YYYY):
         <input
           type="text"
-          defaultValue={info.expiration_date || ""}
+          value={info?.expiration_date?.value || ""}
           onChange={(e) => {
-            if (
-              isValidValue(`${path}.details.expiration_date`, e.target.value)
-            ) {
-              onInputChange(`${path}.details.expiration_date`, e.target.value);
-            }
+            handleDateChange(
+              e.target.value,
+              path,
+              "section9_4.expiration_date",
+              onInputChange,
+              isValidValue
+            );
           }}
+          placeholder="MM/DD/YYYY"
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
         />
         <label className="inline-flex items-center ml-2">
           <input
             type="checkbox"
-            checked={info.is_expiration_est}
+            checked={info?.is_expiration_est?.value === "Yes"}
             onChange={(e) =>
               onInputChange(
-                `${path}.details.is_expiration_est`,
-                e.target.checked
+                `${path}.section9_4.is_expiration_est.value`,
+                e.target.checked ? "Yes" : "No"
               )
             }
             className="mr-2"
@@ -1166,35 +1013,34 @@ const RenderCitizenshipInfo: React.FC<FormProps> = ({
       </label>
 
       <label className="block">
-        Document Issued:
+        Document Type:
         <select
-          name={`${path}.details.document_issued`}
-          defaultValue={info.document_issued}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
+          value={info?.document_issued?.value || ""}
           onChange={(e) => {
-            if (
-              isValidValue(`${path}.details.document_issued`, e.target.value)
-            ) {
-              onInputChange(`${path}.details.document_issued`, e.target.value);
+            if (isValidValue(`${path}.section9_4.document_issued.value`, e.target.value)) {
+              onInputChange(`${path}.section9_4.document_issued.value`, e.target.value);
             }
           }}
+          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
         >
-          <option value="I-94">I-94</option>
-          <option value="U.S. Visa">U.S. Visa</option>
-          <option value="I-20">I-20</option>
-          <option value="DS-2019">DS-2019</option>
-          <option value="Other">Other</option>
+          <option value="">Select document type</option>
+          <option value="1">I-94</option>
+          <option value="2">U.S. Visa (red foil number)</option>
+          <option value="3">I-20</option>
+          <option value="4">DS-2019</option>
+          <option value="5">Other (Provide explanation)</option>
         </select>
       </label>
-      {info.document_issued === "Other" && (
+      
+      {info?.document_issued?.value === "5" && (
         <label className="block">
-          Other Document:
+          Other Document Explanation:
           <input
             type="text"
-            defaultValue={info.other_doc || ""}
+            value={info?.other_doc?.value || ""}
             onChange={(e) => {
-              if (isValidValue(`${path}.details.other_doc`, e.target.value)) {
-                onInputChange(`${path}.details.other_doc`, e.target.value);
+              if (isValidValue(`${path}.section9_4.other_doc.value`, e.target.value)) {
+                onInputChange(`${path}.section9_4.other_doc.value`, e.target.value);
               }
             }}
             className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -1206,10 +1052,10 @@ const RenderCitizenshipInfo: React.FC<FormProps> = ({
         Document Number:
         <input
           type="text"
-          defaultValue={info.doc_num || ""}
+          value={info?.doc_num?.value || ""}
           onChange={(e) => {
-            if (isValidValue(`${path}.details.doc_num`, e.target.value)) {
-              onInputChange(`${path}.details.doc_num`, e.target.value);
+            if (isValidValue(`${path}.section9_4.doc_num.value`, e.target.value)) {
+              onInputChange(`${path}.section9_4.doc_num.value`, e.target.value);
             }
           }}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
@@ -1217,54 +1063,30 @@ const RenderCitizenshipInfo: React.FC<FormProps> = ({
       </label>
 
       <label className="block">
-        Document Issue Date:
+        Document Issue Date (MM/DD/YYYY):
         <input
           type="text"
-          defaultValue={info.doc_issued_date || ""}
+          value={info?.doc_issued_date?.value || ""}
           onChange={(e) => {
-            if (
-              isValidValue(`${path}.details.doc_issued_date`, e.target.value)
-            ) {
-              onInputChange(`${path}.details.doc_issued_date`, e.target.value);
-            }
+            handleDateChange(
+              e.target.value,
+              path,
+              "section9_4.doc_issued_date",
+              onInputChange,
+              isValidValue
+            );
           }}
+          placeholder="MM/DD/YYYY"
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
         />
         <label className="inline-flex items-center ml-2">
           <input
             type="checkbox"
-            checked={info.is_doc_date_est}
-            onChange={(e) =>
-              onInputChange(`${path}.details.is_doc_date_est`, e.target.checked)
-            }
-            className="mr-2"
-          />
-          Est.
-        </label>
-      </label>
-
-      <label className="block">
-        Document Expiration Date:
-        <input
-          type="text"
-          defaultValue={info.doc_expire_date || ""}
-          onChange={(e) => {
-            if (
-              isValidValue(`${path}.details.doc_expire_date`, e.target.value)
-            ) {
-              onInputChange(`${path}.details.doc_expire_date`, e.target.value);
-            }
-          }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
-        />
-        <label className="inline-flex items-center ml-2">
-          <input
-            type="checkbox"
-            checked={info.is_doc_expiration_est}
+            checked={info?.is_doc_date_est?.value === "Yes"}
             onChange={(e) =>
               onInputChange(
-                `${path}.details.is_doc_expiration_est`,
-                e.target.checked
+                `${path}.section9_4.is_doc_date_est.value`,
+                e.target.checked ? "Yes" : "No"
               )
             }
             className="mr-2"
@@ -1274,59 +1096,85 @@ const RenderCitizenshipInfo: React.FC<FormProps> = ({
       </label>
 
       <label className="block">
-        Document First Name:
+        Document Expiration Date (MM/DD/YYYY):
         <input
           type="text"
-          defaultValue={info.doc_fname || ""}
+          value={info?.doc_expire_date?.value || ""}
           onChange={(e) => {
-            if (isValidValue(`${path}.details.doc_fname`, e.target.value)) {
-              onInputChange(`${path}.details.doc_fname`, e.target.value);
-            }
+            handleDateChange(
+              e.target.value,
+              path,
+              "section9_4.doc_expire_date",
+              onInputChange,
+              isValidValue
+            );
           }}
+          placeholder="MM/DD/YYYY"
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
         />
+        <label className="inline-flex items-center ml-2">
+          <input
+            type="checkbox"
+            checked={info?.is_doc_expiration_est?.value === "Yes"}
+            onChange={(e) =>
+              onInputChange(
+                `${path}.section9_4.is_doc_expiration_est.value`,
+                e.target.checked ? "Yes" : "No"
+              )
+            }
+            className="mr-2"
+          />
+          Est.
+        </label>
       </label>
 
-      <label className="block">
-        Document Last Name:
+      <label className="block mt-2">
+        Document Name Information:
+        <div className="grid grid-cols-3 gap-2 mt-1">
         <input
           type="text"
-          defaultValue={info.doc_lname || ""}
+            value={info?.doc_fname?.value || ""}
           onChange={(e) => {
-            if (isValidValue(`${path}.details.doc_lname`, e.target.value)) {
-              onInputChange(`${path}.details.doc_lname`, e.target.value);
+              if (isValidValue(`${path}.section9_4.doc_fname.value`, e.target.value)) {
+                onInputChange(`${path}.section9_4.doc_fname.value`, e.target.value);
             }
           }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
+            className="p-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+            placeholder="First Name"
         />
-      </label>
-
-      <label className="block">
-        Document Middle Name:
         <input
           type="text"
-          defaultValue={info.doc_mname || ""}
+            value={info?.doc_mname?.value || ""}
           onChange={(e) => {
-            if (isValidValue(`${path}.details.doc_mname`, e.target.value)) {
-              onInputChange(`${path}.details.doc_mname`, e.target.value);
+              if (isValidValue(`${path}.section9_4.doc_mname.value`, e.target.value)) {
+                onInputChange(`${path}.section9_4.doc_mname.value`, e.target.value);
             }
           }}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
+            className="p-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+            placeholder="Middle Name"
         />
-      </label>
-
-      <label className="block">
-        Document Suffix:
+        <input
+          type="text"
+            value={info?.doc_lname?.value || ""}
+          onChange={(e) => {
+              if (isValidValue(`${path}.section9_4.doc_lname.value`, e.target.value)) {
+                onInputChange(`${path}.section9_4.doc_lname.value`, e.target.value);
+            }
+          }}
+            className="p-2 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
+            placeholder="Last Name"
+        />
+        </div>
         <select
-          name={`${path}.details.doc_suffix`}
-          defaultValue={info.doc_suffix}
-          className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
+          value={info?.doc_suffix?.value || ""}
           onChange={(e) => {
-            if (isValidValue(`${path}.details.doc_suffix`, e.target.value)) {
-              onInputChange(`${path}.details.doc_suffix`, e.target.value);
+            if (isValidValue(`${path}.section9_4.doc_suffix.value`, e.target.value)) {
+              onInputChange(`${path}.section9_4.doc_suffix.value`, e.target.value);
             }
           }}
+          className="mt-1 p-2 w-1/3 border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
         >
+          <option value="">Select suffix</option>
           {Object.entries(SuffixOptions).map(([key, value]) => (
             <option key={key} value={value}>
               {value}
@@ -1336,6 +1184,7 @@ const RenderCitizenshipInfo: React.FC<FormProps> = ({
       </label>
     </>
   );
+  };
 
   return (
     <div className="p-4 bg-gray-50 rounded-lg shadow space-y-4">
@@ -1344,34 +1193,41 @@ const RenderCitizenshipInfo: React.FC<FormProps> = ({
       <label className="block">
         Citizenship Status:
         <select
-          name={`${path}.citizenship_status_code`}
-          defaultValue={citizenshipInfo.citizenship_status_code.value}
+          name={`${path}.citizenship_status_code.value`}
+          value={citizenshipInfo?.citizenship_status_code?.value}
           className="mt-1 p-2 w-full border-gray-300 rounded-md focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition duration-150 ease-in-out"
           onChange={handleCitizenshipChange}
         >
-          <option value="citizen">U.S. Citizen</option>
-          <option value="birth">
-            U.S. Citizen by Birth in Foreign Territory
+          <option value="I am a U.S. citizen or national by birth in the U.S. or U.S. territory/commonwealth. (Proceed to Section 10)   ">
+            I am a U.S. citizen or national by birth in the U.S. or U.S. territory/commonwealth.
           </option>
-          <option value="naturalized">Naturalized U.S. Citizen</option>
-          <option value="derived">Derived U.S. Citizen</option>
-          <option value="nonCitizen">Non U.S. Citizen</option>
+          <option value="I am a U.S. citizen or national by birth, born to U.S. parent(s), in a foreign country. (Complete 9.1) ">
+            I am a U.S. citizen or national by birth, born to U.S. parent(s), in a foreign country.
+          </option>
+          <option value="I am a naturalized U.S. citizen. (Complete 9.2) ">
+            I am a naturalized U.S. citizen.
+          </option>
+          <option value="I am a derived U.S. citizen. (Complete 9.3) ">
+            I am a derived U.S. citizen.
+          </option>
+          <option value="I am not a U.S. citizen. (Complete 9.4) ">
+            I am not a U.S. citizen.
+          </option>
         </select>
       </label>
 
-      {citizenshipInfo.citizenship_status_code.value === "birth" &&
-        renderCitizenshipByBirthInfo(
-          citizenshipInfo.details as CitizenshipByBirthInfo
-        )}
+      {/* Determine which section to render based on citizenship status */}
+      {citizenshipInfo?.citizenship_status_code?.value === "I am a U.S. citizen or national by birth, born to U.S. parent(s), in a foreign country. (Complete 9.1) " &&
+        citizenshipInfo?.section9_1 && renderCitizenshipByBirthInfo(citizenshipInfo?.section9_1)}
 
-      {citizenshipInfo.citizenship_status_code.value === "naturalized" &&
-        renderNaturalizedCitizenInfo(
-          citizenshipInfo.details as NaturalizedCitizenInfo
-        )}
-      {citizenshipInfo.citizenship_status_code.value === "derived" &&
-        renderDerivedCitizenInfo(citizenshipInfo.details as DerivedCitizenInfo)}
-      {citizenshipInfo.citizenship_status_code.value === "nonCitizen" &&
-        renderNonCitizenInfo(citizenshipInfo.details as NonCitizenInfo)}
+      {citizenshipInfo?.citizenship_status_code?.value === "I am a naturalized U.S. citizen. (Complete 9.2) " &&
+        citizenshipInfo?.section9_2 && renderNaturalizedCitizenInfo(citizenshipInfo?.section9_2)}
+
+      {citizenshipInfo?.citizenship_status_code?.value === "I am a derived U.S. citizen. (Complete 9.3) " &&
+        citizenshipInfo?.section9_3 && renderDerivedCitizenInfo(citizenshipInfo?.section9_3)}
+
+      {citizenshipInfo?.citizenship_status_code?.value === "I am not a U.S. citizen. (Complete 9.4) " &&
+        citizenshipInfo?.section9_4 && renderNonCitizenInfo(citizenshipInfo?.section9_4)}
     </div>
   );
 };

@@ -1,55 +1,63 @@
-import { type PassportInfo, type PassportEntry } from "../../../../api/interfaces/sections/passport";
+import { type PassportInfo } from "api/interfaces/sections/passport";
 
-//passportInfo covers section 8
-
-// Define a sample passport entry based on existing data
-const samplePassport: PassportEntry = {
-  _id: 1,
-  type: {
-    value: "Regular",
-    id: "9553",
-    type: "PDFTextField",
-    label: "Passport Type"
-  },
-  number: {
-    value: "PassportNum",
-    id: "9553",
-    type: "PDFTextField",
-    label: "Passport number"
-  },
-  issueDate: {
-    value: "issueDate",
-    id: "9551",
-    type: "PDFTextField",
-    label: "Issue date (Month/Day/Year)"
-  },
-  expirationDate: {
-    value: "sec8ExpDate",
-    id: "9550",
-    type: "PDFTextField",
-    label: "Expiration date (Month/Day/Year)"
-  },
-  issueCountry: {
-    value: "USA",
-    id: "9547",
-    type: "PDFTextField",
-    label: "Issue Country"
-  },
-  placeOfIssue: {
-    value: "USA",
-    id: "9545",
-    type: "PDFTextField",
-    label: "Place of Issue"
-  }
-};
+// passportInfo covers section 8 - Passport Information
 
 // Default initial state for PassportInfo
 export const passportInfo: PassportInfo = {
   hasPassport: {
-    value: "YES", // "NO (If NO, proceed to Section 9)"
-    id: "17231",
+    value: "YES",
+    id: "9499",
     type: "PDFRadioGroup",
-    label: "Do you currently possess a U.S. passport?"
+    label: "Do you have a U.S. passport (current or expired)?",
   },
-  passports: [samplePassport]
+  passport: {
+    _id: 1,
+    passportNumber: {
+      value: "",
+      id: "9498",
+      type: "PDFTextField",
+      label: "Provide your U.S. passport number",
+    },
+    issuedDate: {
+      date: {
+        value: "",
+        id: "9497",
+        type: "PDFTextField",
+        label: "Provide the date the passport was issued",
+      },
+      isEstimated: {
+        value: "NO",
+        id: "9496",
+        type: "PDFCheckBox",
+        label: "Estimated",
+      },
+    },
+    expirationDate: {
+      date: {
+        value: "",
+        id: "9495",
+        type: "PDFTextField",
+        label: "Provide the date the passport expires",
+      },
+      isEstimated: {
+        value: "NO",
+        id: "9494",
+        type: "PDFCheckBox",
+        label: "Estimated",
+      },
+    },
+    bookType: {
+      value: "Regular",
+      id: "9493",
+      type: "PDFTextField",
+      label: "If you have ever had a U.S. passport book and/or card, indicate which type(s) you have or have had.",
+    },
+    name: {
+      value: "",
+      id: "9492",
+      type: "PDFTextField",
+      label: "Provide the name in which passport was first issued",
+    },
+  },
 };
+
