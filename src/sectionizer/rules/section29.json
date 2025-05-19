@@ -1,0 +1,123 @@
+{
+  "section": 29,
+  "name": "Association Record",
+  "rules": [
+    {
+      "section": 29,
+      "pattern": "form1\\[0\\]\\.Section29\\[0\\]",
+      "confidence": 0.95,
+      "description": "Exact match for Section 29 area"
+    },
+    {
+      "section": 29,
+      "pattern": "section29",
+      "confidence": 0.9,
+      "description": "Generic section 29 field pattern"
+    },
+    {
+      "section": 29,
+      "pattern": "association record",
+      "confidence": 0.85,
+      "description": "Match by section title"
+    },
+    {
+      "section": 29,
+      "pattern": "section29_(\\d+)",
+      "confidence": 0.9,
+      "description": "Section 29 entry index pattern",
+      "entryPattern": "section29_(\\d+)"
+    },
+    {
+      "section": 29,
+      "pattern": "29a\\.?(\\d*)",
+      "confidence": 0.9,
+      "description": "Section 29A fields with alternative format",
+      "entryPattern": "29a\\.?(\\d+)",
+      "subsection": "A"
+    },
+    {
+      "section": 29,
+      "pattern": "29b\\.?(\\d*)",
+      "confidence": 0.9,
+      "description": "Section 29B fields with alternative format",
+      "entryPattern": "29b\\.?(\\d+)",
+      "subsection": "B"
+    },
+    {
+      "section": 29,
+      "pattern": "29c\\.?(\\d*)",
+      "confidence": 0.9,
+      "description": "Section 29C fields with alternative format",
+      "entryPattern": "29c\\.?(\\d+)",
+      "subsection": "C"
+    },
+    {
+      "section": 29,
+      "pattern": "29d\\.?(\\d*)",
+      "confidence": 0.9,
+      "description": "Section 29D fields with alternative format",
+      "entryPattern": "29d\\.?(\\d+)",
+      "subsection": "D"
+    },
+    {
+      "section": 29,
+      "pattern": "association",
+      "confidence": 0.85,
+      "description": "Association related fields"
+    },
+    {
+      "section": 29,
+      "pattern": "organization",
+      "confidence": 0.8,
+      "description": "Organization related fields"
+    },
+    {
+      "section": 29,
+      "pattern": "membership",
+      "confidence": 0.85,
+      "description": "Membership related fields"
+    },
+    {
+      "section": 29,
+      "pattern": "terrorist",
+      "confidence": 0.85,
+      "description": "Terrorist organization related fields"
+    },
+    {
+      "section": 29,
+      "pattern": "terrorism",
+      "confidence": 0.85,
+      "description": "Terrorism related fields"
+    },
+    {
+      "section": 29,
+      "pattern": "violence",
+      "confidence": 0.8,
+      "description": "Violence related fields"
+    },
+    {
+      "section": 29,
+      "pattern": "extremist",
+      "confidence": 0.85,
+      "description": "Extremist related fields"
+    },
+    {
+      "section": 29,
+      "pattern": "overthrow",
+      "confidence": 0.85,
+      "description": "Overthrow government related fields"
+    },
+    {
+      "section": 29,
+      "pattern": "sabotage",
+      "confidence": 0.85,
+      "description": "Sabotage related fields"
+    },
+    {
+      "section": 29,
+      "pattern": "treasonous activities",
+      "confidence": 0.85,
+      "description": "Treasonous activities related fields"
+    }
+  ]
+} 

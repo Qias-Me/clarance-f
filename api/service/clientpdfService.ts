@@ -8,6 +8,9 @@ import {
   PDFTextField
 } from 'pdf-lib';
 import type { ApplicantFormValues } from '../interfaces/formDefinition';
+import { updateIdFormat } from '../../app/utils/formHandler';
+import { mapContextToPdfFields } from '../../app/utils/contextToPdfFieldMapping';
+import type { FieldHierarchy } from '../interfaces/FieldMetadata';
 
 // URLs for fetching the SF86 PDF
 const SF86_PDF_URL = 'https://www.opm.gov/forms/pdf_fill/sf86.pdf';
@@ -26,6 +29,7 @@ interface FieldMetadata {
 export class ClientPdfService {
   private pdfDoc: PDFDocument | null = null;
   private fieldMapping: FieldMetadata[] = [];
+  private fieldHierarchy: FieldHierarchy | null = null;
 
   /**
    * Fetch and load the SF86 PDF document
@@ -136,12 +140,52 @@ export class ClientPdfService {
   }
 
   /**
+   * Set the field hierarchy for mapping
+   * This should be called before generateFilledPdf if using the context mapping approach
+   */
+  setFieldHierarchy(hierarchy: FieldHierarchy): void {
+    this.fieldHierarchy = hierarchy;
+    console.log("Field hierarchy set for PDF generation");
+  }
+
+  /**
    * Map form values to JSON data - align with server-side implementation
    */
   private async mapFormValuesToJsonData(
     fieldMapping: FieldMetadata[],
     formData: ApplicantFormValues
   ): Promise<FieldMetadata[]> {
+    // If we have a field hierarchy, use the context-to-PDF mapping utility
+    if (this.fieldHierarchy) {
+      try {
+        console.log("Using contextToPdfFieldMapping utility to map form values");
+        const pdfFieldValues = mapContextToPdfFields(formData, this.fieldHierarchy);
+        console.log(`Generated ${Object.keys(pdfFieldValues).length} PDF field mappings`);
+        
+        // Create a deep copy of the field mapping
+        const mappedFields: FieldMetadata[] = fieldMapping.map(field => ({...field}));
+        
+        // Map the values from pdfFieldValues to our field metadata
+        let mappedCount = 0;
+        mappedFields.forEach((item) => {
+          const fieldId = item.id + " 0 R"; // Ensure consistent format
+          if (pdfFieldValues[fieldId] !== undefined) {
+            item.value = pdfFieldValues[fieldId];
+            mappedCount++;
+          }
+        });
+        
+        console.log(`Successfully mapped ${mappedCount} values to PDF fields using context mapping`);
+        return mappedFields;
+      } catch (error) {
+        console.error("Error using contextToPdfFieldMapping - falling back to legacy mapping:", error);
+        // Fall back to legacy mapping
+      }
+    }
+    
+    // Legacy implementation as fallback
+    console.log("Using legacy mapping approach");
+    
     // Create ID to value map similar to server-side
     const idValueMap = new Map<string, any>();
   
@@ -154,10 +198,11 @@ export class ClientPdfService {
         if (val && typeof val === "object") {
           // Type guard to check for expected structure
           if ('id' in val && 'value' in val && val.id && val.value !== undefined && val.value !== '') {
-            const idStr = String(val.id);
+            // Ensure ID has the correct PDF format with "0 R" suffix
+            const idStr = updateIdFormat(String(val.id), 'pdf');
             const valueStr = val.value; // Don't convert to string to preserve arrays
             console.log(`Mapping field ${path}: ID=${idStr}, value=${typeof valueStr === 'object' ? JSON.stringify(valueStr) : valueStr}`);
-            idValueMap.set(`${idStr} 0 R`, valueStr);
+            idValueMap.set(idStr, valueStr);
           } else {
             flattenFormValues(val, path);
           }

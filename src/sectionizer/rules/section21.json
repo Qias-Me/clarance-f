@@ -1,0 +1,122 @@
+{
+  "section": 21,
+  "name": "Psychological and Emotional Health",
+  "rules": [
+    {
+      "section": 21,
+      "subsection": "A",
+      "pattern": "section21a(\\d*)",
+      "confidence": 0.95,
+      "description": "Section 21A fields with optional entry number",
+      "entryPattern": "section21a(\\d+)"
+    },
+    {
+      "section": 21,
+      "subsection": "A",
+      "pattern": "21a\\.?(\\d*)",
+      "confidence": 0.9,
+      "description": "Section 21A fields with alternative format",
+      "entryPattern": "21a\\.?(\\d+)"
+    },
+    {
+      "section": 21,
+      "subsection": "B",
+      "pattern": "section21b(\\d*)",
+      "confidence": 0.95,
+      "description": "Section 21B fields with optional entry number",
+      "entryPattern": "section21b(\\d+)"
+    },
+    {
+      "section": 21,
+      "subsection": "B",
+      "pattern": "21b\\.?(\\d*)",
+      "confidence": 0.9,
+      "description": "Section 21B fields with alternative format",
+      "entryPattern": "21b\\.?(\\d+)"
+    },
+    {
+      "section": 21,
+      "subsection": "C",
+      "pattern": "section21c(\\d*)",
+      "confidence": 0.95,
+      "description": "Section 21C fields with optional entry number",
+      "entryPattern": "section21c(\\d+)"
+    },
+    {
+      "section": 21,
+      "subsection": "C",
+      "pattern": "21c\\.?(\\d*)",
+      "confidence": 0.9,
+      "description": "Section 21C fields with alternative format",
+      "entryPattern": "21c\\.?(\\d+)"
+    },
+    {
+      "section": 21,
+      "subsection": "D",
+      "pattern": "section21d(\\d*)",
+      "confidence": 0.95,
+      "description": "Section 21D fields with optional entry number",
+      "entryPattern": "section21d(\\d+)"
+    },
+    {
+      "section": 21,
+      "subsection": "D",
+      "pattern": "21d\\.?(\\d*)",
+      "confidence": 0.9,
+      "description": "Section 21D fields with alternative format",
+      "entryPattern": "21d\\.?(\\d+)"
+    },
+    {
+      "section": 21,
+      "subsection": "E",
+      "pattern": "section21e(\\d*)",
+      "confidence": 0.95,
+      "description": "Section 21E fields with optional entry number",
+      "entryPattern": "section21e(\\d+)"
+    },
+    {
+      "section": 21,
+      "subsection": "E",
+      "pattern": "21e\\.?(\\d*)",
+      "confidence": 0.9,
+      "description": "Section 21E fields with alternative format",
+      "entryPattern": "21e\\.?(\\d+)"
+    },
+    {
+      "section": 21,
+      "pattern": "section21",
+      "confidence": 0.85,
+      "description": "General Section 21 fields"
+    },
+    {
+      "section": 21,
+      "pattern": "mentalhealth",
+      "confidence": 0.8,
+      "description": "Mental health related fields"
+    },
+    {
+      "section": 21,
+      "pattern": "psychological",
+      "confidence": 0.8,
+      "description": "Psychological related fields"
+    },
+    {
+      "section": 21,
+      "pattern": "emotional",
+      "confidence": 0.8,
+      "description": "Emotional health related fields"
+    },
+    {
+      "section": 21,
+      "pattern": "counseling",
+      "confidence": 0.75,
+      "description": "Counseling related fields"
+    },
+    {
+      "section": 21,
+      "pattern": "treatment",
+      "confidence": 0.7,
+      "description": "Treatment related fields"
+    }
+  ]
+} 

@@ -12,11 +12,13 @@ export const employmentInfo: EmploymentInfo = {
           "Other (Provide explanation and complete 13A.2, 13A.5 and 13A.6)",
         id: "17167",
         type: "PDFRadioGroup",
+        label:""
       },
       otherExplanation: {
         value: "13OtherExplanation",
         id: "10240",
         type: "PDFTextField",
+        label: "Other Explanation",
       },
       section13A1: {
         fromDate: {

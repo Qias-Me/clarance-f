@@ -304,3 +304,79 @@ export const namesInfo: NamesInfo = {
       },
     ],
   };
+
+/**
+ * Validates namesInfo data to ensure it meets form requirements
+ * 
+ * @param data The namesInfo data to validate
+ * @returns Object containing validation result and error messages
+ */
+export const validateNamesInfo = (data: NamesInfo): { 
+  isValid: boolean; 
+  errors: string[] 
+} => {
+  const errors: string[] = [];
+  
+  // If user answered YES to having other names, validate the names array
+  if (data.hasNames?.value === "YES") {
+    // Check if names array exists and has at least one entry
+    if (!data.names || data.names.length === 0) {
+      errors.push("You must provide at least one previous name.");
+      return { isValid: false, errors };
+    }
+    
+    // Validate each name entry
+    data.names.forEach((nameEntry, index) => {
+      const nameNum = index + 1;
+      
+      // Check for first or last name (at least one should be provided)
+      if ((!nameEntry.firstName?.value || nameEntry.firstName.value.trim() === '') && 
+          (!nameEntry.lastName?.value || nameEntry.lastName.value.trim() === '')) {
+        errors.push(`Name entry #${nameNum}: First name or last name is required.`);
+      }
+      
+      // Validate date fields if provided
+      if (nameEntry.startDate?.date?.value) {
+        const dateRegex = /^\d{4}-\d{2}$|^\d{2}\/\d{4}$/;
+        if (!dateRegex.test(nameEntry.startDate.date.value)) {
+          errors.push(`Name entry #${nameNum}: Start date must be in MM/YYYY or YYYY-MM format.`);
+        }
+      } else {
+        errors.push(`Name entry #${nameNum}: Start date is required.`);
+      }
+      
+      // Validate end date if "Present" is not checked
+      if (nameEntry.endDate?.isPresent?.value !== "YES") {
+        if (!nameEntry.endDate?.date?.value) {
+          errors.push(`Name entry #${nameNum}: End date is required when "Present" is not selected.`);
+        } else {
+          // Validate date format
+          const dateRegex = /^\d{4}-\d{2}$|^\d{2}\/\d{4}$/;
+          if (!dateRegex.test(nameEntry.endDate.date.value)) {
+            errors.push(`Name entry #${nameNum}: End date must be in MM/YYYY or YYYY-MM format.`);
+          }
+          
+          // Ensure end date is after start date if both exist
+          if (nameEntry.startDate?.date?.value && nameEntry.endDate?.date?.value) {
+            const startDate = new Date(nameEntry.startDate.date.value);
+            const endDate = new Date(nameEntry.endDate.date.value);
+            
+            if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) && endDate < startDate) {
+              errors.push(`Name entry #${nameNum}: End date must be after start date.`);
+            }
+          }
+        }
+      }
+      
+      // Check if reason for name change is provided
+      if (!nameEntry.reasonChanged?.value || nameEntry.reasonChanged.value.trim() === '') {
+        errors.push(`Name entry #${nameNum}: Reason for name change is required.`);
+      }
+    });
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+};

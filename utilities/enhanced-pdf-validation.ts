@@ -23,7 +23,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import * as glob from "glob";
-import { PdfService } from "../api/service/pdfService2";
+import { PdfService } from "../api/service/pdfService2.js";
 import {
   enhancedMultiDimensionalCategorization,
   groupFieldsBySection,
@@ -36,7 +36,8 @@ import {
   loadSectionStats,
   refinedSectionPageRanges,
   sectionFieldPatterns,
-} from "./page-categorization-bridge";
+  extractSectionInfoFromName,
+} from "./page-categorization-bridge.js";
 
 // Add this section structure definition to replace the existing mapping
 const sectionStructure: Record<string, { name: string }> = {
@@ -133,10 +134,10 @@ async function loadSectionContexts(): Promise<Record<string, SectionContext>> {
       "alcoholUse.tsx": { id: "24", name: "Use of Alcohol" },
       "investigationsInfo.tsx": { id: "25", name: "Investigations and Clearance" },
       "finances.tsx": { id: "26", name: "Financial Record" },
-      "itSystems.tsx": { id: "27", name: "Use of Information Technology Systems" },
+      "technology.tsx": { id: "27", name: "Use of Information Technology Systems" },
       "civil.tsx": { id: "28", name: "Involvement in Non-Criminal Court Actions" },
       "association.tsx": { id: "29", name: "Association Record" },
-      "signature.tsx": { id: "30", name: "Continuation Space" }
+      "continuation.tsx": { id: "30", name: "Continuation Space" }
     };
     
     for (const file of contextFiles) {
@@ -381,7 +382,7 @@ function parseFieldNamePattern(fieldName: string): {
     }
     
     // Fall back to basic section extraction
-    return extractSectionFromFieldName(fieldName);
+    return extractSectionInfoFromName(fieldName);
     
   } catch (error) {
     console.warn(`Error parsing field pattern for ${fieldName}:`, error);
@@ -642,48 +643,8 @@ function categorizeSections1to6Field(fieldName: string, fieldLabel?: string, fie
   return { section: 6, confidence: 0.6 };
 }
 
-// Field name patterns for sections 1-6
-const section1to6Patterns: Record<string, RegExp[]> = {
-  "1": [
-    /form1\[0\]\.Sections1-6\[0\]\.TextField11\[0\]/i, // Last name
-    /form1\[0\]\.Sections1-6\[0\]\.TextField11\[1\]/i, // First name
-    /form1\[0\]\.Sections1-6\[0\]\.TextField11\[2\]/i, // Middle name
-    /form1\[0\]\.Sections1-6\[0\]\.suffix\[0\]/i, // Name suffix
-  ],
-  "2": [
-    /form1\[0\]\.Sections1-6\[0\]\.From_Datefield_Name_2\[0\]/i, // Date of Birth field
-    /form1\[0\]\.Sections1-6\[0\]\.#field\[18\]/i, // Second DOB field
-  ],
-  "3": [
-    /Section 3/,
-    /Place of Birth/,
-    /BirthCity/,
-    /County/,
-    /form1\[0\]\.Sections1-6\[0\]\.TextField11\[3\]/i, // Birth city
-    /form1\[0\]\.Sections1-6\[0\]\.TextField11\[4\]/i, // Birth county
-    /form1\[0\]\.Sections1-6\[0\]\.School6_State\[0\]/i, // Birth state
-    /form1\[0\]\.Sections1-6\[0\]\.DropDownList1\[0\]/i,
-  ],
-  "4": [
-    /Section 4/,
-    /Social Security Number/,
-    /^form1\[0\]\.Sections1-6\[0\]\.SSN/,
-    /^SSN\[/,
-    /form1\[0\]\.Sections1-6\[0\]\.SSN\[0\]/i, // Primary SSN field
-    /form1\[0\]\.Sections1-6\[0\]\.SSN\[1\]/i, // Secondary SSN field
-    /SSN\[\d+\]/i,
-  ],
-  "5": [/form1\[0\]\.Sections1-6\[0\]\.section5\[0\]/],
-  "6": [
-    // STRICT: Only these 6 specific fields should be in section 6
-    /form1\[0\]\.Sections1-6\[0\]\.DropDownList7\[0\]/i, // Height in inches
-    /form1\[0\]\.Sections1-6\[0\]\.DropDownList8\[0\]/i, // Height in feets
-    /form1\[0\]\.Sections1-6\[0\]\.DropDownList9\[0\]/i, // Eye color
-    /form1\[0\]\.Sections1-6\[0\]\.DropDownList10\[0\]/i, // Hair color
-    /form1\[0\]\.Sections1-6\[0\]\.p3-rb3b\[0\]/i, // Sex Male or Female
-    /form1\[0\]\.Sections1-6\[0\]\.TextField11\[5\]/i, // Wieght in pounds
-  ],
-};
+// Import the utility functions from scripts/enhanced-pdf-validation.ts
+import { saveSectionSummaryToAllDirectories, saveUnidentifiedFieldsToAllDirectories } from '../scripts/enhanced-pdf-validation.js';
 
 /**
  * Main function to run enhanced PDF validation
@@ -1046,9 +1007,9 @@ async function main(): Promise<void> {
       }
     });
 
-    // // Apply strict section validation to enforce section rules
-    // console.log("Applying strict section validation...");
-    // validateSectionAssignments(fieldCategories);
+    // Apply strict section validation to enforce section rules
+    console.log("Applying strict section validation...");
+    validateSectionAssignments(fieldCategories);
 
     // Save the section grouping
     const sectionsPath = path.join(__dirname, "../reports/field-sections.json");
@@ -1229,6 +1190,70 @@ async function main(): Promise<void> {
     const summaryPath = path.join(__dirname, "../reports/section-summary.json");
     fs.writeFileSync(summaryPath, JSON.stringify(sectionSummary, null, 2));
     console.log(`Saved section summary to ${summaryPath}`);
+    
+    // Use the new function to save section summary to all directories
+    saveSectionSummaryToAllDirectories(sectionSummary);
+
+    // Create backward compatible format in section-data directory 
+    const backwardCompatSummary: {
+      sections: Record<number, { fieldCount: number }>
+    } = {
+      sections: {}
+    };
+    
+    // Include all regular sections
+    sectionSummary.forEach(section => {
+      backwardCompatSummary.sections[section.sectionId] = {
+        fieldCount: section.fieldCount
+      };
+    });
+    
+    // Add section 0 for unidentified/uncategorized fields if they exist
+    const unidentifiedFields = Object.values(fieldCategories).filter(data => data.section === 0);
+    if (unidentifiedFields.length > 0) {
+      backwardCompatSummary.sections[0] = {
+        fieldCount: unidentifiedFields.length
+      };
+      
+      // Also add it to the section summary array for consistency
+      sectionSummary.push({
+        sectionId: 0,
+        sectionName: "Uncategorized",
+        fieldCount: unidentifiedFields.length,
+        filledFieldCount: unidentifiedFields.filter(field => {
+          // Get the field name from the category object
+          const fieldName = Object.entries(fieldCategories)
+            .find(([_, category]) => category === field)?.[0] || '';
+          return getFieldValue(fieldName, fieldCategories) !== null;
+        }).length,
+        highConfidenceFields: 0,
+        mediumConfidenceFields: 0,
+        lowConfidenceFields: unidentifiedFields.length,
+        subsections: undefined // Make sure this field is included to match the expected type
+      });
+      
+      // Save updated summary with section 0 included - use our utility function
+      saveSectionSummaryToAllDirectories(sectionSummary);
+      
+      // Save unidentified fields separately for reference
+      const unidentifiedFieldList = Object.entries(fieldCategories)
+        .filter(([_, category]) => category.section === 0)
+        .map(([fieldName, _]) => ({
+          name: fieldName,
+          label: fieldLabels[fieldName] || fieldName
+        }));
+      
+      // Use our utility function to save unidentified fields to all locations
+      saveUnidentifiedFieldsToAllDirectories({
+        count: unidentifiedFields.length,
+        fields: unidentifiedFieldList
+      });
+      
+      console.log(`Saved ${unidentifiedFields.length} unidentified fields to multiple directories`);
+    }
+    
+    // Save backward compatible format - use our utility function for this too
+    saveSectionSummaryToAllDirectories(backwardCompatSummary);
 
     // Update the console output to use the aggregated data
     console.log("\nSection Distribution:");
@@ -1373,7 +1398,7 @@ async function main(): Promise<void> {
     );
 
     // Add a function to validate section assignments and enforce strict rules
-    // validateSectionAssignments(fieldCategories);
+    validateSectionAssignments(fieldCategories);
   } catch (error) {
     console.error("Error in enhanced validation:", error);
     process.exit(1);
@@ -1547,16 +1572,19 @@ function organizeFieldsHierarchically(
             {
               regex: string;
               confidence: number;
-              fields: Array<{
+              contextMap: Record<
+                string,
+                {
                 name: string;
-                id: string;
-                label?: string;
-                value?: string | string[] | boolean;
-                type?: string;
+                  value: string;
+                  context: string;
                 section: number;
-                sectionName: string;
                 confidence: number;
-              }>;
+                  x: number;
+                  y: number;
+                  page: number;
+                }[]
+              >;
             }
           >;
         }
@@ -1564,116 +1592,379 @@ function organizeFieldsHierarchically(
     }
   > = {};
 
-  // Initialize page structure
-  const uniquePages = [
-    ...new Set(fieldMetadata.filter((f) => f.page).map((f) => f.page)),
-  ];
-  uniquePages.forEach((page) => {
-    hierarchy[page] = {
-      fieldsByValuePattern: {},
-    };
+  // First pass - collect expected field counts per section
+  const expectedCounts: Record<number, number> = {};
+  const sectionSummary = getSectionSummary(); // Placeholder - implement this to get section summary
+  
+  // Get sections that are over-allocated (have more fields than expected)
+  const overallocatedSections: Record<number, { expected: number; actual: number; excess: number }> = {};
+  const underallocatedSections: Record<number, { expected: number; actual: number; missing: number }> = {};
+  
+  // Count fields by section for deviation analysis
+  const sectionCounts: Record<number, number> = {};
+  Object.values(fieldCategories).forEach(data => {
+    const section = data.section || 0;
+    sectionCounts[section] = (sectionCounts[section] || 0) + 1;
+  });
+  
+  // Calculate deviations
+  Object.entries(sectionSummary?.sections || {}).forEach(([sectionId, data]) => {
+    const section = parseInt(sectionId, 10);
+    if (!isNaN(section)) {
+      const expected = data.fieldCount;
+      const actual = sectionCounts[section] || 0;
+      
+      if (actual > expected * 1.2) { // Over by 20%
+        overallocatedSections[section] = {
+          expected,
+          actual,
+          excess: actual - expected
+        };
+      } else if (actual < expected * 0.8) { // Under by 20%
+        underallocatedSections[section] = {
+          expected,
+          actual,
+          missing: expected - actual
+        };
+      }
+      
+      expectedCounts[section] = expected;
+    }
   });
 
-  // Process each field
+  // Group fields by page
   fieldMetadata.forEach((field) => {
-    if (!field.page || field.page === 0) return;
-
-    const page = field.page;
-    const fieldName = field.name;
-    const fieldValue = field.value;
-    const fieldLabel = field.label;
-    const fieldId = field.id;
-    const fieldType = field.type;
-    // Skip if the field is not in fieldCategories
-    if (!fieldCategories[fieldName]) return;
-
-    const { section, sectionName, confidence } = fieldCategories[fieldName];
-
-    // 1. Determine value pattern (sect1FullName, sect9.1_Entry1, etc.)
-    let valuePattern = "unknown";
-    let valuePatternConfidence = 0.2;
-
-    const valuePatternResult = detectSectionFromFieldValue(fieldValue);
-    if (valuePatternResult) {
-      valuePattern =
-        `section${valuePatternResult.section}` +
-        (valuePatternResult.subsection
-          ? `.${valuePatternResult.subsection}`
-          : "") +
-        (valuePatternResult.entry ? `_Entry${valuePatternResult.entry}` : "");
-      valuePatternConfidence = valuePatternResult.confidence;
-    } else {
-      // If no pattern in value, check if section is known and create a default pattern
-      valuePattern = `section${section}`;
+    const page = field.page || 0;
+    
+    // Initialize page in hierarchy if it doesn't exist
+    if (!hierarchy[page]) {
+      hierarchy[page] = { fieldsByValuePattern: {} };
     }
-
-    // 2. Determine field path regex pattern
-    let regexPattern = "unknown";
-    let regexConfidence = 0.2;
-
-    // Simple regex pattern check (would be enhanced with actual regex patterns)
-    if (
-      sectionFieldPatterns[1].some((pattern: RegExp) => pattern.test(fieldName))
-    ) {
-      regexPattern = "section1Name";
-      regexConfidence = 0.98;
-    } else if (
-      sectionFieldPatterns[3].some((pattern: RegExp) => pattern.test(fieldName))
-    ) {
-      regexPattern = "section3Birth";
-      regexConfidence = 0.98;
-    } else {
-      // Create a simplified regex pattern from the field name
-      const nameParts = fieldName.split(/[\[\].]/);
-      if (nameParts.length > 2) {
-        regexPattern = `${nameParts[0]}_${nameParts[1]}`;
-        regexConfidence = 0.5;
-      } else {
-        regexPattern = fieldName.replace(/\[\d+\]/g, "[]");
-        regexConfidence = 0.4;
-      }
+    
+    // Get field category data for this field
+    const categoryData = fieldCategories[field.name] || { section: 0, confidence: 0 };
+    const section = categoryData.section || 0;
+    const fieldConfidence = categoryData.confidence || 0;
+    
+    // Determine if field's section is over-allocated
+    const isOverallocated = !!overallocatedSections[section];
+    const isUnderallocated = !!underallocatedSections[section];
+    
+    // Calculate deviation info
+    let deviationInfo = null;
+    if (expectedCounts[section]) {
+      const expectedCount = expectedCounts[section];
+      const actualCount = sectionCounts[section] || 0;
+      const deviation = actualCount - expectedCount;
+      const deviationPercentage = (deviation / expectedCount) * 100;
+      
+      deviationInfo = {
+        expectedCount,
+        actualCount,
+        deviation,
+        deviationPercentage,
+        isOverallocated,
+        isUnderallocated
+      };
     }
-
-    // Initialize valuePattern structure if needed
+    
+    // Create value pattern key based on the field value
+    const valuePattern = getValuePattern(field.value || "");
+    
+    // Initialize value pattern in page if it doesn't exist
     if (!hierarchy[page].fieldsByValuePattern[valuePattern]) {
       hierarchy[page].fieldsByValuePattern[valuePattern] = {
         pattern: valuePattern,
-        confidence: valuePatternConfidence,
+        confidence: 0,
         fieldsByRegex: {},
       };
     }
 
-    // Initialize regex pattern structure if needed
-    if (
-      !hierarchy[page].fieldsByValuePattern[valuePattern].fieldsByRegex[
-        regexPattern
-      ]
-    ) {
-      hierarchy[page].fieldsByValuePattern[valuePattern].fieldsByRegex[
-        regexPattern
-      ] = {
+    // Create regex pattern for the field name
+    const regexPattern = createFieldRegexPattern(field.name);
+    
+    // Initialize regex pattern in value pattern if it doesn't exist
+    if (!hierarchy[page].fieldsByValuePattern[valuePattern].fieldsByRegex[regexPattern]) {
+      hierarchy[page].fieldsByValuePattern[valuePattern].fieldsByRegex[regexPattern] = {
         regex: regexPattern,
-        confidence: regexConfidence,
-        fields: [],
+        confidence: 0,
+        contextMap: {},
       };
     }
-
-    // Add field to the hierarchy
-    hierarchy[page].fieldsByValuePattern[valuePattern].fieldsByRegex[
-      regexPattern
-    ].fields.push({
-      name: fieldName,
-      id: fieldId,
-      label: fieldLabel,
-      value: fieldValue,
-      type: fieldType,
+    
+    // Extract context from the field
+    const context = extractFieldContext(field);
+    
+    // Initialize context in regex pattern if it doesn't exist
+    if (!hierarchy[page].fieldsByValuePattern[valuePattern].fieldsByRegex[regexPattern].contextMap[context]) {
+      hierarchy[page].fieldsByValuePattern[valuePattern].fieldsByRegex[regexPattern].contextMap[context] = [];
+    }
+    
+    // Calculate potential alternative sections for over-allocated fields
+    let alternativeSections: number[] = [];
+    if (isOverallocated) {
+      alternativeSections = findPotentialAlternativeSections(
+        field, 
+        fieldCategories, 
+        Object.keys(underallocatedSections).map(s => parseInt(s, 10))
+      );
+    }
+    
+    // Add field to context
+    hierarchy[page].fieldsByValuePattern[valuePattern].fieldsByRegex[regexPattern].contextMap[context].push({
+      name: field.name,
+      value: field.value,
+      context,
       section,
-      sectionName,
-      confidence,
+      confidence: fieldConfidence,
+      x: field.x || 0,
+      y: field.y || 0,
+      page,
+      deviationInfo,
+      alternativeSections: alternativeSections.length > 0 ? alternativeSections : undefined
     });
+    
+    // Update confidence scores
+    const contextMapObj = hierarchy[page].fieldsByValuePattern[valuePattern].fieldsByRegex[regexPattern].contextMap;
+    const confidenceSum = Object.values(contextMapObj).reduce(
+      (sum, fields) => sum + fields.reduce((s, f) => s + f.confidence, 0),
+      0
+    );
+    const fieldCount = Object.values(contextMapObj).reduce(
+      (count, fields) => count + fields.length,
+      0
+    );
+    
+    // Update average confidence for the regex pattern
+    hierarchy[page].fieldsByValuePattern[valuePattern].fieldsByRegex[regexPattern].confidence =
+      fieldCount > 0 ? confidenceSum / fieldCount : 0;
+    
+    // Update value pattern confidence based on regex confidences
+    const regexPatterns = hierarchy[page].fieldsByValuePattern[valuePattern].fieldsByRegex;
+    const regexConfidenceSum = Object.values(regexPatterns).reduce(
+      (sum, pattern) => sum + pattern.confidence,
+      0
+    );
+    
+    hierarchy[page].fieldsByValuePattern[valuePattern].confidence =
+      Object.keys(regexPatterns).length > 0
+        ? regexConfidenceSum / Object.keys(regexPatterns).length
+        : 0;
   });
 
   return hierarchy;
+}
+
+/**
+ * Helper function to get a standardized pattern from a field value
+ */
+function getValuePattern(value: string): string {
+  if (!value) return "EMPTY";
+  
+  // Replace special patterns with placeholder tokens
+  return value
+    .replace(/\d+/g, "NUM")
+    .replace(/[A-Z][A-Z]+/g, "CAPS")
+    .replace(/[A-Z][a-z]+/g, "Word")
+    .replace(/[a-z]+/g, "word")
+    .substring(0, 20); // Limit length for reasonable grouping
+}
+
+/**
+ * Helper function to create a regex pattern from a field name
+ */
+function createFieldRegexPattern(fieldName: string): string {
+  // Simple version - can be enhanced for better matching
+  return fieldName
+    .replace(/\d+/g, "\\d+")
+    .replace(/\./g, "\\.")
+    .replace(/\-/g, "\\-");
+}
+
+/**
+ * Extract context from a field
+ */
+function extractFieldContext(field: any): string {
+  // Extract context based on field location and surrounding text
+  // This is a placeholder - implement based on your specific needs
+  return `pg${field.page || 0}_${Math.floor((field.y || 0) / 100)}`;
+}
+
+/**
+ * Find potential alternative sections for a field
+ */
+function findPotentialAlternativeSections(
+  field: any, 
+  fieldCategories: Record<string, any>,
+  undersizedSections: number[]
+): number[] {
+  const alternatives: number[] = [];
+  
+  // Skip if no undersized sections to consider
+  if (!undersizedSections || undersizedSections.length === 0) {
+    return alternatives;
+  }
+  
+  try {
+    // 1. Check nearby fields on same page - fields on same page might belong to same section
+    if (field.page !== undefined) {
+      // Find other fields on same page and check their sections
+      const samePageFields = Object.entries(fieldCategories)
+        .filter(([name, data]) => {
+          return name !== field.name && 
+                data.page === field.page && 
+                data.section !== field.section &&
+                undersizedSections.includes(data.section);
+        });
+      
+      if (samePageFields.length > 0) {
+        // Group by section and count occurrences
+        const sectionCounts: Record<number, number> = {};
+        samePageFields.forEach(([_, data]) => {
+          const section = data.section || 0;
+          if (section > 0) {
+            sectionCounts[section] = (sectionCounts[section] || 0) + 1;
+          }
+        });
+        
+        // Add sections that appear frequently on this page
+        Object.entries(sectionCounts)
+          .filter(([_, count]) => count >= 2) // At least 2 other fields
+          .forEach(([section]) => {
+            alternatives.push(parseInt(section, 10));
+          });
+      }
+      
+      // 2. Check spatial proximity - fields close together might belong to same section
+      if (field.x !== undefined && field.y !== undefined) {
+        const spatialNeighbors = Object.entries(fieldCategories)
+          .filter(([name, data]) => {
+            if (name === field.name || data.page !== field.page || !undersizedSections.includes(data.section)) {
+              return false;
+            }
+            
+            // Check if fields are close together (within 100 units)
+            const xDiff = Math.abs((data.x || 0) - (field.x || 0));
+            const yDiff = Math.abs((data.y || 0) - (field.y || 0));
+            return xDiff < 100 && yDiff < 100;
+          })
+          .map(([_, data]) => data.section);
+          
+        // Count occurrences of each section among spatial neighbors
+        const spatialSections: Record<number, number> = {};
+        spatialNeighbors.forEach(section => {
+          if (section > 0) {
+            spatialSections[section] = (spatialSections[section] || 0) + 1;
+          }
+        });
+        
+        // Add sections that appear frequently among spatial neighbors
+        Object.entries(spatialSections)
+          .filter(([_, count]) => count >= 1) // Even one spatial neighbor is significant
+          .forEach(([section]) => {
+            alternatives.push(parseInt(section, 10));
+          });
+      }
+    }
+    
+    // 3. Check name patterns - use section extraction from field name
+    const sectionInfo = extractSectionFromFieldName(field.name);
+    if (sectionInfo && sectionInfo.section > 0 && 
+        sectionInfo.section !== field.section &&
+        undersizedSections.includes(sectionInfo.section)) {
+      alternatives.push(sectionInfo.section);
+    }
+    
+    // 4. Check by page ranges - use page-based section identification
+    if (field.page !== undefined) {
+      const pageSection = identifySectionByPage(field.page);
+      if (pageSection && pageSection.section > 0 && 
+          pageSection.section !== field.section &&
+          undersizedSections.includes(pageSection.section)) {
+        alternatives.push(pageSection.section);
+      }
+    }
+    
+    // Return unique alternatives, sorted by frequency
+    const uniqueAlternatives = [...new Set(alternatives)];
+    return uniqueAlternatives;
+  } catch (error) {
+    console.error('Error in findPotentialAlternativeSections:', error);
+    return [];
+  }
+}
+
+/**
+ * Add spatial information analysis to the hierarchy
+ */
+function attachSpatialInformation(hierarchy: Record<number, any>): void {
+  // Analyze each page
+  for (const [pageNumStr, pageData] of Object.entries(hierarchy)) {
+    const pageNum = parseInt(pageNumStr, 10);
+    
+    // Skip if no fields on this page
+    if (!pageData.fieldsByValuePattern) continue;
+    
+    // Collect all fields on this page with coordinates
+    const fieldsWithCoordinates: any[] = [];
+    
+    // Collect fields from all patterns and regexes
+    Object.values(pageData.fieldsByValuePattern).forEach((patternData: any) => {
+      Object.values(patternData.fieldsByRegex).forEach((regexData: any) => {
+        regexData.fields.forEach((field: any) => {
+          if (field.coordinates) {
+            fieldsWithCoordinates.push(field);
+          }
+        });
+      });
+    });
+    
+    // Skip if not enough fields with coordinates
+    if (fieldsWithCoordinates.length < 3) continue;
+    
+    // Group fields by their y-coordinate (row) with some tolerance
+    const tolerance = 10; // pixels
+    const rows: Record<string, any[]> = {};
+    
+    fieldsWithCoordinates.forEach(field => {
+      const y = field.coordinates.top;
+      const yKey = y.toString();
+      
+      // Find existing row that's close enough
+      let foundRow = false;
+      for (const [rowY, fields] of Object.entries(rows)) {
+        if (Math.abs(parseInt(rowY) - y) <= tolerance) {
+          fields.push(field);
+          foundRow = true;
+          break;
+        }
+      }
+      
+      // Create new row if needed
+      if (!foundRow) {
+        rows[yKey] = [field];
+      }
+    });
+    
+    // Analyze section distribution by row
+    const rowSections: Record<string, Record<string, number>> = {};
+    
+    for (const [rowY, fields] of Object.entries(rows)) {
+      rowSections[rowY] = {};
+      
+      // Count sections in this row
+      fields.forEach(field => {
+        const sectionKey = field.section.toString();
+        rowSections[rowY][sectionKey] = (rowSections[rowY][sectionKey] || 0) + 1;
+      });
+    }
+    
+    // Add row analysis to page data
+    pageData.spatialAnalysis = {
+      rows: rowSections,
+      pageNumber: pageNum
+    };
+  }
 }
 
 // Add a function to validate section assignments and enforce strict rules
@@ -1862,6 +2153,84 @@ function getFieldLabel(fieldName: string): string {
 // Add this helper function for getting section names
 function getSectionName(section: number): string {
   return sectionStructure[section]?.name || `Section ${section}`;
+}
+
+// Add the getSectionSummary function implementation
+/**
+ * Get the section summary data from already processed sections
+ * This function returns section information including expected field counts
+ */
+function getSectionSummary() {
+  try {
+    // If we already have a sectionSummary loaded for this run, return it
+    if (globalThis.cachedSectionSummary) {
+      return globalThis.cachedSectionSummary;
+    }
+    
+    // First, try to get section summary from our generated data in the reports directory
+    const reportSummaryPath = path.join(__dirname, '../reports/section-summary.json');
+    if (fs.existsSync(reportSummaryPath)) {
+      try {
+        const summaryContent = fs.readFileSync(reportSummaryPath, 'utf8');
+        const summaryData = JSON.parse(summaryContent);
+        
+        // Check if we have section data in expected format
+        if (Array.isArray(summaryData)) {
+          // Convert array format to sections object format
+          const sections = {};
+          summaryData.forEach(section => {
+            if (section.sectionId !== undefined && section.fieldCount !== undefined) {
+              sections[section.sectionId] = { fieldCount: section.fieldCount };
+            }
+          });
+          const result = { sections };
+          globalThis.cachedSectionSummary = result;
+          return result;
+        } else if (summaryData && summaryData.sections) {
+          // Already in correct format
+          globalThis.cachedSectionSummary = summaryData;
+          return summaryData;
+        }
+      } catch (error) {
+        console.error('Error parsing section summary from reports directory:', error);
+      }
+    }
+    
+    // Next, try section-data directory
+    const sectionDataPath = path.join(__dirname, '../section-data/section-summary.json');
+    if (fs.existsSync(sectionDataPath)) {
+      try {
+        const summaryContent = fs.readFileSync(sectionDataPath, 'utf8');
+        const summaryData = JSON.parse(summaryContent);
+        
+        // Similar conversion as above if needed
+        if (Array.isArray(summaryData)) {
+          // Convert array format to sections object format
+          const sections = {};
+          summaryData.forEach(section => {
+            if (section.sectionId !== undefined && section.fieldCount !== undefined) {
+              sections[section.sectionId] = { fieldCount: section.fieldCount };
+            }
+          });
+          const result = { sections };
+          globalThis.cachedSectionSummary = result;
+          return result;
+        } else if (summaryData && summaryData.sections) {
+          // Already in correct format
+          globalThis.cachedSectionSummary = summaryData;
+          return summaryData;
+        }
+      } catch (error) {
+        console.error('Error parsing section summary from section-data directory:', error);
+      }
+    }
+    
+    // Return empty structure if we couldn't find or parse the data
+    return { sections: {} };
+  } catch (error) {
+    console.error('Error in getSectionSummary:', error);
+    return { sections: {} };
+  }
 }
 
 // Run the main function

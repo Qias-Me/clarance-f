@@ -1,6 +1,24 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { clientPdfService } from '../../../api/service/clientpdfService';
 import type { ApplicantFormValues } from '../../../api/interfaces/formDefinition';
+import type { FieldHierarchy } from '../../../api/interfaces/FieldMetadata';
+
+// Mock field hierarchy service - replace with actual API call in production
+async function fetchFieldHierarchy(): Promise<FieldHierarchy | null> {
+  try {
+    // In a real implementation, this would be an API call to fetch field hierarchy
+    // For development/testing, you could load from a local JSON file
+    const response = await fetch('/api/field-hierarchy');
+    if (response.ok) {
+      return await response.json();
+    }
+    console.warn('Failed to fetch field hierarchy, using fallback mapping');
+    return null;
+  } catch (error) {
+    console.error('Error fetching field hierarchy:', error);
+    return null;
+  }
+}
 
 interface PdfGeneratorProps {
   formData: ApplicantFormValues;
@@ -11,7 +29,25 @@ export const PdfGenerator: React.FC<PdfGeneratorProps> = ({ formData }) => {
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<string | null>(null);
   const [showUpload, setShowUpload] = useState(false);
+  const [fieldHierarchy, setFieldHierarchy] = useState<FieldHierarchy | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch field hierarchy when component mounts
+  useEffect(() => {
+    async function loadFieldHierarchy() {
+      try {
+        const hierarchy = await fetchFieldHierarchy();
+        if (hierarchy) {
+          setFieldHierarchy(hierarchy);
+          console.log('Field hierarchy loaded for PDF generation');
+        }
+      } catch (error) {
+        console.error('Failed to load field hierarchy:', error);
+      }
+    }
+    
+    loadFieldHierarchy();
+  }, []);
 
   const generatePdf = async () => {
     setIsGenerating(true);
@@ -22,7 +58,15 @@ export const PdfGenerator: React.FC<PdfGeneratorProps> = ({ formData }) => {
     try {
       // First load the PDF template
       await clientPdfService.loadPdf();
-      setProgress('Filling form fields...');
+      setProgress('Preparing form data...');
+      
+      // Set field hierarchy if available
+      if (fieldHierarchy) {
+        clientPdfService.setFieldHierarchy(fieldHierarchy);
+        setProgress('Field hierarchy set, filling form fields...');
+      } else {
+        setProgress('Using fallback mapping, filling form fields...');
+      }
       
       // Generate the filled PDF
       const pdfBytes = await clientPdfService.generateFilledPdf(formData);
@@ -63,7 +107,13 @@ export const PdfGenerator: React.FC<PdfGeneratorProps> = ({ formData }) => {
       // Load the PDF from the uploaded file
       await clientPdfService.loadPdfFromBuffer(fileBuffer);
       
-      setProgress('PDF template loaded. Filling form fields...');
+      // Set field hierarchy if available
+      if (fieldHierarchy) {
+        clientPdfService.setFieldHierarchy(fieldHierarchy);
+        setProgress('Field hierarchy set, filling uploaded PDF template...');
+      } else {
+        setProgress('Using fallback mapping with uploaded PDF template...');
+      }
       
       // Generate the filled PDF
       const pdfBytes = await clientPdfService.generateFilledPdf(formData);
@@ -129,6 +179,7 @@ export const PdfGenerator: React.FC<PdfGeneratorProps> = ({ formData }) => {
         <small className="text-muted">
           This will generate and download your SF86 form as a PDF file.
           All processing happens in your browser - no data is sent to any server.
+          {fieldHierarchy ? ' Using optimized field mapping.' : ' Using legacy field mapping.'}
         </small>
       </div>
     </div>

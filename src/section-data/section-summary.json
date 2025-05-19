@@ -1,0 +1,272 @@
+[
+  {
+    "sectionId": 1,
+    "sectionName": "Full Name",
+    "fieldCount": 4,
+    "filledFieldCount": 4,
+    "highConfidenceFields": 4,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 2,
+    "sectionName": "Date of Birth",
+    "fieldCount": 2,
+    "filledFieldCount": 2,
+    "highConfidenceFields": 2,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 3,
+    "sectionName": "Place of Birth",
+    "fieldCount": 4,
+    "filledFieldCount": 4,
+    "highConfidenceFields": 4,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 4,
+    "sectionName": "Social Security Number",
+    "fieldCount": 138,
+    "filledFieldCount": 138,
+    "highConfidenceFields": 138,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 5,
+    "sectionName": "Other Names Used",
+    "fieldCount": 45,
+    "filledFieldCount": 45,
+    "highConfidenceFields": 45,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 6,
+    "sectionName": "Your Identifying Information",
+    "fieldCount": 6,
+    "filledFieldCount": 6,
+    "highConfidenceFields": 6,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 7,
+    "sectionName": "Your Contact Information",
+    "fieldCount": 17,
+    "filledFieldCount": 17,
+    "highConfidenceFields": 17,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 8,
+    "sectionName": "U.S. Passport Information",
+    "fieldCount": 10,
+    "filledFieldCount": 10,
+    "highConfidenceFields": 10,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 9,
+    "sectionName": "Citizenship",
+    "fieldCount": 78,
+    "filledFieldCount": 78,
+    "highConfidenceFields": 78,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 10,
+    "sectionName": "Dual/Multiple Citizenship & Foreign Passport Info",
+    "fieldCount": 122,
+    "filledFieldCount": 122,
+    "highConfidenceFields": 122,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 11,
+    "sectionName": "Where You Have Lived",
+    "fieldCount": 252,
+    "filledFieldCount": 252,
+    "highConfidenceFields": 252,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 12,
+    "sectionName": "Where you went to School",
+    "fieldCount": 118,
+    "filledFieldCount": 118,
+    "highConfidenceFields": 0,
+    "mediumConfidenceFields": 118,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 13,
+    "sectionName": "Employment Acitivites",
+    "fieldCount": 1086,
+    "filledFieldCount": 1086,
+    "highConfidenceFields": 886,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 200
+  },
+  {
+    "sectionId": 14,
+    "sectionName": "Selective Service",
+    "fieldCount": 40,
+    "filledFieldCount": 40,
+    "highConfidenceFields": 40,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 15,
+    "sectionName": "Military History",
+    "fieldCount": 60,
+    "filledFieldCount": 60,
+    "highConfidenceFields": 60,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 16,
+    "sectionName": "People Who Know You Well",
+    "fieldCount": 154,
+    "filledFieldCount": 154,
+    "highConfidenceFields": 154,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 17,
+    "sectionName": "Maritial/Relationship Status",
+    "fieldCount": 332,
+    "filledFieldCount": 332,
+    "highConfidenceFields": 332,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 18,
+    "sectionName": "Relatives",
+    "fieldCount": 964,
+    "filledFieldCount": 964,
+    "highConfidenceFields": 964,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 19,
+    "sectionName": "Foreign Contacts",
+    "fieldCount": 277,
+    "filledFieldCount": 277,
+    "highConfidenceFields": 277,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 20,
+    "sectionName": "Foreign Business, Activities, Government Contacts",
+    "fieldCount": 570,
+    "filledFieldCount": 570,
+    "highConfidenceFields": 83,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 487
+  },
+  {
+    "sectionId": 21,
+    "sectionName": "Psycological and Emotional Health",
+    "fieldCount": 486,
+    "filledFieldCount": 486,
+    "highConfidenceFields": 486,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 22,
+    "sectionName": "Police Record",
+    "fieldCount": 267,
+    "filledFieldCount": 267,
+    "highConfidenceFields": 267,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 23,
+    "sectionName": "Illegal Use of Drugs and Drug Activity",
+    "fieldCount": 191,
+    "filledFieldCount": 191,
+    "highConfidenceFields": 191,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 24,
+    "sectionName": "Use of Alcohol",
+    "fieldCount": 160,
+    "filledFieldCount": 160,
+    "highConfidenceFields": 160,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 25,
+    "sectionName": "Investigations and Clearance",
+    "fieldCount": 79,
+    "filledFieldCount": 79,
+    "highConfidenceFields": 79,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 26,
+    "sectionName": "Financial Record",
+    "fieldCount": 237,
+    "filledFieldCount": 237,
+    "highConfidenceFields": 237,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 27,
+    "sectionName": "Use of Information Technology Systems",
+    "fieldCount": 57,
+    "filledFieldCount": 57,
+    "highConfidenceFields": 57,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 28,
+    "sectionName": "Involvement in Non-Criminal Court Actions",
+    "fieldCount": 23,
+    "filledFieldCount": 23,
+    "highConfidenceFields": 23,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 29,
+    "sectionName": "Association Record",
+    "fieldCount": 141,
+    "filledFieldCount": 141,
+    "highConfidenceFields": 141,
+    "mediumConfidenceFields": 0,
+    "lowConfidenceFields": 0
+  },
+  {
+    "sectionId": 30,
+    "sectionName": "Continuation Space",
+    "fieldCount": 25,
+    "filledFieldCount": 25,
+    "highConfidenceFields": 0,
+    "mediumConfidenceFields": 25,
+    "lowConfidenceFields": 0
+  }
+]

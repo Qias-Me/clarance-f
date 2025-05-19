@@ -1,0 +1,1855 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SF-86 Form Subsection Analysis</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 20px;
+      color: #333;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1, h2, h3, h4 {
+      color: #2c3e50;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+      font-weight: bold;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    .overview {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .section {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .highlight {
+      background-color: #e3f2fd;
+    }
+    .confidence-high {
+      color: green;
+      font-weight: bold;
+    }
+    .confidence-medium {
+      color: orange;
+    }
+    .confidence-low {
+      color: red;
+    }
+    .subsection-details {
+      display: none;
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #f8f8f8;
+      border-radius: 5px;
+    }
+    .toggle-button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 5px 10px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 14px;
+      margin: 4px 2px;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h1>SF-86 Form Subsection Analysis</h1>
+  
+  <div class="overview">
+    <h2>Analysis Overview</h2>
+    <p>Total fields analyzed: <strong>6197</strong></p>
+    <p>Total sections: <strong>30</strong></p>
+    <p>Total subsections identified: <strong>23</strong></p>
+    <p>Subsection categorization coverage: <strong>5.73%</strong></p>
+  </div>
+  
+  <h2>Section Summary</h2>
+  <table>
+    <tr>
+      <th>Section</th>
+      <th>Name</th>
+      <th>Fields</th>
+      <th>Categorized</th>
+      <th>Coverage</th>
+      <th>Subsections</th>
+      <th>Details</th>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>Full Name</td>
+      <td>4</td>
+      <td>0</td>
+      <td>0.00%</td>
+      <td>0</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-1')">Details</button></td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>Date of Birth</td>
+      <td>2</td>
+      <td>0</td>
+      <td>0.00%</td>
+      <td>0</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-2')">Details</button></td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>Place of Birth</td>
+      <td>4</td>
+      <td>0</td>
+      <td>0.00%</td>
+      <td>0</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-3')">Details</button></td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>Social Security Number</td>
+      <td>138</td>
+      <td>0</td>
+      <td>0.00%</td>
+      <td>0</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-4')">Details</button></td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>Other Names Used</td>
+      <td>45</td>
+      <td>10</td>
+      <td>22.22%</td>
+      <td>1</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-5')">Details</button></td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>Your Identifying Information</td>
+      <td>6</td>
+      <td>0</td>
+      <td>0.00%</td>
+      <td>0</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-6')">Details</button></td>
+    </tr>
+    <tr>
+      <td>7</td>
+      <td>Your Contact Information</td>
+      <td>17</td>
+      <td>0</td>
+      <td>0.00%</td>
+      <td>0</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-7')">Details</button></td>
+    </tr>
+    <tr>
+      <td>8</td>
+      <td>U.S. Passport Information</td>
+      <td>10</td>
+      <td>0</td>
+      <td>0.00%</td>
+      <td>0</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-8')">Details</button></td>
+    </tr>
+    <tr>
+      <td>9</td>
+      <td>Citizenship</td>
+      <td>78</td>
+      <td>5</td>
+      <td>6.41%</td>
+      <td>5</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-9')">Details</button></td>
+    </tr>
+    <tr>
+      <td>10</td>
+      <td>Dual/Multiple Citizenship & Foreign Passport</td>
+      <td>122</td>
+      <td>0</td>
+      <td>0.00%</td>
+      <td>0</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-10')">Details</button></td>
+    </tr>
+    <tr>
+      <td>11</td>
+      <td>Where You Have Lived</td>
+      <td>252</td>
+      <td>0</td>
+      <td>0.00%</td>
+      <td>0</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-11')">Details</button></td>
+    </tr>
+    <tr>
+      <td>12</td>
+      <td>Where You Went to School</td>
+      <td>150</td>
+      <td>0</td>
+      <td>0.00%</td>
+      <td>0</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-12')">Details</button></td>
+    </tr>
+    <tr>
+      <td>13</td>
+      <td>Employment Activities</td>
+      <td>1086</td>
+      <td>105</td>
+      <td>9.67%</td>
+      <td>6</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-13')">Details</button></td>
+    </tr>
+    <tr>
+      <td>14</td>
+      <td>Selective Service Record</td>
+      <td>40</td>
+      <td>0</td>
+      <td>0.00%</td>
+      <td>0</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-14')">Details</button></td>
+    </tr>
+    <tr>
+      <td>15</td>
+      <td>Military History</td>
+      <td>60</td>
+      <td>0</td>
+      <td>0.00%</td>
+      <td>0</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-15')">Details</button></td>
+    </tr>
+    <tr>
+      <td>16</td>
+      <td>People Who Know You Well</td>
+      <td>154</td>
+      <td>0</td>
+      <td>0.00%</td>
+      <td>0</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-16')">Details</button></td>
+    </tr>
+    <tr>
+      <td>17</td>
+      <td>Marital Status</td>
+      <td>332</td>
+      <td>0</td>
+      <td>0.00%</td>
+      <td>0</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-17')">Details</button></td>
+    </tr>
+    <tr>
+      <td>18</td>
+      <td>Relatives</td>
+      <td>964</td>
+      <td>110</td>
+      <td>11.41%</td>
+      <td>2</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-18')">Details</button></td>
+    </tr>
+    <tr>
+      <td>19</td>
+      <td>Foreign Contacts</td>
+      <td>277</td>
+      <td>0</td>
+      <td>0.00%</td>
+      <td>0</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-19')">Details</button></td>
+    </tr>
+    <tr>
+      <td>20</td>
+      <td>Foreign Activities</td>
+      <td>790</td>
+      <td>0</td>
+      <td>0.00%</td>
+      <td>0</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-20')">Details</button></td>
+    </tr>
+    <tr>
+      <td>21</td>
+      <td>Psychological and Emotional Health</td>
+      <td>486</td>
+      <td>0</td>
+      <td>0.00%</td>
+      <td>0</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-21')">Details</button></td>
+    </tr>
+    <tr>
+      <td>22</td>
+      <td>Police Record</td>
+      <td>267</td>
+      <td>0</td>
+      <td>0.00%</td>
+      <td>0</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-22')">Details</button></td>
+    </tr>
+    <tr>
+      <td>23</td>
+      <td>Illegal Use of Drugs and Drug Activity</td>
+      <td>191</td>
+      <td>0</td>
+      <td>0.00%</td>
+      <td>0</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-23')">Details</button></td>
+    </tr>
+    <tr>
+      <td>24</td>
+      <td>Use of Alcohol</td>
+      <td>160</td>
+      <td>0</td>
+      <td>0.00%</td>
+      <td>0</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-24')">Details</button></td>
+    </tr>
+    <tr>
+      <td>25</td>
+      <td>Investigations and Clearance Record</td>
+      <td>79</td>
+      <td>0</td>
+      <td>0.00%</td>
+      <td>0</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-25')">Details</button></td>
+    </tr>
+    <tr>
+      <td>26</td>
+      <td>Financial Record</td>
+      <td>237</td>
+      <td>0</td>
+      <td>0.00%</td>
+      <td>0</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-26')">Details</button></td>
+    </tr>
+    <tr>
+      <td>27</td>
+      <td>Use of Information Technology</td>
+      <td>57</td>
+      <td>0</td>
+      <td>0.00%</td>
+      <td>0</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-27')">Details</button></td>
+    </tr>
+    <tr>
+      <td>28</td>
+      <td>Involvement in Non-Criminal Court Actions</td>
+      <td>23</td>
+      <td>0</td>
+      <td>0.00%</td>
+      <td>0</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-28')">Details</button></td>
+    </tr>
+    <tr>
+      <td>29</td>
+      <td>Association Record</td>
+      <td>141</td>
+      <td>125</td>
+      <td>88.65%</td>
+      <td>9</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-29')">Details</button></td>
+    </tr>
+    <tr>
+      <td>30</td>
+      <td>Continuation Space</td>
+      <td>25</td>
+      <td>0</td>
+      <td>0.00%</td>
+      <td>0</td>
+      <td><button class="toggle-button" onclick="toggleDetails('section-30')">Details</button></td>
+    </tr>
+  </table>
+  
+  <h2>Detailed Section Analysis</h2>
+  <div class="section">
+    <h3>Section 1: Full Name</h3>
+    <p>Field count: <strong>4</strong></p>
+    <p>Fields categorized into subsections: <strong>0</strong> (0.00%)</p>
+    <p>Subsections identified: <strong>0</strong></p>
+    <p>No subsections identified.</p>
+  </div>
+  <div class="section">
+    <h3>Section 2: Date of Birth</h3>
+    <p>Field count: <strong>2</strong></p>
+    <p>Fields categorized into subsections: <strong>0</strong> (0.00%)</p>
+    <p>Subsections identified: <strong>0</strong></p>
+    <p>No subsections identified.</p>
+  </div>
+  <div class="section">
+    <h3>Section 3: Place of Birth</h3>
+    <p>Field count: <strong>4</strong></p>
+    <p>Fields categorized into subsections: <strong>0</strong> (0.00%)</p>
+    <p>Subsections identified: <strong>0</strong></p>
+    <p>No subsections identified.</p>
+  </div>
+  <div class="section">
+    <h3>Section 4: Social Security Number</h3>
+    <p>Field count: <strong>138</strong></p>
+    <p>Fields categorized into subsections: <strong>0</strong> (0.00%)</p>
+    <p>Subsections identified: <strong>0</strong></p>
+    <p>No subsections identified.</p>
+  </div>
+  <div class="section">
+    <h3>Section 5: Other Names Used</h3>
+    <p>Field count: <strong>45</strong></p>
+    <p>Fields categorized into subsections: <strong>10</strong> (22.22%)</p>
+    <p>Subsections identified: <strong>1</strong></p>
+    <h4>Subsections:</h4>
+    <table>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Field Count</th>
+        <th>Pattern Type</th>
+        <th>Confidence</th>
+        <th>Details</th>
+      </tr>
+      <tr>
+        <td>otherNames</td>
+        <td>Other Names Used</td>
+        <td>10</td>
+        <td>known_pattern</td>
+        <td class="confidence-high">0.95</td>
+        <td><button class="toggle-button" onclick="toggleDetails('subsection-5-otherNames')">Fields</button></td>
+      </tr>
+      <tr>
+        <td colspan="6">
+          <div id="subsection-5-otherNames" class="subsection-details">
+            <h5>Example Fields:</h5>
+            <table>
+              <tr>
+                <th>#</th>
+                <th>Field Name</th>
+                <th>Label</th>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>S5_OtherNames_1</td>
+                <td>Other Name 1</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>S5_OtherNames_2</td>
+                <td>Other Name 2</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>S5_OtherNames_3</td>
+                <td>Other Name 3</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>S5_OtherNames_4</td>
+                <td>Other Name 4</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>S5_OtherNames_5</td>
+                <td>Other Name 5</td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td>S5_OtherNames_6</td>
+                <td>Other Name 6</td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td>S5_OtherNames_7</td>
+                <td>Other Name 7</td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td>S5_OtherNames_8</td>
+                <td>Other Name 8</td>
+              </tr>
+              <tr>
+                <td>9</td>
+                <td>S5_OtherNames_9</td>
+                <td>Other Name 9</td>
+              </tr>
+              <tr>
+                <td>10</td>
+                <td>S5_OtherNames_10</td>
+                <td>Other Name 10</td>
+              </tr>
+            </table>
+            <p><em>Showing 10 of 10 fields</em></p>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div class="section">
+    <h3>Section 6: Your Identifying Information</h3>
+    <p>Field count: <strong>6</strong></p>
+    <p>Fields categorized into subsections: <strong>0</strong> (0.00%)</p>
+    <p>Subsections identified: <strong>0</strong></p>
+    <p>No subsections identified.</p>
+  </div>
+  <div class="section">
+    <h3>Section 7: Your Contact Information</h3>
+    <p>Field count: <strong>17</strong></p>
+    <p>Fields categorized into subsections: <strong>0</strong> (0.00%)</p>
+    <p>Subsections identified: <strong>0</strong></p>
+    <p>No subsections identified.</p>
+  </div>
+  <div class="section">
+    <h3>Section 8: U.S. Passport Information</h3>
+    <p>Field count: <strong>10</strong></p>
+    <p>Fields categorized into subsections: <strong>0</strong> (0.00%)</p>
+    <p>Subsections identified: <strong>0</strong></p>
+    <p>No subsections identified.</p>
+  </div>
+  <div class="section">
+    <h3>Section 9: Citizenship</h3>
+    <p>Field count: <strong>78</strong></p>
+    <p>Fields categorized into subsections: <strong>5</strong> (6.41%)</p>
+    <p>Subsections identified: <strong>5</strong></p>
+    <h4>Subsections:</h4>
+    <table>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Field Count</th>
+        <th>Pattern Type</th>
+        <th>Confidence</th>
+        <th>Details</th>
+      </tr>
+      <tr>
+        <td>birthCitizenship</td>
+        <td>Birth Citizenship</td>
+        <td>1</td>
+        <td>known_pattern</td>
+        <td class="confidence-high">0.95</td>
+        <td><button class="toggle-button" onclick="toggleDetails('subsection-9-birthCitizenship')">Fields</button></td>
+      </tr>
+      <tr>
+        <td colspan="6">
+          <div id="subsection-9-birthCitizenship" class="subsection-details">
+            <h5>Example Fields:</h5>
+            <table>
+              <tr>
+                <th>#</th>
+                <th>Field Name</th>
+                <th>Label</th>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>S9_BornUSCitizen</td>
+                <td>Section 9 Field 1</td>
+              </tr>
+            </table>
+            <p><em>Showing 1 of 1 fields</em></p>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>derivedCitizenship</td>
+        <td>Derived US Citizenship</td>
+        <td>1</td>
+        <td>known_pattern</td>
+        <td class="confidence-high">0.95</td>
+        <td><button class="toggle-button" onclick="toggleDetails('subsection-9-derivedCitizenship')">Fields</button></td>
+      </tr>
+      <tr>
+        <td colspan="6">
+          <div id="subsection-9-derivedCitizenship" class="subsection-details">
+            <h5>Example Fields:</h5>
+            <table>
+              <tr>
+                <th>#</th>
+                <th>Field Name</th>
+                <th>Label</th>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>S9_DerivedUSCitizen</td>
+                <td>Section 9 Field 6</td>
+              </tr>
+            </table>
+            <p><em>Showing 1 of 1 fields</em></p>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>naturalization</td>
+        <td>Naturalization</td>
+        <td>1</td>
+        <td>known_pattern</td>
+        <td class="confidence-high">0.95</td>
+        <td><button class="toggle-button" onclick="toggleDetails('subsection-9-naturalization')">Fields</button></td>
+      </tr>
+      <tr>
+        <td colspan="6">
+          <div id="subsection-9-naturalization" class="subsection-details">
+            <h5>Example Fields:</h5>
+            <table>
+              <tr>
+                <th>#</th>
+                <th>Field Name</th>
+                <th>Label</th>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>S9_Naturalization</td>
+                <td>Section 9 Field 11</td>
+              </tr>
+            </table>
+            <p><em>Showing 1 of 1 fields</em></p>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>foreignBorn</td>
+        <td>Foreign Born</td>
+        <td>1</td>
+        <td>known_pattern</td>
+        <td class="confidence-high">0.95</td>
+        <td><button class="toggle-button" onclick="toggleDetails('subsection-9-foreignBorn')">Fields</button></td>
+      </tr>
+      <tr>
+        <td colspan="6">
+          <div id="subsection-9-foreignBorn" class="subsection-details">
+            <h5>Example Fields:</h5>
+            <table>
+              <tr>
+                <th>#</th>
+                <th>Field Name</th>
+                <th>Label</th>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>S9_ForeignBorn</td>
+                <td>Section 9 Field 16</td>
+              </tr>
+            </table>
+            <p><em>Showing 1 of 1 fields</em></p>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>alienRegistration</td>
+        <td>Alien Registration</td>
+        <td>1</td>
+        <td>known_pattern</td>
+        <td class="confidence-high">0.95</td>
+        <td><button class="toggle-button" onclick="toggleDetails('subsection-9-alienRegistration')">Fields</button></td>
+      </tr>
+      <tr>
+        <td colspan="6">
+          <div id="subsection-9-alienRegistration" class="subsection-details">
+            <h5>Example Fields:</h5>
+            <table>
+              <tr>
+                <th>#</th>
+                <th>Field Name</th>
+                <th>Label</th>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>S9_AlienRegistration</td>
+                <td>Section 9 Field 21</td>
+              </tr>
+            </table>
+            <p><em>Showing 1 of 1 fields</em></p>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div class="section">
+    <h3>Section 10: Dual/Multiple Citizenship & Foreign Passport</h3>
+    <p>Field count: <strong>122</strong></p>
+    <p>Fields categorized into subsections: <strong>0</strong> (0.00%)</p>
+    <p>Subsections identified: <strong>0</strong></p>
+    <p>No subsections identified.</p>
+  </div>
+  <div class="section">
+    <h3>Section 11: Where You Have Lived</h3>
+    <p>Field count: <strong>252</strong></p>
+    <p>Fields categorized into subsections: <strong>0</strong> (0.00%)</p>
+    <p>Subsections identified: <strong>0</strong></p>
+    <p>No subsections identified.</p>
+  </div>
+  <div class="section">
+    <h3>Section 12: Where You Went to School</h3>
+    <p>Field count: <strong>150</strong></p>
+    <p>Fields categorized into subsections: <strong>0</strong> (0.00%)</p>
+    <p>Subsections identified: <strong>0</strong></p>
+    <p>No subsections identified.</p>
+  </div>
+  <div class="section">
+    <h3>Section 13: Employment Activities</h3>
+    <p>Field count: <strong>1086</strong></p>
+    <p>Fields categorized into subsections: <strong>105</strong> (9.67%)</p>
+    <p>Subsections identified: <strong>6</strong></p>
+    <h4>Subsections:</h4>
+    <table>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Field Count</th>
+        <th>Pattern Type</th>
+        <th>Confidence</th>
+        <th>Details</th>
+      </tr>
+      <tr>
+        <td>employmentActivities</td>
+        <td>Employment Activities</td>
+        <td>5</td>
+        <td>known_pattern</td>
+        <td class="confidence-high">0.95</td>
+        <td><button class="toggle-button" onclick="toggleDetails('subsection-13-employmentActivities')">Fields</button></td>
+      </tr>
+      <tr>
+        <td colspan="6">
+          <div id="subsection-13-employmentActivities" class="subsection-details">
+            <h5>Example Fields:</h5>
+            <table>
+              <tr>
+                <th>#</th>
+                <th>Field Name</th>
+                <th>Label</th>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>S13_Employment_CurrentEmployer</td>
+                <td>Section 13 Field 101</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>S13_Employment_PreviousEmployer</td>
+                <td>Section 13 Field 102</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>S13_Employment_Unemployment</td>
+                <td>Section 13 Field 103</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>S13_Employment_SelfEmployment</td>
+                <td>Section 13 Field 104</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>S13_Employment_FederalContractor</td>
+                <td>Section 13 Field 105</td>
+              </tr>
+            </table>
+            <p><em>Showing 5 of 5 fields</em></p>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>1</td>
+        <td>Subsection 13.1</td>
+        <td>20</td>
+        <td>numbered_pattern</td>
+        <td class="confidence-high">0.80</td>
+        <td><button class="toggle-button" onclick="toggleDetails('subsection-13-1')">Fields</button></td>
+      </tr>
+      <tr>
+        <td colspan="6">
+          <div id="subsection-13-1" class="subsection-details">
+            <h5>Example Fields:</h5>
+            <table>
+              <tr>
+                <th>#</th>
+                <th>Field Name</th>
+                <th>Label</th>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>S13_1_Field1</td>
+                <td>Employment 1 Field 1</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>S13_1_Field2</td>
+                <td>Employment 1 Field 2</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>S13_1_Field3</td>
+                <td>Employment 1 Field 3</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>S13_1_Field4</td>
+                <td>Employment 1 Field 4</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>S13_1_Field5</td>
+                <td>Employment 1 Field 5</td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td>S13_1_Field6</td>
+                <td>Employment 1 Field 6</td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td>S13_1_Field7</td>
+                <td>Employment 1 Field 7</td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td>S13_1_Field8</td>
+                <td>Employment 1 Field 8</td>
+              </tr>
+              <tr>
+                <td>9</td>
+                <td>S13_1_Field9</td>
+                <td>Employment 1 Field 9</td>
+              </tr>
+              <tr>
+                <td>10</td>
+                <td>S13_1_Field10</td>
+                <td>Employment 1 Field 10</td>
+              </tr>
+            </table>
+            <p><em>Showing 10 of 20 fields</em></p>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>Subsection 13.2</td>
+        <td>20</td>
+        <td>numbered_pattern</td>
+        <td class="confidence-high">0.80</td>
+        <td><button class="toggle-button" onclick="toggleDetails('subsection-13-2')">Fields</button></td>
+      </tr>
+      <tr>
+        <td colspan="6">
+          <div id="subsection-13-2" class="subsection-details">
+            <h5>Example Fields:</h5>
+            <table>
+              <tr>
+                <th>#</th>
+                <th>Field Name</th>
+                <th>Label</th>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>S13_2_Field1</td>
+                <td>Employment 2 Field 1</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>S13_2_Field2</td>
+                <td>Employment 2 Field 2</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>S13_2_Field3</td>
+                <td>Employment 2 Field 3</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>S13_2_Field4</td>
+                <td>Employment 2 Field 4</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>S13_2_Field5</td>
+                <td>Employment 2 Field 5</td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td>S13_2_Field6</td>
+                <td>Employment 2 Field 6</td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td>S13_2_Field7</td>
+                <td>Employment 2 Field 7</td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td>S13_2_Field8</td>
+                <td>Employment 2 Field 8</td>
+              </tr>
+              <tr>
+                <td>9</td>
+                <td>S13_2_Field9</td>
+                <td>Employment 2 Field 9</td>
+              </tr>
+              <tr>
+                <td>10</td>
+                <td>S13_2_Field10</td>
+                <td>Employment 2 Field 10</td>
+              </tr>
+            </table>
+            <p><em>Showing 10 of 20 fields</em></p>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>Subsection 13.3</td>
+        <td>20</td>
+        <td>numbered_pattern</td>
+        <td class="confidence-high">0.80</td>
+        <td><button class="toggle-button" onclick="toggleDetails('subsection-13-3')">Fields</button></td>
+      </tr>
+      <tr>
+        <td colspan="6">
+          <div id="subsection-13-3" class="subsection-details">
+            <h5>Example Fields:</h5>
+            <table>
+              <tr>
+                <th>#</th>
+                <th>Field Name</th>
+                <th>Label</th>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>S13_3_Field1</td>
+                <td>Employment 3 Field 1</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>S13_3_Field2</td>
+                <td>Employment 3 Field 2</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>S13_3_Field3</td>
+                <td>Employment 3 Field 3</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>S13_3_Field4</td>
+                <td>Employment 3 Field 4</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>S13_3_Field5</td>
+                <td>Employment 3 Field 5</td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td>S13_3_Field6</td>
+                <td>Employment 3 Field 6</td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td>S13_3_Field7</td>
+                <td>Employment 3 Field 7</td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td>S13_3_Field8</td>
+                <td>Employment 3 Field 8</td>
+              </tr>
+              <tr>
+                <td>9</td>
+                <td>S13_3_Field9</td>
+                <td>Employment 3 Field 9</td>
+              </tr>
+              <tr>
+                <td>10</td>
+                <td>S13_3_Field10</td>
+                <td>Employment 3 Field 10</td>
+              </tr>
+            </table>
+            <p><em>Showing 10 of 20 fields</em></p>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>Subsection 13.4</td>
+        <td>20</td>
+        <td>numbered_pattern</td>
+        <td class="confidence-high">0.80</td>
+        <td><button class="toggle-button" onclick="toggleDetails('subsection-13-4')">Fields</button></td>
+      </tr>
+      <tr>
+        <td colspan="6">
+          <div id="subsection-13-4" class="subsection-details">
+            <h5>Example Fields:</h5>
+            <table>
+              <tr>
+                <th>#</th>
+                <th>Field Name</th>
+                <th>Label</th>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>S13_4_Field1</td>
+                <td>Employment 4 Field 1</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>S13_4_Field2</td>
+                <td>Employment 4 Field 2</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>S13_4_Field3</td>
+                <td>Employment 4 Field 3</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>S13_4_Field4</td>
+                <td>Employment 4 Field 4</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>S13_4_Field5</td>
+                <td>Employment 4 Field 5</td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td>S13_4_Field6</td>
+                <td>Employment 4 Field 6</td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td>S13_4_Field7</td>
+                <td>Employment 4 Field 7</td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td>S13_4_Field8</td>
+                <td>Employment 4 Field 8</td>
+              </tr>
+              <tr>
+                <td>9</td>
+                <td>S13_4_Field9</td>
+                <td>Employment 4 Field 9</td>
+              </tr>
+              <tr>
+                <td>10</td>
+                <td>S13_4_Field10</td>
+                <td>Employment 4 Field 10</td>
+              </tr>
+            </table>
+            <p><em>Showing 10 of 20 fields</em></p>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>Subsection 13.5</td>
+        <td>20</td>
+        <td>numbered_pattern</td>
+        <td class="confidence-high">0.80</td>
+        <td><button class="toggle-button" onclick="toggleDetails('subsection-13-5')">Fields</button></td>
+      </tr>
+      <tr>
+        <td colspan="6">
+          <div id="subsection-13-5" class="subsection-details">
+            <h5>Example Fields:</h5>
+            <table>
+              <tr>
+                <th>#</th>
+                <th>Field Name</th>
+                <th>Label</th>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>S13_5_Field1</td>
+                <td>Employment 5 Field 1</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>S13_5_Field2</td>
+                <td>Employment 5 Field 2</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>S13_5_Field3</td>
+                <td>Employment 5 Field 3</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>S13_5_Field4</td>
+                <td>Employment 5 Field 4</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>S13_5_Field5</td>
+                <td>Employment 5 Field 5</td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td>S13_5_Field6</td>
+                <td>Employment 5 Field 6</td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td>S13_5_Field7</td>
+                <td>Employment 5 Field 7</td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td>S13_5_Field8</td>
+                <td>Employment 5 Field 8</td>
+              </tr>
+              <tr>
+                <td>9</td>
+                <td>S13_5_Field9</td>
+                <td>Employment 5 Field 9</td>
+              </tr>
+              <tr>
+                <td>10</td>
+                <td>S13_5_Field10</td>
+                <td>Employment 5 Field 10</td>
+              </tr>
+            </table>
+            <p><em>Showing 10 of 20 fields</em></p>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div class="section">
+    <h3>Section 14: Selective Service Record</h3>
+    <p>Field count: <strong>40</strong></p>
+    <p>Fields categorized into subsections: <strong>0</strong> (0.00%)</p>
+    <p>Subsections identified: <strong>0</strong></p>
+    <p>No subsections identified.</p>
+  </div>
+  <div class="section">
+    <h3>Section 15: Military History</h3>
+    <p>Field count: <strong>60</strong></p>
+    <p>Fields categorized into subsections: <strong>0</strong> (0.00%)</p>
+    <p>Subsections identified: <strong>0</strong></p>
+    <p>No subsections identified.</p>
+  </div>
+  <div class="section">
+    <h3>Section 16: People Who Know You Well</h3>
+    <p>Field count: <strong>154</strong></p>
+    <p>Fields categorized into subsections: <strong>0</strong> (0.00%)</p>
+    <p>Subsections identified: <strong>0</strong></p>
+    <p>No subsections identified.</p>
+  </div>
+  <div class="section">
+    <h3>Section 17: Marital Status</h3>
+    <p>Field count: <strong>332</strong></p>
+    <p>Fields categorized into subsections: <strong>0</strong> (0.00%)</p>
+    <p>Subsections identified: <strong>0</strong></p>
+    <p>No subsections identified.</p>
+  </div>
+  <div class="section">
+    <h3>Section 18: Relatives</h3>
+    <p>Field count: <strong>964</strong></p>
+    <p>Fields categorized into subsections: <strong>110</strong> (11.41%)</p>
+    <p>Subsections identified: <strong>2</strong></p>
+    <h4>Subsections:</h4>
+    <table>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Field Count</th>
+        <th>Pattern Type</th>
+        <th>Confidence</th>
+        <th>Details</th>
+      </tr>
+      <tr>
+        <td>relatives</td>
+        <td>Relatives</td>
+        <td>100</td>
+        <td>known_pattern</td>
+        <td class="confidence-high">0.95</td>
+        <td><button class="toggle-button" onclick="toggleDetails('subsection-18-relatives')">Fields</button></td>
+      </tr>
+      <tr>
+        <td colspan="6">
+          <div id="subsection-18-relatives" class="subsection-details">
+            <h5>Example Fields:</h5>
+            <table>
+              <tr>
+                <th>#</th>
+                <th>Field Name</th>
+                <th>Label</th>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>S18_Relative1_Mother</td>
+                <td>Relative 1 (Mother)</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>S18_Relative1_Father</td>
+                <td>Relative 1 (Father)</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>S18_Relative1_Child</td>
+                <td>Relative 1 (Child)</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>S18_Relative1_Sibling</td>
+                <td>Relative 1 (Sibling)</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>S18_Relative1_StepMother</td>
+                <td>Relative 1 (StepMother)</td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td>S18_Relative1_StepFather</td>
+                <td>Relative 1 (StepFather)</td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td>S18_Relative1_FosterParent</td>
+                <td>Relative 1 (FosterParent)</td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td>S18_Relative1_Mother</td>
+                <td>Relative 1 (Mother)</td>
+              </tr>
+              <tr>
+                <td>9</td>
+                <td>S18_Relative1_Father</td>
+                <td>Relative 1 (Father)</td>
+              </tr>
+              <tr>
+                <td>10</td>
+                <td>S18_Relative1_Child</td>
+                <td>Relative 1 (Child)</td>
+              </tr>
+            </table>
+            <p><em>Showing 10 of 100 fields</em></p>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>entry1</td>
+        <td>Entry 1</td>
+        <td>10</td>
+        <td>entry_pattern</td>
+        <td class="confidence-low">0.60</td>
+        <td><button class="toggle-button" onclick="toggleDetails('subsection-18-entry1')">Fields</button></td>
+      </tr>
+      <tr>
+        <td colspan="6">
+          <div id="subsection-18-entry1" class="subsection-details">
+            <h5>Example Fields:</h5>
+            <table>
+              <tr>
+                <th>#</th>
+                <th>Field Name</th>
+                <th>Label</th>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>-</td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>-</td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>-</td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>-</td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>-</td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td>-</td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td>-</td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td>-</td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td>9</td>
+                <td>-</td>
+                <td>-</td>
+              </tr>
+              <tr>
+                <td>10</td>
+                <td>-</td>
+                <td>-</td>
+              </tr>
+            </table>
+            <p><em>Showing 10 of 10 fields</em></p>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div class="section">
+    <h3>Section 19: Foreign Contacts</h3>
+    <p>Field count: <strong>277</strong></p>
+    <p>Fields categorized into subsections: <strong>0</strong> (0.00%)</p>
+    <p>Subsections identified: <strong>0</strong></p>
+    <p>No subsections identified.</p>
+  </div>
+  <div class="section">
+    <h3>Section 20: Foreign Activities</h3>
+    <p>Field count: <strong>790</strong></p>
+    <p>Fields categorized into subsections: <strong>0</strong> (0.00%)</p>
+    <p>Subsections identified: <strong>0</strong></p>
+    <p>No subsections identified.</p>
+  </div>
+  <div class="section">
+    <h3>Section 21: Psychological and Emotional Health</h3>
+    <p>Field count: <strong>486</strong></p>
+    <p>Fields categorized into subsections: <strong>0</strong> (0.00%)</p>
+    <p>Subsections identified: <strong>0</strong></p>
+    <p>No subsections identified.</p>
+  </div>
+  <div class="section">
+    <h3>Section 22: Police Record</h3>
+    <p>Field count: <strong>267</strong></p>
+    <p>Fields categorized into subsections: <strong>0</strong> (0.00%)</p>
+    <p>Subsections identified: <strong>0</strong></p>
+    <p>No subsections identified.</p>
+  </div>
+  <div class="section">
+    <h3>Section 23: Illegal Use of Drugs and Drug Activity</h3>
+    <p>Field count: <strong>191</strong></p>
+    <p>Fields categorized into subsections: <strong>0</strong> (0.00%)</p>
+    <p>Subsections identified: <strong>0</strong></p>
+    <p>No subsections identified.</p>
+  </div>
+  <div class="section">
+    <h3>Section 24: Use of Alcohol</h3>
+    <p>Field count: <strong>160</strong></p>
+    <p>Fields categorized into subsections: <strong>0</strong> (0.00%)</p>
+    <p>Subsections identified: <strong>0</strong></p>
+    <p>No subsections identified.</p>
+  </div>
+  <div class="section">
+    <h3>Section 25: Investigations and Clearance Record</h3>
+    <p>Field count: <strong>79</strong></p>
+    <p>Fields categorized into subsections: <strong>0</strong> (0.00%)</p>
+    <p>Subsections identified: <strong>0</strong></p>
+    <p>No subsections identified.</p>
+  </div>
+  <div class="section">
+    <h3>Section 26: Financial Record</h3>
+    <p>Field count: <strong>237</strong></p>
+    <p>Fields categorized into subsections: <strong>0</strong> (0.00%)</p>
+    <p>Subsections identified: <strong>0</strong></p>
+    <p>No subsections identified.</p>
+  </div>
+  <div class="section">
+    <h3>Section 27: Use of Information Technology</h3>
+    <p>Field count: <strong>57</strong></p>
+    <p>Fields categorized into subsections: <strong>0</strong> (0.00%)</p>
+    <p>Subsections identified: <strong>0</strong></p>
+    <p>No subsections identified.</p>
+  </div>
+  <div class="section">
+    <h3>Section 28: Involvement in Non-Criminal Court Actions</h3>
+    <p>Field count: <strong>23</strong></p>
+    <p>Fields categorized into subsections: <strong>0</strong> (0.00%)</p>
+    <p>Subsections identified: <strong>0</strong></p>
+    <p>No subsections identified.</p>
+  </div>
+  <div class="section highlight">
+    <h3>Section 29: Association Record</h3>
+    <p>Field count: <strong>141</strong></p>
+    <p>Fields categorized into subsections: <strong>125</strong> (88.65%)</p>
+    <p>Subsections identified: <strong>9</strong></p>
+    <h4>Subsections:</h4>
+    <table>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Field Count</th>
+        <th>Pattern Type</th>
+        <th>Confidence</th>
+        <th>Details</th>
+      </tr>
+      <tr>
+        <td>terroristOrganization</td>
+        <td>Terrorist Organization</td>
+        <td>1</td>
+        <td>known_pattern</td>
+        <td class="confidence-high">0.95</td>
+        <td><button class="toggle-button" onclick="toggleDetails('subsection-29-terroristOrganization')">Fields</button></td>
+      </tr>
+      <tr>
+        <td colspan="6">
+          <div id="subsection-29-terroristOrganization" class="subsection-details">
+            <h5>Example Fields:</h5>
+            <table>
+              <tr>
+                <th>#</th>
+                <th>Field Name</th>
+                <th>Label</th>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>S29_Terrorist</td>
+                <td>Association Terrorist</td>
+              </tr>
+            </table>
+            <p><em>Showing 1 of 1 fields</em></p>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>engagedInTerrorism</td>
+        <td>Engaged in Terrorism</td>
+        <td>1</td>
+        <td>known_pattern</td>
+        <td class="confidence-high">0.95</td>
+        <td><button class="toggle-button" onclick="toggleDetails('subsection-29-engagedInTerrorism')">Fields</button></td>
+      </tr>
+      <tr>
+        <td colspan="6">
+          <div id="subsection-29-engagedInTerrorism" class="subsection-details">
+            <h5>Example Fields:</h5>
+            <table>
+              <tr>
+                <th>#</th>
+                <th>Field Name</th>
+                <th>Label</th>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>S29_Engaged</td>
+                <td>Association Engaged</td>
+              </tr>
+            </table>
+            <p><em>Showing 1 of 1 fields</em></p>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>advocatedTerrorism</td>
+        <td>Advocated Terrorism</td>
+        <td>1</td>
+        <td>known_pattern</td>
+        <td class="confidence-high">0.95</td>
+        <td><button class="toggle-button" onclick="toggleDetails('subsection-29-advocatedTerrorism')">Fields</button></td>
+      </tr>
+      <tr>
+        <td colspan="6">
+          <div id="subsection-29-advocatedTerrorism" class="subsection-details">
+            <h5>Example Fields:</h5>
+            <table>
+              <tr>
+                <th>#</th>
+                <th>Field Name</th>
+                <th>Label</th>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>S29_Advocate</td>
+                <td>Association Advocate</td>
+              </tr>
+            </table>
+            <p><em>Showing 1 of 1 fields</em></p>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>associationMembership</td>
+        <td>Association Membership</td>
+        <td>1</td>
+        <td>known_pattern</td>
+        <td class="confidence-high">0.95</td>
+        <td><button class="toggle-button" onclick="toggleDetails('subsection-29-associationMembership')">Fields</button></td>
+      </tr>
+      <tr>
+        <td colspan="6">
+          <div id="subsection-29-associationMembership" class="subsection-details">
+            <h5>Example Fields:</h5>
+            <table>
+              <tr>
+                <th>#</th>
+                <th>Field Name</th>
+                <th>Label</th>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>S29_Membership</td>
+                <td>Association Membership</td>
+              </tr>
+            </table>
+            <p><em>Showing 1 of 1 fields</em></p>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>associationActivity</td>
+        <td>Association Activity</td>
+        <td>1</td>
+        <td>known_pattern</td>
+        <td class="confidence-high">0.95</td>
+        <td><button class="toggle-button" onclick="toggleDetails('subsection-29-associationActivity')">Fields</button></td>
+      </tr>
+      <tr>
+        <td colspan="6">
+          <div id="subsection-29-associationActivity" class="subsection-details">
+            <h5>Example Fields:</h5>
+            <table>
+              <tr>
+                <th>#</th>
+                <th>Field Name</th>
+                <th>Label</th>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>S29_Activity</td>
+                <td>Association Activity</td>
+              </tr>
+            </table>
+            <p><em>Showing 1 of 1 fields</em></p>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>Subsection 29.2</td>
+        <td>30</td>
+        <td>numbered_pattern</td>
+        <td class="confidence-high">0.80</td>
+        <td><button class="toggle-button" onclick="toggleDetails('subsection-29-2')">Fields</button></td>
+      </tr>
+      <tr>
+        <td colspan="6">
+          <div id="subsection-29-2" class="subsection-details">
+            <h5>Example Fields:</h5>
+            <table>
+              <tr>
+                <th>#</th>
+                <th>Field Name</th>
+                <th>Label</th>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>S29_2_Field1</td>
+                <td>Association Record 2.1</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>S29_2_Field2</td>
+                <td>Association Record 2.2</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>S29_2_Field3</td>
+                <td>Association Record 2.3</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>S29_2_Field4</td>
+                <td>Association Record 2.4</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>S29_2_Field5</td>
+                <td>Association Record 2.5</td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td>S29_2_Field6</td>
+                <td>Association Record 2.6</td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td>S29_2_Field7</td>
+                <td>Association Record 2.7</td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td>S29_2_Field8</td>
+                <td>Association Record 2.8</td>
+              </tr>
+              <tr>
+                <td>9</td>
+                <td>S29_2_Field9</td>
+                <td>Association Record 2.9</td>
+              </tr>
+              <tr>
+                <td>10</td>
+                <td>S29_2_Field10</td>
+                <td>Association Record 2.10</td>
+              </tr>
+            </table>
+            <p><em>Showing 10 of 30 fields</em></p>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>Subsection 29.3</td>
+        <td>30</td>
+        <td>numbered_pattern</td>
+        <td class="confidence-high">0.80</td>
+        <td><button class="toggle-button" onclick="toggleDetails('subsection-29-3')">Fields</button></td>
+      </tr>
+      <tr>
+        <td colspan="6">
+          <div id="subsection-29-3" class="subsection-details">
+            <h5>Example Fields:</h5>
+            <table>
+              <tr>
+                <th>#</th>
+                <th>Field Name</th>
+                <th>Label</th>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>S29_3_Field1</td>
+                <td>Association Record 3.1</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>S29_3_Field2</td>
+                <td>Association Record 3.2</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>S29_3_Field3</td>
+                <td>Association Record 3.3</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>S29_3_Field4</td>
+                <td>Association Record 3.4</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>S29_3_Field5</td>
+                <td>Association Record 3.5</td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td>S29_3_Field6</td>
+                <td>Association Record 3.6</td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td>S29_3_Field7</td>
+                <td>Association Record 3.7</td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td>S29_3_Field8</td>
+                <td>Association Record 3.8</td>
+              </tr>
+              <tr>
+                <td>9</td>
+                <td>S29_3_Field9</td>
+                <td>Association Record 3.9</td>
+              </tr>
+              <tr>
+                <td>10</td>
+                <td>S29_3_Field10</td>
+                <td>Association Record 3.10</td>
+              </tr>
+            </table>
+            <p><em>Showing 10 of 30 fields</em></p>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>Subsection 29.4</td>
+        <td>30</td>
+        <td>numbered_pattern</td>
+        <td class="confidence-high">0.80</td>
+        <td><button class="toggle-button" onclick="toggleDetails('subsection-29-4')">Fields</button></td>
+      </tr>
+      <tr>
+        <td colspan="6">
+          <div id="subsection-29-4" class="subsection-details">
+            <h5>Example Fields:</h5>
+            <table>
+              <tr>
+                <th>#</th>
+                <th>Field Name</th>
+                <th>Label</th>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>S29_4_Field1</td>
+                <td>Association Record 4.1</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>S29_4_Field2</td>
+                <td>Association Record 4.2</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>S29_4_Field3</td>
+                <td>Association Record 4.3</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>S29_4_Field4</td>
+                <td>Association Record 4.4</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>S29_4_Field5</td>
+                <td>Association Record 4.5</td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td>S29_4_Field6</td>
+                <td>Association Record 4.6</td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td>S29_4_Field7</td>
+                <td>Association Record 4.7</td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td>S29_4_Field8</td>
+                <td>Association Record 4.8</td>
+              </tr>
+              <tr>
+                <td>9</td>
+                <td>S29_4_Field9</td>
+                <td>Association Record 4.9</td>
+              </tr>
+              <tr>
+                <td>10</td>
+                <td>S29_4_Field10</td>
+                <td>Association Record 4.10</td>
+              </tr>
+            </table>
+            <p><em>Showing 10 of 30 fields</em></p>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>Subsection 29.5</td>
+        <td>30</td>
+        <td>numbered_pattern</td>
+        <td class="confidence-high">0.80</td>
+        <td><button class="toggle-button" onclick="toggleDetails('subsection-29-5')">Fields</button></td>
+      </tr>
+      <tr>
+        <td colspan="6">
+          <div id="subsection-29-5" class="subsection-details">
+            <h5>Example Fields:</h5>
+            <table>
+              <tr>
+                <th>#</th>
+                <th>Field Name</th>
+                <th>Label</th>
+              </tr>
+              <tr>
+                <td>1</td>
+                <td>S29_5_Field1</td>
+                <td>Association Record 5.1</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>S29_5_Field2</td>
+                <td>Association Record 5.2</td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>S29_5_Field3</td>
+                <td>Association Record 5.3</td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>S29_5_Field4</td>
+                <td>Association Record 5.4</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>S29_5_Field5</td>
+                <td>Association Record 5.5</td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td>S29_5_Field6</td>
+                <td>Association Record 5.6</td>
+              </tr>
+              <tr>
+                <td>7</td>
+                <td>S29_5_Field7</td>
+                <td>Association Record 5.7</td>
+              </tr>
+              <tr>
+                <td>8</td>
+                <td>S29_5_Field8</td>
+                <td>Association Record 5.8</td>
+              </tr>
+              <tr>
+                <td>9</td>
+                <td>S29_5_Field9</td>
+                <td>Association Record 5.9</td>
+              </tr>
+              <tr>
+                <td>10</td>
+                <td>S29_5_Field10</td>
+                <td>Association Record 5.10</td>
+              </tr>
+            </table>
+            <p><em>Showing 10 of 30 fields</em></p>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div class="section">
+    <h3>Section 30: Continuation Space</h3>
+    <p>Field count: <strong>25</strong></p>
+    <p>Fields categorized into subsections: <strong>0</strong> (0.00%)</p>
+    <p>Subsections identified: <strong>0</strong></p>
+    <p>No subsections identified.</p>
+  </div>
+  
+  <script>
+    function toggleDetails(id) {
+      const element = document.getElementById(id);
+      if (element.style.display === "block") {
+        element.style.display = "none";
+      } else {
+        element.style.display = "block";
+      }
+    }
+  </script>
+</body>
+</html>

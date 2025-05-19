@@ -1,0 +1,86 @@
+{
+  "section": 12,
+  "name": "Where You Went to School",
+  "rules": [
+    {
+      "section": 12,
+      "pattern": "form1\\[0\\]\\.Section12\\[0\\]",
+      "confidence": 0.95,
+      "description": "Exact match for Section 12 area"
+    },
+    {
+      "section": 12,
+      "pattern": "section12",
+      "confidence": 0.9,
+      "description": "Generic section 12 field pattern"
+    },
+    {
+      "section": 12,
+      "pattern": "where you went to school",
+      "confidence": 0.85,
+      "description": "Match by section title"
+    },
+    {
+      "section": 12,
+      "pattern": "school name",
+      "confidence": 0.8,
+      "description": "School name field"
+    },
+    {
+      "section": 12,
+      "pattern": "school address",
+      "confidence": 0.8,
+      "description": "School address field"
+    },
+    {
+      "section": 12,
+      "pattern": "degree",
+      "confidence": 0.75,
+      "description": "Degree field"
+    },
+    {
+      "section": 12,
+      "pattern": "diploma",
+      "confidence": 0.75,
+      "description": "Diploma field"
+    },
+    {
+      "section": 12,
+      "pattern": "section12_\\d+",
+      "confidence": 0.9,
+      "description": "Section 12 entry index pattern",
+      "entryPattern": "section12_(\\d+)"
+    },
+    {
+      "section": 12,
+      "pattern": "12\\.\\d+",
+      "confidence": 0.85,
+      "description": "Alternative section 12 entry pattern",
+      "entryPattern": "12\\.(\\d+)"
+    },
+    {
+      "section": 12,
+      "pattern": "education",
+      "confidence": 0.7,
+      "description": "Education related field"
+    },
+    {
+      "section": 12,
+      "pattern": "school",
+      "confidence": 0.7,
+      "description": "School related field"
+    },
+    {
+      "section": 12,
+      "pattern": "college",
+      "confidence": 0.7,
+      "description": "College related field"
+    },
+    {
+      "section": 12,
+      "pattern": "university",
+      "confidence": 0.7,
+      "description": "University related field"
+    }
+  ]
+} 

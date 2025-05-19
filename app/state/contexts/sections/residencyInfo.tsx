@@ -1297,3 +1297,118 @@ export const residencyInfo: ResidencyInfo[] = [
     },
   },
 ];
+
+/**
+ * Validates residencyInfo data to ensure it meets form requirements
+ * 
+ * @param data The residencyInfo data to validate
+ * @returns Object containing validation result and error messages
+ */
+export const validateResidencyInfo = (data: ResidencyInfo[]): { 
+  isValid: boolean; 
+  errors: string[] 
+} => {
+  const errors: string[] = [];
+  
+  // Check if the residency array exists and has entries
+  if (!Array.isArray(data) || data.length === 0) {
+    errors.push("At least one residence record is required.");
+    return { isValid: false, errors };
+  }
+  
+  // Validate each residency entry
+  data.forEach((residency, index) => {
+    const residencyNum = index + 1;
+    
+    // Validate start date
+    if (!residency.residenceStartDate?.value) {
+      errors.push(`Residence #${residencyNum}: Start date is required.`);
+    } else {
+      // Check start date format
+      const dateRegex = /^\d{4}-\d{2}$|^\d{2}\/\d{4}$/;
+      if (!dateRegex.test(residency.residenceStartDate.value)) {
+        errors.push(`Residence #${residencyNum}: Start date must be in MM/YYYY or YYYY-MM format.`);
+      }
+    }
+    
+    // Validate end date if "Present" is not checked
+    if (residency.isResidencePresent?.value !== "Yes") {
+      if (!residency.residenceEndDate?.value) {
+        errors.push(`Residence #${residencyNum}: End date is required when "Present" is not selected.`);
+      } else {
+        // Validate date format
+        const dateRegex = /^\d{4}-\d{2}$|^\d{2}\/\d{4}$/;
+        if (!dateRegex.test(residency.residenceEndDate.value)) {
+          errors.push(`Residence #${residencyNum}: End date must be in MM/YYYY or YYYY-MM format.`);
+        }
+        
+        // Ensure end date is after start date if both exist
+        if (residency.residenceStartDate?.value) {
+          const startDate = new Date(residency.residenceStartDate.value);
+          const endDate = new Date(residency.residenceEndDate.value);
+          
+          if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) && endDate < startDate) {
+            errors.push(`Residence #${residencyNum}: End date must be after start date.`);
+          }
+        }
+      }
+    }
+    
+    // Validate address
+    if (residency.residenceAddress) {
+      // Check if APO/FPO option is selected
+      if (residency.residenceAddress.hasAPOOrFPO?.value === "YES") {
+        // Validate APO/FPO specific fields
+        const apoDetails = residency.residenceAddress.APOOrFPODetails;
+        if (!apoDetails?.APOOrFPO?.value) {
+          errors.push(`Residence #${residencyNum}: APO/FPO type is required.`);
+        }
+        if (!apoDetails?.APOFPOAddress?.value) {
+          errors.push(`Residence #${residencyNum}: APO/FPO address is required.`);
+        }
+        if (!apoDetails?.APOFPOStateCode?.value) {
+          errors.push(`Residence #${residencyNum}: APO/FPO state code is required.`);
+        }
+        if (!apoDetails?.APOFPOZip?.value) {
+          errors.push(`Residence #${residencyNum}: APO/FPO ZIP code is required.`);
+        }
+      } else {
+        // Validate standard address fields
+        if (!residency.residenceAddress.street?.value) {
+          errors.push(`Residence #${residencyNum}: Street address is required.`);
+        }
+        if (!residency.residenceAddress.city?.value) {
+          errors.push(`Residence #${residencyNum}: City is required.`);
+        }
+        if (!residency.residenceAddress.state?.value) {
+          errors.push(`Residence #${residencyNum}: State is required.`);
+        }
+        if (!residency.residenceAddress.zip?.value) {
+          errors.push(`Residence #${residencyNum}: ZIP code is required.`);
+        }
+        if (!residency.residenceAddress.country?.value) {
+          errors.push(`Residence #${residencyNum}: Country is required.`);
+        }
+      }
+    } else {
+      errors.push(`Residence #${residencyNum}: Address information is required.`);
+    }
+    
+    // Validate residence status
+    if (!residency.residenceStatus?.value) {
+      errors.push(`Residence #${residencyNum}: Residence status is required.`);
+    }
+    
+    // Validate neighbor/reference information
+    if (residency.contact) {
+      if (!residency.contact.firstname?.value || !residency.contact.lastname?.value) {
+        errors.push(`Residence #${residencyNum}: Reference person's name is required.`);
+      }
+    }
+  });
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+};

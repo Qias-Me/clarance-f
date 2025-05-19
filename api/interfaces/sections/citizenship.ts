@@ -1,14 +1,56 @@
 import {type Field } from "../formDefinition";
 
+/**
+ * Main interface for Section 9: Citizenship Information
+ * 
+ * Contains fields for the person's citizenship status and specific information
+ * based on their status (by birth, naturalized, derived, non-citizen)
+ */
 interface CitizenshipInfo {
-citizenship_status_code: Field<'birth' | 'naturalized' | 'derived' | 'nonCitizen' | 'citizen' | string>;
-section9_1?: CitizenshipByBirthInfo;
-section9_2?: NaturalizedCitizenInfo;
-section9_3?:DerivedCitizenInfo;
-section9_4?: NonCitizenInfo;
+  /** 
+   * The person's citizenship status
+   * - birth: U.S. citizen by birth
+   * - naturalized: Naturalized U.S. citizen
+   * - derived: Derived U.S. citizen
+   * - nonCitizen: Not a U.S. citizen
+   * - citizen: U.S. citizen by birth abroad
+   */
+  citizenship_status_code: Field<'birth' | 'naturalized' | 'derived' | 'nonCitizen' | 'citizen' | string>;
+  
+  /** Information for citizens born abroad to U.S. parents */
+  section9_1?: CitizenshipByBirthInfo;
+  
+  /** Information for naturalized citizens */
+  section9_2?: NaturalizedCitizenInfo;
+  
+  /** Information for derived citizens */
+  section9_3?: DerivedCitizenInfo;
+  
+  /** Information for non-citizens */
+  section9_4?: NonCitizenInfo;
+  
+  /** Additional metadata about the citizenship section */
+  sectionMetadata?: SectionMetadata;
+}
+
+/**
+ * Metadata about the Citizenship section
+ */
+interface SectionMetadata {
+  /** Section number (9) */
+  sectionNumber: number;
+  
+  /** Section title */
+  sectionTitle: string;
+  
+  /** Last updated timestamp */
+  lastUpdated?: string;
 }
 
 // Specific Information Interfaces for Each Citizenship Status
+/**
+ * Interface for information about citizens born abroad to U.S. parents
+ */
 interface CitizenshipByBirthInfo {
   doc_type: Field<"FS240" | "DS1350" | "FS545" | "Other (Provide explanation)">;
   other_doc?: Field<string>;
@@ -33,6 +75,9 @@ interface CitizenshipByBirthInfo {
   base_name?: Field<string>;
 }
 
+/**
+ * Interface for information about naturalized U.S. citizens
+ */
 interface NaturalizedCitizenInfo {
   us_entry_date: Field<string>;
   is_us_entry_date_est: Field<"Yes" | "No">;
@@ -60,6 +105,9 @@ interface NaturalizedCitizenInfo {
   is_basedOn_naturalization: Field<string>;
 }
 
+/**
+ * Interface for information about derived U.S. citizens
+ */
 interface DerivedCitizenInfo {
   alien_registration_num?: Field<string>;
   permanent_resident_num?: Field<string>;
@@ -75,6 +123,9 @@ interface DerivedCitizenInfo {
   is_basedOn_naturalization: Field<string>;
 }
 
+/**
+ * Interface for information about non-U.S. citizens
+ */
 interface NonCitizenInfo {
   residence_status: Field<string>;
   us_entry_date: Field<string>;
@@ -105,9 +156,13 @@ export type {
   NaturalizedCitizenInfo,
   DerivedCitizenInfo,
   NonCitizenInfo,
+  SectionMetadata
 };
 
-[
+/**
+ * Citizenship status options from the form
+ */
+export const CITIZENSHIP_STATUS_OPTIONS = [
   "I am a U.S. citizen or national by birth in the U.S. or U.S. territory/commonwealth. (Proceed to Section 10)   ",
   "I am a U.S. citizen or national by birth, born to U.S. parent(s), in a foreign country. (Complete 9.1) ",
   "I am a naturalized U.S. citizen. (Complete 9.2) ",
@@ -115,11 +170,11 @@ export type {
   "I am not a U.S. citizen. (Complete 9.4) ",
 ];
 
-
-
-// document_issued: 
-// 1: I-94 
-// 2: U.S. Visa (red foil number) 
-// 3: I-20 
-// 4: DS-2019
-// 5: Other (Provide explanation)
+/**
+ * Document issued code meanings:
+ * 1: I-94 
+ * 2: U.S. Visa (red foil number) 
+ * 3: I-20 
+ * 4: DS-2019
+ * 5: Other (Provide explanation)
+ */

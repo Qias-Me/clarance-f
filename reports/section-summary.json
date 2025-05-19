@@ -101,10 +101,10 @@
   {
     "sectionId": 12,
     "sectionName": "Where you went to School",
-    "fieldCount": 150,
-    "filledFieldCount": 150,
+    "fieldCount": 118,
+    "filledFieldCount": 118,
     "highConfidenceFields": 0,
-    "mediumConfidenceFields": 150,
+    "mediumConfidenceFields": 118,
     "lowConfidenceFields": 0
   },
   {
@@ -173,11 +173,11 @@
   {
     "sectionId": 20,
     "sectionName": "Foreign Business, Activities, Government Contacts",
-    "fieldCount": 790,
-    "filledFieldCount": 790,
+    "fieldCount": 570,
+    "filledFieldCount": 570,
     "highConfidenceFields": 83,
     "mediumConfidenceFields": 0,
-    "lowConfidenceFields": 707
+    "lowConfidenceFields": 487
   },
   {
     "sectionId": 21,
@@ -202,9 +202,9 @@
     "sectionName": "Illegal Use of Drugs and Drug Activity",
     "fieldCount": 191,
     "filledFieldCount": 191,
-    "highConfidenceFields": 48,
+    "highConfidenceFields": 191,
     "mediumConfidenceFields": 0,
-    "lowConfidenceFields": 143
+    "lowConfidenceFields": 0
   },
   {
     "sectionId": 24,

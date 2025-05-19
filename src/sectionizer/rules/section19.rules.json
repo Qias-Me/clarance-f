@@ -1,0 +1,9 @@
+[
+  {
+    "pattern": "\\bsection19_",
+    "flags": "i",
+    "subSection": "_default",
+    "confidence": 0.9788612099644128,
+    "description": "Fields explicitly matching /\\bsection19_/i (Precision: 98.6%, Adds 277 fields, 4 false positives)"
+  }
+]

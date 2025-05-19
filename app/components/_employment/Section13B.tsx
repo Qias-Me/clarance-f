@@ -1,6 +1,6 @@
 // RenderSection13B.tsx
 import React from "react";
-import { type Section13B } from "api/interfaces/sections/employmentInfo";
+import { type Section13B, type EmploymentEntry } from "api/interfaces/sections/employmentInfo";
 
 interface Section13BProps {
   data: Section13B;
@@ -19,276 +19,322 @@ const RenderSection13B: React.FC<Section13BProps> = ({
   path,
   isReadOnlyField,
 }) => {
-  const handleInputChange =
-    (fieldPath: string) =>
+  const handleInputChange = (fieldPath: string) => 
     (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       onInputChange(`${path}.${fieldPath}`, event.target.value);
-    };
-
-  const handleCheckboxChange =
-    (fieldPath: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
-      onInputChange(`${path}.${fieldPath}`, event.target.checked);
-    };
-
-  const handleRadioChange =
-    (value: boolean) => (event: React.ChangeEvent<HTMLInputElement>) => {
-      if (event.target.checked) {
-        onInputChange(`${path}.hasFormerFederalEmployment`, value);
-      }
     };
 
   const addNewEntry = () => {
     const newItem = getDefaultNewItem(
       `employmentInfo.section13B.employmentEntries`
     );
-
-    console.log(newItem, "newItem", path, "path");
     onAddEntry(`${path}.employmentEntries`, newItem);
   };
 
-  return (
-    <div className="p-4 bg-gray-100 rounded-lg shadow space-y-4">
-      <div className="p-4 bg-gray-50 rounded-lg shadow space-y-4">
-        <h3 className="text-lg font-semibold">
-          Section 13B - Employment Activities - Former Federal Service
-        </h3>
+  const renderEmploymentEntry = (entry: EmploymentEntry, index: number) => {
+    return (
+      <div
+        key={index}
+        className="employment-entry border p-4 rounded-lg bg-gray-50 shadow-sm space-y-4 mb-4"
+      >
+        <div className="flex justify-between items-center border-b pb-2">
+          <h4 className="text-md font-medium">Federal Employment Entry #{index + 1}</h4>
+          {/* Optional: Add delete button here if needed */}
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <label className="block font-medium text-sm" htmlFor={`fromDate${index}`}>
+              From Date:
+            </label>
+            <div className="flex items-center">
+              <input
+                type="text"
+                id={`fromDate${index}`}
+                value={entry.fromDate?.value || ""}
+                onChange={handleInputChange(
+                  `employmentEntries[${index}].fromDate`
+                )}
+                className="border rounded p-2 w-full"
+                placeholder="MM/DD/YYYY"
+                readOnly={isReadOnlyField(
+                  `employmentEntries[${index}].fromDate`
+                )}
+              />
+            </div>
+            <p className="text-xs text-gray-500">Format: MM/DD/YYYY</p>
+          </div>
+          
+          <div className="space-y-2">
+            <label className="block font-medium text-sm" htmlFor={`toDate${index}`}>
+              To Date:
+            </label>
+            <div className="flex items-center flex-wrap">
+              <input
+                type="text"
+                id={`toDate${index}`}
+                value={entry.toDate?.value || ""}
+                onChange={handleInputChange(
+                  `employmentEntries[${index}].toDate`
+                )}
+                className="border rounded p-2 w-full"
+                placeholder="MM/DD/YYYY"
+                readOnly={isReadOnlyField(
+                  `employmentEntries[${index}].toDate`
+                )}
+              />
+            </div>
+            <div className="flex space-x-4 mt-1">
+              <label className="inline-flex items-center text-sm">
+                <input
+                  type="checkbox"
+                  checked={entry.present?.value === "Yes"}
+                  onChange={(e) =>
+                    onInputChange(
+                      `${path}.employmentEntries[${index}].present`,
+                      e.target.checked ? "Yes" : "No"
+                    )
+                  }
+                  className="mr-2"
+                  readOnly={isReadOnlyField(
+                    `employmentEntries[${index}].present`
+                  )}
+                />
+                Present
+              </label>
+              <label className="inline-flex items-center text-sm">
+                <input
+                  type="checkbox"
+                  checked={entry.estimated?.value === "Yes"}
+                  onChange={(e) =>
+                    onInputChange(
+                      `${path}.employmentEntries[${index}].estimated`,
+                      e.target.checked ? "Yes" : "No"
+                    )
+                  }
+                  className="mr-2"
+                  readOnly={isReadOnlyField(
+                    `employmentEntries[${index}].estimated`
+                  )}
+                />
+                Estimated
+              </label>
+            </div>
+          </div>
+        </div>
+        
+        <div className="space-y-2">
+          <label className="block font-medium text-sm" htmlFor={`agencyName${index}`}>
+            Agency Name:
+          </label>
+          <input
+            type="text"
+            id={`agencyName${index}`}
+            value={entry.agencyName?.value || ""}
+            onChange={handleInputChange(
+              `employmentEntries[${index}].agencyName`
+            )}
+            className="border rounded p-2 w-full"
+            placeholder="Federal agency name"
+            readOnly={isReadOnlyField(
+              `employmentEntries[${index}].agencyName`
+            )}
+          />
+        </div>
+        
+        <div className="space-y-2">
+          <label className="block font-medium text-sm" htmlFor={`positionTitle${index}`}>
+            Position Title:
+          </label>
+          <input
+            type="text"
+            id={`positionTitle${index}`}
+            value={entry.positionTitle?.value || ""}
+            onChange={handleInputChange(
+              `employmentEntries[${index}].positionTitle`
+            )}
+            className="border rounded p-2 w-full"
+            placeholder="Your job title"
+            readOnly={isReadOnlyField(
+              `employmentEntries[${index}].positionTitle`
+            )}
+          />
+        </div>
+        
+        <div className="border-t pt-3 mt-3">
+          <h5 className="font-medium text-sm mb-3">Agency Location</h5>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="block text-sm" htmlFor={`street${index}`}>
+                Street:
+              </label>
+              <input
+                type="text"
+                id={`street${index}`}
+                value={entry.location?.street?.value || ""}
+                onChange={handleInputChange(
+                  `employmentEntries[${index}].location.street`
+                )}
+                className="border rounded p-2 w-full"
+                placeholder="Street address"
+                readOnly={isReadOnlyField(
+                  `employmentEntries[${index}].location.street`
+                )}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label className="block text-sm" htmlFor={`city${index}`}>
+                City:
+              </label>
+              <input
+                type="text"
+                id={`city${index}`}
+                value={entry.location?.city?.value || ""}
+                onChange={handleInputChange(
+                  `employmentEntries[${index}].location.city`
+                )}
+                className="border rounded p-2 w-full"
+                placeholder="City"
+                readOnly={isReadOnlyField(
+                  `employmentEntries[${index}].location.city`
+                )}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label className="block text-sm" htmlFor={`state${index}`}>
+                State:
+              </label>
+              <input
+                type="text"
+                id={`state${index}`}
+                value={entry.location?.state?.value || ""}
+                onChange={handleInputChange(
+                  `employmentEntries[${index}].location.state`
+                )}
+                className="border rounded p-2 w-full"
+                placeholder="State"
+                readOnly={isReadOnlyField(
+                  `employmentEntries[${index}].location.state`
+                )}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label className="block text-sm" htmlFor={`zipCode${index}`}>
+                Zip Code:
+              </label>
+              <input
+                type="text"
+                id={`zipCode${index}`}
+                value={entry.location?.zipCode?.value || ""}
+                onChange={handleInputChange(
+                  `employmentEntries[${index}].location.zipCode`
+                )}
+                className="border rounded p-2 w-full"
+                placeholder="Zip code"
+                readOnly={isReadOnlyField(
+                  `employmentEntries[${index}].location.zipCode`
+                )}
+              />
+            </div>
+            
+            <div className="space-y-2 md:col-span-2">
+              <label className="block text-sm" htmlFor={`country${index}`}>
+                Country:
+              </label>
+              <input
+                type="text"
+                id={`country${index}`}
+                value={entry.location?.country?.value || ""}
+                onChange={handleInputChange(
+                  `employmentEntries[${index}].location.country`
+                )}
+                className="border rounded p-2 w-full"
+                placeholder="Country"
+                readOnly={isReadOnlyField(
+                  `employmentEntries[${index}].location.country`
+                )}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
-        <label className="block">
+  return (
+    <div className="p-4 bg-white rounded-lg shadow space-y-4">
+      <h3 className="text-lg font-semibold border-b pb-2">
+        Section 13B - Employment Activities - Former Federal Service
+      </h3>
+
+      <div className="space-y-3">
+        <label className="block font-medium">
           Do you have former federal civilian employment, excluding military
           service, NOT indicated previously, to report?
         </label>
-        <div className="mt-2">
+        <div className="mt-2 space-x-6">
           <label className="inline-flex items-center">
             <input
               type="radio"
               name="formerFederalEmployment"
-              value="yes"
-              checked={data.hasFormerFederalEmployment === true}
-              onChange={handleRadioChange(true)}
+              value="YES "
+              checked={data.hasFormerFederalEmployment?.value === "YES "}
+              onChange={() => onInputChange(`${path}.hasFormerFederalEmployment`, "YES ")}
               className="mr-2"
             />
-            YES
+            <span>YES</span>
           </label>
-          <label className="inline-flex items-center ml-4">
+          <label className="inline-flex items-center">
             <input
               type="radio"
               name="formerFederalEmployment"
-              value="no"
-              checked={data.hasFormerFederalEmployment === false}
-              onChange={handleRadioChange(false)}
+              value="NO (If NO, proceed to Section 13C)"
+              checked={data.hasFormerFederalEmployment?.value === "NO (If NO, proceed to Section 13C)"}
+              onChange={() => onInputChange(`${path}.hasFormerFederalEmployment`, "NO (If NO, proceed to Section 13C)")}
               className="mr-2"
             />
-            NO
+            <span>NO</span> <span className="text-sm text-gray-600">(If NO, proceed to Section 13C)</span>
           </label>
         </div>
+      </div>
 
-        {data.hasFormerFederalEmployment && (
-          <>
-            {console.log(data, "employmentEntries")}
-            {data.employmentEntries.map((entry, index) => (
-              <div
-                key={index}
-                className="employment-entry border p-2 rounded-lg shadow space-y-2"
-              >
-                <h4>Entry #{index + 1}</h4>
-                <div className="flex items-center">
-                  <label className="mr-2" htmlFor={`fromDate${index}`}>
-                    From Date:
-                  </label>
-                  <input
-                    type="text"
-                    id={`fromDate${index}`}
-                    value={entry.fromDate}
-                    onChange={handleInputChange(
-                      `employmentEntries[${index}].fromDate`
-                    )}
-                    className="border rounded p-1"
-                    readOnly={isReadOnlyField(
-                      `employmentEntries[${index}].fromDate`
-                    )}
-                  />
-                </div>
-                <div className="flex items-center">
-                  <label className="mr-2" htmlFor={`toDate${index}`}>
-                    To Date:
-                  </label>
-                  <input
-                    type="text"
-                    id={`toDate${index}`}
-                    value={entry.toDate}
-                    onChange={handleInputChange(
-                      `employmentEntries[${index}].toDate`
-                    )}
-                    className="border rounded p-1"
-                    readOnly={isReadOnlyField(
-                      `employmentEntries[${index}].toDate`
-                    )}
-                  />
-                  <label className="ml-2 flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={entry.present}
-                      onChange={handleCheckboxChange(
-                        `employmentEntries[${index}].present`
-                      )}
-                      className="mr-2"
-                      readOnly={isReadOnlyField(
-                        `employmentEntries[${index}].present`
-                      )}
-                    />
-                    Present
-                  </label>
-                  <label className="ml-2 flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={entry.estimated}
-                      onChange={handleCheckboxChange(
-                        `employmentEntries[${index}].estimated`
-                      )}
-                      className="mr-2"
-                      readOnly={isReadOnlyField(
-                        `employmentEntries[${index}].estimated`
-                      )}
-                    />
-                    Estimated
-                  </label>
-                </div>
-                <div className="flex items-center">
-                  <label className="mr-2" htmlFor={`agencyName${index}`}>
-                    Agency Name:
-                  </label>
-                  <input
-                    type="text"
-                    id={`agencyName${index}`}
-                    value={entry.agencyName}
-                    onChange={handleInputChange(
-                      `employmentEntries[${index}].agencyName`
-                    )}
-                    className="border rounded p-1"
-                    readOnly={isReadOnlyField(
-                      `employmentEntries[${index}].agencyName`
-                    )}
-                  />
-                </div>
-                <div className="flex items-center">
-                  <label className="mr-2" htmlFor={`positionTitle${index}`}>
-                    Position Title:
-                  </label>
-                  <input
-                    type="text"
-                    id={`positionTitle${index}`}
-                    value={entry.positionTitle}
-                    onChange={handleInputChange(
-                      `employmentEntries[${index}].positionTitle`
-                    )}
-                    className="border rounded p-1"
-                    readOnly={isReadOnlyField(
-                      `employmentEntries[${index}].positionTitle`
-                    )}
-                  />
-                </div>
-                <div className="flex items-center">
-                  <label className="mr-2" htmlFor={`street${index}`}>
-                    Street:
-                  </label>
-                  <input
-                    type="text"
-                    id={`street${index}`}
-                    value={entry.location.street}
-                    onChange={handleInputChange(
-                      `employmentEntries[${index}].location.street`
-                    )}
-                    className="border rounded p-1"
-                    readOnly={isReadOnlyField(
-                      `employmentEntries[${index}].location.street`
-                    )}
-                  />
-                </div>
-                <div className="flex items-center">
-                  <label className="mr-2" htmlFor={`city${index}`}>
-                    City:
-                  </label>
-                  <input
-                    type="text"
-                    id={`city${index}`}
-                    value={entry.location.city}
-                    onChange={handleInputChange(
-                      `employmentEntries[${index}].location.city`
-                    )}
-                    className="border rounded p-1"
-                    readOnly={isReadOnlyField(
-                      `employmentEntries[${index}].location.city`
-                    )}
-                  />
-                </div>
-                <div className="flex items-center">
-                  <label className="mr-2" htmlFor={`state${index}`}>
-                    State:
-                  </label>
-                  <input
-                    type="text"
-                    id={`state${index}`}
-                    value={entry.location.state}
-                    onChange={handleInputChange(
-                      `employmentEntries[${index}].location.state`
-                    )}
-                    className="border rounded p-1"
-                    readOnly={isReadOnlyField(
-                      `employmentEntries[${index}].location.state`
-                    )}
-                  />
-                </div>
-                <div className="flex items-center">
-                  <label className="mr-2" htmlFor={`zipCode${index}`}>
-                    Zip Code:
-                  </label>
-                  <input
-                    type="text"
-                    id={`zipCode${index}`}
-                    value={entry.location.zipCode}
-                    onChange={handleInputChange(
-                      `employmentEntries[${index}].location.zipCode`
-                    )}
-                    className="border rounded p-1"
-                    readOnly={isReadOnlyField(
-                      `employmentEntries[${index}].location.zipCode`
-                    )}
-                  />
-                </div>
-                <div className="flex items-center">
-                  <label className="mr-2" htmlFor={`country${index}`}>
-                    Country:
-                  </label>
-                  <input
-                    type="text"
-                    id={`country${index}`}
-                    value={entry.location.country}
-                    onChange={handleInputChange(
-                      `employmentEntries[${index}].location.country`
-                    )}
-                    className="border rounded p-1"
-                    readOnly={isReadOnlyField(
-                      `employmentEntries[${index}].location.country`
-                    )}
-                  />
-                </div>
-              </div>
-            ))}
+      {data.hasFormerFederalEmployment?.value === "YES " && (
+        <div className="mt-4 space-y-4">
+          <p className="text-sm text-gray-600">
+            List all of your federal civilian employment, excluding military service, 
+            that was not included in previous sections.
+          </p>
+          
+          {Array.isArray(data.employmentEntries) && data.employmentEntries.map((entry, index) => 
+            renderEmploymentEntry(entry, index)
+          )}
 
-            {data.employmentEntries.length < 2 && (
+          {(!Array.isArray(data.employmentEntries) || data.employmentEntries.length === 0) && (
+            <div className="bg-yellow-50 border border-yellow-100 p-3 rounded text-sm text-yellow-800">
+              No employment entries added yet. Click the button below to add your first federal employment entry.
+            </div>
+          )}
+
+          {Array.isArray(data.employmentEntries) && data.employmentEntries.length < 2 && (
+            <div className="mt-4 text-center">
               <button
                 onClick={(event) => {
                   event.preventDefault();
                   addNewEntry();
                 }}
-                className="mt-2 p-2 bg-blue-500 text-white rounded-md shadow"
+                className="px-4 py-2 bg-blue-500 text-white rounded-md shadow hover:bg-blue-600 transition-colors"
               >
-                Add federal civilian employment Entry
+                {data.employmentEntries?.length === 0 ? 
+                  "Add Federal Employment Entry" : 
+                  "Add Another Federal Employment Entry"}
               </button>
-            )}
-          </>
-        )}
-      </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

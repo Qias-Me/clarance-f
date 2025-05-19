@@ -1,0 +1,113 @@
+{
+  "section": 27,
+  "name": "Use of Information Technology Systems",
+  "rules": [
+    {
+      "section": 27,
+      "pattern": "form1\\[0\\]\\.Section27\\[0\\]",
+      "confidence": 0.95,
+      "description": "Exact match for Section 27 area"
+    },
+    {
+      "section": 27,
+      "pattern": "section27",
+      "confidence": 0.9,
+      "description": "Generic section 27 field pattern"
+    },
+    {
+      "section": 27,
+      "pattern": "information technology",
+      "confidence": 0.85,
+      "description": "Match by section title"
+    },
+    {
+      "section": 27,
+      "pattern": "section27_(\\d+)",
+      "confidence": 0.9,
+      "description": "Section 27 entry index pattern",
+      "entryPattern": "section27_(\\d+)"
+    },
+    {
+      "section": 27,
+      "pattern": "27a\\.?(\\d*)",
+      "confidence": 0.9,
+      "description": "Section 27A fields with alternative format",
+      "entryPattern": "27a\\.?(\\d+)",
+      "subsection": "A"
+    },
+    {
+      "section": 27,
+      "pattern": "27b\\.?(\\d*)",
+      "confidence": 0.9,
+      "description": "Section 27B fields with alternative format",
+      "entryPattern": "27b\\.?(\\d+)",
+      "subsection": "B"
+    },
+    {
+      "section": 27,
+      "pattern": "information technology",
+      "confidence": 0.85,
+      "description": "IT system related fields"
+    },
+    {
+      "section": 27,
+      "pattern": "computer",
+      "confidence": 0.8,
+      "description": "Computer related fields"
+    },
+    {
+      "section": 27,
+      "pattern": "hacking",
+      "confidence": 0.85,
+      "description": "Hacking related fields"
+    },
+    {
+      "section": 27,
+      "pattern": "unauthorized access",
+      "confidence": 0.85,
+      "description": "Unauthorized access related fields"
+    },
+    {
+      "section": 27,
+      "pattern": "malware",
+      "confidence": 0.85,
+      "description": "Malware related fields"
+    },
+    {
+      "section": 27,
+      "pattern": "virus",
+      "confidence": 0.8,
+      "description": "Computer virus related fields"
+    },
+    {
+      "section": 27,
+      "pattern": "illegal download",
+      "confidence": 0.85,
+      "description": "Illegal download related fields"
+    },
+    {
+      "section": 27,
+      "pattern": "cyber",
+      "confidence": 0.8,
+      "description": "Cyber-related fields"
+    },
+    {
+      "section": 27,
+      "pattern": "piracy",
+      "confidence": 0.8,
+      "description": "Software piracy related fields"
+    },
+    {
+      "section": 27,
+      "pattern": "misuse",
+      "confidence": 0.75,
+      "description": "IT system misuse related fields"
+    },
+    {
+      "section": 27,
+      "pattern": "network",
+      "confidence": 0.7,
+      "description": "Network related fields"
+    }
+  ]
+} 

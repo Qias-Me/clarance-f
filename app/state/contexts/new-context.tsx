@@ -45,6 +45,8 @@ export const EmployeeProvider: React.FC<EmployeeProviderProps> = ({
     useState<ApplicantFormValues>(defaultFormData);
   const [updatedData, setUpdatedData] =
     useState<ApplicantFormValues>(defaultFormData);
+  const [isLoading, setLoading] = useState(true);
+  const [loadAttempted, setLoadAttempted] = useState(false);
 
   // console.log(
   //   initialData.employmentInfo,
@@ -55,28 +57,53 @@ export const EmployeeProvider: React.FC<EmployeeProviderProps> = ({
   //   "updatedData.employmentInfo"
   // );
 
-  const [isLoading, setLoading] = useState(true); // Manage loading state
-
   const resetForm = () => {
     setUpdatedData(defaultFormData); // Reset to default form data
   };
 
   const loadEmployee = useCallback(async () => {
-    const dynamicService = new DynamicService();
-    const employee = await dynamicService.loadUserFormData("applicantData");
+    setLoading(true);
+    try {
+      // Check if we're in a browser environment before trying to use IndexedDB
+      if (typeof window === 'undefined') {
+        console.log('Not in browser environment, skipping data loading');
+        setLoading(false);
+        return;
+      }
 
-    if (initialData === defaultFormData && employee.formData) {
-      console.log(employee, "employee");
+      const dynamicService = new DynamicService();
+      const response = await dynamicService.loadUserFormData("applicantData");
 
-      setInitialData(employee.formData);
-      setUpdatedData(employee.formData);
+      if (response.success && response.formData) {
+        setInitialData(response.formData);
+        setUpdatedData(response.formData);
+        console.log('Employee data loaded successfully');
+      } else {
+        console.log('No form data found, using default data');
+        // Use default data when no data is found
+        setInitialData(defaultFormData);
+        setUpdatedData(defaultFormData);
+      }
+    } catch (error) {
+      console.error('Error loading employee data:', error);
+      // Use default data on error
+      setInitialData(defaultFormData);
+      setUpdatedData(defaultFormData);
+    } finally {
+      setLoading(false);
+      setLoadAttempted(true);
     }
-    setLoading(false);
-  }, [initialData]); // Fix: Add an empty array as the second argument
+  }, []); // Empty dependency array since we don't want this to change
 
   useEffect(() => {
-    loadEmployee();
-  }, [loadEmployee]);
+    if (!loadAttempted) {
+      loadEmployee().catch(err => {
+        console.error('Failed to load employee data:', err);
+        setLoading(false);
+        setLoadAttempted(true);
+      });
+    }
+  }, [loadEmployee, loadAttempted]);
 
   const updateField = (path: string, value: any) => {
     setUpdatedData((prev) => {
@@ -86,177 +113,175 @@ export const EmployeeProvider: React.FC<EmployeeProviderProps> = ({
     });
   };
 
-  const getChanges =
-    () =>
-    (initialData: ApplicantFormValues, updatedData: ApplicantFormValues) => {
-      const changes: {
-        added: any;
-        modified: any;
-        deleted: any;
-      } = {
-        added: {},
-        modified: {},
-        deleted: {},
-      };
-
-      const compareObjectsForModifications = (base: any, updated: any): any => {
-        const modified: any = {};
-        const keysToAlwaysInclude: string[] = []; // Add more keys as needed
-
-        if (!base || !updated) return modified; // Ensure base and updated are not undefined or null
-
-        Object.keys(updated).forEach((key: string) => {
-          if (
-            !isEqual(base[key]?.value, updated[key]?.value) ||
-            keysToAlwaysInclude.includes(key)
-          ) {
-            modified[key] = updated[key];
-          }
-        });
-
-        return modified;
-      };
-
-      const compareArrays = (
-        base: any[],
-        updated: any[],
-        idKey: string,
-        arrayName: string
-      ) => {
-        const baseMap = new Map(base.map((item: any) => [item[idKey], item]));
-        const updatedMap = new Map<string, any>();
-        const newEntries: any[] = [];
-
-        updated.forEach((item: any) => {
-          if (item[idKey] !== undefined) {
-            updatedMap.set(item[idKey], item);
-          } else {
-            newEntries.push(item);
-          }
-        });
-
-        const added: any[] = [];
-        const modified: any[] = [];
-        const deleted: any[] = [];
-
-        // Identify added and modified entries
-        for (const [id, updatedItem] of updatedMap.entries()) {
-          if (!baseMap.has(id)) {
-            added.push(updatedItem); // Entire new entry is added
-          } else {
-            const baseItem = baseMap.get(id);
-            const modifications = compareObjectsForModifications(
-              baseItem,
-              updatedItem
-            );
-            if (Object.keys(modifications).length > 0) {
-              modified.push(modifications); // Only modified fields are included in modified
-            }
-          }
-        }
-
-        // Identify new entries (shouldn't filter out any fields)
-        newEntries.forEach((item) => {
-          added.push(item);
-        });
-
-        // Identify deleted entries
-        for (const [id, baseItem] of baseMap.entries()) {
-          if (!updatedMap.has(id)) {
-            deleted.push(baseItem);
-          }
-        }
-
-        if (added.length > 0) {
-          changes.added[arrayName] = added;
-        }
-        if (modified.length > 0) {
-          changes.modified[arrayName] = modified;
-        }
-        if (deleted.length > 0) {
-          changes.deleted[arrayName] = deleted;
-        }
-      };
-
-      // Define all array fields in the form
-      const arrayFields: (keyof ApplicantFormValues)[] = [
-        "residencyInfo",
-        "schoolInfo",
-        "employmentInfo",
-        "peopleThatKnow",
-      ];
-
-      // Special case handling for initially empty arrays
-      arrayFields.forEach((field) => {
-        if (
-          Array.isArray(initialData[field]) &&
-          Array.isArray(updatedData[field])
-        ) {
-          if (
-            initialData[field].length === 0 &&
-            updatedData[field].length > 0
-          ) {
-            changes.added[field] = updatedData[field];
-          } else {
-            compareArrays(
-              initialData[field] as any[], // Type assertion
-              updatedData[field] as any[], // Type assertion
-              "_id", // Ensure that each array type has a consistent id key
-              field
-            );
-          }
-        }
-      });
-
-      const fields: (keyof ApplicantFormValues)[] = [
-        "personalInfo",
-        "birthInfo",
-        "contactInfo",
-        "citizenshipInfo",
-        "dualCitizenshipInfo",
-        "physicalAttributes",
-        "namesInfo",
-        "aknowledgementInfo",
-        "passportInfo",
-        "serviceInfo",
-        "militaryHistoryInfo",
-        "relativesInfo",
-        "relationshipInfo",
-        "foreignContacts",
-        "foreignActivities",
-        "mentalHealth",
-        "policeRecord",
-        "drugActivity",
-        "alcoholUse",
-        "investigationsInfo",
-        "finances",
-        "technology",
-        "civil",
-        "association",
-        "signature",
-      ];
-
-      fields.forEach((field) => {
-        const modifications = compareObjectsForModifications(
-          initialData[field],
-          updatedData[field]
-        );
-        if (Object.keys(modifications).length > 0) {
-          changes.modified[field] = modifications;
-        }
-      });
-
-      return changes;
+  const getChanges = () => {
+    const changes: {
+      added: any;
+      modified: any;
+      deleted: any;
+    } = {
+      added: {},
+      modified: {},
+      deleted: {},
     };
+
+    const compareObjectsForModifications = (base: any, updated: any): any => {
+      const modified: any = {};
+      const keysToAlwaysInclude: string[] = []; // Add more keys as needed
+
+      if (!base || !updated) return modified; // Ensure base and updated are not undefined or null
+
+      Object.keys(updated).forEach((key: string) => {
+        if (
+          !isEqual(base[key]?.value, updated[key]?.value) ||
+          keysToAlwaysInclude.includes(key)
+        ) {
+          modified[key] = updated[key];
+        }
+      });
+
+      return modified;
+    };
+
+    const compareArrays = (
+      base: any[],
+      updated: any[],
+      idKey: string,
+      arrayName: string
+    ) => {
+      const baseMap = new Map(base.map((item: any) => [item[idKey], item]));
+      const updatedMap = new Map<string, any>();
+      const newEntries: any[] = [];
+
+      updated.forEach((item: any) => {
+        if (item[idKey] !== undefined) {
+          updatedMap.set(item[idKey], item);
+        } else {
+          newEntries.push(item);
+        }
+      });
+
+      const added: any[] = [];
+      const modified: any[] = [];
+      const deleted: any[] = [];
+
+      // Identify added and modified entries
+      for (const [id, updatedItem] of updatedMap.entries()) {
+        if (!baseMap.has(id)) {
+          added.push(updatedItem); // Entire new entry is added
+        } else {
+          const baseItem = baseMap.get(id);
+          const modifications = compareObjectsForModifications(
+            baseItem,
+            updatedItem
+          );
+          if (Object.keys(modifications).length > 0) {
+            modified.push(modifications); // Only modified fields are included in modified
+          }
+        }
+      }
+
+      // Identify new entries (shouldn't filter out any fields)
+      newEntries.forEach((item) => {
+        added.push(item);
+      });
+
+      // Identify deleted entries
+      for (const [id, baseItem] of baseMap.entries()) {
+        if (!updatedMap.has(id)) {
+          deleted.push(baseItem);
+        }
+      }
+
+      if (added.length > 0) {
+        changes.added[arrayName] = added;
+      }
+      if (modified.length > 0) {
+        changes.modified[arrayName] = modified;
+      }
+      if (deleted.length > 0) {
+        changes.deleted[arrayName] = deleted;
+      }
+    };
+
+    // Define all array fields in the form
+    const arrayFields: (keyof ApplicantFormValues)[] = [
+      "residencyInfo",
+      "schoolInfo",
+      "employmentInfo",
+      "peopleThatKnow",
+    ];
+
+    // Special case handling for initially empty arrays
+    arrayFields.forEach((field) => {
+      if (
+        Array.isArray(initialData[field]) &&
+        Array.isArray(updatedData[field])
+      ) {
+        if (
+          initialData[field].length === 0 &&
+          updatedData[field].length > 0
+        ) {
+          changes.added[field] = updatedData[field];
+        } else {
+          compareArrays(
+            initialData[field] as any[], // Type assertion
+            updatedData[field] as any[], // Type assertion
+            "_id", // Ensure that each array type has a consistent id key
+            field
+          );
+        }
+      }
+    });
+
+    const fields: (keyof ApplicantFormValues)[] = [
+      "personalInfo",
+      "birthInfo",
+      "contactInfo",
+      "citizenshipInfo",
+      "dualCitizenshipInfo",
+      "physicalAttributes",
+      "namesInfo",
+      "aknowledgementInfo",
+      "passportInfo",
+      "serviceInfo",
+      "militaryHistoryInfo",
+      "relativesInfo",
+      "relationshipInfo",
+      "foreignContacts",
+      "foreignActivities",
+      "mentalHealth",
+      "policeRecord",
+      "drugActivity",
+      "alcoholUse",
+      "investigationsInfo",
+      "finances",
+      "technology",
+      "civil",
+      "association",
+      "signature",
+    ];
+
+    fields.forEach((field) => {
+      const modifications = compareObjectsForModifications(
+        initialData[field],
+        updatedData[field]
+      );
+      if (Object.keys(modifications).length > 0) {
+        changes.modified[field] = modifications;
+      }
+    });
+
+    return changes;
+  };
 
   return (
     <EmployeeContext.Provider
       value={{
         data: updatedData,
         loadEmployee,
+        resetForm,
         isLoading,
         updateField,
-        resetForm,
         getChanges,
       }}
     >

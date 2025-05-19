@@ -12,7 +12,7 @@ import {
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import fs from "fs";
-import { ApplicantFormValues } from "../interfaces/formDefinition";
+import type { ApplicantFormValues } from "../interfaces/formDefinition";
 
 // Handle __dirname in ES Module
 const __filename = fileURLToPath(import.meta.url);
@@ -42,6 +42,12 @@ interface FieldMetadata {
   options?: string[];
   required?: boolean; // If pdf-lib supports this directly
   page?: number;     // Add page number property
+  rect?: {          // Add rectangle coordinates
+    x: number;      // Left position
+    y: number;      // Bottom position
+    width: number;  // Width of the field
+    height: number; // Height of the field
+  };
 }
 
 export class PdfService {
@@ -340,6 +346,7 @@ async generateJSON_fromPDF(
       let options: string[] | undefined = undefined;       // Options for dropdown/radio
       let page: number | undefined = undefined;           // Page number where the field appears
       let required: boolean | undefined = undefined;      // If the field is required
+      let rect: { x: number; y: number; width: number; height: number; } | undefined = undefined; // Field rectangle
 
       // Extract current value with improved type handling
       try {
@@ -361,7 +368,7 @@ async generateJSON_fromPDF(
         // Leave value as undefined if extraction fails
       }
 
-      // Attempt to extract label, maxLength, options, and required status
+      // Attempt to extract label, maxLength, options, required status, and rectangle coordinates
       try {
         const dict = field.acroField.dict;
 
@@ -405,6 +412,54 @@ async generateJSON_fromPDF(
 
         // Extract page number
         page = await this.findPageForField(field, pdfDoc);
+        
+        // Extract rectangle coordinates from the widget
+        try {
+          const widget = field.acroField.getWidgets()[0];
+          if (widget) {
+            // Prefer the high-level helper if available in pdf-lib@^1.17.0
+            try {
+              if (typeof (widget as any).getRectangle === 'function') {
+                const wRect = (widget as any).getRectangle();
+                if (wRect && typeof wRect.x === 'number') {
+                  rect = {
+                    x: wRect.x,
+                    y: wRect.y,
+                    width: wRect.width,
+                    height: wRect.height,
+                  };
+                }
+              }
+            } catch {/* ignore */}
+
+            // Fallback to low-level dictionary lookup when getRectangle is unavailable
+            if (!rect) {
+              const rectArray = widget.dict.lookup(PDFName.of('Rect')) as PDFArray | undefined;
+              if (rectArray && rectArray instanceof PDFArray && rectArray.size() === 4) {
+                // PDF coordinates are typically [left, bottom, right, top]
+                const x1Obj = rectArray.get(0);
+                const y1Obj = rectArray.get(1);
+                const x2Obj = rectArray.get(2);
+                const y2Obj = rectArray.get(3);
+
+                // Safely convert to numbers, checking types
+                const x1 = x1Obj instanceof PDFNumber ? x1Obj.asNumber() : 0;
+                const y1 = y1Obj instanceof PDFNumber ? y1Obj.asNumber() : 0;
+                const x2 = x2Obj instanceof PDFNumber ? x2Obj.asNumber() : 0;
+                const y2 = y2Obj instanceof PDFNumber ? y2Obj.asNumber() : 0;
+
+                rect = {
+                  x: Math.min(x1, x2),
+                  y: Math.min(y1, y2),
+                  width: Math.abs(x2 - x1),
+                  height: Math.abs(y2 - y1),
+                };
+              }
+            }
+          }
+        } catch (e) {
+          console.warn(`Could not extract rectangle for field: ${name}`, e);
+        }
 
       } catch (e) {
         console.error(`Error extracting metadata for field ${name}:`, e);
@@ -421,6 +476,7 @@ async generateJSON_fromPDF(
         options,
         required,
         page,
+        rect
       };
     }));
 

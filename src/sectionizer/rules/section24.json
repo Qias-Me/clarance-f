@@ -1,0 +1,101 @@
+{
+  "section": 24,
+  "name": "Use of Alcohol",
+  "rules": [
+    {
+      "section": 24,
+      "pattern": "form1\\[0\\]\\.Section24\\[0\\]",
+      "confidence": 0.95,
+      "description": "Exact match for Section 24 area"
+    },
+    {
+      "section": 24,
+      "pattern": "section24",
+      "confidence": 0.9,
+      "description": "Generic section 24 field pattern"
+    },
+    {
+      "section": 24,
+      "pattern": "use of alcohol",
+      "confidence": 0.85,
+      "description": "Match by section title"
+    },
+    {
+      "section": 24,
+      "pattern": "section24_(\\d+)",
+      "confidence": 0.9,
+      "description": "Section 24 entry index pattern",
+      "entryPattern": "section24_(\\d+)"
+    },
+    {
+      "section": 24,
+      "pattern": "24a\\.?(\\d*)",
+      "confidence": 0.9,
+      "description": "Section 24A fields with alternative format",
+      "entryPattern": "24a\\.?(\\d+)",
+      "subsection": "A"
+    },
+    {
+      "section": 24,
+      "pattern": "24b\\.?(\\d*)",
+      "confidence": 0.9,
+      "description": "Section 24B fields with alternative format",
+      "entryPattern": "24b\\.?(\\d+)",
+      "subsection": "B"
+    },
+    {
+      "section": 24,
+      "pattern": "alcohol",
+      "confidence": 0.85,
+      "description": "Alcohol related fields"
+    },
+    {
+      "section": 24,
+      "pattern": "drinking",
+      "confidence": 0.8,
+      "description": "Drinking related fields"
+    },
+    {
+      "section": 24,
+      "pattern": "alcoholism",
+      "confidence": 0.85,
+      "description": "Alcoholism related fields"
+    },
+    {
+      "section": 24,
+      "pattern": "alcohol abuse",
+      "confidence": 0.85,
+      "description": "Alcohol abuse related fields"
+    },
+    {
+      "section": 24,
+      "pattern": "alcohol treatment",
+      "confidence": 0.8,
+      "description": "Alcohol treatment related fields"
+    },
+    {
+      "section": 24,
+      "pattern": "alcohol counseling",
+      "confidence": 0.8,
+      "description": "Alcohol counseling related fields"
+    },
+    {
+      "section": 24,
+      "pattern": "alcohol rehabilitation",
+      "confidence": 0.8,
+      "description": "Alcohol rehabilitation related fields"
+    },
+    {
+      "section": 24,
+      "pattern": "dui",
+      "confidence": 0.75,
+      "description": "DUI related fields"
+    },
+    {
+      "section": 24,
+      "pattern": "dwi",
+      "confidence": 0.75,
+      "description": "DWI related fields"
+    }
+  ]
+} 

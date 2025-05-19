@@ -1,0 +1,240 @@
+/**
+ * Rules for Section 9: Section 9
+ * Generated: 2025-05-18T18:26:20.275Z
+ */
+export const rules = [
+    {
+        pattern: /^form1/i,
+        subSection: '_default',
+        confidence: 0.98,
+        description: 'Fields starting with \'form1\' (41 fields) (Precision: 100%, Recall: 100.0%, 41/41 fields)',
+    },
+    {
+        pattern: /^form1\\[/i,,
+        subSection: '_default',
+        confidence: 0.98,
+        description: 'Fields starting with \'form1[\' (41 fields) (Precision: 100%, Recall: 100.0%, 41/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0/i,,
+        subSection: '_default',
+        confidence: 0.98,
+        description: 'Fields starting with \'form1[0\' (41 fields) (Precision: 100%, Recall: 100.0%, 41/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]/i,
+        subSection: '_default',
+        confidence: 0.98,
+        description: 'Fields starting with \'form1[0]\' (41 fields) (Precision: 100%, Recall: 100.0%, 41/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\./i,
+        subSection: '_default',
+        confidence: 0.98,
+        description: 'Fields starting with \'form1[0].\' (41 fields) (Precision: 100%, Recall: 100.0%, 41/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.S/i,
+        subSection: '_default',
+        confidence: 0.98,
+        description: 'Fields starting with \'form1[0].S\' (29 fields) (Precision: 100%, Recall: 70.7%, 29/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.Se/i,
+        subSection: '_default',
+        confidence: 0.98,
+        description: 'Fields starting with \'form1[0].Se\' (29 fields) (Precision: 100%, Recall: 70.7%, 29/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.Sec/i,
+        subSection: '_default',
+        confidence: 0.98,
+        description: 'Fields starting with \'form1[0].Sec\' (29 fields) (Precision: 100%, Recall: 70.7%, 29/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.Sect/i,
+        subSection: '_default',
+        confidence: 0.98,
+        description: 'Fields starting with \'form1[0].Sect\' (29 fields) (Precision: 100%, Recall: 70.7%, 29/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.Secti/i,
+        subSection: '_default',
+        confidence: 0.98,
+        description: 'Fields starting with \'form1[0].Secti\' (29 fields) (Precision: 100%, Recall: 70.7%, 29/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.Sectio/i,
+        subSection: '_default',
+        confidence: 0.98,
+        description: 'Fields starting with \'form1[0].Sectio\' (29 fields) (Precision: 100%, Recall: 70.7%, 29/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.Section/i,
+        subSection: '_default',
+        confidence: 0.98,
+        description: 'Fields starting with \'form1[0].Section\' (29 fields) (Precision: 100%, Recall: 70.7%, 29/41 fields)',
+    },
+    {
+        pattern: /form1/i,
+        subSection: '_default',
+        confidence: 0.98,
+        description: 'Distinctive pattern matching 41 fields (Precision: 100%, Recall: 100.0%, 41/41 fields)',
+    },
+    {
+        pattern: /#field/i,
+        subSection: '_default',
+        confidence: 0.9754390243902439,
+        description: 'Distinctive pattern matching 23 fields (Precision: 100%, Recall: 56.1%, 23/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.Sections/i,
+        subSection: '_default',
+        confidence: 0.9746341463414634,
+        description: 'Fields starting with \'form1[0].Sections\' (15 fields) (Precision: 100%, Recall: 36.6%, 15/41 fields)',
+    },
+    {
+        pattern: /section[_\\. ]*(0*9|9)\\b/i,
+        subSection: '_default',
+        confidence: 0.9736585365853658,
+        description: 'Fields explicitly matching /section[_\. ]*(0*9|9)\b/i (Precision: 100%, Recall: 34.1%, 14/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.Section9/i,
+        subSection: '_default',
+        confidence: 0.9736585365853658,
+        description: 'Fields starting with \'form1[0].Section9\' (14 fields) (Precision: 100%, Recall: 34.1%, 14/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.Section9\\\\/i,
+        subSection: '_default',
+        confidence: 0.9736585365853658,
+        description: 'Fields starting with \'form1[0].Section9\\'(14, fields)(Precision, 100 % , Recall, 34.1 % , 14 / 41, fields), ',: 
+    },
+    {
+        pattern: /^form1\\[0\\]\\.Section9\\\\\\./i,
+        subSection: '_default',
+        confidence: 0.9736585365853658,
+        description: 'Fields starting with \'form1[0].Section9\.\' (14 fields) (Precision: 100%, Recall: 34.1%, 14/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.Section9\\\\\\.1/i,
+        subSection: '_default',
+        confidence: 0.9736585365853658,
+        description: 'Fields starting with \'form1[0].Section9\.1\' (14 fields) (Precision: 100%, Recall: 34.1%, 14/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.#subfor/i,
+        subSection: '_default',
+        confidence: 0.9717073170731707,
+        description: 'Fields starting with \'form1[0].#subfor\' (12 fields) (Precision: 100%, Recall: 29.3%, 12/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.#subform/i,
+        subSection: '_default',
+        confidence: 0.9717073170731707,
+        description: 'Fields starting with \'form1[0].#subform\' (12 fields) (Precision: 100%, Recall: 29.3%, 12/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.#subform\\[/i,,
+        subSection: '_default',
+        confidence: 0.9717073170731707,
+        description: 'Fields starting with \'form1[0].#subform[\' (12 fields) (Precision: 100%, Recall: 29.3%, 12/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.#subfo/i,
+        subSection: '_default',
+        confidence: 0.9712073170731707,
+        description: 'Fields starting with \'form1[0].#subfo\' (12 fields) (Precision: 100%, Recall: 29.3%, 12/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.#subf/i,
+        subSection: '_default',
+        confidence: 0.9707073170731707,
+        description: 'Fields starting with \'form1[0].#subf\' (12 fields) (Precision: 100%, Recall: 29.3%, 12/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.#sub/i,
+        subSection: '_default',
+        confidence: 0.9702073170731706,
+        description: 'Fields starting with \'form1[0].#sub\' (12 fields) (Precision: 100%, Recall: 29.3%, 12/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.#su/i,
+        subSection: '_default',
+        confidence: 0.9697073170731707,
+        description: 'Fields starting with \'form1[0].#su\' (12 fields) (Precision: 100%, Recall: 29.3%, 12/41 fields)',
+    },
+    {
+        pattern: /\\bsection9\\b/i,
+        subSection: '_default',
+        confidence: 0.9696585365853658,
+        description: 'Fields explicitly matching /\bsection9\b/i (Precision: 100%, Recall: 34.1%, 14/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.#s/i,
+        subSection: '_default',
+        confidence: 0.9692073170731706,
+        description: 'Fields starting with \'form1[0].#s\' (12 fields) (Precision: 100%, Recall: 29.3%, 12/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.#/i,
+        subSection: '_default',
+        confidence: 0.9687073170731707,
+        description: 'Fields starting with \'form1[0].#\' (12 fields) (Precision: 100%, Recall: 29.3%, 12/41 fields)',
+    },
+    {
+        pattern: /Section9\\\\/i,
+        subSection: '_default',
+        confidence: 0.9686585365853658,
+        description: 'Distinctive pattern matching 14 fields (Precision: 100%, Recall: 34.1%, 14/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.Sections1/i,
+        subSection: '_default',
+        confidence: 0.9678048780487805,
+        description: 'Fields starting with \'form1[0].Sections1\' (8 fields) (Precision: 100%, Recall: 19.5%, 8/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.Sections1-/i,
+        subSection: '_default',
+        confidence: 0.9678048780487805,
+        description: 'Fields starting with \'form1[0].Sections1-\' (8 fields) (Precision: 100%, Recall: 19.5%, 8/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.Sections1-6/i,
+        subSection: '_default',
+        confidence: 0.9678048780487805,
+        description: 'Fields starting with \'form1[0].Sections1-6\' (8 fields) (Precision: 100%, Recall: 19.5%, 8/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.#subform\\[7/i,,
+        subSection: '_default',
+        confidence: 0.9678048780487805,
+        description: 'Fields starting with \'form1[0].#subform[7\' (8 fields) (Precision: 100%, Recall: 19.5%, 8/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.Sections7/i,
+        subSection: '_default',
+        confidence: 0.9668292682926829,
+        description: 'Fields starting with \'form1[0].Sections7\' (7 fields) (Precision: 100%, Recall: 17.1%, 7/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.Sections7-/i,
+        subSection: '_default',
+        confidence: 0.9668292682926829,
+        description: 'Fields starting with \'form1[0].Sections7-\' (7 fields) (Precision: 100%, Recall: 17.1%, 7/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.Sections7-9/i,
+        subSection: '_default',
+        confidence: 0.9668292682926829,
+        description: 'Fields starting with \'form1[0].Sections7-9\' (7 fields) (Precision: 100%, Recall: 17.1%, 7/41 fields)',
+    },
+    {
+        pattern: /^form1\\[0\\]\\.#subform\\[6/i,,
+        subSection: '_default',
+        confidence: 0.9639024390243902,
+        description: 'Fields starting with \'form1[0].#subform[6\' (4 fields) (Precision: 100%, Recall: 9.8%, 4/41 fields)',
+    }
+];

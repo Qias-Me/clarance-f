@@ -8,31 +8,37 @@ export const relationshipInfo: RelationshipInfo = {
     value: "Yes",
     id: "11749",
     type: "PDFCheckBox",
+    label: "Never entered in a civil marriage, legally recognized civil union, or legally recognized domestic partnership",
   },
   currentlyIn: {
     value: "Yes",
     id: "11746",
     type: "PDFCheckBox",
+    label: "Currently in a civil marriage, legally recognized civil union, or legally recognized domestic partnership",
   },
   separated: {
     value: "Yes",
     id: "11748",
     type: "PDFCheckBox",
+    label: "Separated",
   },
   annulled: {
     value: "Yes",
     id: "11747",
     type: "PDFCheckBox",
+    label: "Annulled",
   },
   divorcedDissolved: {
     value: "Yes",
     id: "11745",
     type: "PDFCheckBox",
+    label: "Divorced/Dissolved",
   },
   widowed: {
     value: "Yes",
     id: "11744",
     type: "PDFCheckBox",
+    label: "Widowed",
   },
   section17_1: {
     _id: 1,
@@ -1824,5 +1830,152 @@ export const relationshipInfo: RelationshipInfo = {
       },
     ],
   },
+};
+
+/**
+ * Validates relationshipInfo data to ensure it meets form requirements
+ * 
+ * @param data The relationshipInfo data to validate
+ * @returns Object containing validation result and error messages
+ */
+export const validateRelationshipInfo = (data: RelationshipInfo): { 
+  isValid: boolean; 
+  errors: string[] 
+} => {
+  const errors: string[] = [];
+  
+  // Ensure at least one marital status option is selected
+  if (
+    data.neverEntered?.value !== "Yes" &&
+    data.currentlyIn?.value !== "Yes" &&
+    data.separated?.value !== "Yes" &&
+    data.annulled?.value !== "Yes" &&
+    data.divorcedDissolved?.value !== "Yes" &&
+    data.widowed?.value !== "Yes"
+  ) {
+    errors.push("You must select at least one marital status option.");
+  }
+  
+  // Validate section17_1 (Current Marriage)
+  if ((data.currentlyIn?.value === "Yes" || data.separated?.value === "Yes") && (!data.section17_1)) {
+    errors.push("Current marriage information is required for 'Currently In' or 'Separated' status.");
+  } else if (data.section17_1) {
+    // Validate spouse name
+    if (!data.section17_1.fullName?.firstName?.value || !data.section17_1.fullName?.lastName?.value) {
+      errors.push("Spouse's first and last name are required.");
+    }
+    
+    // Validate marriage details
+    if (!data.section17_1.marraigeDetails?.date?.date?.value) {
+      errors.push("Date of marriage is required.");
+    }
+    
+    if (!data.section17_1.marraigeDetails?.location?.city?.value) {
+      errors.push("Marriage location city is required.");
+    }
+    
+    if (!data.section17_1.marraigeDetails?.location?.country?.value) {
+      errors.push("Marriage location country is required.");
+    }
+    
+    // Validate separation details if separated
+    if (data.separated?.value === "Yes") {
+      if (!data.section17_1.isSeperated || data.section17_1.isSeperated.value !== "YES ") {
+        errors.push("You must indicate that you are separated.");
+      }
+      
+      if (!data.section17_1.seperated?.date?.value) {
+        errors.push("Date of separation is required.");
+      }
+      
+      if (!data.section17_1.seperated?.location?.city?.value) {
+        errors.push("Separation location city is required.");
+      }
+    }
+  }
+  
+  // Validate section17_2 (Previous Marriages)
+  if ((data.annulled?.value === "Yes" || data.divorcedDissolved?.value === "Yes" || data.widowed?.value === "Yes") && 
+      (!data.section17_2 || data.section17_2.length === 0)) {
+    errors.push("Previous marriage information is required for 'Annulled', 'Divorced/Dissolved', or 'Widowed' status.");
+  } else if (data.section17_2 && data.section17_2.length > 0) {
+    // Validate each previous marriage
+    data.section17_2.forEach((marriage, index) => {
+      const marriageNum = index + 1;
+      
+      // Validate status (Annulled, Divorced, Widowed)
+      if (!marriage.marriageStatus?.value) {
+        errors.push(`Previous marriage #${marriageNum}: Status is required.`);
+      }
+      
+      // Validate date of marriage
+      if (!marriage.dateOfMarriage?.date?.value) {
+        errors.push(`Previous marriage #${marriageNum}: Date of marriage is required.`);
+      }
+      
+      // Validate place of marriage
+      if (!marriage.placeOfMarriage?.city?.value || !marriage.placeOfMarriage?.country?.value) {
+        errors.push(`Previous marriage #${marriageNum}: Place of marriage (city and country) is required.`);
+      }
+      
+      // Validate spouse name
+      if (!marriage.spouseName?.firstName?.value || !marriage.spouseName?.lastName?.value) {
+        errors.push(`Previous marriage #${marriageNum}: Former spouse's name is required.`);
+      }
+      
+      // Validate divorce place and date for divorced/annulled
+      if (marriage.marriageStatus?.value === "2" || marriage.marriageStatus?.value === "3") {  // Divorced or Annulled
+        if (!marriage.divorcePlace?.city?.value || !marriage.divorcePlace?.country?.value) {
+          errors.push(`Previous marriage #${marriageNum}: Divorce/annulment location is required.`);
+        }
+        
+        if (!marriage.dateOfDivorce?.date?.value) {
+          errors.push(`Previous marriage #${marriageNum}: Date of divorce/annulment is required.`);
+        }
+      }
+    });
+  }
+  
+  // Validate section17_3 (Cohabitants)
+  if (data.section17_3) {
+    if (data.section17_3.hasCohabitant?.value === "YES" && 
+        (!data.section17_3.cohabitants || data.section17_3.cohabitants.length === 0)) {
+      errors.push("You indicated having a cohabitant but didn't provide any cohabitant information.");
+    } else if (data.section17_3.cohabitants && data.section17_3.cohabitants.length > 0) {
+      // Validate each cohabitant
+      data.section17_3.cohabitants.forEach((cohabitant, index) => {
+        const cohabitantNum = index + 1;
+        
+        // Validate name
+        if (!cohabitant.fullName?.firstName?.value || !cohabitant.fullName?.lastName?.value) {
+          errors.push(`Cohabitant #${cohabitantNum}: First and last name are required.`);
+        }
+        
+        // Validate birth information
+        if (!cohabitant.dateOfBirth?.date?.value) {
+          errors.push(`Cohabitant #${cohabitantNum}: Date of birth is required.`);
+        }
+        
+        if (!cohabitant.placeOfBirth?.city?.value || !cohabitant.placeOfBirth?.country?.value) {
+          errors.push(`Cohabitant #${cohabitantNum}: Place of birth (city and country) is required.`);
+        }
+        
+        // Validate citizenship
+        if (!cohabitant.citizenship || cohabitant.citizenship.length === 0) {
+          errors.push(`Cohabitant #${cohabitantNum}: Citizenship information is required.`);
+        }
+        
+        // Validate cohabitation start date
+        if (!cohabitant.cohabitationStartDate?.date?.value) {
+          errors.push(`Cohabitant #${cohabitantNum}: Cohabitation start date is required.`);
+        }
+      });
+    }
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
 };
 

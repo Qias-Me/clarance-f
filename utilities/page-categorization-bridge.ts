@@ -542,7 +542,7 @@ export function extractSectionInfoFromName(fieldName: string): {
     ) {
       return { section: 3, confidence: 0.9 };
     }
-    if (fieldName.includes("SSN[1]")) {
+    if (fieldName.includes("SSN")) {
       return { section: 4, confidence: 0.9 };
     } // Check for all section 6 fields - STRICT matching with full paths
     if (

@@ -1,0 +1,50 @@
+{
+  "totalSections": 5,
+  "totalSubsections": 19,
+  "sectionBreakdown": {
+    "12": {
+      "subsections": [
+        "B",
+        "C"
+      ],
+      "fieldCount": 96
+    },
+    "13": {
+      "subsections": [
+        "A"
+      ],
+      "fieldCount": 216
+    },
+    "20": {
+      "subsections": [
+        "A",
+        "A2"
+      ],
+      "fieldCount": 83
+    },
+    "21": {
+      "subsections": [
+        "A",
+        "A2",
+        "B",
+        "B2",
+        "C",
+        "D1",
+        "D2",
+        "D3",
+        "E",
+        "E1"
+      ],
+      "fieldCount": 486
+    },
+    "23": {
+      "subsections": [
+        "C",
+        "D",
+        "E",
+        "F"
+      ],
+      "fieldCount": 143
+    }
+  }
+}

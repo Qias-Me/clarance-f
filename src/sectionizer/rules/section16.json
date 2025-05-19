@@ -1,0 +1,24 @@
+{
+  "section": 16,
+  "name": "People Who Know You Well",
+  "rules": [
+    {
+      "section": 16,
+      "pattern": "form1\\[0\\]\\.Section16_1\\[0\\]",
+      "confidence": 0.99,
+      "description": "Section 16 main pattern"
+    },
+    {
+      "section": 16,
+      "pattern": "form1\\[0\\]\\.Section16_1\\[0\\]\\.#area\\[0\\]\\.From_Datefield_Name_2\\[0\\]",
+      "confidence": 0.99,
+      "description": "Section 16 date field that was misidentified as section 2"
+    },
+    {
+      "section": 16,
+      "pattern": "Provide your period of service",
+      "confidence": 0.85,
+      "description": "Period of service label match"
+    }
+  ]
+} 

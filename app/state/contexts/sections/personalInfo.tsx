@@ -1,30 +1,31 @@
 import { type PersonalInfo } from "api/interfaces/sections/personalInfo";
 
-// personalInfo covers section 1
+// personalInfo covers section 1 - Full Name section of SF-86
+// These field IDs correspond to section 1 in field-hierarchy.json
 
 export const personalInfo: PersonalInfo = {
   lastName: {
-    value: "Sect1FirstName",
-    id: "9449",
+    value: "",
+    id: "9449", // Field ID from field-hierarchy.json without the "0 R" suffix
     type: "PDFTextField",
-    label: "Section 1. Full Name. Provide your full name. If you have only initials in your name, provide them and indicate \"Initial only\". If you do not have a middle name, indicate \"No Middle Name\". If you are a \"Jr.,\" \"Sr.,\" etc. enter this under Suffix. Last Name.",
+    label: "Last Name",
   },
   firstName: {
-    value: "Sect1FirstName",
-    id: "9448",
+    value: "",
+    id: "9448", // Field ID from field-hierarchy.json without the "0 R" suffix
     type: "PDFTextField",
     label: "First name",
   },
   middleName: {
-    value: "Sect1MiddleName",
-    id: "9447",
+    value: "",
+    id: "9447", // Field ID from field-hierarchy.json without the "0 R" suffix
     type: "PDFTextField",
     label: "Middle name",
   },
   suffix: {
-    value: "III",
-    id: "9435",
+    value: "",
+    id: "9435", // Field ID from field-hierarchy.json without the "0 R" suffix
     type: "PDFDropdown",
     label: "Suffix",
   }
-};
+}; 

@@ -1,0 +1,76 @@
+{
+  "section": 10,
+  "name": "Dual/Multiple Citizenship & Foreign Passport",
+  "rules": [
+    {
+      "section": 10,
+      "pattern": "form1\\[0\\]\\.Section10\\[0\\]",
+      "confidence": 0.95,
+      "description": "Exact match for Section 10 area"
+    },
+    {
+      "section": 10,
+      "pattern": "section10",
+      "confidence": 0.9,
+      "description": "Generic section 10 field pattern"
+    },
+    {
+      "section": 10,
+      "pattern": "foreign passport",
+      "confidence": 0.85,
+      "description": "Foreign passport related field"
+    },
+    {
+      "section": 10,
+      "pattern": "dual citizenship",
+      "confidence": 0.82,
+      "description": "Dual citizenship related field"
+    },
+    {
+      "section": 10,
+      "pattern": "multiple citizenship",
+      "confidence": 0.82,
+      "description": "Multiple citizenship related field"
+    },
+    {
+      "section": 10,
+      "subsection": "A",
+      "pattern": "section10a",
+      "confidence": 0.9,
+      "description": "Section 10A field pattern"
+    },
+    {
+      "section": 10,
+      "subsection": "B",
+      "pattern": "section10b",
+      "confidence": 0.9,
+      "description": "Section 10B field pattern"
+    },
+    {
+      "section": 10,
+      "subsection": "A",
+      "pattern": "10a",
+      "confidence": 0.8,
+      "description": "Alternative Section 10A field pattern"
+    },
+    {
+      "section": 10,
+      "subsection": "B",
+      "pattern": "10b",
+      "confidence": 0.8,
+      "description": "Alternative Section 10B field pattern"
+    },
+    {
+      "section": 10,
+      "pattern": "country of citizenship",
+      "confidence": 0.85,
+      "description": "Country of citizenship field"
+    },
+    {
+      "section": 10,
+      "pattern": "how citizenship obtained",
+      "confidence": 0.85,
+      "description": "How citizenship was obtained field"
+    }
+  ]
+} 

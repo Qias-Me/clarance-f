@@ -259,4 +259,7 @@ export type {
   Section13A6,
   Section13B,
   Section13C,
+  Supervisor13A1,
+  Supervisor13A2,
+  EmploymentEntry,
 };

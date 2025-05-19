@@ -1,0 +1,31 @@
+{
+  "section": 2,
+  "name": "Date of Birth",
+  "rules": [
+    {
+      "section": 2,
+      "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.From_Datefield_Name_2\\[0\\]",
+      "confidence": 0.95,
+      "description": "Exact match for Date of Birth field name"
+    },
+    {
+      "section": 2,
+      "pattern": "Section 2\\. Date of Birth",
+      "confidence": 0.95,
+      "description": "Date of Birth field by label match"
+    },
+    {
+      "section": 2,
+      "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.#field\\[18\\]",
+      "confidence": 0.95,
+      "description": "Exact match for Estimate checkbox field name"
+    },
+    {
+      "section": 2,
+      "pattern": "Estimate",
+      "confidence": 0.85,
+      "description": "Estimate checkbox for Date of Birth",
+      "fieldType": ["PDFCheckBox"]
+    }
+  ]
+} 

@@ -1,0 +1,130 @@
+SF-86 FORM FIELD CATEGORIZATION VALIDATION REPORT
+=================================================
+
+Generated: 5/16/2025, 3:51:26 PM
+
+Total Fields: 6197
+Total Sections: 30
+All 30 sections are present
+
+SECTION FIELD COUNTS:
+--------------------
+Section 1 (Full Name): 761 fields
+  High confidence: 424 (56%)
+  Overall confidence score: 69%
+Section 2 (Date of Birth): 26 fields
+  High confidence: 26 (100%)
+  Overall confidence score: 100%
+Section 3 (Place of Birth): 143 fields
+  High confidence: 39 (27%)
+  Overall confidence score: 49%
+Section 4 (Social Security Number): 139 fields
+  High confidence: 139 (100%)
+  Overall confidence score: 100%
+Section 5 (Other Names Used): 56 fields
+  High confidence: 56 (100%)
+  Overall confidence score: 100%
+Section 6 (Your Identifying Information): 8 fields
+  High confidence: 6 (75%)
+  Overall confidence score: 90%
+Section 7 (Your Contact Information): 950 fields
+  High confidence: 950 (100%)
+  Overall confidence score: 100%
+Section 8 (U.S. Passport Information): 77 fields
+  High confidence: 77 (100%)
+  Overall confidence score: 100%
+Section 9 (Citizenship): 124 fields
+  High confidence: 115 (93%)
+  Overall confidence score: 97%
+Section 10 (Dual/Multiple Citizenship & Foreign Passport Info): 56 fields
+  High confidence: 56 (100%)
+  Overall confidence score: 100%
+Section 11 (Where You Have Lived): 421 fields
+  High confidence: 180 (43%)
+  Overall confidence score: 60%
+Section 12 (Where you went to School): 10 fields
+  High confidence: 10 (100%)
+  Overall confidence score: 100%
+Section 13 (Employment Activities): 1012 fields
+  High confidence: 675 (67%)
+  Overall confidence score: 77%
+Section 14 (Selective Service): 40 fields
+  High confidence: 40 (100%)
+  Overall confidence score: 100%
+Section 15 (Military History): 43 fields
+  High confidence: 43 (100%)
+  Overall confidence score: 100%
+Section 16 (People Who Know You Well): 105 fields
+  High confidence: 105 (100%)
+  Overall confidence score: 100%
+Section 17 (Marital/Relationship Status): 254 fields
+  High confidence: 226 (89%)
+  Overall confidence score: 96%
+Section 18 (Relatives): 677 fields
+  High confidence: 677 (100%)
+  Overall confidence score: 100%
+Section 19 (Foreign Contacts): 148 fields
+  High confidence: 148 (100%)
+  Overall confidence score: 100%
+Section 20 (Foreign Business, Activities, Government Contacts): 311 fields
+  High confidence: 12 (4%)
+  Overall confidence score: 33%
+Section 21 (Psychological and Emotional Health): 6 fields
+  High confidence: 6 (100%)
+  Overall confidence score: 100%
+Section 22 (Police Record): 192 fields
+  High confidence: 192 (100%)
+  Overall confidence score: 100%
+Section 23 (Illegal Use of Drugs and Drug Activity): 51 fields
+  High confidence: 48 (94%)
+  Overall confidence score: 98%
+Section 24 (Use of Alcohol): 142 fields
+  High confidence: 142 (100%)
+  Overall confidence score: 100%
+Section 25 (Investigations and Clearance): 79 fields
+  High confidence: 79 (100%)
+  Overall confidence score: 100%
+Section 26 (Financial Record): 231 fields
+  High confidence: 217 (94%)
+  Overall confidence score: 98%
+Section 27 (Use of Information Technology Systems): 57 fields
+  High confidence: 57 (100%)
+  Overall confidence score: 100%
+Section 28 (Involvement in Non-Criminal Court Actions): 20 fields
+  High confidence: 20 (100%)
+  Overall confidence score: 100%
+Section 29 (Association Record): 135 fields
+  High confidence: 135 (100%)
+  Overall confidence score: 100%
+Section 30 (Continuation Space): 0 fields
+  High confidence: 0 (0%)
+  Overall confidence score: 0%
+
+SECTION 29 ANALYSIS (ASSOCIATION RECORD):
+----------------------------------------
+Total fields: 135
+
+Field types:
+  PDFTextField: 68
+  PDFRadioGroup: 7
+  PDFCheckBox: 48
+  PDFDropdown: 12
+
+Potential subsections:
+  Form1 (6 fields, medium confidence)
+    Pattern: form1
+    Sample fields: form1[0].Section15_3[0].TextField13[0], form1[0].Section16_1[0].TextField13[0], ...
+
+  Primary Section 29 Fields (129 fields, high confidence)
+    Pattern: section29-direct
+    Sample fields: form1[0].Section29[0].RadioButtonList[0], form1[0].Section29[0].TextField11[0], ...
+
+
+RECOMMENDATIONS:
+---------------
+1. Section 29 has few identifiable subsections. Consider manual review.
+2. Section 1 has low confidence (69%). Review field classifications.
+3. Section 3 has low confidence (49%). Review field classifications.
+4. Section 11 has low confidence (60%). Review field classifications.
+5. Section 20 has low confidence (33%). Review field classifications.
+6. Section 30 has low confidence (0%). Review field classifications.

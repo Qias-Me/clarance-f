@@ -244,4 +244,5 @@ export type {
   Section18_3Details,
   Section18_4Details,
   Section18_5Details,
+  Countries,
 };

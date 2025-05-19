@@ -21,50 +21,75 @@ const RenderServiceInfo: React.FC<FormProps> = ({
   const handleInputChange =
     (field: string) => (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       const { value } = event.target;
-      onInputChange(`${path}.${field}`, value);
+      onInputChange(`${path}.${field}.value`, value);
     };
 
   const handleRadioChange =
-    (value: boolean) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    (field: string, value: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
       if (event.target.checked) {
-        onInputChange(`${path}.bornAfter1959`, value);
+        onInputChange(`${path}.${field}.value`, value);
       }
     };
+
+  const renderExplanationField = (status: string) => {
+    if (!data.explanations?.[status as "Yes" | "No" | "I don't know"]) return null;
+    
+    return (
+      <label className="block mt-2">
+        <span className="text-gray-700">
+          {status === "Yes" 
+            ? "Registration Number" 
+            : "Explanation"}
+        </span>
+        <input
+          type="text"
+          value={data.explanations[status as "Yes" | "No" | "I don't know"]?.value || ""}
+          onChange={(e) => onInputChange(`${path}.explanations.${status}.value`, e.target.value)}
+          disabled={isReadOnlyField(`${path}.explanations.${status}`)}
+          className="mt-1 block w-full"
+        />
+      </label>
+    );
+  };
 
   return (
     <div className="p-4 bg-gray-50 rounded-lg shadow space-y-4">
       <h3 className="text-lg font-semibold">Section 14 - Selective Service Record</h3>
       <div className="mt-2 space-y-4">
-        <div className="flex space-x-4">
-          <label className="inline-flex items-center">
-            <input
-              type="radio"
-              name="bornAfter1959"
-              value="yes"
-              checked={data.bornAfter1959 === true}
-              onChange={handleRadioChange(true)}
-              className="mr-2"
-            />
-            YES
-          </label>
-          <label className="inline-flex items-center">
-            <input
-              type="radio"
-              name="bornAfter1959"
-              value="no"
-              checked={data.bornAfter1959 === false}
-              onChange={handleRadioChange(false)}
-              className="mr-2"
-            />
-            NO
-          </label>
+        <div>
+          <p className="text-gray-700">Were you born male after December 31, 1959?</p>
+          <div className="flex space-x-4">
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                name="bornAfter1959"
+                value="YES"
+                checked={data.bornAfter1959?.value === "YES"}
+                onChange={handleRadioChange("bornAfter1959", "YES")}
+                className="mr-2"
+              />
+              YES
+            </label>
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                name="bornAfter1959"
+                value="NO (Proceed to Section 15)"
+                checked={data.bornAfter1959?.value === "NO (Proceed to Section 15)"}
+                onChange={handleRadioChange("bornAfter1959", "NO (Proceed to Section 15)")}
+                className="mr-2"
+              />
+              NO (Proceed to Section 15)
+            </label>
+          </div>
         </div>
-        {data.bornAfter1959 !== null && data.bornAfter1959 === true && (
+        
+        {data.bornAfter1959?.value === "YES" && (
           <div className="space-y-2">
             <label className="block">
-              <span className="text-gray-700">Are you registered with SSS?</span>
+              <span className="text-gray-700">Have you registered with the Selective Service System (SSS)?</span>
               <select
-                value={data.registeredWithSSS || ""}
+                value={data.registeredWithSSS?.value || ""}
                 onChange={handleInputChange("registeredWithSSS")}
                 disabled={isReadOnlyField(`${path}.registeredWithSSS`)}
                 className="mt-1 block w-full"
@@ -72,35 +97,18 @@ const RenderServiceInfo: React.FC<FormProps> = ({
                 <option value="" disabled>
                   Select an option
                 </option>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-                <option value="dontKnow">Don&apos;t Know</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+                <option value="I don't know">I don't know</option>
               </select>
             </label>
-            {data.registeredWithSSS === "yes" && (
-              <label className="block mt-2">
-                <span className="text-gray-700">Registration Number</span>
-                <input
-                  type="text"
-                  value={data.registrationNumber || ""}
-                  onChange={handleInputChange("registrationNumber")}
-                  disabled={isReadOnlyField(`${path}.registrationNumber`)}
-                  className="mt-1 block w-full"
-                />
-              </label>
-            )}
-            {(data.registeredWithSSS === "no" || data.registeredWithSSS === "dontKnow") && (
-              <label className="block mt-2">
-                <span className="text-gray-700">Explanation</span>
-                <input
-                  type="text"
-                  value={data.explanation || ""}
-                  onChange={handleInputChange("explanation")}
-                  disabled={isReadOnlyField(`${path}.explanation`)}
-                  className="mt-1 block w-full"
-                />
-              </label>
-            )}
+            
+            {data.registeredWithSSS?.value === "Yes" && renderExplanationField("Yes")}
+            {data.registeredWithSSS?.value === "No" && renderExplanationField("No")}
+            {data.registeredWithSSS?.value === "I don't know" && renderExplanationField("I don't know")}
+            
+            {/* Military service history could be expanded here with additional fields */}
+            {/* This would include fields for military branches, service dates, and discharge information */}
           </div>
         )}
       </div>

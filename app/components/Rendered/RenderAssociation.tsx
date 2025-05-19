@@ -162,14 +162,14 @@ const RenderAssociation: React.FC<FormProps> = ({
 
       {renderBooleanInput(
         "Section 29.1 Are you now or have you EVER been a member of an organization dedicated to terrorism, either with an awareness of the organization's dedication to that end, or with the specific intent to further such activities?",
-        data.terrorismMember,
+        data.terrorismMember.value === "YES",
         (value) => handleInputChange(`${path}.terrorismMember`, value)
       )}
       {data.terrorismMember && renderSection("section29_1")}
 
       {renderBooleanInput(
         "Section 29.2 Have you EVER knowingly engaged in any acts of terrorism?",
-        data.actsOfTerrorism,
+        data.actsOfTerrorism.value === "YES",
         (value) => handleInputChange(`${path}.actsOfTerrorism`, value)
       )}
       {data.actsOfTerrorism && renderSection("section29_2")}

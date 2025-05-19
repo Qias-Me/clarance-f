@@ -1,0 +1,113 @@
+{
+  "section": 28,
+  "name": "Involvement in Non-Criminal Court Actions",
+  "rules": [
+    {
+      "section": 28,
+      "pattern": "form1\\[0\\]\\.Section28\\[0\\]",
+      "confidence": 0.95,
+      "description": "Exact match for Section 28 area"
+    },
+    {
+      "section": 28,
+      "pattern": "section28",
+      "confidence": 0.9,
+      "description": "Generic section 28 field pattern"
+    },
+    {
+      "section": 28,
+      "pattern": "non-criminal court actions",
+      "confidence": 0.85,
+      "description": "Match by section title"
+    },
+    {
+      "section": 28,
+      "pattern": "section28_(\\d+)",
+      "confidence": 0.9,
+      "description": "Section 28 entry index pattern",
+      "entryPattern": "section28_(\\d+)"
+    },
+    {
+      "section": 28,
+      "pattern": "28a\\.?(\\d*)",
+      "confidence": 0.9,
+      "description": "Section 28A fields with alternative format",
+      "entryPattern": "28a\\.?(\\d+)",
+      "subsection": "A"
+    },
+    {
+      "section": 28,
+      "pattern": "28b\\.?(\\d*)",
+      "confidence": 0.9,
+      "description": "Section 28B fields with alternative format",
+      "entryPattern": "28b\\.?(\\d+)",
+      "subsection": "B"
+    },
+    {
+      "section": 28,
+      "pattern": "court action",
+      "confidence": 0.85,
+      "description": "Court action related fields"
+    },
+    {
+      "section": 28,
+      "pattern": "civil court",
+      "confidence": 0.85,
+      "description": "Civil court related fields"
+    },
+    {
+      "section": 28,
+      "pattern": "lawsuit",
+      "confidence": 0.85,
+      "description": "Lawsuit related fields"
+    },
+    {
+      "section": 28,
+      "pattern": "civil suit",
+      "confidence": 0.85,
+      "description": "Civil suit related fields"
+    },
+    {
+      "section": 28,
+      "pattern": "court proceedings",
+      "confidence": 0.8,
+      "description": "Court proceedings related fields"
+    },
+    {
+      "section": 28,
+      "pattern": "legal action",
+      "confidence": 0.8,
+      "description": "Legal action related fields"
+    },
+    {
+      "section": 28,
+      "pattern": "litigation",
+      "confidence": 0.85,
+      "description": "Litigation related fields"
+    },
+    {
+      "section": 28,
+      "pattern": "non-criminal",
+      "confidence": 0.85,
+      "description": "Non-criminal related fields"
+    },
+    {
+      "section": 28,
+      "pattern": "defendant",
+      "confidence": 0.8,
+      "description": "Defendant related fields"
+    },
+    {
+      "section": 28,
+      "pattern": "plaintiff",
+      "confidence": 0.8,
+      "description": "Plaintiff related fields"
+    },
+    {
+      "section": 28,
+      "pattern": "settlement",
+      "confidence": 0.8,
+      "description": "Settlement related fields"
+    }
+  ]
+} 

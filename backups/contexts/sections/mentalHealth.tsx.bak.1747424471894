@@ -1,0 +1,874 @@
+import { type MentalHealth } from "api/interfaces/sections/mentalHealth";
+
+/**
+ * Mental Health Context - SECTION 21
+ * 
+ * IMPORTANT: CONTAINS SENSITIVE PROTECTED HEALTH INFORMATION (PHI)
+ * This context contains sensitive mental health information that is covered under:
+ * - HIPAA (Health Insurance Portability and Accountability Act)
+ * - Privacy Act of 1974
+ * - Various federal regulations on handling of protected health information
+ * 
+ * Special handling requirements:
+ * - Data must be encrypted at rest
+ * - Access should be strictly controlled and logged
+ * - User consent must be obtained before accessing or processing
+ * - Audit trails must be maintained for all access events
+ * - Data should be redacted in exports unless specifically authorized
+ */
+
+// MentalHealth covers section 21 of the form
+export const mentalHealth: MentalHealth = {
+  _id: Math.random(),
+  
+  // Main section questions
+  declaredMentallyIncompetent: {
+    value: "NO",
+    id: "14351",
+    type: "PDFRadioGroup",
+    label: "Have you ever been declared mentally incompetent by a court or administrative agency?"
+  },
+  consultMentalHealth: {
+    value: "NO",
+    id: "14352",
+    type: "PDFRadioGroup",
+    label: "Have you ever been ordered by a court or administrative agency to consult with a mental health professional?"
+  },
+  hospitalizedMentalHealth: {
+    value: "NO",
+    id: "14353",
+    type: "PDFRadioGroup",
+    label: "Have you ever been hospitalized for a mental health condition?"
+  },
+  beenDiagnosed: {
+    value: "NO",
+    id: "14354",
+    type: "PDFRadioGroup",
+    label: "Have you ever been diagnosed with a mental health condition by a health care professional?"
+  },
+  delayedTreatment: {
+    value: "NO",
+    id: "14355",
+    type: "PDFRadioGroup",
+    label: "Did you ever avoid or delay mental health care that was needed?"
+  },
+  currentlyInTreatment: {
+    value: "NO",
+    id: "14356",
+    type: "PDFRadioGroup",
+    label: "Are you currently in treatment for a mental health condition?"
+  },
+  substantialAffects: {
+    value: "NO",
+    id: "14357",
+    type: "PDFRadioGroup",
+    label: "Do you have a mental health condition that substantially adversely affects your judgment, reliability, or trustworthiness?"
+  },
+  counseling: {
+    value: "NO",
+    id: "14358",
+    type: "PDFRadioGroup",
+    label: "In the last seven years, have you consulted with a health care professional regarding an emotional or mental health condition or were you hospitalized for such a condition?"
+  },
+  
+  // Security and privacy metadata
+  securityMetadata: {
+    encryptedAtRest: true,
+    restrictedAccess: true,
+    auditLoggingEnabled: true,
+    consentRequired: true,
+    privacyNoticeDisplayed: true,
+    section: 21,
+    sectionTitle: "Psychological and Emotional Health",
+    containsProtectedHealthInformation: true,
+    lastUpdated: new Date().toISOString(),
+    sensitivityLevel: "HIGH",
+    dataRetentionPolicy: "RESTRICTED",
+    accessControlLevel: "NEED_TO_KNOW",
+    hipaaProtected: true
+  },
+  
+  // Section 21A - Mental incompetence declarations
+  section21A: [
+    {
+      dateOccurred: {
+        value: "",
+        id: "14378",
+        type: "PDFTextField",
+        label: "Date declared mentally incompetent"
+      },
+      estimated: {
+        value: "NO",
+        id: "14377",
+        type: "PDFCheckBox",
+        label: "Estimated date"
+      },
+      courtAgency: {
+        name: {
+          value: "",
+          id: "14376",
+          type: "PDFTextField",
+          label: "Court or administrative agency name"
+        },
+        address: {
+          street: {
+            value: "",
+            id: "14375",
+            type: "PDFTextField",
+            label: "Street address"
+          },
+          city: {
+            value: "",
+            id: "14374",
+            type: "PDFTextField",
+            label: "City"
+          },
+          zipCode: {
+            value: "",
+            id: "14371",
+            type: "PDFTextField",
+            label: "Zip code"
+          },
+          country: {
+            value: "United States",
+            id: "14372",
+            type: "PDFDropdown",
+            label: "Country"
+          },
+          state: {
+            value: "",
+            id: "14373",
+            type: "PDFDropdown",
+            label: "State"
+          },
+        },
+      },
+      appealed: {
+        value: "NO",
+        id: "14380",
+        type: "PDFRadioGroup",
+        label: "Was this determination appealed?"
+      },
+      appeals: [
+        {
+          _id: Math.random(),
+          courtAgency: {
+            name: {
+              value: "",
+              id: "14370",
+              type: "PDFTextField",
+              label: "Court or administrative agency name for appeal"
+            },
+            address: {
+              street: {
+                value: "",
+                id: "14369",
+                type: "PDFTextField",
+                label: "Street address"
+              },
+              city: {
+                value: "",
+                id: "14368",
+                type: "PDFTextField",
+                label: "City"
+              },
+              zipCode: {
+                value: "",
+                id: "14365",
+                type: "PDFTextField",
+                label: "Zip code"
+              },
+              country: {
+                value: "United States",
+                id: "14366",
+                type: "PDFDropdown",
+                label: "Country"
+              },
+              state: {
+                value: "",
+                id: "14367",
+                type: "PDFDropdown",
+                label: "State"
+              },
+            },
+          },
+          finalDisposition: {
+            value: "",
+            id: "14364",
+            type: "PDFTextField",
+            label: "Final disposition"
+          },
+        },
+      ],
+    },
+  ],
+  
+  // Section 21B - Court-ordered consultations
+  section21B: [
+    {
+      dateOccurred: {
+        value: "",
+        id: "14455",
+        type: "PDFTextField",
+        label: "Date of court order"
+      },
+      estimated: {
+        value: "NO",
+        id: "14454",
+        type: "PDFCheckBox",
+        label: "Estimated date"
+      },
+      courtAgency: {
+        name: {
+          value: "",
+          id: "14453",
+          type: "PDFTextField",
+          label: "Court or administrative agency name"
+        },
+        address: {
+          street: {
+            value: "",
+            id: "14452",
+            type: "PDFTextField",
+            label: "Street address"
+          },
+          city: {
+            value: "",
+            id: "14451",
+            type: "PDFTextField",
+            label: "City"
+          },
+          zipCode: {
+            value: "",
+            id: "14448",
+            type: "PDFTextField",
+            label: "Zip code"
+          },
+          country: {
+            value: "United States",
+            id: "14449",
+            type: "PDFDropdown",
+            label: "Country"
+          },
+          state: {
+            value: "",
+            id: "14450",
+            type: "PDFDropdown",
+            label: "State"
+          },
+        },
+      },
+      finalDisposition: {
+        value: "",
+        id: "14433",
+        type: "PDFTextField",
+        label: "Final disposition"
+      },
+      appealed: {
+        value: "NO",
+        id: "14457",
+        type: "PDFRadioGroup",
+        label: "Was this determination appealed?"
+      },
+      appeals: [
+        {
+          _id: Math.random(),
+          courtAgency: {
+            name: {
+              value: "",
+              id: "14447",
+              type: "PDFTextField",
+              label: "Court or administrative agency name for appeal"
+            },
+            address: {
+              street: {
+                value: "",
+                id: "14446",
+                type: "PDFTextField",
+                label: "Street address"
+              },
+              city: {
+                value: "",
+                id: "14445",
+                type: "PDFTextField",
+                label: "City"
+              },
+              zipCode: {
+                value: "",
+                id: "14442",
+                type: "PDFTextField",
+                label: "Zip code"
+              },
+              country: {
+                value: "United States",
+                id: "14443",
+                type: "PDFDropdown",
+                label: "Country"
+              },
+              state: {
+                value: "",
+                id: "14444",
+                type: "PDFDropdown",
+                label: "State"
+              },
+            },
+          },
+          finalDisposition: {
+            value: "",
+            id: "14441",
+            type: "PDFTextField",
+            label: "Final disposition"
+          },
+        },
+      ],
+    },
+  ],
+  
+  // Section 21C - Hospitalization
+  section21C: [
+    {
+      voluntary: {
+        value: "NO",
+        id: "14520",
+        type: "PDFRadioGroup",
+        label: "Was your admission voluntary?"
+      },
+      explanation: {
+        value: "",
+        id: "14519",
+        type: "PDFTextField",
+        label: "Explanation"
+      },
+      facility: {
+        name: {
+          value: "",
+          id: "14518",
+          type: "PDFTextField",
+          label: "Facility name"
+        },
+        address: {
+          street: {
+            value: "",
+            id: "14517",
+            type: "PDFTextField",
+            label: "Street address"
+          },
+          city: {
+            value: "",
+            id: "14516",
+            type: "PDFTextField",
+            label: "City"
+          },
+          zipCode: {
+            value: "",
+            id: "14513",
+            type: "PDFTextField",
+            label: "Zip code"
+          },
+          country: {
+            value: "United States",
+            id: "14514",
+            type: "PDFDropdown",
+            label: "Country"
+          },
+          state: {
+            value: "",
+            id: "14515",
+            type: "PDFDropdown",
+            label: "State"
+          }
+        }
+      },
+      fromDate: {
+        value: "",
+        id: "14523",
+        type: "PDFTextField",
+        label: "From date"
+      },
+      toDate: {
+        value: "",
+        id: "14522",
+        type: "PDFTextField",
+        label: "To date"
+      },
+      present: {
+        value: "NO",
+        id: "14524",
+        type: "PDFCheckBox",
+        label: "Present"
+      },
+      estimatedFrom: {
+        value: "NO",
+        id: "14525",
+        type: "PDFCheckBox",
+        label: "Estimated from date"
+      },
+      estimatedTo: {
+        value: "NO",
+        id: "14526",
+        type: "PDFCheckBox",
+        label: "Estimated to date"
+      }
+    }
+  ],
+  
+  // Section 21D - Diagnosis
+  section21D: [
+    {
+      diagnosis: {
+        value: "",
+        id: "14597",
+        type: "PDFTextField",
+        label: "Diagnosis"
+      },
+      datesOfDiagnosis: {
+        fromDate: {
+          value: "",
+          id: "14600",
+          type: "PDFTextField",
+          label: "From date"
+        },
+        toDate: {
+          value: "",
+          id: "14599",
+          type: "PDFTextField",
+          label: "To date"
+        },
+        present: {
+          value: "NO",
+          id: "14601",
+          type: "PDFCheckBox",
+          label: "Present"
+        },
+        estimatedFrom: {
+          value: "NO",
+          id: "14602",
+          type: "PDFCheckBox",
+          label: "Estimated from date"
+        },
+        estimatedTo: {
+          value: "NO",
+          id: "14603",
+          type: "PDFCheckBox",
+          label: "Estimated to date"
+        }
+      },
+      healthCareProfessional: {
+        name: {
+          value: "",
+          id: "14596",
+          type: "PDFTextField",
+          label: "Healthcare professional name"
+        },
+        telephoneFieldNumber: {
+          value: "",
+          id: "14595",
+          type: "PDFTextField",
+          label: "Telephone number"
+        },
+        extension: {
+          value: "",
+          id: "14587",
+          type: "PDFTextField",
+          label: "Extension"
+        },
+        day: {
+          value: "NO",
+          id: "14594",
+          type: "PDFCheckBox",
+          label: "Day"
+        },
+        night: {
+          value: "NO",
+          id: "14593",
+          type: "PDFCheckBox",
+          label: "Night"
+        },
+        internationalOrDsnPhoneFieldNumber: {
+          value: "NO",
+          id: "14592",
+          type: "PDFCheckBox",
+          label: "International or DSN phone"
+        },
+        address: {
+          street: {
+            value: "",
+            id: "14591",
+            type: "PDFTextField",
+            label: "Street address"
+          },
+          city: {
+            value: "",
+            id: "14590",
+            type: "PDFTextField",
+            label: "City"
+          },
+          zipCode: {
+            value: "",
+            id: "14588",
+            type: "PDFTextField",
+            label: "Zip code"
+          },
+          country: {
+            value: "United States",
+            id: "14589",
+            type: "PDFDropdown",
+            label: "Country"
+          },
+          state: {
+            value: "",
+            id: "14586",
+            type: "PDFDropdown",
+            label: "State"
+          }
+        }
+      },
+      agencyOrFacility: {
+        name: {
+          value: "",
+          id: "14585",
+          type: "PDFTextField",
+          label: "Agency or facility name"
+        },
+        address: {
+          street: {
+            value: "",
+            id: "14584",
+            type: "PDFTextField",
+            label: "Street address"
+          },
+          city: {
+            value: "",
+            id: "14583",
+            type: "PDFTextField",
+            label: "City"
+          },
+          zipCode: {
+            value: "",
+            id: "14580",
+            type: "PDFTextField",
+            label: "Zip code"
+          },
+          country: {
+            value: "United States",
+            id: "14581",
+            type: "PDFDropdown",
+            label: "Country"
+          },
+          state: {
+            value: "",
+            id: "14582",
+            type: "PDFDropdown",
+            label: "State"
+          }
+        },
+        telephoneFieldNumber: {
+          value: "",
+          id: "14579",
+          type: "PDFTextField",
+          label: "Telephone number"
+        },
+        extension: {
+          value: "",
+          id: "14571",
+          type: "PDFTextField",
+          label: "Extension"
+        },
+        day: {
+          value: "NO",
+          id: "14578",
+          type: "PDFCheckBox",
+          label: "Day"
+        },
+        night: {
+          value: "NO",
+          id: "14577",
+          type: "PDFCheckBox",
+          label: "Night"
+        },
+        internationalOrDsnPhoneFieldNumber: {
+          value: "NO",
+          id: "14576",
+          type: "PDFCheckBox",
+          label: "International or DSN phone"
+        }
+      },
+      counselingEffective: {
+        value: "NO",
+        id: "14604",
+        type: "PDFRadioGroup",
+        label: "Was the counseling effective in treating your condition?"
+      },
+      counselingExplanation: {
+        value: "",
+        id: "14605",
+        type: "PDFTextField",
+        label: "Explanation"
+      }
+    }
+  ],
+  
+  // Section 21D1 - Current treatment
+  section21D1: [
+    {
+      healthCareProfessional: {
+        name: {
+          value: "",
+          id: "14627",
+          type: "PDFTextField",
+          label: "Healthcare professional name"
+        },
+        telephoneFieldNumber: {
+          value: "",
+          id: "14626",
+          type: "PDFTextField",
+          label: "Telephone number"
+        },
+        extension: {
+          value: "",
+          id: "14618",
+          type: "PDFTextField",
+          label: "Extension"
+        },
+        day: {
+          value: "NO",
+          id: "14625",
+          type: "PDFCheckBox",
+          label: "Day"
+        },
+        night: {
+          value: "NO",
+          id: "14624",
+          type: "PDFCheckBox",
+          label: "Night"
+        },
+        internationalOrDsnPhoneFieldNumber: {
+          value: "NO",
+          id: "14623",
+          type: "PDFCheckBox",
+          label: "International or DSN phone"
+        },
+        address: {
+          street: {
+            value: "",
+            id: "14622",
+            type: "PDFTextField",
+            label: "Street address"
+          },
+          city: {
+            value: "",
+            id: "14621",
+            type: "PDFTextField",
+            label: "City"
+          },
+          zipCode: {
+            value: "",
+            id: "14619",
+            type: "PDFTextField",
+            label: "Zip code"
+          },
+          country: {
+            value: "United States",
+            id: "14620",
+            type: "PDFDropdown",
+            label: "Country"
+          },
+          state: {
+            value: "",
+            id: "14617",
+            type: "PDFDropdown",
+            label: "State"
+          }
+        }
+      }
+    }
+  ],
+  
+  // Section 21E - Mental health affecting judgment
+  section21E: [
+    {
+      fromDate: {
+        value: "",
+        id: "14673",
+        type: "PDFTextField",
+        label: "From date"
+      },
+      toDate: {
+        value: "",
+        id: "14672",
+        type: "PDFTextField",
+        label: "To date"
+      },
+      present: {
+        value: "NO",
+        id: "14674",
+        type: "PDFCheckBox",
+        label: "Present"
+      },
+      estimatedFrom: {
+        value: "NO",
+        id: "14675",
+        type: "PDFCheckBox",
+        label: "Estimated from date"
+      },
+      estimatedTo: {
+        value: "NO",
+        id: "14676",
+        type: "PDFCheckBox",
+        label: "Estimated to date"
+      },
+      healthCareProfessional: {
+        name: {
+          value: "",
+          id: "14671",
+          type: "PDFTextField",
+          label: "Healthcare professional name"
+        },
+        telephoneFieldNumber: {
+          value: "",
+          id: "14670",
+          type: "PDFTextField",
+          label: "Telephone number"
+        },
+        extension: {
+          value: "",
+          id: "14662",
+          type: "PDFTextField",
+          label: "Extension"
+        },
+        day: {
+          value: "NO",
+          id: "14669",
+          type: "PDFCheckBox",
+          label: "Day"
+        },
+        night: {
+          value: "NO",
+          id: "14668",
+          type: "PDFCheckBox",
+          label: "Night"
+        },
+        internationalOrDsnPhoneFieldNumber: {
+          value: "NO",
+          id: "14667",
+          type: "PDFCheckBox",
+          label: "International or DSN phone"
+        },
+        address: {
+          street: {
+            value: "",
+            id: "14666",
+            type: "PDFTextField",
+            label: "Street address"
+          },
+          city: {
+            value: "",
+            id: "14665",
+            type: "PDFTextField",
+            label: "City"
+          },
+          zipCode: {
+            value: "",
+            id: "14663",
+            type: "PDFTextField",
+            label: "Zip code"
+          },
+          country: {
+            value: "United States",
+            id: "14664",
+            type: "PDFDropdown",
+            label: "Country"
+          },
+          state: {
+            value: "",
+            id: "14661",
+            type: "PDFDropdown",
+            label: "State"
+          }
+        }
+      },
+      agencyOrFacility: {
+        name: {
+          value: "",
+          id: "14660",
+          type: "PDFTextField",
+          label: "Agency or facility name"
+        },
+        address: {
+          street: {
+            value: "",
+            id: "14659",
+            type: "PDFTextField",
+            label: "Street address"
+          },
+          city: {
+            value: "",
+            id: "14658",
+            type: "PDFTextField",
+            label: "City"
+          },
+          zipCode: {
+            value: "",
+            id: "14655",
+            type: "PDFTextField",
+            label: "Zip code"
+          },
+          country: {
+            value: "United States",
+            id: "14656",
+            type: "PDFDropdown",
+            label: "Country"
+          },
+          state: {
+            value: "",
+            id: "14657",
+            type: "PDFDropdown",
+            label: "State"
+          }
+        },
+        telephoneFieldNumber: {
+          value: "",
+          id: "14654",
+          type: "PDFTextField",
+          label: "Telephone number"
+        },
+        extension: {
+          value: "",
+          id: "14646",
+          type: "PDFTextField",
+          label: "Extension"
+        },
+        day: {
+          value: "NO",
+          id: "14653",
+          type: "PDFCheckBox",
+          label: "Day"
+        },
+        night: {
+          value: "NO",
+          id: "14652",
+          type: "PDFCheckBox",
+          label: "Night"
+        },
+        internationalOrDsnPhoneFieldNumber: {
+          value: "NO",
+          id: "14651",
+          type: "PDFCheckBox",
+          label: "International or DSN phone"
+        }
+      },
+      choseNotToFollow: {
+        value: "NO",
+        id: "14677",
+        type: "PDFRadioGroup",
+        label: "Did you choose not to follow the prescribed course of treatment?"
+      },
+      explanation: {
+        value: "",
+        id: "14678",
+        type: "PDFTextField",
+        label: "Explanation"
+      }
+    }
+  ]
+};

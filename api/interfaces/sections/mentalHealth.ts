@@ -103,6 +103,26 @@ interface Section21E {
   explanation?: Field<string>;
 }
 
+/**
+ * Security metadata interface for sensitive protected health information
+ * Used to enforce privacy controls and compliance requirements
+ */
+interface SecurityMetadata {
+  encryptedAtRest: boolean;
+  restrictedAccess: boolean;
+  auditLoggingEnabled: boolean;
+  consentRequired: boolean;
+  privacyNoticeDisplayed: boolean;
+  section: number;
+  sectionTitle: string;
+  containsProtectedHealthInformation: boolean;
+  lastUpdated: string;
+  sensitivityLevel: "HIGH" | "MEDIUM" | "LOW";
+  dataRetentionPolicy: "RESTRICTED" | "STANDARD" | "EXTENDED";
+  accessControlLevel: "NEED_TO_KNOW" | "RESTRICTED" | "STANDARD";
+  hipaaProtected: boolean;
+}
+
 interface MentalHealth {
   _id: number;
   declaredMentallyIncompetent: Field<"YES" | "NO">; // (If NO, proceed to Section 21B)
@@ -112,7 +132,7 @@ interface MentalHealth {
   delayedTreatment: Field<"YES" | "NO">;
   currentlyInTreatment: Field<"YES" | "NO">; // If (NO, proceed to Section 21E)
 
-  // Complete the following if you responded ‘No’ to 21A, 21B, 21C, and 21D (All). If ‘Yes’ was selected for either 21A, 21B, 21C, or 21D, proceed to Section 22.
+  // Complete the following if you responded 'No' to 21A, 21B, 21C, and 21D (All). If 'Yes' was selected for either 21A, 21B, 21C, or 21D, proceed to Section 22.
   substantialAffects: Field<"YES" | "NO">;
 
   // Complete the following if you responded 'Yes' to having a mental health condition that adversely affects your judgment, reliability, or trustworthiness
@@ -124,6 +144,9 @@ interface MentalHealth {
   section21D?: Section21D[];
   section21D1?: Section21D1[];
   section21E?: Section21E[];
+
+  // Security metadata for sensitive protected health information
+  securityMetadata?: SecurityMetadata;
 }
 
 export type {
@@ -140,4 +163,5 @@ export type {
   Facility,
   HealthCareProfessional,
   AgencyOrFacility,
+  SecurityMetadata
 };

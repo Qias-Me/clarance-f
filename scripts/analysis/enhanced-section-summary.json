@@ -1,0 +1,147 @@
+{
+  "timestamp": "2025-05-16T22:24:38.213Z",
+  "pdfFile": "C:\\Users\\Jason\\Desktop\\AI-Coding\\clarance-f\\utilities\\externalTools\\sf861.pdf",
+  "totalFields": 6197,
+  "sections": [
+    {
+      "section": 1,
+      "name": "Full Name",
+      "fieldCount": 4
+    },
+    {
+      "section": 2,
+      "name": "Date of Birth",
+      "fieldCount": 2
+    },
+    {
+      "section": 3,
+      "name": "Place of Birth",
+      "fieldCount": 122
+    },
+    {
+      "section": 4,
+      "name": "Social Security Number",
+      "fieldCount": 135
+    },
+    {
+      "section": 5,
+      "name": "Other Names Used",
+      "fieldCount": 45
+    },
+    {
+      "section": 6,
+      "name": "Your Identifying Information",
+      "fieldCount": 8
+    },
+    {
+      "section": 7,
+      "name": "Your Contact Information",
+      "fieldCount": 2
+    },
+    {
+      "section": 8,
+      "name": "U.S. Passport Information",
+      "fieldCount": 56
+    },
+    {
+      "section": 10,
+      "name": "Dual/Multiple Citizenship & Foreign Passport Info",
+      "fieldCount": 148
+    },
+    {
+      "section": 11,
+      "name": "Where You Have Lived",
+      "fieldCount": 255
+    },
+    {
+      "section": 12,
+      "name": "Where you went to School",
+      "fieldCount": 115
+    },
+    {
+      "section": 13,
+      "name": "Employment Activities",
+      "fieldCount": 895
+    },
+    {
+      "section": 14,
+      "name": "Selective Service",
+      "fieldCount": 40
+    },
+    {
+      "section": 15,
+      "name": "Military History",
+      "fieldCount": 61
+    },
+    {
+      "section": 16,
+      "name": "People Who Know You Well",
+      "fieldCount": 154
+    },
+    {
+      "section": 17,
+      "name": "Marital/Relationship Status",
+      "fieldCount": 332
+    },
+    {
+      "section": 18,
+      "name": "Relatives",
+      "fieldCount": 985
+    },
+    {
+      "section": 19,
+      "name": "Foreign Contacts",
+      "fieldCount": 306
+    },
+    {
+      "section": 21,
+      "name": "Psychological and Emotional Health",
+      "fieldCount": 6
+    },
+    {
+      "section": 22,
+      "name": "Police Record",
+      "fieldCount": 268
+    },
+    {
+      "section": 23,
+      "name": "Illegal Use of Drugs and Drug Activity",
+      "fieldCount": 48
+    },
+    {
+      "section": 24,
+      "name": "Use of Alcohol",
+      "fieldCount": 163
+    },
+    {
+      "section": 25,
+      "name": "Investigations and Clearance",
+      "fieldCount": 79
+    },
+    {
+      "section": 26,
+      "name": "Financial Record",
+      "fieldCount": 255
+    },
+    {
+      "section": 27,
+      "name": "Use of Information Technology Systems",
+      "fieldCount": 57
+    },
+    {
+      "section": 28,
+      "name": "Involvement in Non-Criminal Court Actions",
+      "fieldCount": 23
+    },
+    {
+      "section": 29,
+      "name": "Association Record",
+      "fieldCount": 141
+    },
+    {
+      "section": null,
+      "name": "Section unknown",
+      "fieldCount": 1492
+    }
+  ]
+}

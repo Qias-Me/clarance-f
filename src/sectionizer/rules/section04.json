@@ -1,0 +1,42 @@
+{
+  "section": 4,
+  "name": "Social Security Number",
+  "rules": [
+    {
+      "section": 4,
+      "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.SSN\\[0\\]",
+      "confidence": 0.99,
+      "description": "Primary SSN field"
+    },
+    {
+      "section": 4,
+      "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.SSN\\[1\\]",
+      "confidence": 0.99,
+      "description": "Secondary SSN field"
+    },
+    {
+      "section": 4,
+      "pattern": "\\.SSN\\[\\d+\\]",
+      "confidence": 0.98,
+      "description": "Any SSN field across the form"
+    },
+    {
+      "section": 4,
+      "pattern": "Social Security Number",
+      "confidence": 0.95,
+      "description": "SSN label match"
+    },
+    {
+      "section": 4,
+      "pattern": "SSN",
+      "confidence": 0.92,
+      "description": "Generic SSN pattern"
+    },
+    {
+      "section": 4,
+      "pattern": "\\.#field\\[\\d+\\]\\.SSN",
+      "confidence": 0.97,
+      "description": "SSN checkbox or field pattern"
+    }
+  ]
+} 

@@ -1,0 +1,103 @@
+{
+  "section": 23,
+  "name": "Illegal Drug Use",
+  "rules": [
+    {
+      "section": 23,
+      "pattern": "form1\\[0\\]\\.Section23\\[0\\]",
+      "confidence": 0.95,
+      "description": "Exact match for Section 23 area"
+    },
+    {
+      "section": 23,
+      "pattern": "section23",
+      "confidence": 0.9,
+      "description": "Generic section 23 field pattern"
+    },
+    {
+      "section": 23,
+      "pattern": "illegal drug",
+      "confidence": 0.85,
+      "description": "Match by section title"
+    },
+    {
+      "section": 23,
+      "pattern": "section23_(\\d+)",
+      "confidence": 0.9,
+      "description": "Section 23 entry index pattern",
+      "entryPattern": "section23_(\\d+)"
+    },
+    {
+      "section": 23,
+      "pattern": "23a\\.?(\\d*)",
+      "confidence": 0.9,
+      "description": "Section 23A fields with alternative format",
+      "entryPattern": "23a\\.?(\\d+)",
+      "subsection": "A"
+    },
+    {
+      "section": 23,
+      "pattern": "23b\\.?(\\d*)",
+      "confidence": 0.9,
+      "description": "Section 23B fields with alternative format",
+      "entryPattern": "23b\\.?(\\d+)",
+      "subsection": "B"
+    },
+    {
+      "section": 23,
+      "pattern": "23c\\.?(\\d*)",
+      "confidence": 0.9,
+      "description": "Section 23C fields with alternative format",
+      "entryPattern": "23c\\.?(\\d+)",
+      "subsection": "C"
+    },
+    {
+      "section": 23,
+      "pattern": "drug use",
+      "confidence": 0.85,
+      "description": "Drug use related fields"
+    },
+    {
+      "section": 23,
+      "pattern": "substance",
+      "confidence": 0.8,
+      "description": "Substance related fields"
+    },
+    {
+      "section": 23,
+      "pattern": "controlled substance",
+      "confidence": 0.85,
+      "description": "Controlled substance related fields"
+    },
+    {
+      "section": 23,
+      "pattern": "marijuana",
+      "confidence": 0.8,
+      "description": "Marijuana related fields"
+    },
+    {
+      "section": 23,
+      "pattern": "cocaine",
+      "confidence": 0.8,
+      "description": "Cocaine related fields"
+    },
+    {
+      "section": 23,
+      "pattern": "narcotics",
+      "confidence": 0.8,
+      "description": "Narcotics related fields"
+    },
+    {
+      "section": 23,
+      "pattern": "illegal drugs",
+      "confidence": 0.8,
+      "description": "Illegal drugs related fields"
+    },
+    {
+      "section": 23,
+      "pattern": "treatment",
+      "confidence": 0.7,
+      "description": "Drug treatment related fields"
+    }
+  ]
+} 

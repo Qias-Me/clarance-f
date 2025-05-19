@@ -1,0 +1,66 @@
+{
+  "section": 1,
+  "name": "Name",
+  "rules": [
+    {
+      "section": 1,
+      "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.TextField11\\[0\\]",
+      "confidence": 0.95,
+      "description": "Exact match for Last Name field"
+    },
+    {
+      "section": 1,
+      "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.TextField11\\[1\\]",
+      "confidence": 0.95,
+      "description": "Exact match for First Name field"
+    },
+    {
+      "section": 1,
+      "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.TextField11\\[2\\]",
+      "confidence": 0.95,
+      "description": "Exact match for Middle Name field"
+    },
+    {
+      "section": 1,
+      "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.suffix\\[0\\]",
+      "confidence": 0.95,
+      "description": "Exact match for Name Suffix field"
+    },
+    {
+      "section": 1,
+      "pattern": "^Last Name$",
+      "confidence": 0.9,
+      "description": "Exact match by label for Last Name"
+    },
+    {
+      "section": 1,
+      "pattern": "^First name$",
+      "confidence": 0.9,
+      "description": "Exact match by label for First Name"
+    },
+    {
+      "section": 1,
+      "pattern": "^Middle name$",
+      "confidence": 0.9,
+      "description": "Exact match by label for Middle Name"
+    },
+    {
+      "section": 1,
+      "pattern": "^Suffix$",
+      "confidence": 0.9,
+      "description": "Exact match by label for Name Suffix"
+    },
+    {
+      "section": 1,
+      "pattern": "\\bsection\\s*1\\b",
+      "confidence": 0.8,
+      "description": "More specific Section 1 field pattern"
+    },
+    {
+      "section": 1,
+      "pattern": "\\bfull\\s*name\\b",
+      "confidence": 0.8,
+      "description": "Match 'full name' phrase"
+    }
+  ]
+} 

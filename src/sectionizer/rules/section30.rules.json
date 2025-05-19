@@ -1,0 +1,9 @@
+[
+  {
+    "pattern": "p17",
+    "flags": "i",
+    "subSection": "_default",
+    "confidence": 0.98,
+    "description": "Distinctive pattern matching 20 fields (Precision: 100%, Recall: 80.0%, 20/25 fields)"
+  }
+]

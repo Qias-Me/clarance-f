@@ -1,0 +1,110 @@
+{
+  "section": 17,
+  "name": "Employment Activities",
+  "rules": [
+    {
+      "section": 17,
+      "pattern": "form1\\[0\\]\\.Section17\\[0\\]",
+      "confidence": 0.95,
+      "description": "Exact match for Section 17 area"
+    },
+    {
+      "section": 17,
+      "pattern": "section17",
+      "confidence": 0.9,
+      "description": "Generic section 17 field pattern"
+    },
+    {
+      "section": 17,
+      "pattern": "employment activities",
+      "confidence": 0.85,
+      "description": "Match by section title"
+    },
+    {
+      "section": 17,
+      "pattern": "section17_\\d+",
+      "confidence": 0.9,
+      "description": "Section 17 entry index pattern",
+      "entryPattern": "section17_(\\d+)"
+    },
+    {
+      "section": 17,
+      "pattern": "17\\.\\d+",
+      "confidence": 0.85,
+      "description": "Alternative section 17 entry pattern",
+      "entryPattern": "17\\.(\\d+)"
+    },
+    {
+      "section": 17,
+      "pattern": "employer",
+      "confidence": 0.85,
+      "description": "Employer name field"
+    },
+    {
+      "section": 17,
+      "pattern": "employment date",
+      "confidence": 0.85,
+      "description": "Employment date field"
+    },
+    {
+      "section": 17,
+      "pattern": "job title",
+      "confidence": 0.85,
+      "description": "Job title field"
+    },
+    {
+      "section": 17,
+      "pattern": "job description",
+      "confidence": 0.85,
+      "description": "Job description field"
+    },
+    {
+      "section": 17,
+      "pattern": "work address",
+      "confidence": 0.85,
+      "description": "Work address field"
+    },
+    {
+      "section": 17,
+      "pattern": "supervisor",
+      "confidence": 0.85,
+      "description": "Supervisor name field"
+    },
+    {
+      "section": 17,
+      "pattern": "employment type",
+      "confidence": 0.8,
+      "description": "Employment type field"
+    },
+    {
+      "section": 17,
+      "pattern": "resignation",
+      "confidence": 0.8,
+      "description": "Resignation field"
+    },
+    {
+      "section": 17,
+      "pattern": "termination",
+      "confidence": 0.8,
+      "description": "Termination field"
+    },
+    {
+      "section": 17,
+      "pattern": "employment",
+      "confidence": 0.7,
+      "description": "Generic employment related field"
+    },
+    {
+      "section": 17,
+      "pattern": "job",
+      "confidence": 0.6,
+      "description": "Generic job related field (low confidence)"
+    },
+    {
+      "section": 17,
+      "pattern": "work",
+      "confidence": 0.6,
+      "description": "Generic work related field (low confidence)"
+    }
+  ]
+} 

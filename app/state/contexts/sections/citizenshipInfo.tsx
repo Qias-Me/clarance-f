@@ -486,4 +486,9 @@ export const citizenshipInfo: CitizenshipInfo = {
         label: "Suffix on document",
       },
     },
-  };
+    sectionMetadata: {
+      sectionNumber: 9,
+      sectionTitle: "Citizenship",
+      lastUpdated: new Date().toISOString()
+    }
+};

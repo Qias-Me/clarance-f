@@ -6,15 +6,18 @@ export const signature: Signature = {
     value: "NO",
     id: "",
     type: "",
+    label: "Information",
   },
   medical: {
     value: "NO",
     id: "",
     type: "",
+    label: "Medical",
   },
   credit: {
     value: "NO",
     id: "",
     type: "",
+    label: "Credit",
   },
 };

@@ -2905,44 +2905,36 @@
     "confidence": 0.75
   },
   "form1[0].section_12[0].Table1[0].Row1[0].Cell1[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12[0].Table1[0].Row1[0].Cell2[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12[0].Table1[0].Row1[0].Cell4[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12[0].Table1[0].Row1[0].Cell5[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12[0].Table1[0].Row2[0].Cell1[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12[0].Table1[0].Row2[0].Cell2[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12[0].Table1[0].Row2[0].Cell4[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12[0].Table1[0].Row2[0].Cell5[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12[0].From_Datefield_Name_2[1]": {
     "section": 12,
@@ -3080,44 +3072,36 @@
     "confidence": 0.75
   },
   "form1[0].section_12_2[0].Table1[0].Row1[0].Cell1[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12_2[0].Table1[0].Row1[0].Cell2[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12_2[0].Table1[0].Row1[0].Cell4[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12_2[0].Table1[0].Row1[0].Cell5[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12_2[0].Table1[0].Row2[0].Cell1[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12_2[0].Table1[0].Row2[0].Cell2[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12_2[0].Table1[0].Row2[0].Cell4[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12_2[0].Table1[0].Row2[0].Cell5[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12_2[0].From_Datefield_Name_2[0]": {
     "section": 12,
@@ -3230,44 +3214,36 @@
     "confidence": 0.75
   },
   "form1[0].section_12_2[0].Table1[1].Row1[0].Cell1[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12_2[0].Table1[1].Row1[0].Cell2[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12_2[0].Table1[1].Row1[0].Cell4[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12_2[0].Table1[1].Row1[0].Cell5[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12_2[0].Table1[1].Row2[0].Cell1[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12_2[0].Table1[1].Row2[0].Cell2[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12_2[0].Table1[1].Row2[0].Cell4[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12_2[0].Table1[1].Row2[0].Cell5[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12_2[0].From_Datefield_Name_2[1]": {
     "section": 12,
@@ -3450,44 +3426,36 @@
     "confidence": 0.75
   },
   "form1[0].section_12_3[0].Table1[0].Row1[0].Cell1[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12_3[0].Table1[0].Row1[0].Cell2[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12_3[0].Table1[0].Row1[0].Cell4[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12_3[0].Table1[0].Row1[0].Cell5[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12_3[0].Table1[0].Row2[0].Cell1[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12_3[0].Table1[0].Row2[0].Cell2[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12_3[0].Table1[0].Row2[0].Cell4[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12_3[0].Table1[0].Row2[0].Cell5[0]": {
-    "section": 12,
-    "sectionName": "Where you went to School",
-    "confidence": 0.75
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].section_12_3[0].From_Datefield_Name_2[1]": {
     "section": 12,
@@ -18830,29 +18798,24 @@
     "confidence": 0.4
   },
   "form1[0].#subform[68].#area[0].TextField11[8]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[68].#area[0].TextField11[9]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[68].#area[0].School6_State[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[68].#area[0].DropDownList37[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[68].#area[0].TextField11[10]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[68].RadioButtonList[1]": {
     "section": 20,
@@ -18915,29 +18878,24 @@
     "confidence": 0.4
   },
   "form1[0].#subform[68].#area[1].TextField11[16]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[68].#area[1].TextField11[17]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[68].#area[1].School6_State[1]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[68].#area[1].DropDownList38[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[68].#area[1].TextField11[18]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[68].DropDownList12[2]": {
     "section": 20,
@@ -19060,29 +19018,24 @@
     "confidence": 0.4
   },
   "form1[0].#subform[69].#area[2].TextField11[27]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[69].#area[2].TextField11[28]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[69].#area[2].School6_State[2]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[69].#area[2].DropDownList37[1]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[69].#area[2].TextField11[29]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[69].DropDownList12[4]": {
     "section": 20,
@@ -19140,29 +19093,24 @@
     "confidence": 0.4
   },
   "form1[0].#subform[69].#area[3].TextField11[35]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[69].#area[3].TextField11[36]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[69].#area[3].School6_State[3]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[69].#area[3].DropDownList38[1]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[69].#area[3].TextField11[37]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[69].DropDownList12[6]": {
     "section": 20,
@@ -19245,34 +19193,28 @@
     "confidence": 0.4
   },
   "form1[0].#subform[70].#area[4].TextField11[41]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[70].#area[4].TextField11[42]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[70].#area[4].School6_State[4]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[70].#area[4].DropDownList35[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[70].#area[4].TextField11[43]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[70].#area[5].RadioButtonList[3]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[70].RadioButtonList[4]": {
     "section": 20,
@@ -19310,29 +19252,24 @@
     "confidence": 0.4
   },
   "form1[0].#subform[70].#area[6].TextField11[47]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[70].#area[6].TextField11[48]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[70].#area[6].School6_State[5]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[70].#area[6].DropDownList34[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[70].#area[6].TextField11[49]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[70].TextField11[50]": {
     "section": 20,
@@ -19455,34 +19392,28 @@
     "confidence": 0.4
   },
   "form1[0].#subform[71].#area[7].TextField11[59]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[71].#area[7].TextField11[60]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[71].#area[7].School6_State[6]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[71].#area[7].DropDownList35[1]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[71].#area[7].TextField11[61]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[71].#area[8].RadioButtonList[5]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[71].#field[142]": {
     "section": 20,
@@ -19515,29 +19446,24 @@
     "confidence": 0.4
   },
   "form1[0].#subform[71].#area[9].TextField11[65]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[71].#area[9].TextField11[66]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[71].#area[9].School6_State[7]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[71].#area[9].DropDownList34[1]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[71].#area[9].TextField11[67]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[71].TextField11[68]": {
     "section": 20,
@@ -19710,14 +19636,12 @@
     "confidence": 0.4
   },
   "form1[0].#subform[72].#area[10].TextField11[78]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[72].#area[10].RadioButtonList[9]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[72].From_Datefield_Name_2[11]": {
     "section": 20,
@@ -19760,14 +19684,12 @@
     "confidence": 0.4
   },
   "form1[0].#subform[72].#area[11].TextField11[81]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[72].#area[11].RadioButtonList[11]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[72].From_Datefield_Name_2[12]": {
     "section": 20,
@@ -19905,14 +19827,12 @@
     "confidence": 0.4
   },
   "form1[0].#subform[74].#area[12].TextField11[88]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[74].#area[12].RadioButtonList[16]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[74].From_Datefield_Name_2[15]": {
     "section": 20,
@@ -19955,14 +19875,12 @@
     "confidence": 0.4
   },
   "form1[0].#subform[74].#area[13].TextField11[91]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[74].#area[13].RadioButtonList[18]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[74].From_Datefield_Name_2[16]": {
     "section": 20,
@@ -20035,29 +19953,24 @@
     "confidence": 0.98
   },
   "form1[0].#subform[76].#area[14].TextField11[94]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[76].#area[14].TextField11[95]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[76].#area[14].School6_State[8]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[76].#area[14].DropDownList30[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[76].#area[14].TextField11[96]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[76].suffix[8]": {
     "section": 20,
@@ -20115,29 +20028,24 @@
     "confidence": 0.4
   },
   "form1[0].#subform[76].#area[15].TextField11[102]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[76].#area[15].TextField11[103]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[76].#area[15].School6_State[9]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[76].#area[15].DropDownList31[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[76].#area[15].TextField11[104]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[76].suffix[9]": {
     "section": 20,
@@ -20215,14 +20123,12 @@
     "confidence": 0.4
   },
   "form1[0].#subform[77].#area[16].TextField11[112]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[77].#area[16].DropDownList28[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[77].TextField11[113]": {
     "section": 20,
@@ -20230,29 +20136,24 @@
     "confidence": 0.4
   },
   "form1[0].#subform[77].#area[17].From_Datefield_Name_2[18]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[77].#area[17].#field[280]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[77].#area[17].From_Datefield_Name_2[19]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[77].#area[17].#field[282]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[77].#area[17].#field[283]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[77].TextField11[114]": {
     "section": 20,
@@ -20285,14 +20186,12 @@
     "confidence": 0.4
   },
   "form1[0].#subform[77].#area[18].TextField11[118]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[77].#area[18].DropDownList29[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[77].TextField11[119]": {
     "section": 20,
@@ -20300,29 +20199,24 @@
     "confidence": 0.4
   },
   "form1[0].#subform[77].#area[19].From_Datefield_Name_2[20]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[77].#area[19].#field[293]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[77].#area[19].From_Datefield_Name_2[21]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[77].#area[19].#field[295]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[77].#area[19].#field[296]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[77].TextField11[120]": {
     "section": 20,
@@ -20370,14 +20264,12 @@
     "confidence": 0.4
   },
   "form1[0].#subform[77].#area[20].From_Datefield_Name_2[22]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[77].#area[20].#field[306]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[77].suffix[13]": {
     "section": 20,
@@ -20415,14 +20307,12 @@
     "confidence": 0.4
   },
   "form1[0].#subform[77].#area[21].From_Datefield_Name_2[23]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[77].#area[21].#field[315]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[78].SSN[8]": {
     "section": 4,
@@ -20545,24 +20435,20 @@
     "confidence": 0.4
   },
   "form1[0].#subform[78].#area[22].TextField11[143]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[78].#area[22].School6_State[11]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[78].#area[22].DropDownList25[1]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[78].#area[22].TextField11[144]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[78].TextField11[145]": {
     "section": 20,
@@ -20575,29 +20461,24 @@
     "confidence": 0.4
   },
   "form1[0].#subform[79].#area[23].TextField11[147]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[79].#area[23].TextField11[148]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[79].#area[23].School6_State[12]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[79].#area[23].DropDownList23[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[79].#area[23].TextField11[149]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[79].suffix[16]": {
     "section": 20,
@@ -20635,29 +20516,24 @@
     "confidence": 0.4
   },
   "form1[0].#subform[79].#area[24].From_Datefield_Name_2[26]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[79].#area[24].#field[358]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[79].#area[24].From_Datefield_Name_2[27]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[79].#area[24].#field[360]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[79].#area[24].#field[361]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[79].TextField11[156]": {
     "section": 20,
@@ -20685,29 +20561,24 @@
     "confidence": 0.4
   },
   "form1[0].#subform[79].#area[25].TextField11[160]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[79].#area[25].TextField11[161]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[79].#area[25].School6_State[13]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[79].#area[25].DropDownList24[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[79].#area[25].TextField11[162]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[79].suffix[17]": {
     "section": 20,
@@ -20735,29 +20606,24 @@
     "confidence": 0.4
   },
   "form1[0].#subform[79].#area[26].From_Datefield_Name_2[28]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[79].#area[26].#field[378]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[79].#area[26].From_Datefield_Name_2[29]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[79].#area[26].#field[380]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[79].#area[26].#field[381]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[79].TextField11[167]": {
     "section": 20,
@@ -20875,29 +20741,24 @@
     "confidence": 0.4
   },
   "form1[0].#subform[80].#area[27].RadioButtonList[29]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[80].#area[27].Table3[0].Row2[0].Cell2[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[80].#area[27].Table3[0].Row3[0].Cell2[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[80].#area[27].Table3[0].Row4[0].Cell2[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[80].#area[27].Table3[0].Row5[0].Cell2[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[80].TextField11[177]": {
     "section": 20,
@@ -20950,29 +20811,24 @@
     "confidence": 0.4
   },
   "form1[0].#subform[80].#area[28].RadioButtonList[30]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[80].#area[28].Table3[1].Row2[0].Cell2[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[80].#area[28].Table3[1].Row3[0].Cell2[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[80].#area[28].Table3[1].Row4[0].Cell2[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[80].#area[28].Table3[1].Row5[0].Cell2[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].SSN[11]": {
     "section": 4,
@@ -21000,24 +20856,20 @@
     "confidence": 0.4
   },
   "form1[0].#subform[83].#subform[84].#area[29].TextField11[184]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].#area[29].School6_State[14]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].#area[29].DropDownList20[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].#area[29].TextField11[185]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].suffix[18]": {
     "section": 20,
@@ -21040,89 +20892,72 @@
     "confidence": 0.4
   },
   "form1[0].#subform[83].#subform[84].#area[30].RadioButtonList[31]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].Table1[0].Row1[0].Cell1[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].Table1[0].Row1[0].Cell2[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].Table1[0].Row1[0].Cell4[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].Table1[0].Row2[0].Cell1[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].Table1[0].Row2[0].Cell2[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].Table1[0].Row2[0].Cell4[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].Table1[0].Row3[0].Cell1[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].Table1[0].Row3[0].Cell2[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].Table1[0].Row3[0].Cell4[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].Table1[0].Row4[0].Cell1[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].Table1[0].Row4[0].Cell2[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].Table1[0].Row4[0].Cell4[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].#area[31].TextField11[189]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].#area[31].School6_State[15]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].#area[31].DropDownList20[1]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].#area[31].TextField11[190]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].suffix[19]": {
     "section": 20,
@@ -21145,79 +20980,64 @@
     "confidence": 0.4
   },
   "form1[0].#subform[83].#subform[84].#area[32].From_Datefield_Name_2[34]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].#area[32].#field[436]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].#area[33].RadioButtonList[32]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].Table1[1].Row1[0].Cell1[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].Table1[1].Row1[0].Cell2[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].Table1[1].Row1[0].Cell4[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].Table1[1].Row2[0].Cell1[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].Table1[1].Row2[0].Cell2[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].Table1[1].Row2[0].Cell4[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].Table1[1].Row3[0].Cell1[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].Table1[1].Row3[0].Cell2[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].Table1[1].Row3[0].Cell4[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].Table1[1].Row4[0].Cell1[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].Table1[1].Row4[0].Cell2[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].Table1[1].Row4[0].Cell4[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].DropDownList12[24]": {
     "section": 20,
@@ -21230,14 +21050,12 @@
     "confidence": 0.4
   },
   "form1[0].#subform[83].#subform[84].#area[34].From_Datefield_Name_2[35]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].#area[34].#field[440]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[83].#subform[84].DropDownList12[26]": {
     "section": 20,
@@ -21275,34 +21093,28 @@
     "confidence": 0.4
   },
   "form1[0].#subform[87].#area[35].TextField11[194]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[87].#area[35].School6_State[16]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[87].#area[35].DropDownList19[0]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[87].#area[35].TextField11[195]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[87].#area[35].From_Datefield_Name_2[36]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[87].#area[35].#field[453]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[87].suffix[20]": {
     "section": 20,
@@ -21325,29 +21137,24 @@
     "confidence": 0.4
   },
   "form1[0].#subform[87].#area[36].From_Datefield_Name_2[37]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[87].#area[36].#field[459]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[87].#area[36].From_Datefield_Name_2[38]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[87].#area[36].#field[461]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[87].#area[36].#field[462]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[87].TextField11[199]": {
     "section": 20,
@@ -21465,34 +21272,28 @@
     "confidence": 0.98
   },
   "form1[0].#subform[89].#area[37].TextField11[211]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[89].#area[37].School6_State[20]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[89].#area[37].DropDownList19[1]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[89].#area[37].TextField11[212]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[89].#area[37].From_Datefield_Name_2[39]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[89].#area[37].#field[492]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[89].suffix[21]": {
     "section": 20,
@@ -21515,29 +21316,24 @@
     "confidence": 0.4
   },
   "form1[0].#subform[89].#area[38].From_Datefield_Name_2[40]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[89].#area[38].#field[498]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[89].#area[38].From_Datefield_Name_2[41]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[89].#area[38].#field[500]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[89].#area[38].#field[501]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[89].TextField11[216]": {
     "section": 20,
@@ -21845,59 +21641,48 @@
     "confidence": 0.4
   },
   "form1[0].#subform[92].#area[39].TextField11[238]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[92].#area[41].TextField11[239]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[92].#area[41].#area[42].RadioButtonList[35]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[92].#area[43].TextField11[240]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[92].#area[43].#area[44].RadioButtonList[36]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[92].#area[45].TextField11[241]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[92].#area[45].#area[46].RadioButtonList[37]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[92].#area[47].TextField11[242]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[92].#area[47].#area[48].RadioButtonList[38]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[92].#area[49].TextField11[243]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[92].#area[49].#area[50].RadioButtonList[39]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[92].TextField11[244]": {
     "section": 20,
@@ -21905,9 +21690,8 @@
     "confidence": 0.4
   },
   "form1[0].#subform[92].#area[51].RadioButtonList[40]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[92].DropDownList141[0]": {
     "section": 20,
@@ -21990,59 +21774,48 @@
     "confidence": 0.4
   },
   "form1[0].#subform[93].#area[52].TextField11[245]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[93].#area[54].TextField11[246]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[93].#area[54].#area[55].RadioButtonList[43]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[93].#area[56].TextField11[247]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[93].#area[56].#area[57].RadioButtonList[44]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[93].#area[58].TextField11[248]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[93].#area[58].#area[59].RadioButtonList[45]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[93].#area[60].TextField11[249]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[93].#area[60].#area[61].RadioButtonList[46]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[93].#area[62].TextField11[250]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[93].#area[62].#area[63].RadioButtonList[47]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[93].TextField11[251]": {
     "section": 20,
@@ -22050,9 +21823,8 @@
     "confidence": 0.4
   },
   "form1[0].#subform[93].#area[64].RadioButtonList[48]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[93].DropDownList141[1]": {
     "section": 20,
@@ -22135,59 +21907,48 @@
     "confidence": 0.4
   },
   "form1[0].#subform[94].#area[65].TextField11[252]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[94].#area[67].TextField11[253]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[94].#area[67].#area[68].RadioButtonList[51]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[94].#area[69].TextField11[254]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[94].#area[69].#area[70].RadioButtonList[52]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[94].#area[71].TextField11[255]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[94].#area[71].#area[72].RadioButtonList[53]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[94].#area[73].TextField11[256]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[94].#area[73].#area[74].RadioButtonList[54]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[94].#area[75].TextField11[257]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[94].#area[75].#area[76].RadioButtonList[55]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[94].TextField11[258]": {
     "section": 20,
@@ -22195,9 +21956,8 @@
     "confidence": 0.4
   },
   "form1[0].#subform[94].#area[77].RadioButtonList[56]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[94].DropDownList141[2]": {
     "section": 20,
@@ -22280,59 +22040,48 @@
     "confidence": 0.4
   },
   "form1[0].#subform[95].#area[78].TextField11[259]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[95].#area[80].TextField11[260]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[95].#area[80].#area[81].RadioButtonList[59]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[95].#area[82].TextField11[261]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[95].#area[82].#area[83].RadioButtonList[60]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[95].#area[84].TextField11[262]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[95].#area[84].#area[85].RadioButtonList[61]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[95].#area[86].TextField11[263]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[95].#area[86].#area[87].RadioButtonList[62]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[95].#area[88].TextField11[264]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[95].#area[88].#area[89].RadioButtonList[63]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[95].TextField11[265]": {
     "section": 20,
@@ -22340,9 +22089,8 @@
     "confidence": 0.4
   },
   "form1[0].#subform[95].#area[90].RadioButtonList[64]": {
-    "section": 20,
-    "sectionName": "Foreign Business, Activities, Government Contacts",
-    "confidence": 0.4
+    "sectionName": "Section undefined",
+    "confidence": 0.9
   },
   "form1[0].#subform[95].DropDownList141[3]": {
     "section": 20,
@@ -26502,152 +26250,152 @@
   "form1[0].Section_23_3[0].#field[2]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].#field[3]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].From_Datefield_Name_2[0]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].#field[5]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].From_Datefield_Name_2[1]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].#field[7]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].TextField11[0]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].TextField11[1]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].#field[10]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].From_Datefield_Name_2[2]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].#field[12]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].From_Datefield_Name_2[3]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].#field[14]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].#field[15]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].From_Datefield_Name_2[4]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].#field[17]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].From_Datefield_Name_2[5]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].#field[19]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].TextField11[2]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].TextField11[3]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].RadioButtonList[0]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].TextField11[4]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].TextField11[5]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].RadioButtonList[1]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].From_Datefield_Name_2[6]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].#field[25]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].From_Datefield_Name_2[7]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].#field[27]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].TextField11[6]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_3[0].TextField11[7]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_4[0].SSN[0]": {
     "section": 4,
@@ -26657,97 +26405,97 @@
   "form1[0].Section_23_4[0].#field[2]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_4[0].From_Datefield_Name_2[0]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_4[0].#field[4]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_4[0].From_Datefield_Name_2[1]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_4[0].#field[6]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_4[0].#field[7]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_4[0].From_Datefield_Name_2[2]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_4[0].#field[9]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_4[0].From_Datefield_Name_2[3]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_4[0].#field[11]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_4[0].RadioButtonList[0]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_4[0].TextField11[0]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_4[0].TextField11[1]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_4[0].#area[1].RadioButtonList[1]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_4[0].RadioButtonList[2]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_4[0].TextField11[2]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_4[0].TextField11[3]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_4[0].#area[3].RadioButtonList[3]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_4[0].RadioButtonList[4]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].SSN[0]": {
     "section": 4,
@@ -26757,132 +26505,132 @@
   "form1[0].Section_23_5[0].#field[2]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].From_Datefield_Name_2[0]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].#field[4]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].From_Datefield_Name_2[1]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].#field[6]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].#area[0].RadioButtonList[0]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].RadioButtonList[1]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].TextField11[0]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].#area[1].RadioButtonList[2]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].TextField11[1]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].#area[2].TextField11[2]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].#area[2].TextField11[3]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].#area[2].School6_State[0]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].#area[2].#field[12]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].#area[2].TextField11[4]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].TextField11[5]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].TextField11[6]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].p3-t68[0]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].TextField11[7]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].#field[18]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].#field[19]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].#field[20]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].#area[3].RadioButtonList[3]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].TextField11[8]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].TextField11[9]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_5[0].RadioButtonList[4]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6_1[0].SSN[0]": {
     "section": 4,
@@ -26892,342 +26640,342 @@
   "form1[0].Section_23_6_1[0].#field[2]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6_1[0].From_Datefield_Name_2[0]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6_1[0].#field[4]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6_1[0].From_Datefield_Name_2[1]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6_1[0].#field[6]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6_1[0].RadioButtonList[0]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6_1[0].TextField11[0]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6_1[0].#area[0].RadioButtonList[1]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6_1[0].TextField11[1]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6_1[0].#area[1].TextField11[2]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6_1[0].#area[1].TextField11[3]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6_1[0].#area[1].School6_State[0]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6_1[0].#area[1].#field[12]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6_1[0].#area[1].TextField11[4]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6_1[0].TextField11[5]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6_1[0].TextField11[6]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6_1[0].p3-t68[0]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6_1[0].TextField11[7]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6_1[0].#field[18]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6_1[0].#field[19]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6_1[0].#field[20]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6_1[0].#area[2].RadioButtonList[2]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6_1[0].TextField11[8]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6_1[0].TextField11[9]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6_1[0].RadioButtonList[3]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].RadioButtonList[0]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].TextField11[0]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].RadioButtonList[1]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].TextField11[1]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].#area[0].TextField11[2]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].#area[0].TextField11[3]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].#area[0].School6_State[0]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].#area[0].#field[5]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].#area[0].TextField11[4]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].#field[7]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].From_Datefield_Name_2[0]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].#field[9]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].From_Datefield_Name_2[1]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].#field[11]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].p3-t68[0]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].TextField11[5]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].#field[14]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].#field[15]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].#field[16]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].TextField11[6]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].TextField11[7]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].RadioButtonList[2]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].TextField11[8]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].RadioButtonList[3]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].#area[1].TextField11[9]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].#area[1].TextField11[10]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].#area[1].School6_State[1]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].#area[1].#field[23]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].#area[1].TextField11[11]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].#field[25]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].From_Datefield_Name_2[2]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].#field[27]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].From_Datefield_Name_2[3]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].#field[29]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].p3-t68[1]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].TextField11[12]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].#field[32]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].#field[33]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].#field[34]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].TextField11[13]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].TextField11[14]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].RadioButtonList[4]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].TextField11[15]": {
     "section": 23,
     "sectionName": "Illegal Use of Drugs and Drug Activity",
-    "confidence": 0.55
+    "confidence": 0.9
   },
   "form1[0].Section_23_6[0].SSN[0]": {
     "section": 4,

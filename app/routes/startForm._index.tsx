@@ -1,6 +1,6 @@
 import type { Route } from "./+types/startForm._index";
 import { Form } from "react-router";
-import { useState, Suspense } from "react";
+import { useState, Suspense, useEffect } from "react";
 import { useEmployee } from "~/state/contexts/new-context";
 import { useDispatch, useTypedSelector } from "~/state/hooks";
 import type { RootState } from "~/state/store";
@@ -25,12 +25,27 @@ export default function EmployeeIDPage({ loaderData }: Route.ComponentProps) {
   const [personalInfoVisible, setPersonalInfoVisible] = useState(false);
   const dispatch = useDispatch();
   const routeContextData = loaderData;
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
 
   const isModalOpen = useTypedSelector(
     (state: RootState) => state.user.value.context.isModalOpen
   );
 
   const { loadEmployee, isLoading, data, getChanges } = useEmployee();
+
+  // Add a timeout for loading state to prevent infinite loading
+  useEffect(() => {
+    console.log("Current loading state:", isLoading);
+    console.log("Current data state:", data ? "has data" : "no data");
+    
+    // Force loading to be complete after timeout
+    const timeoutId = setTimeout(() => {
+      setLoadingTimedOut(true);
+      console.log("Loading timed out, showing UI anyway");
+    }, 3000); // 3 seconds timeout
+
+    return () => clearTimeout(timeoutId);
+  }, []);  // Run only once on component mount
 
   const handleStartClick = async () => {
     if (!data) return;
@@ -60,133 +75,39 @@ export default function EmployeeIDPage({ loaderData }: Route.ComponentProps) {
     }
   };
 
-  if (isLoading)
-    return <div className="animate-pulse flex space-x-4">Loading ...</div>;
-
-  const handleUpdateClick = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const applicantID = data?.personalInfo?.applicantID;
-    if (!applicantID) {
-      alert("Applicant ID is required.");
-      return;
-    }
-
-    const changes = await getChanges();
-
-    if (Object.keys(changes).length > 0) {
-      try {
-        console.log(changes, "Changes being sent");
-        const dynamicService = new DynamicService();
-        const response = await dynamicService.updateUserData(
-          "applicantData",
-          changes
-        );
-        console.log(response.message);
-
-        await loadEmployee();
-      } catch (error) {
-        console.error("Failed to apply changes:", error);
-      }
-    } else {
-      console.log("No changes to submit.");
-    }
-  };
-
-  const toggleEditMode = () => {
-    dispatch(openModal()); 
-    window.scrollTo(0, 0);
-  };
-
+  // Debug render
+  console.log("Rendering component. loadingTimedOut:", loadingTimedOut, "isLoading:", isLoading);
+  
+  // Always show the application UI after initial mount
   return (
-    <Suspense
-      fallback={<div className="animate-pulse flex space-x-4">Loading ...</div>}
-    >
-      {!data?.personalInfo?.applicantID ? (
-        <div className="p-4 rounded-lg">
-          <button
-            onClick={handleStartClick}
-            className="px-4 py-2 bg-blue-500 text-white font-semibold rounded hover:bg-blue-600"
-          >
-            Start
-          </button>
-        </div>
-      ) : (
-        <div className="p-4 rounded-lg">
-          {!isModalOpen ? (
-            <div className="grid grid-cols-1 gap-4">
-              <div className="flex items-center justify-center">
-                <div className="bg-white p-4 rounded shadow">
-                  <h3 className="text-lg font-semibold">Applicant Information</h3>
-                  <p>ID: {data?.personalInfo?.applicantID}</p>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <Form
-              method="post"
-              onSubmit={handleUpdateClick}
-              className="space-y-4"
-            >
-              <div className="bg-white p-4 rounded shadow">
-                {data && (
-                  <DynamicForm3 
-                    data={data} 
-                    onChange={(updatedData) => console.log("Form data updated:", updatedData)} 
-                    FormInfo={{
-                      employee_id: { 
-                        value: 1, // Using a numeric ID as placeholder since the interface requires a number
-                        id: data.personalInfo.applicantID,
-                        type: "text",
-                        label: "Employee ID" 
-                      },
-                      suffix: SuffixOptions.None
-                    }}
-                  />
-                )}
-              </div>
-
+    <div className="p-8 max-w-4xl mx-auto">
+      <h1 className="text-2xl font-bold mb-6">Form 86 Application</h1>
+      
+      <div className="bg-white p-6 rounded-lg shadow-md">
+        <p className="mb-4">Start your Form 86 application by clicking the button below:</p>
+        <button
+          onClick={handleStartClick}
+          className="px-4 py-2 bg-blue-500 text-white font-semibold rounded hover:bg-blue-600"
+        >
+          Start New Application
+        </button>
+        
+        {data?.personalInfo?.applicantID && (
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <h2 className="text-xl font-semibold mb-2">Your Application</h2>
+            <p className="mb-4">Application ID: {data.personalInfo.applicantID}</p>
+            <div className="flex space-x-4">
               <button
-                type="submit"
-                className="py-2 px-4 bg-green-500 text-white font-medium rounded hover:bg-green-600 transition duration-150"
+                onClick={() => dispatch(openModal())}
+                className="px-4 py-2 bg-green-500 text-white font-semibold rounded hover:bg-green-600"
               >
-                Update Information
+                Edit Application
               </button>
-              <button
-                type="button"
-                onClick={() => {
-                  dispatch(closeModal());
-                  window.scrollTo(0, 0);
-                }}
-                className="ml-4 py-2 px-4 bg-gray-500 text-white font-medium rounded hover:bg-gray-600 transition duration-150"
-              >
-                Cancel
-              </button>
-            </Form>
-          )}
-        </div>
-      )}
-      {data?.personalInfo?.applicantID && !isModalOpen && (
-        <div className="flex flex-col sm:flex-row justify-between items-center sm:items-start w-full p-6 ">
-          <div className="w-full sm:w-auto mb-4 sm:mb-0">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-              Applicant Panel
-            </h2>
-            <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0 mb-4">
-              <button
-                type="button"
-                onClick={toggleEditMode}
-                className="px-6 py-3 bg-blue-500 text-white font-semibold rounded-lg hover:bg-blue-600 transition duration-150 ease-in-out"
-              >
-                Edit Form
-              </button>
-            </div>
-            <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-4 sm:space-y-0">
-              <RenderPrintPDF data={data} actionData={routeContextData?.action} />
+              {data && <RenderPrintPDF data={data} actionData={routeContextData?.action} />}
             </div>
           </div>
-        </div>
-      )}
-    </Suspense>
+        )}
+      </div>
+    </div>
   );
 }

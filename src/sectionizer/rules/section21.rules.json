@@ -1,0 +1,37 @@
+[
+  {
+    "pattern": "section21D1",
+    "flags": "i",
+    "subSection": "D1",
+    "confidence": 0.9788235294117648,
+    "description": "Subsection D1 field pattern (Precision: 98.5%, Adds 67 fields, 1 false positives)"
+  },
+  {
+    "pattern": "section21D2",
+    "flags": "i",
+    "subSection": "D2",
+    "confidence": 0.9788059701492537,
+    "description": "Subsection D2 field pattern (Precision: 98.5%, Adds 66 fields, 1 false positives)"
+  },
+  {
+    "pattern": "section21E",
+    "flags": "i",
+    "subSection": "E",
+    "confidence": 0.9787596899224806,
+    "description": "Subsection E field pattern (Precision: 98.4%, Adds 127 fields, 2 false positives)"
+  },
+  {
+    "pattern": "section21C",
+    "flags": "i",
+    "subSection": "C",
+    "confidence": 0.9787096774193549,
+    "description": "Subsection C field pattern (Precision: 98.4%, Adds 61 fields, 1 false positives)"
+  },
+  {
+    "pattern": "^form1\\[0\\]\\.section21d",
+    "flags": "i",
+    "subSection": "_default",
+    "confidence": 0.9786813186813187,
+    "description": "Fields starting with 'form1[0].section21d' (133 fields) (Precision: 98.4%, Adds 46 fields, 3 false positives)"
+  }
+]

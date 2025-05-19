@@ -1,0 +1,125 @@
+[
+  {
+    "pattern": "form1\\[0\\]\\.Section24\\[0\\]",
+    "flags": "i",
+    "subSection": "_default",
+    "confidence": 0.95,
+    "description": "Exact match for Section 24 area"
+  },
+  {
+    "pattern": "section24",
+    "flags": "i",
+    "subSection": "_default",
+    "confidence": 0.9,
+    "description": "Generic section 24 field pattern"
+  },
+  {
+    "pattern": "section24_(\\d+)",
+    "flags": "i",
+    "subSection": "_default",
+    "entryIndexFn": "function anonymous(m\n) {\nreturn function anonymous(m\n) {\nreturn function anonymous(m\n) {\nreturn function anonymous(m\n) {\nreturn function anonymous(m\n) {\nreturn function anonymous(m\n) {\nreturn m=>{const entryPattern=new RegExp(rule.entryPattern,\"i\");const match=m[0].match(entryPattern);return match&&match[1]?parseInt(match[1],10):0}\n}\n}\n}\n}\n}\n}",
+    "confidence": 0.9,
+    "description": "Section 24 entry index pattern"
+  },
+  {
+    "pattern": "24a\\.?(\\d*)",
+    "flags": "i",
+    "subSection": "A",
+    "entryIndexFn": "function anonymous(m\n) {\nreturn function anonymous(m\n) {\nreturn function anonymous(m\n) {\nreturn function anonymous(m\n) {\nreturn function anonymous(m\n) {\nreturn function anonymous(m\n) {\nreturn m=>{const entryPattern=new RegExp(rule.entryPattern,\"i\");const match=m[0].match(entryPattern);return match&&match[1]?parseInt(match[1],10):0}\n}\n}\n}\n}\n}\n}",
+    "confidence": 0.9,
+    "description": "Section 24A fields with alternative format"
+  },
+  {
+    "pattern": "24b\\.?(\\d*)",
+    "flags": "i",
+    "subSection": "B",
+    "entryIndexFn": "function anonymous(m\n) {\nreturn function anonymous(m\n) {\nreturn function anonymous(m\n) {\nreturn function anonymous(m\n) {\nreturn function anonymous(m\n) {\nreturn function anonymous(m\n) {\nreturn m=>{const entryPattern=new RegExp(rule.entryPattern,\"i\");const match=m[0].match(entryPattern);return match&&match[1]?parseInt(match[1],10):0}\n}\n}\n}\n}\n}\n}",
+    "confidence": 0.9,
+    "description": "Section 24B fields with alternative format"
+  },
+  {
+    "pattern": "use of alcohol",
+    "flags": "i",
+    "subSection": "_default",
+    "confidence": 0.85,
+    "description": "Match by section title"
+  },
+  {
+    "pattern": "alcohol",
+    "flags": "i",
+    "subSection": "_default",
+    "confidence": 0.85,
+    "description": "Alcohol related fields"
+  },
+  {
+    "pattern": "alcoholism",
+    "flags": "i",
+    "subSection": "_default",
+    "confidence": 0.85,
+    "description": "Alcoholism related fields"
+  },
+  {
+    "pattern": "alcohol abuse",
+    "flags": "i",
+    "subSection": "_default",
+    "confidence": 0.85,
+    "description": "Alcohol abuse related fields"
+  },
+  {
+    "pattern": "form\\d*\\[\\d+\\].*?24",
+    "flags": "i",
+    "subSection": "_default",
+    "confidence": 0.85,
+    "description": "Form field pattern for section 24"
+  },
+  {
+    "pattern": "24_(\\d+)|24\\[(\\d+)\\]",
+    "flags": "i",
+    "subSection": "_default",
+    "entryIndexFn": "function anonymous(m\n) {\nreturn function anonymous(m\n) {\nreturn function anonymous(m\n) {\nreturn function anonymous(m\n) {\nreturn function anonymous(m\n) {\nreturn function anonymous(m\n) {\nreturn m=>{for(let i=1;i<m.length;i++){if(m[i]&&/^\\d+$/.test(m[i])){return parseInt(m[i],10)}}return 0}\n}\n}\n}\n}\n}\n}",
+    "confidence": 0.85,
+    "description": "Section 24 with numeric index"
+  },
+  {
+    "pattern": "drinking",
+    "flags": "i",
+    "subSection": "_default",
+    "confidence": 0.8,
+    "description": "Drinking related fields"
+  },
+  {
+    "pattern": "alcohol treatment",
+    "flags": "i",
+    "subSection": "_default",
+    "confidence": 0.8,
+    "description": "Alcohol treatment related fields"
+  },
+  {
+    "pattern": "alcohol counseling",
+    "flags": "i",
+    "subSection": "_default",
+    "confidence": 0.8,
+    "description": "Alcohol counseling related fields"
+  },
+  {
+    "pattern": "alcohol rehabilitation",
+    "flags": "i",
+    "subSection": "_default",
+    "confidence": 0.8,
+    "description": "Alcohol rehabilitation related fields"
+  },
+  {
+    "pattern": "dui",
+    "flags": "i",
+    "subSection": "_default",
+    "confidence": 0.75,
+    "description": "DUI related fields"
+  },
+  {
+    "pattern": "dwi",
+    "flags": "i",
+    "subSection": "_default",
+    "confidence": 0.75,
+    "description": "DWI related fields"
+  }
+]

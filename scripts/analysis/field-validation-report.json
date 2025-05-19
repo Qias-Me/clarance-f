@@ -1,0 +1,293 @@
+{
+  "timestamp": "2025-05-16T22:51:26.990Z",
+  "totalSections": 30,
+  "totalFields": 6197,
+  "missingSections": [],
+  "sectionCoverage": {
+    "1": {
+      "total": 761,
+      "high": 424,
+      "highPercentage": 56,
+      "medium": 0,
+      "low": 337,
+      "confidence": 69
+    },
+    "2": {
+      "total": 26,
+      "high": 26,
+      "highPercentage": 100,
+      "medium": 0,
+      "low": 0,
+      "confidence": 100
+    },
+    "3": {
+      "total": 143,
+      "high": 39,
+      "highPercentage": 27,
+      "medium": 0,
+      "low": 104,
+      "confidence": 49
+    },
+    "4": {
+      "total": 139,
+      "high": 139,
+      "highPercentage": 100,
+      "medium": 0,
+      "low": 0,
+      "confidence": 100
+    },
+    "5": {
+      "total": 56,
+      "high": 56,
+      "highPercentage": 100,
+      "medium": 0,
+      "low": 0,
+      "confidence": 100
+    },
+    "6": {
+      "total": 8,
+      "high": 6,
+      "highPercentage": 75,
+      "medium": 2,
+      "low": 0,
+      "confidence": 90
+    },
+    "7": {
+      "total": 950,
+      "high": 950,
+      "highPercentage": 100,
+      "medium": 0,
+      "low": 0,
+      "confidence": 100
+    },
+    "8": {
+      "total": 77,
+      "high": 77,
+      "highPercentage": 100,
+      "medium": 0,
+      "low": 0,
+      "confidence": 100
+    },
+    "9": {
+      "total": 124,
+      "high": 115,
+      "highPercentage": 93,
+      "medium": 9,
+      "low": 0,
+      "confidence": 97
+    },
+    "10": {
+      "total": 56,
+      "high": 56,
+      "highPercentage": 100,
+      "medium": 0,
+      "low": 0,
+      "confidence": 100
+    },
+    "11": {
+      "total": 421,
+      "high": 180,
+      "highPercentage": 43,
+      "medium": 0,
+      "low": 241,
+      "confidence": 60
+    },
+    "12": {
+      "total": 10,
+      "high": 10,
+      "highPercentage": 100,
+      "medium": 0,
+      "low": 0,
+      "confidence": 100
+    },
+    "13": {
+      "total": 1012,
+      "high": 675,
+      "highPercentage": 67,
+      "medium": 8,
+      "low": 329,
+      "confidence": 77
+    },
+    "14": {
+      "total": 40,
+      "high": 40,
+      "highPercentage": 100,
+      "medium": 0,
+      "low": 0,
+      "confidence": 100
+    },
+    "15": {
+      "total": 43,
+      "high": 43,
+      "highPercentage": 100,
+      "medium": 0,
+      "low": 0,
+      "confidence": 100
+    },
+    "16": {
+      "total": 105,
+      "high": 105,
+      "highPercentage": 100,
+      "medium": 0,
+      "low": 0,
+      "confidence": 100
+    },
+    "17": {
+      "total": 254,
+      "high": 226,
+      "highPercentage": 89,
+      "medium": 28,
+      "low": 0,
+      "confidence": 96
+    },
+    "18": {
+      "total": 677,
+      "high": 677,
+      "highPercentage": 100,
+      "medium": 0,
+      "low": 0,
+      "confidence": 100
+    },
+    "19": {
+      "total": 148,
+      "high": 148,
+      "highPercentage": 100,
+      "medium": 0,
+      "low": 0,
+      "confidence": 100
+    },
+    "20": {
+      "total": 311,
+      "high": 12,
+      "highPercentage": 4,
+      "medium": 0,
+      "low": 299,
+      "confidence": 33
+    },
+    "21": {
+      "total": 6,
+      "high": 6,
+      "highPercentage": 100,
+      "medium": 0,
+      "low": 0,
+      "confidence": 100
+    },
+    "22": {
+      "total": 192,
+      "high": 192,
+      "highPercentage": 100,
+      "medium": 0,
+      "low": 0,
+      "confidence": 100
+    },
+    "23": {
+      "total": 51,
+      "high": 48,
+      "highPercentage": 94,
+      "medium": 3,
+      "low": 0,
+      "confidence": 98
+    },
+    "24": {
+      "total": 142,
+      "high": 142,
+      "highPercentage": 100,
+      "medium": 0,
+      "low": 0,
+      "confidence": 100
+    },
+    "25": {
+      "total": 79,
+      "high": 79,
+      "highPercentage": 100,
+      "medium": 0,
+      "low": 0,
+      "confidence": 100
+    },
+    "26": {
+      "total": 231,
+      "high": 217,
+      "highPercentage": 94,
+      "medium": 14,
+      "low": 0,
+      "confidence": 98
+    },
+    "27": {
+      "total": 57,
+      "high": 57,
+      "highPercentage": 100,
+      "medium": 0,
+      "low": 0,
+      "confidence": 100
+    },
+    "28": {
+      "total": 20,
+      "high": 20,
+      "highPercentage": 100,
+      "medium": 0,
+      "low": 0,
+      "confidence": 100
+    },
+    "29": {
+      "total": 135,
+      "high": 135,
+      "highPercentage": 100,
+      "medium": 0,
+      "low": 0,
+      "confidence": 100
+    },
+    "30": {
+      "total": 0,
+      "high": 0,
+      "highPercentage": 0,
+      "medium": 0,
+      "low": 0,
+      "confidence": 0
+    }
+  },
+  "section29Analysis": {
+    "totalFields": 135,
+    "fieldTypes": {
+      "PDFTextField": 68,
+      "PDFRadioGroup": 7,
+      "PDFCheckBox": 48,
+      "PDFDropdown": 12
+    },
+    "potentialSubsections": {
+      "form1": {
+        "name": "Form1",
+        "pattern": "form1",
+        "count": 6,
+        "confidence": "medium",
+        "samples": [
+          "form1[0].Section15_3[0].TextField13[0]",
+          "form1[0].Section16_1[0].TextField13[0]",
+          "form1[0].Section16_3[0].#area[0].From_Datefield_Name_2[0]"
+        ]
+      },
+      "section29-direct": {
+        "name": "Primary Section 29 Fields",
+        "pattern": "section29-direct",
+        "count": 129,
+        "confidence": "high",
+        "samples": [
+          "form1[0].Section29[0].RadioButtonList[0]",
+          "form1[0].Section29[0].TextField11[0]",
+          "form1[0].Section29[0].TextField11[2]"
+        ]
+      }
+    },
+    "patternGroups": {
+      "form1": 6,
+      "section29-direct": 129
+    }
+  },
+  "recommendations": [
+    "Section 29 has few identifiable subsections. Consider manual review.",
+    "Section 1 has low confidence (69%). Review field classifications.",
+    "Section 3 has low confidence (49%). Review field classifications.",
+    "Section 11 has low confidence (60%). Review field classifications.",
+    "Section 20 has low confidence (33%). Review field classifications.",
+    "Section 30 has low confidence (0%). Review field classifications."
+  ]
+}

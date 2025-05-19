@@ -1,0 +1,3446 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SF-86 Form Subsection Analysis</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 20px;
+      color: #333;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1, h2, h3, h4 {
+      color: #2c3e50;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-bottom: 20px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+      font-weight: bold;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    .overview {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .section {
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .highlight {
+      background-color: #e3f2fd;
+    }
+    .pattern-name {
+      background-color: #e8f5e9;
+    }
+    .pattern-value {
+      background-color: #fff3e0;
+    }
+    .pattern-label {
+      background-color: #f3e5f5;
+    }
+    .pattern-numbered {
+      background-color: #e0f7fa;
+    }
+    .pattern-entry {
+      background-color: #f1f8e9;
+    }
+    .confidence-high {
+      color: green;
+      font-weight: bold;
+    }
+    .confidence-medium {
+      color: orange;
+    }
+    .confidence-low {
+      color: red;
+    }
+    .subsection-details {
+      display: none;
+      margin-top: 10px;
+      padding: 10px;
+      background-color: #f8f8f8;
+      border-radius: 5px;
+    }
+    .toggle-button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 5px 10px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 14px;
+      margin: 4px 2px;
+      cursor: pointer;
+      border: none;
+      border-radius: 4px;
+    }
+    .tabs {
+      overflow: hidden;
+      border: 1px solid #ccc;
+      background-color: #f1f1f1;
+      margin-bottom: 20px;
+    }
+    .tabs button {
+      background-color: inherit;
+      float: left;
+      border: none;
+      outline: none;
+      cursor: pointer;
+      padding: 10px 16px;
+      transition: 0.3s;
+      font-size: 16px;
+    }
+    .tabs button:hover {
+      background-color: #ddd;
+    }
+    .tabs button.active {
+      background-color: #ccc;
+    }
+    .tabcontent {
+      display: none;
+      padding: 6px 12px;
+      border: 1px solid #ccc;
+      border-top: none;
+    }
+    #overview {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>SF-86 Form Subsection Analysis</h1>
+  
+  <div class="tabs">
+    <button class="tablinks active" onclick="openTab(event, 'overview')">Overview</button>
+    <button class="tablinks" onclick="openTab(event, 'allSections')">All Sections</button>
+    <button class="tablinks" onclick="openTab(event, 'section29')">Section 29 Focus</button>
+  </div>
+  
+  <div id="overview" class="tabcontent">
+    <div class="overview">
+      <h2>Analysis Overview</h2>
+      <p>Total fields analyzed: <strong>6197</strong></p>
+      <p>Total sections: <strong>30</strong></p>
+      <p>Total subsections identified: <strong>84</strong></p>
+      <p>Subsection categorization coverage: <strong>100.00%</strong></p>
+    </div>
+    
+    <h2>Summary Table</h2>
+    <table>
+      <tr>
+        <th>Section</th>
+        <th>Name</th>
+        <th>Field Count</th>
+        <th>Subsections</th>
+        <th>Details</th>
+      </tr>
+      <tr>
+        <td>1</td>
+        <td>Full Name</td>
+        <td>4</td>
+        <td>1</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-1')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td>Date of Birth</td>
+        <td>2</td>
+        <td>1</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-2')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td>Place of Birth</td>
+        <td>4</td>
+        <td>1</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-3')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td>Social Security Number</td>
+        <td>138</td>
+        <td>1</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-4')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td>Other Names Used</td>
+        <td>45</td>
+        <td>1</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-5')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td>Your Identifying Information</td>
+        <td>6</td>
+        <td>1</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-6')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>7</td>
+        <td>Your Contact Information</td>
+        <td>17</td>
+        <td>1</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-7')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>8</td>
+        <td>U.S. Passport Information</td>
+        <td>10</td>
+        <td>1</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-8')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>9</td>
+        <td>Citizenship</td>
+        <td>78</td>
+        <td>5</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-9')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>10</td>
+        <td>Dual/Multiple Citizenship & Foreign Passport Info</td>
+        <td>122</td>
+        <td>1</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-10')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>11</td>
+        <td>Where You Have Lived</td>
+        <td>252</td>
+        <td>1</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-11')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>12</td>
+        <td>Where you went to School</td>
+        <td>150</td>
+        <td>1</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-12')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>13</td>
+        <td>Employment Acitivites</td>
+        <td>1086</td>
+        <td>7</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-13')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>14</td>
+        <td>Selective Service</td>
+        <td>40</td>
+        <td>1</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-14')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>15</td>
+        <td>Military History</td>
+        <td>60</td>
+        <td>2</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-15')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>16</td>
+        <td>People Who Know You Well</td>
+        <td>154</td>
+        <td>2</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-16')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>17</td>
+        <td>Maritial/Relationship Status</td>
+        <td>332</td>
+        <td>3</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-17')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>18</td>
+        <td>Relatives</td>
+        <td>964</td>
+        <td>8</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-18')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>19</td>
+        <td>Foreign Contacts</td>
+        <td>277</td>
+        <td>4</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-19')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>20</td>
+        <td>Foreign Business, Activities, Government Contacts</td>
+        <td>790</td>
+        <td>2</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-20')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>21</td>
+        <td>Psycological and Emotional Health</td>
+        <td>486</td>
+        <td>5</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-21')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>22</td>
+        <td>Police Record</td>
+        <td>267</td>
+        <td>9</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-22')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>23</td>
+        <td>Illegal Use of Drugs and Drug Activity</td>
+        <td>191</td>
+        <td>3</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-23')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>24</td>
+        <td>Use of Alcohol</td>
+        <td>160</td>
+        <td>4</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-24')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>25</td>
+        <td>Investigations and Clearance</td>
+        <td>79</td>
+        <td>2</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-25')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>26</td>
+        <td>Financial Record</td>
+        <td>237</td>
+        <td>7</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-26')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>27</td>
+        <td>Use of Information Technology Systems</td>
+        <td>57</td>
+        <td>2</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-27')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>28</td>
+        <td>Involvement in Non-Criminal Court Actions</td>
+        <td>23</td>
+        <td>1</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-28')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>29</td>
+        <td>Association Record</td>
+        <td>141</td>
+        <td>5</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-29')">Show Details</button></td>
+      </tr>
+      <tr>
+        <td>30</td>
+        <td>Continuation Space</td>
+        <td>25</td>
+        <td>1</td>
+        <td><button class="toggle-button" onclick="toggleDetails('section-30')">Show Details</button></td>
+      </tr>
+    </table>
+  </div>
+  
+  <div id="allSections" class="tabcontent">
+    <h2>All Sections Analysis</h2>
+    <div class="section">
+      <h3>Section 1: Full Name</h3>
+      <p>Field count: <strong>4</strong></p>
+      <p>Fields categorized into subsections: <strong>4</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>1</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-entry">
+          <td>entry0</td>
+          <td>Entry 0</td>
+          <td>4</td>
+          <td>entry_pattern</td>
+          <td class="confidence-low">0.60</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-1-entry0')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-1-entry0" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Sections1-6[0].TextField11[0]</strong> - Section 1. Full Name. Provide your full name. If you have only initials in your name, provide them and indicate "Initial only". If you do not have a middle name, indicate "No Middle Name". If you are a "Jr.," "Sr.," etc. enter this under Suffix. Last Name.</li><li><strong>form1[0].Sections1-6[0].TextField11[1]</strong> - First name</li><li><strong>form1[0].Sections1-6[0].TextField11[2]</strong> - Middle name</li><li><strong>form1[0].Sections1-6[0].suffix[0]</strong> - Suffix</li>
+              </ul>
+              <p><em>Showing 4 of 4 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 2: Date of Birth</h3>
+      <p>Field count: <strong>2</strong></p>
+      <p>Fields categorized into subsections: <strong>2</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>1</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-entry">
+          <td>entry0</td>
+          <td>Entry 0</td>
+          <td>2</td>
+          <td>entry_pattern</td>
+          <td class="confidence-low">0.60</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-2-entry0')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-2-entry0" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Sections1-6[0].From_Datefield_Name_2[0]</strong> - Section 2. Date of Birth. Provide your date of birth (month/day/year).</li><li><strong>form1[0].Sections1-6[0].#field[18]</strong> - Estimate</li>
+              </ul>
+              <p><em>Showing 2 of 2 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 3: Place of Birth</h3>
+      <p>Field count: <strong>4</strong></p>
+      <p>Fields categorized into subsections: <strong>4</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>1</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-entry">
+          <td>entry0</td>
+          <td>Entry 0</td>
+          <td>4</td>
+          <td>entry_pattern</td>
+          <td class="confidence-low">0.60</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-3-entry0')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-3-entry0" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Sections1-6[0].TextField11[3]</strong> - Section 3. Place of Birth. Provide your place of birth. City.</li><li><strong>form1[0].Sections1-6[0].TextField11[4]</strong> - County</li><li><strong>form1[0].Sections1-6[0].DropDownList1[0]</strong> - Country (Required)</li><li><strong>form1[0].Sections1-6[0].School6_State[0]</strong> - State</li>
+              </ul>
+              <p><em>Showing 4 of 4 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 4: Social Security Number</h3>
+      <p>Field count: <strong>138</strong></p>
+      <p>Fields categorized into subsections: <strong>138</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>1</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-entry">
+          <td>entry0</td>
+          <td>Entry 0</td>
+          <td>138</td>
+          <td>entry_pattern</td>
+          <td class="confidence-low">0.60</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-4-entry0')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-4-entry0" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Sections1-6[0].SSN[0]</strong> - Your Social Security Number will auto-fill based on answer provided in section 4.</li><li><strong>form1[0].Sections1-6[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Sections1-6[0].CheckBox1[0]</strong> - Not applicable</li><li><strong>form1[0].Sections1-6[0].SSN[1]</strong> - Section 4. Social Security Number. Provide your U.S. Social Security Number</li><li><strong>form1[0].Sections7-9[0].SSN[0]</strong> - Your Social Security Number will auto-fill based on answer provided in section 4.</li>
+              </ul>
+              <p><em>Showing 5 of 138 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 5: Other Names Used</h3>
+      <p>Field count: <strong>45</strong></p>
+      <p>Fields categorized into subsections: <strong>45</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>1</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-entry">
+          <td>entry0</td>
+          <td>Entry 0</td>
+          <td>45</td>
+          <td>entry_pattern</td>
+          <td class="confidence-low">0.60</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-5-entry0')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-5-entry0" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Sections1-6[0].section5[0].TextField11[0]</strong> - Middle Name</li><li><strong>form1[0].Sections1-6[0].section5[0].TextField11[1]</strong> - First Name</li><li><strong>form1[0].Sections1-6[0].section5[0].TextField11[2]</strong> - Complete the following if you have responded 'Yes' to having used other names. Provide your other name(s) used and the period of time you used it/them [for example: your maiden name(s), name(s) by a former marriage, former name(s), alias(es), or nickname(es)]. If you have only initials in your name(s), provide them and indicate "Initial only." If you do not have a middle name (s), indicate "No Middle Name" (NMN). If you are a "Jr.," "Sr.," etc. enter this under Suffix. #1. Last name.</li><li><strong>form1[0].Sections1-6[0].section5[0].TextField11[3]</strong> - Provide the reason(s) why the name changed</li><li><strong>form1[0].Sections1-6[0].section5[0].#area[0].From_Datefield_Name_2[0]</strong> - Time name used. From (month/year)</li>
+              </ul>
+              <p><em>Showing 5 of 45 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 6: Your Identifying Information</h3>
+      <p>Field count: <strong>6</strong></p>
+      <p>Fields categorized into subsections: <strong>6</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>1</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-entry">
+          <td>entry0</td>
+          <td>Entry 0</td>
+          <td>6</td>
+          <td>entry_pattern</td>
+          <td class="confidence-low">0.60</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-6-entry0')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-6-entry0" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Sections1-6[0].p3-rb3b[0]</strong> - p3-rb3b</li><li><strong>form1[0].Sections1-6[0].TextField11[5]</strong> - Weight (in pounds)</li><li><strong>form1[0].Sections1-6[0].DropDownList10[0]</strong> - Hair color</li><li><strong>form1[0].Sections1-6[0].DropDownList9[0]</strong> - Eye color</li><li><strong>form1[0].Sections1-6[0].DropDownList8[0]</strong> - Section 6. Your Identifying Information. Provide your identifying information. Height (feet).</li>
+              </ul>
+              <p><em>Showing 5 of 6 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 7: Your Contact Information</h3>
+      <p>Field count: <strong>17</strong></p>
+      <p>Fields categorized into subsections: <strong>17</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>1</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-entry">
+          <td>entry0</td>
+          <td>Entry 0</td>
+          <td>17</td>
+          <td>entry_pattern</td>
+          <td class="confidence-low">0.60</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-7-entry0')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-7-entry0" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Sections7-9[0].TextField11[13]</strong> - Section 7-Your Contact Information. Provide your contact information. Home e-mail address</li><li><strong>form1[0].Sections7-9[0].TextField11[14]</strong> - Work e-mail address</li><li><strong>form1[0].Sections7-9[0].p3-t68[1]</strong> - Home telephone number</li><li><strong>form1[0].Sections7-9[0].TextField11[15]</strong> - Extension</li><li><strong>form1[0].Sections7-9[0].#field[33]</strong> - Home telephone number: International or D S N phone number</li>
+              </ul>
+              <p><em>Showing 5 of 17 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 8: U.S. Passport Information</h3>
+      <p>Field count: <strong>10</strong></p>
+      <p>Fields categorized into subsections: <strong>10</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>1</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-entry">
+          <td>entry0</td>
+          <td>Entry 0</td>
+          <td>10</td>
+          <td>entry_pattern</td>
+          <td class="confidence-low">0.60</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-8-entry0')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-8-entry0" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Sections7-9[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Sections7-9[0].p3-t68[0]</strong> - Provide the following information for the most recent U.S. passport you currently possess. Passport number</li><li><strong>form1[0].Sections7-9[0].#area[0].From_Datefield_Name_2[0]</strong> - Issue date (Month/Day/Year)</li><li><strong>form1[0].Sections7-9[0].#area[0].To_Datefield_Name_2[0]</strong> - Expiration date (Month/Day/Year)</li><li><strong>form1[0].Sections7-9[0].#area[0].#field[4]</strong> - Estimate</li>
+              </ul>
+              <p><em>Showing 5 of 10 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 9: Citizenship</h3>
+      <p>Field count: <strong>78</strong></p>
+      <p>Fields categorized into subsections: <strong>78</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>5</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-value">
+          <td>9.1</td>
+          <td>U.S. Citizen by Birth</td>
+          <td>13</td>
+          <td>value_pattern</td>
+          <td class="confidence-high">0.85</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-9-9.1')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-9-9.1" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Sections7-9[0].TextField11[3]</strong> - Explanation</li><li><strong>form1[0].Sections7-9[0].TextField11[4]</strong> - Provide document number for U.S. citizen born abroad.</li><li><strong>form1[0].Sections7-9[0].TextField11[5]</strong> - Provide the place of issuance. (Provide City and Country if outside the United States; otherwise, provide City and State.) City.</li><li><strong>form1[0].Sections7-9[0].TextField11[6]</strong> - Middle name</li><li><strong>form1[0].Sections7-9[0].TextField11[7]</strong> - Provide the name in which document was issued. Last name.</li>
+              </ul>
+              <p><em>Showing 5 of 13 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-value">
+          <td>9.2</td>
+          <td>Naturalized U.S. Citizen</td>
+          <td>13</td>
+          <td>value_pattern</td>
+          <td class="confidence-high">0.85</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-9-9.2')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-9-9.2" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section9\.1-9\.4[0].TextField11[0]</strong> - City</li><li><strong>form1[0].Section9\.1-9\.4[0].TextField11[1]</strong> - Middle name</li><li><strong>form1[0].Section9\.1-9\.4[0].TextField11[2]</strong> - Provide the name in which the Certificate of Naturalization was issued. Last name.</li><li><strong>form1[0].Section9\.1-9\.4[0].TextField11[3]</strong> - First name</li><li><strong>form1[0].Section9\.1-9\.4[0].TextField11[4]</strong> - Provide the address of the court that issued the naturalization certificate. Street</li>
+              </ul>
+              <p><em>Showing 5 of 13 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-value">
+          <td>9.3</td>
+          <td>Derived U.S. Citizen</td>
+          <td>8</td>
+          <td>value_pattern</td>
+          <td class="confidence-high">0.85</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-9-9.3')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-9-9.3" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section9\.1-9\.4[0].TextField11[19]</strong> - 9.3  Complete the following if you answered that you are a derived U.S. Citizen. Provide your alien registration number (on Certificate of Citizenship — utilize U S C I S, C I S or I N S registration number).</li><li><strong>form1[0].Section9\.1-9\.4[0].TextField11[20]</strong> - Provide your Permanent Resident Card number (I-551)</li><li><strong>form1[0].Section9\.1-9\.4[0].TextField11[21]</strong> - Provide your Certificate of Citizenship number (N560 or N561) </li><li><strong>form1[0].Section9\.1-9\.4[0].TextField11[22]</strong> - Middle name</li><li><strong>form1[0].Section9\.1-9\.4[0].TextField11[23]</strong> - Provide the name in which the document was issued. Last name.</li>
+              </ul>
+              <p><em>Showing 5 of 8 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-value">
+          <td>9.4</td>
+          <td>Not a U.S. Citizen</td>
+          <td>12</td>
+          <td>value_pattern</td>
+          <td class="confidence-high">0.85</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-9-9.4')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-9-9.4" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section9\.1-9\.4[0].From_Datefield_Name_2[1]</strong> - Provide your date of entry into the U.S. (Month/Day/Year)</li><li><strong>form1[0].Section9\.1-9\.4[0].TextField11[8]</strong> - 9.4  Complete the following if you answered that you are not a U.S. Citizen. Provide your residence status. </li><li><strong>form1[0].Section9\.1-9\.4[0].From_Datefield_Name_2[2]</strong> - Provide the date document was issued. (Month/Day/Year)</li><li><strong>form1[0].Section9\.1-9\.4[0].TextField11[9]</strong> - Provide your alien registration number (I-551, I-766)</li><li><strong>form1[0].Section9\.1-9\.4[0].TextField11[10]</strong> - Middle name</li>
+              </ul>
+              <p><em>Showing 5 of 12 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-entry">
+          <td>entry0</td>
+          <td>Entry 0</td>
+          <td>32</td>
+          <td>entry_pattern</td>
+          <td class="confidence-low">0.60</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-9-entry0')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-9-entry0" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Sections7-9[0].RadioButtonList[1]</strong> - RadioButtonList</li><li><strong>form1[0].Sections7-9[0].DropDownList12[0]</strong> - Country</li><li><strong>form1[0].Sections7-9[0].School6_State[0]</strong> - State</li><li><strong>form1[0].Sections7-9[0].suffix[1]</strong> - Suffix</li><li><strong>form1[0].Sections7-9[0].suffix[2]</strong> - Suffix</li>
+              </ul>
+              <p><em>Showing 5 of 32 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 10: Dual/Multiple Citizenship & Foreign Passport Info</h3>
+      <p>Field count: <strong>122</strong></p>
+      <p>Fields categorized into subsections: <strong>122</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>1</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-entry">
+          <td>entry0</td>
+          <td>Entry 0</td>
+          <td>122</td>
+          <td>entry_pattern</td>
+          <td class="confidence-low">0.60</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-10-entry0')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-10-entry0" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section10\.1-10\.2[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section10\.1-10\.2[0].DropDownList13[0]</strong> - Complete the following if you answered 'Yes' to having EVER held dual/multiple citizenship. Entry #1 Provide country of citizenship.</li><li><strong>form1[0].Section10\.1-10\.2[0].TextField11[0]</strong> - How did you acquire this non-U.S. citizenship you now have or previously had?</li><li><strong>form1[0].Section10\.1-10\.2[0].From_Datefield_Name_2[0]</strong> - During what period of time did you hold citizenship with this country? (Provide the date range that you held this citizenship, beginning with the date it was acquired through its termination or "Present," whichever is appropriate.) From Date (Month/Year)</li><li><strong>form1[0].Section10\.1-10\.2[0].#field[3]</strong> - Estimate</li>
+              </ul>
+              <p><em>Showing 5 of 122 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 11: Where You Have Lived</h3>
+      <p>Field count: <strong>252</strong></p>
+      <p>Fields categorized into subsections: <strong>252</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>1</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-entry">
+          <td>entry0</td>
+          <td>Entry 0</td>
+          <td>252</td>
+          <td>entry_pattern</td>
+          <td class="confidence-low">0.60</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-11-entry0')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-11-entry0" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section11[0].p3-t68[0]</strong> - Evening telephone number</li><li><strong>form1[0].Section11[0].TextField11[0]</strong> - Extension</li><li><strong>form1[0].Section11[0].#field[4]</strong> - International or D S N phone number</li><li><strong>form1[0].Section11[0].#field[5]</strong> - Provide the following contact information for this person. I don't know.</li><li><strong>form1[0].Section11[0].p3-t68[1]</strong> - Daytime telephone number</li>
+              </ul>
+              <p><em>Showing 5 of 252 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 12: Where you went to School</h3>
+      <p>Field count: <strong>150</strong></p>
+      <p>Fields categorized into subsections: <strong>150</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>1</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-entry">
+          <td>entry0</td>
+          <td>Entry 0</td>
+          <td>150</td>
+          <td>entry_pattern</td>
+          <td class="confidence-low">0.60</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-12-entry0')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-12-entry0" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].section_12[0].pg10r1[0]</strong> - pg10r1</li><li><strong>form1[0].section_12[0].pg10r2[0]</strong> - pg10r2</li><li><strong>form1[0].section_12[0].From_Datefield_Name_2[0]</strong> - Entry # 1. Provide the dates of attendance.  From Date (Month/Year)</li><li><strong>form1[0].section_12[0].#field[3]</strong> - Estimate</li><li><strong>form1[0].section_12[0].sec12_1_1[0]</strong> - Present</li>
+              </ul>
+              <p><em>Showing 5 of 150 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 13: Employment Acitivites</h3>
+      <p>Field count: <strong>1086</strong></p>
+      <p>Fields categorized into subsections: <strong>1086</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>7</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>2</td>
+          <td>Subsection 13.2</td>
+          <td>192</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-13-2')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-13-2" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].section13_2-2[0].School6_State[0]</strong> - State</li><li><strong>form1[0].section13_2-2[0].DropDownList16[0]</strong> - Country</li><li><strong>form1[0].section13_2-2[0].School6_State[1]</strong> - State</li><li><strong>form1[0].section13_2-2[0].DropDownList13[0]</strong> - Country</li><li><strong>form1[0].section13_2-2[0].#field[16]</strong> - International or D S N phone number</li>
+              </ul>
+              <p><em>Showing 5 of 192 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>3</td>
+          <td>Subsection 13.3</td>
+          <td>203</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-13-3')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-13-3" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].section13_3-2[0].School6_State[0]</strong> - State</li><li><strong>form1[0].section13_3-2[0].DropDownList9[0]</strong> - Country</li><li><strong>form1[0].section13_3-2[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].section13_3-2[0].School6_State[1]</strong> - State</li><li><strong>form1[0].section13_3-2[0].DropDownList10[0]</strong> - Country</li>
+              </ul>
+              <p><em>Showing 5 of 203 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>4</td>
+          <td>Subsection 13.4</td>
+          <td>101</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-13-4')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-13-4" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].section13_4[0].#field[3]</strong> - Estimate</li><li><strong>form1[0].section13_4[0].#field[4]</strong> - Present</li><li><strong>form1[0].section13_4[0].#field[6]</strong> - Estimate</li><li><strong>form1[0].section13_4[0].School6_State[0]</strong> - State</li><li><strong>form1[0].section13_4[0].DropDownList6[0]</strong> - Country</li>
+              </ul>
+              <p><em>Showing 5 of 101 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>5</td>
+          <td>Subsection 13.5</td>
+          <td>48</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-13-5')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-13-5" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].section13_5[0].#area[1].p3-t68[0]</strong> - Provide your position title.</li><li><strong>form1[0].section13_5[0].#area[1].p3-t68[1]</strong> - Provide the name of the federal agency for which you are/were employed.</li><li><strong>form1[0].section13_5[0].#area[1].TextField11[0]</strong> - Provide the location of the agency. (Provide City and Country if outside the United States; otherwise, provide City, State and Zip Code.)</li><li><strong>form1[0].section13_5[0].#area[1].TextField11[1]</strong> - City</li><li><strong>form1[0].section13_5[0].#area[1].School6_State[0]</strong> - State</li>
+              </ul>
+              <p><em>Showing 5 of 48 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-value">
+          <td>13A</td>
+          <td>Active Employment</td>
+          <td>447</td>
+          <td>value_pattern</td>
+          <td class="confidence-high">0.90</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-13-13A')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-13-13A" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].section_13_1-2[0].TextField11[0]</strong> - Provide the name of your supervisor.</li><li><strong>form1[0].section_13_1-2[0].TextField11[1]</strong> - Provide the rank/position title of your supervisor.</li><li><strong>form1[0].section_13_1-2[0].p3-t68[0]</strong> - Provide supervisor's telephone number.</li><li><strong>form1[0].section_13_1-2[0].TextField11[2]</strong> - Extension</li><li><strong>form1[0].section_13_1-2[0].TextField11[3]</strong> - Provide physical work location of your supervisor. (Provide City and Country if outside the United States; otherwise provide City, State and Zip Code) Street address</li>
+              </ul>
+              <p><em>Showing 5 of 447 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-value">
+          <td>13C</td>
+          <td>Employment References</td>
+          <td>1</td>
+          <td>value_pattern</td>
+          <td class="confidence-high">0.85</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-13-13C')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-13-13C" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].section13_5[0].RadioButtonList[0]</strong> - RadioButtonList</li>
+              </ul>
+              <p><em>Showing 1 of 1 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-entry">
+          <td>entry0</td>
+          <td>Entry 0</td>
+          <td>94</td>
+          <td>entry_pattern</td>
+          <td class="confidence-low">0.60</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-13-entry0')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-13-entry0" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].section_13_1-2[0].School6_State[0]</strong> - State</li><li><strong>form1[0].section_13_1-2[0].DropDownList18[0]</strong> - Country</li><li><strong>form1[0].section_13_1-2[0].School6_State[1]</strong> - State</li><li><strong>form1[0].section_13_1-2[0].DropDownList17[0]</strong> - Country</li><li><strong>form1[0].section_13_1-2[0].#field[15]</strong> - Night</li>
+              </ul>
+              <p><em>Showing 5 of 94 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 14: Selective Service</h3>
+      <p>Field count: <strong>40</strong></p>
+      <p>Fields categorized into subsections: <strong>40</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>1</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>1</td>
+          <td>Subsection 14.1</td>
+          <td>40</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-14-1')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-14-1" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section14_1[0].#area[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section14_1[0].TextField11[0]</strong> - If yes. provide registration number</li><li><strong>form1[0].Section14_1[0].TextField11[1]</strong> - If no. Provide explanation</li><li><strong>form1[0].Section14_1[0].TextField11[2]</strong> - If I don't know selected, provide explanation</li><li><strong>form1[0].Section14_1[0].#area[4].RadioButtonList[1]</strong> - RadioButtonList</li>
+              </ul>
+              <p><em>Showing 5 of 40 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 15: Military History</h3>
+      <p>Field count: <strong>60</strong></p>
+      <p>Fields categorized into subsections: <strong>60</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>2</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>2</td>
+          <td>Subsection 15.2</td>
+          <td>13</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-15-2')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-15-2" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section15_2[0].#area[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section15_2[0].#field[2]</strong> - Estimate</li><li><strong>form1[0].Section15_2[0].From_Datefield_Name_2[0]</strong> - 15.2 Complete the following if you responded 'Yes' to In the last seven (7) years, have you been subject to court martial or other disciplinary procedure under the Uniform Code of Military Justice (UCMJ), such as Article 15, Captain's Mast, Article 135 Court of Inquiry, etc. Entry #1.  Provide the date of the court martial or other disciplinary procedure. (Month/Year)</li><li><strong>form1[0].Section15_2[0].From_Datefield_Name_2[1]</strong> - Provide a description of the Uniform Code of Military Justice (U C M J) offense(s) for which you were charged.</li><li><strong>form1[0].Section15_2[0].From_Datefield_Name_2[2]</strong> - Provide the name of the disciplinary procedure, such as Court Martial, Article 15, Captain's mast, Article 135 Court of Inquiry, etc.</li>
+              </ul>
+              <p><em>Showing 5 of 13 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>3</td>
+          <td>Subsection 15.3</td>
+          <td>47</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-15-3')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-15-3" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section15_3[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section15_3[0].RadioButtonList[1]</strong> - RadioButtonList</li><li><strong>form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[0]</strong> - Provide your period of service. From Date (Month/Year)</li><li><strong>form1[0].Section15_3[0].#area[0].#field[3]</strong> - Estimate</li><li><strong>form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[1]</strong> - To Date (Month/Year)</li>
+              </ul>
+              <p><em>Showing 5 of 47 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 16: People Who Know You Well</h3>
+      <p>Field count: <strong>154</strong></p>
+      <p>Fields categorized into subsections: <strong>154</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>2</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>1</td>
+          <td>Subsection 16.1</td>
+          <td>46</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-16-1')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-16-1" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section16_1[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section16_1[0].#area[0].From_Datefield_Name_2[0]</strong> - Provide your period of service. From Date (Month/Year)</li><li><strong>form1[0].Section16_1[0].#area[0].#field[3]</strong> - Estimate</li><li><strong>form1[0].Section16_1[0].#area[0].From_Datefield_Name_2[1]</strong> - To Date (Month/Year)</li><li><strong>form1[0].Section16_1[0].#area[0].#field[5]</strong> - Estimate</li>
+              </ul>
+              <p><em>Showing 5 of 46 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>3</td>
+          <td>Subsection 16.3</td>
+          <td>108</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-16-3')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-16-3" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section16_3[0].#field[1]</strong> - Night</li><li><strong>form1[0].Section16_3[0].TextField11[0]</strong> - Middle name</li><li><strong>form1[0].Section16_3[0].TextField11[1]</strong> - First name</li><li><strong>form1[0].Section16_3[0].TextField11[2]</strong> - Provide full name. Last name</li><li><strong>form1[0].Section16_3[0].TextField11[3]</strong> - Provide e-mail address for this person. </li>
+              </ul>
+              <p><em>Showing 5 of 108 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 17: Maritial/Relationship Status</h3>
+      <p>Field count: <strong>332</strong></p>
+      <p>Fields categorized into subsections: <strong>332</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>3</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>1</td>
+          <td>Subsection 17.1</td>
+          <td>117</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-17-1')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-17-1" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section17_1[0].DropDownList12[0]</strong> - Provide country(ies) of citizenship. Country #1</li><li><strong>form1[0].Section17_1[0].From_Datefield_Name_2[0]</strong> - Provide date when you entered into your civil marriage, civil union, or domestic partnership. </li><li><strong>form1[0].Section17_1[0].TextField11[0]</strong> - Middle name</li><li><strong>form1[0].Section17_1[0].TextField11[1]</strong> - First name</li><li><strong>form1[0].Section17_1[0].TextField11[2]</strong> - Provide other names used by your spouse (such as maiden name, names by other marriages, nicknames, etc. and provide dates used for each name). #1. Last name.</li>
+              </ul>
+              <p><em>Showing 5 of 117 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>2</td>
+          <td>Subsection 17.2</td>
+          <td>66</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-17-2')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-17-2" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section17_2[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section17_2[0].#field[2]</strong> - Estimate</li><li><strong>form1[0].Section17_2[0].DropDownList12[0]</strong> - Provide the country(ies) of citizenship. Country #1</li><li><strong>form1[0].Section17_2[0].DropDownList12[1]</strong> - Country #2</li><li><strong>form1[0].Section17_2[0].TextField11[0]</strong> - Middle name</li>
+              </ul>
+              <p><em>Showing 5 of 66 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>3</td>
+          <td>Subsection 17.3</td>
+          <td>149</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-17-3')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-17-3" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section17_3[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section17_3[0].TextField11[0]</strong> - Middle name</li><li><strong>form1[0].Section17_3[0].TextField11[1]</strong> - First name</li><li><strong>form1[0].Section17_3[0].TextField11[2]</strong> - Provide other names used by your cohabitant (such as maiden name, names by other marriages, etc., and provide dates each name was used). #1. Last name.</li><li><strong>form1[0].Section17_3[0].#area[0].From_Datefield_Name_2[0]</strong> - Time name used. From (month/year)</li>
+              </ul>
+              <p><em>Showing 5 of 149 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 18: Relatives</h3>
+      <p>Field count: <strong>964</strong></p>
+      <p>Fields categorized into subsections: <strong>964</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>8</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>1</td>
+          <td>Subsection 18.1</td>
+          <td>372</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-18-1')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-18-1" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section18_1[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section18_1[0].#field[2]</strong> - Provide other names used and the period of time that your relative used them (such as maiden name by a former marriage, former name, alias, or nickname). Not applicable</li><li><strong>form1[0].Section18_1[0].TextField11[0]</strong> - Provide your relative's place of birth. City</li><li><strong>form1[0].Section18_1[0].School6_State[0]</strong> - State</li><li><strong>form1[0].Section18_1[0].DropDownList24[0]</strong> - Country (Required)</li>
+              </ul>
+              <p><em>Showing 5 of 372 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>2</td>
+          <td>Subsection 18.2</td>
+          <td>150</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-18-2')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-18-2" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section18_2[0].School6_State[0]</strong> - State</li><li><strong>form1[0].Section18_2[0].TextField11[0]</strong> - City</li><li><strong>form1[0].Section18_2[0].TextField11[1]</strong> - Provide the address of the court that issued the Certificate of Naturalization. Street</li><li><strong>form1[0].Section18_2[0].TextField11[2]</strong> - Zip Code</li><li><strong>form1[0].Section18_2[0].RadioButtonList[0]</strong> - RadioButtonList</li>
+              </ul>
+              <p><em>Showing 5 of 150 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>3</td>
+          <td>Subsection 18.3</td>
+          <td>390</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-18-3')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-18-3" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section18_3[0].#field[2]</strong> - Telephone</li><li><strong>form1[0].Section18_3[0].#field[3]</strong> - Electronic (Such as e-mail, texting, chat rooms, etc)</li><li><strong>form1[0].Section18_3[0].#field[4]</strong> - Provide methods of contact (Check all that apply). In person</li><li><strong>form1[0].Section18_3[0].#field[5]</strong> - Written correspondence</li><li><strong>form1[0].Section18_3[0].#field[6]</strong> - Other </li>
+              </ul>
+              <p><em>Showing 5 of 390 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-label">
+          <td>18.1</td>
+          <td>Mother</td>
+          <td>39</td>
+          <td>label_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-18-18.1')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-18-18.1" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section18_1[0].#field[14]</strong> - 18.1  Complete the following if the relative listed is your Mother, Father, Stepmother, Stepfather, Child (including adopted/foster), Stepchild, Brother, Sister, Stepbrother, Stepsister, Half-brother, Half-sister.  Entry #1. If mother, provide your mother's maiden name. Same as listed </li><li><strong>form1[0].Section18_1[0].#field[15]</strong> - If mother, provide your mother's maiden name. I don't know.</li><li><strong>form1[0].Section18_1[0].#field[65]</strong> - Stepmother</li><li><strong>form1[0].Section18_1[0].#field[66]</strong> - Section 18-Relatives. Select each type of relative applicable to you, regardless if they are living or deceased. (An opportunity will be provided to list multiple relatives for each type.)Check all that apply. Mother</li><li><strong>form1[0].Section18_1[0].#field[75]</strong> - Mother-in-law</li>
+              </ul>
+              <p><em>Showing 5 of 39 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-label">
+          <td>18.2</td>
+          <td>Father</td>
+          <td>3</td>
+          <td>label_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-18-18.2')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-18-18.2" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section18_1[0].#field[61]</strong> - Father</li><li><strong>form1[0].Section18_1[0].#field[67]</strong> - Stepfather</li><li><strong>form1[0].Section18_1[0].#field[73]</strong> - Father-in-law</li>
+              </ul>
+              <p><em>Showing 3 of 3 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-label">
+          <td>18.5</td>
+          <td>Foster Parent</td>
+          <td>3</td>
+          <td>label_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-18-18.5')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-18-18.5" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section18_1[0].#field[62]</strong> - Child (including adopted/foster)</li><li><strong>form1[0].Section18_1[0].#field[64]</strong> - Foster parent</li><li><strong>form1[0].Section18_1[0].#field[76]</strong> - Guardian</li>
+              </ul>
+              <p><em>Showing 3 of 3 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-label">
+          <td>18.6</td>
+          <td>Child</td>
+          <td>1</td>
+          <td>label_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-18-18.6')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-18-18.6" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section18_1[0].#field[63]</strong> - Stepchild</li>
+              </ul>
+              <p><em>Showing 1 of 1 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-label">
+          <td>18.7</td>
+          <td>Sibling</td>
+          <td>6</td>
+          <td>label_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-18-18.7')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-18-18.7" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section18_1[0].#field[68]</strong> - Brother</li><li><strong>form1[0].Section18_1[0].#field[69]</strong> - Sister</li><li><strong>form1[0].Section18_1[0].#field[70]</strong> - Stepbrother</li><li><strong>form1[0].Section18_1[0].#field[71]</strong> - Stepsister</li><li><strong>form1[0].Section18_1[0].#field[72]</strong> - Half-brother</li>
+              </ul>
+              <p><em>Showing 5 of 6 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 19: Foreign Contacts</h3>
+      <p>Field count: <strong>277</strong></p>
+      <p>Fields categorized into subsections: <strong>277</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>4</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>1</td>
+          <td>Subsection 19.1</td>
+          <td>70</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-19-1')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-19-1" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section19_1[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section19_1[0].#field[2]</strong> - Provide place of birth. I don't know.</li><li><strong>form1[0].Section19_1[0].DropDownList12[0]</strong> - Provide country(ies) of citizenship. Country #1</li><li><strong>form1[0].Section19_1[0].DropDownList12[1]</strong> - Country #2</li><li><strong>form1[0].Section19_1[0].#area[0].#field[5]</strong> - Complete the following if you responded 'Yes' to have, or have had, close and/or continuing contact with a foreign national. #1. Provide the full name of the foreign national, if known. I don't know</li>
+              </ul>
+              <p><em>Showing 5 of 70 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>2</td>
+          <td>Subsection 19.2</td>
+          <td>69</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-19-2')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-19-2" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section19_2[0].#field[2]</strong> - Provide place of birth. I don't know.</li><li><strong>form1[0].Section19_2[0].DropDownList12[0]</strong> - Provide country(ies) of citizenship. Country #1</li><li><strong>form1[0].Section19_2[0].DropDownList12[1]</strong> - Country #2</li><li><strong>form1[0].Section19_2[0].#area[0].#field[5]</strong> - Complete the following if you responded 'Yes' to have, or have had, close and/or continuing contact with a foreign national. #2. Provide the full name of the foreign national, if known. I don't know.</li><li><strong>form1[0].Section19_2[0].#area[0].Name_List_Long[0].suffix[0]</strong> - Suffix</li>
+              </ul>
+              <p><em>Showing 5 of 69 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>3</td>
+          <td>Subsection 19.3</td>
+          <td>69</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-19-3')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-19-3" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section19_3[0].#field[2]</strong> - Provide place of birth. I don't know.</li><li><strong>form1[0].Section19_3[0].DropDownList12[0]</strong> - Provide country(ies) of citizenship. Country #1</li><li><strong>form1[0].Section19_3[0].DropDownList12[1]</strong> - Country #2</li><li><strong>form1[0].Section19_3[0].#area[0].#field[5]</strong> - Complete the following if you responded 'Yes' to have, or have had, close and/or continuing contact with a foreign national. Entry #3. Provide the full name of the foreign national, if known. I don't know.</li><li><strong>form1[0].Section19_3[0].#area[0].Name_List_Long[0].suffix[0]</strong> - Suffix</li>
+              </ul>
+              <p><em>Showing 5 of 69 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>4</td>
+          <td>Subsection 19.4</td>
+          <td>69</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-19-4')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-19-4" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section19_4[0].#field[2]</strong> - Provide place of birth. I don't know.</li><li><strong>form1[0].Section19_4[0].DropDownList12[0]</strong> - Provide country(ies) of citizenship. Country #1</li><li><strong>form1[0].Section19_4[0].DropDownList12[1]</strong> - Country #2</li><li><strong>form1[0].Section19_4[0].#area[0].#field[5]</strong> - Complete the following if you responded 'Yes' to have, or have had, close and/or continuing contact with a foreign national. Entry #4. Provide the full name of the foreign national, if known. I don't know</li><li><strong>form1[0].Section19_4[0].#area[0].Name_List_Long[0].suffix[0]</strong> - Suffix</li>
+              </ul>
+              <p><em>Showing 5 of 69 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 20: Foreign Business, Activities, Government Contacts</h3>
+      <p>Field count: <strong>790</strong></p>
+      <p>Fields categorized into subsections: <strong>790</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>2</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-name">
+          <td>20A</td>
+          <td>Foreign Business</td>
+          <td>83</td>
+          <td>name_pattern</td>
+          <td class="confidence-high">0.90</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-20-20A')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-20-20A" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section20a[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section20a[0].TextField11[0]</strong> - Provide how the financial interest was acquired (such as purchase, gift, etc.).</li><li><strong>form1[0].Section20a[0].DropDownList12[0]</strong> - Provide your co-owner's country(ies) of citizenship. Country #1</li><li><strong>form1[0].Section20a[0].DropDownList12[1]</strong> - Country #2</li><li><strong>form1[0].Section20a[0].DropDownList12[2]</strong> - Provide your co-owner's country(ies) of citizenship. Country #1</li>
+              </ul>
+              <p><em>Showing 5 of 83 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-entry">
+          <td>entry0</td>
+          <td>Entry 0</td>
+          <td>707</td>
+          <td>entry_pattern</td>
+          <td class="confidence-low">0.60</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-20-entry0')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-20-entry0" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].#subform[68].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].#subform[68].From_Datefield_Name_2[0]</strong> - Provide the date this financial interest was acquired. (Month/Day/Year)</li><li><strong>form1[0].#subform[68].#field[3]</strong> - Estimate</li><li><strong>form1[0].#subform[68].TextField11[0]</strong> - Provide details regarding how the financial interest was acquired (such as purchase, gift, etc.).</li><li><strong>form1[0].#subform[68].TextField11[1]</strong> - First name</li>
+              </ul>
+              <p><em>Showing 5 of 707 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 21: Psycological and Emotional Health</h3>
+      <p>Field count: <strong>486</strong></p>
+      <p>Fields categorized into subsections: <strong>486</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>5</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-name">
+          <td>21.1</td>
+          <td>Counseling</td>
+          <td>98</td>
+          <td>name_pattern</td>
+          <td class="confidence-high">0.90</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-21-21.1')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-21-21.1" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section21a[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section21a[0].RadioButtonList[1]</strong> - RadioButtonList</li><li><strong>form1[0].Section21a[0].From_Datefield_Name_2[0]</strong> - Complete the following if you responded 'Yes' to having a court or administrative agency ever declare you mentally incompetent. Entry #1. Provide the date this occurred (Month/Year).</li><li><strong>form1[0].Section21a[0].#field[3]</strong> - Estimate</li><li><strong>form1[0].Section21a[0].TextField11[0]</strong> - Provide the name of the court or administrative agency that declared you mentally incompetent.</li>
+              </ul>
+              <p><em>Showing 5 of 98 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-name">
+          <td>21.2</td>
+          <td>Hospitalization</td>
+          <td>49</td>
+          <td>name_pattern</td>
+          <td class="confidence-high">0.90</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-21-21.2')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-21-21.2" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section21b[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section21b[0].RadioButtonList[1]</strong> - RadioButtonList</li><li><strong>form1[0].Section21b[0].From_Datefield_Name_2[0]</strong> - Complete the following if you responded 'Yes' to having a court or administrative agency EVER ordered you to consult with a mental health professional. Entry 1. Provide the date this occurred (month/year)</li><li><strong>form1[0].Section21b[0].#field[3]</strong> - Estimate</li><li><strong>form1[0].Section21b[0].TextField11[0]</strong> - Provide the name of the court or administrative agency that ordered you to consult with a mental 
+health professional. </li>
+              </ul>
+              <p><em>Showing 5 of 49 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-name">
+          <td>21.3</td>
+          <td>Diagnosis</td>
+          <td>77</td>
+          <td>name_pattern</td>
+          <td class="confidence-high">0.90</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-21-21.3')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-21-21.3" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section21c[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section21c[0].TextField11[0]</strong> - Provide the name of the facility where treatment was provided.</li><li><strong>form1[0].Section21c[0].TextField11[1]</strong> - Provide the address of the facility where treatment was provided. (Provide City and Country if outside the United States; otherwise, provide City, State and Zip Code). Street</li><li><strong>form1[0].Section21c[0].TextField11[2]</strong> - City</li><li><strong>form1[0].Section21c[0].School6_State[0]</strong> - State</li>
+              </ul>
+              <p><em>Showing 5 of 77 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-name">
+          <td>21.4</td>
+          <td>Impact on Judgment</td>
+          <td>151</td>
+          <td>name_pattern</td>
+          <td class="confidence-high">0.90</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-21-21.4')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-21-21.4" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].section21d1[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].section21d1[0].TextField11[1]</strong> - City</li><li><strong>form1[0].section21d1[0].School6_State[0]</strong> - State</li><li><strong>form1[0].section21d1[0].#field[5]</strong> - Country</li><li><strong>form1[0].section21d1[0].TextField11[2]</strong> - Zip Code</li>
+              </ul>
+              <p><em>Showing 5 of 151 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-entry">
+          <td>entry0</td>
+          <td>Entry 0</td>
+          <td>111</td>
+          <td>entry_pattern</td>
+          <td class="confidence-low">0.60</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-21-entry0')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-21-entry0" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section21e[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section21e[0].TextField11[0]</strong> - Provide the name of the health care professional.</li><li><strong>form1[0].Section21e[0].TextField11[1]</strong> - Provide the address of the health care professional.  (Provide City and Country if outside the United States; otherwise, provide City, State and Zip Code). Street</li><li><strong>form1[0].Section21e[0].TextField11[2]</strong> - City</li><li><strong>form1[0].Section21e[0].School6_State[0]</strong> - State</li>
+              </ul>
+              <p><em>Showing 5 of 111 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 22: Police Record</h3>
+      <p>Field count: <strong>267</strong></p>
+      <p>Fields categorized into subsections: <strong>267</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>9</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>1</td>
+          <td>Subsection 22.1</td>
+          <td>42</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-22-1')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-22-1" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section22_1[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section22_1[0].RadioButtonList[1]</strong> - RadioButtonList</li><li><strong>form1[0].Section22_1[0].TextField11[0]</strong> - If YES, provide the name of the court. (If YES, complete (c.1))</li><li><strong>form1[0].Section22_1[0].#field[4]</strong> - Estimate</li><li><strong>form1[0].Section22_1[0].From_Datefield_Name_2[1]</strong> - Provide a description of the specific nature of the offense.</li>
+              </ul>
+              <p><em>Showing 5 of 42 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>2</td>
+          <td>Subsection 22.2</td>
+          <td>16</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-22-2')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-22-2" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section22_2[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section22_2[0].From_Datefield_Name_2[0]</strong> - To date (Month/Year)</li><li><strong>form1[0].Section22_2[0].#field[3]</strong> - Present</li><li><strong>form1[0].Section22_2[0].#field[4]</strong> - Estimate</li><li><strong>form1[0].Section22_2[0].TextField11[0]</strong> - (d.1). Provide a description of the sentence.</li>
+              </ul>
+              <p><em>Showing 5 of 16 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>3</td>
+          <td>Subsection 22.3</td>
+          <td>70</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-22-3')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-22-3" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section22_3[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section22_3[0].TextField11[0]</strong> - If YES, provide the name of the court. (If YES, complete (c.1))</li><li><strong>form1[0].Section22_3[0].#field[4]</strong> - Estimate</li><li><strong>form1[0].Section22_3[0].From_Datefield_Name_2[1]</strong> - Provide a description of the specific nature of the offense.</li><li><strong>form1[0].Section22_3[0].#area[0].TextField11[1]</strong> - Provide the location where the offense occurred. (Provide City and Country if outside the United States; otherwise, provide City, County, State and Zip Code). City</li>
+              </ul>
+              <p><em>Showing 5 of 70 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>4</td>
+          <td>Subsection 22.4</td>
+          <td>16</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-22-4')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-22-4" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section22_4[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section22_4[0].TextField11[0]</strong> - (d.1). Provide a description of the sentence.</li><li><strong>form1[0].Section22_4[0].#area[2].RadioButtonList[1]</strong> - RadioButtonList</li><li><strong>form1[0].Section22_4[0].RadioButtonList[2]</strong> - RadioButtonList</li><li><strong>form1[0].Section22_4[0].From_Datefield_Name_2[0]</strong> - From Date (Month/Year)</li>
+              </ul>
+              <p><em>Showing 5 of 16 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>5</td>
+          <td>Subsection 22.5</td>
+          <td>45</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-22-5')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-22-5" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section22_5[0].#area[0].#field[3]</strong> - Involve firearms or explosives?</li><li><strong>form1[0].Section22_5[0].#area[0].#field[4]</strong> - Involve alcohol or drugs?</li><li><strong>form1[0].Section22_5[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section22_5[0].#area[1].RadioButtonList[1]</strong> - RadioButtonList</li><li><strong>form1[0].Section22_5[0].Table4[0].Row1[0].Cell2[0]</strong> - Charge. Row 1</li>
+              </ul>
+              <p><em>Showing 5 of 45 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>6</td>
+          <td>Subsection 22.6</td>
+          <td>44</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-22-6')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-22-6" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section22_6[0].#area[0].#field[3]</strong> - Involve firearms or explosives?</li><li><strong>form1[0].Section22_6[0].#area[0].#field[4]</strong> - Involve alcohol or drugs?</li><li><strong>form1[0].Section22_6[0].#area[1].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section22_6[0].Table4[0].Row1[0].Cell2[0]</strong> - Charge. Row 1</li><li><strong>form1[0].Section22_6[0].Table4[0].Row1[0].Cell3[0]</strong> - Outcome. Row 1</li>
+              </ul>
+              <p><em>Showing 5 of 44 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-label">
+          <td>22.1</td>
+          <td>Arrests/Charges</td>
+          <td>6</td>
+          <td>label_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-22-22.1')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-22-22.1" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section22_1[0].From_Datefield_Name_2[0]</strong> - Complete the following if you responded 'YES' to one of the following:	- In the last seven (7) years have you been issued a summons, citation, or ticket to appear in court in a criminal proceeding against you?	  (Do not check if all the citations involved traffic infractions where the fine was less than $300 and did not include alcohol or drugs)	- In the last seven (7) years have you been arrested by any police officer, sheriff, marshal or any other type of law enforcement official?	- In the last seven (7) years have you been charged with, convicted of, or sentenced for a crime in any court? (Include all qualifying charges, 	  convictions or sentences in any Federal, state, local, military, or non-U.S. court, even if previously listed on this form).	- In the last seven (7) years have you been or are you currently on probation or parole?	- Are you currently on trial or awaiting a trial on criminal charges? Entry #1. Provide the date of offense. (Month/Year)</li><li><strong>form1[0].Section22_1[0].Table4[0].Row1[0].Cell1[0]</strong> - Provide all the charges brought against you for this offense, and the outcome of each charged offense (such as found guilty, found not-guilty, charge dropped or "nolle pros," etc). If you were found guilty of or pleaded guilty to a lesser offense, list separately both the original charge and the lesser offense. Felony/misdemeanor. Row 1</li><li><strong>form1[0].Section22_3[0].From_Datefield_Name_2[0]</strong> - Complete the following if you responded 'Yes' to one of the following:	- In the last seven (7) years have you been issued a summons, citation, or ticket to appear in court in a criminal proceeding against you?	  (Do not check if all the citations involved traffic infractions where the fine was less than $300 and did not include alcohol or drugs)	- In the last seven (7) years have you been arrested by any police officer, sheriff, marshal or any other type of law enforcement official?	- In the last seven (7) years have you been charged with, convicted of, or sentenced for a crime in any court? (Include all qualifying charges, 	  convictions or sentences in any Federal, state, local, military, or non-U.S. court, even if previously listed on this form).	- In the last seven (7) years have you been or are you currently on probation or parole?	- Are you currently on trial or awaiting a trial on criminal charges? Entry #2. Provide the date of offense. (Month/Year)</li><li><strong>form1[0].Section22_3[0].Table4[0].Row1[0].Cell1[0]</strong> - Provide all the charges brought against you for this offense, and the outcome of each charged offense (such as found guilty, found not-guilty, charge dropped or "nolle pros," etc). If you were found guilty of or pleaded guilty to a lesser offense, list separately both the original charge and the lesser offense. Felony/misdemeanor. Row 1</li><li><strong>form1[0].Section22_5[0].Table4[0].Row1[0].Cell1[0]</strong> - Provide all the charges brought against you for this offense, and the outcome of each charged offense (such as found guilty, found not-guilty, charge dropped or "nolle pros," etc). If you were found guilty of or pleaded guilty to a lesser offense, list separately both the original charge and the lesser offense. Felony/misdemeanor. Row 1</li>
+              </ul>
+              <p><em>Showing 5 of 6 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-label">
+          <td>22.2</td>
+          <td>Convictions</td>
+          <td>20</td>
+          <td>label_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-22-22.2')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-22-22.2" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section22_1[0].Table4[0].Row2[0].Cell1[0]</strong> - Felony/misdemeanor. Row 2</li><li><strong>form1[0].Section22_1[0].Table4[0].Row3[0].Cell1[0]</strong> - Felony/misdemeanor. Row 3</li><li><strong>form1[0].Section22_1[0].Table4[0].Row4[0].Cell1[0]</strong> -  Felony/misdemeanor. Row 4</li><li><strong>form1[0].Section22_2[0].#field[5]</strong> - If the conviction resulted in imprisonment, provide the dates that you actually were incarcerated. Not applicable</li><li><strong>form1[0].Section22_2[0].#field[14]</strong> - If conviction resulted in probation or parole, provide the dates of probation or parole. Not Applicable</li>
+              </ul>
+              <p><em>Showing 5 of 20 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-label">
+          <td>22.3</td>
+          <td>Domestic Violence</td>
+          <td>8</td>
+          <td>label_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-22-22.3')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-22-22.3" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section22_1[0].#field[23]</strong> - Domestic violence or a crime of violence (such as battery or assault) against your child, dependent, cohabitant, spouse or legally recognized civil union/domestic partner, former spouse or legally recognized civil union/domestic partner, or someone with whom you share a child in common?</li><li><strong>form1[0].Section22_3[0].#field[23]</strong> - Check all that apply. Domestic violence or a crime of violence (such as battery or assault) against your child, dependent, cohabitant, spouse, former spouse, or someone with whom you share a child in common?</li><li><strong>form1[0].Section22_5[0].#area[0].#field[2]</strong> - Check all that apply.  Domestic violence or a crime of violence (such as battery or assault) against your child, dependent, cohabitant, spouse or legally recognized civil union/domestic partner, former spouse or legally recognized civil union/domestic partner, or someone with whom you share a child in common?</li><li><strong>form1[0].Section22_6[0].#area[0].#field[2]</strong> - Check all that apply.  Domestic violence or a crime of violence (such as battery or assault) against your child, dependent, cohabitant, spouse or legally recognized civil union/domestic partner, former spouse or legally recognized civil union/domestic partner, or someone with whom you share a child in common?</li><li><strong>form1[0].Section22_3_1[0].From_Datefield_Name_2[1]</strong> - Complete the following if you responded 'Yes' to currently having a domestic violence protective order or restraining order issued against you? Entry #1. Provide explanation.</li>
+              </ul>
+              <p><em>Showing 5 of 8 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 23: Illegal Use of Drugs and Drug Activity</h3>
+      <p>Field count: <strong>191</strong></p>
+      <p>Fields categorized into subsections: <strong>191</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>3</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>1</td>
+          <td>Subsection 23.1</td>
+          <td>23</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-23-1')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-23-1" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section23_1[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section23_1[0].RadioButtonList[1]</strong> - RadioButtonList</li><li><strong>form1[0].Section23_1[0].#area[0].TextField11[0]</strong> - (Provide explanation)</li><li><strong>form1[0].Section23_1[0].From_Datefield_Name_2[0]</strong> - Provide an estimate of the month and year of first use. (Month/Year)</li><li><strong>form1[0].Section23_1[0].#field[4]</strong> - Estimate</li>
+              </ul>
+              <p><em>Showing 5 of 23 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>2</td>
+          <td>Subsection 23.2</td>
+          <td>25</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-23-2')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-23-2" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section23_2[0].TextField11[0]</strong> - (Provide explanation)</li><li><strong>form1[0].Section23_2[0].TextField11[1]</strong> - Provide the nature and frequency of activity.</li><li><strong>form1[0].Section23_2[0].From_Datefield_Name_2[0]</strong> - Provide an estimate of the month and year of first involvement. (Month/Year)</li><li><strong>form1[0].Section23_2[0].#field[5]</strong> - Estimate</li><li><strong>form1[0].Section23_2[0].From_Datefield_Name_2[1]</strong> - Provide an estimate of the month and year of most recent involvement. (Month/Year)</li>
+              </ul>
+              <p><em>Showing 5 of 25 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-entry">
+          <td>entry0</td>
+          <td>Entry 0</td>
+          <td>143</td>
+          <td>entry_pattern</td>
+          <td class="confidence-low">0.60</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-23-entry0')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-23-entry0" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section_23_3[0].#field[2]</strong> - Present</li><li><strong>form1[0].Section_23_3[0].#field[3]</strong> - Present</li><li><strong>form1[0].Section_23_3[0].From_Datefield_Name_2[0]</strong> - Provide the dates of involvement/use. From Date (Month/Year)</li><li><strong>form1[0].Section_23_3[0].#field[5]</strong> - Estimate</li><li><strong>form1[0].Section_23_3[0].From_Datefield_Name_2[1]</strong> - To Date (Month/Year)</li>
+              </ul>
+              <p><em>Showing 5 of 143 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 24: Use of Alcohol</h3>
+      <p>Field count: <strong>160</strong></p>
+      <p>Fields categorized into subsections: <strong>160</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>4</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>2</td>
+          <td>Subsection 24.2</td>
+          <td>45</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-24-2')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-24-2" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section24_2[0].#area[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section24_2[0].#field[2]</strong> - International or D N S phone number</li><li><strong>form1[0].Section24_2[0].#field[3]</strong> - Day</li><li><strong>form1[0].Section24_2[0].#field[4]</strong> - Night</li><li><strong>form1[0].Section24_2[0].RadioButtonList[1]</strong> - RadioButtonList</li>
+              </ul>
+              <p><em>Showing 5 of 45 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>3</td>
+          <td>Subsection 24.3</td>
+          <td>37</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-24-3')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-24-3" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section24_3[0].#area[0].TextField11[0]</strong> - Provide the full address of the counseling/treatment provider. (Provide City and Country if outside the United States; otherwise, provide City, State and Zip Code). Street </li><li><strong>form1[0].Section24_3[0].#area[0].TextField11[1]</strong> - City</li><li><strong>form1[0].Section24_3[0].#area[0].School6_State[0]</strong> - State</li><li><strong>form1[0].Section24_3[0].#area[0].DropDownList13[0]</strong> - Country</li><li><strong>form1[0].Section24_3[0].#area[0].TextField11[2]</strong> - Zip Code</li>
+              </ul>
+              <p><em>Showing 5 of 37 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>4</td>
+          <td>Subsection 24.4</td>
+          <td>41</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-24-4')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-24-4" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section24_4[0].#area[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section24_4[0].TextField11[0]</strong> - Explanation</li><li><strong>form1[0].Section24_4[0].#area[1].RadioButtonList[1]</strong> - RadioButtonList</li><li><strong>form1[0].Section24_4[0].TextField11[1]</strong> - Explanation</li><li><strong>form1[0].Section24_4[0].#area[2].TextField11[2]</strong> - Provide the full address of the counseling/treatment provider. (Provide City and Country if outside the United States; otherwise, provide City, State and Zip Code). Street </li>
+              </ul>
+              <p><em>Showing 5 of 41 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-entry">
+          <td>entry0</td>
+          <td>Entry 0</td>
+          <td>37</td>
+          <td>entry_pattern</td>
+          <td class="confidence-low">0.60</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-24-entry0')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-24-entry0" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section24[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section24[0].From_Datefield_Name_2[0]</strong> - Complete the following if you responded 'Yes' to your alcohol use having had a negative impact on your work performance, your professional or personal relationships, your finances, or resulted in intervention by law enforcement/public safety personnel. Entry #1. Provide the month/year when this negative impact occurred. From Date (Month/Year) </li><li><strong>form1[0].Section24[0].#field[3]</strong> - Estimate</li><li><strong>form1[0].Section24[0].TextField11[0]</strong> - Provide circumstances.</li><li><strong>form1[0].Section24[0].TextField11[1]</strong> - Provide negative impact.</li>
+              </ul>
+              <p><em>Showing 5 of 37 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 25: Investigations and Clearance</h3>
+      <p>Field count: <strong>79</strong></p>
+      <p>Fields categorized into subsections: <strong>79</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>2</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>2</td>
+          <td>Subsection 25.2</td>
+          <td>18</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-25-2')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-25-2" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section25_2[0].From_Datefield_Name_2[0]</strong> - Entry #2. Provide the date security clearance eligibility/access authorization was denied, suspended or revoked. (Month/Year)</li><li><strong>form1[0].Section25_2[0].#field[3]</strong> - Estimate</li><li><strong>form1[0].Section25_2[0].From_Datefield_Name_2[1]</strong> - Provide the name of the agency that took the action.</li><li><strong>form1[0].Section25_2[0].From_Datefield_Name_2[2]</strong> - Provide an explanation of the circumstances of the denial,suspension or revocation action.</li><li><strong>form1[0].Section25_2[0].From_Datefield_Name_2[3]</strong> - Complete the following if you responded 'Yes' to having EVER been debarred from government employment. Entry #1. Provide the name of the government agency taking debarment action. </li>
+              </ul>
+              <p><em>Showing 5 of 18 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-entry">
+          <td>entry0</td>
+          <td>Entry 0</td>
+          <td>61</td>
+          <td>entry_pattern</td>
+          <td class="confidence-low">0.60</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-25-entry0')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-25-entry0" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section25[0].TextField11[0]</strong> - If foreign government selected, provide name of government.</li><li><strong>form1[0].Section25[0].From_Datefield_Name_2[0]</strong> - Date the investigation was completed (Month/Year)</li><li><strong>form1[0].Section25[0].#field[4]</strong> - Estimate</li><li><strong>form1[0].Section25[0].#field[5]</strong> - Date the investigation was completed (Month/Year). I don't know</li><li><strong>form1[0].Section25[0].From_Datefield_Name_2[1]</strong> - Provide the date clearance eligibility/access was granted. (Month/Year)</li>
+              </ul>
+              <p><em>Showing 5 of 61 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 26: Financial Record</h3>
+      <p>Field count: <strong>237</strong></p>
+      <p>Fields categorized into subsections: <strong>237</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>7</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>2</td>
+          <td>Subsection 26.2</td>
+          <td>42</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-26-2')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-26-2" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section26_2[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section26_2[0].p3-t68[0]</strong> - Provide a description of your financial problems due to gambling.</li><li><strong>form1[0].Section26_2[0].NumericField2[0]</strong> - Provide an estimate of the amount (in U.S. dollars) of gambling losses incurred.</li><li><strong>form1[0].Section26_2[0].#field[4]</strong> - Present</li><li><strong>form1[0].Section26_2[0].From_Datefield_Name_2[0]</strong> - Complete the following if you responded 'Yes' to having EVER experienced financial problems due to gambling. Entry #1. Provide the date range of your financial problems due to gambling. From Date (Month/Year)</li>
+              </ul>
+              <p><em>Showing 5 of 42 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>3</td>
+          <td>Subsection 26.3</td>
+          <td>46</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-26-3')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-26-3" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section26_3[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section26_3[0].TextField11[0]</strong> - Provide a description of any action(s) you have taken to rectify this situation. If you have not taken any action(s) provide explanation.</li><li><strong>form1[0].Section26_3[0].DateTimeField1[0]</strong> - Provide the date of your counseling, warning, or disciplinary action. (Month/Year)</li><li><strong>form1[0].Section26_3[0].#field[4]</strong> - Estimate</li><li><strong>form1[0].Section26_3[0].TextField11[1]</strong> - Complete the following if you responded 'Yes' to having been counseled, warned, or disciplined for violating the terms of agreement for a travel or credit card provided by your employer. Entry #1. Provide the name of the agency or company. </li>
+              </ul>
+              <p><em>Showing 5 of 46 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>6</td>
+          <td>Subsection 26.6</td>
+          <td>25</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-26-6')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-26-6" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section26_6[0].#area[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section26_6[0].TextField11[0]</strong> - Provide a description of any action(s) you have taken to satisfy this debt (such as withholdings, frequency and amount of payments, etc.). If you have not taken any action(s), provide explanation.</li><li><strong>form1[0].Section26_6[0].TextField11[1]</strong> - Provide the associated loan/account number(s) involved.</li><li><strong>form1[0].Section26_6[0].#field[4]</strong> - Estimate.</li><li><strong>form1[0].Section26_6[0].NumericField2[0]</strong> - Provide the amount (in U.S. dollars) of the financial issue.</li>
+              </ul>
+              <p><em>Showing 5 of 25 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>7</td>
+          <td>Subsection 26.7</td>
+          <td>24</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-26-7')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-26-7" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section26_7[0].TextField11[0]</strong> - Provide a description of any action(s) you have taken to satisfy this debt (such as withholdings, frequency and amount of payments, etc.). If you have not taken any action(s), provide explanation.</li><li><strong>form1[0].Section26_7[0].TextField11[1]</strong> - Provide the associated loan/account number(s) involved.</li><li><strong>form1[0].Section26_7[0].#field[4]</strong> - Estimate.</li><li><strong>form1[0].Section26_7[0].NumericField2[0]</strong> - Provide the amount (in U.S. dollars) of the financial issue.</li><li><strong>form1[0].Section26_7[0].TextField11[2]</strong> - Identify/describe the type of property involved (if any).</li>
+              </ul>
+              <p><em>Showing 5 of 24 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>8</td>
+          <td>Subsection 26.8</td>
+          <td>23</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-26-8')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-26-8" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section26_8[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section26_8[0].TextField11[0]</strong> - Provide a description of any action(s) you have taken to satisfy this debt (such as withholdings, frequency and amount of payments, etc.). If you have not taken any action(s), provide explanation.</li><li><strong>form1[0].Section26_8[0].TextField11[1]</strong> - Provide the associated loan/account number(s) involved.</li><li><strong>form1[0].Section26_8[0].#field[4]</strong> - Estimate.</li><li><strong>form1[0].Section26_8[0].NumericField2[0]</strong> - Provide the amount (in U.S. dollars) of the financial issue.</li>
+              </ul>
+              <p><em>Showing 5 of 23 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>9</td>
+          <td>Subsection 26.9</td>
+          <td>22</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-26-9')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-26-9" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section26_9[0].TextField11[0]</strong> - Provide a description of any action(s) you have taken to satisfy this debt (such as withholdings, frequency and amount of payments, etc.). If you have not taken any action(s), provide explanation.</li><li><strong>form1[0].Section26_9[0].TextField11[1]</strong> - Provide the associated loan/account number(s) involved.</li><li><strong>form1[0].Section26_9[0].#field[4]</strong> - Estimate.</li><li><strong>form1[0].Section26_9[0].NumericField2[0]</strong> - Provide the amount (in U.S. dollars) of the financial issue.</li><li><strong>form1[0].Section26_9[0].RadioButtonList[0]</strong> - RadioButtonList</li>
+              </ul>
+              <p><em>Showing 5 of 22 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-entry">
+          <td>entry0</td>
+          <td>Entry 0</td>
+          <td>55</td>
+          <td>entry_pattern</td>
+          <td class="confidence-low">0.60</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-26-entry0')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-26-entry0" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section26[0].p3-t68[0]</strong> - Provide the bankruptcy court docket/account number.</li><li><strong>form1[0].Section26[0].#area[0].From_Datefield_Name_2[0]</strong> - Provide the date bankruptcy was filed. (Month/Year)</li><li><strong>form1[0].Section26[0].#area[0].#field[3]</strong> - Estimate</li><li><strong>form1[0].Section26[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section26[0].RadioButtonList[1]</strong> - RadioButtonList</li>
+              </ul>
+              <p><em>Showing 5 of 55 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 27: Use of Information Technology Systems</h3>
+      <p>Field count: <strong>57</strong></p>
+      <p>Fields categorized into subsections: <strong>57</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>2</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>2</td>
+          <td>Subsection 27.2</td>
+          <td>19</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-27-2')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-27-2" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section27_2[0].#area[0].TextField11[0]</strong> - Provide the location where the incident took place. (Provide City and Country if outside the United States; otherwise, provide City, State and Zip Code). Street</li><li><strong>form1[0].Section27_2[0].#area[0].TextField11[1]</strong> - City</li><li><strong>form1[0].Section27_2[0].#area[0].School6_State[0]</strong> - State</li><li><strong>form1[0].Section27_2[0].#area[0].DropDownList9[0]</strong> - Country</li><li><strong>form1[0].Section27_2[0].#area[0].TextField11[2]</strong> - Zip Code</li>
+              </ul>
+              <p><em>Showing 5 of 19 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-entry">
+          <td>entry0</td>
+          <td>Entry 0</td>
+          <td>38</td>
+          <td>entry_pattern</td>
+          <td class="confidence-low">0.60</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-27-entry0')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-27-entry0" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section27[0].#area[0].TextField11[0]</strong> - Provide the location where the incident took place. (Provide City and Country if outside the United States; otherwise, provide City, State and Zip Code). Street</li><li><strong>form1[0].Section27[0].#area[0].TextField11[1]</strong> - City</li><li><strong>form1[0].Section27[0].#area[0].School6_State[0]</strong> - State</li><li><strong>form1[0].Section27[0].#area[0].DropDownList12[0]</strong> - Country</li><li><strong>form1[0].Section27[0].#area[0].TextField11[2]</strong> - Zip Code</li>
+              </ul>
+              <p><em>Showing 5 of 38 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 28: Involvement in Non-Criminal Court Actions</h3>
+      <p>Field count: <strong>23</strong></p>
+      <p>Fields categorized into subsections: <strong>23</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>1</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-entry">
+          <td>entry0</td>
+          <td>Entry 0</td>
+          <td>23</td>
+          <td>entry_pattern</td>
+          <td class="confidence-low">0.60</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-28-entry0')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-28-entry0" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section28[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section28[0].TextField11[0]</strong> - Provide details of the nature of the action.</li><li><strong>form1[0].Section28[0].From_Datefield_Name_2[0]</strong> - Complete the following if you responded 'Yes' to having been a party to any public record civil court action(s) not listed elsewhere on this form in the last ten (10) years. Entry #1. Provide the date of the civil action (Month/Year)</li><li><strong>form1[0].Section28[0].TextField11[1]</strong> - Provide the court name.</li><li><strong>form1[0].Section28[0].TextField11[2]</strong> - Provide a description of the results of the action.</li>
+              </ul>
+              <p><em>Showing 5 of 23 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section highlight">
+      <h3>Section 29: Association Record</h3>
+      <p>Field count: <strong>141</strong></p>
+      <p>Fields categorized into subsections: <strong>141</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>5</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>2</td>
+          <td>Subsection 29.2</td>
+          <td>26</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-29-2')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-29-2" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section29_2[0].TextField11[0]</strong> - Complete the following if you responded 'Yes' to EVER having knowingly engaged in any acts of terrorism. Entry #1. Describe the nature and reasons for the activity.</li><li><strong>form1[0].Section29_2[0].TextField11[1]</strong> - Complete the following if you responded 'Yes' to having EVER advocated any acts of terrorism or activities designed to overthrow the U.S. Government by force. Entry #1. Provide the reason(s) for advocating acts of terrorism. </li><li><strong>form1[0].Section29_2[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section29_2[0].#field[4]</strong> - Present</li><li><strong>form1[0].Section29_2[0].From_Datefield_Name_2[0]</strong> - Provide the dates for any such activities. From Date (Month/Year)</li>
+              </ul>
+              <p><em>Showing 5 of 26 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>3</td>
+          <td>Subsection 29.3</td>
+          <td>33</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-29-3')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-29-3" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section29_3[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section29_3[0].TextField11[0]</strong> - Provide all positions held in the organization, if any.</li><li><strong>form1[0].Section29_3[0].TextField11[1]</strong> - Complete the following if you responded 'Yes' to having EVER been a member of an organization dedicated to the use of violence or force to overthrow the United States Government, and which engaged in activities to that end with an awareness of the organization's dedication to that end or with the specific intent to further such activities. Entry #1. Provide the full name of the organization</li><li><strong>form1[0].Section29_3[0].TextField11[2]</strong> - Provide all contributions made to the organization, if any.</li><li><strong>form1[0].Section29_3[0].TextField11[3]</strong> - Provide a description of the nature of and reasons for your involvement with the organization.</li>
+              </ul>
+              <p><em>Showing 5 of 33 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>4</td>
+          <td>Subsection 29.4</td>
+          <td>33</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-29-4')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-29-4" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section29_4[0].TextField11[0]</strong> - Provide all positions held in the organization, if any.</li><li><strong>form1[0].Section29_4[0].TextField11[1]</strong> - Complete the following if you responded 'Yes' to being or EVER having been a member of an organization that advocates or practices commission of acts of force or violence to discourage others from exercising their rights under the U.S. Constitution or that of any state of the U.S. with the specific intent to further such action. Entry #1. Provide the full name of the organization. </li><li><strong>form1[0].Section29_4[0].TextField11[2]</strong> - Provide all contributions (in U.S. dollars) made to the organization, if any.</li><li><strong>form1[0].Section29_4[0].TextField11[3]</strong> - Provide a description of the nature of and reasons for your involvement with the organization.</li><li><strong>form1[0].Section29_4[0].#field[6]</strong> - Provide all positions held in the organization, if any. No positions held</li>
+              </ul>
+              <p><em>Showing 5 of 33 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>5</td>
+          <td>Subsection 29.5</td>
+          <td>16</td>
+          <td>numbered_pattern</td>
+          <td class="confidence-high">0.80</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-29-5')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-29-5" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section29_5[0].TextField11[0]</strong> - Complete the following if you responded 'Yes' to having EVER knowingly engaged in activities designed to overthrow the U.S. Government by force. Entry #1. Describe the nature and reasons for the activity. </li><li><strong>form1[0].Section29_5[0].TextField11[1]</strong> - Complete the following if you responded 'Yes' to having EVER associated with anyone involved in activities to further terrorism. Entry #1. Provide explanation. </li><li><strong>form1[0].Section29_5[0].TextField11[2]</strong> - Entry #2. Provide explanation. </li><li><strong>form1[0].Section29_5[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section29_5[0].#field[5]</strong> - Present</li>
+              </ul>
+              <p><em>Showing 5 of 16 fields</em></p>
+            </div>
+          </td>
+        </tr>
+        <tr class="pattern-entry">
+          <td>entry0</td>
+          <td>Entry 0</td>
+          <td>33</td>
+          <td>entry_pattern</td>
+          <td class="confidence-low">0.60</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-29-entry0')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-29-entry0" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].Section29[0].RadioButtonList[0]</strong> - RadioButtonList</li><li><strong>form1[0].Section29[0].TextField11[0]</strong> - Provide all positions held in the organization, if any.</li><li><strong>form1[0].Section29[0].TextField11[1]</strong> - Complete the following if you responded 'YES' to being or ever having been a member of an organization dedicated to terrorism, either with an awareness of the organization's dedication to that end, or with the specific intent to further such activities. Entry #1. Provide the full name of the organization. </li><li><strong>form1[0].Section29[0].TextField11[2]</strong> - Provide all contributions made to the organization, if any.</li><li><strong>form1[0].Section29[0].TextField11[3]</strong> - Provide a description of the nature of and reasons for your involvement with the organization.</li>
+              </ul>
+              <p><em>Showing 5 of 33 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div class="section">
+      <h3>Section 30: Continuation Space</h3>
+      <p>Field count: <strong>25</strong></p>
+      <p>Fields categorized into subsections: <strong>25</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>1</strong></p>
+      
+      <h4>Subsections:</h4>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+          <th>Details</th>
+        </tr>
+        <tr class="pattern-entry">
+          <td>entry0</td>
+          <td>Entry 0</td>
+          <td>25</td>
+          <td>entry_pattern</td>
+          <td class="confidence-low">0.60</td>
+          <td><button class="toggle-button" onclick="toggleDetails('subsection-30-entry0')">Show Fields</button></td>
+        </tr>
+        <tr>
+          <td colspan="6">
+            <div id="subsection-30-entry0" class="subsection-details">
+              <h5>Example Fields:</h5>
+              <ul><li><strong>form1[0].continuation1[0].p15-t28[0]</strong> - Use the space below to continue answers or a blank sheet(s) of paper. Include your name and SSN at the top of each blank sheet(s). Before each answer, identify the number of the item and attempt to maintain sequential order and question format.</li><li><strong>form1[0].continuation1[0].p17-t2[0]</strong> - Date signed (m m/d d/y y y y)</li><li><strong>form1[0].continuation2[0].p17-t1[0]</strong> - Full Name (Type or Print legibly)</li><li><strong>form1[0].continuation2[0].p17-t2[0]</strong> - Date signed (m m/d d/y y y y)</li><li><strong>form1[0].continuation2[0].p17-t4[0]</strong> - Date of Birth  (m m/d d/y y y y)</li>
+              </ul>
+              <p><em>Showing 5 of 25 fields</em></p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+  
+  <div id="section29" class="tabcontent">
+    <div class="section highlight">
+      <h2>Section 29: Association Record - Detailed Analysis</h2>
+      <p>Field count: <strong>141</strong></p>
+      <p>Fields categorized into subsections: <strong>141</strong> (100.00%)</p>
+      <p>Subsections identified: <strong>5</strong></p>
+      
+      <h3>Subsection Distribution:</h3>
+      <table>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Field Count</th>
+          <th>Percentage</th>
+          <th>Pattern Type</th>
+          <th>Confidence</th>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>2</td>
+          <td>Subsection 29.2</td>
+          <td>26</td>
+          <td>18.44%</td>
+          <td>numbered_pattern</td>
+          <td>0.80</td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>3</td>
+          <td>Subsection 29.3</td>
+          <td>33</td>
+          <td>23.40%</td>
+          <td>numbered_pattern</td>
+          <td>0.80</td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>4</td>
+          <td>Subsection 29.4</td>
+          <td>33</td>
+          <td>23.40%</td>
+          <td>numbered_pattern</td>
+          <td>0.80</td>
+        </tr>
+        <tr class="pattern-numbered">
+          <td>5</td>
+          <td>Subsection 29.5</td>
+          <td>16</td>
+          <td>11.35%</td>
+          <td>numbered_pattern</td>
+          <td>0.80</td>
+        </tr>
+        <tr class="pattern-entry">
+          <td>entry0</td>
+          <td>Entry 0</td>
+          <td>33</td>
+          <td>23.40%</td>
+          <td>entry_pattern</td>
+          <td>0.60</td>
+        </tr>
+      </table>
+      
+      <h3>Fields by Subsection:</h3>
+      <div class="section">
+        <h4>Subsection 2: Subsection 29.2</h4>
+        <p>Pattern type: <strong>numbered_pattern</strong></p>
+        <p>Confidence: <strong>0.80</strong></p>
+        <p>Field count: <strong>26</strong></p>
+        
+        <h5>Fields:</h5>
+        <table>
+          <tr>
+            <th>#</th>
+            <th>Field Name</th>
+            <th>Label</th>
+            <th>Type</th>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>form1[0].Section29_2[0].TextField11[0]</td>
+            <td>Complete the following if you responded 'Yes' to EVER having knowingly engaged in any acts of terrorism. Entry #1. Describe the nature and reasons for the activity.</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>form1[0].Section29_2[0].TextField11[1]</td>
+            <td>Complete the following if you responded 'Yes' to having EVER advocated any acts of terrorism or activities designed to overthrow the U.S. Government by force. Entry #1. Provide the reason(s) for advocating acts of terrorism. </td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>form1[0].Section29_2[0].RadioButtonList[0]</td>
+            <td>RadioButtonList</td>
+            <td>PDFRadioGroup</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>form1[0].Section29_2[0].#field[4]</td>
+            <td>Present</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>form1[0].Section29_2[0].From_Datefield_Name_2[0]</td>
+            <td>Provide the dates for any such activities. From Date (Month/Year)</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td>form1[0].Section29_2[0].#field[6]</td>
+            <td>Estimate</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td>form1[0].Section29_2[0].From_Datefield_Name_2[1]</td>
+            <td>To Date (Month/Year)</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td>form1[0].Section29_2[0].#field[8]</td>
+            <td>Estimate</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>9</td>
+            <td>form1[0].Section29_2[0].RadioButtonList[1]</td>
+            <td>RadioButtonList</td>
+            <td>PDFRadioGroup</td>
+          </tr>
+          <tr>
+            <td>10</td>
+            <td>form1[0].Section29_2[0].#field[9]</td>
+            <td>Present</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>11</td>
+            <td>form1[0].Section29_2[0].From_Datefield_Name_2[2]</td>
+            <td>Provide the dates of advocating acts of terrorism. From Date (Month/Year)</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>12</td>
+            <td>form1[0].Section29_2[0].#field[11]</td>
+            <td>Estimate</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>13</td>
+            <td>form1[0].Section29_2[0].From_Datefield_Name_2[3]</td>
+            <td>To Date (Month/Year)</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>14</td>
+            <td>form1[0].Section29_2[0].#field[13]</td>
+            <td>Estimate</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>15</td>
+            <td>form1[0].Section29_2[0].TextField11[2]</td>
+            <td>Entry #2. Provide the reason(s) for advocating acts of terrorism. </td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>16</td>
+            <td>form1[0].Section29_2[0].#field[15]</td>
+            <td>Present</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>17</td>
+            <td>form1[0].Section29_2[0].From_Datefield_Name_2[4]</td>
+            <td>Provide the dates of advocating acts of terrorism. From Date (Month/Year)</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>18</td>
+            <td>form1[0].Section29_2[0].#field[17]</td>
+            <td>Estimate</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>19</td>
+            <td>form1[0].Section29_2[0].From_Datefield_Name_2[5]</td>
+            <td>To Date (Month/Year)</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>20</td>
+            <td>form1[0].Section29_2[0].#field[19]</td>
+            <td>Estimate</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>21</td>
+            <td>form1[0].Section29_2[0].TextField11[3]</td>
+            <td>Entry #2. Describe the nature and reasons for the activity.</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>22</td>
+            <td>form1[0].Section29_2[0].#field[21]</td>
+            <td>Present</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>23</td>
+            <td>form1[0].Section29_2[0].From_Datefield_Name_2[6]</td>
+            <td>Provide the dates for any such activities. From Date (Month/Year)</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>24</td>
+            <td>form1[0].Section29_2[0].#field[23]</td>
+            <td>Estimate</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>25</td>
+            <td>form1[0].Section29_2[0].From_Datefield_Name_2[7]</td>
+            <td>To Date (Month/Year)</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>26</td>
+            <td>form1[0].Section29_2[0].#field[25]</td>
+            <td>Estimate</td>
+            <td>PDFCheckBox</td>
+          </tr>
+        </table>
+      </div>
+      <div class="section">
+        <h4>Subsection 3: Subsection 29.3</h4>
+        <p>Pattern type: <strong>numbered_pattern</strong></p>
+        <p>Confidence: <strong>0.80</strong></p>
+        <p>Field count: <strong>33</strong></p>
+        
+        <h5>Fields:</h5>
+        <table>
+          <tr>
+            <th>#</th>
+            <th>Field Name</th>
+            <th>Label</th>
+            <th>Type</th>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>form1[0].Section29_3[0].RadioButtonList[0]</td>
+            <td>RadioButtonList</td>
+            <td>PDFRadioGroup</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>form1[0].Section29_3[0].TextField11[0]</td>
+            <td>Provide all positions held in the organization, if any.</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>form1[0].Section29_3[0].TextField11[1]</td>
+            <td>Complete the following if you responded 'Yes' to having EVER been a member of an organization dedicated to the use of violence or force to overthrow the United States Government, and which engaged in activities to that end with an awareness of the organization's dedication to that end or with the specific intent to further such activities. Entry #1. Provide the full name of the organization</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>form1[0].Section29_3[0].TextField11[2]</td>
+            <td>Provide all contributions made to the organization, if any.</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>form1[0].Section29_3[0].TextField11[3]</td>
+            <td>Provide a description of the nature of and reasons for your involvement with the organization.</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td>form1[0].Section29_3[0].#field[6]</td>
+            <td>Provide all positions held in the organization, if any. No positions held</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td>form1[0].Section29_3[0].#field[7]</td>
+            <td>Provide all contributions made to the organization, if any. No contributions made</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td>form1[0].Section29_3[0].#area[1].TextField11[4]</td>
+            <td>Provide the address/location of the organization. (Provide City and Country if outside the United States; otherwise, provide City, State and Zip Code). Street</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>9</td>
+            <td>form1[0].Section29_3[0].#area[1].TextField11[5]</td>
+            <td>City</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>10</td>
+            <td>form1[0].Section29_3[0].#area[1].School6_State[0]</td>
+            <td>State</td>
+            <td>PDFDropdown</td>
+          </tr>
+          <tr>
+            <td>11</td>
+            <td>form1[0].Section29_3[0].#area[1].DropDownList4[0]</td>
+            <td>Country</td>
+            <td>PDFDropdown</td>
+          </tr>
+          <tr>
+            <td>12</td>
+            <td>form1[0].Section29_3[0].#area[1].TextField11[6]</td>
+            <td>Zip Code</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>13</td>
+            <td>form1[0].Section29_3[0].#field[13]</td>
+            <td>Present</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>14</td>
+            <td>form1[0].Section29_3[0].From_Datefield_Name_2[0]</td>
+            <td>Provide the dates of your involvement with the organization. From Date (Month/Year)</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>15</td>
+            <td>form1[0].Section29_3[0].#field[15]</td>
+            <td>Estimate</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>16</td>
+            <td>form1[0].Section29_3[0].From_Datefield_Name_2[1]</td>
+            <td>To Date (Month/Year)</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>17</td>
+            <td>form1[0].Section29_3[0].#field[17]</td>
+            <td>Estimate</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>18</td>
+            <td>form1[0].Section29_3[0].TextField11[7]</td>
+            <td>Provide all positions held in the organization, if any.</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>19</td>
+            <td>form1[0].Section29_3[0].TextField11[8]</td>
+            <td>Entry #2. Provide the full name of the organization</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>20</td>
+            <td>form1[0].Section29_3[0].TextField11[9]</td>
+            <td>Provide all contributions made to the organization, if any.</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>21</td>
+            <td>form1[0].Section29_3[0].TextField11[10]</td>
+            <td>Provide a description of the nature of and reasons for your involvement with the organization.</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>22</td>
+            <td>form1[0].Section29_3[0].#field[22]</td>
+            <td>Provide all positions held in the organization, if any. No positions held</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>23</td>
+            <td>form1[0].Section29_3[0].#field[23]</td>
+            <td>Provide all contributions made to the organization, if any. No contributions made</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>24</td>
+            <td>form1[0].Section29_3[0].#area[3].TextField11[11]</td>
+            <td>Provide the address/location of the organization. (Provide City and Country if outside the United States; otherwise, provide City, State and Zip Code). Street</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>25</td>
+            <td>form1[0].Section29_3[0].#area[3].TextField11[12]</td>
+            <td>City</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>26</td>
+            <td>form1[0].Section29_3[0].#area[3].School6_State[1]</td>
+            <td>State</td>
+            <td>PDFDropdown</td>
+          </tr>
+          <tr>
+            <td>27</td>
+            <td>form1[0].Section29_3[0].#area[3].DropDownList3[0]</td>
+            <td>Country</td>
+            <td>PDFDropdown</td>
+          </tr>
+          <tr>
+            <td>28</td>
+            <td>form1[0].Section29_3[0].#area[3].TextField11[13]</td>
+            <td>Zip Code</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>29</td>
+            <td>form1[0].Section29_3[0].#field[29]</td>
+            <td>Present</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>30</td>
+            <td>form1[0].Section29_3[0].From_Datefield_Name_2[2]</td>
+            <td>Provide the dates of your involvement with the organization. From Date (Month/Year)</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>31</td>
+            <td>form1[0].Section29_3[0].#field[31]</td>
+            <td>Estimate</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>32</td>
+            <td>form1[0].Section29_3[0].From_Datefield_Name_2[3]</td>
+            <td>To Date (Month/Year)</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>33</td>
+            <td>form1[0].Section29_3[0].#field[33]</td>
+            <td>Estimate</td>
+            <td>PDFCheckBox</td>
+          </tr>
+        </table>
+      </div>
+      <div class="section">
+        <h4>Subsection 4: Subsection 29.4</h4>
+        <p>Pattern type: <strong>numbered_pattern</strong></p>
+        <p>Confidence: <strong>0.80</strong></p>
+        <p>Field count: <strong>33</strong></p>
+        
+        <h5>Fields:</h5>
+        <table>
+          <tr>
+            <th>#</th>
+            <th>Field Name</th>
+            <th>Label</th>
+            <th>Type</th>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>form1[0].Section29_4[0].TextField11[0]</td>
+            <td>Provide all positions held in the organization, if any.</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>form1[0].Section29_4[0].TextField11[1]</td>
+            <td>Complete the following if you responded 'Yes' to being or EVER having been a member of an organization that advocates or practices commission of acts of force or violence to discourage others from exercising their rights under the U.S. Constitution or that of any state of the U.S. with the specific intent to further such action. Entry #1. Provide the full name of the organization. </td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>form1[0].Section29_4[0].TextField11[2]</td>
+            <td>Provide all contributions (in U.S. dollars) made to the organization, if any.</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>form1[0].Section29_4[0].TextField11[3]</td>
+            <td>Provide a description of the nature of and reasons for your involvement with the organization.</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>form1[0].Section29_4[0].#field[6]</td>
+            <td>Provide all positions held in the organization, if any. No positions held</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td>form1[0].Section29_4[0].#field[7]</td>
+            <td>Provide all contributions made to the organization, if any. No contributions made</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td>form1[0].Section29_4[0].#area[1].TextField11[4]</td>
+            <td>Provide the address/location of the organization. (Provide City and Country if outside the United States; otherwise, provide City, State and Zip Code). Street</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td>form1[0].Section29_4[0].#area[1].TextField11[5]</td>
+            <td>City</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>9</td>
+            <td>form1[0].Section29_4[0].#area[1].School6_State[0]</td>
+            <td>State</td>
+            <td>PDFDropdown</td>
+          </tr>
+          <tr>
+            <td>10</td>
+            <td>form1[0].Section29_4[0].#area[1].DropDownList2[0]</td>
+            <td>Country</td>
+            <td>PDFDropdown</td>
+          </tr>
+          <tr>
+            <td>11</td>
+            <td>form1[0].Section29_4[0].#area[1].TextField11[6]</td>
+            <td>Zip Code</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>12</td>
+            <td>form1[0].Section29_4[0].RadioButtonList[0]</td>
+            <td>RadioButtonList</td>
+            <td>PDFRadioGroup</td>
+          </tr>
+          <tr>
+            <td>13</td>
+            <td>form1[0].Section29_4[0].#field[13]</td>
+            <td>Present</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>14</td>
+            <td>form1[0].Section29_4[0].From_Datefield_Name_2[0]</td>
+            <td>Provide the dates of your involvement with the organization. From Date (Month/Year)</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>15</td>
+            <td>form1[0].Section29_4[0].#field[15]</td>
+            <td>Estimate</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>16</td>
+            <td>form1[0].Section29_4[0].From_Datefield_Name_2[1]</td>
+            <td>To Date (Month/Year)</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>17</td>
+            <td>form1[0].Section29_4[0].#field[17]</td>
+            <td>Estimate</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>18</td>
+            <td>form1[0].Section29_4[0].TextField11[7]</td>
+            <td>Provide all positions held in the organization, if any.</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>19</td>
+            <td>form1[0].Section29_4[0].TextField11[8]</td>
+            <td>Entry #2. Provide the full name of the organization. </td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>20</td>
+            <td>form1[0].Section29_4[0].TextField11[9]</td>
+            <td>Provide all contributions (in U.S. dollars) made to the organization, if any.</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>21</td>
+            <td>form1[0].Section29_4[0].TextField11[10]</td>
+            <td>Provide a description of the nature of and reasons for your involvement with the organization.</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>22</td>
+            <td>form1[0].Section29_4[0].#field[22]</td>
+            <td>Provide all positions held in the organization, if any. No positions held</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>23</td>
+            <td>form1[0].Section29_4[0].#field[23]</td>
+            <td>Provide all contributions made to the organization, if any. No contributions made</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>24</td>
+            <td>form1[0].Section29_4[0].#area[3].TextField11[11]</td>
+            <td>Provide the address/location of the organization. (Provide City and Country if outside the United States; otherwise, provide City, State and Zip Code). Street</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>25</td>
+            <td>form1[0].Section29_4[0].#area[3].TextField11[12]</td>
+            <td>City</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>26</td>
+            <td>form1[0].Section29_4[0].#area[3].School6_State[1]</td>
+            <td>State</td>
+            <td>PDFDropdown</td>
+          </tr>
+          <tr>
+            <td>27</td>
+            <td>form1[0].Section29_4[0].#area[3].DropDownList1[0]</td>
+            <td>Country</td>
+            <td>PDFDropdown</td>
+          </tr>
+          <tr>
+            <td>28</td>
+            <td>form1[0].Section29_4[0].#area[3].TextField11[13]</td>
+            <td>Zip Code</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>29</td>
+            <td>form1[0].Section29_4[0].#field[29]</td>
+            <td>Present</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>30</td>
+            <td>form1[0].Section29_4[0].From_Datefield_Name_2[2]</td>
+            <td>Provide the dates of your involvement with the organization. From Date (Month/Year)</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>31</td>
+            <td>form1[0].Section29_4[0].#field[31]</td>
+            <td>Estimate</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>32</td>
+            <td>form1[0].Section29_4[0].From_Datefield_Name_2[3]</td>
+            <td>To Date (Month/Year)</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>33</td>
+            <td>form1[0].Section29_4[0].#field[33]</td>
+            <td>Estimate</td>
+            <td>PDFCheckBox</td>
+          </tr>
+        </table>
+      </div>
+      <div class="section">
+        <h4>Subsection 5: Subsection 29.5</h4>
+        <p>Pattern type: <strong>numbered_pattern</strong></p>
+        <p>Confidence: <strong>0.80</strong></p>
+        <p>Field count: <strong>16</strong></p>
+        
+        <h5>Fields:</h5>
+        <table>
+          <tr>
+            <th>#</th>
+            <th>Field Name</th>
+            <th>Label</th>
+            <th>Type</th>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>form1[0].Section29_5[0].TextField11[0]</td>
+            <td>Complete the following if you responded 'Yes' to having EVER knowingly engaged in activities designed to overthrow the U.S. Government by force. Entry #1. Describe the nature and reasons for the activity. </td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>form1[0].Section29_5[0].TextField11[1]</td>
+            <td>Complete the following if you responded 'Yes' to having EVER associated with anyone involved in activities to further terrorism. Entry #1. Provide explanation. </td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>form1[0].Section29_5[0].TextField11[2]</td>
+            <td>Entry #2. Provide explanation. </td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>form1[0].Section29_5[0].RadioButtonList[0]</td>
+            <td>RadioButtonList</td>
+            <td>PDFRadioGroup</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>form1[0].Section29_5[0].#field[5]</td>
+            <td>Present</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td>form1[0].Section29_5[0].From_Datefield_Name_2[0]</td>
+            <td>Provide the dates of such activities. From Date (Month/Year)</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td>form1[0].Section29_5[0].#field[7]</td>
+            <td>Estimate</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td>form1[0].Section29_5[0].From_Datefield_Name_2[1]</td>
+            <td>To Date (Month/Year)</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>9</td>
+            <td>form1[0].Section29_5[0].#field[9]</td>
+            <td>Estimate</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>10</td>
+            <td>form1[0].Section29_5[0].TextField11[3]</td>
+            <td>Entry #2. Describe the nature and reasons for the activity. </td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>11</td>
+            <td>form1[0].Section29_5[0].#field[11]</td>
+            <td>Present</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>12</td>
+            <td>form1[0].Section29_5[0].From_Datefield_Name_2[2]</td>
+            <td>Provide the dates of such activities. From Date (Month/Year)</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>13</td>
+            <td>form1[0].Section29_5[0].#field[13]</td>
+            <td>Estimate</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>14</td>
+            <td>form1[0].Section29_5[0].From_Datefield_Name_2[3]</td>
+            <td>To Date (Month/Year)</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>15</td>
+            <td>form1[0].Section29_5[0].#field[15]</td>
+            <td>Estimate</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>16</td>
+            <td>form1[0].Section29_5[0].RadioButtonList[1]</td>
+            <td>RadioButtonList</td>
+            <td>PDFRadioGroup</td>
+          </tr>
+        </table>
+      </div>
+      <div class="section">
+        <h4>Subsection entry0: Entry 0</h4>
+        <p>Pattern type: <strong>entry_pattern</strong></p>
+        <p>Confidence: <strong>0.60</strong></p>
+        <p>Field count: <strong>33</strong></p>
+        
+        <h5>Fields:</h5>
+        <table>
+          <tr>
+            <th>#</th>
+            <th>Field Name</th>
+            <th>Label</th>
+            <th>Type</th>
+          </tr>
+          <tr>
+            <td>1</td>
+            <td>form1[0].Section29[0].RadioButtonList[0]</td>
+            <td>RadioButtonList</td>
+            <td>PDFRadioGroup</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td>form1[0].Section29[0].TextField11[0]</td>
+            <td>Provide all positions held in the organization, if any.</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td>form1[0].Section29[0].TextField11[1]</td>
+            <td>Complete the following if you responded 'YES' to being or ever having been a member of an organization dedicated to terrorism, either with an awareness of the organization's dedication to that end, or with the specific intent to further such activities. Entry #1. Provide the full name of the organization. </td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td>form1[0].Section29[0].TextField11[2]</td>
+            <td>Provide all contributions made to the organization, if any.</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td>form1[0].Section29[0].TextField11[3]</td>
+            <td>Provide a description of the nature of and reasons for your involvement with the organization.</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td>form1[0].Section29[0].#field[6]</td>
+            <td>Provide all positions held in the organization, if any. No positions held</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td>form1[0].Section29[0].#field[7]</td>
+            <td>Provide all contributions made to the organization, if any. No contributions made</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td>form1[0].Section29[0].#area[1].TextField11[4]</td>
+            <td>Provide the address/location of the organization. (Provide City and Country if outside the United States; otherwise, provide City, State and Zip Code). Street</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>9</td>
+            <td>form1[0].Section29[0].#area[1].TextField11[5]</td>
+            <td>City</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>10</td>
+            <td>form1[0].Section29[0].#area[1].School6_State[0]</td>
+            <td>State</td>
+            <td>PDFDropdown</td>
+          </tr>
+          <tr>
+            <td>11</td>
+            <td>form1[0].Section29[0].#area[1].DropDownList6[0]</td>
+            <td>Country</td>
+            <td>PDFDropdown</td>
+          </tr>
+          <tr>
+            <td>12</td>
+            <td>form1[0].Section29[0].#area[1].TextField11[6]</td>
+            <td>Zip Code</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>13</td>
+            <td>form1[0].Section29[0].#field[13]</td>
+            <td>Present</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>14</td>
+            <td>form1[0].Section29[0].From_Datefield_Name_2[0]</td>
+            <td>Provide the dates of your involvement with the organization. From Date (Month/Year)</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>15</td>
+            <td>form1[0].Section29[0].#field[15]</td>
+            <td>Estimate</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>16</td>
+            <td>form1[0].Section29[0].From_Datefield_Name_2[1]</td>
+            <td>To Date (Month/Year)</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>17</td>
+            <td>form1[0].Section29[0].#field[17]</td>
+            <td>Estimate</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>18</td>
+            <td>form1[0].Section29[0].TextField11[7]</td>
+            <td>Provide all positions held in the organization, if any.</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>19</td>
+            <td>form1[0].Section29[0].TextField11[8]</td>
+            <td>Entry #2. Provide the full name of the organization. </td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>20</td>
+            <td>form1[0].Section29[0].TextField11[9]</td>
+            <td>Provide all contributions made to the organization, if any.</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>21</td>
+            <td>form1[0].Section29[0].TextField11[10]</td>
+            <td>Provide a description of the nature of and reasons for your involvement with the organization.</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>22</td>
+            <td>form1[0].Section29[0].#field[22]</td>
+            <td>Provide all positions held in the organization, if any. No positions held</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>23</td>
+            <td>form1[0].Section29[0].#field[23]</td>
+            <td>Provide all contributions made to the organization, if any. No contributions made</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>24</td>
+            <td>form1[0].Section29[0].#area[3].TextField11[11]</td>
+            <td>Provide the address/location of the organization. (Provide City and Country if outside the United States; otherwise, provide City, State and Zip Code). Street</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>25</td>
+            <td>form1[0].Section29[0].#area[3].TextField11[12]</td>
+            <td>City</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>26</td>
+            <td>form1[0].Section29[0].#area[3].School6_State[1]</td>
+            <td>State</td>
+            <td>PDFDropdown</td>
+          </tr>
+          <tr>
+            <td>27</td>
+            <td>form1[0].Section29[0].#area[3].DropDownList5[0]</td>
+            <td>Country</td>
+            <td>PDFDropdown</td>
+          </tr>
+          <tr>
+            <td>28</td>
+            <td>form1[0].Section29[0].#area[3].TextField11[13]</td>
+            <td>Zip Code</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>29</td>
+            <td>form1[0].Section29[0].#field[29]</td>
+            <td>Present</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>30</td>
+            <td>form1[0].Section29[0].From_Datefield_Name_2[2]</td>
+            <td>Provide the dates of your involvement with the organization. From Date (Month/Year)</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>31</td>
+            <td>form1[0].Section29[0].#field[31]</td>
+            <td>Estimate</td>
+            <td>PDFCheckBox</td>
+          </tr>
+          <tr>
+            <td>32</td>
+            <td>form1[0].Section29[0].From_Datefield_Name_2[3]</td>
+            <td>To Date (Month/Year)</td>
+            <td>PDFTextField</td>
+          </tr>
+          <tr>
+            <td>33</td>
+            <td>form1[0].Section29[0].#field[33]</td>
+            <td>Estimate</td>
+            <td>PDFCheckBox</td>
+          </tr>
+        </table>
+      </div>
+  </div>
+  
+  <script>
+    function toggleDetails(id) {
+      const element = document.getElementById(id);
+      if (element.style.display === "block") {
+        element.style.display = "none";
+      } else {
+        element.style.display = "block";
+      }
+    }
+    
+    function openTab(evt, tabName) {
+      var i, tabcontent, tablinks;
+      
+      // Hide all tab content
+      tabcontent = document.getElementsByClassName("tabcontent");
+      for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+      }
+      
+      // Remove active class from all tab buttons
+      tablinks = document.getElementsByClassName("tablinks");
+      for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].className = tablinks[i].className.replace(" active", "");
+      }
+      
+      // Show the current tab and add active class to the button
+      document.getElementById(tabName).style.display = "block";
+      evt.currentTarget.className += " active";
+    }
+  </script>
+</body>
+</html>

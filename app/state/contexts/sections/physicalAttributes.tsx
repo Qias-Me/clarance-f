@@ -38,6 +38,11 @@ export const physicalAttributes: PhysicalAttributes = {
     value: "Female",
     id: "17238",
     type: "PDFRadioGroup",
-    label: "p3-rb3b",
+    label: "Gender",
   },
+  sectionMetadata: {
+    sectionNumber: 6,
+    sectionTitle: "Your Identifying Information",
+    lastUpdated: new Date().toISOString()
+  }
 };

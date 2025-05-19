@@ -1,0 +1,30 @@
+{
+  "section": 13,
+  "name": "Employment Activities",
+  "rules": [
+    {
+      "section": 13,
+      "pattern": "form1\\[0\\]\\.section_13_1\\[\\d+\\]",
+      "confidence": 0.99,
+      "description": "Section 13 main pattern"
+    },
+    {
+      "section": 13,
+      "pattern": "form1\\[0\\]\\.section_13_1\\[\\d+\\]\\.From_Datefield_Name_2\\[0\\]",
+      "confidence": 0.99,
+      "description": "Section 13 date field that was misidentified as section 2"
+    },
+    {
+      "section": 13,
+      "pattern": "13A\\.1",
+      "confidence": 0.9,
+      "description": "Section 13A.1 label match"
+    },
+    {
+      "section": 13,
+      "pattern": "Provide dates of employment",
+      "confidence": 0.85,
+      "description": "Employment dates field label match"
+    }
+  ]
+} 

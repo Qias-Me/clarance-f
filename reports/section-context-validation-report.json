@@ -1,0 +1,290 @@
+[
+  {
+    "section": 1,
+    "contextFile": "namesInfo.tsx",
+    "description": "Full Name",
+    "status": "Updated",
+    "missingFieldCount": 15,
+    "totalFields": 15,
+    "coverage": "0.00%"
+  },
+  {
+    "section": 2,
+    "contextFile": "birthInfo.tsx",
+    "description": "Date of Birth",
+    "status": "Complete",
+    "missingFieldCount": 0,
+    "totalFields": 1,
+    "coverage": "100.00%"
+  },
+  {
+    "section": 3,
+    "contextFile": "birthInfo.tsx",
+    "description": "Place of Birth",
+    "status": "Complete",
+    "missingFieldCount": 0,
+    "totalFields": 1,
+    "coverage": "100.00%"
+  },
+  {
+    "section": 4,
+    "contextFile": "personalInfo.tsx",
+    "description": "Personal Information",
+    "status": "Updated",
+    "missingFieldCount": 135,
+    "totalFields": 135,
+    "coverage": "0.00%"
+  },
+  {
+    "section": 5,
+    "contextFile": "physicalAttributes.tsx",
+    "description": "Physical Attributes",
+    "status": "Updated",
+    "missingFieldCount": 45,
+    "totalFields": 45,
+    "coverage": "0.00%"
+  },
+  {
+    "section": 6,
+    "contextFile": "contactInfo.tsx",
+    "description": "Contact Information",
+    "status": "Updated",
+    "missingFieldCount": 1,
+    "totalFields": 1,
+    "coverage": "0.00%"
+  },
+  {
+    "section": 7,
+    "contextFile": "contactInfoContext.tsx",
+    "description": "Additional Contact Information",
+    "status": "Updated",
+    "missingFieldCount": 1,
+    "totalFields": 1,
+    "coverage": "0.00%"
+  },
+  {
+    "section": 8,
+    "contextFile": "placeOfBirth.tsx",
+    "description": "Place of Birth (Extended)",
+    "status": "Updated",
+    "missingFieldCount": 1,
+    "totalFields": 1,
+    "coverage": "0.00%"
+  },
+  {
+    "section": 9,
+    "contextFile": "citizenshipInfo.tsx",
+    "description": "Citizenship",
+    "status": "Complete",
+    "missingFieldCount": 0,
+    "totalFields": 56,
+    "coverage": "100.00%"
+  },
+  {
+    "section": 10,
+    "contextFile": "dualCitizenshipInfo.tsx",
+    "description": "Dual Citizenship",
+    "status": "Updated",
+    "missingFieldCount": 59,
+    "totalFields": 122,
+    "coverage": "51.64%"
+  },
+  {
+    "section": 11,
+    "contextFile": "residencyInfo.tsx",
+    "description": "Where You Have Lived",
+    "status": "Updated",
+    "missingFieldCount": 14,
+    "totalFields": 252,
+    "coverage": "94.44%"
+  },
+  {
+    "section": 12,
+    "contextFile": "passportInfo.tsx",
+    "description": "Passport Information",
+    "status": "Updated",
+    "missingFieldCount": 1,
+    "totalFields": 1,
+    "coverage": "0.00%"
+  },
+  {
+    "section": 13,
+    "contextFile": "employmentInfo.tsx",
+    "description": "Employment History",
+    "status": "Updated",
+    "missingFieldCount": 12,
+    "totalFields": 886,
+    "coverage": "98.65%"
+  },
+  {
+    "section": 14,
+    "contextFile": "schoolInfo.tsx",
+    "description": "Education",
+    "status": "Updated",
+    "missingFieldCount": 40,
+    "totalFields": 40,
+    "coverage": "0.00%"
+  },
+  {
+    "section": 15,
+    "contextFile": "peopleThatKnow.tsx",
+    "description": "People Who Know You Well",
+    "status": "Updated",
+    "missingFieldCount": 61,
+    "totalFields": 61,
+    "coverage": "0.00%"
+  },
+  {
+    "section": 16,
+    "contextFile": "relativesInfo.tsx",
+    "description": "Relatives",
+    "status": "Updated",
+    "missingFieldCount": 154,
+    "totalFields": 154,
+    "coverage": "0.00%"
+  },
+  {
+    "section": 17,
+    "contextFile": "relationshipInfo.tsx",
+    "description": "Relationships",
+    "status": "Updated",
+    "missingFieldCount": 3,
+    "totalFields": 332,
+    "coverage": "99.10%"
+  },
+  {
+    "section": 18,
+    "contextFile": "militaryHistoryInfo.tsx",
+    "description": "Military History",
+    "status": "Updated",
+    "missingFieldCount": 964,
+    "totalFields": 964,
+    "coverage": "0.00%"
+  },
+  {
+    "section": 19,
+    "contextFile": "foreignActivities.tsx",
+    "description": "Foreign Activities",
+    "status": "Updated",
+    "missingFieldCount": 277,
+    "totalFields": 277,
+    "coverage": "0.00%"
+  },
+  {
+    "section": 20,
+    "contextFile": "foreignContacts.tsx",
+    "description": "Foreign Contacts",
+    "status": "Updated",
+    "missingFieldCount": 83,
+    "totalFields": 83,
+    "coverage": "0.00%"
+  },
+  {
+    "section": 21,
+    "contextFile": "mentalHealth.tsx",
+    "description": "Mental Health",
+    "status": "Updated",
+    "missingFieldCount": 380,
+    "totalFields": 485,
+    "coverage": "21.65%"
+  },
+  {
+    "section": 22,
+    "contextFile": "policeRecord.tsx",
+    "description": "Police Record",
+    "status": "Updated",
+    "missingFieldCount": 207,
+    "totalFields": 268,
+    "coverage": "22.76%"
+  },
+  {
+    "section": 23,
+    "contextFile": "drugActivity.tsx",
+    "description": "Drug Use",
+    "status": "Updated",
+    "missingFieldCount": 33,
+    "totalFields": 48,
+    "coverage": "31.25%"
+  },
+  {
+    "section": 24,
+    "contextFile": "alcoholUse.tsx",
+    "description": "Alcohol Use",
+    "status": "Updated",
+    "missingFieldCount": 117,
+    "totalFields": 160,
+    "coverage": "26.88%"
+  },
+  {
+    "section": 25,
+    "contextFile": "investigationsInfo.tsx",
+    "description": "Investigations and Clearances",
+    "status": "Updated",
+    "missingFieldCount": 63,
+    "totalFields": 79,
+    "coverage": "20.25%"
+  },
+  {
+    "section": 26,
+    "contextFile": "finances.tsx",
+    "description": "Financial Record",
+    "status": "Updated",
+    "missingFieldCount": 136,
+    "totalFields": 237,
+    "coverage": "42.62%"
+  },
+  {
+    "section": 27,
+    "contextFile": "technology.tsx",
+    "description": "Use of Information Technology",
+    "status": "Updated",
+    "missingFieldCount": 13,
+    "totalFields": 57,
+    "coverage": "77.19%"
+  },
+  {
+    "section": 28,
+    "contextFile": "association.tsx",
+    "description": "Association Record",
+    "status": "Updated",
+    "missingFieldCount": 23,
+    "totalFields": 23,
+    "coverage": "0.00%"
+  },
+  {
+    "section": 29,
+    "contextFile": "civil.tsx",
+    "description": "Civil Court Record",
+    "status": "Updated",
+    "missingFieldCount": 141,
+    "totalFields": 141,
+    "coverage": "0.00%"
+  },
+  {
+    "section": 30,
+    "contextFile": "signature.tsx",
+    "description": "Continuation Section / Signature",
+    "status": "Updated",
+    "missingFieldCount": 1,
+    "totalFields": 1,
+    "coverage": "0.00%"
+  },
+  {
+    "section": 31,
+    "contextFile": "aknowledgementInfo.tsx",
+    "description": "Application Configuration",
+    "status": "Updated",
+    "missingFieldCount": 1,
+    "totalFields": 1,
+    "coverage": "0.00%"
+  },
+  {
+    "section": 32,
+    "contextFile": "print.tsx",
+    "description": "Print Configuration",
+    "status": "Updated",
+    "missingFieldCount": 1,
+    "totalFields": 1,
+    "coverage": "0.00%"
+  }
+]

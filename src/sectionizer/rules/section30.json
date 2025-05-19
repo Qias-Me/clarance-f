@@ -1,0 +1,119 @@
+{
+  "section": 30,
+  "name": "Security Clearance Record",
+  "rules": [
+    {
+      "section": 30,
+      "pattern": "form1\\[0\\]\\.Section30\\[0\\]",
+      "confidence": 0.95,
+      "description": "Exact match for Section 30 area"
+    },
+    {
+      "section": 30,
+      "pattern": "section30",
+      "confidence": 0.9,
+      "description": "Generic section 30 field pattern"
+    },
+    {
+      "section": 30,
+      "pattern": "security clearance record",
+      "confidence": 0.85,
+      "description": "Match by section title"
+    },
+    {
+      "section": 30,
+      "pattern": "section30_(\\d+)",
+      "confidence": 0.9,
+      "description": "Section 30 entry index pattern",
+      "entryPattern": "section30_(\\d+)"
+    },
+    {
+      "section": 30,
+      "pattern": "30a\\.?(\\d*)",
+      "confidence": 0.9,
+      "description": "Section 30A fields with alternative format",
+      "entryPattern": "30a\\.?(\\d+)",
+      "subsection": "A"
+    },
+    {
+      "section": 30,
+      "pattern": "30b\\.?(\\d*)",
+      "confidence": 0.9,
+      "description": "Section 30B fields with alternative format",
+      "entryPattern": "30b\\.?(\\d+)",
+      "subsection": "B"
+    },
+    {
+      "section": 30,
+      "pattern": "security clearance",
+      "confidence": 0.85,
+      "description": "Security clearance related fields"
+    },
+    {
+      "section": 30,
+      "pattern": "clearance level",
+      "confidence": 0.85,
+      "description": "Clearance level related fields"
+    },
+    {
+      "section": 30,
+      "pattern": "issued by",
+      "confidence": 0.8,
+      "description": "Issuing agency related fields"
+    },
+    {
+      "section": 30,
+      "pattern": "granted on",
+      "confidence": 0.8,
+      "description": "Grant date related fields"
+    },
+    {
+      "section": 30,
+      "pattern": "clearance status",
+      "confidence": 0.85,
+      "description": "Clearance status related fields"
+    },
+    {
+      "section": 30,
+      "pattern": "active clearance",
+      "confidence": 0.85,
+      "description": "Active clearance related fields"
+    },
+    {
+      "section": 30,
+      "pattern": "inactive clearance",
+      "confidence": 0.85,
+      "description": "Inactive clearance related fields"
+    },
+    {
+      "section": 30,
+      "pattern": "revoked clearance",
+      "confidence": 0.85,
+      "description": "Revoked clearance related fields"
+    },
+    {
+      "section": 30,
+      "pattern": "denied clearance",
+      "confidence": 0.85,
+      "description": "Denied clearance related fields"
+    },
+    {
+      "section": 30,
+      "pattern": "top secret",
+      "confidence": 0.8,
+      "description": "Top Secret clearance related fields"
+    },
+    {
+      "section": 30,
+      "pattern": "secret",
+      "confidence": 0.7,
+      "description": "Secret clearance related fields"
+    },
+    {
+      "section": 30,
+      "pattern": "confidential",
+      "confidence": 0.7,
+      "description": "Confidential clearance related fields"
+    }
+  ]
+} 

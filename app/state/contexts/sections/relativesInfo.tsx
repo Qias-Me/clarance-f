@@ -1,764 +1,470 @@
-import { type RelativesInfo } from "api/interfaces/sections/relativesInfo";
+import { type RelativesInfo, type RelativeType } from "api/interfaces/sections/relativesInfo";
 
 //relativesInfo covers section 18
+
+// Helper function to create consistent IDs for dynamic entries
+const generateDynamicFieldId = (baseId: string, index: number): string => {
+  // For section 18, the field IDs start with 120xx
+  // We increment by 100 for each new relative entry beyond the first
+  if (index === 0) return baseId;
+  const baseNum = parseInt(baseId, 10);
+  return (baseNum - (index * 100)).toString();
+};
+
+// Create a template entry that can be used for new relatives
+const createTemplateRelativeEntry = (index: number = 0): RelativesInfo["entries"][0] => {
+  const entry = {
+    _id: Math.random(),
+    type: {
+      value: "Mother" as RelativeType,
+      id: generateDynamicFieldId("12082", index),
+      type: "PDFDropdown",
+      label: "Relative Type",
+    },
+    fullName: {
+      firstName: {
+        value: "",
+        id: generateDynamicFieldId("12137", index),
+        type: "PDFTextField",
+        label: "First Name",
+      },
+      middleName: {
+        value: "",
+        id: generateDynamicFieldId("12140", index),
+        type: "PDFTextField",
+        label: "Middle Name",
+      },
+      lastName: {
+        value: "",
+        id: generateDynamicFieldId("12139", index),
+        type: "PDFTextField",
+        label: "Last Name",
+      },
+      suffix: {
+        value: "",
+        id: generateDynamicFieldId("12138", index),
+        type: "PDFDropdown",
+        label: "Suffix",
+      },
+    },
+    dateOfBirth: {
+      date: {
+        value: "",
+        id: generateDynamicFieldId("12078", index),
+        type: "PDFTextField",
+        label: "Date of Birth",
+      },
+      estimated: {
+        value: "No" as "Yes" | "No",
+        id: generateDynamicFieldId("12079", index),
+        type: "PDFCheckBox",
+        label: "Estimated",
+      },
+    },
+    placeOfBirth: {
+      city: {
+        value: "",
+        id: generateDynamicFieldId("12143", index),
+        type: "PDFTextField",
+        label: "City of Birth",
+      },
+      state: {
+        value: "",
+        id: generateDynamicFieldId("12142", index),
+        type: "PDFDropdown",
+        label: "State of Birth",
+      },
+      country: {
+        value: "",
+        id: generateDynamicFieldId("12141", index),
+        type: "PDFDropdown",
+        label: "Country of Birth",
+      },
+    },
+    countriesOfCitizenship: [
+      {
+        _id: Math.random(),
+        country: {
+          value: "",
+          id: generateDynamicFieldId("12081", index),
+          type: "PDFDropdown",
+          label: "Country of Citizenship",
+        },
+      },
+      {
+        _id: Math.random(),
+        country: {
+          value: "",
+          id: generateDynamicFieldId("12080", index),
+          type: "PDFDropdown",
+          label: "Additional Country of Citizenship",
+        },
+      },
+    ],
+    isDeceased: {
+      value: "NO" as "YES" | "NO",
+      id: generateDynamicFieldId("12090", index),
+      type: "PDFRadioGroup",
+      label: "Is Deceased",
+    },
+    isUSCitizen: {
+      value: "NO" as "YES" | "NO",
+      id: generateDynamicFieldId("12089", index),
+      type: "PDFRadioGroup",
+      label: "Is US Citizen",
+    },
+    hasForeignAddress: {
+      value: "NO" as "YES" | "NO",
+      id: generateDynamicFieldId("12088", index),
+      type: "PDFRadioGroup",
+      label: "Has Foreign Address",
+    },
+    hasUSAddress: {
+      value: "NO" as "YES" | "NO",
+      id: generateDynamicFieldId("12087", index),
+      type: "PDFRadioGroup",
+      label: "Has US Address",
+    },
+    details: {
+      // Each section's details will be initialized as needed based on relative type
+    }
+  };
+  
+  return entry;
+};
+
+// Create a template for otherNamesUsed entries
+const createTemplateOtherNameEntry = (index: number = 0): any => {
+  return {
+    _id: Math.random(),
+    lastName: {
+      value: "",
+      id: generateDynamicFieldId("12200", index),
+      type: "PDFTextField",
+      label: "Last Name",
+    },
+    firstName: {
+      value: "",
+      id: generateDynamicFieldId("12201", index),
+      type: "PDFTextField",
+      label: "First Name",
+    },
+    middleName: {
+      value: "",
+      id: generateDynamicFieldId("12202", index),
+      type: "PDFTextField",
+      label: "Middle Name",
+    },
+    suffix: {
+      value: "",
+      id: generateDynamicFieldId("12203", index),
+      type: "PDFDropdown",
+      label: "Suffix",
+    },
+    maidenName: {
+      value: "NO",
+      id: generateDynamicFieldId("12204", index),
+      type: "PDFRadioGroup",
+      label: "Is Maiden Name",
+    },
+    fromDate: {
+      date: {
+        value: "",
+        id: generateDynamicFieldId("12205", index),
+        type: "PDFTextField",
+        label: "From Date",
+      },
+      estimated: {
+        value: "NO",
+        id: generateDynamicFieldId("12206", index),
+        type: "PDFCheckBox",
+        label: "Estimated",
+      },
+    },
+    toDate: {
+      date: {
+        value: "",
+        id: generateDynamicFieldId("12207", index),
+        type: "PDFTextField",
+        label: "To Date",
+      },
+      estimated: {
+        value: "NO",
+        id: generateDynamicFieldId("12208", index),
+        type: "PDFCheckBox",
+        label: "Estimated",
+      },
+    },
+    reasonForChange: {
+      value: "",
+      id: generateDynamicFieldId("12209", index),
+      type: "PDFTextField",
+      label: "Reason For Change",
+    },
+  };
+};
 
 export const relativesInfo: RelativesInfo = {
   _id: Math.random(),
   relativeTypes: [
     {
       _id: Math.random(),
+      name: "Mother",
       type: {
         type: "PDFCheckBox",
         value: "Yes",
         id: "12077",
-
+        label: "Mother Checkbox",
       },
-      name: "Mother",
     },
     {
       _id: Math.random(),
+      name: "Father",
       type: {
         type: "PDFCheckBox",
         value: "Yes",
         id: "12076",
-
+        label: "Father Checkbox",
       },
-      name: "Father",
     },
     {
       _id: Math.random(),
+      name: "Stepmother",
       type: {
         type: "PDFCheckBox",
         value: "Yes",
         id: "12075",
-
+        label: "Stepmother Checkbox",
       },
-      name: "Stepmother",
     },
     {
       _id: Math.random(),
+      name: "Stepfather",
       type: {
         type: "PDFCheckBox",
         value: "Yes",
         id: "12074",
-
+        label: "Stepfather Checkbox",
       },
-      name: "Stepfather",
     },
     {
       _id: Math.random(),
+      name: "Foster parent",
       type: {
         type: "PDFCheckBox",
         value: "Yes",
         id: "12073",
-
+        label: "Foster Parent Checkbox",
       },
-      name: "Foster parent",
     },
     {
       _id: Math.random(),
+      name: "Child (including adopted/foster)",
       type: {
         type: "PDFCheckBox",
         value: "Yes",
         id: "12072",
-
+        label: "Child Checkbox",
       },
-      name: "Child (including adopted/foster)",
     },
     {
       _id: Math.random(),
+      name: "Stepchild",
       type: {
         type: "PDFCheckBox",
         value: "Yes",
         id: "12071",
-
+        label: "Stepchild Checkbox",
       },
-      name: "Stepchild",
     },
     {
       _id: Math.random(),
+      name: "Brother",
       type: {
         type: "PDFCheckBox",
         value: "Yes",
         id: "12070",
-
+        label: "Brother Checkbox",
       },
-      name: "Brother",
     },
     {
       _id: Math.random(),
+      name: "Sister",
       type: {
         type: "PDFCheckBox",
         value: "Yes",
         id: "12069",
-
+        label: "Sister Checkbox",
       },
-      name: "Sister",
     },
     {
       _id: Math.random(),
+      name: "Stepbrother",
       type: {
         type: "PDFCheckBox",
         value: "Yes",
         id: "12068",
-
+        label: "Stepbrother Checkbox",
       },
-      name: "Stepbrother",
     },
     {
       _id: Math.random(),
+      name: "Stepsister",
       type: {
         type: "PDFCheckBox",
         value: "Yes",
         id: "12067",
-
+        label: "Stepsister Checkbox",
       },
-      name: "Stepsister",
     },
     {
       _id: Math.random(),
+      name: "Half-brother",
       type: {
         type: "PDFCheckBox",
         value: "Yes",
         id: "12066",
-
+        label: "Half-brother Checkbox",
       },
-      name: "Half-brother",
     },
     {
       _id: Math.random(),
+      name: "Half-sister",
       type: {
         type: "PDFCheckBox",
         value: "Yes",
         id: "12065",
-
+        label: "Half-sister Checkbox",
       },
-      name: "Half-sister",
     },
     {
       _id: Math.random(),
+      name: "Father-in-law",
       type: {
         type: "PDFCheckBox",
         value: "Yes",
         id: "12064",
-
+        label: "Father-in-law Checkbox",
       },
-      name: "Father-in-law",
     },
     {
       _id: Math.random(),
+      name: "Mother-in-law",
       type: {
         type: "PDFCheckBox",
         value: "Yes",
         id: "12063",
-
+        label: "Mother-in-law Checkbox",
       },
-      name: "Mother-in-law",
     },
     {
       _id: Math.random(),
+      name: "Guardian",
       type: {
         type: "PDFCheckBox",
         value: "Yes",
         id: "12062",
-
-      },
-      name: "Guardian",
-    },
-
-  ],
-  entries: [
-    {
-      _id: Math.random(),
-      type: {
-        value: "Mother",
-        id: "12082",
-        type: "PDFDropdown",
-      },
-      fullName: {
-        firstName: {
-          value: "Hi",
-          id: "12137",
-          type: "PDFTextField",
-        },
-        middleName: {
-          value: "Hi",
-          id: "12140",
-          type: "PDFTextField",
-        },
-        lastName: {
-          value: "Hi",
-          id: "12139",
-          type: "PDFTextField",
-        },
-        suffix: {
-          value: "Hi",
-          id: "12138",
-          type: "PDFDropdown",
-        },
-      },
-      dateOfBirth: {
-        date: {
-          value: "Hi",
-          id: "12078",
-          type: "PDFTextField",
-        },
-        estimated: {
-          value: "Yes",
-          id: "12079",
-          type: "PDFCheckBox",
-        },
-      },
-      placeOfBirth: {
-        city: {
-          value: "Hi",
-          id: "12143",
-          type: "PDFTextField",
-        },
-        state: {
-          value: "Hi",
-          id: "12142",
-          type: "PDFDropdown",
-        },
-        country: {
-          value: "Hi",
-          id: "12141",
-          type: "PDFDropdown",
-        },
-      },
-      countriesOfCitizenship: [
-        {
-          _id: Math.random(),
-          country: {
-            value: "Hi",
-            id: "12081",
-            type: "PDFDropdown",
-          },
-        },
-        {
-          _id: Math.random(),
-          country: {
-            value: "Hi",
-            id: "12080",
-            type: "PDFDropdown",
-          },
-        },
-      ],
-      isDeceased: {
-        value: "NO",
-        id: "",
-        type: "PDFRadioGroup",
-      },
-      isUSCitizen: {
-        value: "NO",
-        id: "",
-        type: "PDFRadioGroup",
-      },
-      hasForeignAddress: {
-        value: "NO",
-        id: "",
-        type: "PDFRadioGroup",
-      },
-      hasUSAddress: {
-        value: "NO",
-        id: "",
-        type: "PDFRadioGroup",
-      },
-      details: {
-        section18_1: {
-          ifMother: {
-            lastName: {
-              value: "Hi",
-              id: "12134",
-              type: "PDFTextField",
-            },
-            firstName: {
-              value: "Hi",
-              id: "12133",
-              type: "PDFTextField",
-            },
-            middleName: {
-              value: "Hi",
-              id: "12135",
-              type: "PDFTextField",
-            },
-            suffix: {
-              value: "Hi",
-              id: "12136",
-              type: "PDFDropdown",
-            },
-            sameAsListed: {
-              value: "Yes",
-              id: "12132",
-              type: "PDFCheckBox",
-            },
-            iDontKnow: {
-              value: "Yes",
-              id: "12131",
-              type: "PDFCheckBox",
-            },
-          },
-          hasOtherNames: {
-            value: "NO",
-            id: "12132",
-            type: "PDFRadioGroup",
-          },
-          otherNamesUsed: [
-            {
-              _id: 1,
-              lastName: {
-                value: "Hi",
-                id: "12128",
-                type: "PDFTextField",
-              },
-              firstName: {
-                value: "Hi",
-                id: "12129",
-                type: "PDFTextField",
-              },
-              middleName: {
-                value: "Hi",
-                id: "12130",
-                type: "PDFTextField",
-              },
-              suffix: {
-                value: "Hi",
-                id: "12125",
-                type: "PDFDropdown",
-              },
-              maidenName: {
-                value: "NO",
-                id: "16982",
-                type: "PDFRadioGroup",
-              },
-              fromDate: {
-                date: {
-                  value: "Hi",
-                  id: "12127",
-                  type: "PDFTextField",
-                },
-                estimated: {
-                  value: "Yes",
-                  id: "12124",
-                  type: "PDFCheckBox",
-                },
-
-              },
-              toDate: {
-                date: {
-                  value: "Hi",
-                  id: "12126",
-                  type: "PDFTextField",
-                },
-                estimated: {
-                  value: "Yes",
-                  id: "12122",
-                  type: "PDFCheckBox",
-                },
-                present: {
-                  value: "Yes",
-                  id: "12123",
-                  type: "PDFCheckBox",
-                },
-              },
-              reasonForChange: {
-                value: "Hi",
-                id: "12086",
-                type: "PDFTextField",
-              },
-            },
-          ],
-        },
-        section18_2: {
-          _id: Math.random(),
-          street: {
-            value: "Hi",
-            id: "12167",
-            type: "PDFTextField",
-          },
-          city: {
-            value: "Hi",
-            id: "12166",
-            type: "PDFTextField",
-          },
-          state: {
-            value: "Hi",
-            id: "12165",
-            type: "PDFDropdown",
-          },
-          zipCode: {
-            value: "Hi",
-            id: "12163",
-            type: "PDFTextField",
-          },
-          country: {
-            value: "Hi",
-            id: "12164",
-            type: "PDFDropdown",
-          },
-          hasAPOFPOAddress: {
-            value: "NO",
-            id: "12176",
-            type: "PDFRadioGroup",
-          },
-          apofpoAddress: {
-            address: {
-              value: "Hi",
-              id: "12170",
-              type: "PDFTextField",
-            },
-            apofpoStateCode: {
-              value: "Hi",
-              id: "12168",
-              type: "PDFDropdown",
-            },
-            apofpoZipCode: {
-              value: "Hi",
-              id: "12171",
-              type: "PDFTextField",
-            },
-          },
-          dontKnowAPOFPO: {
-            value: "NO",
-            id: "12174",
-            type: "PDFRadioGroup",
-          },
-        },
-        section18_3: {
-          citizenshipDocuments: [
-            {
-              type: "FS240or545",
-              documentNumber: {
-                value: "Hi",
-                id: "12152",
-                type: "PDFTextField",
-              },
-            },
-          ],
-          courtDetails: {
-            street: {
-              value: "Hi",
-              id: "12178",
-              type: "PDFTextField",
-            },
-            city: {
-              value: "Hi",
-              id: "12148",
-              type: "PDFTextField",
-            },
-            state: {
-              value: "Hi",
-              id: "12149",
-              type: "PDFDropdown",
-            },
-            zipCode: {
-              value: "Hi",
-              id: "12177",
-              type: "PDFTextField",
-            },
-          },
-        },
-        section18_4: {
-          usDocumentation: [
-            {
-              type: {
-                value: "I551PermanentResident",
-                id: "12218",
-                type: "PDFCheckBox",
-              },
-            },
-            {
-              type: {
-                value: "I94ArrivalDepartureRecord",
-                id: "12213",
-                type: "PDFCheckBox",
-              },
-            },
-            {
-              type: {
-                value: "I20CertificateEligibilityF1Student",
-                id: "12215",
-                type: "PDFCheckBox",
-              },
-            },
-            {
-              type: {
-                value: "DS2019CertificateEligibilityJ1Status",
-                id: "12214",
-                type: "PDFCheckBox",
-              },
-            },
-            {
-              type: {
-                value: "Other",
-                id: "12217",
-                type: "PDFCheckBox",
-              },
-            },
-            {
-              type: {
-                value: "I766EmploymentAuthorization",
-                id: "12219",
-                type: "PDFCheckBox",
-              },
-            },
-            {
-              type: {
-                value: "Other",
-                id: "12216",
-                type: "PDFCheckBox",
-              },
-            },
-          ],
-          documentFieldNumber: {
-            value: "Hi",
-            id: "12212",
-            type: "PDFTextField",
-          },
-          documentExpirationDate: {
-            value: "Hi",
-            id: "12179",
-            type: "PDFTextField",
-          },
-          firstContactDate: {
-            value: "Hi",
-            id: "12186",
-            type: "PDFTextField",
-          },
-          lastContactDate: {
-            value: "Hi",
-            id: "12182",
-            type: "PDFTextField",
-          },
-          contactMethods: [
-            {
-              value: "In Person",
-              id: "12209",
-              type: "PDFCheckBox",
-            },
-            {
-              value: "Telephone",
-              id: "12211",
-              type: "PDFCheckBox",
-            },
-            {
-              value: "Electronic",
-              id: "12210",
-              type: "PDFCheckBox",
-            },
-            {
-              value: "Written Correspondence",
-              id: "12208",
-              type: "PDFCheckBox",
-            },
-            {
-              value: "Other",
-              id: "12207",
-              type: "PDFCheckBox",
-            },
-          ],
-          contactFrequency: {
-            frequency: {
-              value: "Daily",
-              id: "12204",
-              type: "PDFCheckBox",
-            },
-          },
-          currentEmployer: {
-            name: {
-              value: "Hi",
-              id: "12199",
-              type: "PDFTextField",
-            },
-            address: {
-              street: {
-                value: "Hi",
-                id: "12197",
-                type: "PDFTextField",
-              },
-              city: {
-                value: "Hi",
-                id: "12196",
-                type: "PDFTextField",
-              },
-              state: {
-                value: "Hi",
-                id: "12195",
-                type: "PDFSelect",
-              },
-              zipCode: {
-                value: "Hi",
-                id: "12193",
-                type: "PDFTextField",
-              },
-              country: {
-                value: "Hi",
-                id: "12194",
-                type: "PDFSelect",
-              },
-            },
-            unknown: {
-              value: "NO",
-              id: "12198",
-              type: "PDFCheckBox",
-            },
-          },
-          recentEmployer: {
-            name: {
-              value: "Hi",
-              id: "12199",
-              type: "PDFTextField",
-            },
-            address: {
-              street: {
-                value: "Hi",
-                id: "12197",
-                type: "PDFTextField",
-              },
-              city: {
-                value: "Hi",
-                id: "12196",
-                type: "PDFTextField",
-              },
-              state: {
-                value: "Hi",
-                id: "12195",
-                type: "PDFSelect",
-              },
-              zipCode: {
-                value: "Hi",
-                id: "12193",
-                type: "PDFTextField",
-              },
-              country: {
-                value: "Hi",
-                id: "12194",
-                type: "PDFSelect",
-              },
-            },
-            unknown: {
-              value: "NO",
-              id: "12198",
-              type: "PDFCheckBox",
-            },
-          },
-          foreignGovernmentAffiliation: {
-            affiliation: {
-              value: "NO",
-              id: "12188",
-              type: "PDFRadioButton",
-            },
-            description: {
-              value: "Hi",
-              id: "12187",
-              type: "PDFTextField",
-            },
-          },
-        },
-        section18_5: {
-          firstContactDate: {
-            value: "Hi",
-            id: "12224",
-            type: "PDFTextField",
-          },
-          lastContactDate: {
-            value: "Hi",
-            id: "12222",
-            type: "PDFTextField",
-          },
-          contactMethods: [
-            {
-              value: "In Person",
-              id: "12247",
-              type: "PDFCheckBox",
-            },
-            {
-              value: "Telephone",
-              id: "12249",
-              type: "PDFCheckBox",
-            },
-            {
-              value: "Electronic",
-              id: "12248",
-              type: "PDFCheckBox",
-            },
-            {
-              value: "Written Correspondence",
-              id: "12246",
-              type: "PDFCheckBox",
-            },
-            {
-              value: "Other",
-              id: "12245",
-              type: "PDFCheckBox",
-            },
-          ],
-          contactFrequency: {
-            frequency: {
-              value: "Daily",
-              id: "12242",
-              type: "PDFCheckBox",
-            },
-            explanation: {
-              value: "Hi",
-              id: "12240",
-              type: "PDFTextField",
-            },
-          },
-          employerDetails: {
-            name: {
-              value: "Hi",
-              id: "12237",
-              type: "PDFTextField",
-            },
-            address: {
-              street: {
-                value: "Hi",
-                id: "12235",
-                type: "PDFTextField",
-              },
-              city: {
-                value: "Hi",
-                id: "12234",
-                type: "PDFTextField",
-              },
-              state: {
-                value: "Hi",
-                id: "12233",
-                type: "PDFDropdown",
-              },
-              zipCode: {
-                value: "Hi",
-                id: "12231",
-                type: "PDFTextField",
-              },
-              country: {
-                value: "Hi",
-                id: "12232",
-                type: "PDFDropdown",
-              },
-            },
-            unknown: {
-              value: "NO",
-              id: "12230",
-              type: "PDFCheckBox",
-            },
-          },
-          foreignGovernmentAffiliation: {
-            affiliation: {
-              value: "NO",
-              id: "",
-              type: "PDFRadioButton",
-            },
-
-            description: {
-              value: "Hi",
-              id: "12225",
-              type: "PDFTextField",
-            },
-          },
-        },
+        label: "Guardian Checkbox",
       },
     },
   ],
+  entries: [createTemplateRelativeEntry(0)],
+};
+
+// Export the template functions for use in FormEntryManager
+export { createTemplateRelativeEntry, createTemplateOtherNameEntry };
+
+/**
+ * Validates relativesInfo data to ensure it meets form requirements
+ * 
+ * @param data The relativesInfo data to validate
+ * @returns Object containing validation result and error messages
+ */
+export const validateRelativesInfo = (data: RelativesInfo): { 
+  isValid: boolean; 
+  errors: string[] 
+} => {
+  const errors: string[] = [];
+
+  // Check if at least one relative type is selected
+  const hasSelectedTypes = data.relativeTypes.some(rt => rt.type.value === "Yes");
+  if (!hasSelectedTypes) {
+    errors.push("At least one relative type must be selected.");
+  }
+
+  // Check if entries exist when relative types are selected
+  if (hasSelectedTypes && (!data.entries || data.entries.length === 0)) {
+    errors.push("At least one relative must be added when relative types are selected.");
+  }
+
+  // Validate each entry
+  data.entries?.forEach((entry, index) => {
+    const relativeIndex = index + 1;
+    
+    // Check if type is selected
+    if (!entry.type.value) {
+      errors.push(`Relative #${relativeIndex}: Type is required.`);
+    }
+
+    // Check if name is provided
+    if (!entry.fullName.firstName.value || !entry.fullName.lastName.value) {
+      errors.push(`Relative #${relativeIndex}: First and last name are required.`);
+    }
+
+    // Check if date of birth is provided
+    if (!entry.dateOfBirth.date.value) {
+      errors.push(`Relative #${relativeIndex}: Date of birth is required.`);
+    }
+
+    // Check place of birth
+    if (!entry.placeOfBirth.city.value || !entry.placeOfBirth.country.value) {
+      errors.push(`Relative #${relativeIndex}: City and country of birth are required.`);
+    }
+
+    // Check citizenship
+    if (!entry.countriesOfCitizenship[0]?.country.value) {
+      errors.push(`Relative #${relativeIndex}: At least one country of citizenship is required.`);
+    }
+
+    // If relative is not deceased, check for additional required information
+    if (entry.isDeceased.value === "NO") {
+      // Check for address details when required
+      if (entry.hasForeignAddress.value === "YES" || entry.hasUSAddress.value === "YES") {
+        if (!entry.details.section18_2) {
+          errors.push(`Relative #${relativeIndex}: Address details are required.`);
+        } else {
+          if (!entry.details.section18_2.city || !entry.details.section18_2.country) {
+            errors.push(`Relative #${relativeIndex}: City and country are required in address.`);
+          }
+          
+          // State is required for US addresses
+          if (entry.hasUSAddress.value === "YES" && 
+              (!entry.details.section18_2.state || !entry.details.section18_2.state.value)) {
+            errors.push(`Relative #${relativeIndex}: State is required for US addresses.`);
+          }
+        }
+      }
+      
+      // Check for citizenship documentation for US citizens
+      if (entry.isUSCitizen.value === "YES" && !entry.details.section18_3) {
+        errors.push(`Relative #${relativeIndex}: Citizenship documentation is required for US citizens.`);
+      }
+      
+      // Check for documentation for non-citizens
+      if (entry.isUSCitizen.value === "NO" && !entry.details.section18_4) {
+        errors.push(`Relative #${relativeIndex}: Documentation is required for non-US citizens.`);
+      }
+      
+      // Check for contact information for foreign relatives
+      if ((entry.isUSCitizen.value === "NO" || entry.hasForeignAddress.value === "YES") && 
+          !entry.details.section18_5) {
+        errors.push(`Relative #${relativeIndex}: Contact information is required for foreign relatives.`);
+      }
+    }
+  });
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+  };
 };

@@ -8,8 +8,12 @@ import {
   PDFTextField,
   PDFNumber,
   PDFArray,
+  PDFField,
 } from "pdf-lib";
 import type { ApplicantFormValues } from "../interfaces/formDefinition";
+import path from "path";
+import fs from "fs";
+import { updateIdFormat } from "../../app/utils/formHandler";
 
 // Define the OPM form URL
 const SF86_PDF_URL = "https://www.opm.gov/forms/pdf_fill/sf86/";
@@ -210,6 +214,28 @@ async applyValues_toPDF(formData: ApplicantFormValues): Promise<UserServiceRespo
     const form = pdfDoc.getForm();
     const fieldMap = new Map(form.getFields().map((f) => [f.getName(), f]));
 
+    // Create ID to value map
+    const idValueMap = new Map<string, string>();
+    const processFormData = (data: any) => {
+      if (!data) return;
+      
+      Object.entries(data).forEach(([key, val]) => {
+        if (val && typeof val === 'object') {
+          if ('id' in val && 'value' in val && val.id && val.value !== undefined && val.value !== '') {
+            // Use the updateIdFormat function to ensure correct ID format
+            const idStr = updateIdFormat(String(val.id), 'pdf');
+            const valueStr = String(val.value);
+            
+            idValueMap.set(idStr, valueStr);
+          } else {
+            processFormData(val);
+          }
+        }
+      });
+    };
+    
+    processFormData(formData);
+    
     // Directly apply values to the PDF form
     let appliedCount = 0;
     await Promise.all(

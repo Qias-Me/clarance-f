@@ -1,0 +1,2647 @@
+
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SF-86 Form Structure Report</title>
+    <style>
+      body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; }
+      h1, h2, h3, h4 { color: #333; }
+      .section { background: #f5f5f5; padding: 15px; margin-bottom: 15px; border-radius: 5px; }
+      .subsection { background: #e9e9e9; padding: 10px; margin: 10px 0; border-radius: 3px; }
+      .nested-subsection { background: #ddd; padding: 8px; margin: 8px 0 8px 20px; border-radius: 3px; }
+      .field-count { color: #555; font-size: 0.9em; }
+      .stats { background: #eef; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
+      .warning { color: #c00; }
+      .good { color: #090; }
+      .poor { color: #c00; }
+      table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+      th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+      th { background-color: #f2f2f2; }
+      tr:hover { background-color: #f5f5f5; }
+      .toggle-btn { cursor: pointer; color: blue; text-decoration: underline; }
+      .hidden { display: none; }
+    </style>
+    <script>
+      function toggleSection(id) {
+        const element = document.getElementById(id);
+        if (element.classList.contains('hidden')) {
+          element.classList.remove('hidden');
+        } else {
+          element.classList.add('hidden');
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <h1>SF-86 Form Structure Report</h1>
+    
+    <div class="stats">
+      <h2>Summary Statistics</h2>
+      <p>Total Sections: 30</p>
+      <p>Total Fields: 7745</p>
+      <p>Fields Classified into Subsections: 4180 
+         <span class="poor">
+           (53.97%)
+         </span>
+      </p>
+      <p>Total Subsections: 82</p>
+      <p>Nested Subsections: 82</p>
+      <p>Maximum Nesting Level: 2</p>
+      
+    </div>
+    
+    <h2>Section Coverage</h2>
+    <table>
+      <tr>
+        <th>Section</th>
+        <th>Fields</th>
+        <th>Subsections</th>
+        <th>Classification Rate</th>
+      </tr>
+      
+        <tr>
+          <td>Section 1</td>
+          <td>761</td>
+          <td>1</td>
+          <td class="poor">
+            0.26%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 2</td>
+          <td>26</td>
+          <td>0</td>
+          <td class="poor">
+            0.00%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 3</td>
+          <td>143</td>
+          <td>0</td>
+          <td class="poor">
+            0.00%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 4</td>
+          <td>139</td>
+          <td>22</td>
+          <td class="">
+            55.40%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 5</td>
+          <td>56</td>
+          <td>7</td>
+          <td class="poor">
+            35.71%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 6</td>
+          <td>8</td>
+          <td>0</td>
+          <td class="poor">
+            0.00%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 7</td>
+          <td>950</td>
+          <td>0</td>
+          <td class="poor">
+            0.00%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 8</td>
+          <td>56</td>
+          <td>0</td>
+          <td class="poor">
+            0.00%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 9</td>
+          <td>124</td>
+          <td>6</td>
+          <td class="poor">
+            45.16%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 10</td>
+          <td>56</td>
+          <td>9</td>
+          <td class="good">
+            169.64%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 11</td>
+          <td>421</td>
+          <td>14</td>
+          <td class="poor">
+            23.75%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 12</td>
+          <td>10</td>
+          <td>0</td>
+          <td class="poor">
+            0.00%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 13</td>
+          <td>1012</td>
+          <td>4</td>
+          <td class="good">
+            87.55%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 14</td>
+          <td>40</td>
+          <td>4</td>
+          <td class="good">
+            100.00%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 15</td>
+          <td>43</td>
+          <td>4</td>
+          <td class="good">
+            141.86%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 16</td>
+          <td>105</td>
+          <td>4</td>
+          <td class="good">
+            146.67%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 17</td>
+          <td>254</td>
+          <td>4</td>
+          <td class="good">
+            130.71%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 18</td>
+          <td>677</td>
+          <td>4</td>
+          <td class="good">
+            142.39%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 19</td>
+          <td>148</td>
+          <td>4</td>
+          <td class="good">
+            187.16%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 20</td>
+          <td>311</td>
+          <td>8</td>
+          <td class="poor">
+            8.36%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 21</td>
+          <td>6</td>
+          <td>24</td>
+          <td class="good">
+            3350.00%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 22</td>
+          <td>192</td>
+          <td>4</td>
+          <td class="good">
+            139.06%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 23</td>
+          <td>51</td>
+          <td>4</td>
+          <td class="good">
+            94.12%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 24</td>
+          <td>142</td>
+          <td>6</td>
+          <td class="good">
+            106.34%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 25</td>
+          <td>79</td>
+          <td>8</td>
+          <td class="good">
+            88.61%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 26</td>
+          <td>231</td>
+          <td>8</td>
+          <td class="good">
+            85.71%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 27</td>
+          <td>57</td>
+          <td>6</td>
+          <td class="poor">
+            47.37%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 28</td>
+          <td>20</td>
+          <td>3</td>
+          <td class="poor">
+            30.00%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section 29</td>
+          <td>135</td>
+          <td>6</td>
+          <td class="good">
+            90.37%
+          </td>
+        </tr>
+      
+        <tr>
+          <td>Section unknown</td>
+          <td>1492</td>
+          <td>0</td>
+          <td class="poor">
+            0.00%
+          </td>
+        </tr>
+      
+    </table>
+    
+    <h2>Section Details</h2>
+  
+    <div class="section">
+      <h3>Section 1: Full Name</h3>
+      <p class="field-count">
+        15 total fields, 
+        1 subsections,
+        13 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-1')">Toggle Subsections</p>
+      <div id="section-1" class="hidden">
+    
+        <div class="subsection">
+          <h4>PDFCheckBox Fields</h4>
+          <p class="field-count">
+            2 direct fields
+            , 0 nested subsections
+            (Pattern: type_fallback)
+          </p>
+          
+          
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 10: Dual/Multiple Citizenship & Foreign Passport Info</h3>
+      <p class="field-count">
+        122 total fields, 
+        3 subsections,
+        27 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-10')">Toggle Subsections</p>
+      <div id="section-10" class="hidden">
+    
+        <div class="subsection">
+          <h4>Section10\ 1-10\ 2</h4>
+          <p class="field-count">
+            23 direct fields
+            , 3 nested subsections
+            (Pattern: form_section_indicator)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-10-Section10\.1-10\.2')">Toggle Nested Subsections</p>
+             <div id="subsection-10-Section10\.1-10\.2" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>PDFRadioGroup</h5>
+      <p class="field-count">
+        7 fields
+        (Pattern: type_proximity)
+      </p>
+      
+      
+    </div>
+    
+    <div class="nested-subsection">
+      <h5>PDFDropdown</h5>
+      <p class="field-count">
+        11 fields
+        (Pattern: type_proximity)
+      </p>
+      
+      
+    </div>
+    
+    <div class="nested-subsection">
+      <h5>PDFCheckBox</h5>
+      <p class="field-count">
+        26 fields
+        (Pattern: type_proximity)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Name</h4>
+          <p class="field-count">
+            4 direct fields
+            , 2 nested subsections
+            (Pattern: common_prefix_with_index)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-10-Name')">Toggle Nested Subsections</p>
+             <div id="subsection-10-Name" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>2[0]</h5>
+      <p class="field-count">
+        2 fields
+        (Pattern: common_suffix)
+      </p>
+      
+      
+    </div>
+    
+    <div class="nested-subsection">
+      <h5>2[1]</h5>
+      <p class="field-count">
+        2 fields
+        (Pattern: common_suffix)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>PDFCheckBox Fields</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: type_fallback)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-10-Generic_PDFCheckBox')">Toggle Nested Subsections</p>
+             <div id="subsection-10-Generic_PDFCheckBox" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>PDFCheckBox</h5>
+      <p class="field-count">
+        20 fields
+        (Pattern: type_proximity)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 11: Where You Have Lived</h3>
+      <p class="field-count">
+        252 total fields, 
+        6 subsections,
+        152 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-11')">Toggle Subsections</p>
+      <div id="section-11" class="hidden">
+    
+        <div class="subsection">
+          <h4>Name</h4>
+          <p class="field-count">
+            0 direct fields
+            , 3 nested subsections
+            (Pattern: common_prefix_with_index)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-11-Name')">Toggle Nested Subsections</p>
+             <div id="subsection-11-Name" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>2[0]</h5>
+      <p class="field-count">
+        4 fields
+        (Pattern: common_suffix)
+      </p>
+      
+      
+    </div>
+    
+    <div class="nested-subsection">
+      <h5>2[1]</h5>
+      <p class="field-count">
+        4 fields
+        (Pattern: common_suffix)
+      </p>
+      
+      
+    </div>
+    
+    <div class="nested-subsection">
+      <h5>2[2]</h5>
+      <p class="field-count">
+        4 fields
+        (Pattern: common_suffix)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>PDFCheckBox Fields</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: type_fallback)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-11-Generic_PDFCheckBox')">Toggle Nested Subsections</p>
+             <div id="subsection-11-Generic_PDFCheckBox" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>PDFCheckBox</h5>
+      <p class="field-count">
+        64 fields
+        (Pattern: type_proximity)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section11[0] School6</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-11-form1[0].Section11[0].School6')">Toggle Nested Subsections</p>
+             <div id="subsection-11-form1[0].Section11[0].School6" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section11[0] School6</h5>
+      <p class="field-count">
+        6 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section11-2[0] School6</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-11-form1[0].Section11-2[0].School6')">Toggle Nested Subsections</p>
+             <div id="subsection-11-form1[0].Section11-2[0].School6" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section11-2[0] School6</h5>
+      <p class="field-count">
+        6 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section11-3[0] School6</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-11-form1[0].Section11-3[0].School6')">Toggle Nested Subsections</p>
+             <div id="subsection-11-form1[0].Section11-3[0].School6" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section11-3[0] School6</h5>
+      <p class="field-count">
+        6 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section11-4[0] School6</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-11-form1[0].Section11-4[0].School6')">Toggle Nested Subsections</p>
+             <div id="subsection-11-form1[0].Section11-4[0].School6" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section11-4[0] School6</h5>
+      <p class="field-count">
+        6 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 12: Where you went to School</h3>
+      <p class="field-count">
+        10 total fields, 
+        0 subsections,
+        10 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-12')">Toggle Subsections</p>
+      <div id="section-12" class="hidden">
+    <p>No subsections identified</p>
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 13: Employment Activities</h3>
+      <p class="field-count">
+        886 total fields, 
+        2 subsections,
+        0 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-13')">Toggle Subsections</p>
+      <div id="section-13" class="hidden">
+    
+        <div class="subsection">
+          <h4>Form1[0] Section13</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-13-form1[0].section13')">Toggle Nested Subsections</p>
+             <div id="subsection-13-form1[0].section13" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section13</h5>
+      <p class="field-count">
+        822 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Name</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: common_prefix_with_index)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-13-Name')">Toggle Nested Subsections</p>
+             <div id="subsection-13-Name" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section13</h5>
+      <p class="field-count">
+        64 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 14: Selective Service</h3>
+      <p class="field-count">
+        40 total fields, 
+        2 subsections,
+        0 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-14')">Toggle Subsections</p>
+      <div id="section-14" class="hidden">
+    
+        <div class="subsection">
+          <h4>Form1[0] Section14</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-14-form1[0].Section14')">Toggle Nested Subsections</p>
+             <div id="subsection-14-form1[0].Section14" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section14</h5>
+      <p class="field-count">
+        34 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Name</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: common_prefix_with_index)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-14-Name')">Toggle Nested Subsections</p>
+             <div id="subsection-14-Name" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section14</h5>
+      <p class="field-count">
+        6 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 15: Military History</h3>
+      <p class="field-count">
+        61 total fields, 
+        2 subsections,
+        0 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-15')">Toggle Subsections</p>
+      <div id="section-15" class="hidden">
+    
+        <div class="subsection">
+          <h4>Form1[0] Section15</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-15-form1[0].Section15')">Toggle Nested Subsections</p>
+             <div id="subsection-15-form1[0].Section15" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section15</h5>
+      <p class="field-count">
+        45 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Name</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: common_prefix_with_index)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-15-Name')">Toggle Nested Subsections</p>
+             <div id="subsection-15-Name" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section15</h5>
+      <p class="field-count">
+        16 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 16: People Who Know You Well</h3>
+      <p class="field-count">
+        154 total fields, 
+        2 subsections,
+        0 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-16')">Toggle Subsections</p>
+      <div id="section-16" class="hidden">
+    
+        <div class="subsection">
+          <h4>Name</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: common_prefix_with_index)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-16-Name')">Toggle Nested Subsections</p>
+             <div id="subsection-16-Name" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section16</h5>
+      <p class="field-count">
+        12 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section16</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-16-form1[0].Section16')">Toggle Nested Subsections</p>
+             <div id="subsection-16-form1[0].Section16" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section16</h5>
+      <p class="field-count">
+        142 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 17: Marital/Relationship Status</h3>
+      <p class="field-count">
+        332 total fields, 
+        2 subsections,
+        0 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-17')">Toggle Subsections</p>
+      <div id="section-17" class="hidden">
+    
+        <div class="subsection">
+          <h4>Form1[0] Section17</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-17-form1[0].Section17')">Toggle Nested Subsections</p>
+             <div id="subsection-17-form1[0].Section17" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section17</h5>
+      <p class="field-count">
+        292 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Name</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: common_prefix_with_index)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-17-Name')">Toggle Nested Subsections</p>
+             <div id="subsection-17-Name" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section17</h5>
+      <p class="field-count">
+        40 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 18: Relatives</h3>
+      <p class="field-count">
+        964 total fields, 
+        2 subsections,
+        0 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-18')">Toggle Subsections</p>
+      <div id="section-18" class="hidden">
+    
+        <div class="subsection">
+          <h4>Form1[0] Section18</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-18-form1[0].Section18')">Toggle Nested Subsections</p>
+             <div id="subsection-18-form1[0].Section18" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section18</h5>
+      <p class="field-count">
+        880 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Name</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: common_prefix_with_index)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-18-Name')">Toggle Nested Subsections</p>
+             <div id="subsection-18-Name" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section18</h5>
+      <p class="field-count">
+        84 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 19: Foreign Contacts</h3>
+      <p class="field-count">
+        277 total fields, 
+        2 subsections,
+        0 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-19')">Toggle Subsections</p>
+      <div id="section-19" class="hidden">
+    
+        <div class="subsection">
+          <h4>Form1[0] Section19</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-19-form1[0].Section19')">Toggle Nested Subsections</p>
+             <div id="subsection-19-form1[0].Section19" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section19</h5>
+      <p class="field-count">
+        265 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Name</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: common_prefix_with_index)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-19-Name')">Toggle Nested Subsections</p>
+             <div id="subsection-19-Name" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section19</h5>
+      <p class="field-count">
+        12 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 2: Date of Birth</h3>
+      <p class="field-count">
+        1 total fields, 
+        0 subsections,
+        1 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-2')">Toggle Subsections</p>
+      <div id="section-2" class="hidden">
+    <p>No subsections identified</p>
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 20: Foreign Business, Activities, Government Contacts</h3>
+      <p class="field-count">
+        83 total fields, 
+        4 subsections,
+        57 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-20')">Toggle Subsections</p>
+      <div id="section-20" class="hidden">
+    
+        <div class="subsection">
+          <h4>PDFCheckBox Fields</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: type_fallback)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-20-Generic_PDFCheckBox')">Toggle Nested Subsections</p>
+             <div id="subsection-20-Generic_PDFCheckBox" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>PDFCheckBox</h5>
+      <p class="field-count">
+        16 fields
+        (Pattern: type_proximity)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Provide The Current Value (In U S  Dollars) Or The Value At The Time Control Or Ownership Was Sold, Lost Or Otherwise Disposed Of</h4>
+          <p class="field-count">
+            2 direct fields
+            , 0 nested subsections
+            (Pattern: label_subsection)
+          </p>
+          
+          
+        </div>
+        
+        <div class="subsection">
+          <h4>Name</h4>
+          <p class="field-count">
+            0 direct fields
+            , 3 nested subsections
+            (Pattern: common_prefix_with_index)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-20-Name')">Toggle Nested Subsections</p>
+             <div id="subsection-20-Name" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>2[0]</h5>
+      <p class="field-count">
+        2 fields
+        (Pattern: common_suffix)
+      </p>
+      
+      
+    </div>
+    
+    <div class="nested-subsection">
+      <h5>2[1]</h5>
+      <p class="field-count">
+        2 fields
+        (Pattern: common_suffix)
+      </p>
+      
+      
+    </div>
+    
+    <div class="nested-subsection">
+      <h5>2[2]</h5>
+      <p class="field-count">
+        2 fields
+        (Pattern: common_suffix)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Checkboxes</h4>
+          <p class="field-count">
+            2 direct fields
+            
+            (Pattern: type_fallback)
+          </p>
+          
+          
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 21: Psychological and Emotional Health</h3>
+      <p class="field-count">
+        485 total fields, 
+        12 subsections,
+        284 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-21')">Toggle Subsections</p>
+      <div id="section-21" class="hidden">
+    
+        <div class="subsection">
+          <h4>Name</h4>
+          <p class="field-count">
+            4 direct fields
+            , 4 nested subsections
+            (Pattern: common_prefix_with_index)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-21-Name')">Toggle Nested Subsections</p>
+             <div id="subsection-21-Name" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>2[0]</h5>
+      <p class="field-count">
+        9 fields
+        (Pattern: common_suffix)
+      </p>
+      
+      
+    </div>
+    
+    <div class="nested-subsection">
+      <h5>2[1]</h5>
+      <p class="field-count">
+        6 fields
+        (Pattern: common_suffix)
+      </p>
+      
+      
+    </div>
+    
+    <div class="nested-subsection">
+      <h5>2[2]</h5>
+      <p class="field-count">
+        5 fields
+        (Pattern: common_suffix)
+      </p>
+      
+      
+    </div>
+    
+    <div class="nested-subsection">
+      <h5>2[3]</h5>
+      <p class="field-count">
+        5 fields
+        (Pattern: common_suffix)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>PDFCheckBox Fields</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: type_fallback)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-21-Generic_PDFCheckBox')">Toggle Nested Subsections</p>
+             <div id="subsection-21-Generic_PDFCheckBox" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>PDFCheckBox</h5>
+      <p class="field-count">
+        133 fields
+        (Pattern: type_proximity)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section21a[0] School6</h4>
+          <p class="field-count">
+            3 direct fields
+            , 0 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section21a2[0] School6</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-21-form1[0].Section21a2[0].School6')">Toggle Nested Subsections</p>
+             <div id="subsection-21-form1[0].Section21a2[0].School6" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section21a2[0] School6</h5>
+      <p class="field-count">
+        6 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section21b[0] School6</h4>
+          <p class="field-count">
+            3 direct fields
+            , 0 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section21b2[0] School6</h4>
+          <p class="field-count">
+            3 direct fields
+            , 0 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section21c[0] School6</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-21-form1[0].Section21c[0].School6')">Toggle Nested Subsections</p>
+             <div id="subsection-21-form1[0].Section21c[0].School6" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section21c[0] School6</h5>
+      <p class="field-count">
+        4 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section21d1[0] School6</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-21-form1[0].section21d1[0].School6')">Toggle Nested Subsections</p>
+             <div id="subsection-21-form1[0].section21d1[0].School6" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section21d1[0] School6</h5>
+      <p class="field-count">
+        4 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section21d2[0] School6</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-21-form1[0].section21d2[0].School6')">Toggle Nested Subsections</p>
+             <div id="subsection-21-form1[0].section21d2[0].School6" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section21d2[0] School6</h5>
+      <p class="field-count">
+        4 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section21d3[0] School6</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-21-form1[0].Section21d3[0].School6')">Toggle Nested Subsections</p>
+             <div id="subsection-21-form1[0].Section21d3[0].School6" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section21d3[0] School6</h5>
+      <p class="field-count">
+        4 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section21e[0] School6</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-21-form1[0].Section21e[0].School6')">Toggle Nested Subsections</p>
+             <div id="subsection-21-form1[0].Section21e[0].School6" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section21e[0] School6</h5>
+      <p class="field-count">
+        4 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section21e1[0] School6</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-21-form1[0].Section21e1[0].School6')">Toggle Nested Subsections</p>
+             <div id="subsection-21-form1[0].Section21e1[0].School6" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section21e1[0] School6</h5>
+      <p class="field-count">
+        4 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 22: Police Record</h3>
+      <p class="field-count">
+        268 total fields, 
+        2 subsections,
+        1 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-22')">Toggle Subsections</p>
+      <div id="section-22" class="hidden">
+    
+        <div class="subsection">
+          <h4>Form1[0] Section22</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-22-form1[0].Section22')">Toggle Nested Subsections</p>
+             <div id="subsection-22-form1[0].Section22" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section22</h5>
+      <p class="field-count">
+        235 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Name</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: common_prefix_with_index)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-22-Name')">Toggle Nested Subsections</p>
+             <div id="subsection-22-Name" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section22</h5>
+      <p class="field-count">
+        32 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 23: Illegal Use of Drugs and Drug Activity</h3>
+      <p class="field-count">
+        48 total fields, 
+        2 subsections,
+        0 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-23')">Toggle Subsections</p>
+      <div id="section-23" class="hidden">
+    
+        <div class="subsection">
+          <h4>Form1[0] Section23</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-23-form1[0].Section23')">Toggle Nested Subsections</p>
+             <div id="subsection-23-form1[0].Section23" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section23</h5>
+      <p class="field-count">
+        40 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Name</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: common_prefix_with_index)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-23-Name')">Toggle Nested Subsections</p>
+             <div id="subsection-23-Name" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section23</h5>
+      <p class="field-count">
+        8 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 24: Use of Alcohol</h3>
+      <p class="field-count">
+        160 total fields, 
+        3 subsections,
+        9 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-24')">Toggle Subsections</p>
+      <div id="section-24" class="hidden">
+    
+        <div class="subsection">
+          <h4>Name</h4>
+          <p class="field-count">
+            12 direct fields
+            , 1 nested subsections
+            (Pattern: common_prefix_with_index)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-24-Name')">Toggle Nested Subsections</p>
+             <div id="subsection-24-Name" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section24</h5>
+      <p class="field-count">
+        12 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>PDFCheckBox Fields</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: type_fallback)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-24-Generic_PDFCheckBox')">Toggle Nested Subsections</p>
+             <div id="subsection-24-Generic_PDFCheckBox" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>PDFCheckBox</h5>
+      <p class="field-count">
+        16 fields
+        (Pattern: type_proximity)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section24</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-24-form1[0].Section24')">Toggle Nested Subsections</p>
+             <div id="subsection-24-form1[0].Section24" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section24</h5>
+      <p class="field-count">
+        111 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 25: Investigations and Clearance</h3>
+      <p class="field-count">
+        79 total fields, 
+        5 subsections,
+        9 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-25')">Toggle Subsections</p>
+      <div id="section-25" class="hidden">
+    
+        <div class="subsection">
+          <h4>Name</h4>
+          <p class="field-count">
+            6 direct fields
+            , 1 nested subsections
+            (Pattern: common_prefix_with_index)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-25-Name')">Toggle Nested Subsections</p>
+             <div id="subsection-25-Name" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section25</h5>
+      <p class="field-count">
+        12 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>PDFCheckBox Fields</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: type_fallback)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-25-Generic_PDFCheckBox')">Toggle Nested Subsections</p>
+             <div id="subsection-25-Generic_PDFCheckBox" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>PDFCheckBox</h5>
+      <p class="field-count">
+        42 fields
+        (Pattern: type_proximity)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Provide The Level Of Clearance Eligibility/Access Granted</h4>
+          <p class="field-count">
+            2 direct fields
+            , 0 nested subsections
+            (Pattern: label_subsection)
+          </p>
+          
+          
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section25</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-25-form1[0].Section25')">Toggle Nested Subsections</p>
+             <div id="subsection-25-form1[0].Section25" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section25</h5>
+      <p class="field-count">
+        6 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Checkboxes</h4>
+          <p class="field-count">
+            2 direct fields
+            
+            (Pattern: type_fallback)
+          </p>
+          
+          
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 26: Financial Record</h3>
+      <p class="field-count">
+        237 total fields, 
+        5 subsections,
+        39 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-26')">Toggle Subsections</p>
+      <div id="section-26" class="hidden">
+    
+        <div class="subsection">
+          <h4>Name</h4>
+          <p class="field-count">
+            4 direct fields
+            , 1 nested subsections
+            (Pattern: common_prefix_with_index)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-26-Name')">Toggle Nested Subsections</p>
+             <div id="subsection-26-Name" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section26</h5>
+      <p class="field-count">
+        14 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>PDFCheckBox Fields</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: type_fallback)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-26-Generic_PDFCheckBox')">Toggle Nested Subsections</p>
+             <div id="subsection-26-Generic_PDFCheckBox" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>PDFCheckBox</h5>
+      <p class="field-count">
+        8 fields
+        (Pattern: type_proximity)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section26[0] School6</h4>
+          <p class="field-count">
+            2 direct fields
+            , 0 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          
+        </div>
+        
+        <div class="subsection">
+          <h4>(A) If Chapter 13 Previously Selected</h4>
+          <p class="field-count">
+            2 direct fields
+            , 0 nested subsections
+            (Pattern: label_subsection)
+          </p>
+          
+          
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section26</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-26-form1[0].Section26')">Toggle Nested Subsections</p>
+             <div id="subsection-26-form1[0].Section26" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section26</h5>
+      <p class="field-count">
+        168 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 27: Use of Information Technology Systems</h3>
+      <p class="field-count">
+        57 total fields, 
+        3 subsections,
+        30 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-27')">Toggle Subsections</p>
+      <div id="section-27" class="hidden">
+    
+        <div class="subsection">
+          <h4>PDFCheckBox Fields</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: type_fallback)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-27-Generic_PDFCheckBox')">Toggle Nested Subsections</p>
+             <div id="subsection-27-Generic_PDFCheckBox" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>PDFCheckBox</h5>
+      <p class="field-count">
+        4 fields
+        (Pattern: type_proximity)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Name</h4>
+          <p class="field-count">
+            4 direct fields
+            , 1 nested subsections
+            (Pattern: common_prefix_with_index)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-27-Name')">Toggle Nested Subsections</p>
+             <div id="subsection-27-Name" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section27</h5>
+      <p class="field-count">
+        2 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section27</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-27-form1[0].Section27')">Toggle Nested Subsections</p>
+             <div id="subsection-27-form1[0].Section27" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section27</h5>
+      <p class="field-count">
+        17 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 28: Involvement in Non-Criminal Court Actions</h3>
+      <p class="field-count">
+        23 total fields, 
+        3 subsections,
+        17 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-28')">Toggle Subsections</p>
+      <div id="section-28" class="hidden">
+    
+        <div class="subsection">
+          <h4>Name</h4>
+          <p class="field-count">
+            2 direct fields
+            , 0 nested subsections
+            (Pattern: common_prefix_with_index)
+          </p>
+          
+          
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section28[0] School6</h4>
+          <p class="field-count">
+            2 direct fields
+            , 0 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          
+        </div>
+        
+        <div class="subsection">
+          <h4>PDFCheckBox Fields</h4>
+          <p class="field-count">
+            2 direct fields
+            , 0 nested subsections
+            (Pattern: type_fallback)
+          </p>
+          
+          
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 29: Association Record</h3>
+      <p class="field-count">
+        141 total fields, 
+        3 subsections,
+        19 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-29')">Toggle Subsections</p>
+      <div id="section-29" class="hidden">
+    
+        <div class="subsection">
+          <h4>PDFCheckBox Fields</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: type_fallback)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-29-Generic_PDFCheckBox')">Toggle Nested Subsections</p>
+             <div id="subsection-29-Generic_PDFCheckBox" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>PDFCheckBox</h5>
+      <p class="field-count">
+        10 fields
+        (Pattern: type_proximity)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Name</h4>
+          <p class="field-count">
+            4 direct fields
+            , 1 nested subsections
+            (Pattern: common_prefix_with_index)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-29-Name')">Toggle Nested Subsections</p>
+             <div id="subsection-29-Name" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section29</h5>
+      <p class="field-count">
+        20 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section29</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-29-form1[0].Section29')">Toggle Nested Subsections</p>
+             <div id="subsection-29-form1[0].Section29" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section29</h5>
+      <p class="field-count">
+        88 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 3: Place of Birth</h3>
+      <p class="field-count">
+        1 total fields, 
+        0 subsections,
+        1 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-3')">Toggle Subsections</p>
+      <div id="section-3" class="hidden">
+    <p>No subsections identified</p>
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 4: Social Security Number</h3>
+      <p class="field-count">
+        135 total fields, 
+        12 subsections,
+        58 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-4')">Toggle Subsections</p>
+      <div id="section-4" class="hidden">
+    
+        <div class="subsection">
+          <h4>Section</h4>
+          <p class="field-count">
+            1 direct fields
+            , 2 nested subsections
+            (Pattern: common_prefix_with_index)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-4-section')">Toggle Nested Subsections</p>
+             <div id="subsection-4-section" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] 12</h5>
+      <p class="field-count">
+        2 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+    <div class="nested-subsection">
+      <h5>Form1[0] 13</h5>
+      <p class="field-count">
+        4 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section13</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-4-form1[0].section13')">Toggle Nested Subsections</p>
+             <div id="subsection-4-form1[0].section13" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section13</h5>
+      <p class="field-count">
+        13 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section16</h4>
+          <p class="field-count">
+            2 direct fields
+            , 0 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section17</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-4-form1[0].Section17')">Toggle Nested Subsections</p>
+             <div id="subsection-4-form1[0].Section17" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section17</h5>
+      <p class="field-count">
+        6 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section18</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-4-form1[0].Section18')">Toggle Nested Subsections</p>
+             <div id="subsection-4-form1[0].Section18" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section18</h5>
+      <p class="field-count">
+        18 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section19</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-4-form1[0].Section19')">Toggle Nested Subsections</p>
+             <div id="subsection-4-form1[0].Section19" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section19</h5>
+      <p class="field-count">
+        4 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section22</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-4-form1[0].Section22')">Toggle Nested Subsections</p>
+             <div id="subsection-4-form1[0].Section22" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section22</h5>
+      <p class="field-count">
+        7 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section23</h4>
+          <p class="field-count">
+            2 direct fields
+            , 0 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          
+        </div>
+        
+        <div class="subsection">
+          <h4>Section</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: common_prefix_with_index)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-4-Section')">Toggle Nested Subsections</p>
+             <div id="subsection-4-Section" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] 23</h5>
+      <p class="field-count">
+        5 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section24</h4>
+          <p class="field-count">
+            3 direct fields
+            , 0 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section26</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-4-form1[0].Section26')">Toggle Nested Subsections</p>
+             <div id="subsection-4-form1[0].Section26" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section26</h5>
+      <p class="field-count">
+        6 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Form1[0] Section29</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: semantic_prefix)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-4-form1[0].Section29')">Toggle Nested Subsections</p>
+             <div id="subsection-4-form1[0].Section29" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section29</h5>
+      <p class="field-count">
+        4 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 5: Other Names Used</h3>
+      <p class="field-count">
+        45 total fields, 
+        2 subsections,
+        25 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-5')">Toggle Subsections</p>
+      <div id="section-5" class="hidden">
+    
+        <div class="subsection">
+          <h4>Name</h4>
+          <p class="field-count">
+            0 direct fields
+            , 4 nested subsections
+            (Pattern: common_prefix_with_index)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-5-Name')">Toggle Nested Subsections</p>
+             <div id="subsection-5-Name" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>2[0]</h5>
+      <p class="field-count">
+        2 fields
+        (Pattern: common_suffix)
+      </p>
+      
+      
+    </div>
+    
+    <div class="nested-subsection">
+      <h5>2[1]</h5>
+      <p class="field-count">
+        2 fields
+        (Pattern: common_suffix)
+      </p>
+      
+      
+    </div>
+    
+    <div class="nested-subsection">
+      <h5>2[2]</h5>
+      <p class="field-count">
+        2 fields
+        (Pattern: common_suffix)
+      </p>
+      
+      
+    </div>
+    
+    <div class="nested-subsection">
+      <h5>2[3]</h5>
+      <p class="field-count">
+        2 fields
+        (Pattern: common_suffix)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>PDFCheckBox Fields</h4>
+          <p class="field-count">
+            0 direct fields
+            , 1 nested subsections
+            (Pattern: type_fallback)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-5-Generic_PDFCheckBox')">Toggle Nested Subsections</p>
+             <div id="subsection-5-Generic_PDFCheckBox" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>PDFCheckBox</h5>
+      <p class="field-count">
+        12 fields
+        (Pattern: type_proximity)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 6: Your Identifying Information</h3>
+      <p class="field-count">
+        1 total fields, 
+        0 subsections,
+        1 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-6')">Toggle Subsections</p>
+      <div id="section-6" class="hidden">
+    <p>No subsections identified</p>
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 7: Your Contact Information</h3>
+      <p class="field-count">
+        1 total fields, 
+        0 subsections,
+        1 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-7')">Toggle Subsections</p>
+      <div id="section-7" class="hidden">
+    <p>No subsections identified</p>
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 8: U.S. Passport Information</h3>
+      <p class="field-count">
+        56 total fields, 
+        0 subsections,
+        56 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-8')">Toggle Subsections</p>
+      <div id="section-8" class="hidden">
+    <p>No subsections identified</p>
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section 9: Citizenship</h3>
+      <p class="field-count">
+        56 total fields, 
+        2 subsections,
+        0 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-9')">Toggle Subsections</p>
+      <div id="section-9" class="hidden">
+    
+        <div class="subsection">
+          <h4>Section9\ 1-9\ 4</h4>
+          <p class="field-count">
+            26 direct fields
+            , 4 nested subsections
+            (Pattern: form_section_indicator)
+          </p>
+          
+          <p class="toggle-btn" onclick="toggleSection('subsection-9-Section9\.1-9\.4')">Toggle Nested Subsections</p>
+             <div id="subsection-9-Section9\.1-9\.4" class="hidden">
+               
+    <div class="nested-subsection">
+      <h5>Form1[0] Section9\ 1-9\ 4[0] School6</h5>
+      <p class="field-count">
+        3 fields
+        (Pattern: indexed_groups)
+      </p>
+      
+      
+    </div>
+    
+    <div class="nested-subsection">
+      <h5>PDFDropdown</h5>
+      <p class="field-count">
+        7 fields
+        (Pattern: type_proximity)
+      </p>
+      
+      
+    </div>
+    
+    <div class="nested-subsection">
+      <h5>PDFCheckBox</h5>
+      <p class="field-count">
+        11 fields
+        (Pattern: type_proximity)
+      </p>
+      
+      
+    </div>
+    
+    <div class="nested-subsection">
+      <h5>PDFRadioGroup</h5>
+      <p class="field-count">
+        2 fields
+        (Pattern: type_proximity)
+      </p>
+      
+      
+    </div>
+    
+             </div>
+        </div>
+        
+        <div class="subsection">
+          <h4>Name</h4>
+          <p class="field-count">
+            7 direct fields
+            , 0 nested subsections
+            (Pattern: common_prefix_with_index)
+          </p>
+          
+          
+        </div>
+        
+      </div>
+    </div>
+    
+    <div class="section">
+      <h3>Section unknown: Section unknown</h3>
+      <p class="field-count">
+        1492 total fields, 
+        0 subsections,
+        1492 unclassified fields
+      </p>
+      <p class="toggle-btn" onclick="toggleSection('section-unknown')">Toggle Subsections</p>
+      <div id="section-unknown" class="hidden">
+    <p>No subsections identified</p>
+      </div>
+    </div>
+    
+  </body>
+  </html>
+  
