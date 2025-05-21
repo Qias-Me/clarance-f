@@ -1372,37 +1372,74 @@ export class SelfHealingManager {
      * @returns Array of rule candidates
      */
     generateSubsectionRulesForAllSections(sectionFields) {
-        console.time('generateSubsectionRulesForAllSections');
-        // Create a container for all the rules
         const allRules = [];
         // Process each section
-        for (const [sectionStr, fields] of Object.entries(sectionFields)) {
-            const sectionId = parseInt(sectionStr, 10);
+        Object.entries(sectionFields).forEach(([sectionIdStr, fields]) => {
+            const sectionId = parseInt(sectionIdStr, 10);
             if (isNaN(sectionId) || sectionId === 0)
-                continue;
-            // Skip sections with too few fields
-            if (fields.length < 3)
-                continue;
-            console.log(`Analyzing section ${sectionId} with ${fields.length} fields for subsection/entry patterns`);
-            // Generate rules based on section type
-            let sectionRules = [];
-            // Sections 1-8 don't have subsections, only entries
-            if (sectionId <= 8) {
-                sectionRules = this.generateEntryRulesForBaseSection(fields, sectionId);
-                console.log(`Generated ${sectionRules.length} entry rules for base section ${sectionId}`);
-            }
-            else {
-                // Sections 9+ may have both subsections and entries
-                sectionRules = this.generateSubsectionRules(fields, sectionId);
-                console.log(`Generated ${sectionRules.length} subsection/entry rules for complex section ${sectionId}`);
-            }
+                return;
+            // Skip sections with very few fields
+            if (fields.length < 5)
+                return;
+            // Generate rules for this section
+            const sectionRules = this.generateSubsectionRules(fields, sectionId);
             if (sectionRules.length > 0) {
-                // Add the rules to our collection
                 allRules.push(...sectionRules);
             }
-        }
-        console.log(`Total rules generated: ${allRules.length}`);
-        console.timeEnd('generateSubsectionRulesForAllSections');
+        });
+        return allRules;
+    }
+    /**
+     * Generate entry rules for all sections
+     * @param sectionFields Fields grouped by section
+     * @returns Array of rules for entry categorization
+     */
+    generateEntryRulesForAllSections(sectionFields) {
+        const allRules = [];
+        // Process each section
+        Object.entries(sectionFields).forEach(([sectionIdStr, fields]) => {
+            const sectionId = parseInt(sectionIdStr, 10);
+            if (isNaN(sectionId) || sectionId === 0)
+                return;
+            // Skip sections with very few fields
+            if (fields.length < 5)
+                return;
+            // Skip sections 1-8 as they typically don't have entries
+            if (sectionId <= 8)
+                return;
+            // Group fields by subsection
+            const fieldsBySubsection = {};
+            fields.forEach(field => {
+                const subsection = field.subsection || 'base';
+                if (!fieldsBySubsection[subsection]) {
+                    fieldsBySubsection[subsection] = [];
+                }
+                fieldsBySubsection[subsection].push(field);
+            });
+            // Process each subsection
+            Object.entries(fieldsBySubsection).forEach(([subsection, subsectionFields]) => {
+                // Find fields with entries
+                const fieldsWithEntries = subsectionFields.filter(field => field.entry && field.entry > 0);
+                if (fieldsWithEntries.length >= 3) { // Need at least 3 fields with entries to establish a pattern
+                    // Get unique entry numbers
+                    const entryNumbers = Array.from(new Set(fieldsWithEntries.map(field => field.entry))).filter(entry => entry !== undefined);
+                    if (entryNumbers.length >= 2) { // Need at least 2 entries to generate meaningful rules
+                        // Generate entry rules for this subsection
+                        const entryRules = this.generateEntryRules(subsectionFields, sectionId, subsection === 'base' ? '' : subsection, entryNumbers);
+                        if (entryRules.length > 0) {
+                            allRules.push(...entryRules);
+                        }
+                    }
+                }
+            });
+            // Generate base entry rules for sections that have entries but not subsections
+            if (fields.some(field => field.entry && field.entry > 0 && !field.subsection)) {
+                const baseEntryRules = this.generateEntryRulesForBaseSection(fields, sectionId);
+                if (baseEntryRules.length > 0) {
+                    allRules.push(...baseEntryRules);
+                }
+            }
+        });
         return allRules;
     }
     /**
@@ -1649,34 +1686,50 @@ export class SelfHealingManager {
             const entryFields = fieldsByEntry[entry];
             if (entryFields.length < 2)
                 continue; // Skip if too few fields
-            // Common entry pattern formats
+            // Common entry pattern formats - make sure to escape special regex characters
             const entryPatterns = [
-                `section${sectionId}${subsection.toLowerCase()}${entry}`, // section21d1
-                `section${sectionId}_${subsection.toLowerCase()}_${entry}`, // section21_d_1
-                `section${sectionId}\\.${subsection.toLowerCase()}\\.${entry}`, // section21.d.1
-                `form1\\[\\d+\\]\\.section${sectionId}[-_]?${subsection.toLowerCase()}[-_]?${entry}` // form1[0].Section21D_1[0]
+                `section${sectionId}${subsection.toLowerCase()}${entry}`.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'), // section21d1
+                `section${sectionId}_${subsection.toLowerCase()}_${entry}`.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&'), // section21_d_1
+                `section${sectionId}\\.${subsection.toLowerCase()}\\.${entry}`, // section21.d.1 (already escaped)
+                `form1\\[\\d+\\]\\.section${sectionId}[-_]?${subsection.toLowerCase()}[-_]?${entry}` // form1[0].Section21D_1[0] (already escaped)
             ];
             // Add entry patterns
             for (const patternStr of entryPatterns) {
-                rules.push({
-                    pattern: new RegExp(patternStr, 'i'),
-                    subSection: subsection,
-                    confidence: 0.92,
-                    description: `Entry ${entry} pattern for subsection ${subsection} in section ${sectionId}`,
-                    entryIndex: () => entry
-                });
+                try {
+                    // Validate the pattern is a valid regex before adding it
+                    new RegExp(patternStr, 'i');
+                    rules.push({
+                        pattern: new RegExp(patternStr, 'i'),
+                        subSection: subsection,
+                        confidence: 0.92,
+                        description: `Entry ${entry} pattern for subsection ${subsection} in section ${sectionId}`,
+                        entryIndex: () => entry
+                    });
+                }
+                catch (error) {
+                    console.warn(`Invalid entry pattern regex: ${patternStr}`);
+                    // Skip this pattern
+                }
             }
             // Look for specific patterns in this entry's fields
             const uniquePatterns = this.findUniqueEntryPatterns(entryFields, entry);
             for (const pattern of uniquePatterns) {
                 if (!entryPatterns.includes(pattern)) {
-                    rules.push({
-                        pattern: new RegExp(pattern, 'i'),
-                        subSection: subsection,
-                        confidence: 0.88,
-                        description: `Custom entry ${entry} pattern for subsection ${subsection} in section ${sectionId}`,
-                        entryIndex: () => entry
-                    });
+                    try {
+                        // Validate the pattern is a valid regex before adding it
+                        new RegExp(pattern, 'i');
+                        rules.push({
+                            pattern: new RegExp(pattern, 'i'),
+                            subSection: subsection,
+                            confidence: 0.88,
+                            description: `Custom entry ${entry} pattern for subsection ${subsection} in section ${sectionId}`,
+                            entryIndex: () => entry
+                        });
+                    }
+                    catch (error) {
+                        console.warn(`Invalid custom entry pattern regex: ${pattern}`);
+                        // Skip this pattern
+                    }
                 }
             }
         }
@@ -1695,9 +1748,12 @@ export class SelfHealingManager {
             const names = fields.map(f => f.name);
             const commonPrefix = this.findCommonPrefix(names);
             if (commonPrefix && commonPrefix.length > 5) {
-                patterns.add(commonPrefix);
+                // Only add if the prefix doesn't contain square brackets, which would cause regex issues
+                if (!commonPrefix.includes('[')) {
+                    patterns.add(commonPrefix);
+                }
             }
-            // Extract patterns with entry number
+            // Extract patterns with entry number, avoiding complex nested structures
             for (const field of fields) {
                 const entryStr = entry.toString();
                 const entryIndex = field.name.indexOf(entryStr);
@@ -1706,11 +1762,30 @@ export class SelfHealingManager {
                     const start = Math.max(0, entryIndex - 5);
                     const end = Math.min(field.name.length, entryIndex + entryStr.length + 5);
                     const context = field.name.substring(start, end);
-                    if (context.length > entryStr.length + 2) {
-                        patterns.add(context.replace(entryStr, '\\d+'));
+                    // Only create patterns if the context doesn't contain square brackets, which are problematic
+                    if (context.length > entryStr.length + 2 && !context.includes('[') && !context.includes(']')) {
+                        // Simple regex escape for the reduced number of special chars we still need to handle
+                        const escapedContext = context
+                            .replace(/\\/g, '\\\\')
+                            .replace(/\./g, '\\.')
+                            .replace(/\+/g, '\\+')
+                            .replace(/\*/g, '\\*')
+                            .replace(/\?/g, '\\?')
+                            .replace(/\^/g, '\\^')
+                            .replace(/\$/g, '\\$')
+                            .replace(/\{/g, '\\{')
+                            .replace(/\}/g, '\\}')
+                            .replace(/\(/g, '\\(')
+                            .replace(/\)/g, '\\)')
+                            .replace(/\|/g, '\\|');
+                        const pattern = escapedContext.replace(entryStr, '\\d+');
+                        patterns.add(pattern);
                     }
                 }
             }
+            // Add a simple, safe fallback pattern for entries
+            const safePattern = `_${entry}_`;
+            patterns.add(safePattern);
         }
         return Array.from(patterns);
     }

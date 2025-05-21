@@ -1,0 +1,22 @@
+    const normalizedName = fieldName.toLowerCase().trim();
+
+  
+  // Pattern for camelCase field value with embedded section/subsection/entry
+  // Example: section13aEntry2Date or section13SubAEntry2StartDate
+  const camelCasePattern = /section(\d+)(?:Sub)?([A-Za-z])(?:Entry|Instance)?(\d+)/i;
+  const camelCaseMatch = normalizedValue.match(camelCasePattern);
+  if (camelCaseMatch) {
+    const section = parseInt(camelCaseMatch[1]);
+    const subsection = camelCaseMatch[2].toUpperCase();
+    const entry = parseInt(camelCaseMatch[3]);
+    
+    matchDetails = verbose ? `Camel case pattern: ${camelCaseMatch[0]}` : undefined;
+    return {
+      section,
+      subsection,
+      entry,
+      confidence: 0.92,
+      ...matchDetails && { matchDetails }
+    };
+  }
+  

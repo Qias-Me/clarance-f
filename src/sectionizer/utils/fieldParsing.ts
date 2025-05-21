@@ -159,59 +159,7 @@ export function extractSectionInfo(
     };
   }
   
-  // Pattern for camelCase field names with embedded section/subsection/entry
-  // Example: section13aEntry2Date or section13SubAEntry2StartDate
-  const camelCasePattern = /section(\d+)(?:Sub)?([A-Za-z])(?:Entry|Instance)?(\d+)/i;
-  const camelCaseMatch = normalizedName.match(camelCasePattern);
-  if (camelCaseMatch) {
-    const section = parseInt(camelCaseMatch[1]);
-    const subsection = camelCaseMatch[2].toUpperCase();
-    const entry = parseInt(camelCaseMatch[3]);
-    
-    matchDetails = verbose ? `Camel case pattern: ${camelCaseMatch[0]}` : undefined;
-    return {
-      section,
-      subsection,
-      entry,
-      confidence: 0.92,
-      ...matchDetails && { matchDetails }
-    };
-  }
-  
-  // Pattern: sect13A.1Entry2StartDate
-  const sectDotPattern = /sect(\d+)([A-Za-z])(?:\.(\d+))?(?:Entry|Instance)(\d+)/i;
-  const sectDotMatch = normalizedName.match(sectDotPattern);
-  if (sectDotMatch) {
-    const section = parseInt(sectDotMatch[1]);
-    const subsectionLetter = sectDotMatch[2].toUpperCase();
-    const subsectionNumber = sectDotMatch[3] ? `.${sectDotMatch[3]}` : '';
-    const subsection = `${subsectionLetter}${subsectionNumber}`;
-    const entry = parseInt(sectDotMatch[4]);
-    
-    matchDetails = verbose ? `Section dot pattern: ${sectDotMatch[0]}` : undefined;
-    return {
-      section,
-      subsection,
-      entry,
-      confidence: 0.93,
-      ...matchDetails && { matchDetails }
-    };
-  }
-  
-  // Pattern: s_21 or s-21
-  const sPrefixPattern = /\bs[_\-]?(\d+)/i;
-  const sPrefixMatch = normalizedName.match(sPrefixPattern);
-  if (sPrefixMatch) {
-    const section = parseInt(sPrefixMatch[1]);
-    if (section > 0 && section <= 30) {
-      matchDetails = verbose ? `S-prefix pattern: ${sPrefixMatch[0]}` : undefined;
-      return {
-        section,
-        confidence: 0.85,
-        ...matchDetails && { matchDetails }
-      };
-    }
-  }
+
   
   // Most basic pattern: just looking for "Section X" anywhere in the field name
   const basicSectionPattern = /\bsection\s*(\d+)\b/i;
@@ -445,6 +393,8 @@ export function extractSectionInfo(
   return null;
 }
 
+
+
 /**
  * Extract section information from multiple field properties
  * Tries name first, then label, falls back to other properties if available
@@ -532,6 +482,7 @@ export function getSpecialSectionPatterns(sectionNumber: number): { pattern: Reg
       return [];
   }
 }
+
 
 // Re-export necessary functions from bridge adapter for cleaner imports
 export { 

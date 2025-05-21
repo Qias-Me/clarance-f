@@ -764,12 +764,17 @@ export class RulesGenerator {
   }
   
   /**
-   * Escape special characters in a string for use in a RegExp
+   * Properly escapes all special regex characters in a string
    * @param string String to escape
-   * @returns Escaped string
+   * @returns Escaped string safe for use in RegExp constructor
    */
   private escapeRegExp(string: string): string {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Return an empty string if input is undefined or null
+    if (!string) return '';
+    
+    // Escape all special regex characters:
+    // . * + ? ^ $ { } ( ) | [ ] \ /
+    return string.replace(/[.*+?^${}()|[\]\\\/]/g, '\\$&');
   }
   
   /**

@@ -165,6 +165,18 @@ export class PdfService {
       value.toLowerCase() === "yes" ? field.check() : field.uncheck();
   }
 
+  public getFieldValue(field: any): string | string[] | boolean | undefined {
+    if (field instanceof PDFTextField) {
+      return field.getText();
+    } else if (field instanceof PDFDropdown) {
+      return field.getSelected();
+    } else if (field instanceof PDFCheckBox) {
+      return field.isChecked(); // Return boolean for checkboxes
+    } else if (field instanceof PDFRadioGroup) {
+      return field.getSelected();
+    }
+    return undefined; // Default for unknown or unhandled field types
+  }
 
   //Advanced Methods
 
@@ -442,10 +454,15 @@ async generateJSON_fromPDF(
 
     // Extract field data
     const fieldDataList: FieldMetadata[] = [];
+    const seenFieldIds = new Set<string>(); // Keep track of processed field IDs
     let directExtractionCount = 0;
     let annotationCount = 0;
     let backupCount = 0;
     let fallbackCount = 0;
+    let checkboxSampleLogged = 0;
+    let radioSampleLogged = 0;
+    let textSampleLogged = 0;
+    const SAMPLE_LOG_LIMIT = 3; // Log up to 3 samples for each type
 
     for (let i = 0; i < fields.length; i++) {
       const field = fields[i];
@@ -453,68 +470,110 @@ async generateJSON_fromPDF(
       // Get field properties
       const fieldName = field.getName();
       const fieldType = field.constructor.name;
+      // Log the field type for every field
+      console.log(`Processing field: ${fieldName}, Type: ${fieldType}`);
+
       const widgets = field.acroField.getWidgets();
       const pages = this.getFieldPages(field, pdfDoc);
+      const fieldId = field.ref.tag.toString();
       
+      // If we've already processed this fieldId, skip it
+      if (seenFieldIds.has(fieldId)) {
+        continue;
+      }
+
       // Most fields have only one widget, but some may have multiple
+      // We'll take the data from the first widget for deduplication purposes
       if (widgets.length > 0) {
-        for (let j = 0; j < widgets.length; j++) {
-          const widget = widgets[j];
-          
-          // Try to extract coordinates using different methods
-          let coordinates = this.extractRectFromWidget(widget);
-          
+        const widget = widgets[0]; // Process only the first widget for this field
+        
+        // Try to extract coordinates using different methods
+        let coordinates = this.extractRectFromWidget(widget);
+        let extractionMethod = "widget";
+        
+        if (coordinates) {
+          directExtractionCount++;
+        } else {
+          // Try alternative method based on annotations
+          coordinates = this.extractRectFromAnnotation(field, pdfDoc);
+          extractionMethod = "annotation";
           if (coordinates) {
-            directExtractionCount++;
+            annotationCount++;
           } else {
-            // Try alternative method based on annotations
-            coordinates = this.extractRectFromAnnotation(field, pdfDoc);
+            // Try backup method
+            coordinates = this.extractRectFromFieldObject(field);
+            extractionMethod = "fieldObject";
             if (coordinates) {
-              annotationCount++;
+              backupCount++;
             } else {
-              // Try backup method
-              coordinates = this.extractRectFromFieldObject(field);
-              if (coordinates) {
-                backupCount++;
-              } else {
-                // Last resort fallback
-                coordinates = { x: 0, y: 0, width: 0, height: 0 };
-                fallbackCount++;
-              }
+              // Last resort fallback: Use -1 to indicate failure to extract actual coordinates
+              coordinates = { x: -1, y: -1, width: -1, height: -1 };
+              extractionMethod = "fallback";
+              fallbackCount++;
             }
           }
-
-          // Get page number (0-based)
-          const pageIndex = this.getWidgetPage(widget, pdfDoc);
-          
-          // Create field metadata object
-          fieldDataList.push({
-            id: `${i}_${j}`,
-            name: fieldName,
-            type: fieldType,
-            value: this.getFieldValue(field),
-            page: pageIndex !== null ? pageIndex + 1 : 1, // Convert to 1-based
-            rect: coordinates
-          });
         }
-      } else {
-        // Fallback for fields without widgets
+
+        // Get page number (0-based)
+        const pageIndex = this.getWidgetPage(widget, pdfDoc);
+        
+        // Log sample data
+        const logSample = (type: string, currentLogged: number) => {
+          if (currentLogged < SAMPLE_LOG_LIMIT) {
+            console.log(`  [Sample] Type: ${fieldType}, Name: ${fieldName}, Page: ${pageIndex !== null ? pageIndex + 1 : 'N/A'}, Coords: ${JSON.stringify(coordinates)}, Method: ${extractionMethod}`);
+            return currentLogged + 1;
+          }
+          return currentLogged;
+        };
+
+        if (fieldType === "PDFCheckBox") {
+          checkboxSampleLogged = logSample("Checkbox", checkboxSampleLogged);
+        } else if (fieldType === "PDFRadioGroup") {
+          radioSampleLogged = logSample("RadioGroup", radioSampleLogged);
+        } else if (fieldType === "PDFTextField") {
+          textSampleLogged = logSample("TextField", textSampleLogged);
+        } else {
+          // Log any other field types encountered, just once per type for brevity
+          if (!seenFieldIds.has(`otherTypeLogged_${fieldType}`)) {
+            console.log(`  [Encountered other field type] Type: ${fieldType}, Name: ${fieldName}`);
+            seenFieldIds.add(`otherTypeLogged_${fieldType}`);
+          }
+        }
+
+
+        // Create field metadata object
         fieldDataList.push({
-          id: `${i}_0`,
+          id: fieldId,
           name: fieldName,
           type: fieldType,
           value: this.getFieldValue(field),
-          page: pages.length > 0 ? pages[0] + 1 : 1, // Convert to 1-based
-          rect: { x: 0, y: 0, width: 0, height: 0 }
+          page: pageIndex !== null ? pageIndex + 1 : 1,
+          rect: coordinates
         });
-        fallbackCount++;
+        seenFieldIds.add(fieldId); // Mark this fieldId as processed
+      } else {
+        // Fallback for fields without widgets (should also be unique by fieldId)
+        if (!seenFieldIds.has(fieldId)) {
+           console.warn(`Field '${fieldName}' (ID: ${fieldId}, Type: ${fieldType}) has no widgets. Using fallback coordinates.`);
+          fieldDataList.push({
+            id: fieldId,
+            name: fieldName,
+            type: fieldType,
+            value: this.getFieldValue(field),
+            page: pages.length > 0 ? pages[0] + 1 : 1, // Use getFieldPages as fallback
+            // Use -1 to indicate failure to extract actual coordinates
+            rect: { x: -1, y: -1, width: -1, height: -1 }
+          });
+          fallbackCount++; // Count this as a fallback
+          seenFieldIds.add(fieldId); // Mark this fieldId as processed
+        }
       }
     }
 
     // Create debug report
     try {
       // Ensure the output directory exists
-      const outputDir = path.join(process.cwd(), 'api', 'service', 'output');
+      const outputDir = path.join(process.cwd(), 'output');
       if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
       }
@@ -529,14 +588,14 @@ async generateJSON_fromPDF(
 
     // Count how many fields have valid coordinates
     const fieldsWithCoordinates = fieldDataList.filter(field => field.rect && 
-      (field.rect.width > 0 || field.rect.height > 0));
+      (field.rect.width > 0 || field.rect.height > 0)); // A width or height > 0 implies valid rect
     
-    console.log(`Extracted coordinates for ${fieldsWithCoordinates.length} out of ${fieldDataList.length} fields (${(fieldsWithCoordinates.length/fieldDataList.length*100).toFixed(1)}%)`);
+    console.log(`Extracted coordinates for ${fieldsWithCoordinates.length} out of ${fieldDataList.length} unique fields (${(fieldDataList.length > 0 ? (fieldsWithCoordinates.length/fieldDataList.length*100) : 0).toFixed(1)}%)`);
     console.log(`Extraction method breakdown:
       - Direct widget extraction: ${directExtractionCount}
       - Annotation-based: ${annotationCount}
       - Backup method: ${backupCount}
-      - Fallback estimation: ${fallbackCount}
+      - Fallback (no widgets or all methods failed): ${fallbackCount}
     `);
 
     return fieldDataList;
@@ -886,46 +945,6 @@ async generateJSON_fromPDF(
       console.error(`Error extracting rect from field object: ${error}`);
     }
     return null;
-  }
-
-  /**
-   * Get the value of a PDF field with type checking
-   * @param field PDF form field
-   * @returns Field value as string or empty string if unavailable
-   */
-  private getFieldValue(field: PDFField): string {
-    try {
-      if (field instanceof PDFTextField) {
-        return field.getText() || '';
-      } else if (field instanceof PDFDropdown) {
-        const selected = field.getSelected();
-        if (Array.isArray(selected)) {
-          return selected.join(', ');
-        }
-        return selected || '';
-      } else if (field instanceof PDFCheckBox) {
-        return field.isChecked() ? 'checked' : 'unchecked';
-      } else if (field instanceof PDFRadioGroup) {
-        return field.getSelected() || '';
-      } else {
-        // Generic fallback - try to access value safely
-        try {
-          // First try to use a common toString method if available
-          if (field.acroField.dict) {
-            const valueObj = field.acroField.dict.get(PDFName.of('V'));
-            if (valueObj instanceof PDFString) {
-              return valueObj.decodeText();
-            }
-          }
-        } catch (e) {
-          // Ignore errors and return empty string
-        }
-        return '';
-      }
-    } catch (error) {
-      console.error(`Error getting field value: ${error}`);
-      return '';
-    }
   }
 
 }

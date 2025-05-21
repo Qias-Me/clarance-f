@@ -1,9 +1,24 @@
 import fs from 'fs/promises';
 import path from 'path';
 import * as url from 'url';
-import { strictSectionPatterns, isFieldInSection } from './section-patterns.js';
-// Reference to the section field patterns in shared section-patterns.ts
-// No need to redefine these patterns here anymore
+import { sectionFieldPatterns } from './field-clusterer.js';
+// Define aliases for compatibility with existing code
+const strictSectionPatterns = sectionFieldPatterns;
+/**
+ * Function to determine if a field belongs to a specific section
+ */
+function isFieldInSection(fieldName, section) {
+    if (!fieldName)
+        return false;
+    const lowerName = fieldName.toLowerCase();
+    // Check if we have patterns for this section
+    if (!sectionFieldPatterns[section]) {
+        return false;
+    }
+    // Check if the field name matches any pattern for this section
+    const patterns = sectionFieldPatterns[section];
+    return patterns.some(pattern => pattern.test(lowerName));
+}
 /**
  * Manages loading and caching of section rules
  */

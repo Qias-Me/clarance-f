@@ -7,252 +7,174 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import type { SectionedField } from './fieldGrouping.js';
+import { expectedFieldCounts } from './field-clusterer.js';
 
 /**
- * Result from section count validation
+ * Interface for basic sectioned field
  */
-export interface SectionValidationResult {
-  /** Overall validation success */
-  success: boolean;
-  
-  /** Percentage of sections that are within threshold */
-  alignmentPercentage: number;
-  
-  /** List of deviations sorted by percentage (highest first) */
-  deviations: SectionDeviation[];
-  
-  /** Total number of fields expected */
-  totalExpected: number;
-  
-  /** Total number of fields found */
-  totalActual: number;
-  
-  /** Total absolute deviation across all sections */
-  totalDeviation: number;
-  
-  /** Number of fields in section 0 (uncategorized) */
-  unknownFieldCount: number;
-  
-  /** Whether critical sections are aligned properly */
-  criticalSectionsAligned: boolean;
+export interface ValidationSectionedField {
+  section: number;
 }
 
 /**
- * Information about an individual section's deviation
+ * Section deviation information
  */
 export interface SectionDeviation {
-  /** Section number */
-  section: number;
-  
-  /** Expected number of fields */
-  expected: number;
-  
-  /** Actual number of fields */
-  actual: number;
-  
-  /** Difference (actual - expected) */
-  deviation: number;
-  
-  /** Deviation percentage */
-  percentage: number;
-  
-  /** Whether this is considered a critical section */
-  isCritical?: boolean;
+  section: number;       // Section number
+  expected: number;      // Expected field count
+  actual: number;        // Actual field count
+  deviation: number;     // Difference (actual - expected)
+  percentage: number;    // Percentage deviation
+  isCritical?: boolean;  // Indicates if this section is critical/mandatory
 }
 
 /**
- * Options for validateSectionCounts function
+ * Result of section count validation
+ */
+export interface SectionValidationResult {
+  success: boolean;      // Overall validation result
+  deviations: SectionDeviation[];  // Detailed deviations by section
+  missingMandatorySections: number[];  // Sections that are required but missing
+  undersizedSections: number[];    // Sections with too few fields
+  oversizedSections: number[];     // Sections with too many fields
+  message: string;       // Human-readable result message
+}
+
+/**
+ * Options for section validation
  */
 export interface ValidationOptions {
-  /** Maximum acceptable deviation percentage (default: 30%) */
-  maxDeviationPercent?: number;
-  
-  /** Stricter threshold for critical sections (default: maxDeviationPercent * 0.7) */
-  criticalSectionThreshold?: number;
-  
-  /** Minimum success percentage for overall alignment (default: 0.9 = 90%) */
-  successThreshold?: number;
-  
-  /** Critical section numbers that require stricter validation */
-  criticalSections?: number[];
-  
-  /** Maximum number of acceptable fields in section 0 (default: 20) */
-  maxAcceptableUnknownFields?: number;
-  
-  /** Whether to write detailed validation report to file */
-  outputReport?: boolean;
-  
-  /** Path to write validation report to if outputReport is true */
-  reportPath?: string;
-  
-  /** Whether to show detailed logging */
-  verbose?: boolean;
+  maxDeviationPercent?: number;  // Maximum acceptable percentage deviation
+  strict?: boolean;              // Use stricter validation thresholds
+  ignoreSections?: number[];     // Sections to exclude from validation
+  ignoreOverflowSections?: boolean; // Whether to ignore high-numbered overflow sections
+  mandatorySections?: number[];  // Sections that must be present
 }
 
-/**
- * Known reference counts from SF-86 form 
- */
-export const DEFAULT_REFERENCE_COUNTS: Record<number, number> = {
-  1: 15, 2: 20, 3: 10, 4: 25, 5: 140,
-  6: 25, 7: 20, 8: 15, 9: 100, 10: 60,
-  11: 40, 12: 40, 13: 80, 14: 40, 15: 40,
-  16: 40, 17: 90, 18: 30, 19: 50, 20: 40,
-  21: 50, 22: 50, 23: 50, 24: 20, 25: 40,
-  26: 20, 27: 20, 28: 20, 29: 141, 30: 10
-};
+// Default critical/mandatory sections that should always be present
+export const DEFAULT_MANDATORY_SECTIONS = [
+  1, 2, 5, 13, 17, 19
+];
 
 /**
- * Default critical sections that require stricter validation
- */
-export const DEFAULT_CRITICAL_SECTIONS = [1, 2, 4, 5, 8, 13, 14, 15, 17, 21, 27];
-
-/**
- * Validate section counts against reference data
+ * Validate section counts against reference counts
  * 
- * @param sectionFields Fields grouped by section
- * @param referenceCounts Reference counts for each section
+ * @param sectionFields Map of sections to fields
+ * @param referenceCounts Reference counts for validation
  * @param options Validation options
- * @returns Detailed validation result
+ * @returns Validation result object
  */
-export function validateSectionCounts<T extends SectionedField>(
+export function validateSectionCounts<T extends ValidationSectionedField>(
   sectionFields: Record<string | number, T[]>,
-  referenceCounts: Record<number, number> = DEFAULT_REFERENCE_COUNTS,
+  referenceCounts: Record<number, { fields: number; entries: number; subsections: number; }> = expectedFieldCounts,
   options: ValidationOptions = {}
 ): SectionValidationResult {
+  // Default options
   const {
-    maxDeviationPercent = 30,
-    criticalSectionThreshold = maxDeviationPercent * 0.7,
-    successThreshold = 0.9,
-    criticalSections = DEFAULT_CRITICAL_SECTIONS,
-    maxAcceptableUnknownFields = 20,
-    outputReport = false,
-    reportPath,
-    verbose = false
+    maxDeviationPercent = options.strict ? 10 : 30,
+    ignoreOverflowSections = !options.strict,
+    ignoreSections = []
   } = options;
   
-  // Track validation metrics
-  const deviations: SectionDeviation[] = [];
-  let sectionsInRange = 0;
-  let totalSections = 0;
-  let totalExpected = 0;
-  let totalActual = 0;
-  let totalDeviation = 0;
-  let criticalSectionsAligned = true;
-  
-  // Get section 0 count
-  const unknownFieldCount = Array.isArray(sectionFields["0"]) ? sectionFields["0"].length : 0;
-  
-  // Check each section
-  for (const [sectionKey, expectedCount] of Object.entries(referenceCounts)) {
-    const section = parseInt(sectionKey, 10);
-    if (isNaN(section) || section === 0 || expectedCount <= 0) continue;
-    
-    totalSections++;
-    totalExpected += expectedCount;
-    
-    // Get actual count, supporting both string and number keys
-    const strKey = section.toString();
-    const numKey = section;
-    const sectionArray = sectionFields[strKey] || sectionFields[numKey] || [];
-    const actualCount = Array.isArray(sectionArray) ? sectionArray.length : 0;
-    
-    totalActual += actualCount;
-    
-    const deviation = actualCount - expectedCount;
-    const absDev = Math.abs(deviation);
-    totalDeviation += absDev;
-    
-    const deviationPercent = (expectedCount > 0) ? (absDev / expectedCount) * 100 : 100;
-    const isCritical = criticalSections.includes(section);
-    
-    // Threshold depends on whether this is a critical section
-    const threshold = isCritical ? criticalSectionThreshold : maxDeviationPercent;
-    
-    // Add to deviations if there's any difference
-    if (deviation !== 0) {
-      deviations.push({
-        section,
-        expected: expectedCount,
-        actual: actualCount,
-        deviation,
-        percentage: deviationPercent,
-        isCritical
-      });
-    }
-    
-    // Check if deviation is within acceptable range
-    if (deviationPercent <= threshold) {
-      sectionsInRange++;
-    } else if (isCritical) {
-      criticalSectionsAligned = false;
-    }
-  }
-  
-  // Calculate success metrics
-  const alignmentPercentage = totalSections > 0 ? (sectionsInRange / totalSections) * 100 : 0;
-  const isUnknownFieldsAcceptable = unknownFieldCount <= maxAcceptableUnknownFields;
-  
-  // Success if we hit the threshold percentage and unknown fields are acceptable
-  const success = 
-    isUnknownFieldsAcceptable && // Check if unknown fields count is acceptable 
-    totalSections > 0 && // Make sure we checked at least one section
-    ((sectionsInRange / totalSections) >= successThreshold); // Check if we met the threshold
-  
-  // Sort deviations by percentage (highest first)
-  const sortedDeviations = deviations.sort((a, b) => b.percentage - a.percentage);
-  
-  // Return detailed result
+  // Initialize result
   const result: SectionValidationResult = {
-    success,
-    alignmentPercentage,
-    deviations: sortedDeviations,
-    totalExpected,
-    totalActual,
-    totalDeviation,
-    unknownFieldCount,
-    criticalSectionsAligned
+    success: true,
+    deviations: [],
+    missingMandatorySections: [],
+    oversizedSections: [],
+    undersizedSections: [],
+    message: ""
   };
   
-  // Log results if verbose
-  if (verbose) {
-    console.log(`Section count validation result: ${success ? 'SUCCESS' : 'FAILURE'}`);
-    console.log(`Alignment percentage: ${alignmentPercentage.toFixed(1)}%`);
-    console.log(`Unknown fields: ${unknownFieldCount}`);
-    
-    if (sortedDeviations.length > 0) {
-      console.log('Top deviations:');
-      sortedDeviations.slice(0, 5).forEach(dev => {
-        const sign = dev.deviation > 0 ? '+' : '';
-        console.log(`  Section ${dev.section}${dev.isCritical ? ' (CRITICAL)' : ''}: ` +
-                   `${dev.actual} vs ${dev.expected} expected (${sign}${dev.deviation}, ${dev.percentage.toFixed(1)}%)`);
-      });
+  // Keep track of numbers to identify any important missing sections
+  const missingNumbers: number[] = [];
+  const mandatorySections = options.mandatorySections || DEFAULT_MANDATORY_SECTIONS;
+  
+  // Track non-zero sections and their counts
+  const sectionCounts: Record<number, number> = {};
+  
+  // Convert string keys to numbers and build counts
+  for (const [key, fields] of Object.entries(sectionFields)) {
+    const sectionNum = parseInt(key, 10);
+    if (!isNaN(sectionNum)) {
+      sectionCounts[sectionNum] = fields.length;
     }
   }
   
-  // Write detailed report if requested
-  if (outputReport && reportPath) {
-    try {
-      const reportDir = path.dirname(reportPath);
-      if (!fs.existsSync(reportDir)) {
-        fs.mkdirSync(reportDir, { recursive: true });
-      }
-      
-      fs.writeFileSync(
-        reportPath,
-        JSON.stringify({
-          date: new Date().toISOString(),
-          result,
-        }, null, 2),
-        'utf8'
-      );
-      
-      if (verbose) {
-        console.log(`Validation report written to: ${reportPath}`);
-      }
-    } catch (error) {
-      console.error(`Error writing validation report: ${error}`);
+  // Check for missing sections
+  for (const section of mandatorySections) {
+    if (!(section in sectionCounts) || sectionCounts[section] === 0) {
+      result.missingMandatorySections.push(section);
+      result.success = false;
     }
+  }
+  
+  // Calculate deviations from expected counts
+  for (const [sectionStr, expected] of Object.entries(referenceCounts)) {
+    const section = parseInt(sectionStr, 10);
+    
+    // Skip section 0 (uncategorized)
+    if (section === 0 || ignoreSections.includes(section)) {
+      continue;
+    }
+    
+    const expectedCount = expected.fields; // Use fields count for comparison
+    const actual = sectionCounts[section] || 0;
+    
+    // Skip sections with no expectation
+    if (expectedCount === 0) {
+      continue;
+    }
+    
+    const deviation = actual - expectedCount;
+    const deviationPercent = Math.abs(deviation) / expectedCount * 100;
+    
+    // Record this section's deviation
+    result.deviations.push({
+        section,
+        expected: expectedCount,
+      actual,
+        deviation,
+      percentage: deviationPercent
+    });
+    
+    // Check if this deviation is too large
+    if (deviationPercent > maxDeviationPercent) {
+      // For overflow sections, we might be more lenient
+      if (section >= 20 && ignoreOverflowSections) {
+        continue;
+      }
+      
+      // Otherwise, mark as problem section
+      result.success = false;
+      
+      if (deviation < 0) {
+        result.undersizedSections.push(section);
+      } else {
+        result.oversizedSections.push(section);
+      }
+    }
+  }
+  
+  // Build result message
+  if (result.success) {
+    result.message = "Section counts validation passed successfully.";
+  } else {
+    const issues: string[] = [];
+    
+    if (result.missingMandatorySections.length > 0) {
+      issues.push(`Missing mandatory sections: ${result.missingMandatorySections.join(", ")}`);
+    }
+    
+    if (result.undersizedSections.length > 0) {
+      issues.push(`Undersized sections: ${result.undersizedSections.join(", ")}`);
+    }
+    
+    if (result.oversizedSections.length > 0) {
+      issues.push(`Oversized sections: ${result.oversizedSections.join(", ")}`);
+    }
+    
+    result.message = `Section counts validation failed: ${issues.join("; ")}`;
   }
   
   return result;
@@ -294,9 +216,9 @@ export function identifyProblemSections(
  * @param filePath Optional path to JSON file with reference counts
  * @returns Reference counts object
  */
-export function loadReferenceCounts(filePath?: string): Record<number, number> {
+export function loadReferenceCounts(filePath?: string): Record<number, { fields: number; entries: number; subsections: number; }> {
   if (!filePath) {
-    return DEFAULT_REFERENCE_COUNTS;
+    return expectedFieldCounts;
   }
   
   try {
@@ -305,11 +227,16 @@ export function loadReferenceCounts(filePath?: string): Record<number, number> {
       const parsed = JSON.parse(data);
       
       // Convert string keys to numbers
-      const result: Record<number, number> = {};
+      const result: Record<number, { fields: number; entries: number; subsections: number; }> = {};
       for (const [key, value] of Object.entries(parsed)) {
         const numKey = parseInt(key, 10);
-        if (!isNaN(numKey) && typeof value === 'number') {
-          result[numKey] = value;
+        if (!isNaN(numKey) && 
+            typeof value === 'object' && 
+            value !== null &&
+            typeof (value as any).fields === 'number' &&
+            typeof (value as any).entries === 'number' &&
+            typeof (value as any).subsections === 'number') {
+          result[numKey] = value as { fields: number; entries: number; subsections: number; };
         }
       }
       
@@ -319,7 +246,7 @@ export function loadReferenceCounts(filePath?: string): Record<number, number> {
     console.error(`Error loading reference counts: ${error}`);
   }
   
-  return DEFAULT_REFERENCE_COUNTS;
+  return expectedFieldCounts;
 }
 
 /**

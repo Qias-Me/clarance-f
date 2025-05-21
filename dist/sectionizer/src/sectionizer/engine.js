@@ -4,12 +4,12 @@
  * This file implements the core rule engine that applies section-specific regex maps
  * to categorize fields into their respective sections and sub-sections.
  */
-import * as fs from 'fs';
-import * as path from 'path';
-import { confidenceCalculator } from './utils/confidence-calculator.js';
-import { ruleLoader } from './utils/rule-loader.js';
-import { rulesGenerator } from './utils/rules-generator.js';
-import { strictSectionPatternsNumeric } from './utils/section-patterns.js';
+import * as fs from "fs";
+import * as path from "path";
+import { confidenceCalculator } from "./utils/confidence-calculator.js";
+import { ruleLoader } from "./utils/rule-loader.js";
+import { rulesGenerator } from "./utils/rules-generator.js";
+import { sectionFieldPatterns } from "./utils/field-clusterer.js";
 /**
  * Rule Engine for SF-86 field categorization
  */
@@ -18,7 +18,7 @@ export class RuleEngine {
     rules = [];
     sectionRules = {};
     // Define strict patterns for critical sections - imported from shared definition
-    strictSectionPatterns = strictSectionPatternsNumeric;
+    strictSectionPatterns = sectionFieldPatterns;
     loaded = false;
     logger;
     // Reference section distribution for validation
@@ -52,13 +52,13 @@ export class RuleEngine {
         27: 57,
         28: 23,
         29: 141,
-        30: 25
+        30: 25,
     };
     /**
      * Create a new rule engine
      * @param rulesDir Directory containing section rule files
      */
-    constructor(rulesDir = path.resolve(process.cwd(), 'src', 'sectionizer', 'rules'), logger) {
+    constructor(rulesDir = path.resolve(process.cwd(), "src", "sectionizer", "rules"), logger) {
         this.rulesDir = rulesDir;
         this.logger = logger || console;
     }
@@ -87,11 +87,15 @@ export class RuleEngine {
                     // Convert MatchRules to CategoryRules
                     const categoryRules = ruleSet.rules.map((rule) => {
                         // Ensure proper subsection mapping - prefer subSection over subsection for compatibility
-                        const subsection = rule.subSection !== undefined ? rule.subSection :
-                            (rule.subsection !== undefined ? rule.subsection : undefined);
+                        const subsection = rule.subSection !== undefined
+                            ? rule.subSection
+                            : rule.subsection !== undefined
+                                ? rule.subsection
+                                : undefined;
                         // Entry extraction - if the rule has entryIndex or entryPattern, set up entry extraction
                         // Even if there's no explicit entryPattern, we can use the rule's pattern
-                        const entryPattern = rule.entryPattern || (rule.entryIndex ? rule.pattern : undefined);
+                        const entryPattern = rule.entryPattern ||
+                            (rule.entryIndex ? rule.pattern : undefined);
                         return {
                             section,
                             subsection,
@@ -108,7 +112,7 @@ export class RuleEngine {
                     this.sectionRules[section] = {
                         section,
                         name: `Section ${section}`,
-                        rules: categoryRules
+                        rules: categoryRules,
                     };
                     // Add to master rules collection
                     this.rules.push(...categoryRules);
@@ -135,7 +139,7 @@ export class RuleEngine {
             this.sectionRules[section] = {
                 section,
                 name: `Section ${section}`,
-                rules: []
+                rules: [],
             };
         }
         // Add each rule if it doesn't already exist (based on pattern)
@@ -145,11 +149,10 @@ export class RuleEngine {
                 ? rule.pattern.source
                 : String(rule.pattern);
             // Check if the rule already exists with the same pattern
-            const existingRuleIndex = this.sectionRules[section].rules.findIndex(r => {
-                const existingPattern = r.pattern instanceof RegExp
-                    ? r.pattern.source
-                    : String(r.pattern);
-                return existingPattern === rulePatternString && r.subsection === rule.subsection;
+            const existingRuleIndex = this.sectionRules[section].rules.findIndex((r) => {
+                const existingPattern = r.pattern instanceof RegExp ? r.pattern.source : String(r.pattern);
+                return (existingPattern === rulePatternString &&
+                    r.subsection === rule.subsection);
             });
             // Add the rule if it doesn't exist
             if (existingRuleIndex === -1) {
@@ -185,6 +188,13 @@ export class RuleEngine {
         return this.sectionRules[section]?.rules || [];
     }
     /**
+     * Get all rules currently loaded in the engine
+     * @returns Array of all category rules
+     */
+    getRules() {
+        return [...this.rules];
+    }
+    /**
      * Match a field against all available rules
      * @param field PDF field to categorize
      * @returns The best categorization result or undefined if no rules match
@@ -210,19 +220,23 @@ export class RuleEngine {
                         section,
                         pattern: currentPatterns[0], // Use the first pattern as reference
                         confidence: 0.99,
-                        description: `Strict pattern match for section ${section}`
-                    }
+                        description: `Strict pattern match for section ${section}`,
+                    },
                 };
             }
         }
         // Try to match against each rule
         for (const rule of this.rules) {
             // Check if the rule is restricted to specific field types
-            if (rule.fieldType && field.type && !rule.fieldType.includes(field.type)) {
+            if (rule.fieldType &&
+                field.type &&
+                !rule.fieldType.includes(field.type)) {
                 continue;
             }
             // Test the pattern against field name and label
-            const pattern = rule.pattern instanceof RegExp ? rule.pattern : new RegExp(rule.pattern, 'i');
+            const pattern = rule.pattern instanceof RegExp
+                ? rule.pattern
+                : new RegExp(rule.pattern, "i");
             const nameMatch = pattern.test(field.name);
             const labelMatch = field.label ? pattern.test(field.label) : false;
             // If the pattern matches, update the best match if the confidence is higher
@@ -234,11 +248,14 @@ export class RuleEngine {
                 let entry = undefined;
                 if (rule.entryPattern) {
                     try {
-                        const entryPattern = rule.entryPattern instanceof RegExp ?
-                            rule.entryPattern : new RegExp(rule.entryPattern, 'i');
+                        const entryPattern = rule.entryPattern instanceof RegExp
+                            ? rule.entryPattern
+                            : new RegExp(rule.entryPattern, "i");
                         // Try to extract entry from name first
                         const nameEntryMatch = field.name.match(entryPattern);
-                        if (nameEntryMatch && nameEntryMatch.length > 1 && nameEntryMatch[1]) {
+                        if (nameEntryMatch &&
+                            nameEntryMatch.length > 1 &&
+                            nameEntryMatch[1]) {
                             // Try to convert match to a number
                             const extractedEntry = parseInt(nameEntryMatch[1], 10);
                             if (!isNaN(extractedEntry)) {
@@ -248,7 +265,9 @@ export class RuleEngine {
                         // If no entry found in name, try label
                         if (entry === undefined && field.label) {
                             const labelEntryMatch = field.label.match(entryPattern);
-                            if (labelEntryMatch && labelEntryMatch.length > 1 && labelEntryMatch[1]) {
+                            if (labelEntryMatch &&
+                                labelEntryMatch.length > 1 &&
+                                labelEntryMatch[1]) {
                                 const extractedEntry = parseInt(labelEntryMatch[1], 10);
                                 if (!isNaN(extractedEntry)) {
                                     entry = extractedEntry;
@@ -256,9 +275,11 @@ export class RuleEngine {
                             }
                         }
                         // If still no entry, try value if it's a string
-                        if (entry === undefined && typeof field.value === 'string') {
+                        if (entry === undefined && typeof field.value === "string") {
                             const valueEntryMatch = field.value.match(entryPattern);
-                            if (valueEntryMatch && valueEntryMatch.length > 1 && valueEntryMatch[1]) {
+                            if (valueEntryMatch &&
+                                valueEntryMatch.length > 1 &&
+                                valueEntryMatch[1]) {
                                 const extractedEntry = parseInt(valueEntryMatch[1], 10);
                                 if (!isNaN(extractedEntry)) {
                                     entry = extractedEntry;
@@ -296,7 +317,7 @@ export class RuleEngine {
                         subsection,
                         entry,
                         confidence: adjustedConfidence,
-                        rule
+                        rule,
                     };
                 }
             }
@@ -324,7 +345,7 @@ export class RuleEngine {
         }
         // If contains subsection keyword but no number, use a generic subsection
         if (/subsection/i.test(fieldName)) {
-            return '_default';
+            return "_default";
         }
         return undefined;
     }
@@ -358,23 +379,23 @@ export class RuleEngine {
      */
     categorizeFields(fields) {
         if (!this.loaded) {
-            this.logger.warn('Rules not loaded, categorization may be incomplete');
+            this.logger.warn("Rules not loaded, categorization may be incomplete");
         }
         const startTime = process.hrtime();
         this.logger.log(`Categorizing ${fields.length} fields with ${this.rules.length} rules...`);
         // First pass categorization with normal rules
-        const categorizedFields = fields.map(field => {
+        const categorizedFields = fields.map((field) => {
             const result = this.categorizeField(field);
             return {
                 ...field,
                 section: result?.section || 0,
                 subsection: result?.subsection,
                 entry: result?.entry,
-                confidence: result?.confidence || 0
+                confidence: result?.confidence || 0,
             };
         });
         // Track uncategorized fields
-        const uncategorizedFields = categorizedFields.filter(field => !field.section || field.section === 0);
+        const uncategorizedFields = categorizedFields.filter((field) => !field.section || field.section === 0);
         if (uncategorizedFields.length > 0) {
             this.logger.log(`First pass left ${uncategorizedFields.length} fields uncategorized. Applying heuristics...`);
         }
@@ -383,7 +404,7 @@ export class RuleEngine {
         // Log section distribution
         this.validateSectionDistribution(categorizedFields);
         const [seconds, nanoseconds] = process.hrtime(startTime);
-        const totalMs = (seconds * 1000) + (nanoseconds / 1000000);
+        const totalMs = seconds * 1000 + nanoseconds / 1000000;
         this.logger.log(`Categorization completed in ${totalMs.toFixed(2)}ms`);
         return categorizedFields;
     }
@@ -394,12 +415,12 @@ export class RuleEngine {
     validateSectionDistribution(fields) {
         // Count fields in each section
         const sectionCounts = {};
-        fields.forEach(field => {
+        fields.forEach((field) => {
             const section = field.section || 0;
             sectionCounts[section] = (sectionCounts[section] || 0) + 1;
         });
         // Log the distribution
-        console.log('=== Section Distribution ===');
+        console.log("=== Section Distribution ===");
         // Track sections that need redistribution
         const sectionsToRedistribute = [];
         const targetSections = [];
@@ -420,7 +441,7 @@ export class RuleEngine {
                 deficit,
                 ratio,
                 isOverAllocated: ratio >= 3,
-                isUnderAllocated: hasExpected && count < expected * 0.8
+                isUnderAllocated: hasExpected && count < expected * 0.8,
             };
             // Mark sections with significant deviation for redistribution
             if (expected > 0) {
@@ -432,12 +453,14 @@ export class RuleEngine {
                 }
             }
             // Display warning for significant deviations
-            const warning = (expected > 0 && Math.abs(count - expected) > Math.max(5, expected * 0.2)) ? ' ⚠️' : '';
+            const warning = expected > 0 && Math.abs(count - expected) > Math.max(5, expected * 0.2)
+                ? " ⚠️"
+                : "";
             console.log(`Section ${section}: ${count} fields (Expected: ${expected})${warning}`);
         }
         // Perform redistribution if we have serious distribution issues
         if (sectionsToRedistribute.length > 0 && targetSections.length > 0) {
-            console.log(`\nDetected distribution issues. Redistributing fields from ${sectionsToRedistribute.join(', ')} to sections ${targetSections.join(', ')}`);
+            console.log(`\nDetected distribution issues. Redistributing fields from ${sectionsToRedistribute.join(", ")} to sections ${targetSections.join(", ")}`);
             // Sort the over-allocated sections by how overallocated they are (descending)
             sectionsToRedistribute.sort((a, b) => {
                 return sectionStatus[b].ratio - sectionStatus[a].ratio;
@@ -452,7 +475,7 @@ export class RuleEngine {
                 if (sectionStatus[overAllocatedSection].count > 500) {
                     console.log(`Processing overallocated section ${overAllocatedSection} with ${sectionStatus[overAllocatedSection].count} fields (expected ${sectionStatus[overAllocatedSection].expected})`);
                     // Get all fields from this section
-                    const overAllocatedFields = fields.filter(f => f.section === overAllocatedSection);
+                    const overAllocatedFields = fields.filter((f) => f.section === overAllocatedSection);
                     // Calculate how many fields to keep in this section
                     const keepCount = Math.min(sectionStatus[overAllocatedSection].expected * 1.2, // Keep up to 120% of expected
                     sectionStatus[overAllocatedSection].count * 0.1 // But at least 10% of current
@@ -479,7 +502,7 @@ export class RuleEngine {
                         fieldsProcessed += fieldsToMove;
                         console.log(`Moving ${selectedFields.length} fields from section ${overAllocatedSection} to section ${targetSection}`);
                         // Update the fields' section
-                        selectedFields.forEach(field => {
+                        selectedFields.forEach((field) => {
                             field.section = targetSection;
                             field.confidence = 0.7; // Lower confidence since this is a forced redistribution
                         });
@@ -508,7 +531,7 @@ export class RuleEngine {
                                 if (fieldBatch.length === 0)
                                     break;
                                 console.log(`Distributing ${fieldBatch.length} additional fields to section ${section}`);
-                                fieldBatch.forEach(field => {
+                                fieldBatch.forEach((field) => {
                                     field.section = section;
                                     field.confidence = 0.65; // Even lower confidence for secondary distribution
                                 });
@@ -527,7 +550,7 @@ export class RuleEngine {
      */
     applyHeuristics(fields) {
         // Identify fields with no section assigned
-        const uncategorizedFields = fields.filter(field => !field.section || field.section === 0);
+        const uncategorizedFields = fields.filter((field) => !field.section || field.section === 0);
         if (uncategorizedFields.length === 0)
             return;
         // Pattern-based categorization (by field name patterns)
@@ -545,28 +568,161 @@ export class RuleEngine {
         const sectionPatterns = {
             5: [/OtherNames/i, /alias/i, /maiden/i, /prevName/i, /previousName/i],
             8: [/citizenship/i, /citizen/i, /national/i, /nationality/i],
-            9: [/residence/i, /residency/i, /address/i, /lived/i, /live/i, /living/i, /dwelling/i, /housing/i],
-            10: [/education/i, /school/i, /college/i, /university/i, /degree/i, /academic/i],
-            11: [/employment/i, /employer/i, /job/i, /work/i, /occupation/i, /career/i, /company/i, /position/i],
+            9: [
+                /residence/i,
+                /residency/i,
+                /address/i,
+                /lived/i,
+                /live/i,
+                /living/i,
+                /dwelling/i,
+                /housing/i,
+            ],
+            10: [
+                /education/i,
+                /school/i,
+                /college/i,
+                /university/i,
+                /degree/i,
+                /academic/i,
+            ],
+            11: [
+                /employment/i,
+                /employer/i,
+                /job/i,
+                /work/i,
+                /occupation/i,
+                /career/i,
+                /company/i,
+                /position/i,
+            ],
             12: [/reference/i, /referee/i, /referrer/i, /vouch/i, /contact/i],
-            13: [/employment/i, /employer/i, /job/i, /work/i, /occupation/i, /career/i, /company/i, /position/i, /salary/i],
-            14: [/selective/i, /military/i, /armed forces/i, /service/i, /discharge/i, /defense/i, /veteran/i],
-            15: [/military/i, /foreign military/i, /foreign service/i, /foreign armed forces/i, /foreign defense/i],
-            16: [/marital/i, /marriage/i, /spouse/i, /husband/i, /wife/i, /civil union/i, /domestic partner/i],
-            17: [/relative/i, /family/i, /cohabitant/i, /mother/i, /father/i, /parent/i, /brother/i, /sister/i, /sibling/i],
-            18: [/foreign.*contact/i, /contact.*foreign/i, /foreigner/i, /non-citizen/i, /overseas/i],
+            13: [
+                /employment/i,
+                /employer/i,
+                /job/i,
+                /work/i,
+                /occupation/i,
+                /career/i,
+                /company/i,
+                /position/i,
+                /salary/i,
+            ],
+            14: [
+                /selective/i,
+                /military/i,
+                /armed forces/i,
+                /service/i,
+                /discharge/i,
+                /defense/i,
+                /veteran/i,
+            ],
+            15: [
+                /military/i,
+                /foreign military/i,
+                /foreign service/i,
+                /foreign armed forces/i,
+                /foreign defense/i,
+            ],
+            16: [
+                /marital/i,
+                /marriage/i,
+                /spouse/i,
+                /husband/i,
+                /wife/i,
+                /civil union/i,
+                /domestic partner/i,
+            ],
+            17: [
+                /relative/i,
+                /family/i,
+                /cohabitant/i,
+                /mother/i,
+                /father/i,
+                /parent/i,
+                /brother/i,
+                /sister/i,
+                /sibling/i,
+            ],
+            18: [
+                /foreign.*contact/i,
+                /contact.*foreign/i,
+                /foreigner/i,
+                /non-citizen/i,
+                /overseas/i,
+            ],
             19: [/foreign.*activit/i, /activit.*foreign/i, /overseas business/i],
-            20: [/foreign.*business/i, /business.*foreign/i, /overseas business/i, /international business/i],
-            21: [/travel/i, /trip/i, /abroad/i, /overseas visit/i, /international travel/i, /passport/i, /visa/i],
-            22: [/mental/i, /psychological/i, /emotional/i, /counseling/i, /therapy/i, /psychiatr/i, /disorder/i],
-            23: [/police/i, /criminal/i, /arrest/i, /offense/i, /crime/i, /legal/i, /law/i, /violation/i],
-            24: [/drug/i, /substance/i, /alcohol/i, /controlled substance/i, /narcotic/i, /misuse/i, /abuse/i],
-            25: [/financial/i, /money/i, /debt/i, /bankrupt/i, /credit/i, /loan/i, /economic/i],
+            20: [
+                /foreign.*business/i,
+                /business.*foreign/i,
+                /overseas business/i,
+                /international business/i,
+            ],
+            21: [
+                /travel/i,
+                /trip/i,
+                /abroad/i,
+                /overseas visit/i,
+                /international travel/i,
+                /passport/i,
+                /visa/i,
+            ],
+            22: [
+                /mental/i,
+                /psychological/i,
+                /emotional/i,
+                /counseling/i,
+                /therapy/i,
+                /psychiatr/i,
+                /disorder/i,
+            ],
+            23: [
+                /police/i,
+                /criminal/i,
+                /arrest/i,
+                /offense/i,
+                /crime/i,
+                /legal/i,
+                /law/i,
+                /violation/i,
+            ],
+            24: [
+                /drug/i,
+                /substance/i,
+                /alcohol/i,
+                /controlled substance/i,
+                /narcotic/i,
+                /misuse/i,
+                /abuse/i,
+            ],
+            25: [
+                /financial/i,
+                /money/i,
+                /debt/i,
+                /bankrupt/i,
+                /credit/i,
+                /loan/i,
+                /economic/i,
+            ],
             26: [/consultancy/i, /advice/i, /recommend/i, /suggest/i],
-            27: [/information technology/i, /IT/i, /computer/i, /network/i, /system/i, /internet/i],
+            27: [
+                /information technology/i,
+                /IT/i,
+                /computer/i,
+                /network/i,
+                /system/i,
+                /internet/i,
+            ],
             28: [/background/i, /investigation/i, /clearance/i, /assessment/i],
             29: [/form/i, /record/i, /document/i, /certificate/i, /submission/i],
-            30: [/signature/i, /sign/i, /date/i, /certify/i, /attest/i, /authentication/i]
+            30: [
+                /signature/i,
+                /sign/i,
+                /date/i,
+                /certify/i,
+                /attest/i,
+                /authentication/i,
+            ],
         };
         // Apply pattern-based matching - going through each section's patterns
         for (const field of uncategorizedFields) {
@@ -574,15 +730,17 @@ export class RuleEngine {
             if (field.section !== 0)
                 continue;
             // Use the field name and label for matching
-            const fieldNameValue = field.name || '';
-            const fieldLabelValue = field.label || '';
-            const fieldValue = typeof field.value === 'string' ? field.value : '';
+            const fieldNameValue = field.name || "";
+            const fieldLabelValue = field.label || "";
+            const fieldValue = typeof field.value === "string" ? field.value : "";
             // Check each section's patterns
             for (const [sectionStr, patterns] of Object.entries(sectionPatterns)) {
                 const section = parseInt(sectionStr, 10);
                 // Check if any of the patterns match
                 for (const pattern of patterns) {
-                    if (pattern.test(fieldNameValue) || pattern.test(fieldLabelValue) || pattern.test(fieldValue)) {
+                    if (pattern.test(fieldNameValue) ||
+                        pattern.test(fieldLabelValue) ||
+                        pattern.test(fieldValue)) {
                         // Found a match, assign to this section
                         field.section = section;
                         field.confidence = 0.7; // Set moderate confidence for pattern-based matches
@@ -602,10 +760,12 @@ export class RuleEngine {
      */
     applyPositionBasedCategorization(allFields, uncategorizedFields) {
         // Skip if no rect data available
-        if (!uncategorizedFields.some(f => f.rect))
+        if (!uncategorizedFields.some((f) => f.rect))
             return;
         // Get fields with known sections and coordinates
-        const knownFields = allFields.filter(f => f.section && f.section > 0 && f.rect &&
+        const knownFields = allFields.filter((f) => f.section &&
+            f.section > 0 &&
+            f.rect &&
             (f.rect.x !== 0 || f.rect.y !== 0));
         if (knownFields.length === 0)
             return;
@@ -637,7 +797,8 @@ export class RuleEngine {
                     nearestField = knownField;
                 }
             }
-            if (nearestField && minDistance < 200) { // Threshold for proximity
+            if (nearestField && minDistance < 200) {
+                // Threshold for proximity
                 field.section = nearestField.section;
             }
         }
@@ -655,8 +816,7 @@ export class RuleEngine {
         const center2X = field2.rect.x + (field2.rect.width || 0) / 2;
         const center2Y = field2.rect.y + (field2.rect.height || 0) / 2;
         // Calculate Euclidean distance
-        return Math.sqrt(Math.pow(center1X - center2X, 2) +
-            Math.pow(center1Y - center2Y, 2));
+        return Math.sqrt(Math.pow(center1X - center2X, 2) + Math.pow(center1Y - center2Y, 2));
     }
     /**
      * Apply neighborhood-based categorization
@@ -718,12 +878,12 @@ export class RuleEngine {
         if (!fieldName)
             return null;
         // Remove array indices
-        const withoutIndices = fieldName.replace(/\[\d+\]/g, '');
+        const withoutIndices = fieldName.replace(/\[\d+\]/g, "");
         // Split by dots and get components
-        const parts = withoutIndices.split('.');
+        const parts = withoutIndices.split(".");
         // Use up to the first two parts as prefix
         if (parts.length >= 2) {
-            return parts.slice(0, 2).join('.');
+            return parts.slice(0, 2).join(".");
         }
         else if (parts.length === 1) {
             return parts[0];
@@ -736,7 +896,7 @@ export class RuleEngine {
      * @param name Section name
      */
     createDefaultRuleFile(section, name) {
-        const filePath = path.join(this.rulesDir, `section${section.toString().padStart(2, '0')}.json`);
+        const filePath = path.join(this.rulesDir, `section${section.toString().padStart(2, "0")}.json`);
         // Skip if the file already exists
         if (fs.existsSync(filePath)) {
             return;
@@ -750,9 +910,9 @@ export class RuleEngine {
                     section,
                     pattern: `section${section}`,
                     confidence: 0.8,
-                    description: `Default pattern for section ${section} (${name})`
-                }
-            ]
+                    description: `Default pattern for section ${section} (${name})`,
+                },
+            ],
         };
         // Create the rules directory if it doesn't exist
         if (!fs.existsSync(this.rulesDir)) {
@@ -767,36 +927,36 @@ export class RuleEngine {
      */
     initializeDefaultRules() {
         const sectionNames = [
-            "Instructions",
-            "Identification",
-            "Where You Have Lived",
-            "Where You Went To School",
-            "Employment Activities",
-            "People Who Know You Well",
-            "Your Spouse",
-            "Your Relatives",
+            "Full Name",
+            "Date of Birth",
+            "Place of Birth",
+            "Social Security Number",
+            "Other Names Used",
+            "Your Identifying Information",
+            "Your Contact Information",
+            "U.S. Passport Information",
             "Citizenship",
-            "Dual/Multiple Citizenship",
+            "Dual/Multiple Citizenship & Foreign Passport Info",
+            "Where You Have Lived",
+            "Where you went to School",
+            "Employment Acitivites",
+            "Selective Service",
+            "Military History",
+            "People Who Know You Well",
+            "Maritial/Relationship Status",
+            "Relatives",
             "Foreign Contacts",
-            "Foreign Activities",
-            "Financial Record",
-            "Public Record",
-            "Investigation and Clearance Record",
-            "Financial Conflicts of Interest",
-            "Association Record",
-            "Foreign Business Relationships",
-            "Government Contacts",
-            "Your Foreign Activities",
-            "Substance Use - Illegal Drugs & Drug Activities",
-            "Alcohol Use",
+            "Foreign Business, Activities, Government Contacts",
+            "Psycological and Emotional Health",
             "Police Record",
-            "Use of Information Technology",
-            "Financial Distress",
-            "Civil Court Actions",
-            "Your Military Service",
-            "Mental Health",
-            "Security Violations",
-            "Signature and Certification"
+            "Illegal Use of Drugs and Drug Activity",
+            "Use of Alcohol",
+            "Investigations and Clearance",
+            "Financial Record",
+            "Use of Information Technology Systems",
+            "Involvement in Non-Criminal Court Actions",
+            "Association Record",
+            "Continuation Space",
         ];
         // Create default rule files for all sections
         sectionNames.forEach((name, index) => {
@@ -822,13 +982,13 @@ export class RuleEngine {
         const sectionOutputs = {};
         for (const [sectionKey, fields] of Object.entries(sectionMap)) {
             // Skip unknown section (0)
-            if (sectionKey === '0')
+            if (sectionKey === "0")
                 continue;
             // Group by subsection
             const subsectionMap = {};
             let matchedFields = 0;
             for (const field of fields) {
-                const subsectionKey = field.subsection || '_default';
+                const subsectionKey = field.subsection || "_default";
                 if (!subsectionMap[subsectionKey]) {
                     subsectionMap[subsectionKey] = [];
                 }
@@ -844,13 +1004,14 @@ export class RuleEngine {
             // Create section output
             sectionOutputs[sectionKey] = {
                 meta: {
-                    hasSubSections: Object.keys(subsectionMap).filter(k => k !== '_default').length > 0,
+                    hasSubSections: Object.keys(subsectionMap).filter((k) => k !== "_default").length >
+                        0,
                     confidence: 0, // Will be calculated by confidence calculator
                     totalFields: 0, // Will be calculated by confidence calculator
                     matchedFields,
-                    name: sectionName
+                    name: sectionName,
                 },
-                fields: subsectionMap
+                fields: subsectionMap,
             };
         }
         // Calculate confidence metrics
@@ -888,25 +1049,24 @@ export class RuleEngine {
      */
     async processUnknownFields(unknownFields, autoUpdate = false) {
         if (!unknownFields || unknownFields.length === 0) {
-            console.log('No unknown fields to process.');
+            console.log("No unknown fields to process.");
             return new Map();
         }
         console.log(`Processing ${unknownFields.length} unknown fields for rule generation...`);
         // Convert to EnhancedField format if needed
-        const enhancedFields = unknownFields.map(field => ({
+        const enhancedFields = unknownFields.map((field) => ({
             id: field.id,
             name: field.name,
-            value: field.value || '',
+            value: field.value || "",
             page: field.page,
             label: field.label,
             type: field.type,
             maxLength: field.maxLength,
             options: field.options,
-            required: field.required,
             section: field.section,
             subSection: field.subsection,
             entryIndex: field.entry,
-            confidence: field.confidence
+            confidence: field.confidence,
         }));
         // Generate rule candidates
         const ruleCandidates = await rulesGenerator.generateRuleCandidates(enhancedFields);
@@ -917,11 +1077,11 @@ export class RuleEngine {
         }
         // Update rule files if requested
         if (autoUpdate && ruleCandidates.size > 0) {
-            console.log('Automatically updating rule files with new candidates...');
+            console.log("Automatically updating rule files with new candidates...");
             await rulesGenerator.updateRuleFiles(ruleCandidates);
             // Reload rules to incorporate the changes
             await this.loadRules();
-            console.log('Rules reloaded with new additions.');
+            console.log("Rules reloaded with new additions.");
         }
         return ruleCandidates;
     }
@@ -936,7 +1096,7 @@ export class RuleEngine {
         const categorizedFields = this.getAllCategorizedFields(uncategorizedFields);
         // Group categorized fields by their section
         const sectionFieldNames = {};
-        categorizedFields.forEach(field => {
+        categorizedFields.forEach((field) => {
             if (!field.section || field.section === 0)
                 return;
             if (!sectionFieldNames[field.section]) {
@@ -1012,10 +1172,10 @@ export class RuleEngine {
         Object.entries(this.strictSectionPatterns).forEach(([sectionStr, regexArray]) => {
             const section = parseInt(sectionStr, 10);
             if (!isNaN(section)) {
-                regexArray.forEach(pattern => {
+                regexArray.forEach((pattern) => {
                     patterns.push({
                         section,
-                        pattern
+                        pattern,
                     });
                 });
             }
@@ -1030,9 +1190,9 @@ export class RuleEngine {
         // Handle pattern type conversion if needed
         const normalizedRule = {
             ...rule,
-            pattern: typeof rule.pattern === 'string'
+            pattern: typeof rule.pattern === "string"
                 ? rule.pattern
-                : rule.pattern.toString().replace(/^\/|\/[gimuy]*$/g, '') // Convert RegExp to string pattern
+                : rule.pattern.toString().replace(/^\/|\/[gimuy]*$/g, ""), // Convert RegExp to string pattern
         };
         // Add the rule to our internal rule collection
         this.rules.push(normalizedRule);
@@ -1044,7 +1204,7 @@ export class RuleEngine {
                 this.sectionRules[section] = {
                     section,
                     name: `Section ${section}`,
-                    rules: []
+                    rules: [],
                 };
             }
             // Add to section rules
@@ -1056,7 +1216,7 @@ export class RuleEngine {
  * Create a sample rule file for testing purposes
  * @param rulesDir Directory to save the sample rule file
  */
-export function createSampleRuleFile(rulesDir = path.resolve(process.cwd(), 'src', 'sectionizer', 'rules')) {
+export function createSampleRuleFile(rulesDir = path.resolve(process.cwd(), "src", "sectionizer", "rules")) {
     const section2Rules = {
         section: 2,
         name: "Date of Birth",
@@ -1065,28 +1225,28 @@ export function createSampleRuleFile(rulesDir = path.resolve(process.cwd(), 'src
                 section: 2,
                 pattern: "form1\\[0\\]\\.Sections1-6\\[0\\]\\.From_Datefield_Name_2\\[0\\]",
                 confidence: 0.98,
-                description: "Exact match for Date of Birth field name"
+                description: "Exact match for Date of Birth field name",
             },
             {
                 section: 2,
                 pattern: "Section 2\\. Date of Birth",
                 confidence: 0.98,
-                description: "Date of Birth field by label match"
+                description: "Date of Birth field by label match",
             },
             {
                 section: 2,
                 pattern: "form1\\[0\\]\\.Sections1-6\\[0\\]\\.#field\\[18\\]",
                 confidence: 0.98,
-                description: "Exact match for Estimate checkbox field name"
+                description: "Exact match for Estimate checkbox field name",
             },
             {
                 section: 2,
                 pattern: "Estimate",
                 confidence: 0.9,
                 description: "Estimate checkbox for Date of Birth",
-                fieldType: ["PDFCheckBox"]
-            }
-        ]
+                fieldType: ["PDFCheckBox"],
+            },
+        ],
     };
     // Create the rules directory if it doesn't exist
     if (!fs.existsSync(rulesDir)) {

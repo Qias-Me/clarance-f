@@ -5,19 +5,42 @@
  * based on field coordinates within the form.
  */
 import { refinedSectionPageRanges } from './fieldParsing.js';
+import { PDFDocument } from 'pdf-lib';
 /**
  * Default PDF page dimensions (US Letter size)
+ * These are used as fallback when a PDFDocument is not available
  */
 export const DEFAULT_PAGE_DIMENSIONS = {
     width: 612, // Default letter size width in points (8.5 x 11 inches)
     height: 792 // Default letter size height in points (8.5 x 11 inches)
 };
 /**
+ * Get the dimensions of a specific page in the PDF document
+ * @param pdfDoc PDF document
+ * @param pageIndex Page index (0-based)
+ * @returns Page dimensions (width and height)
+ */
+export function getPageDimensions(pdfDoc, pageIndex = 0) {
+    try {
+        if (pdfDoc && pageIndex >= 0 && pageIndex < pdfDoc.getPageCount()) {
+            const page = pdfDoc.getPage(pageIndex);
+            const { width, height } = page.getSize();
+            return { width, height };
+        }
+    }
+    catch (error) {
+        console.warn(`Could not get page dimensions for page ${pageIndex}: ${error}`);
+    }
+    // Return default dimensions if we couldn't get them from the PDF
+    return DEFAULT_PAGE_DIMENSIONS;
+}
+/**
  * Extract spatial information from field coordinates
  * @param field PDF field with potential coordinate data
+ * @param pdfDoc Optional PDF document to get accurate page dimensions
  * @returns Spatial info object or null if coordinates not available
  */
-export function extractSpatialInfo(field) {
+export function extractSpatialInfo(field, pdfDoc) {
     // Check if we have coordinate data for dimensional analysis
     const hasCoordinates = field.rect !== undefined ||
         ('x' in field && 'y' in field && 'width' in field && 'height' in field);
@@ -29,11 +52,14 @@ export function extractSpatialInfo(field) {
     const y = field.rect?.y || field.y || 0;
     const width = field.rect?.width || field.width || 0;
     const height = field.rect?.height || field.height || 0;
+    // Get page dimensions - use field's page if available, otherwise use first page
+    const pageIndex = field.page ? field.page - 1 : 0; // Convert from 1-based to 0-based
+    const pageDimensions = pdfDoc ? getPageDimensions(pdfDoc, pageIndex) : DEFAULT_PAGE_DIMENSIONS;
     // Calculate relative positions (as percentages of page dimensions)
-    const relativeX = x / DEFAULT_PAGE_DIMENSIONS.width;
-    const relativeY = y / DEFAULT_PAGE_DIMENSIONS.height;
-    const relativeWidth = width / DEFAULT_PAGE_DIMENSIONS.width;
-    const relativeHeight = height / DEFAULT_PAGE_DIMENSIONS.height;
+    const relativeX = x / pageDimensions.width;
+    const relativeY = y / pageDimensions.height;
+    const relativeWidth = width / pageDimensions.width;
+    const relativeHeight = height / pageDimensions.height;
     // Determine if the field is in a header, footer, or main content area
     const isInHeader = relativeY > 0.8; // Top 20% of page
     const isInFooter = relativeY < 0.2; // Bottom 20% of page
@@ -89,11 +115,12 @@ export function extractSpatialInfo(field) {
 /**
  * Calculate spatial confidence boost based on field position
  * @param field PDF field to analyze
- * @param candidateSections Possible sections being considered
+ * @param candidateSection Possible section being considered
+ * @param pdfDoc Optional PDF document to get accurate page dimensions
  * @returns Confidence boost amount (0-0.2)
  */
-export function calculateSpatialConfidenceBoost(field, candidateSection) {
-    const spatialInfo = extractSpatialInfo(field);
+export function calculateSpatialConfidenceBoost(field, candidateSection, pdfDoc) {
+    const spatialInfo = extractSpatialInfo(field, pdfDoc);
     if (!spatialInfo) {
         return 0;
     }

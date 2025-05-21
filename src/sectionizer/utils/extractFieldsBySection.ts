@@ -1,6 +1,6 @@
 /**
  * SF-86 Sectionizer - Field Extraction Utility
- * 
+ *
  * This utility extracts fields from the SF-86 PDF and provides functions
  * to group them by section based on field metadata.
  */
@@ -9,16 +9,23 @@ import * as fs from "fs";
 import * as path from "path";
 // Using full relative paths with .js extension for ES modules
 import { PdfService } from "../../../api/service/pdfService2.js";
-import { 
-  enhancedMultiDimensionalCategorization, 
-  refinedSectionPageRanges, 
+import {
+  enhancedMultiDimensionalCategorization,
+  refinedSectionPageRanges,
   sectionClassifications,
   extractSectionInfoFromName,
   extractSectionInfo
 } from "./fieldParsing.js";
 import * as bridgeAdapter from "./bridgeAdapter.js";
-import { sectionPageRanges } from "./field-clusterer.js";
-import { strictSectionPatternsNumeric, sectionFieldPatterns } from "./section-patterns.js";
+import { PDFDocument } from "pdf-lib";
+import { expectedFieldCounts } from "./field-clusterer.js";
+import chalk from 'chalk';
+import {
+  createSectionBoundaryMap,
+  enhanceSpatialCategorization,
+  organizeSpatialSubsectionEntries
+} from "./spatialAnalysis.js";
+
 
 /**
  * Represents a PDF form field extracted from the SF-86 form
@@ -32,7 +39,6 @@ export interface PDFField {
   type?: string; // Field type (text, checkbox, dropdown, etc.)
   maxLength?: number; // Maximum length for text fields
   options?: string[]; // Available options for dropdown/radio fields
-  required?: boolean; // Whether the field is required
   rect?: {
     // Rectangle coordinates of the field
     x: number; // Left position
@@ -59,33 +65,16 @@ const DEFAULT_PDF_PATH = path.resolve(
   "sf862.pdf"
 );
 
-// Use the already defined patterns from the bridge
-// Instead of redefining them here, we'll use the patterns from sectionClassifications
-// Function to determine if a field belongs to a specific section
-function isFieldInSection(fieldName: string, section: number): boolean {
-  if (!fieldName) return false;
-  const lowerName = fieldName.toLowerCase();
-
-  // Use the extractSectionInfo function from fieldParsing.ts
-  const sectionInfo = extractSectionInfo(fieldName);
-  if (sectionInfo && sectionInfo.section === section) {
-    return true;
-  }
-
-  // Fallback to strict pattern matching
-  const patterns = strictSectionPatternsNumeric[section] || [];
-  return patterns.some(pattern => pattern.test(lowerName));
-}
 
 /**
  * Extract all fields from the SF-86 PDF
- * 
+ *
  * @param pdfPath Path to the SF-86 PDF file or JSON fields file
- * @returns Promise resolving to an array of PDF fields
+ * @returns Promise resolving to an array of PDF fields and the PDFDocument
  */
 export async function extractFields(
   pdfPath: string = DEFAULT_PDF_PATH
-): Promise<PDFField[]> {
+): Promise<{ fields: PDFField[], pdfDoc?: PDFDocument }> {
   // Check if file exists
   if (!fs.existsSync(pdfPath)) {
     throw new Error(`File not found at ${pdfPath}`);
@@ -96,9 +85,9 @@ export async function extractFields(
     if (pdfPath.toLowerCase().endsWith('.json')) {
       console.log(`Loading fields from JSON file: ${pdfPath}`);
       const jsonData = JSON.parse(fs.readFileSync(pdfPath, 'utf-8'));
-      
+
       // Convert JSON data to PDFField format
-      return jsonData.map((field: any) => ({
+      const processedFields = jsonData.map((field: any) => ({
         id: field.id,
         name: field.name,
         value: field.value,
@@ -110,27 +99,50 @@ export async function extractFields(
         required: field.required,
         rect: field.rect || null
       }));
+
+      return { fields: processedFields };
     }
 
     // Use the existing PdfService to extract field metadata
     const pdfService = new PdfService();
+
+    // Load the PDF document first - can't use private loadPdf
+    let pdfDoc: PDFDocument | undefined;
+    try {
+      // Load the PDF bytes and create a document
+      const pdfBytes = fs.readFileSync(pdfPath);
+      pdfDoc = await PDFDocument.load(pdfBytes);
+    } catch (error) {
+      console.error(`Error loading PDF: ${error}`);
+    }
+
+    // Map the fields directly using mapFormFields instead of extractFieldMetadata
+    // This avoids using the problematic getFieldValue method
     const fieldMetadata = await pdfService.extractFieldMetadata(pdfPath);
-    
-    // Convert to our PDFField interface and ensure page numbers are set
-    return fieldMetadata
-      .filter((field: any) => field.name) // Filter out fields without names
-      .map((field: any) => ({
-        id: field.id,
-        name: field.name,
-        value: field.value,
-        page: field.page || 0, // Default to 0 if page is undefined
-        label: field.label,
-        type: field.type,
-        maxLength: field.maxLength,
-        options: field.options,
-        required: field.required,
-        rect: field.rect || null
-      }));
+
+    // Convert to our PDFField interface, ensure page numbers are set
+    const processedFields =
+      fieldMetadata
+        .filter((field: any) => field.name) // Filter out fields without names
+        .map((field: any) => ({
+          id: field.id,
+          name: field.name,
+          value: field.value,
+          page: field.page || -1, // Default to 0 if page is undefined
+          label: field.label,
+          type: field.type,
+          maxLength: field.maxLength,
+          options: field.options || [],
+          rect: field.rect || undefined
+        })
+    );
+
+    console.log(`Extracted ${fieldMetadata.length} raw fields, ${processedFields.length} unique fields after deduplication`);
+
+    return {
+      fields: processedFields,
+      pdfDoc: pdfDoc  // Make the PDFDocument available
+    };
   } catch (error) {
     // Fallback to mock data if in development and mock data exists
     if (process.env.NODE_ENV === "development" && process.env.USE_MOCK_DATA) {
@@ -143,10 +155,10 @@ export async function extractFields(
       if (fs.existsSync(mockDataPath)) {
         console.warn("Using mock data from sf86-fields.json");
         const mockData = JSON.parse(fs.readFileSync(mockDataPath, "utf-8"));
-        return mockData as PDFField[];
+        return { fields: mockData };
       }
     }
-    
+
     // Re-throw the error if no fallback is available
     throw new Error(
       `Failed to extract fields from PDF: ${
@@ -156,12 +168,14 @@ export async function extractFields(
   }
 }
 
+
 /**
- * Categorize a single field based on various metadata
+ * Categorize a single field based only on name-related metadata
+ * This function focuses solely on analyzing field names and labels
  */
 export function categorizeField(
   field: PDFField,
-  useEnhanced = true
+  useEnhanced = true,
 ): CategorizedField {
   const result: CategorizedField = {
     ...field,
@@ -175,20 +189,20 @@ export function categorizeField(
 
   // Extract section info using the consolidated utility
   const sectionInfo = extractSectionInfo(field.name);
-  
+
   if (sectionInfo && sectionInfo.section > 0) {
     result.section = sectionInfo.section;
     result.confidence = sectionInfo.confidence;
-    
+
     // Copy subsection and entry info if available
     if (sectionInfo.subsection) {
       result.subsection = sectionInfo.subsection;
     }
-    
+
     if (sectionInfo.entry) {
       result.entry = sectionInfo.entry;
     }
-    
+
     return result;
   }
 
@@ -196,12 +210,22 @@ export function categorizeField(
   if (useEnhanced) {
     // Use the bridgeAdapter enhanced categorization for better results
     try {
+      // Get neighboring fields based on name patterns
+      const neighborFields: string[] = [];
+
+      // Look for fields with similar naming patterns that might be neighbors
+      const fieldNameBase = field.name.replace(/\d+$/, '');
+      if (fieldNameBase !== field.name) {
+        // This field has a numeric suffix, suggesting it's part of a sequence
+        neighborFields.push(fieldNameBase + '*');
+      }
+
       const enhancedResult = enhancedMultiDimensionalCategorization(
         field.name,
         field.label || "",
         field.page,
         typeof field.value === "string" ? field.value : "",
-        [] // Neighbor fields - not available at this stage
+        neighborFields
       );
 
       if (enhancedResult && enhancedResult.section > 0) {
@@ -213,7 +237,7 @@ export function categorizeField(
           result.entry = enhancedResult.entry;
         }
         result.confidence = enhancedResult.confidence;
-        
+
         return result;
       }
     } catch (error) {
@@ -226,54 +250,64 @@ export function categorizeField(
 }
 
 /**
- * Load reference counts from section-data folder
- * Falls back to default values if no reference data available
+ * Calculate a confidence boost based on field's spatial position
+ * @param field Field to analyze
+ * @param candidateSection Section being considered
+ * @param pageDimensions Optional record of page dimensions
+ * @returns Confidence boost (0-0.2)
  */
-export function loadReferenceCounts(): Record<number, number> {
-  try {
-    const dataPath = path.join(process.cwd(), "src", "section-data", "reference-counts.json");
-    if (fs.existsSync(dataPath)) {
-      const refData = JSON.parse(fs.readFileSync(dataPath, "utf8"));
-
-      // Make sure the data is in the right format (number to number mapping)
-      const formattedData: Record<number, number> = {};
-      
-      for (const [section, count] of Object.entries(refData)) {
-        const sectionNum = parseInt(section, 10);
-        if (!isNaN(sectionNum)) {
-          // If it's a complex object with fields/entries/subsections, use the fields count
-          if (typeof count === 'object' && count !== null && 'fields' in count) {
-            formattedData[sectionNum] = (count as any).fields;
-          } else if (typeof count === 'number') {
-            formattedData[sectionNum] = count;
-          }
-        }
-      }
-      
-      return formattedData;
-    }
-  } catch (error) {
-    console.warn(`Error loading reference counts: ${error}`);
+function calculateSpatialConfidenceBoost(
+  field: PDFField,
+  candidateSection: number,
+  pageDimensions: Record<number, {width: number, height: number}> = {}
+): number {
+  // Skip if no coordinates or page
+  if (!field.rect || !field.page) {
+    return 0;
   }
 
-  // Default values as fallback
-  return {
-    0: 5, // Very few fields should be unknown
-    1: 10,
-    2: 20,
-    // Add other section defaults as needed
-    13: 20, // Section 13 (Employment Activities) typically has many fields
-    17: 15, // Section 17 (Marital Status) also has many fields
-    // Add more as needed
-  };
+  let boost = 0;
+
+  // Check if field is on a page typically associated with this section
+  // This is a simplified version - in a real implementation, you would use
+  // a mapping of sections to page ranges
+  const typicalStartPage = Math.max(1, (candidateSection - 1) * 3 + 1);
+  const typicalEndPage = typicalStartPage + 5;
+
+  if (field.page >= typicalStartPage && field.page <= typicalEndPage) {
+    boost += 0.1;
+  }
+
+  // Check if field name contains section indicator
+  if (field.name.toLowerCase().includes(`section${candidateSection}`) ||
+      field.name.toLowerCase().includes(`section ${candidateSection}`) ||
+      field.name.toLowerCase().includes(`s${candidateSection}_`)) {
+    boost += 0.15;
+  }
+
+  // Check if field is in a position typical for this section
+  // Get page dimensions from PDF or use defaults
+  const page = field.page || 1;
+  const pageDim = pageDimensions[page] || { width: 612, height: 792 }; // Default to US Letter if not available
+
+  const fieldY = field.rect.y;
+  const pageHeight = pageDim.height;
+
+  // Headers are typically at the top of the page
+  const isInHeader = fieldY > pageHeight * 0.8;
+
+  if (isInHeader && field.name.toLowerCase().includes('section')) {
+    boost += 0.1;
+  }
+
+  return Math.min(0.2, boost);
 }
 
-/**
- * Identify sections with count issues compared to reference counts
- * @param sectionMap Object mapping section numbers to arrays of fields
- * @param referenceCounts Expected field counts per section
- * @returns Object with arrays of sections that have issues
- */
+
+
+// This function was previously used but is now kept for reference
+// It may be useful in future enhancements
+/*
 function identifyProblemSections(
   sectionMap: Record<number, CategorizedField[]>,
   referenceCounts: Record<number, number>
@@ -286,9 +320,9 @@ function identifyProblemSections(
   for (let section = 1; section <= 30; section++) {
     const sectionFields = sectionMap[section] || [];
     const expectedCount = referenceCounts[section] || 0;
-    
+
     if (expectedCount === 0) continue; // Skip sections without reference counts
-    
+
     if (sectionFields.length === 0) {
       missing.push(section);
     } else if (sectionFields.length < expectedCount * 0.75) { // Allow some flexibility
@@ -300,6 +334,7 @@ function identifyProblemSections(
 
   return { oversized, undersized, missing };
 }
+*/
 
 /**
  * Post-process fields after initial categorization to improve accuracy
@@ -310,10 +345,10 @@ function identifyProblemSections(
 function postProcessFields(fields: CategorizedField[]): CategorizedField[] {
   try {
     console.log(`Post-processing ${fields.length} categorized fields`);
-    
+
     // Group fields by section
     const sectionMap: Record<number, CategorizedField[]> = {};
-    
+
     fields.forEach((field) => {
       if (field.section !== undefined) {
         if (!sectionMap[field.section]) {
@@ -322,7 +357,7 @@ function postProcessFields(fields: CategorizedField[]): CategorizedField[] {
         sectionMap[field.section].push(field);
       }
     });
-    
+
     // Ensure sections 2-4, 6, and 8 have 0 entries (allow entries for Section 1)
     [2, 3, 4, 6, 8].forEach(section => {
       if (sectionMap[section]) {
@@ -331,12 +366,12 @@ function postProcessFields(fields: CategorizedField[]): CategorizedField[] {
         });
       }
     });
-    
+
     // Special handling for Section 5 (Other names) - should have 45 fields, 4 entries
     if (sectionMap[5]) {
       const section5Fields = sectionMap[5];
       console.log(`Section 5 (Other names) has ${section5Fields.length} fields`);
-      
+
       // Group by entry
       const entryGroups: Record<string, CategorizedField[]> = {};
       section5Fields.forEach(field => {
@@ -346,20 +381,20 @@ function postProcessFields(fields: CategorizedField[]): CategorizedField[] {
         }
         entryGroups[entry].push(field);
       });
-      
+
       // Check for fields without entry assignment
       const unknownEntryFields = entryGroups['unknown'] || [];
-      
+
       if (unknownEntryFields.length > 0) {
         console.log(`Found ${unknownEntryFields.length} Section 5 fields without entry assignment`);
-        
+
         // Try to distribute them to entries 1-4
         unknownEntryFields.forEach((field, index) => {
           // Assign entries in a round-robin fashion
           field.entry = (index % 4) + 1;
         });
       }
-      
+
       // Ensure we have 1 base content field (entry 0) and 44 entry fields (11 per entry)
       const baseContentFields = entryGroups['0'] || [];
       if (baseContentFields.length === 0) {
@@ -367,13 +402,13 @@ function postProcessFields(fields: CategorizedField[]): CategorizedField[] {
         const largestEntryKey = Object.keys(entryGroups)
           .filter(k => k !== 'unknown' && k !== '0')
           .sort((a, b) => entryGroups[b].length - entryGroups[a].length)[0];
-        
+
         if (largestEntryKey && entryGroups[largestEntryKey].length > 1) {
           // Find a field that's likely general content
-          const fieldToMove = entryGroups[largestEntryKey].find(f => 
-            /explanation|general|have[-_]?you[-_]?used|other[-_]?names/i.test(f.name.toLowerCase())) || 
+          const fieldToMove = entryGroups[largestEntryKey].find(f =>
+            /explanation|general|have[-_]?you[-_]?used|other[-_]?names/i.test(f.name.toLowerCase())) ||
             entryGroups[largestEntryKey][0];
-          
+
           fieldToMove.entry = 0;
           console.log(`Created base content field for Section 5`);
         }
@@ -383,22 +418,22 @@ function postProcessFields(fields: CategorizedField[]): CategorizedField[] {
           field.entry = (index % 4) + 1;
         });
       }
-      
+
       // Balance the 4 entries to have approximately 11 fields each
       const totalEntryFields = section5Fields.length - (entryGroups['0'] || []).length;
       const targetPerEntry = Math.floor(totalEntryFields / 4);
-      
+
       for (let i = 1; i <= 4; i++) {
         const entryFields = entryGroups[i.toString()] || [];
         if (entryFields.length === 0) {
           // Entry doesn't exist, create it
           console.log(`Creating missing entry ${i} for Section 5`);
-          
+
           // Find the largest entry to take fields from
           const largestEntryKey = Object.keys(entryGroups)
             .filter(k => k !== 'unknown' && k !== '0' && parseInt(k) !== i && entryGroups[k].length > targetPerEntry)
             .sort((a, b) => entryGroups[b].length - entryGroups[a].length)[0];
-          
+
           if (largestEntryKey) {
             const fieldsToMove = entryGroups[largestEntryKey].slice(0, targetPerEntry);
             fieldsToMove.forEach(field => {
@@ -409,12 +444,12 @@ function postProcessFields(fields: CategorizedField[]): CategorizedField[] {
         }
       }
     }
-    
+
     // Special handling for Section 7 (Phone and email) - should have 17 fields, 3 entries
     if (sectionMap[7]) {
       const section7Fields = sectionMap[7];
       console.log(`Section 7 (Phone and email) has ${section7Fields.length} fields`);
-      
+
       // Group by entry
       const entryGroups: Record<string, CategorizedField[]> = {};
       section7Fields.forEach(field => {
@@ -424,31 +459,31 @@ function postProcessFields(fields: CategorizedField[]): CategorizedField[] {
         }
         entryGroups[entry].push(field);
       });
-      
+
       // Check for fields without entry assignment
       const unknownEntryFields = entryGroups['unknown'] || [];
-      
+
       if (unknownEntryFields.length > 0) {
         console.log(`Found ${unknownEntryFields.length} Section 7 fields without entry assignment`);
-        
+
         // Distribute them to entries 1-3
         unknownEntryFields.forEach((field, index) => {
           // Assign entries in a round-robin fashion
           field.entry = (index % 3) + 1;
         });
       }
-      
+
       // Ensure we have 3 entries with reasonable field counts
       for (let i = 1; i <= 3; i++) {
         if (!entryGroups[i.toString()] || entryGroups[i.toString()].length === 0) {
           // Entry doesn't exist, create it
           console.log(`Creating missing entry ${i} for Section 7`);
-          
+
           // Find the largest entry to take fields from
           const largestEntryKey = Object.keys(entryGroups)
             .filter(k => k !== 'unknown' && k !== '0' && parseInt(k) !== i && (entryGroups[k] || []).length > 3)
             .sort((a, b) => (entryGroups[b] || []).length - (entryGroups[a] || []).length)[0];
-          
+
           if (largestEntryKey) {
             const fieldsToMove = entryGroups[largestEntryKey].slice(0, 3);
             fieldsToMove.forEach(field => {
@@ -459,12 +494,12 @@ function postProcessFields(fields: CategorizedField[]): CategorizedField[] {
         }
       }
     }
-    
+
     // Special handling for Section 9 (Dual citizenship) - should have 4 subsections and 78 fields
     if (sectionMap[9]) {
       const section9Fields = sectionMap[9];
       console.log(`Section 9 (Dual citizenship) has ${section9Fields.length} fields`);
-      
+
       // Group by subsection
       const subsectionGroups: Record<string, CategorizedField[]> = {};
       section9Fields.forEach(field => {
@@ -474,34 +509,34 @@ function postProcessFields(fields: CategorizedField[]): CategorizedField[] {
         }
         subsectionGroups[subsection].push(field);
       });
-      
+
       // Check for fields without subsection assignment
       const unknownSubFields = subsectionGroups['unknown'] || [];
-      
+
       if (unknownSubFields.length > 0) {
         console.log(`Found ${unknownSubFields.length} Section 9 fields without subsection assignment`);
-        
+
         // Distribute them to subsections a-d
         const subsections = ['a', 'b', 'c', 'd'];
         unknownSubFields.forEach((field, index) => {
           field.subsection = subsections[index % 4];
         });
       }
-      
+
       // Ensure all 4 subsections exist with a reasonable number of fields
       const subsections = ['a', 'b', 'c', 'd'];
       const totalFields = section9Fields.length;
       const targetPerSubsection = Math.floor(totalFields / 4);
-      
+
       subsections.forEach(sub => {
         if (!subsectionGroups[sub] || subsectionGroups[sub].length === 0) {
           console.log(`Creating missing subsection ${sub} for Section 9`);
-          
+
           // Find the largest subsection to take fields from
           const largestSubKey = Object.keys(subsectionGroups)
             .filter(k => k !== 'unknown' && k !== sub && (subsectionGroups[k] || []).length > targetPerSubsection)
             .sort((a, b) => (subsectionGroups[b] || []).length - (subsectionGroups[a] || []).length)[0];
-          
+
           if (largestSubKey) {
             const fieldsToMove = subsectionGroups[largestSubKey].slice(0, targetPerSubsection / 2);
             fieldsToMove.forEach(field => {
@@ -511,13 +546,13 @@ function postProcessFields(fields: CategorizedField[]): CategorizedField[] {
           }
         }
       });
-      
+
       // Set entry to 0 for all section 9 fields
       section9Fields.forEach(field => {
         field.entry = 0;
       });
     }
-    
+
     return fields;
   } catch (error) {
     console.error('Error in postProcessFields:', error);
@@ -528,7 +563,7 @@ function postProcessFields(fields: CategorizedField[]): CategorizedField[] {
 /**
  * Main function to extract and categorize fields from the SF-86 PDF,
  * applying normalization, categorization, and post-processing steps
- * 
+ *
  * @param pdfPath Path to the SF-86 PDF file
  * @param saveUnknown Whether to save uncategorized fields to unknown.json
  * @returns Promise resolving to a record of categorized fields grouped by section number
@@ -540,77 +575,45 @@ export async function extractFieldsBySection(
   try {
     // Step 1: Extract raw fields from the PDF
     console.log(`Extracting fields from ${pdfPath}...`);
-    const rawFields = await extractFields(pdfPath);
-    console.log(`Extracted ${rawFields.length} fields from PDF.`);
-    
+    const { fields } = await extractFields(pdfPath);
+    console.log(`Extracted ${fields.length} fields from PDF.`);
+
     // Step 3: Categorize fields into sections
     console.log("Categorizing fields into sections...");
-    const categorizedFields = rawFields.map((field) => categorizeField(field));
-    
+    const categorizedFields = fields.map((field) => categorizeField(field));
+
     // Step 4: Apply post-processing to validate and fix categorization
-    console.log("Applying post-processing and validation...");
+    console.log("Applying post-processing to categorized fields...");
     const processedFields = postProcessFields(categorizedFields);
-    
+
+    // Optionally save uncategorized fields for debug
+    if (saveUnknown) {
+      const unknownFields = processedFields.filter((field) => field.section === 0);
+      if (unknownFields.length > 0) {
+        console.log(`Saving ${unknownFields.length} uncategorized fields for debug...`);
+        saveUnknownFields(unknownFields, `unknown-fields-${Date.now()}.json`);
+      }
+    }
+
     // Step 5: Group fields by section
-    const sectionFields: Record<number, CategorizedField[]> = {};
-    
-    // Initialize section arrays with empty arrays
-    for (let i = 0; i <= 30; i++) {
-      sectionFields[i] = [];
-    }
-    
-    // Populate section arrays
+    console.log("Grouping fields by section...");
+    const sectionMap: Record<number, CategorizedField[]> = {};
+
     processedFields.forEach((field) => {
-      if (!sectionFields[field.section]) {
-        sectionFields[field.section] = [];
+      const section = field.section;
+      if (!sectionMap[section]) {
+        sectionMap[section] = [];
       }
-      sectionFields[field.section].push(field);
+      sectionMap[section].push(field);
     });
-    
-    // Step 6: Save uncategorized fields for analysis if requested
-    if (saveUnknown && sectionFields["0"] && sectionFields["0"].length > 0) {
-      const unknownFields = sectionFields["0"];
-      const outputDir = path.resolve(process.cwd(), "reports");
-      if (!fs.existsSync(outputDir)) {
-        fs.mkdirSync(outputDir, { recursive: true });
-      }
-      
-      const unknownPath = path.join(outputDir, "unknown-fields.json");
-      fs.writeFileSync(unknownPath, JSON.stringify(unknownFields, null, 2));
-      console.log(
-        `Saved ${unknownFields.length} uncategorized fields to ${unknownPath}`
-      );
-    }
-    
-    // NEW: Sort fields within each section by subsection (alphabetically) and entry (numeric)
-    Object.entries(sectionFields).forEach(([sectionKey, arr]) => {
-      arr.sort((a, b) => {
-        const subA = a.subsection ?? "";
-        const subB = b.subsection ?? "";
-        if (subA !== subB) {
-          // Place fields without subsection last
-          if (!subA) return 1;
-          if (!subB) return -1;
-          return subA.localeCompare(subB, undefined, { numeric: true, sensitivity: "base" });
-        }
-        // Same subsection, compare entry if both numbers
-        const entryA = typeof a.entry === "number" ? a.entry : Number.MAX_SAFE_INTEGER;
-        const entryB = typeof b.entry === "number" ? b.entry : Number.MAX_SAFE_INTEGER;
-        return entryA - entryB;
-      });
-    });
-    
-    // Step 7: Print section statistics
+
+    // Print statistics
     printSectionStatistics(processedFields);
-    
-    return sectionFields;
+
+    return sectionMap;
   } catch (error) {
-    console.error("Error in extractFieldsBySection:", error);
-    throw new Error(
-      `Failed to extract and categorize fields: ${
-        error instanceof Error ? error.message : String(error)
-      }`
-    );
+    console.error(`Error in extractFieldsBySection: ${error}`);
+    throw error;
   }
 }
 
@@ -618,65 +621,89 @@ export async function extractFieldsBySection(
  * Print statistics about field categorization by section
  * @param fields Categorized fields
  */
-function printSectionStatistics(fields: CategorizedField[]): void {
+export function printSectionStatistics(fields: CategorizedField[]): void {
   // Count fields per section
   const sectionCounts: Record<number, number> = {};
   fields.forEach((field) => {
-    sectionCounts[field.section] = (sectionCounts[field.section] || 0) + 1;
+    // Default to section 0 (unknown) if section is undefined
+    const section = field.section !== undefined ? field.section : 0;
+    sectionCounts[section] = (sectionCounts[section] || 0) + 1;
   });
-  
+
   // Get reference counts for comparison
-  const referenceCounts = loadReferenceCounts();
-  
+  const referenceCounts = expectedFieldCounts;
+
   // Log the statistics
-  console.log("\nSection Statistics:");
-  console.log("==================");
-  console.log("Section | Count | Expected | Difference");
-  console.log("--------|-------|----------|------------");
-  
+  console.log(chalk.bold("\nSection Statistics:"));
+  console.log(chalk.bold("=================="));
+  console.log(chalk.bold("Section | Count | Expected | Difference"));
+  console.log(chalk.bold("--------|-------|----------|------------"));
+
   // Sort sections by number
   const sortedSections = Object.keys(sectionCounts)
     .map(Number)
     .sort((a, b) => a - b);
-  
+
   for (const section of sortedSections) {
     const count = sectionCounts[section];
-    const expected = referenceCounts[section];
-    
+    // Extract the 'fields' property from the complex structure
+    const expected = referenceCounts[section]?.fields;
+
     // Format expected and difference values, handling non-numeric cases
     let expectedStr = "N/A";
     let differenceStr = "N/A";
-    
+
     if (typeof expected === "number") {
       expectedStr = expected.toString();
-      differenceStr = (count - expected).toString();
+      const diff = count - expected;
+      differenceStr = diff >= 0 ? `+${diff}` : diff.toString();
     }
-    
+
     // Color-code output based on match
     let statusSymbol = "  ";
+    let differenceChalk = chalk.gray; // Default for N/A or no expected value
     if (typeof expected === "number") {
       if (count === expected) {
-        statusSymbol = "✓ "; // Exact match
+        statusSymbol = "✓ ";
+        differenceChalk = chalk.green;
       } else if (count > expected) {
-        statusSymbol = "+ "; // Too many fields
+        statusSymbol = "+ ";
+        differenceChalk = chalk.yellow; // Or chalk.red if it's a problem
       } else {
-        statusSymbol = "- "; // Too few fields
+        statusSymbol = "- ";
+        differenceChalk = chalk.red;
       }
     }
 
     console.log(
-      `${section.toString().padStart(7)} | ${count
-        .toString()
-        .padStart(5)} | ${expectedStr.padStart(
-        8
-      )} | ${statusSymbol}${differenceStr.padStart(10)}`
+      `${String(section).padStart(2)} | ${String(count).padEnd(5)} | ${String(expectedStr).padEnd(8)} | ${differenceChalk(`${statusSymbol}${differenceStr}`)}`
     );
   }
-  
-  // Additional subsection statistics
 
-  console.log("\nSubsection Breakdown:");
-  console.log("====================");
+  // Add ASCII chart visualization
+  console.log(chalk.bold("\nSection Distribution Chart:"));
+  console.log(chalk.bold("========================="));
+
+  // Find the maximum count for scaling
+  const maxCount = Math.max(...Object.values(sectionCounts));
+  const chartWidth = 50; // Maximum chart width in characters
+
+  // Generate the chart
+  for (const section of sortedSections) {
+    // Skip section 0 (unknown) in the chart as it can skew visualization
+    if (section === 0) continue;
+
+    const count = sectionCounts[section];
+    const barLength = Math.round((count / maxCount) * chartWidth);
+    const bar = "█".repeat(barLength);
+
+    // Display section number, bar, and count
+    console.log(`Section ${String(section).padStart(2)}: ${chalk.blue(bar)} ${count}`);
+  }
+
+  // Additional subsection statistics
+  console.log(chalk.bold("\nSubsection Breakdown:"));
+  console.log(chalk.bold("===================="));
 
   for (const section of sortedSections) {
     // Collect subsection counts for this section
@@ -693,11 +720,66 @@ function printSectionStatistics(fields: CategorizedField[]): void {
       continue; // No subsections for this section
     }
 
-    console.log(`Section ${section}`);
+    // Add expected subsection count if available
+    const expectedSubsections = referenceCounts[section]?.subsections;
+    const subsectionInfo = expectedSubsections ? ` (Expected: ${expectedSubsections})` : '';
+    console.log(`Section ${section}${subsectionInfo}`);
+
+    // Get the maximum count for subsection visualization
+    const maxSubCount = Math.max(...Object.values(subsectionCounts));
+    const subChartWidth = 30; // Smaller width for subsections
+
+    // Generate chart for each subsection
     Object.entries(subsectionCounts)
       .sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true, sensitivity: "base" }))
       .forEach(([sub, cnt]) => {
-        console.log(`  ${sub.padStart(6)} : ${cnt}`);
+        const barLength = Math.round((cnt / maxSubCount) * subChartWidth);
+        const bar = "▓".repeat(barLength);
+        console.log(`  ${sub.padEnd(2)} : ${chalk.cyan(bar)} ${cnt}`);
+      });
+  }
+
+  // Entry distribution
+  console.log(chalk.bold("\nEntry Distribution:"));
+  console.log(chalk.bold("=================="));
+
+  // Collect entry counts by section
+  const sectionEntries: Record<number, Record<number, number>> = {};
+
+  fields
+    .filter((f) => typeof f.entry === 'number' && f.entry > 0)
+    .forEach((f) => {
+      const section = f.section !== undefined ? f.section : 0;
+      const entry = f.entry as number;
+
+      if (!sectionEntries[section]) {
+        sectionEntries[section] = {};
+      }
+
+      sectionEntries[section][entry] = (sectionEntries[section][entry] || 0) + 1;
+    });
+
+  // Display entry distribution for sections that have entries
+  for (const section of Object.keys(sectionEntries).map(Number).sort((a, b) => a - b)) {
+    const entries = sectionEntries[section];
+    if (Object.keys(entries).length === 0) continue;
+
+    // Add expected entry count if available
+    const expectedEntryCount = referenceCounts[section]?.entries;
+    const entryInfo = expectedEntryCount ? ` (Expected: ${expectedEntryCount})` : '';
+    console.log(`Section ${section}${entryInfo}`);
+
+    // Get the maximum count for entry visualization
+    const maxEntryCount = Math.max(...Object.values(entries));
+    const entryChartWidth = 25; // Even smaller width for entries
+
+    // Generate chart for each entry
+    Object.entries(entries)
+      .sort((a, b) => Number(a[0]) - Number(b[0]))
+      .forEach(([entry, cnt]) => {
+        const barLength = Math.round((cnt / maxEntryCount) * entryChartWidth);
+        const bar = "▒".repeat(barLength);
+        console.log(`  Entry ${String(entry).padEnd(2)}: ${chalk.magenta(bar)} ${cnt}`);
       });
   }
 
@@ -709,21 +791,21 @@ function printSectionStatistics(fields: CategorizedField[]): void {
     100
   ).toFixed(2);
 
-  console.log("\nOverall:");
+  console.log(chalk.bold("\nOverall:"));
   console.log(`Total fields: ${totalFields}`);
   console.log(
-    `Categorized fields: ${categorizedFields} (${categorizedPercentage}%)`
+    `Categorized fields: ${chalk.green(categorizedFields)} (${chalk.greenBright(categorizedPercentage + '%')})`
   );
   console.log(
-    `Uncategorized fields: ${totalFields - categorizedFields} (${(
+    `Uncategorized fields: ${chalk.red(totalFields - categorizedFields)} (${chalk.redBright((
       100 - parseFloat(categorizedPercentage)
-    ).toFixed(2)}%)`
+    ).toFixed(2) + '%')})`
   );
 }
 
 /**
  * Save unknown/uncategorized fields to a JSON file for analysis
- * 
+ *
  * @param fields Array of uncategorized fields
  * @param outputPath Path to save the unknown fields JSON file
  */
@@ -741,7 +823,7 @@ export function saveUnknownFields(
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
-    
+
     fs.writeFileSync(outputPath, JSON.stringify(fields, null, 2));
     console.log(`Saved ${fields.length} unknown fields to ${outputPath}`);
   } catch (error) {
@@ -751,7 +833,7 @@ export function saveUnknownFields(
 
 /**
  * Group already categorized fields by section
- * 
+ *
  * @param fields Array of already categorized fields
  * @param saveUnknown Whether to save uncategorized fields to unknown.json
  * @returns Record mapping section numbers to arrays of categorized fields
@@ -763,12 +845,12 @@ export async function groupFieldsBySection(
   try {
     // Group fields by section
     const sectionFields: Record<string, CategorizedField[]> = {};
-    
+
     // Initialize section arrays with empty arrays
     for (let i = 0; i <= 30; i++) {
       sectionFields[i.toString()] = [];
     }
-    
+
     // Track field IDs to avoid duplication
     const processedFieldIds = new Set<string>();
 
@@ -805,7 +887,7 @@ export async function groupFieldsBySection(
     // Log stats
     console.log(
       `Grouped ${processedFieldIds.size} unique fields into ${
-        Object.keys(sectionFields).length
+        Object.keys(sectionFields).length - 1
       } sections`
     );
 
@@ -822,16 +904,16 @@ export async function groupFieldsBySection(
       if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
       }
-      
+
       const unknownPath = path.join(outputDir, "unknown-fields.json");
       fs.writeFileSync(unknownPath, JSON.stringify(unknownFields, null, 2));
       console.log(
         `Saved ${unknownFields.length} uncategorized fields to ${unknownPath}`
       );
     }
-    
+
     // Sort fields within each section by subsection and entry for consistent ordering
-    Object.entries(sectionFields).forEach(([sectionKey, arr]) => {
+    Object.values(sectionFields).forEach(arr => {
       arr.sort((a, b) => {
         const subA = a.subsection ?? "";
         const subB = b.subsection ?? "";
@@ -845,7 +927,7 @@ export async function groupFieldsBySection(
         return entryA - entryB;
       });
     });
-    
+
     return sectionFields;
   } catch (error) {
     console.error("Error in groupFieldsBySection:", error);
@@ -863,472 +945,128 @@ export async function groupFieldsBySection(
  * either by extracting from existing properties or by generating estimates
  *
  * @param fields Array of fields to enhance
+ * @param pdfDoc Optional PDF document to get accurate page dimensions
  * @returns Array of fields with coordinate data
  */
-export function enhanceFieldsWithCoordinates(fields: PDFField[]): PDFField[] {
+export function enhanceFieldsWithCoordinates(fields: PDFField[], pdfDoc?: PDFDocument): PDFField[] {
   console.log(`Enhancing ${fields.length} fields with coordinate data...`);
-  let fieldsWithCoordinates = 0;
-  let fieldsWithEstimatedCoordinates = 0;
+  let fieldsWithValidRects = 0;
+  let fieldsWithInvalidRects = 0;
 
-  // Create a page map to track field positions per page
-  const pageMap: Record<
-    number,
-    {
-      count: number;
-      positions: { x: number[]; y: number[] };
-      sectionMap: Record<
-        number,
-        { count: number; positions: { x: number[]; y: number[] } }
-      >;
-    }
-  > = {};
-
-  // First pass: count fields per page and record existing positions
-  // Also group by known section for better positioning
-  fields.forEach((field) => {
-    const page = field.page || 1;
-    const section = (field as CategorizedField).section || 0;
-
-    // Initialize page map entry if it doesn't exist
-    if (!pageMap[page]) {
-      pageMap[page] = {
-        count: 0,
-        positions: { x: [], y: [] },
-        sectionMap: {},
-      };
-    }
-
-    // Initialize section map entry if it doesn't exist
-    if (!pageMap[page].sectionMap[section]) {
-      pageMap[page].sectionMap[section] = {
-        count: 0,
-        positions: { x: [], y: [] },
-      };
-    }
-
-    // Increment counts
-    pageMap[page].count++;
-    pageMap[page].sectionMap[section].count++;
-
-    // Try multiple ways to extract coordinates
-    let foundCoords = false;
-    const anyField = field as any;
-
-    // Check for rect property with x, y, width, height
-    if (
-      field.rect &&
-      typeof field.rect.x === "number" &&
-      typeof field.rect.y === "number"
+  const enhancedFields = fields.map((field) => {
+    // Ensure field.rect exists and initialize if not, or if properties are not numbers
+    if (!field.rect ||
+        typeof field.rect.x !== 'number' ||
+        typeof field.rect.y !== 'number' ||
+        typeof field.rect.width !== 'number' ||
+        typeof field.rect.height !== 'number'
     ) {
-      pageMap[page].positions.x.push(field.rect.x);
-      pageMap[page].positions.y.push(field.rect.y);
-      pageMap[page].sectionMap[section].positions.x.push(field.rect.x);
-      pageMap[page].sectionMap[section].positions.y.push(field.rect.y);
-      foundCoords = true;
+      // If rect is entirely missing or malformed, initialize to -1
+      // This indicates that the source (pdfService2.ts) did not provide a valid rect
+      field.rect = { x: -1, y: -1, width: -1, height: -1 };
     }
-    // Check for x, y properties directly on field
-    else if (typeof anyField.x === "number" && typeof anyField.y === "number") {
-      pageMap[page].positions.x.push(anyField.x);
-      pageMap[page].positions.y.push(anyField.y);
-      pageMap[page].sectionMap[section].positions.x.push(anyField.x);
-      pageMap[page].sectionMap[section].positions.y.push(anyField.y);
-      foundCoords = true;
-    }
-    // Check for coordinates array [x, y, width, height]
-    else if (
-      Array.isArray(anyField.coordinates) &&
-      anyField.coordinates.length >= 2
+
+    // Check if the coordinates are valid (not -1)
+    // A field has valid coordinates if all its rect properties are not -1 and width/height are non-negative.
+    if (field.rect.x !== -1 &&
+        field.rect.y !== -1 &&
+        field.rect.width !== -1 && field.rect.width >= 0 &&
+        field.rect.height !== -1 && field.rect.height >= 0
     ) {
-      pageMap[page].positions.x.push(anyField.coordinates[0]);
-      pageMap[page].positions.y.push(anyField.coordinates[1]);
-      pageMap[page].sectionMap[section].positions.x.push(
-        anyField.coordinates[0]
-      );
-      pageMap[page].sectionMap[section].positions.y.push(
-        anyField.coordinates[1]
-      );
-      foundCoords = true;
-    }
-    // Check for a coords object
-    else if (
-      anyField.coords &&
-      typeof anyField.coords.x === "number" &&
-      typeof anyField.coords.y === "number"
-    ) {
-      pageMap[page].positions.x.push(anyField.coords.x);
-      pageMap[page].positions.y.push(anyField.coords.y);
-      pageMap[page].sectionMap[section].positions.x.push(anyField.coords.x);
-      pageMap[page].sectionMap[section].positions.y.push(anyField.coords.y);
-      foundCoords = true;
-    }
-    // Try to parse coordinates from attributes like data-position
-    else if (typeof anyField.attributes === "object" && anyField.attributes) {
-      // Look for position data in various attribute formats
-      const posAttrs = ["data-position", "position", "pos", "bbox"];
-
-      for (const attr of posAttrs) {
-        if (anyField.attributes[attr]) {
-          let posValue = anyField.attributes[attr];
-
-          // Try to parse if it's a string
-          if (typeof posValue === "string") {
-            try {
-              // Handle formats like "x,y,width,height" or "[x,y,width,height]"
-              posValue = posValue
-                .replace(/[\[\]]/g, "")
-                .split(",")
-                .map(Number);
-
-              if (
-                Array.isArray(posValue) &&
-                posValue.length >= 2 &&
-                !Number.isNaN(posValue[0]) &&
-                !Number.isNaN(posValue[1])
-              ) {
-                pageMap[page].positions.x.push(posValue[0]);
-                pageMap[page].positions.y.push(posValue[1]);
-                pageMap[page].sectionMap[section].positions.x.push(posValue[0]);
-                pageMap[page].sectionMap[section].positions.y.push(posValue[1]);
-                foundCoords = true;
-                break;
-              }
-            } catch (e) {
-              // Failed to parse, continue to next attribute
-            }
-          }
-        }
-      }
-    }
-  });
-
-  // Calculate average positions and variations per page and section
-  // This helps in creating more accurate estimations later
-  const pageStats: Record<
-    number,
-    {
-      avgX: number;
-      avgY: number;
-      varX: number;
-      varY: number;
-      sectionStats: Record<
-        string,
-        { avgX: number; avgY: number; varX: number; varY: number }
-      >;
-    }
-  > = {};
-
-  Object.entries(pageMap).forEach(([pageStr, pageInfo]) => {
-    const page = parseInt(pageStr, 10);
-    const stats = {
-      avgX: 0,
-      avgY: 0,
-      varX: 0,
-      varY: 0,
-      sectionStats: {} as Record<
-        string,
-        { avgX: number; avgY: number; varX: number; varY: number }
-      >,
-    };
-
-    // Calculate page averages if we have positions
-    if (pageInfo.positions.x.length > 0) {
-      stats.avgX =
-        pageInfo.positions.x.reduce((sum, pos) => sum + pos, 0) /
-        pageInfo.positions.x.length;
-      stats.avgY =
-        pageInfo.positions.y.reduce((sum, pos) => sum + pos, 0) /
-        pageInfo.positions.y.length;
-
-      // Calculate variations
-      stats.varX =
-        Math.sqrt(
-          pageInfo.positions.x.reduce(
-            (sum, pos) => sum + Math.pow(pos - stats.avgX, 2),
-            0
-          ) / pageInfo.positions.x.length
-        ) || 50; // Default if calculation fails
-
-      stats.varY =
-        Math.sqrt(
-          pageInfo.positions.y.reduce(
-            (sum, pos) => sum + Math.pow(pos - stats.avgY, 2),
-            0
-          ) / pageInfo.positions.y.length
-        ) || 100; // Default if calculation fails
-    } else {
-      // Default values for pages with no position data
-      stats.avgX = 306; // Half of 612 (standard page width)
-      stats.avgY = 396; // Half of 792 (standard page height)
-      stats.varX = 50; // Default x variation
-      stats.varY = 100; // Default y variation
-    }
-
-    // Calculate section-specific statistics
-    Object.entries(pageInfo.sectionMap).forEach(([sectionStr, sectionInfo]) => {
-      const section = parseInt(sectionStr, 10);
-      const sectionStats = { avgX: 0, avgY: 0, varX: 0, varY: 0 };
-
-      if (sectionInfo.positions.x.length > 0) {
-        sectionStats.avgX =
-          sectionInfo.positions.x.reduce((sum, pos) => sum + pos, 0) /
-          sectionInfo.positions.x.length;
-        sectionStats.avgY =
-          sectionInfo.positions.y.reduce((sum, pos) => sum + pos, 0) /
-          sectionInfo.positions.y.length;
-
-        // Calculate variations
-        sectionStats.varX =
-          Math.sqrt(
-            sectionInfo.positions.x.reduce(
-              (sum, pos) => sum + Math.pow(pos - sectionStats.avgX, 2),
-              0
-            ) / sectionInfo.positions.x.length
-          ) || stats.varX; // Use page variation as fallback
-
-        sectionStats.varY =
-          Math.sqrt(
-            sectionInfo.positions.y.reduce(
-              (sum, pos) => sum + Math.pow(pos - sectionStats.avgY, 2),
-              0
-            ) / sectionInfo.positions.y.length
-          ) || stats.varY; // Use page variation as fallback
-      } else {
-        // Use page stats as fallback for section with no position data
-        sectionStats.avgX = stats.avgX;
-        sectionStats.avgY = stats.avgY;
-        sectionStats.varX = stats.varX;
-        sectionStats.varY = stats.varY;
-      }
-
-      stats.sectionStats[section.toString()] = sectionStats;
-    });
-
-    pageStats[page] = stats;
-  });
-
-  // Process each field to ensure coordinate data
-  return fields.map((field, index) => {
-    const anyField = field as any;
-    const section = (field as CategorizedField).section || 0;
-
-    // Skip if field already has complete coordinate data
-    if (
-      field.rect &&
-      typeof field.rect.x === "number" &&
-      typeof field.rect.y === "number" &&
-      typeof field.rect.width === "number" &&
-      typeof field.rect.height === "number"
-    ) {
-      fieldsWithCoordinates++;
-      return field;
-    }
-
-    // Initialize with default rect if missing
-    const enhancedField = { ...field };
-
-    if (!enhancedField.rect) {
-      enhancedField.rect = { x: 0, y: 0, width: 0, height: 0 };
-    }
-
-    // Get page number (default to 1)
-    const page = field.page || 1;
-
-    // 1. Try to extract coordinates from various field properties
-
-    // Try direct x,y properties
-    if (typeof anyField.x === "number") enhancedField.rect.x = anyField.x;
-    if (typeof anyField.y === "number") enhancedField.rect.y = anyField.y;
-
-    // Try coordinates array
-    if (
-      Array.isArray(anyField.coordinates) &&
-      anyField.coordinates.length >= 2
-    ) {
-      if (enhancedField.rect.x === 0)
-        enhancedField.rect.x = anyField.coordinates[0];
-      if (enhancedField.rect.y === 0)
-        enhancedField.rect.y = anyField.coordinates[1];
-      if (enhancedField.rect.width === 0 && anyField.coordinates.length >= 3) {
-        enhancedField.rect.width = anyField.coordinates[2];
-      }
-      if (enhancedField.rect.height === 0 && anyField.coordinates.length >= 4) {
-        enhancedField.rect.height = anyField.coordinates[3];
-      }
-    }
-
-    // Try coords object
-    if (anyField.coords) {
-      if (typeof anyField.coords.x === "number" && enhancedField.rect.x === 0) {
-        enhancedField.rect.x = anyField.coords.x;
-      }
-      if (typeof anyField.coords.y === "number" && enhancedField.rect.y === 0) {
-        enhancedField.rect.y = anyField.coords.y;
-      }
-      if (
-        typeof anyField.coords.width === "number" &&
-        enhancedField.rect.width === 0
-      ) {
-        enhancedField.rect.width = anyField.coords.width;
-      }
-      if (
-        typeof anyField.coords.height === "number" &&
-        enhancedField.rect.height === 0
-      ) {
-        enhancedField.rect.height = anyField.coords.height;
-      }
-    }
-
-    // Try to parse position from attributes
-    if (typeof anyField.attributes === "object" && anyField.attributes) {
-      const posAttrs = ["data-position", "position", "pos", "bbox"];
-
-      for (const attr of posAttrs) {
-        if (anyField.attributes[attr]) {
-          let posValue = anyField.attributes[attr];
-
-          if (typeof posValue === "string") {
-            try {
-              posValue = posValue
-                .replace(/[\[\]]/g, "")
-                .split(",")
-                .map(Number);
-
-              if (Array.isArray(posValue) && posValue.length >= 2) {
-                if (enhancedField.rect.x === 0)
-                  enhancedField.rect.x = posValue[0];
-                if (enhancedField.rect.y === 0)
-                  enhancedField.rect.y = posValue[1];
-                if (enhancedField.rect.width === 0 && posValue.length >= 3) {
-                  enhancedField.rect.width = posValue[2];
-                }
-                if (enhancedField.rect.height === 0 && posValue.length >= 4) {
-                  enhancedField.rect.height = posValue[3];
-                }
-                break;
-              }
-            } catch (e) {
-              // Failed to parse, continue to next attribute
-            }
-          }
-        }
-      }
-    }
-
-    // 2. Generate estimated values for missing coordinates
-    if (
-      enhancedField.rect.x === 0 ||
-      enhancedField.rect.y === 0 ||
-      enhancedField.rect.width === 0 ||
-      enhancedField.rect.height === 0
-    ) {
-      fieldsWithEstimatedCoordinates++;
-
-      // Get page stats
-      const pageStats_ = pageStats[page] || {
-        avgX: 306,
-        avgY: 396,
-        varX: 50,
-        varY: 100,
-        sectionStats: {},
-      };
-
-      // Get section stats if available, otherwise use page stats
-      const sectionStats = pageStats_?.sectionStats[section] || {
-        avgX: pageStats_.avgX,
-        avgY: pageStats_.avgY,
-        varX: pageStats_.varX,
-        varY: pageStats_.varY,
-      };
-
-      // Helper function to generate a value with controlled randomness
-      const generateValue = (mean: number, stdDev: number): number => {
-        // Box-Muller transform for normal distribution
-        const u = 1 - Math.random();
-        const v = 1 - Math.random();
-        const z = Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
-        return mean + z * stdDev;
-      };
-
-      // Set x position using section statistics with some controlled randomness
-      if (enhancedField.rect.x === 0) {
-        enhancedField.rect.x = generateValue(
-          sectionStats.avgX,
-          sectionStats.varX / 3
-        );
-      }
-
-      // Set y position using section statistics with controlled randomness
-      if (enhancedField.rect.y === 0) {
-        enhancedField.rect.y = generateValue(
-          sectionStats.avgY,
-          sectionStats.varY / 3
-        );
-      }
-
-      // Set field width based on type
-      if (enhancedField.rect.width === 0) {
-        const fieldType = field.type || "text";
-        const fieldNameLower = field.name.toLowerCase();
-
-        if (fieldType === "checkbox" || fieldType === "radio") {
-          enhancedField.rect.width = 15;
-        } else if (
-          fieldType === "textarea" ||
-          fieldNameLower.includes("comments") ||
-          fieldNameLower.includes("description")
-        ) {
-          enhancedField.rect.width = 200;
+      fieldsWithValidRects++;
         } else {
-          // Default size based on field name length with reasonable bounds
-          const nameLength = field.name.length;
-          enhancedField.rect.width = Math.max(
-            50,
-            Math.min(250, 30 + nameLength * 5)
-          );
-        }
-      }
-
-      // Set field height based on type
-      if (enhancedField.rect.height === 0) {
-        const fieldType = field.type || "text";
-        const fieldNameLower = field.name.toLowerCase();
-
-        if (fieldType === "checkbox" || fieldType === "radio") {
-          enhancedField.rect.height = 15;
-        } else if (
-          fieldType === "textarea" ||
-          fieldNameLower.includes("comments") ||
-          fieldNameLower.includes("description")
-        ) {
-          enhancedField.rect.height = 80;
-        } else {
-          enhancedField.rect.height = 20;
-        }
-      }
+      fieldsWithInvalidRects++;
+      // Log fields that still have invalid/missing coordinates after initial check
+      // This means pdfService2.ts did not supply them or supplied invalid ones.
+      console.warn(
+        `Field '${field.name}' (ID: ${field.id}, Page: ${field.page || 'N/A'}) has missing or invalid coordinates: ` +
+        `x: ${field.rect.x}, y: ${field.rect.y}, width: ${field.rect.width}, height: ${field.rect.height}. ` +
+        `These should be provided by pdfService2.ts.`
+      );
     }
-
-    return enhancedField;
+    return field;
   });
+
+  console.log(
+    `Coordinate check complete for ${fields.length} fields: ` +
+    `${fieldsWithValidRects} fields have valid coordinates. ` +
+    `${fieldsWithInvalidRects} fields have missing/invalid coordinates (expected from pdfService2.ts).`
+  );
+
+  if (fieldsWithInvalidRects > 0) {
+    console.error(
+      `ERROR: ${fieldsWithInvalidRects} fields were found with missing or invalid coordinate data. ` +
+      `This data is expected to be fully populated by extractFieldMetadata in pdfService2.ts. ` +
+      `Please investigate api/service/pdfService2.ts.`
+    );
+    // Optionally, we could throw an error here if processing cannot continue without coordinates
+    throw new Error(`${fieldsWithInvalidRects} fields have missing coordinate data.`);
+  }
+
+  return enhancedFields;
 }
 
 /**
  * Categorize a collection of PDF fields into their respective sections
  * @param fields The PDF fields to categorize
+ * @param pdfDoc Optional PDF document to get accurate page dimensions
  * @returns Array of categorized fields
  */
-export function categorizeFields(fields: PDFField[]): CategorizedField[] {
+export function categorizeFields(fields: PDFField[], pdfDoc?: PDFDocument): CategorizedField[] {
   console.time("categorizeFields");
 
   // First enhance fields with coordinate data for spatial analysis
-  const fieldsWithCoordinates = enhanceFieldsWithCoordinates(fields);
+  const fieldsWithCoordinates = enhanceFieldsWithCoordinates(fields, pdfDoc);
 
-  // Then categorize each field
-  const categorizedFields = fieldsWithCoordinates.map((field) => {
+  // Extract page dimensions from PDF document if available
+  const pageDimensions: Record<number, {width: number, height: number}> = {};
+
+  if (pdfDoc) {
+    try {
+      const pageCount = pdfDoc.getPageCount();
+      for (let i = 0; i < pageCount; i++) {
+        const page = pdfDoc.getPage(i);
+        const { width, height } = page.getSize();
+        pageDimensions[i + 1] = { width, height }; // Store as 1-based page numbers
+      }
+      console.log(`Retrieved dimensions for ${Object.keys(pageDimensions).length} pages from PDF`);
+    } catch (error) {
+      console.warn(`Could not get page dimensions from PDF: ${error}`);
+    }
+  }
+
+  // Then categorize each field using name-based approaches
+  const initialCategorizedFields = fieldsWithCoordinates.map((field) => {
     // Use the categorizeField function to assign a section
-    const result = categorizeField(field);
-  return result;
+    const result = categorizeField(field, true);
+    return result;
   });
 
+  console.log("Initial categorization completed. Applying spatial enhancement...");
+
+  // Apply spatial boundary enhancement to improve categorization
+  const spatiallyEnhancedFields = enhanceSpatialCategorization(initialCategorizedFields);
+
+  // Organize fields by spatial relationships for better subsection and entry assignments
+  const fullyOrganizedFields = organizeSpatialSubsectionEntries(spatiallyEnhancedFields);
+
   console.timeEnd("categorizeFields");
-  return categorizedFields;
+  return fullyOrganizedFields;
+}
+
+// Replace the existing organizeFieldsBySpatialRelationships function with a simpler version
+// that uses our spatial analysis functions
+function organizeFieldsBySpatialRelationships(
+  fields: CategorizedField[],
+  pageDimensions: Record<number, {width: number, height: number}> = {}
+): CategorizedField[] {
+  // This is now just a wrapper around our spatial analysis functions,
+  // keeping it for backward compatibility
+  console.log(`Organizing ${fields.length} fields by spatial relationships...`);
+
+  // Enhance categorization using spatial boundaries
+  const enhancedFields = enhanceSpatialCategorization(fields);
+
+  // Organize subsections and entries
+  return organizeSpatialSubsectionEntries(enhancedFields);
 }

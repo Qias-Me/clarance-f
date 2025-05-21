@@ -33,8 +33,6 @@ export interface FieldMetadata {
   /** Available options for dropdown/radio fields */
   options?: string[];
   
-  /** Whether the field is required */
-  required?: boolean;
 }
 
 /**

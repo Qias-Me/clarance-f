@@ -1,7 +1,8 @@
-import { PDFCheckBox, PDFDocument, PDFDropdown, PDFName, PDFRadioGroup, PDFString, PDFTextField, PDFNumber, PDFArray, PDFDict, PDFObject } from "pdf-lib";
+import { PDFCheckBox, PDFDocument, PDFDropdown, PDFName, PDFRadioGroup, PDFString, PDFTextField, PDFNumber, PDFArray, PDFPage, PDFForm, PDFField, PDFSignature, PDFDict, StandardFonts } from "pdf-lib";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import fs from "fs";
+import path from "path";
 // Handle __dirname in ES Module
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -98,6 +99,21 @@ export class PdfService {
             field.select(value);
         else if (field instanceof PDFCheckBox)
             value.toLowerCase() === "yes" ? field.check() : field.uncheck();
+    }
+    getFieldValue(field) {
+        if (field instanceof PDFTextField) {
+            return field.getText();
+        }
+        else if (field instanceof PDFDropdown) {
+            return field.getSelected();
+        }
+        else if (field instanceof PDFCheckBox) {
+            return field.isChecked(); // Return boolean for checkboxes
+        }
+        else if (field instanceof PDFRadioGroup) {
+            return field.getSelected();
+        }
+        return undefined; // Default for unknown or unhandled field types
     }
     //Advanced Methods
     async applyValues_toPDF(formData) {
@@ -234,11 +250,11 @@ export class PdfService {
             if (!widget)
                 return null;
             // Get the Rect array from the widget dictionary
-            // Use a type guard to safely access dictionary
-            const dict = widget.dict;
-            if (!dict || typeof dict.lookup !== 'function')
+            // Use type assertion to handle the TypeScript type issue with dict property
+            const widgetDict = widget.dict;
+            if (!widgetDict)
                 return null;
-            const rectArray = dict.lookup(PDFName.of('Rect'));
+            const rectArray = widgetDict.lookup(PDFName.of('Rect'));
             if (rectArray instanceof PDFArray && rectArray.size() === 4) {
                 try {
                     // PDF coordinates are [left, bottom, right, top]
@@ -282,9 +298,9 @@ export class PdfService {
                 const annotation = annotations.lookup(i);
                 if (!annotation)
                     continue;
-                // Safely check if the annotation has a dict property
-                const annotDict = annotation instanceof PDFDict ? annotation :
-                    annotation.dict instanceof PDFDict ? annotation.dict : null;
+                // Check if this annotation belongs to our field
+                // Use type assertion to handle the TypeScript type issue with dict property
+                const annotDict = annotation.dict;
                 if (!annotDict)
                     continue;
                 // The annotation may refer to the field directly or via a Parent reference
@@ -303,327 +319,156 @@ export class PdfService {
         }
     }
     /**
-     * Safe method to extract a Rect array from an annotation
-     */
-    extractRectFromAnnotation(annotation) {
-        try {
-            // Handle different annotation structures
-            let dict = null;
-            if (annotation instanceof PDFDict) {
-                dict = annotation;
-            }
-            else if (annotation.dict instanceof PDFDict) {
-                dict = annotation.dict;
-            }
-            if (!dict)
-                return null;
-            const rectArray = dict.lookup(PDFName.of('Rect'));
-            if (rectArray instanceof PDFArray && rectArray.size() === 4) {
-                try {
-                    const x1 = rectArray.lookup(0, PDFNumber).asNumber();
-                    const y1 = rectArray.lookup(1, PDFNumber).asNumber();
-                    const x2 = rectArray.lookup(2, PDFNumber).asNumber();
-                    const y2 = rectArray.lookup(3, PDFNumber).asNumber();
-                    return {
-                        x: Math.min(x1, x2),
-                        y: Math.min(y1, y2),
-                        width: Math.abs(x2 - x1),
-                        height: Math.abs(y2 - y1)
-                    };
-                }
-                catch (e) {
-                    console.warn('Error parsing annotation rectangle:', e);
-                }
-            }
-        }
-        catch (e) {
-            console.warn('Error accessing annotation dictionary:', e);
-        }
-        return null;
-    }
-    /**
      * Extract field metadata from a PDF file
-     * Enhanced coordinate extraction for better spatial analysis
+     * @param pdfPath Path to the PDF file
+     * @returns Array of field metadata objects
      */
     async extractFieldMetadata(pdfPath) {
-        const pdfBytes = fs.readFileSync(pdfPath);
-        const pdfDoc = await PDFDocument.load(pdfBytes);
+        console.log(`Extracting field metadata from: ${pdfPath}`);
+        // Load the PDF document
+        const pdfDoc = await this.loadPdf(pdfPath);
+        if (!pdfDoc) {
+            throw new Error("Failed to load PDF document");
+        }
+        // Get all form fields from the PDF
         const form = pdfDoc.getForm();
         const fields = form.getFields();
-        const pages = pdfDoc.getPages();
-        // Create a debug log to track coordinate extraction
-        const debugLog = [];
-        const coordExtractionStats = {
-            total: fields.length,
-            withCoordinates: 0,
-            byMethod: {
-                widget_direct: 0,
-                widget_p_dict: 0,
-                annotation_direct: 0,
-                annotation_indirect: 0,
-                annotation_search: 0,
-                fallback: 0
+        console.log(`PDF loaded successfully. Processing ${fields.length} form fields...`);
+        // Extract field data
+        const fieldDataList = [];
+        const seenFieldIds = new Set(); // Keep track of processed field IDs
+        let directExtractionCount = 0;
+        let annotationCount = 0;
+        let backupCount = 0;
+        let fallbackCount = 0;
+        let checkboxSampleLogged = 0;
+        let radioSampleLogged = 0;
+        let textSampleLogged = 0;
+        const SAMPLE_LOG_LIMIT = 3; // Log up to 3 samples for each type
+        for (let i = 0; i < fields.length; i++) {
+            const field = fields[i];
+            // Get field properties
+            const fieldName = field.getName();
+            const fieldType = field.constructor.name;
+            // Log the field type for every field
+            console.log(`Processing field: ${fieldName}, Type: ${fieldType}`);
+            const widgets = field.acroField.getWidgets();
+            const pages = this.getFieldPages(field, pdfDoc);
+            const fieldId = field.ref.tag.toString();
+            // If we've already processed this fieldId, skip it
+            if (seenFieldIds.has(fieldId)) {
+                continue;
             }
-        };
-        const fieldData = await Promise.all(fields.map(async (field) => {
-            const name = field.getName();
-            const type = field.constructor.name;
-            const id = field.ref.tag.toString();
-            let value = undefined;
-            let label = undefined;
-            let maxLength = undefined;
-            let options = undefined;
-            let page = undefined;
-            let rect = undefined;
-            // Extract current value with improved type handling
-            try {
-                if (field instanceof PDFTextField) {
-                    value = field.getText() || undefined;
-                }
-                else if (field instanceof PDFDropdown) {
-                    value = field.getSelected() || undefined;
-                    if (Array.isArray(value) && value.length === 0) {
-                        value = undefined;
-                    }
-                }
-                else if (field instanceof PDFCheckBox) {
-                    const isChecked = field.isChecked();
-                    value = isChecked !== undefined ? isChecked : undefined;
-                }
-                else if (field instanceof PDFRadioGroup) {
-                    value = field.getSelected() || undefined;
-                }
-            }
-            catch (e) {
-                console.error(`Error extracting value for field ${name}:`, e);
-            }
-            // Attempt to extract label, maxLength, options
-            try {
-                const dict = field.acroField.dict;
-                // Extract Label (TU entry)
-                const tuRaw = dict.get(PDFName.of("TU"));
-                if (tuRaw instanceof PDFString) {
-                    label = tuRaw.decodeText();
-                }
-                // Extract MaxLength (/MaxLen entry) - common for text fields
-                const maxLenRaw = dict.get(PDFName.of('MaxLen'));
-                if (maxLenRaw instanceof PDFNumber) {
-                    maxLength = maxLenRaw.asNumber();
-                }
-                // Extract Options (/Opt entry) - common for dropdowns/radio groups
-                const optRaw = dict.get(PDFName.of('Opt'));
-                if (optRaw instanceof PDFArray) {
-                    options = optRaw.asArray().map(opt => {
-                        // Options can be strings or [exportValue, displayValue] pairs
-                        if (opt instanceof PDFString) {
-                            return opt.decodeText();
-                        }
-                        else if (opt instanceof PDFArray && opt.size() === 2) {
-                            // Use the display value (second element) if it's a pair
-                            const displayValue = opt.get(1);
-                            if (displayValue instanceof PDFString) {
-                                return displayValue.decodeText();
-                            }
-                        }
-                        return opt?.toString() ?? ''; // Fallback
-                    }).filter(opt => opt !== ''); // Filter out empty strings
-                }
-                // Extract page number - essential for coordinate processing
-                page = await this.findPageForField(field, pdfDoc);
-            }
-            catch (e) {
-                console.error(`Error extracting metadata for field ${name}:`, e);
-            }
-            // *** ENHANCED COORDINATE EXTRACTION APPROACH ***
-            // We'll use multiple methods and take the first successful one
-            // Method 1: Extract from widgets
-            try {
-                const widgets = field.acroField.getWidgets();
-                if (widgets && widgets.length > 0) {
-                    // Try direct method from widget
-                    const widgetRect = this.extractRectFromWidget(widgets[0]);
-                    if (widgetRect && widgetRect.width > 0 && widgetRect.height > 0) {
-                        rect = widgetRect;
-                        coordExtractionStats.byMethod.widget_direct++;
-                        debugLog.push({
-                            field: name,
-                            method: "widget_direct",
-                            coordinates: rect,
-                            page
-                        });
-                    }
-                    // Try through widget's P dictionary (page reference)
-                    else {
-                        const widget = widgets[0];
-                        if (widget && widget.P && typeof widget.P === 'function') {
-                            const pageRef = widget.P();
-                            if (pageRef) {
-                                // Safely access the page dictionary
-                                let pageRectDict = null;
-                                try {
-                                    // PDFRef doesn't have .dict directly, need to dereference it
-                                    const pageObj = pdfDoc.context.lookup(pageRef);
-                                    if (pageObj instanceof PDFDict) {
-                                        pageRectDict = pageObj;
-                                    }
-                                    else if (pageObj.dict instanceof PDFDict) {
-                                        pageRectDict = pageObj.dict;
-                                    }
-                                }
-                                catch (e) {
-                                    console.warn('Error dereferencing page', e);
-                                }
-                                if (pageRectDict && typeof pageRectDict.lookup === 'function') {
-                                    const annotRect = pageRectDict.lookup(PDFName.of('Rect'));
-                                    if (annotRect instanceof PDFArray && annotRect.size() === 4) {
-                                        try {
-                                            const x1 = annotRect.lookup(0, PDFNumber).asNumber();
-                                            const y1 = annotRect.lookup(1, PDFNumber).asNumber();
-                                            const x2 = annotRect.lookup(2, PDFNumber).asNumber();
-                                            const y2 = annotRect.lookup(3, PDFNumber).asNumber();
-                                            rect = {
-                                                x: Math.min(x1, x2),
-                                                y: Math.min(y1, y2),
-                                                width: Math.abs(x2 - x1),
-                                                height: Math.abs(y2 - y1)
-                                            };
-                                            coordExtractionStats.byMethod.widget_p_dict++;
-                                            debugLog.push({
-                                                field: name,
-                                                method: "widget_p_dict",
-                                                coordinates: rect,
-                                                page
-                                            });
-                                        }
-                                        catch (e) {
-                                            console.warn(`Error extracting rect from P dict for ${name}:`, e);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            catch (e) {
-                console.warn(`Error extracting widget rectangle for field ${name}:`, e);
-            }
-            // Method 2: Directly access the annotation if known page
-            if (!rect && page !== undefined) {
-                try {
-                    const pdfPage = pages[page - 1]; // Pages are 0-indexed
-                    const fieldAnnotations = this.findFieldAnnotationsOnPage(field, pdfPage);
-                    if (fieldAnnotations.length > 0) {
-                        // Try to extract rectangle from the first annotation
-                        const annotRect = this.extractRectFromAnnotation(fieldAnnotations[0]);
-                        if (annotRect && annotRect.width > 0 && annotRect.height > 0) {
-                            rect = annotRect;
-                            coordExtractionStats.byMethod.annotation_direct++;
-                            debugLog.push({
-                                field: name,
-                                method: "annotation_direct",
-                                coordinates: rect,
-                                page
-                            });
-                        }
-                    }
-                }
-                catch (e) {
-                    console.warn(`Error finding field annotations for ${name}:`, e);
-                }
-            }
-            // Method 3: Search all annotations on the page by field ID
-            if (!rect && page !== undefined) {
-                try {
-                    const pdfPage = pages[page - 1];
-                    const annotations = pdfPage.node.lookup(PDFName.of('Annots'));
-                    if (annotations instanceof PDFArray) {
-                        const fieldRefStr = field.ref.toString();
-                        for (let i = 0; i < annotations.size(); i++) {
-                            const annotation = annotations.lookup(i);
-                            if (!annotation)
-                                continue;
-                            // Check if this annotation refers to our field
-                            const annotStr = annotation.toString();
-                            if (annotStr.includes(fieldRefStr)) {
-                                // Found an annotation for our field
-                                const annotRect = this.extractRectFromAnnotation(annotation);
-                                if (annotRect && annotRect.width > 0 && annotRect.height > 0) {
-                                    rect = annotRect;
-                                    coordExtractionStats.byMethod.annotation_search++;
-                                    debugLog.push({
-                                        field: name,
-                                        method: "annotation_search",
-                                        coordinates: rect,
-                                        page
-                                    });
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-                catch (e) {
-                    console.warn(`Error searching annotations for field ${name}:`, e);
-                }
-            }
-            // Method 4: Fallback - set default reasonable coordinates if page is known
-            if (!rect && page !== undefined) {
-                // Set default coordinates based on field type
-                const fieldType = type.toLowerCase();
-                if (fieldType.includes('checkbox')) {
-                    rect = { x: 100, y: 500, width: 15, height: 15 };
-                }
-                else if (fieldType.includes('radio')) {
-                    rect = { x: 150, y: 500, width: 15, height: 15 };
-                }
-                else if (fieldType.includes('dropdown')) {
-                    rect = { x: 200, y: 500, width: 150, height: 20 };
+            // Most fields have only one widget, but some may have multiple
+            // We'll take the data from the first widget for deduplication purposes
+            if (widgets.length > 0) {
+                const widget = widgets[0]; // Process only the first widget for this field
+                // Try to extract coordinates using different methods
+                let coordinates = this.extractRectFromWidget(widget);
+                let extractionMethod = "widget";
+                if (coordinates) {
+                    directExtractionCount++;
                 }
                 else {
-                    // Default text field size
-                    rect = { x: 250, y: 500, width: 200, height: 25 };
+                    // Try alternative method based on annotations
+                    coordinates = this.extractRectFromAnnotation(field, pdfDoc);
+                    extractionMethod = "annotation";
+                    if (coordinates) {
+                        annotationCount++;
+                    }
+                    else {
+                        // Try backup method
+                        coordinates = this.extractRectFromFieldObject(field);
+                        extractionMethod = "fieldObject";
+                        if (coordinates) {
+                            backupCount++;
+                        }
+                        else {
+                            // Last resort fallback: Use -1 to indicate failure to extract actual coordinates
+                            coordinates = { x: -1, y: -1, width: -1, height: -1 };
+                            extractionMethod = "fallback";
+                            fallbackCount++;
+                        }
+                    }
                 }
-                coordExtractionStats.byMethod.fallback++;
-                debugLog.push({
-                    field: name,
-                    method: "fallback",
-                    coordinates: rect,
-                    page,
-                    fieldType
+                // Get page number (0-based)
+                const pageIndex = this.getWidgetPage(widget, pdfDoc);
+                // Log sample data
+                const logSample = (type, currentLogged) => {
+                    if (currentLogged < SAMPLE_LOG_LIMIT) {
+                        console.log(`  [Sample] Type: ${fieldType}, Name: ${fieldName}, Page: ${pageIndex !== null ? pageIndex + 1 : 'N/A'}, Coords: ${JSON.stringify(coordinates)}, Method: ${extractionMethod}`);
+                        return currentLogged + 1;
+                    }
+                    return currentLogged;
+                };
+                if (fieldType === "PDFCheckBox") {
+                    checkboxSampleLogged = logSample("Checkbox", checkboxSampleLogged);
+                }
+                else if (fieldType === "PDFRadioGroup") {
+                    radioSampleLogged = logSample("RadioGroup", radioSampleLogged);
+                }
+                else if (fieldType === "PDFTextField") {
+                    textSampleLogged = logSample("TextField", textSampleLogged);
+                }
+                else {
+                    // Log any other field types encountered, just once per type for brevity
+                    if (!seenFieldIds.has(`otherTypeLogged_${fieldType}`)) {
+                        console.log(`  [Encountered other field type] Type: ${fieldType}, Name: ${fieldName}`);
+                        seenFieldIds.add(`otherTypeLogged_${fieldType}`);
+                    }
+                }
+                // Create field metadata object
+                fieldDataList.push({
+                    id: fieldId,
+                    name: fieldName,
+                    type: fieldType,
+                    value: this.getFieldValue(field),
+                    page: pageIndex !== null ? pageIndex + 1 : 1,
+                    rect: coordinates
                 });
+                seenFieldIds.add(fieldId); // Mark this fieldId as processed
             }
-            // If we found coordinates, increment the counter
-            if (rect && (rect.width > 0 || rect.height > 0)) {
-                coordExtractionStats.withCoordinates++;
+            else {
+                // Fallback for fields without widgets (should also be unique by fieldId)
+                if (!seenFieldIds.has(fieldId)) {
+                    console.warn(`Field '${fieldName}' (ID: ${fieldId}, Type: ${fieldType}) has no widgets. Using fallback coordinates.`);
+                    fieldDataList.push({
+                        id: fieldId,
+                        name: fieldName,
+                        type: fieldType,
+                        value: this.getFieldValue(field),
+                        page: pages.length > 0 ? pages[0] + 1 : 1, // Use getFieldPages as fallback
+                        // Use -1 to indicate failure to extract actual coordinates
+                        rect: { x: -1, y: -1, width: -1, height: -1 }
+                    });
+                    fallbackCount++; // Count this as a fallback
+                    seenFieldIds.add(fieldId); // Mark this fieldId as processed
+                }
             }
-            // Return the completed field metadata
-            return {
-                name,
-                id,
-                type,
-                value,
-                label,
-                maxLength,
-                options,
-                page,
-                rect
-            };
-        }));
-        // Save the debug log and stats for troubleshooting
+        }
+        // Create debug report
         try {
-            fs.writeFileSync(join(__dirname, "../../tools/externalTools/coordinates-debug.json"), JSON.stringify(debugLog, null, 2));
-            fs.writeFileSync(join(__dirname, "../../tools/externalTools/coordinates-stats.json"), JSON.stringify(coordExtractionStats, null, 2));
+            // Ensure the output directory exists
+            const outputDir = path.join(process.cwd(), 'output');
+            if (!fs.existsSync(outputDir)) {
+                fs.mkdirSync(outputDir, { recursive: true });
+            }
+            fs.writeFileSync(path.join(outputDir, 'coordinates-debug.json'), JSON.stringify(fieldDataList, null, 2));
         }
-        catch (e) {
-            console.warn("Could not save coordinates debug info:", e);
+        catch (error) {
+            console.error(`Could not save coordinates debug log: ${error}`);
         }
-        console.log(`Extracted coordinates for ${coordExtractionStats.withCoordinates} out of ${coordExtractionStats.total} fields (${(coordExtractionStats.withCoordinates / coordExtractionStats.total * 100).toFixed(1)}%)`);
-        console.log('Coordinate extraction methods used:');
-        Object.entries(coordExtractionStats.byMethod).forEach(([method, count]) => {
-            console.log(`  ${method}: ${count} fields`);
-        });
-        return fieldData;
+        // Count how many fields have valid coordinates
+        const fieldsWithCoordinates = fieldDataList.filter(field => field.rect &&
+            (field.rect.width > 0 || field.rect.height > 0)); // A width or height > 0 implies valid rect
+        console.log(`Extracted coordinates for ${fieldsWithCoordinates.length} out of ${fieldDataList.length} unique fields (${(fieldDataList.length > 0 ? (fieldsWithCoordinates.length / fieldDataList.length * 100) : 0).toFixed(1)}%)`);
+        console.log(`Extraction method breakdown:
+      - Direct widget extraction: ${directExtractionCount}
+      - Annotation-based: ${annotationCount}
+      - Backup method: ${backupCount}
+      - Fallback (no widgets or all methods failed): ${fallbackCount}
+    `);
+        return fieldDataList;
     }
     /**
      * Validates PDF form fields for a specific section by setting values and reading them back
@@ -635,7 +480,7 @@ export class PdfService {
     async validatePdfFormBySection(sectionId, testValues) {
         try {
             // 1. Load the PDF
-            const pdfPath = join(__dirname, "../../tools/externalTools/sf861.pdf");
+            const pdfPath = join(__dirname, "src/sf862.pdf");
             const pdfDoc = await PDFDocument.load(fs.readFileSync(pdfPath));
             const form = pdfDoc.getForm();
             // Create a mapping of field names to PDF form fields
@@ -669,24 +514,11 @@ export class PdfService {
                     });
                 }
             }
-            // Get section name (this could be enhanced to use actual section names)
-            const sectionNames = {
-                1: "Full Name",
-                2: "Date of Birth",
-                3: "Place of Birth",
-                4: "Social Security Number",
-                5: "Other Names Used",
-                6: "Identifying Information",
-                7: "Contact Information",
-                8: "U.S. Passport Information",
-                9: "Citizenship",
-                // Add more sections as needed
-            };
             // 6. Generate validation report
             return {
                 success: discrepancies.length === 0,
                 section: sectionId,
-                sectionName: sectionNames[sectionId] || `Section ${sectionId}`,
+                sectionName: `Section ${sectionId}`,
                 fieldsValidated: fieldsToTest.length,
                 fieldsWithDiscrepancies: discrepancies.length,
                 discrepancies,
@@ -791,5 +623,153 @@ export class PdfService {
             report += `- Message: ${sectionReport.message}\n\n`;
         }
         return report;
+    }
+    /**
+     * Load a PDF document from file path
+     * @param pdfPath Path to the PDF file
+     * @returns Loaded PDF document or null if loading fails
+     */
+    async loadPdf(pdfPath) {
+        try {
+            const pdfBytes = fs.readFileSync(pdfPath);
+            return await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
+        }
+        catch (error) {
+            console.error(`Error loading PDF: ${error}`);
+            return null;
+        }
+    }
+    /**
+     * Get all pages where a field appears
+     * @param field PDF form field
+     * @param pdfDoc PDF document
+     * @returns Array of page indices (0-based)
+     */
+    getFieldPages(field, pdfDoc) {
+        const pages = [];
+        try {
+            const widgets = field.acroField.getWidgets();
+            for (const widget of widgets) {
+                const pageIndex = this.getWidgetPage(widget, pdfDoc);
+                if (pageIndex !== null && !pages.includes(pageIndex)) {
+                    pages.push(pageIndex);
+                }
+            }
+        }
+        catch (error) {
+            console.error(`Error getting field pages: ${error}`);
+        }
+        return pages;
+    }
+    /**
+     * Get the page index of a widget
+     * @param widget Field widget
+     * @param pdfDoc PDF document
+     * @returns Page index (0-based) or null if not found
+     */
+    getWidgetPage(widget, pdfDoc) {
+        try {
+            const widgetDict = widget.dict;
+            if (!widgetDict)
+                return null;
+            // Get the page reference from the widget
+            const pageRef = widgetDict.get(PDFName.of('P'));
+            if (!pageRef)
+                return null;
+            // Find the page index by matching references
+            const pages = pdfDoc.getPages();
+            for (let i = 0; i < pages.length; i++) {
+                if (pages[i].ref === pageRef) {
+                    return i;
+                }
+            }
+        }
+        catch (error) {
+            console.error(`Error getting widget page: ${error}`);
+        }
+        return null;
+    }
+    /**
+     * Extract rectangle from field annotations
+     * @param field PDF form field
+     * @param pdfDoc PDF document
+     * @returns Rectangle coordinates or null if not found
+     */
+    extractRectFromAnnotation(field, pdfDoc) {
+        try {
+            const pages = pdfDoc.getPages();
+            const fieldPages = this.getFieldPages(field, pdfDoc);
+            for (const pageIndex of fieldPages) {
+                const page = pages[pageIndex];
+                if (!page)
+                    continue;
+                // Get annotations for the page
+                const annotations = page.node.lookup(PDFName.of('Annots'));
+                if (!(annotations instanceof PDFArray))
+                    continue;
+                // Find the annotation for this field
+                for (let i = 0; i < annotations.size(); i++) {
+                    const annot = annotations.lookup(i);
+                    if (!annot)
+                        continue;
+                    const annotDict = annot.dict;
+                    if (!annotDict)
+                        continue;
+                    // Check if this annotation belongs to our field
+                    const fieldRef = annotDict.get(PDFName.of('Parent')) || annot;
+                    const fieldObj = field.acroField;
+                    if (fieldRef && fieldRef.toString() === fieldObj.ref.toString()) {
+                        // Found matching annotation, get its rectangle
+                        const annotRect = annotDict.lookup(PDFName.of('Rect'));
+                        if (annotRect instanceof PDFArray && annotRect.size() === 4) {
+                            const x1 = annotRect.lookup(0, PDFNumber).asNumber();
+                            const y1 = annotRect.lookup(1, PDFNumber).asNumber();
+                            const x2 = annotRect.lookup(2, PDFNumber).asNumber();
+                            const y2 = annotRect.lookup(3, PDFNumber).asNumber();
+                            return {
+                                x: Math.min(x1, x2),
+                                y: Math.min(y1, y2),
+                                width: Math.abs(x2 - x1),
+                                height: Math.abs(y2 - y1)
+                            };
+                        }
+                    }
+                }
+            }
+        }
+        catch (error) {
+            console.error(`Error extracting rect from annotation: ${error}`);
+        }
+        return null;
+    }
+    /**
+     * Extract rectangle directly from the field object
+     * @param field PDF form field
+     * @returns Rectangle coordinates or null if not found
+     */
+    extractRectFromFieldObject(field) {
+        try {
+            const dict = field.acroField.dict;
+            if (!dict)
+                return null;
+            // Some fields store coordinates directly
+            const rectArray = dict.lookup(PDFName.of('Rect'));
+            if (rectArray instanceof PDFArray && rectArray.size() === 4) {
+                const x1 = rectArray.lookup(0, PDFNumber).asNumber();
+                const y1 = rectArray.lookup(1, PDFNumber).asNumber();
+                const x2 = rectArray.lookup(2, PDFNumber).asNumber();
+                const y2 = rectArray.lookup(3, PDFNumber).asNumber();
+                return {
+                    x: Math.min(x1, x2),
+                    y: Math.min(y1, y2),
+                    width: Math.abs(x2 - x1),
+                    height: Math.abs(y2 - y1)
+                };
+            }
+        }
+        catch (error) {
+            console.error(`Error extracting rect from field object: ${error}`);
+        }
+        return null;
     }
 }

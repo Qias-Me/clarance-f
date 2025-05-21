@@ -5,6 +5,44 @@
  * to help identify groups of related fields that should be processed together.
  */
 import chalk from 'chalk';
+/**
+ * Estimated field counts per section based on PDF analysis and manual review
+ * Key is the section number, value is the expected number of fields
+ * the entires and subsections are not yet implemented
+ * the fields are still a bit scewed.
+ */
+export const expectedFieldCounts = {
+    1: { fields: 4, entries: 0, subsections: 0 },
+    2: { fields: 2, entries: 0, subsections: 0 },
+    3: { fields: 4, entries: 0, subsections: 0 },
+    4: { fields: 136, entries: 0, subsections: 0 },
+    5: { fields: 45, entries: 4, subsections: 0 },
+    6: { fields: 6, entries: 0, subsections: 0 },
+    7: { fields: 17, entries: 0, subsections: 0 },
+    8: { fields: 10, entries: 0, subsections: 0 },
+    9: { fields: 78, entries: 0, subsections: 0 },
+    10: { fields: 122, entries: 0, subsections: 4 },
+    11: { fields: 252, entries: 0, subsections: 0 },
+    12: { fields: 118, entries: 0, subsections: 0 },
+    13: { fields: 1086, entries: 0, subsections: 0 },
+    14: { fields: 5, entries: 0, subsections: 0 },
+    15: { fields: 60, entries: 0, subsections: 0 },
+    16: { fields: 154, entries: 0, subsections: 0 },
+    17: { fields: 332, entries: 0, subsections: 0 },
+    18: { fields: 964, entries: 0, subsections: 0 },
+    19: { fields: 277, entries: 0, subsections: 0 },
+    20: { fields: 570, entries: 0, subsections: 0 },
+    21: { fields: 486, entries: 0, subsections: 0 },
+    22: { fields: 267, entries: 0, subsections: 0 },
+    23: { fields: 191, entries: 0, subsections: 0 },
+    24: { fields: 160, entries: 0, subsections: 0 },
+    25: { fields: 79, entries: 0, subsections: 0 },
+    26: { fields: 237, entries: 0, subsections: 0 },
+    27: { fields: 57, entries: 0, subsections: 0 },
+    28: { fields: 23, entries: 0, subsections: 0 },
+    29: { fields: 141, entries: 0, subsections: 0 },
+    30: { fields: 25, entries: 0, subsections: 0 },
+};
 // Import section field patterns
 export const sectionFieldPatterns = {
     1: [

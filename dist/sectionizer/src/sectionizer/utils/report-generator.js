@@ -149,23 +149,7 @@ export class ReportGenerator {
             report += `*No sections with subsections found.*\n\n`;
         }
         // Field distribution visual chart
-        report += `## Field Distribution \n\n`;
-        report += `\`\`\`\n`;
-        // Create a simple ASCII chart
-        const maxChars = 50; // Maximum chart width
-        const maxCount = Math.max(...sectionNumbers.map(num => sectionOutputs[String(num)]?.meta.totalFields || 0));
-        const scale = maxCount > 0 ? maxChars / maxCount : 0;
-        for (const sectionNum of sectionNumbers) {
-            const section = String(sectionNum);
-            const output = sectionOutputs[section];
-            if (!output)
-                continue;
-            const fieldCount = output.meta.totalFields;
-            const barLength = Math.round(fieldCount * scale);
-            const bar = '█'.repeat(barLength);
-            report += `Section ${String(sectionNum).padStart(2, ' ')}: ${bar} ${fieldCount}\n`;
-        }
-        report += `\`\`\`\n\n`;
+        report += this.generateDistributionChart(sectionOutputs);
         // Deviation analysis (if reference counts are available)
         if (referenceCounts && Object.keys(referenceCounts).length > 0) {
             report += `## Section Count Deviations\n\n`;
@@ -298,23 +282,7 @@ export class ReportGenerator {
             report += `| ${sectionName} | ${fieldCount} | ${expectedCount} | ${deviation} | ${(sectionConfidence * 100).toFixed(2)}% |\n`;
         }
         // Field distribution visual chart
-        report += `\n## Field Distribution \n\n`;
-        report += `\`\`\`\n`;
-        // Create a simple ASCII chart
-        const maxChars = 50; // Maximum chart width
-        const maxCount = Math.max(...sectionNumbers.map(num => sectionFields[String(num)]?.length || 0));
-        const scale = maxCount > 0 ? maxChars / maxCount : 0;
-        for (const sectionNum of sectionNumbers) {
-            const section = String(sectionNum);
-            const fields = sectionFields[section];
-            if (!fields || fields.length === 0)
-                continue;
-            const fieldCount = fields.length;
-            const barLength = Math.round(fieldCount * scale);
-            const bar = '█'.repeat(barLength);
-            report += `Section ${String(sectionNum).padStart(2, ' ')}: ${bar} ${fieldCount}\n`;
-        }
-        report += `\`\`\`\n\n`;
+        report += this.generateDistributionChart(sectionFields);
         // Deviation analysis (if reference counts are available)
         if (referenceCounts && Object.keys(referenceCounts).length > 0) {
             report += `## Section Count Deviations\n\n`;
@@ -380,6 +348,196 @@ export class ReportGenerator {
         fs.writeFileSync(reportFilePath, report);
         console.log(chalk.green(`Report generated at ${reportFilePath}`));
         return reportFilePath;
+    }
+    /**
+     * Generates a visual ASCII chart of section distribution for the report
+     *
+     * @param sectionFields Map of sections to fields
+     * @returns ASCII chart for section and subsection distribution
+     */
+    generateDistributionChart(sectionFields) {
+        let chart = `## Field Distribution \n\n`;
+        // Prepare section counts
+        const sectionCounts = {};
+        Object.entries(sectionFields).forEach(([sectionStr, fields]) => {
+            const section = parseInt(sectionStr, 10);
+            if (!isNaN(section)) {
+                // Handle both CategorizedField[] and SectionOutput
+                const count = Array.isArray(fields) ? fields.length : fields.meta?.totalFields || 0;
+                sectionCounts[section] = count;
+            }
+        });
+        // Sort sections
+        const sortedSections = Object.keys(sectionCounts)
+            .map(Number)
+            .filter(section => section > 0) // Skip section 0 (unknown)
+            .sort((a, b) => a - b);
+        // Find the maximum for scaling
+        const maxCount = Math.max(...sortedSections.map(s => sectionCounts[s]));
+        // Generate chart
+        chart += `\`\`\`\n`;
+        // Create a simple ASCII chart
+        const maxChars = 50; // Maximum chart width
+        const scale = maxCount > 0 ? maxChars / maxCount : 0;
+        for (const section of sortedSections) {
+            if (section === 0)
+                continue; // Skip unknown section
+            const count = sectionCounts[section];
+            const barLength = Math.round(count * scale);
+            const bar = '█'.repeat(barLength);
+            chart += `Section ${String(section).padStart(2, ' ')}: ${bar} ${count}\n`;
+        }
+        chart += `\`\`\`\n\n`;
+        // Add subsection distribution for sections with subsections
+        chart += `## Subsection Distribution\n\n`;
+        // Track if we have any subsections to display
+        let hasSubsections = false;
+        for (const section of sortedSections) {
+            // Group fields by subsection
+            const subsectionCounts = {};
+            if (Array.isArray(sectionFields[section.toString()])) {
+                // Handle CategorizedField[]
+                sectionFields[section.toString()]
+                    .filter(field => field.subsection)
+                    .forEach(field => {
+                    const sub = field.subsection || 'unknown';
+                    subsectionCounts[sub] = (subsectionCounts[sub] || 0) + 1;
+                });
+            }
+            else if (sectionFields[section.toString()] && 'fields' in sectionFields[section.toString()]) {
+                // Handle SectionOutput
+                const sectionOutput = sectionFields[section.toString()];
+                Object.entries(sectionOutput.fields).forEach(([subSection, fields]) => {
+                    subsectionCounts[subSection] = fields.length;
+                });
+            }
+            // Skip if no subsections
+            if (Object.keys(subsectionCounts).length === 0)
+                continue;
+            hasSubsections = true;
+            chart += `### Section ${section}\n\n`;
+            chart += `\`\`\`\n`;
+            // Find the maximum for scaling
+            const maxSubCount = Math.max(...Object.values(subsectionCounts));
+            const subScale = maxSubCount > 0 ? 30 / maxSubCount : 0;
+            // Sort by subsection
+            const sortedSubs = Object.keys(subsectionCounts).sort();
+            for (const sub of sortedSubs) {
+                const count = subsectionCounts[sub];
+                const barLength = Math.round(count * subScale);
+                const bar = '▓'.repeat(barLength);
+                chart += `Subsection ${sub.padEnd(6)}: ${bar} ${count}\n`;
+            }
+            chart += `\`\`\`\n\n`;
+        }
+        if (!hasSubsections) {
+            chart += `*No sections with subsections found.*\n\n`;
+        }
+        // Add entry distribution
+        chart += `## Entry Distribution\n\n`;
+        // Track if we have any entries to display
+        let hasEntries = false;
+        // Collect entry counts by section
+        for (const section of sortedSections) {
+            // Group fields by entry
+            const entryCounts = {};
+            if (Array.isArray(sectionFields[section.toString()])) {
+                // Handle CategorizedField[]
+                sectionFields[section.toString()]
+                    .filter(field => typeof field.entry === 'number' && field.entry > 0)
+                    .forEach(field => {
+                    const entry = field.entry;
+                    entryCounts[entry] = (entryCounts[entry] || 0) + 1;
+                });
+            }
+            // We don't handle entries for SectionOutput here as they're stored differently
+            // Skip if no entries
+            if (Object.keys(entryCounts).length === 0)
+                continue;
+            hasEntries = true;
+            chart += `### Section ${section}\n\n`;
+            chart += `\`\`\`\n`;
+            // Find the maximum for scaling
+            const maxEntryCount = Math.max(...Object.values(entryCounts));
+            const entryScale = maxEntryCount > 0 ? 25 / maxEntryCount : 0;
+            // Sort by entry number
+            const sortedEntries = Object.keys(entryCounts).map(Number).sort((a, b) => a - b);
+            for (const entry of sortedEntries) {
+                const count = entryCounts[entry];
+                const barLength = Math.round(count * entryScale);
+                const bar = '▒'.repeat(barLength);
+                chart += `Entry ${String(entry).padEnd(3)}: ${bar} ${count}\n`;
+            }
+            chart += `\`\`\`\n\n`;
+        }
+        if (!hasEntries) {
+            chart += `*No sections with entries found.*\n\n`;
+        }
+        return chart;
+    }
+    /**
+     * Analyze unknown fields to find common patterns
+     * @param fields Array of uncategorized fields
+     * @returns Object mapping patterns to arrays of matching fields
+     */
+    analyzeUnknownPatterns(fields) {
+        if (!fields || fields.length === 0) {
+            return {};
+        }
+        const patterns = {};
+        // Common patterns to look for in field names
+        const patternRegexes = {
+            'form1\\[0\\]\\..*': /form1\[0\]\..*?(?=\[|\.|$)/,
+            'section\\d+': /section\d+/i,
+            '#area\\[\\d+\\]': /#area\[\d+\]/i,
+            '#field\\[\\d+\\]': /#field\[\d+\]/i,
+            'TextField\\d+': /TextField\d+/i,
+            'RadioButtonList\\[\\d+\\]': /RadioButtonList\[\d+\]/i,
+            'DropDownList\\d+': /DropDownList\d+/i,
+            'CheckBox\\d+': /CheckBox\d+/i,
+        };
+        // Process each field
+        for (const field of fields) {
+            let patternFound = false;
+            // Try to match against known patterns
+            for (const [patternName, regex] of Object.entries(patternRegexes)) {
+                if (regex.test(field.name)) {
+                    if (!patterns[patternName]) {
+                        patterns[patternName] = [];
+                    }
+                    patterns[patternName].push(field);
+                    patternFound = true;
+                    break;
+                }
+            }
+            // If no pattern matches, use the first segment of the field name
+            if (!patternFound) {
+                const segments = field.name.split(/[\[\]\.\s]/);
+                const firstSegment = segments[0] || 'other';
+                const pattern = `${firstSegment}.*`;
+                if (!patterns[pattern]) {
+                    patterns[pattern] = [];
+                }
+                patterns[pattern].push(field);
+            }
+        }
+        return patterns;
+    }
+    /**
+     * Group fields by their page number
+     * @param fields Array of fields to group
+     * @returns Object mapping page numbers to arrays of fields
+     */
+    groupFieldsByPage(fields) {
+        const result = {};
+        for (const field of fields) {
+            const page = field.page ? field.page.toString() : 'unknown';
+            if (!result[page]) {
+                result[page] = [];
+            }
+            result[page].push(field);
+        }
+        return result;
     }
     /**
      * Generates a healing performance report
@@ -456,96 +614,6 @@ export class ReportGenerator {
                 report += `| ${page} | ${fields.length} | ${examples} |\n`;
             }
         }
-        // Recommendations section
-        report += `\n## Recommendations\n\n`;
-        if (healingResult.success) {
-            report += `✅ **Self-healing completed successfully**\n\n`;
-            report += `All fields have been categorized with high confidence. No further action is needed.\n`;
-        }
-        else if (healingResult.remainingUnknown.length > 0) {
-            report += `⚠️ **Some fields remain uncategorized**\n\n`;
-            // Get sorted patterns for remaining unknown fields
-            const sortedPatterns = Object.entries(this.analyzeUnknownPatterns(healingResult.remainingUnknown))
-                .sort(([, a], [, b]) => b.length - a.length);
-            if (sortedPatterns && sortedPatterns.length > 0) {
-                report += `Consider adding patterns for the following field types:\n\n`;
-                for (let i = 0; i < Math.min(sortedPatterns.length, 5); i++) {
-                    const [pattern, fields] = sortedPatterns[i];
-                    report += `- \`${pattern}\` (${fields.length} fields)\n`;
-                }
-            }
-            report += `\nConsider increasing the iteration limit if the healing trend was positive but incomplete.\n`;
-        }
-        if (healingResult.deviations && healingResult.deviations.some(d => Math.abs(d.deviation) > 5)) {
-            report += `\n⚠️ **Significant count deviations remain in some sections**\n\n`;
-            report += `Check the sections with high deviations for miscategorized fields.\n`;
-        }
         return report;
     }
-    /**
-     * Analyze unknown fields to find common patterns
-     * @param fields Array of uncategorized fields
-     * @returns Object mapping patterns to arrays of matching fields
-     */
-    analyzeUnknownPatterns(fields) {
-        if (!fields || fields.length === 0) {
-            return {};
-        }
-        const patterns = {};
-        // Common patterns to look for in field names
-        const patternRegexes = {
-            'form1\\[0\\]\\..*': /form1\[0\]\..*?(?=\[|\.|$)/,
-            'section\\d+': /section\d+/i,
-            '#area\\[\\d+\\]': /#area\[\d+\]/i,
-            '#field\\[\\d+\\]': /#field\[\d+\]/i,
-            'TextField\\d+': /TextField\d+/i,
-            'RadioButtonList\\[\\d+\\]': /RadioButtonList\[\d+\]/i,
-            'DropDownList\\d+': /DropDownList\d+/i,
-            'CheckBox\\d+': /CheckBox\d+/i,
-        };
-        // Process each field
-        for (const field of fields) {
-            let patternFound = false;
-            // Try to match against known patterns
-            for (const [patternName, regex] of Object.entries(patternRegexes)) {
-                if (regex.test(field.name)) {
-                    if (!patterns[patternName]) {
-                        patterns[patternName] = [];
-                    }
-                    patterns[patternName].push(field);
-                    patternFound = true;
-                    break;
-                }
-            }
-            // If no pattern matches, use the first segment of the field name
-            if (!patternFound) {
-                const segments = field.name.split(/[\[\]\.\s]/);
-                const firstSegment = segments[0] || 'other';
-                const pattern = `${firstSegment}.*`;
-                if (!patterns[pattern]) {
-                    patterns[pattern] = [];
-                }
-                patterns[pattern].push(field);
-            }
-        }
-        return patterns;
-    }
-    /**
-     * Group fields by their page number
-     * @param fields Array of fields to group
-     * @returns Object mapping page numbers to arrays of fields
-     */
-    groupFieldsByPage(fields) {
-        const result = {};
-        for (const field of fields) {
-            const page = field.page ? field.page.toString() : 'unknown';
-            if (!result[page]) {
-                result[page] = [];
-            }
-            result[page].push(field);
-        }
-        return result;
-    }
 }
-// Export a singleton instance
-export const reportGenerator = new ReportGenerator();

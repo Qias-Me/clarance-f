@@ -15,7 +15,7 @@ import type { MatchRule, EnhancedField } from "./types.js";
 import { confidenceCalculator } from "./utils/confidence-calculator.js";
 import { ruleLoader } from "./utils/rule-loader.js";
 import { rulesGenerator } from "./utils/rules-generator.js";
-import { strictSectionPatternsNumeric } from "./utils/section-patterns.js";
+import { sectionFieldPatterns } from "./utils/field-clusterer.js";
 
 /**
  * Interface defining a rule for field categorization
@@ -57,7 +57,7 @@ export class RuleEngine {
   private rules: CategoryRule[] = [];
   private sectionRules: Record<number, SectionRules> = {};
   // Define strict patterns for critical sections - imported from shared definition
-  private strictSectionPatterns = strictSectionPatternsNumeric;
+  private strictSectionPatterns = sectionFieldPatterns;
   private loaded: boolean = false;
   private logger: any;
 
@@ -1376,7 +1376,6 @@ export class RuleEngine {
       type: field.type,
       maxLength: field.maxLength,
       options: field.options,
-      required: field.required,
       section: field.section,
       subSection: field.subsection,
       entryIndex: field.entry,
@@ -1518,7 +1517,7 @@ export class RuleEngine {
       ([sectionStr, regexArray]) => {
         const section = parseInt(sectionStr, 10);
         if (!isNaN(section)) {
-          regexArray.forEach((pattern) => {
+          (regexArray as RegExp[]).forEach((pattern: RegExp) => {
             patterns.push({
               section,
               pattern,

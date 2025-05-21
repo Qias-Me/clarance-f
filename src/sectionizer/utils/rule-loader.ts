@@ -2,7 +2,28 @@ import type { MatchRule } from '../types.js';
 import fs from 'fs/promises';
 import path from 'path';
 import * as url from 'url';
-import { strictSectionPatterns, isFieldInSection } from './section-patterns.js';
+import { sectionFieldPatterns } from './field-clusterer.js';
+
+// Define aliases for compatibility with existing code
+const strictSectionPatterns = sectionFieldPatterns;
+
+/**
+ * Function to determine if a field belongs to a specific section
+ */
+function isFieldInSection(fieldName: string, section: number): boolean {
+  if (!fieldName) return false;
+  
+  const lowerName = fieldName.toLowerCase();
+  
+  // Check if we have patterns for this section
+  if (!sectionFieldPatterns[section as keyof typeof sectionFieldPatterns]) {
+    return false;
+  }
+  
+  // Check if the field name matches any pattern for this section
+  const patterns = sectionFieldPatterns[section as keyof typeof sectionFieldPatterns];
+  return patterns.some(pattern => pattern.test(lowerName));
+}
 
 /**
  * Structure to hold both inclusion and exclusion rules for a section
@@ -12,8 +33,6 @@ export interface SectionRuleSet {
   exclude: MatchRule[];
 }
 
-// Reference to the section field patterns in shared section-patterns.ts
-// No need to redefine these patterns here anymore
 
 /**
  * Manages loading and caching of section rules

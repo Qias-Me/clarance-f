@@ -16,13 +16,16 @@ import type { CommandLineOptions } from './utils/cli-args.js';
 
 import {
   extractFields,
-  loadReferenceCounts,
   categorizeFields,
+  printSectionStatistics
 } from "./utils/extractFieldsBySection.js";
 import { groupFieldsBySection } from "./utils/fieldGrouping.js";
 import { validateSectionCounts as validateSectionCountsUtil } from "./utils/validation.js";
 import type { PDFField, CategorizedField as BaseCategorizedField } from "./utils/extractFieldsBySection.js";
 import type { FieldMetadata, EnhancedField, CategoryRule, CategorizationResult } from "./types.js";
+
+// Import the SelfHealingManager for rule generation
+import { SelfHealingManager } from './utils/self-healing.js';
 
 // Import from consolidated utilities
 import { 
@@ -58,8 +61,8 @@ import {
 // Import the rules updater
 import { updateRules } from './utils/rules-updater.js';
 
-// Import the SelfHealingManager
-import { SelfHealingManager } from './utils/self-healing.js';
+// Import PDFDocument
+import { PDFDocument } from 'pdf-lib';
 
 // Extend the CategorizedField to include our additional properties
 interface CategorizedField extends BaseCategorizedField {
@@ -294,8 +297,23 @@ function validateSectionCounts(
   success: boolean, 
   deviations: Array<{section: number, expected: number, actual: number, deviation: number, percentage: number}>
 } {
-  // Use the imported utility function
-  return validateSectionCountsUtil(sectionFields, referenceCounts, { maxDeviationPercent });
+  // Convert simple referenceCounts to the complex type expected by the utility
+  const formattedCounts: Record<number, { fields: number; entries: number; subsections: number; }> = {};
+  
+  // Format the reference counts to match the expected structure
+  for (const [section, count] of Object.entries(referenceCounts)) {
+    const sectionNum = parseInt(section, 10);
+    if (!isNaN(sectionNum)) {
+      formattedCounts[sectionNum] = {
+        fields: count,
+        entries: 0, // Default values
+        subsections: 0 // Default values
+      };
+    }
+  }
+  
+  // Use the imported utility function with properly formatted counts
+  return validateSectionCountsUtil(sectionFields, formattedCounts, { maxDeviationPercent });
 }
 
 // Update the afterSelfHealing function to be more aggressive in distributing fields from section 0, ignoring expected count limits
@@ -743,12 +761,12 @@ async function updateEnhancedSubsectionRules(engine: RuleEngine, sectionFields: 
   log("info", "Generating enhanced subsection rules from current categorization");
   
   try {
-    // Import the self-healing manager for subsection rules generation
-    const { SelfHealingManager } = require('./utils/self-healing.js');
+    // Use the already imported module rather than dynamically importing it
+    // This avoids the require compatibility issue in ES modules
     const selfHealer = new SelfHealingManager(1); // Use a single iteration for rule generation
     
     // Generate subsection rules for all sections using self-healing approach
-    const ruleCandidates = selfHealer.generateSubsectionRulesForAllSections(sectionFields);
+    const ruleCandidates: MatchRule[] = selfHealer.generateSubsectionRulesForAllSections(sectionFields);
     
     if (Array.isArray(ruleCandidates) && ruleCandidates.length > 0) {
       log("info", `Found ${ruleCandidates.length} subsection rule candidates`);
@@ -787,12 +805,12 @@ async function updateEnhancedEntryRules(engine: RuleEngine, sectionFields: Recor
   log("info", "Generating enhanced entry rules from current categorization");
   
   try {
-    // Import the self-healing manager for entry rules generation
-    const { SelfHealingManager } = require('./utils/self-healing.js');
+    // Use the already imported module rather than dynamically importing it
+    // This avoids the require compatibility issue in ES modules
     const selfHealer = new SelfHealingManager(1); // Use a single iteration for rule generation
     
     // Generate entry rules using self-healing approach
-    const ruleCandidates = selfHealer.generateEntryRulesForAllSections(sectionFields);
+    const ruleCandidates: MatchRule[] = selfHealer.generateEntryRulesForAllSections(sectionFields);
     
     if (Array.isArray(ruleCandidates) && ruleCandidates.length > 0) {
       log("info", `Found ${ruleCandidates.length} entry rule candidates`);
@@ -1228,10 +1246,12 @@ function createUniqueFieldIdentifier(field: CategorizedField): string {
 
 /**
  * Enhance fields with spatial analysis information
- * @param fields Array of categorized fields
- * @returns Enhanced fields with spatial analysis data
+ * 
+ * @param fields Fields to enhance
+ * @param pdfDoc PDF document for page dimension calculations
+ * @returns Enhanced fields with spatial information
  */
-function enhanceFieldsWithSpatialAnalysis(fields: CategorizedField[]): CategorizedField[] {
+function enhanceFieldsWithSpatialAnalysis(fields: CategorizedField[], pdfDoc?: PDFDocument): CategorizedField[] {
   console.log("Enhancing fields with spatial analysis...");
   
   // First pass: extract basic spatial info for all fields
@@ -1241,7 +1261,7 @@ function enhanceFieldsWithSpatialAnalysis(fields: CategorizedField[]): Categoriz
     
     // Extract spatial info if coordinates are available
     if (field.rect || (field.coordinates)) {
-      enhanced.spatialInfo = extractSpatialInfo(field);
+      enhanced.spatialInfo = extractSpatialInfo(field, pdfDoc);
     }
     
     // Add a unique identifier
@@ -1294,7 +1314,7 @@ function enhanceFieldsWithSpatialAnalysis(fields: CategorizedField[]): Categoriz
           
           // If most frequent section is very dominant, consider updating
           if (frequencyRatio > 0.7 && field.confidence < 0.8) {
-            const spatialBoost = calculateSpatialConfidenceBoost(field, mostFrequentSection);
+            const spatialBoost = calculateSpatialConfidenceBoost(field, mostFrequentSection, pdfDoc);
             
             // Only update if significant improvement
             if (spatialBoost > 0.1) {
@@ -1338,6 +1358,7 @@ function convertMapToRecord(
 async function runCyclicalLearning(
   engine: RuleEngine,
   fields: PDFField[],
+  pdfDoc?: PDFDocument,
   referenceCounts?: Record<number, number>,
   outputDir?: string,
   maxCycles: number = 3
@@ -1350,13 +1371,13 @@ async function runCyclicalLearning(
   log("info", `Loaded ${strictPatterns.length} strict section patterns for precise categorization`);
   
   // First, do basic categorization with the engine
-  let categorizedFields = engine.categorizeFields(fields);
+  let categorizedFields = engine.categorizeFields(fields as any);
   
   // Add this code after initial categorization
   log("info", "Initial field categorization complete. Enhancing with spatial analysis...");
   
   // Enhance fields with spatial analysis
-  const enhancedFields = enhanceFieldsWithSpatialAnalysis(categorizedFields);
+  const enhancedFields = enhanceFieldsWithSpatialAnalysis(categorizedFields, pdfDoc);
   log("info", `Completed spatial analysis enhancement for ${enhancedFields.length} fields`);
   
   // Replace the original categorized fields with the enhanced ones
@@ -1388,7 +1409,7 @@ async function runCyclicalLearning(
     
     // Apply spatial analysis to improve categorization
     log("info", "Applying spatial analysis enhancement...");
-    categorizedFields = enhanceFieldsWithSpatialAnalysis(categorizedFields);
+    categorizedFields = enhanceFieldsWithSpatialAnalysis(categorizedFields, pdfDoc);
     
     // Group by section
     sectionFields = await groupFieldsBySection(categorizedFields);
@@ -1458,102 +1479,58 @@ function calculateCoverage(sectionFields: Record<string, CategorizedField[]>): n
   return (totalFields - unknownFields) / totalFields;
 }
 
-// Main function for the sectionizer
+/**
+ * Initialize the rule engine
+ */
+async function initializeRuleEngine(): Promise<RuleEngine> {
+  // Create a new rule engine instance
+  const engine = new RuleEngine();
+  
+  // Load default rules
+  log("info", "Initializing rule engine with default rules");
+  
+  return engine;
+}
+
+/**
+ * Main function for the sectionizer
+ */
 async function main() {
   try {
-    logger.section('SF-86 Sectionizer', 'info');
+    // Process command line arguments
+    const args = parseCommandLineArgs();
     
-    // Validate input path
-    if (!options.pdfPath && !options.inputFields) {
-      logger.error('Either --pdf-path or --input-fields must be provided');
-      process.exit(1);
-    }
+    // Extract fields from PDF
+    const { fields, pdfDoc } = await extractFields(args.pdfPath);
     
-    // Resolve the PDF path
-    const pdfPath = options.pdfPath ? resolvePdfPath(options.pdfPath) : '';
-    
-    // Validate PDF path if provided
-    if (pdfPath && !await validatePdf(pdfPath)) {
-      logger.error(`Invalid PDF path: ${pdfPath}`);
-      process.exit(1);
-    }
-    
-    // Configure output
-    const outputDir = options.outputDir || path.join(process.cwd(), 'output');
-    
-    // Create the output directory if it doesn't exist
-    if (!fs.existsSync(outputDir)) {
-      fs.mkdirSync(outputDir, { recursive: true });
-    }
-    
-    // Initialize the rule engine
-    logger.info('Initializing rule engine...');
-    const ruleEngine = new RuleEngine();
-    await ruleEngine.loadRules();
-    logger.success('Rule engine initialized');
-    
-    let sectionFields;
-    
-    // Use direct processing if input fields are provided
-    if (options.inputFields) {
-      const inputFields = JSON.parse(fs.readFileSync(options.inputFields, 'utf8'));
-      logger.info(`Processing ${inputFields.length} input fields from ${options.inputFields}`);
-      
-      // Process fields using the cyclical learning approach
-      sectionFields = await runCyclicalLearning(
-        ruleEngine, 
-        inputFields, 
-        undefined, 
-        outputDir, 
-        options.maxIterations || 3
-      );
+    // Print section stats before processing
+    console.log("\n--- BEFORE PROCESSING ---");
+    if (pdfDoc) {
+      // Categorize the fields before printing statistics
+      const initialCategorized = categorizeFields(fields, pdfDoc);
+      printSectionStatistics(initialCategorized);
     } else {
-      // Extract fields from PDF
-      logger.info(`Extracting fields from PDF: ${pdfPath}`);
-      const fields = await extractFields(pdfPath);
-      logger.info(`Extracted ${fields.length} fields from PDF`);
-      
-      // Process fields using the cyclical learning approach
-      sectionFields = await runCyclicalLearning(
-        ruleEngine, 
-        fields, 
-        undefined, 
-        outputDir, 
-        options.maxIterations || 3
-      );
+      console.log("No PDF document found");
     }
     
-    // Save the output to JSON files
-    const sectionDataPath = path.join(outputDir, 'section-data.json');
-    const fieldsPath = path.join(outputDir, 'fields.json');
-    const rulesPath = path.join(outputDir, 'rules-applied.json');
+    // // Initialize the rule engine
+    // const ruleEngine = await initializeRuleEngine();
     
-    // Flatten and save all fields
-    const allFields: CategorizedField[] = [];
-    Object.values(sectionFields).forEach(sectionFieldArray => {
-      allFields.push(...sectionFieldArray);
-    });
+    // // Perform basic categorization
+    // let categorizedFields = ruleEngine.categorizeFields(fields as any);
     
-    // Save fields with section data
-    fs.writeFileSync(sectionDataPath, JSON.stringify(allFields, null, 2));
-    logger.success(`Saved section data to ${sectionDataPath}`);
+    // // Group fields by section
+    // const sectionFields = await groupFieldsBySection(categorizedFields);
     
-    // Save fields organized by section
-    fs.writeFileSync(fieldsPath, JSON.stringify(sectionFields, null, 2));
-    logger.success(`Saved section fields to ${fieldsPath}`);
+    // // Print section stats after processing
+    // console.log("\n--- AFTER PROCESSING ---");
+    // printSectionStatistics(categorizedFields);
     
-    // Save rules that were applied
-    fs.writeFileSync(rulesPath, JSON.stringify(ruleEngine.getRules(), null, 2));
-    logger.success(`Saved rules to ${rulesPath}`);
+    // Log success
+    log("success", "Categorization complete");
     
-    // Generate report if enabled
-    if (options.generateReport) {
-      logger.info('Report generation skipped - functionality moved to cyclical learning');
-    }
-    
-    logger.section('Sectionizer Completed Successfully', 'success');
   } catch (error) {
-    logger.error(`Error in sectionizer: ${error}`);
+    log("error", `Error in sectionizer: ${error}`);
     console.error(error);
     process.exit(1);
   }
