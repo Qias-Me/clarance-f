@@ -11,6 +11,7 @@ import { confidenceCalculator } from './confidence-calculator.js';
 import * as fs from 'fs';
 import * as path from 'path';
 import chalk from 'chalk';
+import logger from './logging.js';
 
 /**
  * Interface for section output structure
@@ -56,18 +57,43 @@ export class ReportGenerator {
    * @returns Promise resolving to the report path
    */
   public async generateReport(
-    sectionFields: Record<string, CategorizedField[]>,
-    reportFilePath: string,
+    sectionFields: Record<string, CategorizedField[]> | string,
+    reportFilePath?: string,
     referenceCounts?: Record<number, number>
   ): Promise<string>;
   
   // Implementation that handles both overloads
   public async generateReport(
-    input: Record<string, any>,
-    pathOrFields: string | CategorizedField[],
+    input: Record<string, any> | string,
+    pathOrFields?: string | CategorizedField[],
     referencesOrIterations?: Record<number, number> | number
   ): Promise<string> {
-    // Determine which overload was called
+    // Handle case where called with just a directory path
+    if (typeof input === 'string') {
+      logger.info(`Generating report for directory: ${input}`);
+      // Assume input is the directory path
+      const outputDir = input;
+      const sectionDataPath = path.join(outputDir, 'section-data.json');
+      let sectionData: any = {};
+      
+      try {
+        if (fs.existsSync(sectionDataPath)) {
+          const rawData = fs.readFileSync(sectionDataPath, 'utf8');
+          sectionData = JSON.parse(rawData);
+        } else {
+          logger.warn(`No section-data.json found in ${outputDir}, using empty data`);
+        }
+        
+        // Generate report using the structure from section-data.json
+        const reportPath = path.join(outputDir, 'report.md');
+        return this.generateSimpleReport(sectionData.sections || {}, reportPath);
+      } catch (error) {
+        logger.error(`Error loading section data: ${error}`);
+        throw error;
+      }
+    }
+    
+    // Determine which overload was called for the other cases
     if (typeof pathOrFields === 'string') {
       // New format: (sectionFields, reportFilePath, referenceCounts?)
       return this.generateSimpleReport(
@@ -79,8 +105,8 @@ export class ReportGenerator {
       // Original format: (sectionOutputs, unknownFields, iterations, referenceCounts?)
       return this.generateLegacyReport(
         input as Record<string, SectionOutput>,
-        pathOrFields as CategorizedField[],
-        referencesOrIterations as number,
+        pathOrFields as CategorizedField[] || [],
+        referencesOrIterations as number || 0,
         arguments[3] as Record<number, number> | undefined
       );
     }
@@ -91,10 +117,20 @@ export class ReportGenerator {
    */
   private async generateLegacyReport(
     sectionOutputs: Record<string, SectionOutput>,
-    unknownFields: CategorizedField[],
-    iterations: number,
+    unknownFields: CategorizedField[] = [],
+    iterations: number = 0,
     referenceCounts?: Record<number, number>
   ): Promise<string> {
+    // Safety check for empty or undefined inputs
+    if (!sectionOutputs || Object.keys(sectionOutputs).length === 0) {
+      logger.warn("No section outputs provided for report generation, using empty data");
+      sectionOutputs = {};
+    }
+    
+    if (!unknownFields) {
+      unknownFields = [];
+    }
+    
     const reportPath = path.join(process.cwd(), 'reports', 'sectionizer-report.md');
     
     // Ensure reports directory exists
@@ -106,29 +142,40 @@ export class ReportGenerator {
     
     // Summary section
     report += `## Summary\n\n`;
-    const totalFields = Object.values(sectionOutputs).reduce(
-      (sum, section) => sum + section.meta.totalFields, 0
-    ) + unknownFields.length;
     
-    const totalMatched = Object.values(sectionOutputs).reduce(
-      (sum, section) => sum + section.meta.matchedFields, 0
+    // Calculate total fields with safety checks
+    const sectionTotals = Object.values(sectionOutputs).map(section => 
+      section && section.meta ? (section.meta.totalFields || 0) : 0
     );
     
-    // Calculate confidence manually if the confidenceCalculator has type issues
+    const totalFields = sectionTotals.reduce((sum, count) => sum + count, 0) + unknownFields.length;
+    
+    // Calculate matched fields with safety checks
+    const matchedTotals = Object.values(sectionOutputs).map(section => 
+      section && section.meta ? (section.meta.matchedFields || 0) : 0
+    );
+    
+    const totalMatched = matchedTotals.reduce((sum, count) => sum + count, 0);
+    
+    // Calculate confidence manually with safety checks
     let overallConfidence = 0;
     let totalConfidenceWeight = 0;
     
     for (const section of Object.values(sectionOutputs)) {
-      const weight = section.meta.totalFields;
-      overallConfidence += section.meta.confidence * weight;
-      totalConfidenceWeight += weight;
+      if (section && section.meta) {
+        const weight = section.meta.totalFields || 0;
+        const confidence = section.meta.confidence || 0;
+        overallConfidence += confidence * weight;
+        totalConfidenceWeight += weight;
+      }
     }
     
     overallConfidence = totalConfidenceWeight > 0 ? overallConfidence / totalConfidenceWeight : 0;
     
+    // Add summary information
     report += `- **Total fields processed**: ${totalFields}\n`;
-    report += `- **Fields categorized**: ${totalMatched} (${((totalMatched / totalFields) * 100).toFixed(2)}%)\n`;
-    report += `- **Fields uncategorized**: ${unknownFields.length} (${((unknownFields.length / totalFields) * 100).toFixed(2)}%)\n`;
+    report += `- **Fields categorized**: ${totalMatched} (${totalFields > 0 ? ((totalMatched / totalFields) * 100).toFixed(2) : 0}%)\n`;
+    report += `- **Fields uncategorized**: ${unknownFields.length} (${totalFields > 0 ? ((unknownFields.length / totalFields) * 100).toFixed(2) : 0}%)\n`;
     report += `- **Overall confidence**: ${(overallConfidence * 100).toFixed(2)}%\n`;
     report += `- **Iterations performed**: ${iterations}\n\n`;
     
@@ -304,10 +351,10 @@ export class ReportGenerator {
       }
     }
     
-    // Write the report to disk
+    // Write the report to file
     fs.writeFileSync(reportPath, report);
     
-    console.log(chalk.green(`Report generated at ${reportPath}`));
+    logger.success(`Report generated at ${reportPath}`);
     return reportPath;
   }
   

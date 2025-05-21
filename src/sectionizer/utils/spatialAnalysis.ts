@@ -6,7 +6,7 @@
  */
 
 import type { PDFField, CategorizedField } from './extractFieldsBySection.js';
-import { refinedSectionPageRanges } from '../../../utilities/page-categorization-bridge.js';
+import { refinedSectionPageRanges } from './fieldParsing.js';
 
 /**
  * Default PDF page dimensions (US Letter size)

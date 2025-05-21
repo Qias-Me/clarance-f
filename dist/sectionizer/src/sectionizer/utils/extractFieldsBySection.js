@@ -4,28 +4,31 @@
  * This utility extracts fields from the SF-86 PDF and provides functions
  * to group them by section based on field metadata.
  */
-import * as fs from 'fs';
-import * as path from 'path';
+import * as fs from "fs";
+import * as path from "path";
 // Using full relative paths with .js extension for ES modules
-import { PdfService } from '../../../api/service/pdfService2.js';
-import { enhancedMultiDimensionalCategorization, refinedSectionPageRanges, sectionFieldPatterns, sectionClassifications } from '../../../utilities/page-categorization-bridge.js';
-import * as bridgeAdapter from './bridgeAdapter.js';
-import { sectionPageRanges } from './field-clusterer.js';
-/**
- * Default path to the SF-86 PDF file
- */
-const DEFAULT_PDF_PATH = path.resolve(process.cwd(), 'utilities/externalTools/sf862.pdf');
+import { PdfService } from "../../../api/service/pdfService2.js";
+import { enhancedMultiDimensionalCategorization, refinedSectionPageRanges, sectionClassifications, extractSectionInfoFromName, extractSectionInfo } from "./fieldParsing.js";
+import * as bridgeAdapter from "./bridgeAdapter.js";
+import { sectionPageRanges } from "./field-clusterer.js";
+import { strictSectionPatternsNumeric, sectionFieldPatterns } from "./section-patterns.js";
+// Default to the embedded PDF under src/ for easier local development
+const DEFAULT_PDF_PATH = path.resolve(process.cwd(), "src", "sf862.pdf");
 // Use the already defined patterns from the bridge
 // Instead of redefining them here, we'll use the patterns from sectionClassifications
 // Function to determine if a field belongs to a specific section
 function isFieldInSection(fieldName, section) {
-    // Find the section in sectionClassifications
-    const sectionInfo = sectionClassifications.find(s => s.sectionId === section);
-    // Check if the field name matches any pattern for the section
-    if (sectionInfo?.fieldPathPatterns) {
-        return sectionInfo.fieldPathPatterns.some(pattern => pattern.test(fieldName));
+    if (!fieldName)
+        return false;
+    const lowerName = fieldName.toLowerCase();
+    // Use the extractSectionInfo function from fieldParsing.ts
+    const sectionInfo = extractSectionInfo(fieldName);
+    if (sectionInfo && sectionInfo.section === section) {
+        return true;
     }
-    return false;
+    // Fallback to strict pattern matching
+    const patterns = strictSectionPatternsNumeric[section] || [];
+    return patterns.some(pattern => pattern.test(lowerName));
 }
 /**
  * Extract all fields from the SF-86 PDF
@@ -54,16 +57,16 @@ export async function extractFields(pdfPath = DEFAULT_PDF_PATH) {
             type: field.type,
             maxLength: field.maxLength,
             options: field.options,
-            required: field.required
+            required: field.required,
         }));
     }
     catch (error) {
         // Fallback to mock data if in development and mock data exists
-        if (process.env.NODE_ENV === 'development' && process.env.USE_MOCK_DATA) {
-            const mockDataPath = path.resolve(process.cwd(), 'scripts', 'mock-data', 'sf86-fields.json');
+        if (process.env.NODE_ENV === "development" && process.env.USE_MOCK_DATA) {
+            const mockDataPath = path.resolve(process.cwd(), "scripts", "mock-data", "sf86-fields.json");
             if (fs.existsSync(mockDataPath)) {
-                console.warn('Using mock data from sf86-fields.json');
-                const mockData = JSON.parse(fs.readFileSync(mockDataPath, 'utf-8'));
+                console.warn("Using mock data from sf86-fields.json");
+                const mockData = JSON.parse(fs.readFileSync(mockDataPath, "utf-8"));
                 return mockData;
             }
         }
@@ -72,716 +75,314 @@ export async function extractFields(pdfPath = DEFAULT_PDF_PATH) {
     }
 }
 /**
- * Extract section number from a field name
- * @param fieldName The field name to extract section from
- * @returns The section number or 0 if not found
- */
-function extractSectionFromFieldName(fieldName) {
-    if (!fieldName)
-        return 0;
-    // Look for Section X or SectionX patterns
-    const sectionMatch = fieldName.match(/section\s*(\d+)/i);
-    if (sectionMatch && sectionMatch[1]) {
-        const sectionNum = parseInt(sectionMatch[1], 10);
-        if (sectionNum > 0 && sectionNum <= 30) {
-            return sectionNum;
-        }
-    }
-    // Look for S_XX patterns (e.g., S_12 for Section 12)
-    const sMatch = fieldName.match(/\bs[_\-]?(\d+)/i);
-    if (sMatch && sMatch[1]) {
-        const sectionNum = parseInt(sMatch[1], 10);
-        if (sectionNum > 0 && sectionNum <= 30) {
-            return sectionNum;
-        }
-    }
-    return 0;
-}
-/**
- * Categorize a PDF field into a specific section
- * @param field Field to categorize
- * @param {boolean} useEnhanced Use enhanced categorization (default: true)
- * @returns {CategorizedField} The field with section and confidence information
+ * Categorize a single field based on various metadata
  */
 export function categorizeField(field, useEnhanced = true) {
-    // Initialize with default values
     const result = {
         ...field,
-        section: 0,
+        section: 0, // Default to unknown section
         confidence: 0
     };
-    // Skip empty fields or non-value fields
     if (!field.name) {
         return result;
     }
-    // Try enhanced categorization with dimensional analysis
-    if (useEnhanced) {
-        try {
-            // If we have rectangle coordinates, use them for additional analysis
-            if (field.rect) {
-                // Add coordinate info to the field for use in advanced categorization
-                const fieldWithCoordinates = {
-                    ...field,
-                    x: field.rect.x,
-                    y: field.rect.y,
-                    width: field.rect.width,
-                    height: field.rect.height
-                };
-                // Pass the coordinates to the advanced categorization function
-                const enhancedResult = bridgeAdapter.advancedCategorization(fieldWithCoordinates);
-                // Only use synchronous results with high confidence
-                if (typeof enhancedResult === 'object' &&
-                    'section' in enhancedResult &&
-                    enhancedResult.section !== 0 &&
-                    enhancedResult.confidence > 0.7) {
-                    return enhancedResult;
-                }
-            }
-            else {
-                // Fallback to standard advancedCategorization if no coordinates
-                const enhancedResult = bridgeAdapter.advancedCategorization(field);
-                if (typeof enhancedResult === 'object' &&
-                    'section' in enhancedResult &&
-                    enhancedResult.section !== 0 &&
-                    enhancedResult.confidence > 0.7) {
-                    return enhancedResult;
-                }
-            }
+    // Extract section info using the consolidated utility
+    const sectionInfo = extractSectionInfo(field.name);
+    if (sectionInfo && sectionInfo.section > 0) {
+        result.section = sectionInfo.section;
+        result.confidence = sectionInfo.confidence;
+        // Copy subsection and entry info if available
+        if (sectionInfo.subsection) {
+            result.subsection = sectionInfo.subsection;
         }
-        catch (e) {
-            // If advancedCategorization fails, continue with other methods
-            console.warn(`Enhanced categorization failed for field ${field.name}:`, e);
+        if (sectionInfo.entry) {
+            result.entry = sectionInfo.entry;
         }
-    }
-    // Try standard categorization by field name matching against section patterns
-    for (const [sectionKey, patterns] of Object.entries(sectionFieldPatterns)) {
-        const sectionNumber = parseInt(sectionKey, 10);
-        if (isNaN(sectionNumber))
-            continue;
-        // Use isFieldInSection from bridgeAdapter for consistent pattern matching
-        if (isFieldInSection(field.name, sectionNumber)) {
-            result.section = sectionNumber;
-            result.confidence = 0.85; // Default confidence for pattern match
-            return result;
-        }
-    }
-    // Extract section number from the field name using enhanced helper
-    const extractedSection = extractSectionFromFieldName(field.name);
-    if (extractedSection > 0) {
-        result.section = extractedSection;
-        result.confidence = 0.75; // Moderate confidence for section extracted from name
         return result;
     }
-    // Fallback - check if we can extract any information from the label
-    if (field.label) {
-        const labelSection = extractSectionFromFieldName(field.label);
-        if (labelSection > 0) {
-            result.section = labelSection;
-            result.confidence = 0.65; // Lower confidence for section extracted from label
-            return result;
+    // Try enhanced categorization if enabled
+    if (useEnhanced) {
+        // Use the bridgeAdapter enhanced categorization for better results
+        try {
+            const enhancedResult = enhancedMultiDimensionalCategorization(field.name, field.label || "", field.page, typeof field.value === "string" ? field.value : "", [] // Neighbor fields - not available at this stage
+            );
+            if (enhancedResult && enhancedResult.section > 0) {
+                result.section = enhancedResult.section;
+                if (enhancedResult.subsection) {
+                    result.subsection = enhancedResult.subsection;
+                }
+                if (enhancedResult.entry) {
+                    result.entry = enhancedResult.entry;
+                }
+                result.confidence = enhancedResult.confidence;
+                return result;
+            }
+        }
+        catch (error) {
+            console.warn("Error during enhanced categorization:", error);
         }
     }
-    // Return unknown if all attempts failed
+    // If we reached here, no section was found
     return result;
 }
 /**
- * Load reference field counts from section-data files
- * @returns Record mapping section numbers to expected field counts
+ * Load reference counts from section-data folder
+ * Falls back to default values if no reference data available
  */
 export function loadReferenceCounts() {
-    const referenceCounts = {};
-    // Try multiple directories where section data might be stored
-    const potentialDirectories = [
-        path.join(process.cwd(), 'src', 'section-data'),
-    ];
-    // Try each directory until we find data
-    for (const sectionDataDir of potentialDirectories) {
-        if (!fs.existsSync(sectionDataDir)) {
-            console.log(`Directory not found: ${sectionDataDir}`);
-            continue; // Try next directory
-        }
-        console.log(`Looking for section data in: ${sectionDataDir}`);
-        // Try to load section-summary.json first
-        const summaryPath = path.join(sectionDataDir, 'section-summary.json');
-        if (fs.existsSync(summaryPath)) {
-            try {
-                console.log(`Found summary file: ${summaryPath}`);
-                const summaryData = JSON.parse(fs.readFileSync(summaryPath, 'utf-8'));
-                // Check if it's an array of section objects (new format)
-                if (Array.isArray(summaryData)) {
-                    // Process array format directly
-                    summaryData.forEach((sectionData) => {
-                        if (typeof sectionData.sectionId === 'number' && typeof sectionData.fieldCount === 'number') {
-                            referenceCounts[sectionData.sectionId] = sectionData.fieldCount;
-                        }
-                    });
-                    if (Object.keys(referenceCounts).length > 0) {
-                        // Check for unidentified fields count (section 0)
-                        const unknownFieldsPath = path.join(sectionDataDir, 'unidentified-fields.json');
-                        if (fs.existsSync(unknownFieldsPath)) {
-                            try {
-                                const unknownData = JSON.parse(fs.readFileSync(unknownFieldsPath, 'utf-8'));
-                                if (unknownData && typeof unknownData.count === 'number') {
-                                    // Add section 0 count from the unidentified fields file
-                                    referenceCounts[0] = unknownData.count;
-                                    console.log(`Added section 0 count: ${unknownData.count} from unidentified-fields.json`);
-                                }
-                            }
-                            catch (e) {
-                                console.warn(`Error reading unidentified-fields.json: ${e}`);
-                            }
-                        }
-                        console.log(`Loaded reference counts for ${Object.keys(referenceCounts).length} sections from ${summaryPath} (direct array format)`);
-                        return referenceCounts;
+    try {
+        const dataPath = path.join(process.cwd(), "src", "section-data", "reference-counts.json");
+        if (fs.existsSync(dataPath)) {
+            const refData = JSON.parse(fs.readFileSync(dataPath, "utf8"));
+            // Make sure the data is in the right format (number to number mapping)
+            const formattedData = {};
+            for (const [section, count] of Object.entries(refData)) {
+                const sectionNum = parseInt(section, 10);
+                if (!isNaN(sectionNum)) {
+                    // If it's a complex object with fields/entries/subsections, use the fields count
+                    if (typeof count === 'object' && count !== null && 'fields' in count) {
+                        formattedData[sectionNum] = count.fields;
                     }
-                }
-                // Check if sections property is an array (new format)
-                else if (Array.isArray(summaryData.sections)) {
-                    // Process array format
-                    summaryData.sections.forEach((sectionData) => {
-                        if (typeof sectionData.section === 'number' && typeof sectionData.fieldCount === 'number') {
-                            referenceCounts[sectionData.section] = sectionData.fieldCount;
-                        }
-                    });
-                    if (Object.keys(referenceCounts).length > 0) {
-                        console.log(`Loaded reference counts for ${Object.keys(referenceCounts).length} sections from ${summaryPath} (array format)`);
-                        return referenceCounts;
-                    }
-                }
-                // Try the object format (original expected format)
-                else if (summaryData.sections && typeof summaryData.sections === 'object') {
-                    for (const [section, count] of Object.entries(summaryData.sections)) {
-                        const sectionNum = parseInt(section, 10);
-                        if (!isNaN(sectionNum)) { // Allow section 0 too
-                            // Convert count to number if it's not already
-                            if (typeof count === 'number') {
-                                referenceCounts[sectionNum] = count;
-                            }
-                            else if (typeof count === 'string') {
-                                const parsedCount = parseInt(count, 10);
-                                if (!isNaN(parsedCount)) {
-                                    referenceCounts[sectionNum] = parsedCount;
-                                }
-                            }
-                            else if (typeof count === 'object' && count !== null && 'length' in count) {
-                                referenceCounts[sectionNum] = count.length;
-                            }
-                            else if (typeof count === 'object' && count !== null && 'fieldCount' in count) {
-                                referenceCounts[sectionNum] = count.fieldCount;
-                            }
-                        }
-                    }
-                    if (Object.keys(referenceCounts).length > 0) {
-                        console.log(`Loaded reference counts for ${Object.keys(referenceCounts).length} sections from ${summaryPath} (object format)`);
-                        return referenceCounts;
-                    }
-                }
-                // Try direct object format where section IDs are keys
-                else if (typeof summaryData === 'object' && summaryData !== null) {
-                    // Check if the structure is { 1: {fieldCount: 10}, 2: {fieldCount: 15} }
-                    let foundSections = false;
-                    for (const [key, value] of Object.entries(summaryData)) {
-                        const sectionNum = parseInt(key, 10);
-                        if (!isNaN(sectionNum)) { // Allow section 0 too
-                            if (typeof value === 'object' && value !== null && 'fieldCount' in value) {
-                                referenceCounts[sectionNum] = value.fieldCount;
-                                foundSections = true;
-                            }
-                        }
-                    }
-                    if (foundSections && Object.keys(referenceCounts).length > 0) {
-                        console.log(`Loaded reference counts for ${Object.keys(referenceCounts).length} sections from ${summaryPath} (direct object format)`);
-                        return referenceCounts;
+                    else if (typeof count === 'number') {
+                        formattedData[sectionNum] = count;
                     }
                 }
             }
-            catch (error) {
-                console.warn(`Error loading summary file ${summaryPath}: ${error instanceof Error ? error.message : String(error)}`);
-                // Continue trying other methods
-            }
-        }
-        // Look for sections-summary.json (with an 's') as an alternative
-        const alternativePath = path.join(sectionDataDir, 'sections-summary.json');
-        if (fs.existsSync(alternativePath)) {
-            try {
-                console.log(`Found alternate summary file: ${alternativePath}`);
-                const altData = JSON.parse(fs.readFileSync(alternativePath, 'utf-8'));
-                if (altData && typeof altData === 'object') {
-                    // Try to extract field counts from this file
-                    for (const [key, value] of Object.entries(altData)) {
-                        if (/^\d+$/.test(key)) {
-                            const sectionNum = parseInt(key, 10);
-                            if (typeof value === 'object' && value !== null && 'fieldCount' in value) {
-                                referenceCounts[sectionNum] = value.fieldCount;
-                            }
-                            else if (typeof value === 'number') {
-                                referenceCounts[sectionNum] = value;
-                            }
-                        }
-                    }
-                    if (Object.keys(referenceCounts).length > 0) {
-                        console.log(`Loaded reference counts for ${Object.keys(referenceCounts).length} sections from ${alternativePath}`);
-                        return referenceCounts;
-                    }
-                }
-            }
-            catch (error) {
-                // Ignore errors and proceed to next method
-            }
-        }
-        // Try using the *-fields.json counts as a fallback
-        const fieldPattern = /section(\d+)-fields\.json$/;
-        const files = fs.readdirSync(sectionDataDir);
-        for (const file of files) {
-            const match = file.match(fieldPattern);
-            if (match && match[1]) {
-                try {
-                    const sectionNum = parseInt(match[1], 10);
-                    const filePath = path.join(sectionDataDir, file);
-                    const stats = fs.statSync(filePath);
-                    // Use a simple JSON length check first for efficiency
-                    if (stats.size > 0) {
-                        try {
-                            const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-                            if (Array.isArray(data)) {
-                                referenceCounts[sectionNum] = data.length;
-                            }
-                        }
-                        catch (e) {
-                            // If full parsing fails, just estimate from file size
-                            // This is a rough heuristic: ~30 bytes per field on average
-                            const estimatedFields = Math.floor(stats.size / 30);
-                            if (estimatedFields > 0) {
-                                referenceCounts[sectionNum] = estimatedFields;
-                            }
-                        }
-                    }
-                }
-                catch (error) {
-                    // Ignore individual file errors
-                }
-            }
-        }
-        // If we found field count estimates from this directory
-        if (Object.keys(referenceCounts).length > 0) {
-            console.log(`Loaded reference counts for ${Object.keys(referenceCounts).length} sections from field files in ${sectionDataDir}`);
-            return referenceCounts;
-        }
-        // Last resort: Load from individual section files
-        for (let i = 1; i <= 30; i++) {
-            const sectionFile = path.join(sectionDataDir, `section${i}.json`);
-            if (fs.existsSync(sectionFile)) {
-                try {
-                    const sectionData = JSON.parse(fs.readFileSync(sectionFile, 'utf-8'));
-                    if (Array.isArray(sectionData)) {
-                        referenceCounts[i] = sectionData.length;
-                    }
-                    else if (sectionData && typeof sectionData === 'object') {
-                        if ('fields' in sectionData && Array.isArray(sectionData.fields)) {
-                            referenceCounts[i] = sectionData.fields.length;
-                        }
-                        else if ('fieldCount' in sectionData && typeof sectionData.fieldCount === 'number') {
-                            referenceCounts[i] = sectionData.fieldCount;
-                        }
-                    }
-                }
-                catch (error) {
-                    // Skip any files that can't be parsed
-                }
-            }
-        }
-        // If we found any reference counts in this directory
-        if (Object.keys(referenceCounts).length > 0) {
-            console.log(`Loaded reference counts for ${Object.keys(referenceCounts).length} sections from individual section files in ${sectionDataDir}`);
-            return referenceCounts;
+            return formattedData;
         }
     }
-    // If we couldn't find any data in any directory
-    console.warn('No reference counts could be loaded from any source.');
-    return referenceCounts;
+    catch (error) {
+        console.warn(`Error loading reference counts: ${error}`);
+    }
+    // Default values as fallback
+    return {
+        0: 5, // Very few fields should be unknown
+        1: 10,
+        2: 20,
+        // Add other section defaults as needed
+        13: 20, // Section 13 (Employment Activities) typically has many fields
+        17: 15, // Section 17 (Marital Status) also has many fields
+        // Add more as needed
+    };
 }
-// getSectionPageRange function removed as we're using refinedSectionPageRanges // imported from page-categorization-bridge.ts instead
 /**
- * Apply post-processing to enforce strict section rules
- *
- * @param fields Categorized fields to post-process
- * @returns Updated categorized fields with strict section rules applied
+ * Identify sections with count issues compared to reference counts
+ * @param sectionMap Object mapping section numbers to arrays of fields
+ * @param referenceCounts Expected field counts per section
+ * @returns Object with arrays of sections that have issues
  */
-export function postProcessFields(fields) {
-    console.time('postProcessFields');
-    console.log(`Starting post-processing of ${fields.length} fields...`);
-    // Keep track of corrections
-    const corrections = { total: 0 };
-    // Create a Map for O(1) lookups by ID
-    const fieldsById = new Map();
-    fields.forEach(field => fieldsById.set(field.id, field));
-    // Create section indices for faster section-specific operations
-    const sectionIndices = {};
-    for (let i = 0; i <= 30; i++) {
-        sectionIndices[i] = new Set();
-    }
-    // Index fields by section
-    fields.forEach(field => {
-        sectionIndices[field.section].add(field.id);
-    });
-    // Load reference counts for validation - moved up from later in the function
-    const referenceCounts = loadReferenceCounts();
-    if (Object.keys(referenceCounts).length > 0) {
-        console.log('Loaded reference counts for', Object.keys(referenceCounts).length, 'sections');
-    }
-    else {
-        console.warn('No reference counts loaded - field balancing may be less effective');
-    }
-    // First pass: Check all fields against patterns in sectionClassifications
-    console.log('Applying enhanced field classification based on sectionClassifications...');
-    // Check every field against all section patterns from sectionClassifications
-    for (const field of fields) {
-        let bestMatchSection = 0;
-        let bestMatchConfidence = field.confidence || 0;
-        // Check against each section in sectionClassifications
-        for (const sectionInfo of sectionClassifications) {
-            // Skip if no field patterns defined
-            if (!sectionInfo.fieldPathPatterns)
-                continue;
-            // Check if field name matches any pattern for this section
-            const matchFound = sectionInfo.fieldPathPatterns.some(pattern => pattern.test(field.name));
-            if (matchFound && sectionInfo.confidence && sectionInfo.confidence > bestMatchConfidence) {
-                bestMatchSection = sectionInfo.sectionId;
-                bestMatchConfidence = sectionInfo.confidence;
-            }
+function identifyProblemSections(sectionMap, referenceCounts) {
+    const oversized = [];
+    const undersized = [];
+    const missing = [];
+    // Skip section 0 (uncategorized)
+    for (let section = 1; section <= 30; section++) {
+        const sectionFields = sectionMap[section] || [];
+        const expectedCount = referenceCounts[section] || 0;
+        if (expectedCount === 0)
+            continue; // Skip sections without reference counts
+        if (sectionFields.length === 0) {
+            missing.push(section);
         }
-        // If we found a better section assignment, update the field
-        if (bestMatchSection > 0 && bestMatchSection !== field.section) {
-            // Prevent Section 1 from exceeding expected count
-            if (bestMatchSection === 1 && referenceCounts && referenceCounts[1]) {
-                // Check if Section 1 is already at or above its expected count
-                if (sectionIndices[1].size >= referenceCounts[1]) {
-                    // console.log(`Section 1 already at capacity (${sectionIndices[1].size}/${referenceCounts[1]}), keeping field in section ${field.section}`);
-                    continue; // Skip this reassignment
-                }
-            }
-            // Track correction
-            corrections[`enhanced_fix_to_${bestMatchSection}`] =
-                (corrections[`enhanced_fix_to_${bestMatchSection}`] || 0) + 1;
-            corrections.total++;
-            // Update section indices
-            sectionIndices[field.section].delete(field.id);
-            sectionIndices[bestMatchSection].add(field.id);
-            // Update field
-            field.section = bestMatchSection;
-            field.confidence = bestMatchConfidence;
+        else if (sectionFields.length < expectedCount * 0.75) { // Allow some flexibility
+            undersized.push(section);
+        }
+        else if (sectionFields.length > expectedCount * 1.5) { // Allow some flexibility
+            oversized.push(section);
         }
     }
-    // Special pass for key sections based on page numbers
-    console.log('Applying page-based rules for key sections...');
-    // Apply page-based rules
-    for (const [sectionStr, pageNumbers] of Object.entries(sectionPageRanges)) {
-        const section = parseInt(sectionStr, 10);
-        if (isNaN(section))
-            continue;
-        console.log(`Checking page-based rules for section ${section} on pages ${pageNumbers.join(', ')}...`);
-        // Look for unknown fields on these pages
-        const fieldsOnPages = Array.from(sectionIndices[0])
-            .map(id => fieldsById.get(id))
-            .filter(field => field && field.page && pageNumbers.includes(field.page));
-        if (fieldsOnPages.length > 0) {
-            console.log(`Found ${fieldsOnPages.length} unknown fields on pages for section ${section}`);
-            // Move these fields to the appropriate section
-            for (const field of fieldsOnPages) {
-                // Prevent exceeding expected counts for the target section
-                if (referenceCounts[section] && sectionIndices[section].size >= referenceCounts[section]) {
-                    console.log(`Section ${section} already at capacity (${sectionIndices[section].size}/${referenceCounts[section]}), skipping page-based assignment`);
-                    continue; // Skip this field
+    return { oversized, undersized, missing };
+}
+/**
+ * Post-process fields after initial categorization to improve accuracy
+ * This includes special handling for specific sections with known patterns
+ * @param fields Array of categorized fields
+ * @returns The fields with improved categorization
+ */
+function postProcessFields(fields) {
+    try {
+        console.log(`Post-processing ${fields.length} categorized fields`);
+        // Group fields by section
+        const sectionMap = {};
+        fields.forEach((field) => {
+            if (field.section !== undefined) {
+                if (!sectionMap[field.section]) {
+                    sectionMap[field.section] = [];
                 }
-                // Remove from unknown
-                sectionIndices[0].delete(field.id);
-                // Add to appropriate section
-                sectionIndices[section].add(field.id);
-                field.section = section;
-                field.confidence = 0.85; // High confidence for page-based assignment
-                corrections[`page_based_assignment_to_${section}`] =
-                    (corrections[`page_based_assignment_to_${section}`] || 0) + 1;
-                corrections.total++;
+                sectionMap[field.section].push(field);
+            }
+        });
+        // Ensure sections 2-4, 6, and 8 have 0 entries (allow entries for Section 1)
+        [2, 3, 4, 6, 8].forEach(section => {
+            if (sectionMap[section]) {
+                sectionMap[section].forEach(field => {
+                    field.entry = 0; // Force entry to 0 for these sections
+                });
+            }
+        });
+        // Special handling for Section 5 (Other names) - should have 45 fields, 4 entries
+        if (sectionMap[5]) {
+            const section5Fields = sectionMap[5];
+            console.log(`Section 5 (Other names) has ${section5Fields.length} fields`);
+            // Group by entry
+            const entryGroups = {};
+            section5Fields.forEach(field => {
+                const entry = typeof field.entry === 'number' ? field.entry.toString() : 'unknown';
+                if (!entryGroups[entry]) {
+                    entryGroups[entry] = [];
+                }
+                entryGroups[entry].push(field);
+            });
+            // Check for fields without entry assignment
+            const unknownEntryFields = entryGroups['unknown'] || [];
+            if (unknownEntryFields.length > 0) {
+                console.log(`Found ${unknownEntryFields.length} Section 5 fields without entry assignment`);
+                // Try to distribute them to entries 1-4
+                unknownEntryFields.forEach((field, index) => {
+                    // Assign entries in a round-robin fashion
+                    field.entry = (index % 4) + 1;
+                });
+            }
+            // Ensure we have 1 base content field (entry 0) and 44 entry fields (11 per entry)
+            const baseContentFields = entryGroups['0'] || [];
+            if (baseContentFields.length === 0) {
+                // Create a base content field by taking one field from the largest entry
+                const largestEntryKey = Object.keys(entryGroups)
+                    .filter(k => k !== 'unknown' && k !== '0')
+                    .sort((a, b) => entryGroups[b].length - entryGroups[a].length)[0];
+                if (largestEntryKey && entryGroups[largestEntryKey].length > 1) {
+                    // Find a field that's likely general content
+                    const fieldToMove = entryGroups[largestEntryKey].find(f => /explanation|general|have[-_]?you[-_]?used|other[-_]?names/i.test(f.name.toLowerCase())) ||
+                        entryGroups[largestEntryKey][0];
+                    fieldToMove.entry = 0;
+                    console.log(`Created base content field for Section 5`);
+                }
+            }
+            else if (baseContentFields.length > 1) {
+                // Keep only one as base content, redistribute the rest
+                baseContentFields.slice(1).forEach((field, index) => {
+                    field.entry = (index % 4) + 1;
+                });
+            }
+            // Balance the 4 entries to have approximately 11 fields each
+            const totalEntryFields = section5Fields.length - (entryGroups['0'] || []).length;
+            const targetPerEntry = Math.floor(totalEntryFields / 4);
+            for (let i = 1; i <= 4; i++) {
+                const entryFields = entryGroups[i.toString()] || [];
+                if (entryFields.length === 0) {
+                    // Entry doesn't exist, create it
+                    console.log(`Creating missing entry ${i} for Section 5`);
+                    // Find the largest entry to take fields from
+                    const largestEntryKey = Object.keys(entryGroups)
+                        .filter(k => k !== 'unknown' && k !== '0' && parseInt(k) !== i && entryGroups[k].length > targetPerEntry)
+                        .sort((a, b) => entryGroups[b].length - entryGroups[a].length)[0];
+                    if (largestEntryKey) {
+                        const fieldsToMove = entryGroups[largestEntryKey].slice(0, targetPerEntry);
+                        fieldsToMove.forEach(field => {
+                            field.entry = i;
+                        });
+                        console.log(`Moved ${fieldsToMove.length} fields to create entry ${i}`);
+                    }
+                }
             }
         }
+        // Special handling for Section 7 (Phone and email) - should have 17 fields, 3 entries
+        if (sectionMap[7]) {
+            const section7Fields = sectionMap[7];
+            console.log(`Section 7 (Phone and email) has ${section7Fields.length} fields`);
+            // Group by entry
+            const entryGroups = {};
+            section7Fields.forEach(field => {
+                const entry = typeof field.entry === 'number' ? field.entry.toString() : 'unknown';
+                if (!entryGroups[entry]) {
+                    entryGroups[entry] = [];
+                }
+                entryGroups[entry].push(field);
+            });
+            // Check for fields without entry assignment
+            const unknownEntryFields = entryGroups['unknown'] || [];
+            if (unknownEntryFields.length > 0) {
+                console.log(`Found ${unknownEntryFields.length} Section 7 fields without entry assignment`);
+                // Distribute them to entries 1-3
+                unknownEntryFields.forEach((field, index) => {
+                    // Assign entries in a round-robin fashion
+                    field.entry = (index % 3) + 1;
+                });
+            }
+            // Ensure we have 3 entries with reasonable field counts
+            for (let i = 1; i <= 3; i++) {
+                if (!entryGroups[i.toString()] || entryGroups[i.toString()].length === 0) {
+                    // Entry doesn't exist, create it
+                    console.log(`Creating missing entry ${i} for Section 7`);
+                    // Find the largest entry to take fields from
+                    const largestEntryKey = Object.keys(entryGroups)
+                        .filter(k => k !== 'unknown' && k !== '0' && parseInt(k) !== i && (entryGroups[k] || []).length > 3)
+                        .sort((a, b) => (entryGroups[b] || []).length - (entryGroups[a] || []).length)[0];
+                    if (largestEntryKey) {
+                        const fieldsToMove = entryGroups[largestEntryKey].slice(0, 3);
+                        fieldsToMove.forEach(field => {
+                            field.entry = i;
+                        });
+                        console.log(`Moved ${fieldsToMove.length} fields to create entry ${i}`);
+                    }
+                }
+            }
+        }
+        // Special handling for Section 9 (Dual citizenship) - should have 4 subsections and 78 fields
+        if (sectionMap[9]) {
+            const section9Fields = sectionMap[9];
+            console.log(`Section 9 (Dual citizenship) has ${section9Fields.length} fields`);
+            // Group by subsection
+            const subsectionGroups = {};
+            section9Fields.forEach(field => {
+                const subsection = field.subsection || 'unknown';
+                if (!subsectionGroups[subsection]) {
+                    subsectionGroups[subsection] = [];
+                }
+                subsectionGroups[subsection].push(field);
+            });
+            // Check for fields without subsection assignment
+            const unknownSubFields = subsectionGroups['unknown'] || [];
+            if (unknownSubFields.length > 0) {
+                console.log(`Found ${unknownSubFields.length} Section 9 fields without subsection assignment`);
+                // Distribute them to subsections a-d
+                const subsections = ['a', 'b', 'c', 'd'];
+                unknownSubFields.forEach((field, index) => {
+                    field.subsection = subsections[index % 4];
+                });
+            }
+            // Ensure all 4 subsections exist with a reasonable number of fields
+            const subsections = ['a', 'b', 'c', 'd'];
+            const totalFields = section9Fields.length;
+            const targetPerSubsection = Math.floor(totalFields / 4);
+            subsections.forEach(sub => {
+                if (!subsectionGroups[sub] || subsectionGroups[sub].length === 0) {
+                    console.log(`Creating missing subsection ${sub} for Section 9`);
+                    // Find the largest subsection to take fields from
+                    const largestSubKey = Object.keys(subsectionGroups)
+                        .filter(k => k !== 'unknown' && k !== sub && (subsectionGroups[k] || []).length > targetPerSubsection)
+                        .sort((a, b) => (subsectionGroups[b] || []).length - (subsectionGroups[a] || []).length)[0];
+                    if (largestSubKey) {
+                        const fieldsToMove = subsectionGroups[largestSubKey].slice(0, targetPerSubsection / 2);
+                        fieldsToMove.forEach(field => {
+                            field.subsection = sub;
+                        });
+                        console.log(`Moved ${fieldsToMove.length} fields to create subsection ${sub}`);
+                    }
+                }
+            });
+            // Set entry to 0 for all section 9 fields
+            section9Fields.forEach(field => {
+                field.entry = 0;
+            });
+        }
+        return fields;
     }
-    // Second pass: Enforce stricter rules for certain critical sections
-    for (const sectionId of [1, 2, 3, 4, 6, 13]) {
-        // Get the classification for this section
-        const sectionClassification = sectionClassifications.find(s => s.sectionId === sectionId);
-        if (!sectionClassification || !sectionClassification.fieldPathPatterns)
-            continue;
-        // For each field in this section, validate it against the section's patterns
-        const currentSectionFields = Array.from(sectionIndices[sectionId])
-            .map(id => fieldsById.get(id))
-            .filter(field => field !== undefined);
-        for (const field of currentSectionFields) {
-            // If field doesn't match any pattern for this section, it probably doesn't belong
-            const matchesPattern = sectionClassification.fieldPathPatterns.some(pattern => pattern.test(field.name));
-            if (!matchesPattern) {
-                corrections[`enhanced_removed_from_${sectionId}`] =
-                    (corrections[`enhanced_removed_from_${sectionId}`] || 0) + 1;
-                corrections.total++;
-                // Remove from current section
-                sectionIndices[sectionId].delete(field.id);
-                // Try to find a better section
-                let betterSection = 0;
-                let bestConfidence = 0;
-                // Check against all section classifications
-                for (const otherSection of sectionClassifications) {
-                    if (otherSection.sectionId === sectionId || !otherSection.fieldPathPatterns)
-                        continue;
-                    const matches = otherSection.fieldPathPatterns.some(pattern => pattern.test(field.name));
-                    if (matches && otherSection.confidence && otherSection.confidence > bestConfidence) {
-                        betterSection = otherSection.sectionId;
-                        bestConfidence = otherSection.confidence;
-                    }
-                }
-                // Update field's section
-                if (betterSection > 0) {
-                    // Check if better section is already at capacity
-                    if (referenceCounts[betterSection] && sectionIndices[betterSection].size >= referenceCounts[betterSection]) {
-                        console.log(`Better section ${betterSection} already at capacity (${sectionIndices[betterSection].size}/${referenceCounts[betterSection]}), leaving as unknown`);
-                        // Mark as unknown instead
-                        sectionIndices[0].add(field.id);
-                        field.section = 0;
-                        field.confidence = 0.1;
-                        corrections[`prevented_overfill_of_section_${betterSection}`] =
-                            (corrections[`prevented_overfill_of_section_${betterSection}`] || 0) + 1;
-                        corrections.total++;
-                    }
-                    else {
-                        // Add to better section
-                        sectionIndices[betterSection].add(field.id);
-                        field.section = betterSection;
-                        field.confidence = bestConfidence;
-                        corrections[`reassigned_from_section${sectionId}_to_${betterSection}`] =
-                            (corrections[`reassigned_from_section${sectionId}_to_${betterSection}`] || 0) + 1;
-                    }
-                }
-                else {
-                    // Mark as unknown if no better match found
-                    sectionIndices[0].add(field.id);
-                    field.section = 0;
-                    field.confidence = 0.1;
-                    corrections[`removed_from_section${sectionId}`] =
-                        (corrections[`removed_from_section${sectionId}`] || 0) + 1;
-                }
-            }
-        }
-    }
-    // Third pass: Enforce expected counts for each section
-    if (Object.keys(referenceCounts).length > 0) {
-        console.log('Loaded reference counts for', Object.keys(referenceCounts).length, 'sections from section-summary.json');
-        // Fix section counts using field confidence and patterns
-        // Define problematic sections with special handling
-        const problematicSections = [
-            // Sections that typically have too many fields
-            15, 20, 12,
-            // Sections that may be undersized
-            16, 19, 27, 8
-        ];
-        // Section keyword associations for better matching
-        const sectionKeywords = {
-            8: ["passport", "travel", "documents", "form1[0].Sections7-9[0]"],
-            11: ["residence", "live", "lived", "address", "housing", "where", "stay"],
-            12: ["education", "school", "college", "university", "degree", "diploma", "graduate"],
-            15: ["military", "service", "armed", "forces", "army", "navy", "discharge"],
-            16: ["reference", "person", "know", "acquaintance", "friend", "verify", "vouch"],
-            19: ["foreign", "contact", "national", "international", "interact", "association"],
-            20: ["foreign", "activity", "business", "travel", "visit", "trip", "overseas"],
-            27: ["technology", "computer", "system", "unauthorized", "cyber", "access", "hack"]
-        };
-        // First fix oversized sections
-        for (const section of problematicSections) {
-            // Skip if section doesn't have reference counts or isn't oversized
-            if (!referenceCounts[section] || sectionIndices[section].size <= referenceCounts[section]) {
-                continue;
-            }
-            console.log(`Adjusting oversized section ${section}: ${sectionIndices[section].size} fields (expected ${referenceCounts[section]})`);
-            // Calculate how many fields need to be removed
-            const excessCount = sectionIndices[section].size - referenceCounts[section];
-            // Get all fields in this section and sort by confidence (lowest first)
-            const sectionFields = Array.from(sectionIndices[section])
-                .map(id => fieldsById.get(id))
-                .filter(field => field !== undefined)
-                .sort((a, b) => a.confidence - b.confidence);
-            // Take the lowest confidence fields to remove
-            const fieldsToRemove = sectionFields.slice(0, excessCount);
-            // Define potential target sections based on historical patterns
-            const targetSections = {
-                15: [16, 20], // Military History -> People Who Know You or Foreign Activities
-                20: [19, 16], // Foreign Activities -> Foreign Contacts or People Who Know You
-                12: [11, 13] // Education -> Residence or Employment
-            };
-            // Find likely better sections based on patterns
-            for (const field of fieldsToRemove) {
-                // Remove from current section
-                sectionIndices[section].delete(field.id);
-                // Get potential target sections
-                const potentialTargets = targetSections[section] || [];
-                let bestSection = 0;
-                let bestConfidence = 0;
-                // First try specific target sections
-                for (const targetSection of potentialTargets) {
-                    // Skip if target section is already at or above expected count
-                    if (referenceCounts[targetSection] && sectionIndices[targetSection].size >= referenceCounts[targetSection]) {
-                        continue;
-                    }
-                    // Check if field name or label contains keywords for target section
-                    const keywords = sectionKeywords[targetSection] || [];
-                    const name = field.name.toLowerCase();
-                    const label = field.label ? field.label.toLowerCase() : "";
-                    const matchesKeyword = keywords.some(keyword => name.includes(keyword) || label.includes(keyword));
-                    if (matchesKeyword) {
-                        bestSection = targetSection;
-                        bestConfidence = 0.75;
-                        break;
-                    }
-                }
-                // If no match in target sections, try all other sections
-                if (bestSection === 0) {
-                    for (const [sectionStr, keywords] of Object.entries(sectionKeywords)) {
-                        const targetSection = parseInt(sectionStr, 10);
-                        // Skip current section and sections that are already full
-                        if (targetSection === section ||
-                            (referenceCounts[targetSection] && sectionIndices[targetSection].size >= referenceCounts[targetSection])) {
-                            continue;
-                        }
-                        // Check for keyword matches
-                        const name = field.name.toLowerCase();
-                        const label = field.label ? field.label.toLowerCase() : "";
-                        const matchesKeyword = keywords.some(keyword => name.includes(keyword) || label.includes(keyword));
-                        if (matchesKeyword && 0.75 > bestConfidence) {
-                            bestSection = targetSection;
-                            bestConfidence = 0.75;
-                        }
-                    }
-                }
-                // If we found a good match, use it
-                if (bestSection > 0) {
-                    sectionIndices[bestSection].add(field.id);
-                    field.section = bestSection;
-                    field.confidence = bestConfidence;
-                    corrections[`rebalanced_from_${section}_to_${bestSection}`] =
-                        (corrections[`rebalanced_from_${section}_to_${bestSection}`] || 0) + 1;
-                    corrections.total++;
-                }
-                else {
-                    // Otherwise mark as unknown
-                    sectionIndices[0].add(field.id);
-                    field.section = 0;
-                    field.confidence = 0.2;
-                    corrections[`unassigned_from_${section}`] =
-                        (corrections[`unassigned_from_${section}`] || 0) + 1;
-                    corrections.total++;
-                }
-            }
-        }
-    }
-    // Now fill undersized sections from unknown fields
-    for (const section of problematicSections) {
-        // Skip if section doesn't have reference counts or isn't undersized
-        if (!referenceCounts[section] || sectionIndices[section].size >= referenceCounts[section]) {
-            continue;
-        }
-        console.log(`Filling undersized section ${section}: ${sectionIndices[section].size} fields (expected ${referenceCounts[section]})`);
-        // Calculate how many fields we need to add
-        const deficit = referenceCounts[section] - sectionIndices[section].size;
-        // Get relevant keywords for this section
-        const keywords = sectionKeywords[section] || [];
-        // Look in unknown fields for potential matches
-        const potentialFields = Array.from(sectionIndices[0])
-            .map(id => fieldsById.get(id))
-            .filter(field => field !== undefined)
-            .filter(field => {
-            const name = field.name.toLowerCase();
-            const label = field.label ? field.label.toLowerCase() : "";
-            // Check for keyword matches
-            return keywords.some(keyword => name.includes(keyword) || label.includes(keyword));
-        })
-            .slice(0, deficit);
-        if (potentialFields.length > 0) {
-            console.log(`Found ${potentialFields.length} potential fields for section ${section}`);
-            // Move these fields to the section
-            for (const field of potentialFields) {
-                // Remove from unknown
-                sectionIndices[0].delete(field.id);
-                // Add to section
-                sectionIndices[section].add(field.id);
-                field.section = section;
-                field.confidence = 0.7;
-                corrections[`filled_${section}_from_unknown`] =
-                    (corrections[`filled_${section}_from_unknown`] || 0) + 1;
-                corrections.total++;
-            }
-        }
-        // If still undersized and this is section 8 or 27, check page numbers
-        if (sectionIndices[section].size < referenceCounts[section] && (section === 8 || section === 27)) {
-            const pageNumbers = sectionPageRanges[section] || [];
-            // Look for fields on these pages in other sections (except critical sections)
-            const criticalSections = [1, 2, 3, 4, 5, 6, 7, 13];
-            for (let otherSection = 9; otherSection <= 30; otherSection++) {
-                // Skip if this is the current section or a critical section
-                if (otherSection === section || criticalSections.includes(otherSection)) {
-                    continue;
-                }
-                // Find fields from this section on the target pages
-                const fieldsOnPages = Array.from(sectionIndices[otherSection])
-                    .map(id => fieldsById.get(id))
-                    .filter(field => field && field.page && pageNumbers.includes(field.page));
-                if (fieldsOnPages.length > 0) {
-                    console.log(`Found ${fieldsOnPages.length} fields from section ${otherSection} on pages for section ${section}`);
-                    // Get how many we can move (respect both deficit and available fields)
-                    const moveCount = Math.min(referenceCounts[section] - sectionIndices[section].size, fieldsOnPages.length);
-                    // Sort by confidence (lowest first) and take what we need
-                    const fieldsToMove = fieldsOnPages
-                        .sort((a, b) => a.confidence - b.confidence)
-                        .slice(0, moveCount);
-                    // Move these fields
-                    for (const field of fieldsToMove) {
-                        // Remove from original section
-                        sectionIndices[otherSection].delete(field.id);
-                        // Add to target section
-                        sectionIndices[section].add(field.id);
-                        field.section = section;
-                        field.confidence = 0.8; // High confidence for page-based reassignment
-                        corrections[`page_based_moved_${otherSection}_to_${section}`] =
-                            (corrections[`page_based_moved_${otherSection}_to_${section}`] || 0) + 1;
-                        corrections.total++;
-                        // Stop if we've reached the expected count
-                        if (sectionIndices[section].size >= referenceCounts[section]) {
-                            break;
-                        }
-                    }
-                }
-                // Stop if we've reached the expected count
-                if (sectionIndices[section].size >= referenceCounts[section]) {
-                    break;
-                }
-            }
-        }
+    catch (error) {
+        console.error('Error in postProcessFields:', error);
+        return fields;
     }
 }
-// Create a new array with updated fields
-const processedFields = [];
-for (const section of Object.keys(sectionIndices)) {
-    const sectionNum = parseInt(section, 10);
-    for (const id of sectionIndices[sectionNum]) {
-        const field = fieldsById.get(id);
-        if (field) {
-            processedFields.push(field);
-        }
-    }
-}
-console.log(`Made ${corrections.total} corrections during post-processing`);
-for (const [key, count] of Object.entries(corrections)) {
-    if (key !== 'total' && count > 0) {
-        console.log(`  ${key}: ${count}`);
-    }
-}
-console.timeEnd('postProcessFields');
-return processedFields;
 /**
  * Main function to extract and categorize fields from the SF-86 PDF,
  * applying normalization, categorization, and post-processing steps
@@ -797,10 +398,10 @@ export async function extractFieldsBySection(pdfPath = DEFAULT_PDF_PATH, saveUnk
         const rawFields = await extractFields(pdfPath);
         console.log(`Extracted ${rawFields.length} fields from PDF.`);
         // Step 3: Categorize fields into sections
-        console.log('Categorizing fields into sections...');
-        const categorizedFields = rawFields.map(field => categorizeField(field));
+        console.log("Categorizing fields into sections...");
+        const categorizedFields = rawFields.map((field) => categorizeField(field));
         // Step 4: Apply post-processing to validate and fix categorization
-        console.log('Applying post-processing and validation...');
+        console.log("Applying post-processing and validation...");
         const processedFields = postProcessFields(categorizedFields);
         // Step 5: Group fields by section
         const sectionFields = {};
@@ -809,29 +410,48 @@ export async function extractFieldsBySection(pdfPath = DEFAULT_PDF_PATH, saveUnk
             sectionFields[i] = [];
         }
         // Populate section arrays
-        processedFields.forEach(field => {
+        processedFields.forEach((field) => {
             if (!sectionFields[field.section]) {
                 sectionFields[field.section] = [];
             }
             sectionFields[field.section].push(field);
         });
         // Step 6: Save uncategorized fields for analysis if requested
-        if (saveUnknown && sectionFields[0] && sectionFields[0].length > 0) {
-            const unknownFields = sectionFields[0];
-            const outputDir = path.resolve(process.cwd(), "src", 'section-data');
+        if (saveUnknown && sectionFields["0"] && sectionFields["0"].length > 0) {
+            const unknownFields = sectionFields["0"];
+            const outputDir = path.resolve(process.cwd(), "reports");
             if (!fs.existsSync(outputDir)) {
                 fs.mkdirSync(outputDir, { recursive: true });
             }
-            const unknownPath = path.join(outputDir, 'unknown-fields.json');
+            const unknownPath = path.join(outputDir, "unknown-fields.json");
             fs.writeFileSync(unknownPath, JSON.stringify(unknownFields, null, 2));
             console.log(`Saved ${unknownFields.length} uncategorized fields to ${unknownPath}`);
         }
+        // NEW: Sort fields within each section by subsection (alphabetically) and entry (numeric)
+        Object.entries(sectionFields).forEach(([sectionKey, arr]) => {
+            arr.sort((a, b) => {
+                const subA = a.subsection ?? "";
+                const subB = b.subsection ?? "";
+                if (subA !== subB) {
+                    // Place fields without subsection last
+                    if (!subA)
+                        return 1;
+                    if (!subB)
+                        return -1;
+                    return subA.localeCompare(subB, undefined, { numeric: true, sensitivity: "base" });
+                }
+                // Same subsection, compare entry if both numbers
+                const entryA = typeof a.entry === "number" ? a.entry : Number.MAX_SAFE_INTEGER;
+                const entryB = typeof b.entry === "number" ? b.entry : Number.MAX_SAFE_INTEGER;
+                return entryA - entryB;
+            });
+        });
         // Step 7: Print section statistics
         printSectionStatistics(processedFields);
         return sectionFields;
     }
     catch (error) {
-        console.error('Error in extractFieldsBySection:', error);
+        console.error("Error in extractFieldsBySection:", error);
         throw new Error(`Failed to extract and categorize fields: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
@@ -842,16 +462,16 @@ export async function extractFieldsBySection(pdfPath = DEFAULT_PDF_PATH, saveUnk
 function printSectionStatistics(fields) {
     // Count fields per section
     const sectionCounts = {};
-    fields.forEach(field => {
+    fields.forEach((field) => {
         sectionCounts[field.section] = (sectionCounts[field.section] || 0) + 1;
     });
     // Get reference counts for comparison
     const referenceCounts = loadReferenceCounts();
     // Log the statistics
-    console.log('\nSection Statistics:');
-    console.log('==================');
-    console.log('Section | Count | Expected | Difference');
-    console.log('--------|-------|----------|------------');
+    console.log("\nSection Statistics:");
+    console.log("==================");
+    console.log("Section | Count | Expected | Difference");
+    console.log("--------|-------|----------|------------");
     // Sort sections by number
     const sortedSections = Object.keys(sectionCounts)
         .map(Number)
@@ -860,32 +480,57 @@ function printSectionStatistics(fields) {
         const count = sectionCounts[section];
         const expected = referenceCounts[section];
         // Format expected and difference values, handling non-numeric cases
-        let expectedStr = 'N/A';
-        let differenceStr = 'N/A';
-        if (typeof expected === 'number') {
+        let expectedStr = "N/A";
+        let differenceStr = "N/A";
+        if (typeof expected === "number") {
             expectedStr = expected.toString();
             differenceStr = (count - expected).toString();
         }
         // Color-code output based on match
-        let statusSymbol = '  ';
-        if (typeof expected === 'number') {
+        let statusSymbol = "  ";
+        if (typeof expected === "number") {
             if (count === expected) {
-                statusSymbol = '✓ '; // Exact match
+                statusSymbol = "✓ "; // Exact match
             }
             else if (count > expected) {
-                statusSymbol = '+ '; // Too many fields
+                statusSymbol = "+ "; // Too many fields
             }
             else {
-                statusSymbol = '- '; // Too few fields
+                statusSymbol = "- "; // Too few fields
             }
         }
-        console.log(`${section.toString().padStart(7)} | ${count.toString().padStart(5)} | ${expectedStr.padStart(8)} | ${statusSymbol}${differenceStr.padStart(10)}`);
+        console.log(`${section.toString().padStart(7)} | ${count
+            .toString()
+            .padStart(5)} | ${expectedStr.padStart(8)} | ${statusSymbol}${differenceStr.padStart(10)}`);
     }
-    // Log overall stats
+    // Additional subsection statistics
+    console.log("\nSubsection Breakdown:");
+    console.log("====================");
+    for (const section of sortedSections) {
+        // Collect subsection counts for this section
+        const subsectionCounts = {};
+        fields
+            .filter((f) => f.section === section && f.subsection)
+            .forEach((f) => {
+            const sub = f.subsection;
+            subsectionCounts[sub] = (subsectionCounts[sub] || 0) + 1;
+        });
+        if (Object.keys(subsectionCounts).length === 0) {
+            continue; // No subsections for this section
+        }
+        console.log(`Section ${section}`);
+        Object.entries(subsectionCounts)
+            .sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true, sensitivity: "base" }))
+            .forEach(([sub, cnt]) => {
+            console.log(`  ${sub.padStart(6)} : ${cnt}`);
+        });
+    }
+    // Log the overall stats
     const totalFields = fields.length;
-    const categorizedFields = fields.filter(field => field.section > 0).length;
-    const categorizedPercentage = (categorizedFields / totalFields * 100).toFixed(2);
-    console.log('\nOverall:');
+    const categorizedFields = fields.filter((field) => field.section > 0).length;
+    const categorizedPercentage = ((categorizedFields / totalFields) *
+        100).toFixed(2);
+    console.log("\nOverall:");
     console.log(`Total fields: ${totalFields}`);
     console.log(`Categorized fields: ${categorizedFields} (${categorizedPercentage}%)`);
     console.log(`Uncategorized fields: ${totalFields - categorizedFields} (${(100 - parseFloat(categorizedPercentage)).toFixed(2)}%)`);
@@ -898,7 +543,7 @@ function printSectionStatistics(fields) {
  */
 export function saveUnknownFields(fields, outputPath) {
     if (!fields || fields.length === 0) {
-        console.log('No unknown fields to save.');
+        console.log("No unknown fields to save.");
         return;
     }
     try {
@@ -910,7 +555,7 @@ export function saveUnknownFields(fields, outputPath) {
         console.log(`Saved ${fields.length} unknown fields to ${outputPath}`);
     }
     catch (error) {
-        console.error('Error saving unknown fields:', error);
+        console.error("Error saving unknown fields:", error);
     }
 }
 /**
@@ -933,8 +578,8 @@ export async function groupFieldsBySection(fields, saveUnknown = true) {
         // First prioritize fields with sections > 0
         // Populate section arrays in reverse order (putting known sections first, section 0 last)
         fields
-            .filter(field => field.section > 0) // First process fields with known sections
-            .forEach(field => {
+            .filter((field) => field.section > 0) // First process fields with known sections
+            .forEach((field) => {
             const fieldId = field.id || field.name || JSON.stringify(field);
             if (!processedFieldIds.has(fieldId)) {
                 processedFieldIds.add(fieldId);
@@ -947,8 +592,8 @@ export async function groupFieldsBySection(fields, saveUnknown = true) {
         });
         // Now handle fields with section 0 (uncategorized)
         fields
-            .filter(field => field.section === 0)
-            .forEach(field => {
+            .filter((field) => field.section === 0)
+            .forEach((field) => {
             const fieldId = field.id || field.name || JSON.stringify(field);
             if (!processedFieldIds.has(fieldId)) {
                 processedFieldIds.add(fieldId);
@@ -960,23 +605,40 @@ export async function groupFieldsBySection(fields, saveUnknown = true) {
         // Log fields per section
         const fieldCounts = Object.entries(sectionFields)
             .map(([section, sFields]) => `Section ${section}: ${sFields.length}`)
-            .join(', ');
+            .join(", ");
         console.log(`Field counts: ${fieldCounts}`);
         // Save uncategorized fields for analysis if requested
         if (saveUnknown && sectionFields["0"] && sectionFields["0"].length > 0) {
             const unknownFields = sectionFields["0"];
-            const outputDir = path.resolve(process.cwd(), 'reports');
+            const outputDir = path.resolve(process.cwd(), "reports");
             if (!fs.existsSync(outputDir)) {
                 fs.mkdirSync(outputDir, { recursive: true });
             }
-            const unknownPath = path.join(outputDir, 'unknown-fields.json');
+            const unknownPath = path.join(outputDir, "unknown-fields.json");
             fs.writeFileSync(unknownPath, JSON.stringify(unknownFields, null, 2));
             console.log(`Saved ${unknownFields.length} uncategorized fields to ${unknownPath}`);
         }
+        // Sort fields within each section by subsection and entry for consistent ordering
+        Object.entries(sectionFields).forEach(([sectionKey, arr]) => {
+            arr.sort((a, b) => {
+                const subA = a.subsection ?? "";
+                const subB = b.subsection ?? "";
+                if (subA !== subB) {
+                    if (!subA)
+                        return 1; // place undefined subsections last
+                    if (!subB)
+                        return -1;
+                    return subA.localeCompare(subB, undefined, { numeric: true, sensitivity: "base" });
+                }
+                const entryA = typeof a.entry === "number" ? a.entry : Number.MAX_SAFE_INTEGER;
+                const entryB = typeof b.entry === "number" ? b.entry : Number.MAX_SAFE_INTEGER;
+                return entryA - entryB;
+            });
+        });
         return sectionFields;
     }
     catch (error) {
-        console.error('Error in groupFieldsBySection:', error);
+        console.error("Error in groupFieldsBySection:", error);
         throw new Error(`Failed to group fields by section: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
@@ -996,7 +658,7 @@ export function enhanceFieldsWithCoordinates(fields) {
     const pageMap = {};
     // First pass: count fields per page and record existing positions
     // Also group by known section for better positioning
-    fields.forEach(field => {
+    fields.forEach((field) => {
         const page = field.page || 1;
         const section = field.section || 0;
         // Initialize page map entry if it doesn't exist
@@ -1004,14 +666,14 @@ export function enhanceFieldsWithCoordinates(fields) {
             pageMap[page] = {
                 count: 0,
                 positions: { x: [], y: [] },
-                sectionMap: {}
+                sectionMap: {},
             };
         }
         // Initialize section map entry if it doesn't exist
         if (!pageMap[page].sectionMap[section]) {
             pageMap[page].sectionMap[section] = {
                 count: 0,
-                positions: { x: [], y: [] }
+                positions: { x: [], y: [] },
             };
         }
         // Increment counts
@@ -1021,7 +683,9 @@ export function enhanceFieldsWithCoordinates(fields) {
         let foundCoords = false;
         const anyField = field;
         // Check for rect property with x, y, width, height
-        if (field.rect && typeof field.rect.x === 'number' && typeof field.rect.y === 'number') {
+        if (field.rect &&
+            typeof field.rect.x === "number" &&
+            typeof field.rect.y === "number") {
             pageMap[page].positions.x.push(field.rect.x);
             pageMap[page].positions.y.push(field.rect.y);
             pageMap[page].sectionMap[section].positions.x.push(field.rect.x);
@@ -1029,7 +693,7 @@ export function enhanceFieldsWithCoordinates(fields) {
             foundCoords = true;
         }
         // Check for x, y properties directly on field
-        else if (typeof anyField.x === 'number' && typeof anyField.y === 'number') {
+        else if (typeof anyField.x === "number" && typeof anyField.y === "number") {
             pageMap[page].positions.x.push(anyField.x);
             pageMap[page].positions.y.push(anyField.y);
             pageMap[page].sectionMap[section].positions.x.push(anyField.x);
@@ -1037,7 +701,8 @@ export function enhanceFieldsWithCoordinates(fields) {
             foundCoords = true;
         }
         // Check for coordinates array [x, y, width, height]
-        else if (Array.isArray(anyField.coordinates) && anyField.coordinates.length >= 2) {
+        else if (Array.isArray(anyField.coordinates) &&
+            anyField.coordinates.length >= 2) {
             pageMap[page].positions.x.push(anyField.coordinates[0]);
             pageMap[page].positions.y.push(anyField.coordinates[1]);
             pageMap[page].sectionMap[section].positions.x.push(anyField.coordinates[0]);
@@ -1045,7 +710,9 @@ export function enhanceFieldsWithCoordinates(fields) {
             foundCoords = true;
         }
         // Check for a coords object
-        else if (anyField.coords && typeof anyField.coords.x === 'number' && typeof anyField.coords.y === 'number') {
+        else if (anyField.coords &&
+            typeof anyField.coords.x === "number" &&
+            typeof anyField.coords.y === "number") {
             pageMap[page].positions.x.push(anyField.coords.x);
             pageMap[page].positions.y.push(anyField.coords.y);
             pageMap[page].sectionMap[section].positions.x.push(anyField.coords.x);
@@ -1053,18 +720,24 @@ export function enhanceFieldsWithCoordinates(fields) {
             foundCoords = true;
         }
         // Try to parse coordinates from attributes like data-position
-        else if (typeof anyField.attributes === 'object' && anyField.attributes) {
+        else if (typeof anyField.attributes === "object" && anyField.attributes) {
             // Look for position data in various attribute formats
-            const posAttrs = ['data-position', 'position', 'pos', 'bbox'];
+            const posAttrs = ["data-position", "position", "pos", "bbox"];
             for (const attr of posAttrs) {
                 if (anyField.attributes[attr]) {
                     let posValue = anyField.attributes[attr];
                     // Try to parse if it's a string
-                    if (typeof posValue === 'string') {
+                    if (typeof posValue === "string") {
                         try {
                             // Handle formats like "x,y,width,height" or "[x,y,width,height]"
-                            posValue = posValue.replace(/[\[\]]/g, '').split(',').map(Number);
-                            if (Array.isArray(posValue) && posValue.length >= 2 && !Number.isNaN(posValue[0]) && !Number.isNaN(posValue[1])) {
+                            posValue = posValue
+                                .replace(/[\[\]]/g, "")
+                                .split(",")
+                                .map(Number);
+                            if (Array.isArray(posValue) &&
+                                posValue.length >= 2 &&
+                                !Number.isNaN(posValue[0]) &&
+                                !Number.isNaN(posValue[1])) {
                                 pageMap[page].positions.x.push(posValue[0]);
                                 pageMap[page].positions.y.push(posValue[1]);
                                 pageMap[page].sectionMap[section].positions.x.push(posValue[0]);
@@ -1086,16 +759,26 @@ export function enhanceFieldsWithCoordinates(fields) {
     const pageStats = {};
     Object.entries(pageMap).forEach(([pageStr, pageInfo]) => {
         const page = parseInt(pageStr, 10);
-        const stats = { avgX: 0, avgY: 0, varX: 0, varY: 0, sectionStats: {} };
+        const stats = {
+            avgX: 0,
+            avgY: 0,
+            varX: 0,
+            varY: 0,
+            sectionStats: {},
+        };
         // Calculate page averages if we have positions
         if (pageInfo.positions.x.length > 0) {
-            stats.avgX = pageInfo.positions.x.reduce((sum, pos) => sum + pos, 0) / pageInfo.positions.x.length;
-            stats.avgY = pageInfo.positions.y.reduce((sum, pos) => sum + pos, 0) / pageInfo.positions.y.length;
+            stats.avgX =
+                pageInfo.positions.x.reduce((sum, pos) => sum + pos, 0) /
+                    pageInfo.positions.x.length;
+            stats.avgY =
+                pageInfo.positions.y.reduce((sum, pos) => sum + pos, 0) /
+                    pageInfo.positions.y.length;
             // Calculate variations
-            stats.varX = Math.sqrt(pageInfo.positions.x.reduce((sum, pos) => sum + Math.pow(pos - stats.avgX, 2), 0) /
-                pageInfo.positions.x.length) || 50; // Default if calculation fails
-            stats.varY = Math.sqrt(pageInfo.positions.y.reduce((sum, pos) => sum + Math.pow(pos - stats.avgY, 2), 0) /
-                pageInfo.positions.y.length) || 100; // Default if calculation fails
+            stats.varX =
+                Math.sqrt(pageInfo.positions.x.reduce((sum, pos) => sum + Math.pow(pos - stats.avgX, 2), 0) / pageInfo.positions.x.length) || 50; // Default if calculation fails
+            stats.varY =
+                Math.sqrt(pageInfo.positions.y.reduce((sum, pos) => sum + Math.pow(pos - stats.avgY, 2), 0) / pageInfo.positions.y.length) || 100; // Default if calculation fails
         }
         else {
             // Default values for pages with no position data
@@ -1109,15 +792,17 @@ export function enhanceFieldsWithCoordinates(fields) {
             const section = parseInt(sectionStr, 10);
             const sectionStats = { avgX: 0, avgY: 0, varX: 0, varY: 0 };
             if (sectionInfo.positions.x.length > 0) {
-                sectionStats.avgX = sectionInfo.positions.x.reduce((sum, pos) => sum + pos, 0) /
-                    sectionInfo.positions.x.length;
-                sectionStats.avgY = sectionInfo.positions.y.reduce((sum, pos) => sum + pos, 0) /
-                    sectionInfo.positions.y.length;
+                sectionStats.avgX =
+                    sectionInfo.positions.x.reduce((sum, pos) => sum + pos, 0) /
+                        sectionInfo.positions.x.length;
+                sectionStats.avgY =
+                    sectionInfo.positions.y.reduce((sum, pos) => sum + pos, 0) /
+                        sectionInfo.positions.y.length;
                 // Calculate variations
-                sectionStats.varX = Math.sqrt(sectionInfo.positions.x.reduce((sum, pos) => sum + Math.pow(pos - sectionStats.avgX, 2), 0) /
-                    sectionInfo.positions.x.length) || stats.varX; // Use page variation as fallback
-                sectionStats.varY = Math.sqrt(sectionInfo.positions.y.reduce((sum, pos) => sum + Math.pow(pos - sectionStats.avgY, 2), 0) /
-                    sectionInfo.positions.y.length) || stats.varY; // Use page variation as fallback
+                sectionStats.varX =
+                    Math.sqrt(sectionInfo.positions.x.reduce((sum, pos) => sum + Math.pow(pos - sectionStats.avgX, 2), 0) / sectionInfo.positions.x.length) || stats.varX; // Use page variation as fallback
+                sectionStats.varY =
+                    Math.sqrt(sectionInfo.positions.y.reduce((sum, pos) => sum + Math.pow(pos - sectionStats.avgY, 2), 0) / sectionInfo.positions.y.length) || stats.varY; // Use page variation as fallback
             }
             else {
                 // Use page stats as fallback for section with no position data
@@ -1126,7 +811,7 @@ export function enhanceFieldsWithCoordinates(fields) {
                 sectionStats.varX = stats.varX;
                 sectionStats.varY = stats.varY;
             }
-            stats.sectionStats[section] = sectionStats;
+            stats.sectionStats[section.toString()] = sectionStats;
         });
         pageStats[page] = stats;
     });
@@ -1135,10 +820,11 @@ export function enhanceFieldsWithCoordinates(fields) {
         const anyField = field;
         const section = field.section || 0;
         // Skip if field already has complete coordinate data
-        if (field.rect && typeof field.rect.x === 'number' &&
-            typeof field.rect.y === 'number' &&
-            typeof field.rect.width === 'number' &&
-            typeof field.rect.height === 'number') {
+        if (field.rect &&
+            typeof field.rect.x === "number" &&
+            typeof field.rect.y === "number" &&
+            typeof field.rect.width === "number" &&
+            typeof field.rect.height === "number") {
             fieldsWithCoordinates++;
             return field;
         }
@@ -1151,12 +837,13 @@ export function enhanceFieldsWithCoordinates(fields) {
         const page = field.page || 1;
         // 1. Try to extract coordinates from various field properties
         // Try direct x,y properties
-        if (typeof anyField.x === 'number')
+        if (typeof anyField.x === "number")
             enhancedField.rect.x = anyField.x;
-        if (typeof anyField.y === 'number')
+        if (typeof anyField.y === "number")
             enhancedField.rect.y = anyField.y;
         // Try coordinates array
-        if (Array.isArray(anyField.coordinates) && anyField.coordinates.length >= 2) {
+        if (Array.isArray(anyField.coordinates) &&
+            anyField.coordinates.length >= 2) {
             if (enhancedField.rect.x === 0)
                 enhancedField.rect.x = anyField.coordinates[0];
             if (enhancedField.rect.y === 0)
@@ -1170,28 +857,33 @@ export function enhanceFieldsWithCoordinates(fields) {
         }
         // Try coords object
         if (anyField.coords) {
-            if (typeof anyField.coords.x === 'number' && enhancedField.rect.x === 0) {
+            if (typeof anyField.coords.x === "number" && enhancedField.rect.x === 0) {
                 enhancedField.rect.x = anyField.coords.x;
             }
-            if (typeof anyField.coords.y === 'number' && enhancedField.rect.y === 0) {
+            if (typeof anyField.coords.y === "number" && enhancedField.rect.y === 0) {
                 enhancedField.rect.y = anyField.coords.y;
             }
-            if (typeof anyField.coords.width === 'number' && enhancedField.rect.width === 0) {
+            if (typeof anyField.coords.width === "number" &&
+                enhancedField.rect.width === 0) {
                 enhancedField.rect.width = anyField.coords.width;
             }
-            if (typeof anyField.coords.height === 'number' && enhancedField.rect.height === 0) {
+            if (typeof anyField.coords.height === "number" &&
+                enhancedField.rect.height === 0) {
                 enhancedField.rect.height = anyField.coords.height;
             }
         }
         // Try to parse position from attributes
-        if (typeof anyField.attributes === 'object' && anyField.attributes) {
-            const posAttrs = ['data-position', 'position', 'pos', 'bbox'];
+        if (typeof anyField.attributes === "object" && anyField.attributes) {
+            const posAttrs = ["data-position", "position", "pos", "bbox"];
             for (const attr of posAttrs) {
                 if (anyField.attributes[attr]) {
                     let posValue = anyField.attributes[attr];
-                    if (typeof posValue === 'string') {
+                    if (typeof posValue === "string") {
                         try {
-                            posValue = posValue.replace(/[\[\]]/g, '').split(',').map(Number);
+                            posValue = posValue
+                                .replace(/[\[\]]/g, "")
+                                .split(",")
+                                .map(Number);
                             if (Array.isArray(posValue) && posValue.length >= 2) {
                                 if (enhancedField.rect.x === 0)
                                     enhancedField.rect.x = posValue[0];
@@ -1214,8 +906,10 @@ export function enhanceFieldsWithCoordinates(fields) {
             }
         }
         // 2. Generate estimated values for missing coordinates
-        if (enhancedField.rect.x === 0 || enhancedField.rect.y === 0 ||
-            enhancedField.rect.width === 0 || enhancedField.rect.height === 0) {
+        if (enhancedField.rect.x === 0 ||
+            enhancedField.rect.y === 0 ||
+            enhancedField.rect.width === 0 ||
+            enhancedField.rect.height === 0) {
             fieldsWithEstimatedCoordinates++;
             // Get page stats
             const pageStats_ = pageStats[page] || {
@@ -1223,14 +917,14 @@ export function enhanceFieldsWithCoordinates(fields) {
                 avgY: 396,
                 varX: 50,
                 varY: 100,
-                sectionStats: {}
+                sectionStats: {},
             };
             // Get section stats if available, otherwise use page stats
             const sectionStats = pageStats_?.sectionStats[section] || {
                 avgX: pageStats_.avgX,
                 avgY: pageStats_.avgY,
                 varX: pageStats_.varX,
-                varY: pageStats_.varY
+                varY: pageStats_.varY,
             };
             // Helper function to generate a value with controlled randomness
             const generateValue = (mean, stdDev) => {
@@ -1250,13 +944,14 @@ export function enhanceFieldsWithCoordinates(fields) {
             }
             // Set field width based on type
             if (enhancedField.rect.width === 0) {
-                const fieldType = field.type || 'text';
+                const fieldType = field.type || "text";
                 const fieldNameLower = field.name.toLowerCase();
-                if (fieldType === 'checkbox' || fieldType === 'radio') {
+                if (fieldType === "checkbox" || fieldType === "radio") {
                     enhancedField.rect.width = 15;
                 }
-                else if (fieldType === 'textarea' || fieldNameLower.includes('comments') ||
-                    fieldNameLower.includes('description')) {
+                else if (fieldType === "textarea" ||
+                    fieldNameLower.includes("comments") ||
+                    fieldNameLower.includes("description")) {
                     enhancedField.rect.width = 200;
                 }
                 else {
@@ -1267,13 +962,14 @@ export function enhanceFieldsWithCoordinates(fields) {
             }
             // Set field height based on type
             if (enhancedField.rect.height === 0) {
-                const fieldType = field.type || 'text';
+                const fieldType = field.type || "text";
                 const fieldNameLower = field.name.toLowerCase();
-                if (fieldType === 'checkbox' || fieldType === 'radio') {
+                if (fieldType === "checkbox" || fieldType === "radio") {
                     enhancedField.rect.height = 15;
                 }
-                else if (fieldType === 'textarea' || fieldNameLower.includes('comments') ||
-                    fieldNameLower.includes('description')) {
+                else if (fieldType === "textarea" ||
+                    fieldNameLower.includes("comments") ||
+                    fieldNameLower.includes("description")) {
                     enhancedField.rect.height = 80;
                 }
                 else {
@@ -1290,15 +986,15 @@ export function enhanceFieldsWithCoordinates(fields) {
  * @returns Array of categorized fields
  */
 export function categorizeFields(fields) {
-    console.time('categorizeFields');
+    console.time("categorizeFields");
     // First enhance fields with coordinate data for spatial analysis
     const fieldsWithCoordinates = enhanceFieldsWithCoordinates(fields);
     // Then categorize each field
-    const categorizedFields = fieldsWithCoordinates.map(field => {
+    const categorizedFields = fieldsWithCoordinates.map((field) => {
         // Use the categorizeField function to assign a section
         const result = categorizeField(field);
         return result;
     });
-    console.timeEnd('categorizeFields');
+    console.timeEnd("categorizeFields");
     return categorizedFields;
 }

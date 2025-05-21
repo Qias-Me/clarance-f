@@ -1,0 +1,222 @@
+[
+  {
+    "id": "1",
+    "name": "form1[0].Sections1-6[0].section5[0].TextField11[0]",
+    "page": 5,
+    "rect": {
+      "x": 405.04199,
+      "y": 397.957,
+      "width": 124.00201999999996,
+      "height": 14.77301
+    }
+  },
+  {
+    "id": "2",
+    "name": "form1[0].Sections1-6[0].section5[0].TextField11[1]",
+    "page": 5,
+    "rect": {
+      "x": 240.582,
+      "y": 397.957,
+      "width": 159.99899,
+      "height": 14.77301
+    }
+  },
+  {
+    "id": "3",
+    "name": "form1[0].Sections1-6[0].section5[0].TextField11[2]",
+    "page": 5,
+    "rect": {
+      "x": 45,
+      "y": 397.957,
+      "width": 187.99899,
+      "height": 14.449009999999987
+    }
+  },
+  {
+    "id": "4",
+    "name": "form1[0].Sections1-6[0].section5[0].TextField11[3]",
+    "page": 5,
+    "rect": {
+      "x": 360,
+      "y": 370.957,
+      "width": 234,
+      "height": 14.77301
+    }
+  },
+  {
+    "id": "5",
+    "name": "form1[0].Sections1-6[0].section5[0].#area[0].From_Datefield_Name_2[0]",
+    "page": 5,
+    "rect": {
+      "x": 45,
+      "y": 368.12201,
+      "width": 67.500999,
+      "height": 17.679990000000032
+    }
+  },
+  {
+    "id": "6",
+    "name": "form1[0].Sections1-6[0].section5[0].#area[0].To_Datefield_Name_2[0]",
+    "page": 5,
+    "rect": {
+      "x": 171.00301,
+      "y": 368.12201,
+      "width": 58.49598,
+      "height": 17.679990000000032
+    }
+  },
+  {
+    "id": "7",
+    "name": "form1[0].Sections1-6[0].section5[0].RadioButtonList[0]",
+    "page": 5,
+    "rect": {
+      "x": 322.81799,
+      "y": 372.23599,
+      "width": 9,
+      "height": 9
+    }
+  },
+  {
+    "id": "8",
+    "name": "form1[0].Sections1-6[0].section5[0].suffix[0]",
+    "page": 5,
+    "rect": {
+      "x": 533.953,
+      "y": 395.12201,
+      "width": 60.04602,
+      "height": 17.75
+    }
+  },
+  {
+    "id": "9",
+    "name": "form1[0].Sections1-6[0].section5[0].#field[7]",
+    "page": 5,
+    "rect": {
+      "x": 119,
+      "y": 370.23801,
+      "width": 9,
+      "height": 9
+    }
+  },
+  {
+    "id": "10",
+    "name": "form1[0].Sections1-6[0].section5[0].#field[8]",
+    "page": 5,
+    "rect": {
+      "x": 236.00101,
+      "y": 370.23801,
+      "width": 9,
+      "height": 9
+    }
+  },
+  {
+    "id": "11",
+    "name": "form1[0].Sections1-6[0].section5[0].#field[9]",
+    "page": 5,
+    "rect": {
+      "x": 236.00101,
+      "y": 382.495,
+      "width": 9,
+      "height": 9
+    }
+  },
+  {
+    "id": "12",
+    "name": "form1[0].Sections1-6[0].section5[0].RadioButtonList[1]",
+    "page": 5,
+    "rect": {
+      "x": 407.83499,
+      "y": 478.617,
+      "width": 9,
+      "height": 9
+    }
+  },
+  {
+    "id": "13",
+    "name": "form1[0].Sections1-6[0].section9[0].TextField11[0]",
+    "page": 9,
+    "rect": {
+      "x": 404.79001,
+      "y": 342.457,
+      "width": 124.00198000000006,
+      "height": 14.77301
+    }
+  },
+  {
+    "id": "14",
+    "name": "form1[0].Sections1-6[0].section9[0].TextField11[1]",
+    "page": 9,
+    "rect": {
+      "x": 240.33,
+      "y": 342.457,
+      "width": 159.99900999999997,
+      "height": 14.77301
+    }
+  },
+  {
+    "id": "15",
+    "name": "form1[0].Sections1-6[0].section12[0].TextField11[0]",
+    "page": 12,
+    "rect": {
+      "x": 44.748001,
+      "y": 342.457,
+      "width": 187.998989,
+      "height": 14.449009999999987
+    }
+  },
+  {
+    "id": "16",
+    "name": "form1[0].Sections1-6[0].section13[0].TextField11[0]",
+    "page": 13,
+    "rect": {
+      "x": 359.74799,
+      "y": 315.457,
+      "width": 233.99999999999994,
+      "height": 14.77301
+    }
+  },
+  {
+    "id": "17",
+    "name": "form1[0].Sections1-6[0].section17[0].From_Datefield_Name_2[0]",
+    "page": 17,
+    "rect": {
+      "x": 44.748001,
+      "y": 312.62201,
+      "width": 67.501,
+      "height": 17.679990000000032
+    }
+  },
+  {
+    "id": "18",
+    "name": "form1[0].Sections1-6[0].section21[0].To_Datefield_Name_2[0]",
+    "page": 21,
+    "rect": {
+      "x": 170.75101,
+      "y": 312.62201,
+      "width": 58.49598,
+      "height": 17.679990000000032
+    }
+  },
+  {
+    "id": "19",
+    "name": "form1[0].Sections1-6[0].section25[0].RadioButtonList[0]",
+    "page": 25,
+    "rect": {
+      "x": 322.56601,
+      "y": 316.73599,
+      "width": 9,
+      "height": 9
+    }
+  },
+  {
+    "id": "20",
+    "name": "form1[0].Sections1-6[0].section25[0].suffix[0]",
+    "page": 25,
+    "rect": {
+      "x": 533.70099,
+      "y": 339.62201,
+      "width": 60.046019999999994,
+      "height": 17.75
+    }
+  }
+] 

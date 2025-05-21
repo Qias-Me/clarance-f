@@ -15,8 +15,9 @@ import {
   identifySectionByPage,
   identifySectionByPageWithConfidence,
   detectSectionFromFieldValue,
-  sectionClassifications 
-} from '../../../utilities/page-categorization-bridge.js';
+  sectionClassifications,
+  refinedSectionPageRanges
+} from './fieldParsing.js';
 import { reportGenerator } from './report-generator.js';
 import { rulesGenerator } from './rules-generator.js';
 import { 
@@ -27,7 +28,6 @@ import {
   clusterFieldsSpatially,
   getSpatialNeighbors
 } from './spatialAnalysis.js';
-import { refinedSectionPageRanges } from '../../../utilities/page-categorization-bridge.js';
 import { sectionFieldPatterns } from './field-clusterer.js';
 
 interface DeviationInfo {
@@ -394,7 +394,7 @@ function applyEnhancedCategorization(
           if (ruleResult && ruleResult.section > 0) {
             field.section = ruleResult.section;
             field.confidence = ruleResult.confidence;
-            corrections++;
+          corrections++;
           }
         } catch (error) {
           // Silently continue if categorization fails

@@ -1,101 +1,35 @@
 // import { FullEmployee } from "api/interfaces/employee";
 import pkg from "lodash";
+import { Utils } from "../commonUtils";
 
-export default class Utils {
-  // static flattenFormData(formData: FormData, allowedFields: string[]) {
-  //   const { set } = pkg;
-  //   const result = {};
-  //   for (const [key, value] of formData.entries()) {
-  //     // Convert indices to property paths
-  //     const path = key.replace(/\[(\w+)\]/g, ".$1");
+export class FormUtils {
+  // Handle input changes with improved typings
+  static handleInputChange = (
+    formData: any, 
+    setFormData: (data: any) => void, 
+    onChange?: (data: any) => void, 
+    updateField?: (path: string, value: any) => void
+  ) => Utils.createInputChangeHandler(formData, setFormData, onChange, updateField);
 
-  //     // Check if the path starts with any of the allowed fields
-  //     const isAllowed = allowedFields.some((field) => path.startsWith(field));
-  //     if (!isAllowed) {
-  //       continue; // Skip adding fields not listed in allowedFields
-  //     }
+  // Re-export isValidValue from the common Utils
+  static isValidValue = Utils.isValidValue;
 
-  //     set(result, path, value);
-  //   }
+  // Re-export handlers with backward compatibility
+  static handleAddEntry = (
+    formData: any, 
+    setFormData: (data: any) => void, 
+    onChange: (data: any) => void, 
+    updateField: (path: string, value: any) => void
+  ) => Utils.createAddEntryHandler(formData, setFormData, onChange, updateField);
 
-  //   return result;
-  // }
+  static handleRemoveEntry = (
+    formData: any, 
+    setFormData: (data: any) => void, 
+    onChange: (data: any) => void, 
+    updateField: (path: string, value: any) => void
+  ) => Utils.createRemoveEntryHandler(formData, setFormData, onChange, updateField);
 
-  // static extractUpdatesFromFormData(formData: FormData): Partial<FullEmployee> {
-  //   const { set } = pkg;
-  //   const updates: Partial<FullEmployee> = {};
-
-  //   formData.forEach((value, key) => {
-  //     // Attempt to parse JSON values for complex data, fall back to direct assignment
-  //     try {
-  //       // Check if the value is a JSON string (for nested objects/arrays)
-  //       if (
-  //         typeof value === "string" &&
-  //         (value.startsWith("{") || value.startsWith("["))
-  //       ) {
-  //         set(updates, key, JSON.parse(value));
-  //       } else {
-  //         set(updates, key, value);
-  //       }
-  //     } catch (e) {
-  //       // Not a JSON string, use the value directly
-  //       set(updates, key, value);
-  //     }
-  //   });
-
-  //   return updates;
-  // }
- static handleInputChange = (formData, setFormData, onChange, updateField) => (path, value) => {
-    const { set, cloneDeep } = pkg;
-    const updatedFormData = cloneDeep(formData);  // Cloning to ensure immutability
-    set(updatedFormData, path, value);  // Use lodash's set to handle nested paths
-    
-    setFormData(updatedFormData);  // Update state with new object
-    if (onChange) {
-      onChange(updatedFormData);  // Callback for any additional actions
-    }
-    if (updateField) {
-      updateField(path, value);  // Callback for any field-specific updates
-    }
-  };
-  
-  static isValidValue = (path, value) => {
-    if (typeof value === "string" && value.trim() === "") return false;
-    if (value === null) return false;
-    if (Array.isArray(value) && value.length === 0) return false;
-    if (
-      typeof value === "object" &&
-      !Array.isArray(value) &&
-      Object.keys(value).length === 0
-    )
-      return false;
-    return true;
-  };
-
-  static handleAddEntry = (formData, setFormData, onChange, updateField) => (path, defaultItem) => {
-      const { set, cloneDeep, get } = pkg;
-      const updatedFormData = cloneDeep(formData);
-      const list = get(updatedFormData, path, [defaultItem]);
-      list.push(defaultItem);
-      set(updatedFormData, path, list);
-      setFormData(updatedFormData);
-      onChange(updatedFormData);
-      updateField(path, list);
-    };
-
-  static handleRemoveEntry = (formData:string[], setFormData, onChange, updateField) => (path: string, index: number) => {
-      const { set, cloneDeep, get } = pkg;
-      const updatedFormData = cloneDeep(formData);
-      const list = get(updatedFormData, path, []);
-      if (list && Array.isArray(list)) {
-        list.splice(index, 1);
-        set(updatedFormData, path, list);
-        setFormData(updatedFormData);
-        onChange(updatedFormData);
-        updateField(path, list);
-      }
-    };
-
+  // Keep the template implementation here since it's forms-specific
   static getDefaultNewItem = (path: string): any => {
     const { cloneDeep } = pkg;
     const templates = {
@@ -163,7 +97,9 @@ export default class Utils {
     return cloneDeep(templates[lastSegment as keyof typeof templates]) || {};
   };
 
-  static isReadOnlyField = (key: string) => {
-    return key.endsWith("_id") || key === "createdAt" || key === "updatedAt";
-  };
+  // Re-export isReadOnlyField from the common Utils
+  static isReadOnlyField = Utils.isReadOnlyField;
 }
+
+// For backward compatibility
+export default FormUtils;

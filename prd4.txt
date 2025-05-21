@@ -1,0 +1,63 @@
+This is a typescript project in a cloudflare worker environment, but you only need to focus on the fact this is a typescript project so it is run in a node environment.
+
+C:\Users\Jason\Desktop\AI-Coding\clarance-f\src\sectionizer\tsconfig.json
+
+===========================
+
+General Roadmap:
+
+
+
+consider this sectionizer project located in: C:\Users\Jason\Desktop\AI-Coding\clarance-f\src
+
+instead of enriching the C:\Users\Jason\Desktop\AI-Coding\clarance-f\src\section-data\extracted-fields.json I'd prefer to just apply the logic to the data set before it is saved to C:\Users\Jason\Desktop\AI-Coding\clarance-f\src\section-data\extracted-fields.json instead of creating C:\Users\Jason\Desktop\AI-Coding\clarance-f\src\section-data\enhanced-fields-template.json
+
+
+
+
+Specifically focus on C:\Users\Jason\Desktop\AI-Coding\clarance-f\src\sectionizer\index.ts
+
+
+Analyze the file and clean up any redundant code.. you'll be able to notice redundancy by using the function names in each file as a reference, however only keep the most optimal solutions.
+
+You can also ensure the project properly uses its utility functions with optimal organization in mind, meaning there should not be redundanct code across the project.
+
+
+To Test the implementation along the way please run:
+
+tsx src/sectionizer/index.ts -v -s --validate-counts --fields=src/section-data/extracted-fields.json -l 0 -m 1 --self-healing
+
+Clean up the project and ensure each utility file strictly has the code that is is used for. NO REDUNDANCY for any reason. I'f its about mutable object optimize the algorithm to account for such a case. 
+
+The main diea here is to clean up the dataflow to allow for an easier workflow, and optimal data pipeline in organize the fields effectively.
+
+
+
+Be to sure clean up any unsed functions, and consider why these fucntions aren't being used.... if they are useful please implement them properly.
+
+REDUCE REDUNDANCY
+
+
+Cleanup the project and make it leaner.
+
+==============================
+
+
+Forceful roadmap:
+
+
+tsx src/sectionizer/index.ts -v -s --validate-counts --fields=src/section-data/extracted-fields.json -l 0 -m 1 --self-healing
+
+follow the dataflow, and ensure to make optimal changes, as much of the logic as already been implemented, or is implemented multiple times... reduce the amount of redundant code. 
+
+
+Enforce the separation of concerns for each file to promote organization.
+
+use each file name as a reference for where to put each function as it relates to its purpose. 
+
+
+
+GOAL: Clean up C:\Users\Jason\Desktop\AI-Coding\clarance-f\src to reduce all redundancy and map field by their section, subsection, and entry
+
+
+

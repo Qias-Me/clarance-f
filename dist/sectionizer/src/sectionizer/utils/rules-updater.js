@@ -6,7 +6,7 @@
  */
 import fs from 'fs';
 import path from 'path';
-import { sectionClassifications, getSectionPageRange } from '../../../utilities/page-categorization-bridge.js';
+import { sectionClassifications, getSectionPageRange } from './fieldParsing.js';
 /**
  * Updates rules based on section deviations
  * @param sectionFields Current categorized fields

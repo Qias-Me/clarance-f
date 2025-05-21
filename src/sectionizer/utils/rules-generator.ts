@@ -5,6 +5,9 @@ import path from 'path';
 import { ruleLoader } from './rule-loader.js';
 import { ruleExporter } from './rule-exporter.js';
 import chalk from 'chalk';
+import { extractSectionInfo, identifySectionByPage } from './fieldParsing.js';
+import { validateSectionCounts } from './validation.js';
+import type { SectionedField } from './fieldGrouping.js';
 
 /**
  * Self-healing rule generator for SF-86 field categorization
@@ -60,20 +63,31 @@ export class RulesGenerator {
       // Method 1: Try to extract section number from field name
       const nameSection = this.extractSectionFromName(field.name);
       
-      // Method 2: Try to determine section from page number
-      const pageSection = field.page > 0 ? bridge.pageRangeLookup(field.page) : null;
+      // Method 2: Try to determine section from page number if it has a page
+      let pageSection: number | null = null;
+      if (field.page && field.page > 0) {
+        // Use identifySectionByPage directly imported from page categorization bridge
+        pageSection = identifySectionByPage(field.page);
+      }
       
-      // Method 3: Try the bridge's advanced categorization if available
-      const bridgeResult = bridge.extractSectionInfo(field.name);
+      // Method 3: Try the extractSectionInfo from consolidated utility
+      const sectionInfo = extractSectionInfo(field.name);
+      const sectionFromInfo = sectionInfo ? String(sectionInfo.section) : null;
       
-      // Method 4: Try fallback categorization
-      const fallbackResult = bridge.fallbackCategorization(field);
+      // Method 4: Try using advancedCategorization if available
+      let advancedResult = null;
+      if (typeof bridge.advancedCategorization === 'function') {
+        const categorizedField = bridge.advancedCategorization(field);
+        if (categorizedField && categorizedField.section > 0) {
+          advancedResult = { section: categorizedField.section };
+        }
+      }
       
-      // Use the most reliable detection method (prioritize name over page over bridge over fallback)
+      // Use the most reliable detection method (prioritize name over page over sectionInfo over advanced)
       const sectionId = nameSection || 
                         (pageSection ? String(pageSection) : null) || 
-                        (bridgeResult ? String(bridgeResult.section) : null) ||
-                        (fallbackResult ? String(fallbackResult.section) : null);
+                        sectionFromInfo ||
+                        (advancedResult ? String(advancedResult.section) : null);
       
       if (sectionId) {
         // Only assign to sections 1-30
@@ -977,54 +991,37 @@ export class RulesGenerator {
   }
   
   /**
-   * Validates section counts against reference data
-   * @param sectionFields Map of section to fields
+   * Validate section counts against expected reference data
    */
   private validateSectionCounts(sectionFields: Record<string, EnhancedField[]>): void {
-    // Known reference counts from SF-86 form 
-    const referenceCounts: Record<string, number> = {
-      "1": 15, "2": 20, "3": 10, "4": 25, "5": 140,
-      "6": 25, "7": 20, "8": 15, "9": 100, "10": 60,
-      "11": 40, "12": 40, "13": 80, "14": 40, "15": 40,
-      "16": 40, "17": 90, "18": 30, "19": 50, "20": 40,
-      "21": 50, "22": 50, "23": 50, "24": 20, "25": 40,
-      "26": 20, "27": 20, "28": 20, "29": 141, "30": 10
-    };
+    // Convert EnhancedField to SectionedField by ensuring section is a number
+    const convertedSectionFields: Record<string, SectionedField[]> = {};
     
-    console.log('Validating section counts against reference data:');
-    
-    // Check for significant deviations
-    let totalDeviation = 0;
-    let sectionsWithDeviations = 0;
-    
-    for (let i = 1; i <= 30; i++) {
-      const section = i.toString();
-      const actualCount = sectionFields[section]?.length || 0;
-      const expectedCount = referenceCounts[section] || 0;
-      
-      if (expectedCount > 0) {
-        const deviation = actualCount - expectedCount;
-        const percentDeviation = expectedCount > 0 ? (Math.abs(deviation) / expectedCount) * 100 : 0;
-        
-        totalDeviation += Math.abs(deviation);
-        
-        if (Math.abs(deviation) > 5 || percentDeviation > 10) {
-          console.log(chalk.yellow(
-            `Section ${section}: ${actualCount} fields vs expected ${expectedCount} ` +
-            `(${deviation > 0 ? '+' : ''}${deviation}, ${percentDeviation.toFixed(1)}%)`
-          ));
-          sectionsWithDeviations++;
-        }
-      }
+    for (const [section, fields] of Object.entries(sectionFields)) {
+      convertedSectionFields[section] = fields.map(field => ({
+        ...field,
+        section: typeof field.section === 'number' ? field.section : parseInt(section, 10) || 0
+      })) as SectionedField[];
     }
     
-    if (sectionsWithDeviations > 0) {
-      console.log(chalk.yellow(
-        `${sectionsWithDeviations} sections have significant count deviations. ` +
-        `Total absolute deviation: ${totalDeviation} fields.`
-      ));
+    // Use the consolidated validation function directly
+    const result = validateSectionCounts(convertedSectionFields);
+    
+    // Log results based on validation output
+    if (result.success) {
+      console.log(chalk.green(`✓ Section count validation passed! ${result.alignmentPercentage.toFixed(1)}% sections aligned.`));
     } else {
-      console.log(chalk.green('All section counts align well with reference data.'));
+      console.log(chalk.yellow(`⚠ Section count validation issues: Only ${result.alignmentPercentage.toFixed(1)}% sections aligned.`));
+      
+      // Log top 5 issues
+      const topIssues = result.deviations.slice(0, 5);
+      console.log(chalk.yellow('Top misaligned sections:'));
+      for (const issue of topIssues) {
+        const diff = issue.deviation > 0 ? `+${issue.deviation}` : issue.deviation;
+        console.log(chalk.yellow(`  Section ${issue.section}: ${issue.actual} (expected ${issue.expected}, ${diff}, ${issue.percentage.toFixed(1)}%)`));
+      }
+      
+      console.log(chalk.yellow(`Unknown fields: ${result.unknownFieldCount}`));
     }
   }
   

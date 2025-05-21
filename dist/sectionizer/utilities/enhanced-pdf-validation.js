@@ -22,7 +22,11 @@ import { fileURLToPath } from "url";
 import { dirname } from "path";
 import * as glob from "glob";
 import { PdfService } from "../api/service/pdfService2.js";
-import { enhancedMultiDimensionalCategorization, groupFieldsBySection, sectionClassifications, loadFieldPageMapping, initPageCategorization, enhancedSectionCategorization, identifySectionByPageWithConfidence, detectSectionFromFieldValue, loadSectionStats, refinedSectionPageRanges, sectionFieldPatterns, extractSectionInfoFromName, } from "./page-categorization-bridge.js";
+import { enhancedMultiDimensionalCategorization, sectionClassifications, initPageCategorization, enhancedSectionCategorization, identifySectionByPageWithConfidence, detectSectionFromFieldValue, refinedSectionPageRanges, extractSectionInfoFromName, } from "../src/sectionizer/utils/fieldParsing.js";
+// Import these functions from the consolidated utils also
+import { loadFieldPageMapping, loadSectionStats } from "./page-categorization-bridge.js";
+import { groupFieldsBySection } from "../src/sectionizer/utils/fieldGrouping.js";
+import { sectionFieldPatterns } from "../src/sectionizer/utils/field-clusterer.js";
 // Add this section structure definition to replace the existing mapping
 const sectionStructure = {
     1: { name: "Full Name" },

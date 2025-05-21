@@ -1,0 +1,570 @@
+{
+  "5": [
+    {
+      "id": "1",
+      "name": "form1[0].Sections1-6[0].section5[0].TextField11[0]",
+      "page": 5,
+      "rect": {
+        "x": 405.04199,
+        "y": 397.957,
+        "width": 124.00201999999996,
+        "height": 14.77301
+      },
+      "section": 5,
+      "entry": 0,
+      "confidence": 0.99,
+      "spatialInfo": {
+        "relativeX": 0.661833316993464,
+        "relativeY": 0.5024709595959596,
+        "relativeWidth": 0.202617679738562,
+        "relativeHeight": 0.018652790404040404,
+        "isInHeader": false,
+        "isInFooter": false,
+        "isInLeftColumn": false,
+        "isInRightColumn": true,
+        "positionHint": "right",
+        "region": "middle-center",
+        "quadrant": 1
+      },
+      "uniqueId": "section_5_entry_0_field_form1_0__Sections1_6_0__section5_0__TextField11_0_"
+    },
+    {
+      "id": "2",
+      "name": "form1[0].Sections1-6[0].section5[0].TextField11[1]",
+      "page": 5,
+      "rect": {
+        "x": 240.582,
+        "y": 397.957,
+        "width": 159.99899,
+        "height": 14.77301
+      },
+      "section": 5,
+      "entry": 1,
+      "confidence": 0.99,
+      "spatialInfo": {
+        "relativeX": 0.3931078431372549,
+        "relativeY": 0.5024709595959596,
+        "relativeWidth": 0.26143625816993465,
+        "relativeHeight": 0.018652790404040404,
+        "isInHeader": false,
+        "isInFooter": false,
+        "isInLeftColumn": true,
+        "isInRightColumn": false,
+        "positionHint": "left",
+        "region": "middle-center",
+        "quadrant": 2
+      },
+      "uniqueId": "section_5_entry_1_field_form1_0__Sections1_6_0__section5_0__TextField11_1_"
+    },
+    {
+      "id": "3",
+      "name": "form1[0].Sections1-6[0].section5[0].TextField11[2]",
+      "page": 5,
+      "rect": {
+        "x": 45,
+        "y": 397.957,
+        "width": 187.99899,
+        "height": 14.449009999999987
+      },
+      "section": 5,
+      "entry": 2,
+      "confidence": 0.99,
+      "spatialInfo": {
+        "relativeX": 0.07352941176470588,
+        "relativeY": 0.5024709595959596,
+        "relativeWidth": 0.3071878921568627,
+        "relativeHeight": 0.01824369949494948,
+        "isInHeader": false,
+        "isInFooter": false,
+        "isInLeftColumn": true,
+        "isInRightColumn": false,
+        "positionHint": "left",
+        "region": "middle-left",
+        "quadrant": 2
+      },
+      "uniqueId": "section_5_entry_2_field_form1_0__Sections1_6_0__section5_0__TextField11_2_"
+    },
+    {
+      "id": "4",
+      "name": "form1[0].Sections1-6[0].section5[0].TextField11[3]",
+      "page": 5,
+      "rect": {
+        "x": 360,
+        "y": 370.957,
+        "width": 234,
+        "height": 14.77301
+      },
+      "section": 5,
+      "entry": 3,
+      "confidence": 0.99,
+      "spatialInfo": {
+        "relativeX": 0.5882352941176471,
+        "relativeY": 0.4683800505050505,
+        "relativeWidth": 0.38235294117647056,
+        "relativeHeight": 0.018652790404040404,
+        "isInHeader": false,
+        "isInFooter": false,
+        "isInLeftColumn": false,
+        "isInRightColumn": true,
+        "positionHint": "right",
+        "region": "middle-center",
+        "quadrant": 4
+      },
+      "uniqueId": "section_5_entry_3_field_form1_0__Sections1_6_0__section5_0__TextField11_3_"
+    },
+    {
+      "id": "5",
+      "name": "form1[0].Sections1-6[0].section5[0].#area[0].From_Datefield_Name_2[0]",
+      "page": 5,
+      "rect": {
+        "x": 45,
+        "y": 368.12201,
+        "width": 67.500999,
+        "height": 17.679990000000032
+      },
+      "section": 5,
+      "entry": 0,
+      "confidence": 0.99,
+      "spatialInfo": {
+        "relativeX": 0.07352941176470588,
+        "relativeY": 0.46480051767676767,
+        "relativeWidth": 0.11029574999999998,
+        "relativeHeight": 0.022323219696969737,
+        "isInHeader": false,
+        "isInFooter": false,
+        "isInLeftColumn": true,
+        "isInRightColumn": false,
+        "positionHint": "left",
+        "region": "middle-left",
+        "quadrant": 3
+      },
+      "uniqueId": "section_5_entry_0_field_form1_0__Sections1_6_0__section5_0___area_0__From_Datefield_Name_2_0_"
+    },
+    {
+      "id": "6",
+      "name": "form1[0].Sections1-6[0].section5[0].#area[0].To_Datefield_Name_2[0]",
+      "page": 5,
+      "rect": {
+        "x": 171.00301,
+        "y": 368.12201,
+        "width": 58.49598,
+        "height": 17.679990000000032
+      },
+      "section": 5,
+      "entry": 0,
+      "confidence": 0.99,
+      "spatialInfo": {
+        "relativeX": 0.27941668300653594,
+        "relativeY": 0.46480051767676767,
+        "relativeWidth": 0.09558166666666668,
+        "relativeHeight": 0.022323219696969737,
+        "isInHeader": false,
+        "isInFooter": false,
+        "isInLeftColumn": true,
+        "isInRightColumn": false,
+        "positionHint": "left",
+        "region": "middle-left",
+        "quadrant": 3
+      },
+      "uniqueId": "section_5_entry_0_field_form1_0__Sections1_6_0__section5_0___area_0__To_Datefield_Name_2_0_"
+    },
+    {
+      "id": "7",
+      "name": "form1[0].Sections1-6[0].section5[0].RadioButtonList[0]",
+      "page": 5,
+      "rect": {
+        "x": 322.81799,
+        "y": 372.23599,
+        "width": 9,
+        "height": 9
+      },
+      "section": 5,
+      "entry": 0,
+      "confidence": 0.99,
+      "spatialInfo": {
+        "relativeX": 0.5274803758169935,
+        "relativeY": 0.4699949368686869,
+        "relativeWidth": 0.014705882352941176,
+        "relativeHeight": 0.011363636363636364,
+        "isInHeader": false,
+        "isInFooter": false,
+        "isInLeftColumn": false,
+        "isInRightColumn": true,
+        "positionHint": "right",
+        "region": "middle-center",
+        "quadrant": 4
+      },
+      "uniqueId": "section_5_entry_0_field_form1_0__Sections1_6_0__section5_0__RadioButtonList_0_"
+    },
+    {
+      "id": "8",
+      "name": "form1[0].Sections1-6[0].section5[0].suffix[0]",
+      "page": 5,
+      "rect": {
+        "x": 533.953,
+        "y": 395.12201,
+        "width": 60.04602,
+        "height": 17.75
+      },
+      "section": 5,
+      "entry": 0,
+      "confidence": 0.99,
+      "spatialInfo": {
+        "relativeX": 0.8724722222222222,
+        "relativeY": 0.4988914267676767,
+        "relativeWidth": 0.09811441176470588,
+        "relativeHeight": 0.02241161616161616,
+        "isInHeader": false,
+        "isInFooter": false,
+        "isInLeftColumn": false,
+        "isInRightColumn": true,
+        "positionHint": "right",
+        "region": "middle-right",
+        "quadrant": 4
+      },
+      "uniqueId": "section_5_entry_0_field_form1_0__Sections1_6_0__section5_0__suffix_0_"
+    },
+    {
+      "id": "9",
+      "name": "form1[0].Sections1-6[0].section5[0].#field[7]",
+      "page": 5,
+      "rect": {
+        "x": 119,
+        "y": 370.23801,
+        "width": 9,
+        "height": 9
+      },
+      "section": 5,
+      "entry": 7,
+      "confidence": 0.99,
+      "spatialInfo": {
+        "relativeX": 0.19444444444444445,
+        "relativeY": 0.4674722348484848,
+        "relativeWidth": 0.014705882352941176,
+        "relativeHeight": 0.011363636363636364,
+        "isInHeader": false,
+        "isInFooter": false,
+        "isInLeftColumn": true,
+        "isInRightColumn": false,
+        "positionHint": "left",
+        "region": "middle-left",
+        "quadrant": 3
+      },
+      "uniqueId": "section_5_entry_7_field_form1_0__Sections1_6_0__section5_0___field_7_"
+    },
+    {
+      "id": "10",
+      "name": "form1[0].Sections1-6[0].section5[0].#field[8]",
+      "page": 5,
+      "rect": {
+        "x": 236.00101,
+        "y": 370.23801,
+        "width": 9,
+        "height": 9
+      },
+      "section": 5,
+      "entry": 8,
+      "confidence": 0.99,
+      "spatialInfo": {
+        "relativeX": 0.38562256535947714,
+        "relativeY": 0.4674722348484848,
+        "relativeWidth": 0.014705882352941176,
+        "relativeHeight": 0.011363636363636364,
+        "isInHeader": false,
+        "isInFooter": false,
+        "isInLeftColumn": true,
+        "isInRightColumn": false,
+        "positionHint": "left",
+        "region": "middle-center",
+        "quadrant": 3
+      },
+      "uniqueId": "section_5_entry_8_field_form1_0__Sections1_6_0__section5_0___field_8_"
+    },
+    {
+      "id": "11",
+      "name": "form1[0].Sections1-6[0].section5[0].#field[9]",
+      "page": 5,
+      "rect": {
+        "x": 236.00101,
+        "y": 382.495,
+        "width": 9,
+        "height": 9
+      },
+      "section": 5,
+      "entry": 9,
+      "confidence": 0.99,
+      "spatialInfo": {
+        "relativeX": 0.38562256535947714,
+        "relativeY": 0.4829482323232323,
+        "relativeWidth": 0.014705882352941176,
+        "relativeHeight": 0.011363636363636364,
+        "isInHeader": false,
+        "isInFooter": false,
+        "isInLeftColumn": true,
+        "isInRightColumn": false,
+        "positionHint": "left",
+        "region": "middle-center",
+        "quadrant": 3
+      },
+      "uniqueId": "section_5_entry_9_field_form1_0__Sections1_6_0__section5_0___field_9_"
+    },
+    {
+      "id": "12",
+      "name": "form1[0].Sections1-6[0].section5[0].RadioButtonList[1]",
+      "page": 5,
+      "rect": {
+        "x": 407.83499,
+        "y": 478.617,
+        "width": 9,
+        "height": 9
+      },
+      "section": 5,
+      "entry": 1,
+      "confidence": 0.99,
+      "spatialInfo": {
+        "relativeX": 0.6663970424836602,
+        "relativeY": 0.604314393939394,
+        "relativeWidth": 0.014705882352941176,
+        "relativeHeight": 0.011363636363636364,
+        "isInHeader": false,
+        "isInFooter": false,
+        "isInLeftColumn": false,
+        "isInRightColumn": true,
+        "positionHint": "right",
+        "region": "middle-center",
+        "quadrant": 1
+      },
+      "uniqueId": "section_5_entry_1_field_form1_0__Sections1_6_0__section5_0__RadioButtonList_1_"
+    }
+  ],
+  "29": [
+    {
+      "id": "13",
+      "name": "form1[0].Sections1-6[0].section9[0].TextField11[0]",
+      "page": 9,
+      "rect": {
+        "x": 404.79001,
+        "y": 342.457,
+        "width": 124.00198000000006,
+        "height": 14.77301
+      },
+      "section": 29,
+      "confidence": 0.7,
+      "spatialInfo": {
+        "relativeX": 0.6614215849673203,
+        "relativeY": 0.432395202020202,
+        "relativeWidth": 0.20261761437908507,
+        "relativeHeight": 0.018652790404040404,
+        "isInHeader": false,
+        "isInFooter": false,
+        "isInLeftColumn": false,
+        "isInRightColumn": true,
+        "positionHint": "right",
+        "region": "middle-center",
+        "quadrant": 4
+      },
+      "uniqueId": "section_29_field_form1_0__Sections1_6_0__section9_0__TextField11_0_",
+      "neighboringSections": [
+        29
+      ]
+    },
+    {
+      "id": "14",
+      "name": "form1[0].Sections1-6[0].section9[0].TextField11[1]",
+      "page": 9,
+      "rect": {
+        "x": 240.33,
+        "y": 342.457,
+        "width": 159.99900999999997,
+        "height": 14.77301
+      },
+      "section": 29,
+      "confidence": 0.7,
+      "spatialInfo": {
+        "relativeX": 0.39269607843137255,
+        "relativeY": 0.432395202020202,
+        "relativeWidth": 0.2614362908496732,
+        "relativeHeight": 0.018652790404040404,
+        "isInHeader": false,
+        "isInFooter": false,
+        "isInLeftColumn": true,
+        "isInRightColumn": false,
+        "positionHint": "left",
+        "region": "middle-center",
+        "quadrant": 3
+      },
+      "uniqueId": "section_29_field_form1_0__Sections1_6_0__section9_0__TextField11_1_",
+      "neighboringSections": [
+        29
+      ]
+    },
+    {
+      "id": "15",
+      "name": "form1[0].Sections1-6[0].section12[0].TextField11[0]",
+      "page": 12,
+      "rect": {
+        "x": 44.748001,
+        "y": 342.457,
+        "width": 187.998989,
+        "height": 14.449009999999987
+      },
+      "section": 29,
+      "confidence": 0.7,
+      "spatialInfo": {
+        "relativeX": 0.07311764869281046,
+        "relativeY": 0.432395202020202,
+        "relativeWidth": 0.3071878905228758,
+        "relativeHeight": 0.01824369949494948,
+        "isInHeader": false,
+        "isInFooter": false,
+        "isInLeftColumn": true,
+        "isInRightColumn": false,
+        "positionHint": "left",
+        "region": "middle-left",
+        "quadrant": 3
+      },
+      "uniqueId": "section_29_field_form1_0__Sections1_6_0__section12_0__TextField11_0_"
+    },
+    {
+      "id": "16",
+      "name": "form1[0].Sections1-6[0].section13[0].TextField11[0]",
+      "page": 13,
+      "rect": {
+        "x": 359.74799,
+        "y": 315.457,
+        "width": 233.99999999999994,
+        "height": 14.77301
+      },
+      "section": 29,
+      "confidence": 0.7,
+      "spatialInfo": {
+        "relativeX": 0.5878235130718954,
+        "relativeY": 0.3983042929292929,
+        "relativeWidth": 0.3823529411764705,
+        "relativeHeight": 0.018652790404040404,
+        "isInHeader": false,
+        "isInFooter": false,
+        "isInLeftColumn": false,
+        "isInRightColumn": true,
+        "positionHint": "right",
+        "region": "middle-center",
+        "quadrant": 4
+      },
+      "uniqueId": "section_29_field_form1_0__Sections1_6_0__section13_0__TextField11_0_"
+    },
+    {
+      "id": "17",
+      "name": "form1[0].Sections1-6[0].section17[0].From_Datefield_Name_2[0]",
+      "page": 17,
+      "rect": {
+        "x": 44.748001,
+        "y": 312.62201,
+        "width": 67.501,
+        "height": 17.679990000000032
+      },
+      "section": 29,
+      "confidence": 0.7,
+      "spatialInfo": {
+        "relativeX": 0.07311764869281046,
+        "relativeY": 0.3947247601010101,
+        "relativeWidth": 0.11029575163398693,
+        "relativeHeight": 0.022323219696969737,
+        "isInHeader": false,
+        "isInFooter": false,
+        "isInLeftColumn": true,
+        "isInRightColumn": false,
+        "positionHint": "left",
+        "region": "middle-left",
+        "quadrant": 3
+      },
+      "uniqueId": "section_29_field_form1_0__Sections1_6_0__section17_0__From_Datefield_Name_2_0_"
+    },
+    {
+      "id": "18",
+      "name": "form1[0].Sections1-6[0].section21[0].To_Datefield_Name_2[0]",
+      "page": 21,
+      "rect": {
+        "x": 170.75101,
+        "y": 312.62201,
+        "width": 58.49598,
+        "height": 17.679990000000032
+      },
+      "section": 29,
+      "confidence": 0.7,
+      "spatialInfo": {
+        "relativeX": 0.2790049183006536,
+        "relativeY": 0.3947247601010101,
+        "relativeWidth": 0.09558166666666668,
+        "relativeHeight": 0.022323219696969737,
+        "isInHeader": false,
+        "isInFooter": false,
+        "isInLeftColumn": true,
+        "isInRightColumn": false,
+        "positionHint": "left",
+        "region": "middle-left",
+        "quadrant": 3
+      },
+      "uniqueId": "section_29_field_form1_0__Sections1_6_0__section21_0__To_Datefield_Name_2_0_"
+    },
+    {
+      "id": "19",
+      "name": "form1[0].Sections1-6[0].section25[0].RadioButtonList[0]",
+      "page": 25,
+      "rect": {
+        "x": 322.56601,
+        "y": 316.73599,
+        "width": 9,
+        "height": 9
+      },
+      "section": 29,
+      "confidence": 0.7,
+      "spatialInfo": {
+        "relativeX": 0.5270686437908497,
+        "relativeY": 0.3999191792929293,
+        "relativeWidth": 0.014705882352941176,
+        "relativeHeight": 0.011363636363636364,
+        "isInHeader": false,
+        "isInFooter": false,
+        "isInLeftColumn": false,
+        "isInRightColumn": true,
+        "positionHint": "right",
+        "region": "middle-center",
+        "quadrant": 4
+      },
+      "uniqueId": "section_29_field_form1_0__Sections1_6_0__section25_0__RadioButtonList_0_",
+      "neighboringSections": [
+        29
+      ]
+    },
+    {
+      "id": "20",
+      "name": "form1[0].Sections1-6[0].section25[0].suffix[0]",
+      "page": 25,
+      "rect": {
+        "x": 533.70099,
+        "y": 339.62201,
+        "width": 60.04601999999999,
+        "height": 17.75
+      },
+      "section": 29,
+      "confidence": 0.7,
+      "spatialInfo": {
+        "relativeX": 0.8720604411764706,
+        "relativeY": 0.42881566919191916,
+        "relativeWidth": 0.09811441176470587,
+        "relativeHeight": 0.02241161616161616,
+        "isInHeader": false,
+        "isInFooter": false,
+        "isInLeftColumn": false,
+        "isInRightColumn": true,
+        "positionHint": "right",
+        "region": "middle-right",
+        "quadrant": 4
+      },
+      "uniqueId": "section_29_field_form1_0__Sections1_6_0__section25_0__suffix_0_",
+      "neighboringSections": [
+        29
+      ]
+    }
+  ]
+}

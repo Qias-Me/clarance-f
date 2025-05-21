@@ -8,7 +8,9 @@
 import type { EnhancedField, MatchRule } from '../types.js';
 import { rulesGenerator, RulesGenerator } from './rules-generator.js';
 import { RuleEngine } from '../engine.js';
-import type { extractFieldsBySection, CategorizedField } from './extractFieldsBySection.js';
+import type { PDFField, CategorizedField } from './extractFieldsBySection.js';
+import type { SectionedField } from './fieldGrouping.js';
+import type { extractFieldsBySection } from './extractFieldsBySection.js';
 import * as fs from 'fs';
 import * as path from 'path';
 import chalk from 'chalk';
@@ -19,7 +21,7 @@ import {
   extractSectionInfoFromName,
   getNeighborFieldContext,
   sectionClassifications
-} from '../../../utilities/page-categorization-bridge.js';
+} from './fieldParsing.js';
 
 /**
  * Interface for section statistics comparison
@@ -1138,6 +1140,8 @@ export class SelfHealingManager {
     iterations: number;
     remainingUnknown: CategorizedField[];
     finalSectionFields: Record<string, CategorizedField[]>;
+    subsectionRulesGenerated?: number;
+    entryRulesGenerated?: number;
   }> {
     // Reset iteration counter
     this.iteration = 0;
@@ -1146,6 +1150,10 @@ export class SelfHealingManager {
     let currentSectionFields = await extractFieldsFn(pdfPath);
     let remainingUnknown = currentSectionFields['0'] || [];
     let initialUnknownCount = remainingUnknown.length;
+    
+    // Track subsection and entry rules generated
+    let subsectionRulesGenerated = 0;
+    let entryRulesGenerated = 0;
     
     // Check if there are any unknown fields to process
     if (initialUnknownCount === 0) {
@@ -1196,6 +1204,92 @@ export class SelfHealingManager {
       // Get new section fields - reorganize them internally since we can't call extractFieldsFn with field array
       const updatedFields = this.reorganizeFieldsBySections(allFieldsWithProcessed);
       currentSectionFields = updatedFields;
+      
+      // Generate subsection rules for all sections with sufficient data
+      const subsectionRules = this.generateSubsectionRulesForAllSections(currentSectionFields);
+      
+      // Only add new rules if we found some
+      if (subsectionRules.length > 0) {
+        console.log(chalk.blue(`Generated ${subsectionRules.length} subsection and entry rules`));
+        
+        // Count types of rules generated
+        const subCount = subsectionRules.filter(r => !r.entryIndex).length;
+        const entryCount = subsectionRules.filter(r => r.entryIndex).length;
+        
+        subsectionRulesGenerated += subCount;
+        entryRulesGenerated += entryCount;
+        
+        console.log(chalk.blue(`Added ${subCount} subsection rules and ${entryCount} entry rules`));
+        
+        // Add the rules to the rule engine
+        for (const rule of subsectionRules) {
+          // Find which section this rule belongs to
+          let sectionId = 0;
+          
+          for (const [sectionStr, fields] of Object.entries(currentSectionFields)) {
+            if (sectionStr === '0') continue;
+            
+            const section = parseInt(sectionStr, 10);
+            if (isNaN(section)) continue;
+            
+            // Check if this rule matches any fields in this section
+            const matchesSection = fields.some(field => 
+              rule.pattern instanceof RegExp && rule.pattern.test(field.name)
+            );
+            
+            if (matchesSection) {
+              sectionId = section;
+              break;
+            }
+          }
+          
+          if (sectionId > 0) {
+            // Convert MatchRule to CategoryRule
+            const categoryRule = {
+              section: sectionId,
+              subsection: rule.subSection,
+              pattern: rule.pattern,
+              confidence: rule.confidence || 0.8,
+              description: rule.description
+            };
+            
+            ruleEngine.addRulesForSection(sectionId, [categoryRule]);
+          }
+        }
+        
+        // Re-apply categorization to improve subsection and entry classification
+        // This approach creates a nested cycle for subsection/entry classification
+        const beforeSubCatCount = this.countFieldsWithoutSubsectionOrEntry(currentSectionFields);
+        
+        // Apply the new rules to re-categorize the fields
+        for (const [sectionStr, fields] of Object.entries(currentSectionFields)) {
+          if (sectionStr === '0') continue; // Skip unknown fields
+          
+          const sectionId = parseInt(sectionStr, 10);
+          if (isNaN(sectionId)) continue;
+          
+          // Re-apply subsection rules
+          const updatedFields = fields.map(field => {
+            // Skip if field already has subsection/entry categorized properly
+            if (field.subsection && field.entry) return field;
+            
+            // Try to match with all the subsection rules
+            const result = ruleEngine.categorizeField(field);
+            return result || field; // Return original field if categorization doesn't change anything
+          });
+          
+          // Update the section fields with type safety
+          (currentSectionFields as any)[sectionStr] = updatedFields as CategorizedField[];
+        }
+        
+        // Check if we've improved subsection/entry categorization
+        const afterSubCatCount = this.countFieldsWithoutSubsectionOrEntry(currentSectionFields);
+        const subsectionImprovement = beforeSubCatCount - afterSubCatCount;
+        
+        if (subsectionImprovement > 0) {
+          console.log(chalk.green(`Improved subsection/entry categorization for ${subsectionImprovement} fields`));
+        }
+      }
       
       // Update unknown fields
       remainingUnknown = currentSectionFields['0'] || [];
@@ -1251,13 +1345,42 @@ export class SelfHealingManager {
     
     console.log(chalk.green(`Self-healing process complete after ${this.iteration} iterations.`));
     console.log(chalk.green(`Improved classification for ${totalImprovedFields} fields (${(totalImprovedFields / initialUnknownCount * 100).toFixed(2)}%).`));
+    console.log(chalk.green(`Generated ${subsectionRulesGenerated} subsection rules and ${entryRulesGenerated} entry rules.`));
     
     return {
       success: remainingUnknown.length === 0,
       iterations: this.iteration,
       remainingUnknown,
-      finalSectionFields: currentSectionFields
+      finalSectionFields: currentSectionFields,
+      subsectionRulesGenerated,
+      entryRulesGenerated
     };
+  }
+
+  /**
+   * Count fields that don't have subsection or entry values
+   * @param sectionFields Sections and their fields
+   * @returns Count of fields missing subsection or entry classification
+   */
+  private countFieldsWithoutSubsectionOrEntry(sectionFields: Record<string, CategorizedField[]>): number {
+    let count = 0;
+    
+    for (const [sectionStr, fields] of Object.entries(sectionFields)) {
+      if (sectionStr === '0') continue; // Skip unknown fields
+      
+      const sectionId = parseInt(sectionStr, 10);
+      if (isNaN(sectionId)) continue;
+      
+      // For sections 1-8, only count missing entry values
+      if (sectionId <= 8) {
+        count += fields.filter(f => !f.entry).length;
+      } else {
+        // For other sections, count fields missing either subsection or entry
+        count += fields.filter(f => !f.subsection || !f.entry).length;
+      }
+    }
+    
+    return count;
   }
 
   /**
@@ -1286,10 +1409,16 @@ export class SelfHealingManager {
    */
   private async regroupFieldsBySections(fields: CategorizedField[]): Promise<Record<string, CategorizedField[]>> {
     try {
-      // Import the groupFieldsBySection function here to avoid circular dependencies
-      const { groupFieldsBySection } = await import('./extractFieldsBySection.js');
-      // Call the function with the fields array
-      return await groupFieldsBySection(fields, false);
+      // Import the groupFieldsBySection function from the new consolidated utility
+      const { groupFieldsBySection } = await import('./fieldGrouping.js');
+      // Call the function with the fields array, ensuring we get a record back
+      const result = await groupFieldsBySection(fields, { 
+        saveUnknown: false,
+        returnType: 'record' 
+      });
+      
+      // We know this will be a Record due to our returnType setting
+      return result as Record<string, CategorizedField[]>;
     } catch (error) {
       console.error('Error regrouping fields:', error);
       
@@ -1654,6 +1783,993 @@ export class SelfHealingManager {
     
     console.log(`Found ${candidates.length} candidate fields to move into section ${targetSection}`);
     return this.deduplicateCorrections(candidates);
+  }
+
+  /**
+   * Analyze fields and generate subsection/entry rules for all sections
+   * @param sectionFields Fields grouped by section
+   * @returns Array of rule candidates
+   */
+  public generateSubsectionRulesForAllSections(
+    sectionFields: Record<string, CategorizedField[]>
+  ): MatchRule[] {
+    console.time('generateSubsectionRulesForAllSections');
+    
+    // Create a container for all the rules
+    const allRules: MatchRule[] = [];
+    
+    // Process each section
+    for (const [sectionStr, fields] of Object.entries(sectionFields)) {
+      const sectionId = parseInt(sectionStr, 10);
+      if (isNaN(sectionId) || sectionId === 0) continue;
+      
+      // Skip sections with too few fields
+      if (fields.length < 3) continue;
+      
+      console.log(`Analyzing section ${sectionId} with ${fields.length} fields for subsection/entry patterns`);
+      
+      // Generate rules based on section type
+      let sectionRules: MatchRule[] = [];
+      
+      // Sections 1-8 don't have subsections, only entries
+      if (sectionId <= 8) {
+        sectionRules = this.generateEntryRulesForBaseSection(fields, sectionId);
+        console.log(`Generated ${sectionRules.length} entry rules for base section ${sectionId}`);
+      } else {
+        // Sections 9+ may have both subsections and entries
+        sectionRules = this.generateSubsectionRules(fields, sectionId);
+        console.log(`Generated ${sectionRules.length} subsection/entry rules for complex section ${sectionId}`);
+      }
+      
+      if (sectionRules.length > 0) {
+        // Add the rules to our collection
+        allRules.push(...sectionRules);
+      }
+    }
+    
+    console.log(`Total rules generated: ${allRules.length}`);
+    console.timeEnd('generateSubsectionRulesForAllSections');
+    
+    return allRules;
+  }
+
+  /**
+   * Analyze fields within a section to generate subsection and entry categorization rules
+   * @param sectionFields Fields from a specific section
+   * @param sectionId Section number
+   * @returns Array of subsection rules
+   */
+  protected generateSubsectionRules(sectionFields: CategorizedField[], sectionId: number): MatchRule[] {
+    // Skip subsection rule generation for sections 1-8 as they don't have subsections
+    if (sectionId <= 8) {
+      return this.generateEntryRulesForBaseSection(sectionFields, sectionId);
+    }
+    
+    const rules: MatchRule[] = [];
+    
+    // Group fields by subsection
+    const subsectionGroups: Record<string, CategorizedField[]> = {};
+    
+    sectionFields.forEach(field => {
+      const sub = field.subsection || 'unknown';
+      if (!subsectionGroups[sub]) {
+        subsectionGroups[sub] = [];
+      }
+      subsectionGroups[sub].push(field);
+    });
+    
+    // Skip if no fields have subsections
+    if (Object.keys(subsectionGroups).length <= 1 && subsectionGroups['unknown']) {
+      console.log(`Section ${sectionId} has no subsection information in field data, attempting pattern detection`);
+      
+      // Try to detect subsection patterns from field names
+      const detectedPatterns = this.detectSubsectionPatternsFromNames(sectionFields, sectionId);
+      if (detectedPatterns.size > 0) {
+        console.log(`Detected ${detectedPatterns.size} potential subsections from field name patterns`);
+        
+        // Add rules for each detected subsection
+        for (const [subsection, pattern] of detectedPatterns.entries()) {
+          rules.push({
+            pattern: new RegExp(pattern, 'i'),
+            subSection: subsection,
+            confidence: 0.85,
+            description: `Detected pattern for subsection ${subsection} in section ${sectionId}`
+          });
+        }
+      }
+      
+      return rules;
+    }
+    
+    console.log(`Section ${sectionId} has ${Object.keys(subsectionGroups).length} subsections: ${Object.keys(subsectionGroups).filter(s => s !== 'unknown').join(', ')}`);
+    
+    // Process each subsection to extract patterns
+    for (const [subsection, fields] of Object.entries(subsectionGroups)) {
+      if (subsection === 'unknown') continue;
+      
+      // Group by entry for further analysis
+      const entriesMap: Record<number, CategorizedField[]> = {};
+      fields.forEach(field => {
+        const entry = field.entry || 0;
+        if (!entriesMap[entry]) {
+          entriesMap[entry] = [];
+        }
+        entriesMap[entry].push(field);
+      });
+      
+      // Collect common patterns
+      const patternSet = new Set<string>();
+      
+      // Analyze field names to identify patterns
+      fields.forEach(field => {
+        const fieldName = field.name.toLowerCase();
+        
+        // Pattern: section21d (direct)
+        const directPattern = `section${sectionId}${subsection.toLowerCase()}`;
+        if (fieldName.includes(directPattern)) {
+          patternSet.add(directPattern);
+        }
+        
+        // Pattern: section21_d (with underscore)
+        const underscorePattern = `section${sectionId}_${subsection.toLowerCase()}`;
+        if (fieldName.includes(underscorePattern)) {
+          patternSet.add(underscorePattern);
+        }
+        
+        // Pattern: section21.d (with dot)
+        const dotPattern = `section${sectionId}.${subsection.toLowerCase()}`;
+        if (fieldName.includes(dotPattern)) {
+          patternSet.add(dotPattern);
+        }
+        
+        // Form pattern: form1[0].Section21D[0]
+        const formPattern = `form1\\[\\d+\\]\\.section${sectionId}[-_]?${subsection.toLowerCase()}`;
+        if (fieldName.match(new RegExp(formPattern, 'i'))) {
+          patternSet.add(formPattern);
+        }
+        
+        // Additional common patterns
+        const commonPatterns = [
+          `s${sectionId}${subsection.toLowerCase()}`,
+          `s${sectionId}_${subsection.toLowerCase()}`
+        ];
+        
+        for (const pattern of commonPatterns) {
+          if (fieldName.includes(pattern)) {
+            patternSet.add(pattern);
+          }
+        }
+      });
+      
+      // Generate entry-specific rules if we have multiple entries
+      const entries = Object.keys(entriesMap).map(Number).filter(e => e > 0).sort();
+      
+      if (entries.length > 0) {
+        console.log(`Subsection ${subsection} has entries: ${entries.join(', ')}`);
+        
+        // Generate entry patterns
+        entries.forEach(entry => {
+          // Common entry pattern formats
+          const entryPatterns = [
+            `section${sectionId}${subsection.toLowerCase()}${entry}`, // section21d1
+            `section${sectionId}_${subsection.toLowerCase()}_${entry}`, // section21_d_1
+            `section${sectionId}\\.${subsection.toLowerCase()}\\.${entry}`, // section21.d.1
+            `form1\\[\\d+\\]\\.section${sectionId}[-_]?${subsection.toLowerCase()}[-_]?${entry}`, // form1[0].Section21D_1[0]
+          ];
+          
+          // Add entry patterns
+          entryPatterns.forEach(patternStr => {
+            rules.push({
+              pattern: new RegExp(patternStr, 'i'),
+              subSection: subsection,
+              confidence: 0.92,
+              description: `Entry ${entry} pattern for subsection ${subsection} in section ${sectionId}`,
+              entryIndex: () => entry
+            });
+          });
+        });
+      }
+      
+      // Add subsection patterns
+      patternSet.forEach(patternStr => {
+        rules.push({
+          pattern: new RegExp(patternStr, 'i'),
+          subSection: subsection,
+          confidence: 0.9,
+          description: `Subsection ${subsection} pattern for section ${sectionId}`
+        });
+      });
+      
+      // If no specific patterns found, add a generic pattern
+      if (patternSet.size === 0) {
+        const genericPattern = `section[-_]?${sectionId}.*?[^a-z]${subsection.toLowerCase()}[^a-z0-9]`;
+        rules.push({
+          pattern: new RegExp(genericPattern, 'i'),
+          subSection: subsection,
+          confidence: 0.75,
+          description: `Generic pattern for subsection ${subsection} in section ${sectionId}`
+        });
+      }
+    }
+    
+    // Add special case handlers for complex sections
+    this.addSpecialCaseSectionRules(rules, sectionId);
+    
+    return rules;
+  }
+  
+  /**
+   * Detect subsection patterns from field names when no explicit subsection info is available
+   * @param fields Fields to analyze
+   * @param sectionId Section ID
+   * @returns Map of detected subsections to patterns
+   */
+  private detectSubsectionPatternsFromNames(fields: CategorizedField[], sectionId: number): Map<string, string> {
+    const subsectionPatterns = new Map<string, string>();
+    
+    // Common subsection pattern formats
+    const patternFormats = [
+      { regex: new RegExp(`section${sectionId}([a-z])`, 'i'), group: 1 },
+      { regex: new RegExp(`section${sectionId}_([a-z])`, 'i'), group: 1 },
+      { regex: new RegExp(`section${sectionId}\\.([a-z])`, 'i'), group: 1 },
+      { regex: new RegExp(`s${sectionId}_([a-z])`, 'i'), group: 1 }
+    ];
+    
+    // Check each field for subsection indicators
+    for (const field of fields) {
+      for (const { regex, group } of patternFormats) {
+        const match = field.name.match(regex);
+        if (match && match[group]) {
+          const subsection = match[group].toLowerCase();
+          const pattern = match[0];
+          
+          if (!subsectionPatterns.has(subsection)) {
+            subsectionPatterns.set(subsection, pattern);
+          }
+        }
+      }
+    }
+    
+    return subsectionPatterns;
+  }
+  
+  /**
+   * Get special rules for specific sections based on known structures
+   * @param sectionId Section number
+   * @returns Array of special rules
+   */
+  private getSpecialSectionRules(sectionId: number): MatchRule[] {
+    const specialRules: MatchRule[] = [];
+    
+    // Section-specific rule definitions
+    switch (sectionId) {
+      case 17: // Marital Status
+        [
+          { sub: "1", pattern: "Section17_1", desc: "Current marriage" },
+          { sub: "2", pattern: "Section17_2", desc: "Former spouse" },
+          { sub: "3", pattern: "Section17_3", desc: "Cohabitants" }
+        ].forEach(({ sub, pattern, desc }) => {
+          specialRules.push({
+            pattern: new RegExp(pattern, 'i'),
+            subSection: sub,
+            confidence: 0.9,
+            description: `${desc} subsection in Section 17`
+          });
+        });
+        break;
+        
+      case 21: // Mental Health
+        [
+          { sub: "a", pattern: "section21a", desc: "Mental health treatment" },
+          { sub: "c", pattern: "section21c", desc: "Mental health disorders" },
+          { sub: "d", pattern: "section21d", desc: "Mental health hospitalizations" },
+          { sub: "e", pattern: "section21e", desc: "Mental health conditions not covered" }
+        ].forEach(({ sub, pattern, desc }) => {
+          specialRules.push({
+            pattern: new RegExp(pattern, 'i'),
+            subSection: sub,
+            confidence: 0.92,
+            description: `${desc} subsection in Section 21`
+          });
+        });
+        break;
+        
+      case 20: // Foreign Activities
+        [
+          { sub: "a", pattern: "section20a", desc: "Foreign contacts" },
+          { sub: "b", pattern: "section20b", desc: "Foreign business" },
+          { sub: "c", pattern: "section20c", desc: "Foreign travel" }
+        ].forEach(({ sub, pattern, desc }) => {
+          specialRules.push({
+            pattern: new RegExp(pattern, 'i'),
+            subSection: sub,
+            confidence: 0.92,
+            description: `${desc} subsection in Section 20`
+          });
+        });
+        break;
+    }
+    
+    return specialRules;
+  }
+  
+  /**
+   * Generate rules for specific entries within a subsection
+   * @param fields Fields from a subsection
+   * @param sectionId Section number
+   * @param subsection Subsection identifier
+   * @param entries Array of entry numbers
+   * @returns Array of entry-specific rules
+   */
+  private generateEntryRules(
+    fields: CategorizedField[], 
+    sectionId: number, 
+    subsection: string, 
+    entries: number[]
+  ): MatchRule[] {
+    const rules: MatchRule[] = [];
+    
+    // Group fields by entry
+    const fieldsByEntry: Record<number, CategorizedField[]> = {};
+    for (const entry of entries) {
+      fieldsByEntry[entry] = fields.filter(f => f.entry === entry);
+    }
+    
+    // Generate rules for each entry
+    for (const entry of entries) {
+      const entryFields = fieldsByEntry[entry];
+      if (entryFields.length < 2) continue; // Skip if too few fields
+      
+      // Common entry pattern formats
+      const entryPatterns = [
+        `section${sectionId}${subsection.toLowerCase()}${entry}`, // section21d1
+        `section${sectionId}_${subsection.toLowerCase()}_${entry}`, // section21_d_1
+        `section${sectionId}\\.${subsection.toLowerCase()}\\.${entry}`, // section21.d.1
+        `form1\\[\\d+\\]\\.section${sectionId}[-_]?${subsection.toLowerCase()}[-_]?${entry}` // form1[0].Section21D_1[0]
+      ];
+      
+      // Add entry patterns
+      for (const patternStr of entryPatterns) {
+        rules.push({
+          pattern: new RegExp(patternStr, 'i'),
+          subSection: subsection,
+          confidence: 0.92,
+          description: `Entry ${entry} pattern for subsection ${subsection} in section ${sectionId}`,
+          entryIndex: () => entry
+        });
+      }
+      
+      // Look for specific patterns in this entry's fields
+      const uniquePatterns = this.findUniqueEntryPatterns(entryFields, entry);
+      for (const pattern of uniquePatterns) {
+        if (!entryPatterns.includes(pattern)) {
+          rules.push({
+            pattern: new RegExp(pattern, 'i'),
+            subSection: subsection,
+            confidence: 0.88,
+            description: `Custom entry ${entry} pattern for subsection ${subsection} in section ${sectionId}`,
+            entryIndex: () => entry
+          });
+        }
+      }
+    }
+    
+    return rules;
+  }
+  
+  /**
+   * Find unique patterns that identify a specific entry
+   * @param fields Fields from an entry
+   * @param entry Entry number
+   * @returns Array of unique patterns
+   */
+  private findUniqueEntryPatterns(fields: CategorizedField[], entry: number): string[] {
+    const patterns = new Set<string>();
+    
+    // Find common prefixes/suffixes
+    if (fields.length >= 2) {
+      const names = fields.map(f => f.name);
+      const commonPrefix = this.findCommonPrefix(names);
+      if (commonPrefix && commonPrefix.length > 5) {
+        patterns.add(commonPrefix);
+      }
+      
+      // Extract patterns with entry number
+      for (const field of fields) {
+        const entryStr = entry.toString();
+        const entryIndex = field.name.indexOf(entryStr);
+        
+        if (entryIndex >= 0) {
+          // Get context around the entry number (5 chars before and after)
+          const start = Math.max(0, entryIndex - 5);
+          const end = Math.min(field.name.length, entryIndex + entryStr.length + 5);
+          const context = field.name.substring(start, end);
+          
+          if (context.length > entryStr.length + 2) {
+            patterns.add(context.replace(entryStr, '\\d+'));
+          }
+        }
+      }
+    }
+    
+    return Array.from(patterns);
+  }
+  
+  /**
+   * Find the longest common prefix among strings
+   * @param strings Array of strings to analyze
+   * @returns Longest common prefix, or empty string if none
+   */
+  private findCommonPrefix(strings: string[]): string {
+    if (strings.length === 0) return '';
+    if (strings.length === 1) return strings[0];
+    
+    let prefix = '';
+    const firstStr = strings[0].toLowerCase();
+    
+    for (let i = 0; i < firstStr.length; i++) {
+      const char = firstStr[i];
+      for (let j = 1; j < strings.length; j++) {
+        if (i >= strings[j].length || strings[j].toLowerCase()[i] !== char) {
+          return prefix;
+        }
+      }
+      prefix += char;
+    }
+    
+    return prefix;
+  }
+  
+  /**
+   * Add special case rules for complex sections with unique patterns
+   * @param rules Rules array to modify
+   * @param sectionId Section number
+   */
+  private addSpecialCaseSectionRules(rules: MatchRule[], sectionId: number): void {
+    // Special cases for specific sections
+    switch (sectionId) {
+      case 17: // Marital Status
+        [
+          { sub: "1", patternStr: "Section17_1", desc: "Current marriage" },
+          { sub: "2", patternStr: "Section17_2", desc: "Former spouse" },
+          { sub: "3", patternStr: "Section17_3", desc: "Cohabitants" }
+        ].forEach(({ sub, patternStr, desc }) => {
+          rules.push({
+            pattern: new RegExp(patternStr, 'i'),
+            subSection: sub,
+            confidence: 0.9,
+            description: `${desc} subsection in Section 17`
+          });
+        });
+        break;
+        
+      case 21: // Mental Health
+        [
+          { sub: "a", patternStr: "section21a", desc: "Mental health treatment" },
+          { sub: "c", patternStr: "section21c", desc: "Mental health disorders" },
+          { sub: "d", patternStr: "section21d", desc: "Mental health hospitalizations" },
+          { sub: "e", patternStr: "section21e", desc: "Mental health conditions not covered" }
+        ].forEach(({ sub, patternStr, desc }) => {
+          // Only add if not already present
+          if (!rules.some(r => r.pattern instanceof RegExp && r.pattern.source === patternStr)) {
+            rules.push({
+              pattern: new RegExp(patternStr, 'i'),
+              subSection: sub,
+              confidence: 0.92,
+              description: `${desc} subsection in Section 21`
+            });
+          }
+        });
+        break;
+        
+      case 20: // Foreign Activities
+        [
+          { sub: "a", patternStr: "section20a", desc: "Foreign contacts" },
+          { sub: "b", patternStr: "section20b", desc: "Foreign business" },
+          { sub: "c", patternStr: "section20c", desc: "Foreign travel" }
+        ].forEach(({ sub, patternStr, desc }) => {
+          // Only add if not already present
+          if (!rules.some(r => r.pattern instanceof RegExp && r.pattern.source === patternStr)) {
+            rules.push({
+              pattern: new RegExp(patternStr, 'i'),
+              subSection: sub,
+              confidence: 0.92,
+              description: `${desc} subsection in Section 20`
+            });
+          }
+        });
+        break;
+    }
+  }
+
+  /**
+   * Generate entry rules for sections 1-8 that don't have subsections
+   * @param sectionFields Fields from a basic section
+   * @param sectionId Section number (1-8)
+   * @returns Array of entry categorization rules
+   */
+  private generateEntryRulesForBaseSection(sectionFields: CategorizedField[], sectionId: number): MatchRule[] {
+    if (sectionId > 8) return [];
+    
+    const rules: MatchRule[] = [];
+    
+    // Group fields by entry
+    const entriesMap: Record<number, CategorizedField[]> = {};
+    sectionFields.forEach(field => {
+      const entry = field.entry || 0;
+      if (!entriesMap[entry]) {
+        entriesMap[entry] = [];
+      }
+      entriesMap[entry].push(field);
+    });
+    
+    // Skip if no entries or only entry 0
+    const entries = Object.keys(entriesMap).map(Number).filter(e => e > 0);
+    if (entries.length === 0) {
+      return [];
+    }
+    
+    console.log(`Section ${sectionId} has ${entries.length} entries`);
+    
+    // Generate rules for each entry
+    entries.forEach(entry => {
+      const fields = entriesMap[entry];
+      if (fields.length < 2) return; // Skip if too few fields
+      
+      // Find common patterns in field names
+      const commonPrefix = this.findCommonPrefix(fields.map(f => f.name));
+      if (commonPrefix && commonPrefix.length > 3) {
+        rules.push({
+          pattern: new RegExp(`${commonPrefix}.*`, 'i'),
+          subSection: '_default',
+          confidence: 0.8,
+          description: `Entry ${entry} pattern for section ${sectionId}`,
+          entryIndex: () => entry
+        });
+      }
+      
+      // Try specific entry patterns
+      const entryPatterns = [
+        `section${sectionId}_${entry}`,
+        `section${sectionId}\\.${entry}`,
+        `s${sectionId}_${entry}`,
+        `form1\\[\\d+\\]\\.section${sectionId}[-_]?${entry}`
+      ];
+      
+      entryPatterns.forEach(patternStr => {
+        rules.push({
+          pattern: new RegExp(patternStr, 'i'),
+          subSection: '_default',
+          confidence: 0.9,
+          description: `Entry ${entry} pattern for section ${sectionId}`,
+          entryIndex: () => entry
+        });
+      });
+    });
+    
+    return rules;
+  }
+
+  /**
+   * Use field coordinates to perform dimensional analysis for better classification
+   * This helps with fields that are on the same page but in different visual regions
+   * @param fields Fields to analyze
+   * @returns Fields with improved classification based on spatial analysis
+   */
+  public analyzeFieldPositions(fields: CategorizedField[]): CategorizedField[] {
+    // Create a copy of the fields to avoid mutation
+    const enhancedFields = [...fields];
+    
+    // Group fields by page number for spatial analysis
+    const fieldsByPage: Record<number, CategorizedField[]> = {};
+    
+    // First, group all fields by their page number
+    for (const field of enhancedFields) {
+      if (!field.page || field.page <= 0) continue;
+      
+      if (!fieldsByPage[field.page]) {
+        fieldsByPage[field.page] = [];
+      }
+      fieldsByPage[field.page].push(field);
+    }
+    
+    // Process each page independently
+    for (const [pageNum, pageFields] of Object.entries(fieldsByPage)) {
+      const page = parseInt(pageNum, 10);
+      if (isNaN(page)) continue;
+      
+      // Find fields with known coordinates on this page
+      const fieldsWithCoords = pageFields.filter(f => f.rect && 
+        typeof f.rect.y === 'number' && 
+        typeof f.rect.x === 'number' &&
+        typeof f.rect.height === 'number' && 
+        typeof f.rect.width === 'number');
+      
+      if (fieldsWithCoords.length < 3) continue; // Need enough fields for analysis
+      
+      // Analyze spatial distribution: likely sections by position
+      // Section assignment based on vertical position (y-coordinate clusters)
+      this.assignSectionsByVerticalPosition(fieldsWithCoords, page);
+      
+      // Detect subsection groups based on horizontal alignment
+      this.detectSubsectionsFromAlignment(fieldsWithCoords);
+      
+      // Detect entries based on repeating patterns in vertical spacing
+      this.detectEntriesFromSpacing(fieldsWithCoords);
+    }
+    
+    return enhancedFields;
+  }
+  
+  /**
+   * Assign sections to fields based on vertical position analysis
+   * @param fields Fields with coordinate data
+   * @param pageNum Page number being analyzed
+   */
+  private assignSectionsByVerticalPosition(fields: CategorizedField[], pageNum: number): void {
+    if (fields.length === 0) return;
+    
+    // Sort fields by vertical position on the page
+    fields.sort((a, b) => {
+      // Safe access for rect properties
+      const aTop = a.rect?.y ?? 0;
+      const bTop = b.rect?.y ?? 0;
+      return aTop - bTop; // Sort top-to-bottom
+    });
+    
+    // Find vertical clusters (groups of fields that are closely spaced vertically)
+    const verticalClusters: CategorizedField[][] = [];
+    let currentCluster: CategorizedField[] = [fields[0]];
+    let prevY = fields[0].rect?.y ?? 0;
+    
+    // Group fields into clusters based on vertical proximity
+    for (let i = 1; i < fields.length; i++) {
+      const field = fields[i];
+      const currentY = field.rect?.y ?? 0;
+      
+      // If this field is within a reasonable vertical distance from the previous one,
+      // add it to the current cluster, otherwise start a new cluster
+      const verticalGap = currentY - prevY;
+      
+      if (verticalGap < 30) { // Threshold for vertical grouping - may need tuning
+        currentCluster.push(field);
+      } else {
+        // Save current cluster and start a new one
+        verticalClusters.push([...currentCluster]);
+        currentCluster = [field];
+      }
+      
+      prevY = currentY;
+    }
+    
+    // Add the last cluster if not empty
+    if (currentCluster.length > 0) {
+      verticalClusters.push(currentCluster);
+    }
+    
+    // Now analyze each vertical cluster for section patterns
+    for (const cluster of verticalClusters) {
+      if (cluster.length < 2) continue; // Skip singleton clusters
+      
+      // Extract unique sections in this cluster
+      const sectionCounts: Record<number, number> = {};
+      
+      for (const field of cluster) {
+        if (field.section && field.section > 0) {
+          sectionCounts[field.section] = (sectionCounts[field.section] || 0) + 1;
+        }
+      }
+      
+      // Find the most common section in this cluster
+      let bestSection = 0;
+      let maxCount = 0;
+      
+      for (const [sectionStr, count] of Object.entries(sectionCounts)) {
+        const section = parseInt(sectionStr, 10);
+        if (count > maxCount) {
+          maxCount = count;
+          bestSection = section;
+        }
+      }
+      
+      // If we found a dominant section and it has enough evidence
+      if (bestSection > 0 && maxCount >= Math.max(2, cluster.length * 0.3)) {
+        // Assign that section to all unknown fields in the cluster
+        for (const field of cluster) {
+          if (!field.section || field.section === 0) {
+            field.section = bestSection;
+            field.confidence = 0.75; // Reasonable confidence for spatial assignment
+          }
+        }
+      }
+    }
+    
+    // Check for specific page-section correlations using reference data
+    this.applyPageBasedSectionRules(fields, pageNum);
+  }
+  
+  /**
+   * Apply known page-to-section mappings for better classification
+   * @param fields Fields to process
+   * @param pageNum Page number
+   */
+  private applyPageBasedSectionRules(fields: CategorizedField[], pageNum: number): void {
+    // Known page-to-section mappings (derived from form structure)
+    // This could be moved to a configuration file for better maintainability
+    const pageSectionMappings: Record<number, number> = {
+      6: 8,   // Section 8 (Passport) is primarily on page 6
+      44: 12, // Section 12 (Education) starts around page 44
+      45: 12,
+      46: 12,
+      47: 12,
+      55: 15, // Section 15 (Military History)
+      56: 15,
+      57: 15,
+      58: 15,
+      65: 16, // Section 16 (People Who Know You)
+      66: 16,
+      67: 16,
+      68: 16,
+      80: 20, // Section 20 (Foreign Activities)
+      81: 20,
+      82: 20,
+      83: 20,
+      84: 20,
+      85: 20,
+      86: 20,
+      125: 27, // Section 27 (Technology)
+      126: 27
+    };
+    
+    // If this page has a strong section correlation and the field has no section
+    const sectionForPage = pageSectionMappings[pageNum];
+    if (sectionForPage) {
+      // Find unknown fields on this page
+      const unknownFields = fields.filter(f => !f.section || f.section === 0);
+      
+      if (unknownFields.length > 0) {
+        console.log(`Applying page-based rule: assigning section ${sectionForPage} to ${unknownFields.length} fields on page ${pageNum}`);
+      
+        // Assign the section based on page
+        for (const field of unknownFields) {
+          field.section = sectionForPage;
+          field.confidence = 0.85; // High confidence for page-based assignment
+        }
+      }
+    }
+  }
+  
+  /**
+   * Detect subsections based on horizontal alignment of fields
+   * @param fields Fields with coordinate data
+   */
+  private detectSubsectionsFromAlignment(fields: CategorizedField[]): void {
+    // Group fields by section first
+    const sectionGroups: Record<number, CategorizedField[]> = {};
+    
+    for (const field of fields) {
+      if (!field.section || field.section === 0) continue;
+      
+      if (!sectionGroups[field.section]) {
+        sectionGroups[field.section] = [];
+      }
+      sectionGroups[field.section].push(field);
+    }
+    
+    // Process each section group to find subsections based on horizontal alignment
+    for (const [sectionStr, sectionFields] of Object.entries(sectionGroups)) {
+      const section = parseInt(sectionStr, 10);
+      if (isNaN(section) || section <= 8 || sectionFields.length < 3) continue;
+      
+      // Sort fields by horizontal position
+      sectionFields.sort((a, b) => {
+        // Safe rect access
+        const aLeft = a.rect?.x ?? 0;
+        const bLeft = b.rect?.x ?? 0;
+        return aLeft - bLeft; // Sort left-to-right
+      });
+      
+      // Find horizontal clusters (could indicate subsections or entry columns)
+      const horizontalClusters: CategorizedField[][] = [];
+      let currentCluster: CategorizedField[] = [sectionFields[0]];
+      let prevX = sectionFields[0].rect?.x ?? 0;
+      
+      // Group by horizontal position
+      for (let i = 1; i < sectionFields.length; i++) {
+        const field = sectionFields[i];
+        const currentX = field.rect?.x ?? 0;
+        const horizontalGap = Math.abs(currentX - prevX);
+        
+        // If close horizontally, group together
+        if (horizontalGap < 20) { // Threshold may need tuning
+          currentCluster.push(field);
+        } else {
+          // Save current cluster and start a new one
+          horizontalClusters.push([...currentCluster]);
+          currentCluster = [field];
+        }
+        
+        prevX = currentX;
+      }
+      
+      // Add the last cluster if not empty
+      if (currentCluster.length > 0) {
+        horizontalClusters.push(currentCluster);
+      }
+      
+      // For sections with subsections, analyze each horizontal cluster
+      if (horizontalClusters.length > 1) {
+        // Assign provisional subsection labels based on horizontal position
+        for (let i = 0; i < horizontalClusters.length; i++) {
+          const cluster = horizontalClusters[i];
+          
+          // Extract existing subsection information
+          const subsectionCounts: Record<string, number> = {};
+          
+          for (const field of cluster) {
+            if (field.subsection) {
+              subsectionCounts[field.subsection] = (subsectionCounts[field.subsection] || 0) + 1;
+            }
+          }
+          
+          // Find most common existing subsection
+          let bestSubsection = '';
+          let maxCount = 0;
+          
+          for (const [sub, count] of Object.entries(subsectionCounts)) {
+            if (count > maxCount) {
+              maxCount = count;
+              bestSubsection = sub;
+            }
+          }
+          
+          // If a clear subsection pattern exists, use it
+          if (bestSubsection && maxCount >= Math.max(2, cluster.length * 0.3)) {
+            // Apply to fields without subsection
+            for (const field of cluster) {
+              if (!field.subsection) {
+                field.subsection = bestSubsection;
+                field.confidence = Math.min(1.0, (field.confidence || 0.7) + 0.05);
+              }
+            }
+          }
+          // Otherwise create a positional subsection based on index
+          else if (cluster.length >= 3) {
+            // Use letters for subsections: a, b, c...
+            const subsectionLetter = String.fromCharCode(97 + i); // 97 = 'a'
+            
+            // Apply to fields without subsection
+            for (const field of cluster) {
+              if (!field.subsection) {
+                field.subsection = subsectionLetter;
+                field.confidence = 0.7; // Moderate confidence
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  /**
+   * Detect entries based on repeating patterns in vertical spacing
+   * @param fields Fields with coordinate data to analyze
+   */
+  private detectEntriesFromSpacing(fields: CategorizedField[]): void {
+    // Group by section and subsection
+    const sectionSubsectionGroups: Record<string, CategorizedField[]> = {};
+    
+    for (const field of fields) {
+      if (!field.section) continue;
+      
+      // Key format: "section.subsection"
+      const subsection = field.subsection || '_default';
+      const key = `${field.section}.${subsection}`;
+      
+      if (!sectionSubsectionGroups[key]) {
+        sectionSubsectionGroups[key] = [];
+      }
+      sectionSubsectionGroups[key].push(field);
+    }
+    
+    // Process each group to find entry patterns
+    for (const [groupKey, groupFields] of Object.entries(sectionSubsectionGroups)) {
+      if (groupFields.length < 5) continue; // Need enough fields to detect patterns
+      
+      // Sort fields by vertical position
+      groupFields.sort((a, b) => {
+        const aTop = a.rect?.y ?? 0;
+        const bTop = b.rect?.y ?? 0;
+        return aTop - bTop;
+      });
+      
+      // Look for repeating vertical spacing patterns which could indicate entries
+      const spacings: number[] = [];
+      for (let i = 1; i < groupFields.length; i++) {
+        const prevField = groupFields[i - 1];
+        const currField = groupFields[i];
+        
+        const prevBottom = (prevField.rect?.y ?? 0) + (prevField.rect?.height ?? 0);
+        const currTop = currField.rect?.y ?? 0;
+        
+        const spacing = currTop - prevBottom;
+        if (spacing > 0) {
+          spacings.push(spacing);
+        }
+      }
+      
+      // Find frequently occurring large gaps (potential entry boundaries)
+      if (spacings.length > 2) {
+        // Find "large" gaps (above average)
+        const avgSpacing = spacings.reduce((sum, val) => sum + val, 0) / spacings.length;
+        const largeGaps: number[] = [];
+        
+        for (let i = 0; i < spacings.length; i++) {
+          if (spacings[i] > avgSpacing * 1.5) { // Threshold for "large" gap
+            largeGaps.push(i); // Index of the field after the large gap
+          }
+        }
+        
+        // If we found potential entry boundaries
+        if (largeGaps.length > 0) {
+          let entryIndex = 1; // Start with entry 1
+          let lastGroupStart = 0;
+          
+          // Apply entry indexing based on gaps
+          for (const gapIndex of largeGaps) {
+            // Set entry for all fields from lastGroupStart up to this gap
+            for (let j = lastGroupStart; j <= gapIndex; j++) {
+              if (j < groupFields.length && !groupFields[j].entry) {
+                groupFields[j].entry = entryIndex;
+                groupFields[j].confidence = Math.min(1.0, (groupFields[j].confidence || 0.7) + 0.05);
+              }
+            }
+            
+            // Move to next entry
+            entryIndex++;
+            lastGroupStart = gapIndex + 1;
+          }
+          
+          // Handle remaining fields (last entry)
+          for (let j = lastGroupStart; j < groupFields.length; j++) {
+            if (!groupFields[j].entry) {
+              groupFields[j].entry = entryIndex;
+              groupFields[j].confidence = Math.min(1.0, (groupFields[j].confidence || 0.7) + 0.05);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Process fields using self-healing approach, utilizing field coordinates for dimensional analysis
+   * @param fields Array of fields to process
+   * @returns Processed fields with improved categorization
+   */
+  public enhanceFieldsWithCoordinates(fields: CategorizedField[]): CategorizedField[] {
+    // First, apply basic self-healing to get preliminary categorization
+    let processedFields = [...fields];
+    
+    // Now apply dimensional analysis using field coordinates
+    processedFields = this.analyzeFieldPositions(processedFields);
+    
+    // Gather statistics on the improvements
+    const beforeUnknown = fields.filter(f => !f.section).length;
+    const afterUnknown = processedFields.filter(f => !f.section).length;
+    
+    const beforeSubsections = fields.filter(f => f.section && f.subsection).length;
+    const afterSubsections = processedFields.filter(f => f.section && f.subsection).length;
+    
+    const beforeEntries = fields.filter(f => f.section && f.entry).length;
+    const afterEntries = processedFields.filter(f => f.section && f.entry).length;
+    
+    console.log(`Coordinate analysis results:
+      - Sections: ${beforeUnknown - afterUnknown} additional fields categorized
+      - Subsections: ${afterSubsections - beforeSubsections} additional fields with subsections
+      - Entries: ${afterEntries - beforeEntries} additional fields with entries`);
+    
+    return processedFields;
   }
 }
 

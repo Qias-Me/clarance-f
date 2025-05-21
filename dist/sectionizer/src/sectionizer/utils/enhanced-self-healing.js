@@ -7,11 +7,10 @@
 import fs from 'fs';
 import path from 'path';
 import { RuleEngine } from '../engine.js';
-import { enhancedMultiDimensionalCategorization, extractSectionInfoFromName, identifySectionByPage, identifySectionByPageWithConfidence, detectSectionFromFieldValue, sectionClassifications } from '../../../utilities/page-categorization-bridge.js';
+import { enhancedMultiDimensionalCategorization, extractSectionInfoFromName, identifySectionByPage, identifySectionByPageWithConfidence, detectSectionFromFieldValue, sectionClassifications, refinedSectionPageRanges } from './fieldParsing.js';
 import { reportGenerator } from './report-generator.js';
 import { rulesGenerator } from './rules-generator.js';
 import { predictSectionBySpatialProximity, calculateSpatialConfidenceBoost, extractSpatialInfo, getPositionalSectionScore, clusterFieldsSpatially, getSpatialNeighbors } from './spatialAnalysis.js';
-import { refinedSectionPageRanges } from '../../../utilities/page-categorization-bridge.js';
 import { sectionFieldPatterns } from './field-clusterer.js';
 // Cache existing section data between runs
 let existingSectionData = null;

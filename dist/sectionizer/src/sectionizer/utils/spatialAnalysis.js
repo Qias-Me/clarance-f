@@ -4,7 +4,7 @@
  * This utility provides spatial analysis functions for better field categorization
  * based on field coordinates within the form.
  */
-import { refinedSectionPageRanges } from '../../../utilities/page-categorization-bridge.js';
+import { refinedSectionPageRanges } from './fieldParsing.js';
 /**
  * Default PDF page dimensions (US Letter size)
  */

@@ -11,7 +11,7 @@ import type { CategorizedField } from './extractFieldsBySection.js';
 import { 
   sectionClassifications,
   getSectionPageRange
-} from '../../../utilities/page-categorization-bridge.js';
+} from './fieldParsing.js';
 
 interface SectionDeviation {
   section: number;

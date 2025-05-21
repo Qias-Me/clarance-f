@@ -495,120 +495,264 @@ export function extractSectionInfoFromName(fieldName: string): {
 } | null {
   if (!fieldName) return null;
 
-  // Try each complex pattern
-  for (const pattern of complexFieldPatterns) {
-    const match = fieldName.match(pattern.regex);
-    if (match) {
-      const info = pattern.getSectionInfo(match);
+  // For debugging
+  // console.log(`Analyzing field name: ${fieldName}`);
+
+  // CRITICAL: Strict matching for Section 1 - Only these 4 specific fields should be in Section 1
+  const section1Patterns = [
+    /form1\[0\]\.Sections1-6\[0\]\.TextField11\[0\]/i, // Last name
+    /form1\[0\]\.Sections1-6\[0\]\.TextField11\[1\]/i, // First name
+    /form1\[0\]\.Sections1-6\[0\]\.TextField11\[2\]/i, // Middle name
+    /form1\[0\]\.Sections1-6\[0\]\.suffix\[0\]/i, // Name suffix
+  ];
+  
+  for (let i = 0; i < section1Patterns.length; i++) {
+    if (section1Patterns[i].test(fieldName)) {
       return {
-        ...info,
-        confidence: 0.9,
+        section: 1,
+        entry: 0, // Base entry content (not repetitive)
+        confidence: 0.99
+      };
+    }
+  }
+  
+  // Complex multidimensional pattern matching - Example: sect13A.1Entry2StartDate
+  // This pattern includes section, subsection, and entry in a complex format
+  const complexPatterns = [
+    // Pattern: sect13A.1Entry2StartDate -> section 13, subsection A.1, entry 2
+    /sect(\d+)([A-Za-z])\.?(\d*)Entry(\d+)/i,
+    
+    // Pattern: section13A.1_entry2_startDate -> section 13, subsection A.1, entry 2
+    /section(\d+)([A-Za-z])\.?(\d*)[_\s]?entry(\d+)/i,
+    
+    // Pattern: section13A.1_instance2_date -> section 13, subsection A.1, entry 2
+    /section(\d+)([A-Za-z])\.?(\d*)[_\s]?instance(\d+)/i,
+    
+    // Pattern: sect13_subsecA_entry2 -> section 13, subsection A, entry 2
+    /sect(\d+)[_\s]?subsec([A-Za-z])[_\s]?entry(\d+)/i,
+    
+    // Pattern: section13_subA1_entry2 -> section 13, subsection A1, entry 2
+    /section(\d+)[_\s]?sub([A-Za-z]\d*)[_\s]?entry(\d+)/i
+  ];
+  
+  for (const pattern of complexPatterns) {
+    const match = fieldName.match(pattern);
+    if (match) {
+      const section = parseInt(match[1]);
+      const subsectionLetter = match[2].toUpperCase();
+      
+      // Handle different pattern variations
+      let subsectionNumber = "";
+      let entry = 0;
+      
+      if (pattern.source.includes("subsec") || pattern.source.includes("sub")) {
+        // For patterns like sect13_subsecA_entry2 or section13_subA1_entry2
+        subsectionNumber = match[3] && match[3] !== "" ? match[3] : "";
+        entry = parseInt(match[3]);
+      } else {
+        // For patterns like sect13A.1Entry2StartDate
+        subsectionNumber = match[3] && match[3] !== "" ? match[3] : "";
+        entry = parseInt(match[4]);
+      }
+      
+      // Combine subsection letter and number if both exist
+      const subsection = subsectionNumber ? `${subsectionLetter}.${subsectionNumber}` : subsectionLetter;
+      
+      return {
+        section,
+        subsection,
+        entry, // Keep this as entry 1+ for repetitive instances
+        confidence: 0.97, // High confidence for complex pattern match
       };
     }
   }
 
-  // Direct section pattern (Section##)
-  const directSectionMatch = fieldName.match(/Section(\d+)/i);
-  if (directSectionMatch) {
-    const section = parseInt(directSectionMatch[1]);
-    if (section > 0 && section <= 30) {
+  // Section with explicit subsection and entry patterns (examples from section 21, 17, 16)
+  // Pattern: Section21D1, section21d3, Section21a2 - section, subsection, entry
+  const explicitSubsectionEntryPattern = /section(\d+)([a-z])(\d*)/i;
+  const explicitSubsectionEntryMatch = fieldName.match(explicitSubsectionEntryPattern);
+  if (explicitSubsectionEntryMatch) {
+    const section = parseInt(explicitSubsectionEntryMatch[1]);
+    const subsection = explicitSubsectionEntryMatch[2].toUpperCase();
+    let entry = 0; // Default to 0 (base content) if not specified
+    
+    if (explicitSubsectionEntryMatch[3]) {
+      entry = parseInt(explicitSubsectionEntryMatch[3]); // Keep this as entry 1+ for repetitive instances
+    }
+    
+    return {
+      section,
+      subsection,
+      entry,
+      confidence: 0.95,
+    };
+  }
+
+  // Pattern: section_21_2 (section 21, entry 2)
+  const sectionEntryPattern = /section[_\s]?(\d+)[_\s]?(\d+)/i;
+  const sectionEntryMatch = fieldName.match(sectionEntryPattern);
+  if (sectionEntryMatch) {
+    const section = parseInt(sectionEntryMatch[1]);
+    const entry = parseInt(sectionEntryMatch[2]);
+    
+    return {
+      section,
+      entry, // Keep this as entry 1+ for repetitive instances
+      confidence: 0.95,
+    };
+  }
+
+  // Pattern: Section17_1_2 (section 17, subsection 1, entry 2)
+  const sectionSubEntryPattern = /section(\d+)_(\d+)_(\d+)/i;
+  const sectionSubEntryMatch = fieldName.match(sectionSubEntryPattern);
+  if (sectionSubEntryMatch) {
+    const section = parseInt(sectionSubEntryMatch[1]);
+    const subsection = sectionSubEntryMatch[2];
+    const entry = parseInt(sectionSubEntryMatch[3]);
+    
+    return {
+      section,
+      subsection,
+      entry, // Keep this as entry 1+ for repetitive instances
+      confidence: 0.95,
+    };
+  }
+
+  // Pattern: Section17_1 (section 17, subsection 1, entry 1)
+  const sectionSubPattern = /section(\d+)_(\d+)(?![_\d])/i;
+  const sectionSubMatch = fieldName.match(sectionSubPattern);
+  if (sectionSubMatch) {
+    const section = parseInt(sectionSubMatch[1]);
+    const subsection = sectionSubMatch[2];
+    
+    return {
+      section,
+      subsection,
+      entry: 1, // Keep entry as 1 for first repetitive instance
+      confidence: 0.9,
+    };
+  }
+
+  // Pattern for camelCase field names with embedded section/subsection/entry
+  // Example: section13aEntry2Date or section13SubAEntry2StartDate
+  const camelCasePattern = /section(\d+)(?:Sub)?([A-Za-z])(?:Entry|Instance)?(\d+)/i;
+  const camelCaseMatch = fieldName.match(camelCasePattern);
+  if (camelCaseMatch) {
+    const section = parseInt(camelCaseMatch[1]);
+    const subsection = camelCaseMatch[2].toUpperCase();
+    const entry = parseInt(camelCaseMatch[3]);
+    
+    return {
+      section,
+      subsection,
+      entry,
+      confidence: 0.92
+    };
+  }
+
+  // Pattern: form1[0].Sections7-9[0].TextField11[17] -> Section 7 Entry 3
+  // Special handling for Section 7 repeating fields
+  const section7Pattern = /sections7-9.*?TextField11\[(\d+)]/i;
+  const section7Match = fieldName.match(section7Pattern);
+  if (section7Match) {
+    const textFieldIndex = parseInt(section7Match[1]);
+    
+    // Determine entry based on TextField11 index in section 7
+    // This is a heuristic based on the given examples
+    let entry = 0; // Default to 0 (base content)
+    if (textFieldIndex >= 15 && textFieldIndex <= 17) {
+      entry = 3; // 3rd repetitive instance
+    } else if (textFieldIndex >= 10 && textFieldIndex < 15) {
+      entry = 2; // 2nd repetitive instance
+    } else if (textFieldIndex < 10) {
+      entry = 1; // 1st repetitive instance
+    }
+    
+    return {
+      section: 7,
+      entry,
+      confidence: 0.9,
+    };
+  }
+
+  // Special handler for Section 12 table structures
+  // Pattern: form1[0].section_12_2[0].Table1[0].Row1[0].Cell1[0]
+  const section12TablePattern = /section_12_(\d+).*?Table(\d+)\[.*?Row(\d+)/i;
+  const section12TableMatch = fieldName.match(section12TablePattern);
+  if (section12TableMatch) {
+    const entry = parseInt(section12TableMatch[1]); 
+    const tableNum = parseInt(section12TableMatch[2]);
+    const rowNum = parseInt(section12TableMatch[3]);
+    
+    return {
+      section: 12,
+      entry, // Keep entry 1+ for repetitive instances
+      subEntry: (tableNum * 100) + rowNum, // Combine table and row for unique subEntry
+      confidence: 0.95,
+    };
+  }
+
+  // Sections 1-6 pattern with entries
+  const sections1To6Pattern = /Sections1-6\[0\]\.TextField11\[(\d+)\]/i;
+  const sections1To6Match = fieldName.match(sections1To6Pattern);
+  if (sections1To6Match) {
+    const textFieldIndex = parseInt(sections1To6Match[1]);
+    
+    // Map TextField11 indices to appropriate sections
+    // This mapping is based on the strict patterns in rule-loader.ts
+    if (textFieldIndex <= 2) {
+      // First 3 indices (0, 1, 2) go to Section 1 (first name, last name, middle name)
+      return {
+        section: 1,
+        entry: 0, // Updated to entry 0 as base content
+        confidence: 0.95,
+      };
+    } else if (textFieldIndex >= 3 && textFieldIndex <= 4) {
+      // Indices 3, 4 go to Section 3 (birth city, birth county)
+      return {
+        section: 3,
+        entry: 0, // Updated to entry 0 as base content
+        confidence: 0.95,
+      };
+    } else if (textFieldIndex === 5) {
+      // Index 5 goes to Section 6 (weight in pounds)
+      return {
+        section: 6,
+        entry: 0, // Updated to entry 0 as base content
+        confidence: 0.95,
+      };
+    }
+  }
+
+  // Additional pattern matching for Sections 1-8 (base content)
+  // These low-numbered sections don't have subsections but do have entries
+  if (fieldName.match(/section[_\s]?([1-8])\b/i)) {
+    const sectionMatch = fieldName.match(/section[_\s]?([1-8])\b/i);
+    if (sectionMatch) {
+      const section = parseInt(sectionMatch[1]);
+      
+      // Look for any entry indicators (assume 0 if none found)
+      const entryMatch = fieldName.match(/entry[_\s]?(\d+)/i) || 
+                          fieldName.match(/instance[_\s]?(\d+)/i);
+      
       return {
         section,
+        entry: entryMatch ? parseInt(entryMatch[1]) : 0, // Default to 0 (base content) if no entry indicator
         confidence: 0.85,
       };
     }
   }
 
-  // Direct section pattern from Sections1-6
-  if (fieldName.includes("Sections1-6")) {
-    if (
-      fieldName.includes("TextField11[0]") ||
-      fieldName.includes("TextField11[1]") ||
-      fieldName.includes("TextField11[2]") ||
-      fieldName.includes("suffix[0]")
-    ) {
-      return { section: 1, confidence: 0.9 };
-    }
-
-    if (fieldName.includes("From_Datefield_Name_2[0]")) {
-      return { section: 2, confidence: 0.9 };
-    }
-
-    if (
-      fieldName.includes("TextField11[3]") ||
-      fieldName.includes("TextField11[4]") ||
-      fieldName.includes("School6_State[0]") ||
-      fieldName.includes("DropDownList1[0]")
-    ) {
-      return { section: 3, confidence: 0.9 };
-    }
-    if (fieldName.includes("SSN")) {
-      return { section: 4, confidence: 0.9 };
-    } // Check for all section 6 fields - STRICT matching with full paths
-    if (
-      fieldName.includes("form1[0].Sections1-6[0].DropDownList7[0]") ||
-      fieldName.includes("form1[0].Sections1-6[0].DropDownList8[0]") ||
-      fieldName.includes("form1[0].Sections1-6[0].DropDownList9[0]") ||
-      fieldName.includes("form1[0].Sections1-6[0].DropDownList10[0]") ||
-      fieldName.includes("form1[0].Sections1-6[0].p3-rb3b[0]") ||
-      fieldName.includes("form1[0].Sections1-6[0].TextField11[5]")
-    ) {
-      return { section: 6, confidence: 0.98 }; // Higher confidence for strict matching
-    }
-  }
-  // Match for sections7-9
-  if (fieldName.includes("Sections7-9")) {
-    if (
-      fieldName.includes("TextField11[10]") ||
-      fieldName.includes("TextField11[18]")
-    ) {
-      return { section: 9, confidence: 0.85 }; // Section 9 Last Name (page 6).
-    }
-
-    if (
-      fieldName.includes("TextField11[13]") ||
-      fieldName.includes("TextField11[15]") ||
-      fieldName.includes("TextField11[17]") ||
-      fieldName.includes("TextField11[14]") ||
-      fieldName.includes("p3-t68[3]") ||
-      fieldName.includes("p3-t68[1]") ||
-      fieldName.includes("p3-t68[2]") ||
-      fieldName.includes("#field[33]") ||
-      fieldName.includes("#field[34]") ||
-      fieldName.includes("#field[35]") ||
-      fieldName.includes("#field[39]") ||
-      fieldName.includes("#field[40]") ||
-      fieldName.includes("#field[43]") ||
-      fieldName.includes("#field[45]")
-    ) {
-      return { section: 7, confidence: 0.85 }; // Section 7 Work Phone
-    }
-
-    if (
-      fieldName.includes("TextField11[13]") ||
-      fieldName.includes("TextField11[15]") ||
-      fieldName.includes("TextField11[17]") ||
-      fieldName.includes("TextField11[14]") ||
-      fieldName.includes("p3-t68[3]") ||
-      fieldName.includes("p3-t68[1]") ||
-      fieldName.includes("p3-t68[2]") ||
-      fieldName.includes("#field[33]") ||
-      fieldName.includes("#field[34]") ||
-      fieldName.includes("#field[35]") ||
-      fieldName.includes("#field[39]") ||
-      fieldName.includes("#field[40]") ||
-      fieldName.includes("#field[43]") ||
-      fieldName.includes("#field[45]")
-    ) {
-      return { section: 8, confidence: 0.85 }; // Section 7 Work Phone
-    }
-  }
-
-  // Check for continuation sections
-  if (fieldName.includes("continuation")) {
+  // Basic section detection pattern (less specific)
+  const basicSectionPattern = /section(?:[_\s]?|s)(\d+)/i;
+  const basicMatch = fieldName.match(basicSectionPattern);
+  if (basicMatch) {
+    const section = parseInt(basicMatch[1]);
+    
     return {
-      section: 30, // Use 30 for continuation
-      confidence: 0.8,
+      section,
+      entry: 0, // Default to 0 (base content) for basic section detection
+      confidence: 0.85,
     };
   }
 
@@ -2465,6 +2609,19 @@ export function enhancedMultiDimensionalCategorization(
   entry?: number;
   confidence: number;
 } | null {
+  // OPTIMIZATION: Check for complex pattern match first
+  // This gives precedence to precise pattern matching before more generic heuristics
+  const complexInfo = extractSectionInfoFromName(fieldName);
+  if (complexInfo?.section && complexInfo.confidence >= 0.95) {
+    // If we have a high-confidence match from the pattern extraction, use it directly
+    return {
+      section: complexInfo.section,
+      subsection: complexInfo.subsection,
+      entry: complexInfo.entry,
+      confidence: complexInfo.confidence,
+    };
+  }
+
   // Track the best match with its confidence score
   let bestMatch: {
     section: number;
@@ -2581,13 +2738,52 @@ export function enhancedMultiDimensionalCategorization(
 
     // Update best match if this section has higher confidence
     if (!bestMatch || confidence > bestMatch.confidence) {
-      // Extract subsection and entry from fieldName if possible
-      const complexInfo = extractSectionInfoFromName(fieldName);
+      // Get section ID from classification
+      const sectionId = classification.sectionId;
+      
+      // Try to extract subsection and entry information
+      // If we have lower confidence match from pattern extraction, use it
+      let subsection: string | undefined = undefined;
+      let entry: number | undefined = undefined;
+      
+      if (complexInfo && complexInfo.section === sectionId) {
+        subsection = complexInfo.subsection;
+        entry = complexInfo.entry;
+      } else {
+        // Try to extract subsection and entry from the field name
+        // This handles cases where the field name contains subsection/entry info
+        // but wasn't matched with high confidence in the first pass
+        
+        // For entry detection in specific sections:
+        if (sectionId >= 1 && sectionId <= 8) {
+          // Lower-numbered sections (1-8) typically don't have subsections
+          // Look for entry patterns
+          const entryMatch = fieldName.match(/entry[_\s]?(\d+)/i) || 
+                            fieldName.match(/instance[_\s]?(\d+)/i);
+                            
+          entry = entryMatch ? parseInt(entryMatch[1]) : 0; // Default to entry 0 for base content
+        } else {
+          // Higher-numbered sections (9+) may have both subsections and entries
+          // Look for subsection patterns first
+          const subsectionMatch = fieldName.match(/subsection[_\s]?([A-Za-z])/i) ||
+                                  fieldName.match(/sub[_\s]?([A-Za-z])/i);
+                                  
+          if (subsectionMatch) {
+            subsection = subsectionMatch[1].toUpperCase();
+            
+            // If we found a subsection, look for entry
+            const entryMatch = fieldName.match(/entry[_\s]?(\d+)/i) || 
+                              fieldName.match(/instance[_\s]?(\d+)/i);
+                              
+            entry = entryMatch ? parseInt(entryMatch[1]) : 1; // Default to entry 1 for first instance
+          }
+        }
+      }
 
       bestMatch = {
-        section: classification.sectionId,
-        subsection: complexInfo?.subsection,
-        entry: complexInfo?.entry,
+        section: sectionId,
+        subsection,
+        entry,
         confidence,
       };
     }
