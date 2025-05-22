@@ -18,6 +18,44 @@ export const DEFAULT_PAGE_DIMENSIONS = {
   height: 792 // Default letter size height in points (8.5 x 11 inches)
 };
 
+// Cache for page dimensions
+let cachedPageDimensions: Record<number, { width: number, height: number }> = {};
+
+/**
+ * Get PDF page dimensions, using cached values if available
+ * @param pdfDoc PDF document
+ * @returns Record of page dimensions
+ */
+export function getPageDimensions(pdfDoc?: PDFDocument): Record<number, { width: number, height: number }> {
+  // Return cached dimensions if they exist and we don't have a new document
+  if (Object.keys(cachedPageDimensions).length > 0 && !pdfDoc) {
+    console.log(`Using cached page dimensions for ${Object.keys(cachedPageDimensions).length} pages`);
+    return cachedPageDimensions;
+  }
+
+  // Create new dimensions record
+  const dimensions: Record<number, { width: number, height: number }> = {};
+  
+  if (pdfDoc) {
+    try {
+      const pageCount = pdfDoc.getPageCount();
+      for (let i = 0; i < pageCount; i++) {
+        const page = pdfDoc.getPage(i);
+        const { width, height } = page.getSize();
+        dimensions[i + 1] = { width, height }; // Store as 1-based page numbers
+      }
+      console.log(`Retrieved dimensions for ${Object.keys(dimensions).length} pages from PDF`);
+      
+      // Cache the dimensions
+      cachedPageDimensions = dimensions;
+    } catch (error) {
+      console.warn(`Could not get page dimensions from PDF: ${error}`);
+    }
+  }
+
+  return dimensions;
+}
+
 /**
  * Interface for spatial information about a field
  */
@@ -71,7 +109,7 @@ export interface SectionBoundary {
  * @param pageIndex Page index (0-based)
  * @returns Page dimensions (width and height)
  */
-export function getPageDimensions(pdfDoc: PDFDocument, pageIndex: number = 0): { width: number, height: number } {
+export function getPageDimensionForIndex(pdfDoc: PDFDocument, pageIndex: number = 0): { width: number, height: number } {
   try {
     if (pdfDoc && pageIndex >= 0 && pageIndex < pdfDoc.getPageCount()) {
       const page = pdfDoc.getPage(pageIndex);
@@ -109,7 +147,7 @@ export function extractSpatialInfo(field: PDFField, pdfDoc?: PDFDocument): Spati
   
   // Get page dimensions - use field's page if available, otherwise use first page
   const pageIndex = field.page ? field.page - 1 : 0; // Convert from 1-based to 0-based
-  const pageDimensions = pdfDoc ? getPageDimensions(pdfDoc, pageIndex) : DEFAULT_PAGE_DIMENSIONS;
+  const pageDimensions = pdfDoc ? getPageDimensionForIndex(pdfDoc, pageIndex) : DEFAULT_PAGE_DIMENSIONS;
   
   // Calculate relative positions (as percentages of page dimensions)
   const relativeX = x / pageDimensions.width;

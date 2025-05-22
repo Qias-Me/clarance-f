@@ -17,8 +17,9 @@ import type { CommandLineOptions } from './utils/cli-args.js';
 import {
   extractFields,
   categorizeFields,
-  printSectionStatistics
+  printSectionStatistics,
 } from "./utils/extractFieldsBySection.js";
+import { getPageDimensions } from "./utils/spatialAnalysis.js";
 import { groupFieldsBySection } from "./utils/fieldGrouping.js";
 import { validateSectionCounts as validateSectionCountsUtil } from "./utils/validation.js";
 import type { PDFField, CategorizedField as BaseCategorizedField } from "./utils/extractFieldsBySection.js";
@@ -1350,7 +1351,8 @@ function convertMapToRecord(
   return record;
 }
 
-// Modify the runCyclicalLearning function to use spatial analysis properly
+// Modify the runCyclicalLearning function to pass the output directory properly
+
 async function runCyclicalLearning(
   engine: RuleEngine,
   fields: PDFField[],
@@ -1383,7 +1385,10 @@ async function runCyclicalLearning(
   // categorizedFields = enhancedFields;
   
   // Group by section
-  let sectionFields = await groupFieldsBySection(categorizedFields);
+  let sectionFields = await groupFieldsBySection(categorizedFields, { 
+    saveUnknown: true, 
+    outputDir: outputDir 
+  });
   
   // Convert Map to Record if needed
   let sectionFieldsRecord = convertMapToRecord(sectionFields);
@@ -1423,7 +1428,10 @@ async function runCyclicalLearning(
     categorizedFields = enhanceFieldsWithSpatialAnalysis(categorizedFields, pdfDoc);
     
     // Group by section
-    sectionFields = await groupFieldsBySection(categorizedFields);
+    sectionFields = await groupFieldsBySection(categorizedFields, { 
+      saveUnknown: true, 
+      outputDir: outputDir 
+    });
     sectionFieldsRecord = convertMapToRecord(sectionFields);
     
     // Apply organization for subsections and entries based on spatial relationships
@@ -1431,7 +1439,10 @@ async function runCyclicalLearning(
     categorizedFields = organizeSpatialSubsectionEntries(categorizedFields);
     
     // Regroup after spatial organization
-    sectionFields = await groupFieldsBySection(categorizedFields);
+    sectionFields = await groupFieldsBySection(categorizedFields, { 
+      saveUnknown: true, 
+      outputDir: outputDir 
+    });
     sectionFieldsRecord = convertMapToRecord(sectionFields);
     
     // If we have reference counts and unknown fields, try to distribute them
@@ -1448,7 +1459,10 @@ async function runCyclicalLearning(
       const organizedFields = organizeSpatialSubsectionEntries(allFieldsAfterDistribution);
       
       // Regroup after organization
-      sectionFields = await groupFieldsBySection(organizedFields);
+      sectionFields = await groupFieldsBySection(organizedFields, { 
+        saveUnknown: true, 
+        outputDir: outputDir 
+      });
       sectionFieldsRecord = convertMapToRecord(sectionFields);
     }
     
@@ -1577,16 +1591,22 @@ async function main() {
     let inputPath = args.inputFields || args.pdfPath;
     
     if (!inputPath) {
-      console.log("No input provided. Please specify either --pdf-path or --input-fields");
-      process.exit(1);
+      console.log("No input provided. Using fallback PDF path.");
+      // Use fallback PDF path
+      inputPath = "C:\\Users\\Jason\\Desktop\\AI-Coding\\clarance-f\\src\\sf862.pdf";
+      console.log(`Using fallback PDF path: ${inputPath}`);
+    } else {
+      console.log(`Using input: ${inputPath}${args.force ? ' (ignoring cache)' : ''}`);
     }
-
-    console.log(`Using input: ${inputPath}${args.force ? ' (ignoring cache)' : ''}`);
     
     // Extract fields from PDF or JSON
     console.log("Extracting fields from input...");
     const { fields, pdfDoc } = await extractFields(inputPath, args.force);
     console.log(`Extracted ${fields.length} fields${pdfDoc ? ' and loaded PDF document' : ''}`);
+    
+    // Cache page dimensions if we have a PDF document
+    const pageDimensions = getPageDimensions(pdfDoc);
+    console.log(`Cached dimensions for ${Object.keys(pageDimensions).length} pages`);
     
     // Print section stats before processing
     console.log("\n--- BEFORE PROCESSING ---");
@@ -1611,7 +1631,7 @@ async function main() {
       pdfDoc, 
       expectedFieldCounts, 
       args.outputDir,
-      3      
+      3     
     );
     
     // Print final statistics
@@ -1619,6 +1639,9 @@ async function main() {
     
     // Count unique sections, subsections, and entries
     const allFields = Object.values(finalCategorized).flat();
+
+    // Print section statistics
+    printSectionStatistics(allFields);
     
     // Create a set of unique section numbers
     const uniqueFinalSections = new Set<number>();
@@ -1640,7 +1663,7 @@ async function main() {
       fs.writeFileSync(categorizedOutputFile, JSON.stringify(allFields, null, 2));
       console.log(`Wrote categorized fields to ${categorizedOutputFile}`);
       
-      // Write the categorized fields to a JSON file
+      // Write the extracted fields to a JSON file
       const extractedFieldsOutput = path.join(outputPath, 'pdf-extracted.json');
       fs.writeFileSync(extractedFieldsOutput, JSON.stringify(fields, null, 2));
       console.log(`Wrote extracted fields to ${extractedFieldsOutput}`);

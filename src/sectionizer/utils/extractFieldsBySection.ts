@@ -23,7 +23,8 @@ import chalk from 'chalk';
 import {
   createSectionBoundaryMap,
   enhanceSpatialCategorization,
-  organizeSpatialSubsectionEntries
+  organizeSpatialSubsectionEntries,
+  getPageDimensions
 } from "./spatialAnalysis.js";
 
 
@@ -65,6 +66,10 @@ const DEFAULT_PDF_PATH = path.resolve(
   "sf862.pdf"
 );
 
+// Fallback PDF path for when both input path and JSON loading fail
+const FALLBACK_PDF_PATH = "C:\\Users\\Jason\\Desktop\\AI-Coding\\clarance-f\\src\\sf862.pdf";
+
+
 
 /**
  * Extract all fields from the SF-86 PDF
@@ -82,16 +87,24 @@ export async function extractFields(
   // Check if file exists
   if (!fs.existsSync(pdfPath)) {
     console.error(`File not found at ${pdfPath}`);
-    throw new Error(`File not found at ${pdfPath}`);
+    // Use fallback PDF path if available
+    const fallbackPath = "C:\\Users\\Jason\\Desktop\\AI-Coding\\clarance-f\\src\\sf862.pdf";
+    console.log(`Attempting to use fallback PDF path: ${fallbackPath}`);
+    
+    if (fs.existsSync(fallbackPath)) {
+      console.log(`Fallback PDF found, using it instead`);
+      pdfPath = fallbackPath;
+    } else {
+      throw new Error(`File not found at ${pdfPath} and fallback path ${fallbackPath} not found either`);
+    }
   }
 
   try {
     // Check if it's a JSON file with pre-extracted fields
     if (pdfPath.toLowerCase().endsWith('.json')) {
       console.log(`Loading fields from JSON file: ${pdfPath}`);
-      
-      // Read file contents
       let jsonData;
+      
       try {
         const fileContents = fs.readFileSync(pdfPath, 'utf-8');
         console.log(`Read ${fileContents.length} bytes from JSON file`);
@@ -103,17 +116,17 @@ export async function extractFields(
         console.error(`Error reading/parsing JSON file: ${jsonError}`);
         throw new Error(`Failed to read/parse JSON file: ${jsonError.message}`);
       }
-
+      
       // Convert JSON data to PDFField format
       console.log("Converting JSON data to PDFField format...");
       const processedFields = jsonData.map((field: any) => ({
-        id: field.id,
-        name: field.name,
-        value: field.value,
-        page: field.page || -1,
-        label: field.label,
-        type: field.type,
-        maxLength: field.maxLength || undefined,
+        id: field.id || `field_${Math.random().toString(36).substring(2, 15)}`,
+        name: field.name || '',
+        value: field.value || '',
+        page: field.page || 0,
+        label: field.label || '',
+        type: field.type || 'text',
+        maxLength: field.maxLength || 0,
         options: field.options || [],
         required: field.required || false,
         rect: field.rect || null
@@ -130,12 +143,32 @@ export async function extractFields(
           const pdfBytes = fs.readFileSync(possiblePdfPath);
           pdfDoc = await PDFDocument.load(pdfBytes);
           console.log(`Successfully loaded associated PDF document`);
+          
+          // Cache page dimensions
+          getPageDimensions(pdfDoc);
         } catch (error) {
           console.warn(`Could not load associated PDF document: ${error}`);
         }
       } else {
-        console.warn(`No associated PDF document found for ${pdfPath}`);
-        console.warn(`Spatial analysis features may be limited without PDF page dimensions`);
+        // Try the fallback PDF for dimensions if no associated PDF found
+        const fallbackPath = "C:\\Users\\Jason\\Desktop\\AI-Coding\\clarance-f\\src\\sf862.pdf";
+        if (fs.existsSync(fallbackPath)) {
+          // Try the fallback PDF for dimensions if no associated PDF found
+          try {
+            console.log(`No associated PDF found. Using fallback PDF path for dimensions: ${fallbackPath}`);
+            const pdfBytes = fs.readFileSync(fallbackPath);
+            pdfDoc = await PDFDocument.load(pdfBytes);
+            console.log(`Successfully loaded fallback PDF document for page dimensions`);
+            
+            // Cache page dimensions
+            getPageDimensions(pdfDoc);
+          } catch (error) {
+            console.warn(`Could not load fallback PDF document: ${error}`);
+          }
+        } else {
+          console.warn(`No associated PDF document found for ${pdfPath}`);
+          console.warn(`Spatial analysis features may be limited without PDF page dimensions`);
+        }
       }
 
       return { fields: processedFields, pdfDoc };
@@ -174,6 +207,9 @@ export async function extractFields(
         try {
           const pdfBytes = fs.readFileSync(pdfPath);
           pdfDoc = await PDFDocument.load(pdfBytes);
+          
+          // Cache page dimensions
+          getPageDimensions(pdfDoc);
         } catch (error) {
           console.warn(`Could not load PDF document, spatial analysis may be limited: ${error}`);
         }
@@ -193,6 +229,9 @@ export async function extractFields(
       // Load the PDF bytes and create a document
       const pdfBytes = fs.readFileSync(pdfPath);
       pdfDoc = await PDFDocument.load(pdfBytes);
+      
+      // Cache page dimensions
+      getPageDimensions(pdfDoc);
     } catch (error) {
       console.error(`Error loading PDF: ${error}`);
     }
@@ -209,7 +248,7 @@ export async function extractFields(
           id: field.id,
           name: field.name,
           value: field.value,
-          page: field.page || -1, // Default to 0 if page is undefined
+          page: field.page || -1, // Default to -1 if page is undefined
           label: field.label,
           type: field.type,
           maxLength: field.maxLength,
@@ -246,6 +285,12 @@ export async function extractFields(
         const mockData = JSON.parse(fs.readFileSync(mockDataPath, "utf-8"));
         return { fields: mockData };
       }
+    }
+
+    // Try the fallback PDF as a last resort
+    if (pdfPath !== FALLBACK_PDF_PATH && fs.existsSync(FALLBACK_PDF_PATH)) {
+      console.log(`Error processing ${pdfPath}. Using fallback PDF path as last resort: ${FALLBACK_PDF_PATH}`);
+      return extractFields(FALLBACK_PDF_PATH, force);
     }
 
     // Re-throw the error if no fallback is available
@@ -769,108 +814,109 @@ export function printSectionStatistics(fields: CategorizedField[]): void {
     );
   }
 
-  // Add ASCII chart visualization
-  console.log(chalk.bold("\nSection Distribution Chart:"));
-  console.log(chalk.bold("========================="));
+  // // Add ASCII chart visualization
+  // console.log(chalk.bold("\nSection Distribution Chart:"));
+  // console.log(chalk.bold("========================="));
 
-  // Find the maximum count for scaling
-  const maxCount = Math.max(...Object.values(sectionCounts));
-  const chartWidth = 50; // Maximum chart width in characters
+  // // Find the maximum count for scaling
+  // const maxCount = Math.max(...Object.values(sectionCounts));
+  // const chartWidth = 50; // Maximum chart width in characters
 
-  // Generate the chart
-  for (const section of sortedSections) {
-    // Skip section 0 (unknown) in the chart as it can skew visualization
-    if (section === 0) continue;
+  // // Generate the chart
+  // for (const section of sortedSections) {
+  //   // Skip section 0 (unknown) in the chart as it can skew visualization
+  //   if (section === 0) continue;
 
-    const count = sectionCounts[section];
-    const barLength = Math.round((count / maxCount) * chartWidth);
-    const bar = "█".repeat(barLength);
+  //   const count = sectionCounts[section];
+  //   const barLength = Math.round((count / maxCount) * chartWidth);
+  //   const bar = "█".repeat(barLength);
 
-    // Display section number, bar, and count
-    console.log(`Section ${String(section).padStart(2)}: ${chalk.blue(bar)} ${count}`);
-  }
+  //   // Display section number, bar, and count
+  //   console.log(`Section ${String(section).padStart(2)}: ${chalk.blue(bar)} ${count}`);
+  // }
 
-  // Additional subsection statistics
-  console.log(chalk.bold("\nSubsection Breakdown:"));
-  console.log(chalk.bold("===================="));
+  // // Additional subsection statistics
+  // console.log(chalk.bold("\nSubsection Breakdown:"));
+  // console.log(chalk.bold("===================="));
 
-  for (const section of sortedSections) {
-    // Collect subsection counts for this section
-    const subsectionCounts: Record<string, number> = {};
+  // for (const section of sortedSections) {
+  //   // Collect subsection counts for this section
+  //   const subsectionCounts: Record<string, number> = {};
 
-    fields
-      .filter((f) => f.section === section && f.subsection)
-      .forEach((f) => {
-        const sub = f.subsection as string;
-        subsectionCounts[sub] = (subsectionCounts[sub] || 0) + 1;
-      });
+  //   fields
+  //     .filter((f) => f.section === section && f.subsection)
+  //     .forEach((f) => {
+  //       const sub = f.subsection as string;
+  //       subsectionCounts[sub] = (subsectionCounts[sub] || 0) + 1;
+  //     });
 
-    if (Object.keys(subsectionCounts).length === 0) {
-      continue; // No subsections for this section
-    }
+  //   if (Object.keys(subsectionCounts).length === 0) {
+  //     continue; // No subsections for this section
+  //   }
 
-    // Add expected subsection count if available
-    const expectedSubsections = referenceCounts[section]?.subsections;
-    const subsectionInfo = expectedSubsections ? ` (Expected: ${expectedSubsections})` : '';
-    console.log(`Section ${section}${subsectionInfo}`);
+  //   // Add expected subsection count if available
+  //   const expectedSubsections = referenceCounts[section]?.subsections;
+  //   const subsectionInfo = expectedSubsections ? ` (Expected: ${expectedSubsections})` : '';
+  //   console.log(`Section ${section}${subsectionInfo}`);
 
-    // Get the maximum count for subsection visualization
-    const maxSubCount = Math.max(...Object.values(subsectionCounts));
-    const subChartWidth = 30; // Smaller width for subsections
+  //   // Get the maximum count for subsection visualization
+  //   const maxSubCount = Math.max(...Object.values(subsectionCounts));
+  //   const subChartWidth = 30; // Smaller width for subsections
 
-    // Generate chart for each subsection
-    Object.entries(subsectionCounts)
-      .sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true, sensitivity: "base" }))
-      .forEach(([sub, cnt]) => {
-        const barLength = Math.round((cnt / maxSubCount) * subChartWidth);
-        const bar = "▓".repeat(barLength);
-        console.log(`  ${sub.padEnd(2)} : ${chalk.cyan(bar)} ${cnt}`);
-      });
-  }
+  //   // Generate chart for each subsection
+  //   Object.entries(subsectionCounts)
+  //     .sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true, sensitivity: "base" }))
+  //     .forEach(([sub, cnt]) => {
+  //       const barLength = Math.round((cnt / maxSubCount) * subChartWidth);
+  //       const bar = "▓".repeat(barLength);
+  //       console.log(`  ${sub.padEnd(2)} : ${chalk.cyan(bar)} ${cnt}`);
+  //     });
+  // }
 
-  // Entry distribution
-  console.log(chalk.bold("\nEntry Distribution:"));
-  console.log(chalk.bold("=================="));
+  // // Entry distribution
+  // console.log(chalk.bold("\nEntry Distribution:"));
+  // console.log(chalk.bold("=================="));
 
-  // Collect entry counts by section
-  const sectionEntries: Record<number, Record<number, number>> = {};
+  // // Collect entry counts by section
+  // const sectionEntries: Record<number, Record<number, number>> = {};
 
-  fields
-    .filter((f) => typeof f.entry === 'number' && f.entry > 0)
-    .forEach((f) => {
-      const section = f.section !== undefined ? f.section : 0;
-      const entry = f.entry as number;
+  // fields
+  //   .filter((f) => typeof f.entry === 'number' && f.entry > 0)
+  //   .forEach((f) => {
+  //     const section = f.section !== undefined ? f.section : 0;
+  //     const entry = f.entry as number;
 
-      if (!sectionEntries[section]) {
-        sectionEntries[section] = {};
-      }
+  //     if (!sectionEntries[section]) {
+  //       sectionEntries[section] = {};
+  //     }
 
-      sectionEntries[section][entry] = (sectionEntries[section][entry] || 0) + 1;
-    });
+  //     sectionEntries[section][entry] = (sectionEntries[section][entry] || 0) + 1;
+  //   });
 
-  // Display entry distribution for sections that have entries
-  for (const section of Object.keys(sectionEntries).map(Number).sort((a, b) => a - b)) {
-    const entries = sectionEntries[section];
-    if (Object.keys(entries).length === 0) continue;
+  // // Display entry distribution for sections that have entries
+  // for (const section of Object.keys(sectionEntries).map(Number).sort((a, b) => a - b)) {
+  //   const entries = sectionEntries[section];
+  //   if (Object.keys(entries).length === 0) continue;
 
-    // Add expected entry count if available
-    const expectedEntryCount = referenceCounts[section]?.entries;
-    const entryInfo = expectedEntryCount ? ` (Expected: ${expectedEntryCount})` : '';
-    console.log(`Section ${section}${entryInfo}`);
+  //   // Add expected entry count if available
+  //   const expectedEntryCount = referenceCounts[section]?.entries;
+  //   const entryInfo = expectedEntryCount ? ` (Expected: ${expectedEntryCount})` : '';
+  //   console.log(`Section ${section}${entryInfo}`);
 
-    // Get the maximum count for entry visualization
-    const maxEntryCount = Math.max(...Object.values(entries));
-    const entryChartWidth = 25; // Even smaller width for entries
+  //   // Get the maximum count for entry visualization
+  //   const maxEntryCount = Math.max(...Object.values(entries));
+  //   const entryChartWidth = 25; // Even smaller width for entries
 
-    // Generate chart for each entry
-    Object.entries(entries)
-      .sort((a, b) => Number(a[0]) - Number(b[0]))
-      .forEach(([entry, cnt]) => {
-        const barLength = Math.round((cnt / maxEntryCount) * entryChartWidth);
-        const bar = "▒".repeat(barLength);
-        console.log(`  Entry ${String(entry).padEnd(2)}: ${chalk.magenta(bar)} ${cnt}`);
-      });
-  }
+  //   // Generate chart for each entry
+  //   Object.entries(entries)
+  //     .sort((a, b) => Number(a[0]) - Number(b[0]))
+  //     .forEach(([entry, cnt]) => {
+  //       const barLength = Math.round((cnt / maxEntryCount) * entryChartWidth);
+  //       const bar = "▒".repeat(barLength);
+  //       console.log(`  Entry ${String(entry).padEnd(2)}: ${chalk.magenta(bar)} ${cnt}`);
+  //     });
+  // }
+
 
   // Log the overall stats
   const totalFields = fields.length;
@@ -925,11 +971,13 @@ export function saveUnknownFields(
  *
  * @param fields Array of already categorized fields
  * @param saveUnknown Whether to save uncategorized fields to unknown.json
+ * @param outputDir Directory to save unknown fields if saveUnknown is true
  * @returns Record mapping section numbers to arrays of categorized fields
  */
 export async function groupFieldsBySection(
   fields: CategorizedField[],
-  saveUnknown: boolean = true
+  saveUnknown: boolean = true,
+  outputDir?: string
 ): Promise<Record<string, CategorizedField[]>> {
   try {
     // Group fields by section
@@ -989,12 +1037,16 @@ export async function groupFieldsBySection(
     // Save uncategorized fields for analysis if requested
     if (saveUnknown && sectionFields["0"] && sectionFields["0"].length > 0) {
       const unknownFields = sectionFields["0"];
-      const outputDir = path.resolve(process.cwd(), "reports");
-      if (!fs.existsSync(outputDir)) {
-        fs.mkdirSync(outputDir, { recursive: true });
+      // Use the provided outputDir if available, otherwise use default
+      const outputPath = outputDir 
+        ? path.resolve(outputDir) 
+        : path.resolve(process.cwd(), "output", "reports");
+        
+      if (!fs.existsSync(outputPath)) {
+        fs.mkdirSync(outputPath, { recursive: true });
       }
 
-      const unknownPath = path.join(outputDir, "unknown-fields.json");
+      const unknownPath = path.join(outputPath, "unknown-fields.json");
       fs.writeFileSync(unknownPath, JSON.stringify(unknownFields, null, 2));
       console.log(
         `Saved ${unknownFields.length} uncategorized fields to ${unknownPath}`

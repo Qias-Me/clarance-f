@@ -514,6 +514,9 @@ export interface ClusteringOptions {
   usePositionalInfo?: boolean;
 }
 
+export const PageAnalysisSettings = {}
+
+
 /**
  * Field clusterer for grouping SF-86 form fields based on naming patterns
  */
@@ -1308,6 +1311,8 @@ export class FieldClusterer {
     
     return null;
   }
+
+
 }
 
 // Export singleton instance for easier usage
