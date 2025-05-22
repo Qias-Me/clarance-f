@@ -101,11 +101,11 @@ export function extractSpatialInfo(field: PDFField, pdfDoc?: PDFDocument): Spati
     return null;
   }
   
-  // Extract coordinates from either the rect property or direct properties
-  const x = field.rect?.x || (field as any).x || 0;
-  const y = field.rect?.y || (field as any).y || 0;
-  const width = field.rect?.width || (field as any).width || 0;
-  const height = field.rect?.height || (field as any).height || 0;
+  // Extract coordinates from either the rect property or direct properties and round to 2 decimal places
+  const x = Math.round((field.rect?.x || (field as any).x || 0) * 100) / 100;
+  const y = Math.round((field.rect?.y || (field as any).y || 0) * 100) / 100;
+  const width = Math.round((field.rect?.width || (field as any).width || 0) * 100) / 100;
+  const height = Math.round((field.rect?.height || (field as any).height || 0) * 100) / 100;
   
   // Get page dimensions - use field's page if available, otherwise use first page
   const pageIndex = field.page ? field.page - 1 : 0; // Convert from 1-based to 0-based
@@ -308,81 +308,61 @@ export function clusterFieldsSpatially(
   // Initialize clusters array
   const clusters: SpatialCluster[] = [];
   
-  // Group fields by page first
-  const fieldsByPage: Record<number, CategorizedField[]> = {};
+  // Group fields by page using Map for better performance
+  const fieldsByPage = new Map<number, Array<{field: CategorizedField, spatialInfo: SpatialInfo}>>();
   
+  // Pre-process fields to extract spatial info only once
   fields.forEach(field => {
     if (!field.page) return;
     
-    if (!fieldsByPage[field.page]) {
-      fieldsByPage[field.page] = [];
+    const spatialInfo = extractSpatialInfo(field);
+    if (!spatialInfo) return;
+    
+    if (!fieldsByPage.has(field.page)) {
+      fieldsByPage.set(field.page, []);
     }
     
-    fieldsByPage[field.page].push(field);
+    fieldsByPage.get(field.page)!.push({ field, spatialInfo });
   });
   
   // Process each page separately
-  Object.entries(fieldsByPage).forEach(([pageStr, pageFields]) => {
-    const page = parseInt(pageStr, 10);
-    
-    // Get spatial info for all fields
-    const fieldsWithSpatialInfo = pageFields
-      .map(field => ({ field, spatialInfo: extractSpatialInfo(field) }))
-      .filter(item => item.spatialInfo !== null) as Array<{ field: CategorizedField, spatialInfo: SpatialInfo }>;
-    
+  fieldsByPage.forEach((fieldsWithSpatialInfo, page) => {
     // Skip if no fields have spatial info
     if (fieldsWithSpatialInfo.length === 0) return;
     
     // Simple clustering algorithm:
     // For each field, check if it belongs to an existing cluster or create a new one
-    fieldsWithSpatialInfo.forEach(({ field, spatialInfo }) => {
+    for (const { field, spatialInfo } of fieldsWithSpatialInfo) {
       // Find the closest cluster on this page
       let closestCluster: SpatialCluster | null = null;
       let minDistance = Number.MAX_VALUE;
       
-      for (const cluster of clusters) {
-        if (cluster.page !== page) continue;
-        
-        // Calculate distance to cluster centroid
-        const distance = Math.sqrt(
+      // Only check clusters on the same page
+      const pageClusters = clusters.filter(c => c.page === page);
+      
+      for (const cluster of pageClusters) {
+        // Calculate distance to cluster centroid using squared distance for efficiency
+        // (avoiding unnecessary square root operations when comparing distances)
+        const squaredDistance = 
           Math.pow(spatialInfo.relativeX - cluster.centroid.x, 2) +
-          Math.pow(spatialInfo.relativeY - cluster.centroid.y, 2)
-        );
+          Math.pow(spatialInfo.relativeY - cluster.centroid.y, 2);
         
-        if (distance < minDistance) {
-          minDistance = distance;
+        if (squaredDistance < minDistance) {
+          minDistance = squaredDistance;
           closestCluster = cluster;
         }
       }
+      
+      // Convert back to actual distance for threshold comparison
+      minDistance = Math.sqrt(minDistance);
       
       // If within threshold, add to closest cluster, otherwise create new cluster
       if (closestCluster !== null && minDistance <= maxDistance) {
         // Add field to existing cluster
         closestCluster.fields.push(field);
         
-        // Recalculate centroid
-        const allSpatialInfos = closestCluster.fields
-          .map(f => extractSpatialInfo(f))
-          .filter((info): info is SpatialInfo => info !== null);
-        
-        if (allSpatialInfos.length > 0) {
-          closestCluster.centroid = {
-            x: allSpatialInfos.reduce((sum, info) => sum + info.relativeX, 0) / allSpatialInfos.length,
-            y: allSpatialInfos.reduce((sum, info) => sum + info.relativeY, 0) / allSpatialInfos.length
-          };
-          
-          // Update radius to encompass all points
-          let maxRadius = 0;
-          allSpatialInfos.forEach(info => {
-            const distance = Math.sqrt(
-              Math.pow(info.relativeX - closestCluster!.centroid.x, 2) +
-              Math.pow(info.relativeY - closestCluster!.centroid.y, 2)
-            );
-            maxRadius = Math.max(maxRadius, distance);
-          });
-          
-          closestCluster.radius = maxRadius;
-        }
+        // Update cluster properties efficiently
+        updateClusterProperties(closestCluster);
       } else {
         // Create new cluster
         clusters.push({
@@ -397,42 +377,84 @@ export function clusterFieldsSpatially(
           confidence: 0.5
         });
       }
-    });
+    }
   });
   
   // Calculate dominant section for each cluster
-  clusters.forEach(cluster => {
-    const sectionCounts: Record<number, number> = {};
-    
-    // Count sections in cluster
-    cluster.fields.forEach(field => {
-      if (field.section) {
-        sectionCounts[field.section] = (sectionCounts[field.section] || 0) + 1;
-      }
-    });
-    
-    // Find dominant section
-    let dominantSection = 0;
-    let maxCount = 0;
-    let totalFields = 0;
-    
-    Object.entries(sectionCounts).forEach(([sectionStr, count]) => {
-      totalFields += count;
-      
-      if (count > maxCount) {
-        maxCount = count;
-        dominantSection = parseInt(sectionStr, 10);
-      }
-    });
-    
-    // Calculate confidence based on percentage of dominant section
-    const confidence = totalFields > 0 ? maxCount / totalFields : 0;
-    
-    cluster.dominantSection = dominantSection;
-    cluster.confidence = confidence;
-  });
+  clusters.forEach(updateClusterDominantSection);
   
   return clusters;
+}
+
+/**
+ * Helper function to update cluster centroid and radius
+ * @param cluster The cluster to update
+ */
+function updateClusterProperties(cluster: SpatialCluster): void {
+  // Extract spatial info for all fields in the cluster
+  const allSpatialInfos = cluster.fields
+    .map(f => extractSpatialInfo(f))
+    .filter((info): info is SpatialInfo => info !== null);
+  
+  if (allSpatialInfos.length === 0) return;
+  
+  // Calculate new centroid
+  const sumX = allSpatialInfos.reduce((sum, info) => sum + info.relativeX, 0);
+  const sumY = allSpatialInfos.reduce((sum, info) => sum + info.relativeY, 0);
+  
+  cluster.centroid = {
+    x: sumX / allSpatialInfos.length,
+    y: sumY / allSpatialInfos.length
+  };
+  
+  // Update radius to encompass all points
+  let maxRadiusSquared = 0;
+  
+  for (const info of allSpatialInfos) {
+    const distanceSquared = 
+      Math.pow(info.relativeX - cluster.centroid.x, 2) +
+      Math.pow(info.relativeY - cluster.centroid.y, 2);
+    
+    maxRadiusSquared = Math.max(maxRadiusSquared, distanceSquared);
+  }
+  
+  cluster.radius = Math.sqrt(maxRadiusSquared);
+}
+
+/**
+ * Helper function to update the dominant section of a cluster
+ * @param cluster The cluster to update
+ */
+function updateClusterDominantSection(cluster: SpatialCluster): void {
+  // Use Map for better performance with numeric keys
+  const sectionCounts = new Map<number, number>();
+  let totalFields = 0;
+  
+  // Count sections in cluster
+  for (const field of cluster.fields) {
+    if (!field.section) continue;
+    
+    const count = (sectionCounts.get(field.section) || 0) + 1;
+    sectionCounts.set(field.section, count);
+    totalFields++;
+  }
+  
+  // Find dominant section
+  let dominantSection = 0;
+  let maxCount = 0;
+  
+  sectionCounts.forEach((count, section) => {
+    if (count > maxCount) {
+      maxCount = count;
+      dominantSection = section;
+    }
+  });
+  
+  // Calculate confidence based on percentage of dominant section
+  const confidence = totalFields > 0 ? maxCount / totalFields : 0;
+  
+  cluster.dominantSection = dominantSection;
+  cluster.confidence = confidence;
 }
 
 /**

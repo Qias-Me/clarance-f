@@ -1014,9 +1014,9 @@ export class RulesGenerator {
     
     // Log results based on validation output
     if (result.success) {
-      console.log(chalk.green(`✓ Section count validation passed! ${result.alignmentPercentage.toFixed(1)}% sections aligned.`));
+      console.log(chalk.green(`✓ Section count validation passed! ${result.alignmentPercentage?.toFixed(1)}% sections aligned.`));
     } else {
-      console.log(chalk.yellow(`⚠ Section count validation issues: Only ${result.alignmentPercentage.toFixed(1)}% sections aligned.`));
+      console.log(chalk.yellow(`⚠ Section count validation issues: Only ${result.alignmentPercentage?.toFixed(1)}% sections aligned.`));
       
       // Log top 5 issues
       const topIssues = result.deviations.slice(0, 5);

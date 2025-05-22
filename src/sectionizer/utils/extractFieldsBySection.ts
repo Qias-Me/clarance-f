@@ -70,13 +70,18 @@ const DEFAULT_PDF_PATH = path.resolve(
  * Extract all fields from the SF-86 PDF
  *
  * @param pdfPath Path to the SF-86 PDF file or JSON fields file
+ * @param force If true, bypass cache and extract fields directly from PDF
  * @returns Promise resolving to an array of PDF fields and the PDFDocument
  */
 export async function extractFields(
-  pdfPath: string = DEFAULT_PDF_PATH
+  pdfPath: string = DEFAULT_PDF_PATH,
+  force: boolean = false
 ): Promise<{ fields: PDFField[], pdfDoc?: PDFDocument }> {
+  console.log(`extractFields called with path: ${pdfPath}, force: ${force}`);
+  
   // Check if file exists
   if (!fs.existsSync(pdfPath)) {
+    console.error(`File not found at ${pdfPath}`);
     throw new Error(`File not found at ${pdfPath}`);
   }
 
@@ -84,24 +89,100 @@ export async function extractFields(
     // Check if it's a JSON file with pre-extracted fields
     if (pdfPath.toLowerCase().endsWith('.json')) {
       console.log(`Loading fields from JSON file: ${pdfPath}`);
-      const jsonData = JSON.parse(fs.readFileSync(pdfPath, 'utf-8'));
+      
+      // Read file contents
+      let jsonData;
+      try {
+        const fileContents = fs.readFileSync(pdfPath, 'utf-8');
+        console.log(`Read ${fileContents.length} bytes from JSON file`);
+        
+        // Parse JSON data
+        jsonData = JSON.parse(fileContents);
+        console.log(`Successfully parsed JSON with ${jsonData.length} entries`);
+      } catch (jsonError: any) {
+        console.error(`Error reading/parsing JSON file: ${jsonError}`);
+        throw new Error(`Failed to read/parse JSON file: ${jsonError.message}`);
+      }
 
       // Convert JSON data to PDFField format
+      console.log("Converting JSON data to PDFField format...");
       const processedFields = jsonData.map((field: any) => ({
         id: field.id,
         name: field.name,
         value: field.value,
-        page: field.page || 0,
+        page: field.page || -1,
         label: field.label,
         type: field.type,
-        maxLength: field.maxLength,
-        options: field.options,
-        required: field.required,
+        maxLength: field.maxLength || undefined,
+        options: field.options || [],
+        required: field.required || false,
         rect: field.rect || null
       }));
 
-      return { fields: processedFields };
+      console.log(`Loaded ${processedFields.length} fields from JSON file`);
+      
+      // Try to load PDF document if it exists in the same directory
+      let pdfDoc: PDFDocument | undefined;
+      const possiblePdfPath = pdfPath.replace(/\.json$/, '.pdf');
+      if (fs.existsSync(possiblePdfPath)) {
+        try {
+          console.log(`Found associated PDF file: ${possiblePdfPath}`);
+          const pdfBytes = fs.readFileSync(possiblePdfPath);
+          pdfDoc = await PDFDocument.load(pdfBytes);
+          console.log(`Successfully loaded associated PDF document`);
+        } catch (error) {
+          console.warn(`Could not load associated PDF document: ${error}`);
+        }
+      } else {
+        console.warn(`No associated PDF document found for ${pdfPath}`);
+        console.warn(`Spatial analysis features may be limited without PDF page dimensions`);
+      }
+
+      return { fields: processedFields, pdfDoc };
     }
+
+    // Check for a cached version of the extracted fields
+    const cacheFilename = `${pdfPath}.cache.json`;
+    
+    // Check if cache exists and is newer than PDF file
+    if (!force && fs.existsSync(cacheFilename)) {
+      const pdfStats = fs.statSync(pdfPath);
+      const cacheStats = fs.statSync(cacheFilename);
+      
+      if (cacheStats.mtime > pdfStats.mtime) {
+        console.log(`Loading fields from cache: ${cacheFilename}`);
+        const cachedData = JSON.parse(fs.readFileSync(cacheFilename, 'utf-8'));
+        
+        // Convert JSON data to PDFField format
+        const processedFields = cachedData.map((field: any) => ({
+          id: field.id,
+          name: field.name,
+          value: field.value,
+          page: field.page || 0,
+          label: field.label,
+          type: field.type,
+          maxLength: field.maxLength,
+          options: field.options,
+          required: field.required,
+          rect: field.rect || null
+        }));
+        
+        console.log(`Loaded ${processedFields.length} fields from cache`);
+        
+        // We still need to load the PDF document for page dimensions
+        let pdfDoc: PDFDocument | undefined;
+        try {
+          const pdfBytes = fs.readFileSync(pdfPath);
+          pdfDoc = await PDFDocument.load(pdfBytes);
+        } catch (error) {
+          console.warn(`Could not load PDF document, spatial analysis may be limited: ${error}`);
+        }
+        
+        return { fields: processedFields, pdfDoc };
+      }
+    }
+    
+    console.log(`Extracting fields from PDF: ${pdfPath}${force ? ' (cache bypassed)' : ''}`);
 
     // Use the existing PdfService to extract field metadata
     const pdfService = new PdfService();
@@ -138,6 +219,14 @@ export async function extractFields(
     );
 
     console.log(`Extracted ${fieldMetadata.length} raw fields, ${processedFields.length} unique fields after deduplication`);
+
+    // Save to cache for future use
+    try {
+      fs.writeFileSync(cacheFilename, JSON.stringify(processedFields, null, 2));
+      console.log(`Saved extracted fields to cache: ${cacheFilename}`);
+    } catch (error) {
+      console.warn(`Could not save fields to cache: ${error}`);
+    }
 
     return {
       fields: processedFields,
@@ -1013,7 +1102,19 @@ export function enhanceFieldsWithCoordinates(fields: PDFField[], pdfDoc?: PDFDoc
  * @returns Array of categorized fields
  */
 export function categorizeFields(fields: PDFField[], pdfDoc?: PDFDocument): CategorizedField[] {
+
+  
   console.time("categorizeFields");
+
+  
+    // Then categorize each field using name-based approaches
+    const preFields = fields.map((field) => {
+      // Use the categorizeField function to assign a section
+      const result = categorizeField(field, true);
+      return result;
+    });
+  
+
 
   // First enhance fields with coordinate data for spatial analysis
   const fieldsWithCoordinates = enhanceFieldsWithCoordinates(fields, pdfDoc);
@@ -1035,17 +1136,17 @@ export function categorizeFields(fields: PDFField[], pdfDoc?: PDFDocument): Cate
     }
   }
 
-  // Then categorize each field using name-based approaches
-  const initialCategorizedFields = fieldsWithCoordinates.map((field) => {
-    // Use the categorizeField function to assign a section
-    const result = categorizeField(field, true);
-    return result;
-  });
+  // // Then categorize each field using name-based approaches
+  // const initialCategorizedFields = fieldsWithCoordinates.map((field) => {
+  //   // Use the categorizeField function to assign a section
+  //   const result = categorizeField(field, true);
+  //   return result;
+  // });
 
   console.log("Initial categorization completed. Applying spatial enhancement...");
 
   // Apply spatial boundary enhancement to improve categorization
-  const spatiallyEnhancedFields = enhanceSpatialCategorization(initialCategorizedFields);
+  const spatiallyEnhancedFields = enhanceSpatialCategorization(preFields);
 
   // Organize fields by spatial relationships for better subsection and entry assignments
   const fullyOrganizedFields = organizeSpatialSubsectionEntries(spatiallyEnhancedFields);

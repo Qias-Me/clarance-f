@@ -372,12 +372,12 @@ async generateJSON_fromPDF(
           const x2 = rectArray.lookup(2, PDFNumber).asNumber();
           const y2 = rectArray.lookup(3, PDFNumber).asNumber();
           
-          // Ensure coordinates are properly ordered (x1,y1 is lower-left)
+          // Ensure coordinates are properly ordered (x1,y1 is lower-left) and round to 2 decimal places
           return {
-            x: Math.min(x1, x2),
-            y: Math.min(y1, y2),
-            width: Math.abs(x2 - x1),
-            height: Math.abs(y2 - y1)
+            x: Math.round(Math.min(x1, x2) * 100) / 100,
+            y: Math.round(Math.min(y1, y2) * 100) / 100,
+            width: Math.round(Math.abs(x2 - x1) * 100) / 100,
+            height: Math.round(Math.abs(y2 - y1) * 100) / 100
           };
         } catch (e) {
           console.warn('Error parsing rectangle array:', e);
@@ -471,7 +471,7 @@ async generateJSON_fromPDF(
       const fieldName = field.getName();
       const fieldType = field.constructor.name;
       // Log the field type for every field
-      console.log(`Processing field: ${fieldName}, Type: ${fieldType}`);
+      // console.log(`Processing field: ${fieldName}, Type: ${fieldType}`);
 
       const widgets = field.acroField.getWidgets();
       const pages = this.getFieldPages(field, pdfDoc);
@@ -520,7 +520,7 @@ async generateJSON_fromPDF(
         // Log sample data
         const logSample = (type: string, currentLogged: number) => {
           if (currentLogged < SAMPLE_LOG_LIMIT) {
-            console.log(`  [Sample] Type: ${fieldType}, Name: ${fieldName}, Page: ${pageIndex !== null ? pageIndex + 1 : 'N/A'}, Coords: ${JSON.stringify(coordinates)}, Method: ${extractionMethod}`);
+            console.log(`  [Sample] Type: ${fieldType}, Name: ${fieldName}, Page: ${pageIndex !== null ? pageIndex + 1 : 'N/A'}, Coords: ${JSON.stringify(coordinates)}`);
             return currentLogged + 1;
           }
           return currentLogged;
@@ -532,6 +532,7 @@ async generateJSON_fromPDF(
           radioSampleLogged = logSample("RadioGroup", radioSampleLogged);
         } else if (fieldType === "PDFTextField") {
           textSampleLogged = logSample("TextField", textSampleLogged);
+        
         } else {
           // Log any other field types encountered, just once per type for brevity
           if (!seenFieldIds.has(`otherTypeLogged_${fieldType}`)) {
@@ -900,10 +901,10 @@ async generateJSON_fromPDF(
               const y2 = annotRect.lookup(3, PDFNumber).asNumber();
               
               return {
-                x: Math.min(x1, x2),
-                y: Math.min(y1, y2),
-                width: Math.abs(x2 - x1),
-                height: Math.abs(y2 - y1)
+                x: Math.round(Math.min(x1, x2) * 100) / 100,
+                y: Math.round(Math.min(y1, y2) * 100) / 100,
+                width: Math.round(Math.abs(x2 - x1) * 100) / 100,
+                height: Math.round(Math.abs(y2 - y1) * 100) / 100
               };
             }
           }
@@ -935,10 +936,10 @@ async generateJSON_fromPDF(
         const y2 = rectArray.lookup(3, PDFNumber).asNumber();
         
         return {
-          x: Math.min(x1, x2),
-          y: Math.min(y1, y2),
-          width: Math.abs(x2 - x1),
-          height: Math.abs(y2 - y1)
+          x: Math.round(Math.min(x1, x2) * 100) / 100,
+          y: Math.round(Math.min(y1, y2) * 100) / 100,
+          width: Math.round(Math.abs(x2 - x1) * 100) / 100,
+          height: Math.round(Math.abs(y2 - y1) * 100) / 100
         };
       }
     } catch (error) {

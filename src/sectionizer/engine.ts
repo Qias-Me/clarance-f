@@ -15,7 +15,14 @@ import type { MatchRule, EnhancedField } from "./types.js";
 import { confidenceCalculator } from "./utils/confidence-calculator.js";
 import { ruleLoader } from "./utils/rule-loader.js";
 import { rulesGenerator } from "./utils/rules-generator.js";
-import { sectionFieldPatterns } from "./utils/field-clusterer.js";
+import {
+  sectionFieldPatterns,
+  expectedFieldCounts,
+  subsectionPatterns,
+  entryPatterns,
+  sectionEntryPrefixes,
+  sectionStructure
+} from "./utils/field-clusterer.js";
 
 /**
  * Interface defining a rule for field categorization
@@ -62,38 +69,7 @@ export class RuleEngine {
   private logger: any;
 
   // Reference section distribution for validation
-  private expectedSectionCounts: Record<number, number> = {
-    1: 4,
-    2: 2,
-    3: 4,
-    4: 138,
-    5: 45,
-    6: 6,
-    7: 17,
-    8: 10,
-    9: 78,
-    10: 122,
-    11: 252,
-    12: 118,
-    13: 1086,
-    14: 40,
-    15: 60,
-    16: 154,
-    17: 332,
-    18: 964,
-    19: 277,
-    20: 570,
-    21: 486,
-    22: 267,
-    23: 191,
-    24: 160,
-    25: 79,
-    26: 237,
-    27: 57,
-    28: 23,
-    29: 141,
-    30: 25,
-  };
+  private expectedSectionCounts = expectedFieldCounts;
 
   /**
    * Create a new rule engine
@@ -291,6 +267,7 @@ export class RuleEngine {
     for (const [sectionStr, patterns] of Object.entries(
       this.strictSectionPatterns
     )) {
+
       const section = parseInt(sectionStr);
 
       // Check if the field matches any of the strict patterns for this section
@@ -301,8 +278,8 @@ export class RuleEngine {
 
       if (matchesStrict) {
         // Try to extract subsection and entry for strict matches
-        const subsection = this.extractSubsection(field.name);
-        const entry = this.extractEntry(field.name);
+        const subsection = this.extractSubsection(field.name, section);
+        const entry = this.extractEntry(field.name, section);
 
         return {
           section,
@@ -317,6 +294,7 @@ export class RuleEngine {
           },
         };
       }
+      
     }
 
     // Try to match against each rule
@@ -428,7 +406,7 @@ export class RuleEngine {
 
         // Extract subsection if present in rule
         const subsection =
-          rule.subsection || this.extractSubsection(field.name);
+          rule.subsection || this.extractSubsection(field.name, rule.section);
 
         // Update best match if this rule has higher confidence
         if (!bestMatch || adjustedConfidence > bestMatch.confidence) {
@@ -449,17 +427,42 @@ export class RuleEngine {
   /**
    * Extract subsection information from field name
    */
-  private extractSubsection(fieldName: string): string | undefined {
+  private extractSubsection(fieldName: string, knownSection?: number): string | undefined {
     if (!fieldName) return undefined;
 
-    // Look for subsection patterns in the name
-    // Examples: Section5_2, section5-2, subsection5_2, etc.
-    const subsectionMatch = fieldName.match(/[Ss]ection(\d+)[-_](\d+)/);
-    if (subsectionMatch && subsectionMatch.length > 2) {
-      return subsectionMatch[2];
+    let section = knownSection !== undefined && knownSection > 0 ? knownSection : 0;
+    // Try to determine which section this field belongs to from its name if not provided
+    if (section === 0) {
+        const sectionMatch = fieldName.match(/[s]ection(\d+)/);
+        if (sectionMatch && sectionMatch[1]) {
+            section = parseInt(sectionMatch[1], 10);
+        }
     }
 
-    // Look for subsection pattern in parts
+    // First try section-specific patterns if we identified a section
+    if (section > 0 && subsectionPatterns[section]) {
+      for (const pattern of subsectionPatterns[section]) {
+        const match = fieldName.match(pattern);
+        if (match && match.length > 1) {
+          // For section-specific patterns, the subsection is typically in capture group 1
+          return match[1];
+        }
+      }
+    }
+
+    // If no match from section-specific patterns, try the generic patterns
+    for (const pattern of subsectionPatterns[0]) {
+      const match = fieldName.match(pattern);
+      if (match && match.length > 2) {
+        // Most patterns have the subsection in capture group 2
+        return match[2];
+      } else if (match && match.length > 1 && pattern.toString().includes('Subsection')) {
+        // For patterns with just the subsection identifier
+        return match[1];
+      }
+    }
+
+    // Look for subsection pattern in parts (fallback)
     const parts = fieldName.split(/[\\/_.]/);
     for (let i = 0; i < parts.length; i++) {
       if (/^subsection/i.test(parts[i]) && i + 1 < parts.length) {
@@ -478,24 +481,56 @@ export class RuleEngine {
   /**
    * Extract entry information from field name
    */
-  private extractEntry(fieldName: string): number | undefined {
+  private extractEntry(fieldName: string, knownSection?: number): number | undefined {
     if (!fieldName) return undefined;
+    
+    let section = knownSection !== undefined && knownSection > 0 ? knownSection : 0;
+    // Try to determine which section this field belongs to from its name if not provided
+    if (section === 0) {
+        const sectionMatch = fieldName.match(/[Ss]ection(\d+)/);
+        if (sectionMatch && sectionMatch[1]) {
+            section = parseInt(sectionMatch[1], 10);
+        }
+    }
 
-    // Look for entry index in brackets [n]
-    const bracketMatch = fieldName.match(/\[(\d+)\]/g);
-    if (bracketMatch && bracketMatch.length > 0) {
-      // Last bracket is typically the entry index
-      const lastBracket = bracketMatch[bracketMatch.length - 1];
-      const indexMatch = lastBracket.match(/\[(\d+)\]/);
-      if (indexMatch && indexMatch[1]) {
-        return parseInt(indexMatch[1], 10);
+    // First try section-specific patterns if we identified a section
+    if (section > 0 && entryPatterns[section]) {
+      for (const pattern of entryPatterns[section]) {
+        const match = fieldName.match(pattern);
+        if (match && match.length > 1) {
+          const parsedEntry = parseInt(match[1], 10);
+          if (!isNaN(parsedEntry)) {
+            return parsedEntry;
+          }
+        }
       }
     }
 
-    // Look for entry pattern entry5, entry-5, etc.
-    const entryMatch = fieldName.match(/entry[-_]?(\d+)/i);
-    if (entryMatch && entryMatch.length > 1) {
-      return parseInt(entryMatch[1], 10);
+    // If no match from section-specific patterns, try the generic patterns
+    for (const pattern of entryPatterns[0]) {
+      const match = fieldName.match(pattern);
+      if (match && match.length > 1) {
+        const parsedEntry = parseInt(match[1], 10);
+        if (!isNaN(parsedEntry)) {
+          return parsedEntry;
+        }
+      }
+    }
+
+    // Look for section-specific entry patterns based on the field name
+    for (const [sectionStr, prefixes] of Object.entries(sectionEntryPrefixes)) {
+      const sectionNum = parseInt(sectionStr, 10);
+      // If the field name contains any of the section's entry prefixes
+      if (prefixes.some((prefix: string) => fieldName.toLowerCase().includes(prefix.toLowerCase()))) {
+        // Extract numeric part after the prefix
+        const match = fieldName.match(new RegExp(`${prefixes.join('|')}[_-]?(\\d+)`, 'i'));
+        if (match && match.length > 1) {
+          const parsedEntry = parseInt(match[1], 10);
+          if (!isNaN(parsedEntry)) {
+            return parsedEntry;
+          }
+        }
+      }
     }
 
     return undefined;
@@ -587,26 +622,29 @@ export class RuleEngine {
 
     for (let section = 1; section <= 30; section++) {
       const count = sectionCounts[section] || 0;
-      const expected = this.expectedSectionCounts[section] || 0;
+      const expected = this.expectedSectionCounts[section] || { fields: 0, entries: 0, subsections: 0 };
+      
+      // Calculate total expected fields (including entries and subsections)
+      const totalExpectedFields = expected.fields + expected.entries + expected.subsections;
 
       // Determine if there's a serious distribution problem
       const hasCount = count > 0;
-      const hasExpected = expected > 0;
-      const ratio = hasCount && hasExpected ? count / expected : 0;
-      const deficit = expected - count;
+      const hasExpected = totalExpectedFields > 0;
+      const ratio = hasCount && hasExpected ? count / totalExpectedFields : 0;
+      const deficit = totalExpectedFields - count;
 
       // Store section status
       sectionStatus[section] = {
         count,
-        expected,
+        expected: totalExpectedFields,
         deficit,
         ratio,
         isOverAllocated: ratio >= 3,
-        isUnderAllocated: hasExpected && count < expected * 0.8,
+        isUnderAllocated: hasExpected && count < totalExpectedFields * 0.8,
       };
 
       // Mark sections with significant deviation for redistribution
-      if (expected > 0) {
+      if (totalExpectedFields > 0) {
         if (sectionStatus[section].isOverAllocated) {
           sectionsToRedistribute.push(section);
         }
@@ -618,11 +656,11 @@ export class RuleEngine {
 
       // Display warning for significant deviations
       const warning =
-        expected > 0 && Math.abs(count - expected) > Math.max(5, expected * 0.2)
+        totalExpectedFields > 0 && Math.abs(count - totalExpectedFields) > Math.max(5, totalExpectedFields * 0.2)
           ? " ⚠️"
           : "";
       console.log(
-        `Section ${section}: ${count} fields (Expected: ${expected})${warning}`
+        `Section ${section}: ${count} fields | Expected: [fields: ${expected.fields}, entries: ${expected.entries}, subsections: ${expected.subsections}]${warning}`
       );
     }
 
@@ -806,165 +844,7 @@ export class RuleEngine {
     uncategorizedFields: CategorizedField[]
   ): void {
     // Define section-specific patterns
-    const sectionPatterns: Record<number, RegExp[]> = {
-      5: [/OtherNames/i, /alias/i, /maiden/i, /prevName/i, /previousName/i],
-      8: [/citizenship/i, /citizen/i, /national/i, /nationality/i],
-      9: [
-        /residence/i,
-        /residency/i,
-        /address/i,
-        /lived/i,
-        /live/i,
-        /living/i,
-        /dwelling/i,
-        /housing/i,
-      ],
-      10: [
-        /education/i,
-        /school/i,
-        /college/i,
-        /university/i,
-        /degree/i,
-        /academic/i,
-      ],
-      11: [
-        /employment/i,
-        /employer/i,
-        /job/i,
-        /work/i,
-        /occupation/i,
-        /career/i,
-        /company/i,
-        /position/i,
-      ],
-      12: [/reference/i, /referee/i, /referrer/i, /vouch/i, /contact/i],
-      13: [
-        /employment/i,
-        /employer/i,
-        /job/i,
-        /work/i,
-        /occupation/i,
-        /career/i,
-        /company/i,
-        /position/i,
-        /salary/i,
-      ],
-      14: [
-        /selective/i,
-        /military/i,
-        /armed forces/i,
-        /service/i,
-        /discharge/i,
-        /defense/i,
-        /veteran/i,
-      ],
-      15: [
-        /military/i,
-        /foreign military/i,
-        /foreign service/i,
-        /foreign armed forces/i,
-        /foreign defense/i,
-      ],
-      16: [
-        /marital/i,
-        /marriage/i,
-        /spouse/i,
-        /husband/i,
-        /wife/i,
-        /civil union/i,
-        /domestic partner/i,
-      ],
-      17: [
-        /relative/i,
-        /family/i,
-        /cohabitant/i,
-        /mother/i,
-        /father/i,
-        /parent/i,
-        /brother/i,
-        /sister/i,
-        /sibling/i,
-      ],
-      18: [
-        /foreign.*contact/i,
-        /contact.*foreign/i,
-        /foreigner/i,
-        /non-citizen/i,
-        /overseas/i,
-      ],
-      19: [/foreign.*activit/i, /activit.*foreign/i, /overseas business/i],
-      20: [
-        /foreign.*business/i,
-        /business.*foreign/i,
-        /overseas business/i,
-        /international business/i,
-      ],
-      21: [
-        /travel/i,
-        /trip/i,
-        /abroad/i,
-        /overseas visit/i,
-        /international travel/i,
-        /passport/i,
-        /visa/i,
-      ],
-      22: [
-        /mental/i,
-        /psychological/i,
-        /emotional/i,
-        /counseling/i,
-        /therapy/i,
-        /psychiatr/i,
-        /disorder/i,
-      ],
-      23: [
-        /police/i,
-        /criminal/i,
-        /arrest/i,
-        /offense/i,
-        /crime/i,
-        /legal/i,
-        /law/i,
-        /violation/i,
-      ],
-      24: [
-        /drug/i,
-        /substance/i,
-        /alcohol/i,
-        /controlled substance/i,
-        /narcotic/i,
-        /misuse/i,
-        /abuse/i,
-      ],
-      25: [
-        /financial/i,
-        /money/i,
-        /debt/i,
-        /bankrupt/i,
-        /credit/i,
-        /loan/i,
-        /economic/i,
-      ],
-      26: [/consultancy/i, /advice/i, /recommend/i, /suggest/i],
-      27: [
-        /information technology/i,
-        /IT/i,
-        /computer/i,
-        /network/i,
-        /system/i,
-        /internet/i,
-      ],
-      28: [/background/i, /investigation/i, /clearance/i, /assessment/i],
-      29: [/form/i, /record/i, /document/i, /certificate/i, /submission/i],
-      30: [
-        /signature/i,
-        /sign/i,
-        /date/i,
-        /certify/i,
-        /attest/i,
-        /authentication/i,
-      ],
-    };
+    const sectionPatterns = sectionFieldPatterns;
 
     // Apply pattern-based matching - going through each section's patterns
     for (const field of uncategorizedFields) {
@@ -1212,43 +1092,12 @@ export class RuleEngine {
    * Initialize default rule files for all 30 sections
    */
   public initializeDefaultRules(): void {
-    const sectionNames = [
-      "Full Name",
-      "Date of Birth",
-      "Place of Birth",
-      "Social Security Number",
-      "Other Names Used",
-      "Your Identifying Information",
-      "Your Contact Information",
-      "U.S. Passport Information",
-      "Citizenship",
-      "Dual/Multiple Citizenship & Foreign Passport Info",
-      "Where You Have Lived",
-      "Where you went to School",
-      "Employment Acitivites",
-      "Selective Service",
-      "Military History",
-      "People Who Know You Well",
-      "Maritial/Relationship Status",
-      "Relatives",
-      "Foreign Contacts",
-      "Foreign Business, Activities, Government Contacts",
-      "Psycological and Emotional Health",
-      "Police Record",
-      "Illegal Use of Drugs and Drug Activity",
-      "Use of Alcohol",
-      "Investigations and Clearance",
-      "Financial Record",
-      "Use of Information Technology Systems",
-      "Involvement in Non-Criminal Court Actions",
-      "Association Record",
-      "Continuation Space",
-    ];
-
-    // Create default rule files for all sections
-    sectionNames.forEach((name, index) => {
-      this.createDefaultRuleFile(index + 1, name);
-    });
+    // Create default rule files for all sections using names from sectionStructure
+    for (let sectionNumber = 1; sectionNumber <= 30; sectionNumber++) {
+      // Get the section name from sectionStructure (first element in the array)
+      const sectionName = sectionStructure[sectionNumber][0];
+      this.createDefaultRuleFile(sectionNumber, sectionName);
+    }
   }
 
   /**

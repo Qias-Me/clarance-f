@@ -176,7 +176,275 @@ const sectionKeywords: Record<number, string[]> = {
   30: ["continuation", "additional", "information", "comments"]
 };
 
+// Add this section structure definition to replace the existing mapping
+export const sectionStructure: Record<number, string[]> = {
+  0:[ "Unknown" ],
+  1:[ "Full Name" ],
+  2:[ "Date of Birth" ],
+  3:[ "Place of Birth" ],
+  4:[ "Social Security Number" ],
+  5:[ "Other Names Used" ],
+  6:[ "Your Identifying Information" ],
+  7:[ "Your Contact Information" ],
+  8:[ "U.S. Passport Information" ],
+  9:[ "Citizenship" ],
+  10:[ "Dual/Multiple Citizenship & Foreign Passport Info" ],
+  11:[ "Where You Have Lived" ],
+  12:[ "Where you went to School" ],
+  13:[ "Employment Acitivites" ],
+  14:[ "Selective Service" ],
+  15:[ "Military History" ],
+  16:[ "People Who Know You Well" ],
+  17:[ "Maritial/Relationship Status" ],
+  18:[ "Relatives" ],
+  19:[ "Foreign Contacts" ],
+  20:[ "Foreign Business, Activities, Government Contacts" ],
+  21:[ "Psycological and Emotional Health" ],
+  22:[ "Police Record" ],
+  23:[ "Illegal Use of Drugs and Drug Activity" ],
+  24:[ "Use of Alcohol" ],
+  25:[ "Investigations and Clearance" ],
+  26:[ "Financial Record" ],
+  27:[ "Use of Information Technology Systems" ],
+  28:[ "Involvement in Non-Criminal Court Actions" ],
+  29:[ "Association Record" ],
+  30:[ "Continuation Space" ]
+};
 
+/**
+ * Patterns for extracting subsection information from field names
+ * Used to identify which fields belong to specific subsections within a section
+ */
+export const subsectionPatterns: Record<number, RegExp[]> = {
+  // Generic patterns that apply to multiple sections
+  0: [
+    // Generic subsection patterns that can be used as fallback
+    /[Ss]ection(\d+)[-_](\d+)/,
+    /[Ss]ection(\d+)\.(\d+)/i,
+    /\[SubSection[_-]?(\w+)\]/i,
+    // Pattern: Section17_1_2 (section 17, subsection 1, entry 2)
+    /section(\d+)_(\d+)_(\d+)/i,
+    // Pattern: Section17_1 (section 17, subsection 1)
+    /section(\d+)_(\d+)(?![_\d])/i
+  ],
+  // Section-specific subsection patterns
+  1: [],
+  2: [],
+  3: [],
+  4: [
+    // SSN fields in Section 4
+    /\.SSN\[(\d+)\]/i,
+    // RadioButtonList in Sections1-6 format (Section 4)
+    /Sections1-6\[\d+\]\.RadioButtonList\[\d+\]/i
+  ],
+  5: [
+    // Section 5 control fields (radio/checkbox)
+    /(Sections1-6|\.)section5[\[\.].*?(Radio|YES|NO)/i
+  ],
+  6: [],
+  7: [],
+  8: [],
+  9: [],
+  10: [
+
+  ],
+  11: [],
+  12: [],
+  13: [
+
+  ],
+  14: [],
+  15: [],
+  16: [],
+  17: [
+
+  ],
+  18: [],
+  19: [],
+  20: [
+    // Foreign activities subsections
+    /foreign[._-]?activity[._-]?(\d+)/i,
+    /foreign[._-]?government[._-]?(\d+)/i
+  ],
+  21: [
+
+  ],
+  22: [],
+  23: [],
+  24: [],
+  25: [],
+  26: [],
+  27: [],
+  28: [],
+  29: [
+  ],
+  30: []
+};
+
+/**
+ * Patterns for extracting entry information from field names
+ * Used to identify which fields belong to numbered entries within a section or subsection
+ */
+export const entryPatterns: Record<number, RegExp[]> = {
+  // Generic patterns that apply to multiple sections
+  0: [
+    // Generic entry patterns for all sections
+    /\[(\d+)\]/,
+    /entry[-_]?(\d+)/i,
+    /(?:item|row|entry|record|instance)[-_](\d+)/i,
+    /\w+(\d+)$/,
+    /form1\[0\]\.Section\d+\.Entry(\d+)/i,
+    // Pattern: section_21_2 (section 21, entry 2)
+    /section[_\s]?(\d+)[_\s]?(\d+)/i,
+    // Pattern: formX[entry].SectionY or similar
+    /form\d+\[(\d+)\][._].*?(?:section(?:s)?(\d+)|sections(\d+)-\d+)/i
+  ],
+  // Section-specific entry patterns
+  1: [],
+  2: [],
+  3: [],
+  4: [
+    // SSN fields in Section 4
+    /\.SSN\[(\d+)\]/i,
+    // RadioButtonList in Sections1-6 format (Section 4)
+    /Sections1-6\[\d+\]\.RadioButtonList\[\d+\]/i
+  ],
+  5: [
+    // Other names used
+    /othername[._-]?(\d+)/i,
+    /alias[._-]?(\d+)/i,
+    /maiden[._-]?(\d+)/i,
+    // Section 5 specific patterns
+    /\.section5\[(\d+)\]\.TextField11\[(\d+)\]/i,
+    /\.section5\[(\d+)\]\.#area\[(\d+)\]\.From_Datefield_Name_2\[(\d+)\]/i,
+    /Sections1-6\[\d+\]\.section5\[(\d+)\]\.([^[]+)(?:\[(\d+)\])?/i,
+    /Sections1-6\[\d+\]\.section5\[\d+\]\.TextField11\[(\d+)\]/i,
+    /Sections1-6\[\d+\]\.section5\[\d+\]\.#area\[\d+\]\.From_Datefield_Name_2\[(\d+)\]/i
+  ],
+  6: [],
+  7: [],
+  8: [],
+  9: [],
+  10: [],
+  11: [
+    // Residence history
+    /residence[._-]?(\d+)/i,
+    /address[._-]?(\d+)/i,
+    /lived[._-]?(\d+)/i
+  ],
+  12: [
+    // Education history
+    /school[._-]?(\d+)/i,
+    /education[._-]?(\d+)/i,
+    /degree[._-]?(\d+)/i
+  ],
+  13: [
+    // Employment history
+    /employer[._-]?(\d+)/i,
+    /employment[._-]?(\d+)/i,
+    /job[._-]?(\d+)/i,
+    /position[._-]?(\d+)/i
+  ],
+  14: [],
+  15: [
+    // Military history
+    /military[._-]?(\d+)/i,
+    /service[._-]?(\d+)/i,
+    /branch[._-]?(\d+)/i
+  ],
+  16: [
+    // References
+    /reference[._-]?(\d+)/i,
+    /knowsyou[._-]?(\d+)/i,
+    /contact[._-]?(\d+)/i
+  ],
+  17: [
+    // Relationships
+    /spouse[._-]?(\d+)/i,
+    /partner[._-]?(\d+)/i,
+    /relationship[._-]?(\d+)/i,
+    /cohabitant[._-]?(\d+)/i
+  ],
+  18: [
+    // Relatives
+    /relative[._-]?(\d+)/i,
+    /family[._-]?(\d+)/i,
+    /member[._-]?(\d+)/i
+  ],
+  19: [
+    // Foreign contacts
+    /foreign[._-]?contact[._-]?(\d+)/i,
+    /nonuscitizen[._-]?(\d+)/i
+  ],
+  20: [
+    // Foreign activities
+    /foreignbus[._-]?(\d+)/i,
+    /foreigngov[._-]?(\d+)/i,
+    /activity[._-]?(\d+)/i
+  ],
+  21: [],
+  22: [
+    // Police record
+    /offense[._-]?(\d+)/i,
+    /arrest[._-]?(\d+)/i,
+    /charge[._-]?(\d+)/i
+  ],
+  23: [
+    // Drug use
+    /drug[._-]?(\d+)/i,
+    /substance[._-]?(\d+)/i,
+    /controlled[._-]?(\d+)/i
+  ],
+  24: [],
+  25: [],
+  26: [
+    // Financial record
+    /financial[._-]?(\d+)/i,
+    /debt[._-]?(\d+)/i,
+    /bankruptcy[._-]?(\d+)/i
+  ],
+  27: [],
+  28: [],
+  29: [],
+  30: []
+};
+
+/**
+ * Entry field names by section
+ * Maps sections to common prefixes used for entry fields
+ */
+export const sectionEntryPrefixes: Record<number, string[]> = {
+  1: [],
+  2: [],
+  3: [],
+  4: [],
+  5: ["othername", "alias", "maiden"],      // Other names used
+  6: [],
+  7: [],
+  8: [],
+  9: [],
+  10: [],
+  11: ["residence", "address", "lived"],     // Where you have lived
+  12: ["school", "education", "degree"],     // Schools attended
+  13: ["employer", "employment", "job"],     // Employment history
+  14: [],
+  15: ["military", "service", "branch"],     // Military history
+  16: ["reference", "knowsyou", "contact"],  // References
+  17: ["spouse", "partner", "relationship"], // Relationships
+  18: ["relative", "family", "member"],      // Relatives
+  19: ["foreign", "contact", "nonuscitizen"], // Foreign contacts
+  20: ["foreignbus", "foreigngov", "activity"], // Foreign activities
+  21: [],
+  22: ["offense", "arrest", "charge"],       // Police record
+  23: ["drug", "substance", "controlled"],   // Drug use
+  24: [],
+  25: [],
+  26: ["financial", "debt", "bankruptcy"],   // Financial record
+  27: [],
+  28: [],
+  29: [],
+  30: []
+};
 
 // Define more accurate section page ranges based on validation
 export const sectionPageRanges: Record<number, [number, number]> = {

@@ -10,12 +10,13 @@ import type { OptionValues } from 'commander';
 import path from 'path';
 import * as fsPromises from 'fs/promises';
 import * as fs from 'fs';
+import { PDFDocument } from 'pdf-lib';
 
 /**
  * Interface for common command line options used throughout the application
  */
 export interface CommandLineOptions {
-  pdfPath?: string;
+  pdfPath: string;
   inputFields?: string;
   outputDir?: string;
   selfHealing?: boolean;
@@ -23,6 +24,8 @@ export interface CommandLineOptions {
   maxIterations?: number;
   logLevel?: 'debug' | 'info' | 'warn' | 'error' | 'success';
   generateReport?: boolean;
+  force?: boolean;
+  verbose?: boolean;
 }
 
 /**
@@ -73,6 +76,15 @@ export function configureCommandLineParser(): Command {
     .option(
       "-r, --generate-report",
       "Generate summary report after processing"
+    )
+    .option(
+      "-f, --force",
+      "Force extraction even when cache exists",
+      false
+    )
+    .option(
+      "--verbose",
+      "Show detailed output"
     );
 
   program.addHelpText(
@@ -109,7 +121,9 @@ export function parseCommandLineArgs(argv?: string[]): CommandLineOptions {
     validate: !!opts.validate,
     maxIterations: opts.maxIterations,
     logLevel: opts.logLevel,
-    generateReport: !!opts.generateReport
+    generateReport: !!opts.generateReport,
+    force: !!opts.force,
+    verbose: !!opts.verbose
   };
   
   return options;
@@ -137,10 +151,18 @@ function validateLogLevel(level: unknown): 'debug' | 'info' | 'warn' | 'error' |
  * @returns True if valid, false otherwise
  */
 export async function validatePdf(pdfPath: string): Promise<boolean> {
+  console.log(`Validating PDF path: ${pdfPath}`);
   try {
     const stats = await fs.promises.stat(pdfPath);
-    return stats.isFile() && path.extname(pdfPath).toLowerCase() === '.pdf';
+    const isFile = stats.isFile();
+    const extension = path.extname(pdfPath).toLowerCase();
+    const isValidExtension = extension === '.pdf';
+    
+    console.log(`PDF validation results: isFile=${isFile}, extension=${extension}, isValidExtension=${isValidExtension}`);
+    
+    return isFile && isValidExtension;
   } catch (error) {
+    console.error(`Error validating PDF: ${error}`);
     return false;
   }
 }

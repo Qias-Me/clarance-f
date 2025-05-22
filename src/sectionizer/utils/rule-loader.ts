@@ -59,8 +59,9 @@ export class RuleLoader {
     }
     
     try {
-      // Try to load rules from the rule file
-      const ruleFile = path.join(this.rulesDir, `section-${section}.json`);
+      // Try to load rules from the rule file - padded with leading zeros
+      const sectionStr = section.toString().padStart(2, "0");
+      const ruleFile = path.join(this.rulesDir, `section${sectionStr}.json`);
       const fileContent = await fs.readFile(ruleFile, 'utf-8');
       const sectionRules = JSON.parse(fileContent) as SectionRuleSet;
       
@@ -76,8 +77,9 @@ export class RuleLoader {
       
       // Add strict pattern rules for this section if available
       const sectionStr = section.toString();
-      if (strictSectionPatterns[sectionStr]) {
-        defaultRules.rules = strictSectionPatterns[sectionStr].map((pattern: RegExp) => ({
+      if (strictSectionPatterns[sectionStr as keyof typeof strictSectionPatterns]) {
+        const patterns = strictSectionPatterns[sectionStr as keyof typeof strictSectionPatterns];
+        defaultRules.rules = patterns.map((pattern: RegExp) => ({
           pattern: new RegExp(pattern.source, 'i'),
           confidence: 0.95,
           subSection: '_default'
@@ -122,8 +124,8 @@ export class RuleLoader {
       // Read all files in the rules directory
       const files = await fs.readdir(this.rulesDir);
       
-      // Extract section numbers from filenames
-      const sectionPattern = /section[-_]?(\d+)\.json$/i;
+      // Extract section numbers from filenames (format: section01.json, section02.json, etc.)
+      const sectionPattern = /section(\d+)\.json$/i;
       const sections = files
         .map(file => {
           const match = file.match(sectionPattern);

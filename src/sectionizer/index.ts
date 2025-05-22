@@ -63,6 +63,7 @@ import { updateRules } from './utils/rules-updater.js';
 
 // Import PDFDocument
 import { PDFDocument } from 'pdf-lib';
+import { expectedFieldCounts } from "./utils/field-clusterer.js";
 
 // Extend the CategorizedField to include our additional properties
 interface CategorizedField extends BaseCategorizedField {
@@ -123,7 +124,7 @@ function log(
  */
 async function distributeRemainingUnknownFields(
   sectionFields: Record<string, CategorizedField[]>,
-  referenceCounts: Record<number, number>
+  referenceCounts: Record<number, { fields: number, entries: number, subsections: number }>
 ): Promise<Record<string, CategorizedField[]>> {
   const result = { ...sectionFields };
   
@@ -152,15 +153,19 @@ async function distributeRemainingUnknownFields(
     if (isNaN(section) || section === 0) return;
     
     const actualCount = (result[section.toString()] || []).length;
-    if (actualCount < expectedCount) {
+    // Use the total of fields, entries, and subsections for comparison
+    const totalExpected = expectedCount.fields + expectedCount.entries + expectedCount.subsections;
+    if (actualCount < totalExpected) {
       undersizedSections.push(section);
     }
   });
   
   // Sort by most undersized first
   undersizedSections.sort((a, b) => {
-    const aDeficit = referenceCounts[a] - (result[a.toString()] || []).length;
-    const bDeficit = referenceCounts[b] - (result[b.toString()] || []).length;
+    const aExpected = referenceCounts[a].fields + referenceCounts[a].entries + referenceCounts[a].subsections;
+    const bExpected = referenceCounts[b].fields + referenceCounts[b].entries + referenceCounts[b].subsections;
+    const aDeficit = aExpected - (result[a.toString()] || []).length;
+    const bDeficit = bExpected - (result[b.toString()] || []).length;
     return bDeficit - aDeficit;
   });
   
@@ -184,7 +189,8 @@ async function distributeRemainingUnknownFields(
   
   // First, prioritize filling undersized sections
   for (const section of undersizedSections) {
-    const deficit = referenceCounts[section] - (result[section.toString()] || []).length;
+    const expectedTotal = referenceCounts[section].fields + referenceCounts[section].entries + referenceCounts[section].subsections;
+    const deficit = expectedTotal - (result[section.toString()] || []).length;
     if (deficit <= 0) continue;
     
     // Find pages belonging to this section
@@ -243,11 +249,12 @@ async function distributeRemainingUnknownFields(
       }
       
       // Check if this section is already oversized
-      const expectedCount = referenceCounts[sectionForPage] || 0;
+      const expectedCount = referenceCounts[sectionForPage] || { fields: 0, entries: 0, subsections: 0 };
+      const expectedTotal = expectedCount.fields + expectedCount.entries + expectedCount.subsections;
       const currentCount = result[sectionForPage.toString()].length;
       
       // Only assign if not already oversized
-      if (expectedCount === 0 || currentCount < expectedCount * 1.2) { // Allow up to 20% over expected
+      if (expectedTotal === 0 || currentCount < expectedTotal * 1.2) { // Allow up to 20% over expected
         // Update field
         field.section = sectionForPage;
         field.confidence = 0.6; // Lower confidence for fallback assignment
@@ -291,33 +298,21 @@ async function distributeRemainingUnknownFields(
  */
 function validateSectionCounts(
   sectionFields: Record<string, CategorizedField[]>,
-  referenceCounts: Record<number, number>,
+  referenceCounts: Record<number, { fields: number, entries: number, subsections: number }>,
   maxDeviationPercent: number = 30
 ): { 
   success: boolean, 
   deviations: Array<{section: number, expected: number, actual: number, deviation: number, percentage: number}>
 } {
-  // Convert simple referenceCounts to the complex type expected by the utility
-  const formattedCounts: Record<number, { fields: number; entries: number; subsections: number; }> = {};
-  
-  // Format the reference counts to match the expected structure
-  for (const [section, count] of Object.entries(referenceCounts)) {
-    const sectionNum = parseInt(section, 10);
-    if (!isNaN(sectionNum)) {
-      formattedCounts[sectionNum] = {
-        fields: count,
-        entries: 0, // Default values
-        subsections: 0 // Default values
-      };
-    }
-  }
+  // No need to convert referenceCounts since it's already in the right format
+  const formattedCounts = referenceCounts;
   
   // Use the imported utility function with properly formatted counts
   return validateSectionCountsUtil(sectionFields, formattedCounts, { maxDeviationPercent });
 }
 
 // Update the afterSelfHealing function to be more aggressive in distributing fields from section 0, ignoring expected count limits
-async function afterSelfHealing(sectionFields: Record<string, CategorizedField[]>, referenceCounts: Record<number, number>): Promise<Record<string, CategorizedField[]>> {
+async function afterSelfHealing(sectionFields: Record<string, CategorizedField[]>, referenceCounts: Record<number, { fields: number, entries: number, subsections: number }>): Promise<Record<string, CategorizedField[]>> {
   const unknownFields = sectionFields["0"] || [];
   const unknownCount = unknownFields.length;
   
@@ -498,10 +493,11 @@ async function afterSelfHealing(sectionFields: Record<string, CategorizedField[]
           if (isNaN(section) || section <= 0) return;
           
           const currentCount = (result[sectionStr] || []).length;
-          if (expectedCount > currentCount) {
+          const expectedTotal = expectedCount.fields + expectedCount.entries + expectedCount.subsections;
+          if (expectedTotal > currentCount) {
             candidates.push({
               section,
-              deficit: expectedCount - currentCount
+              deficit: expectedTotal - currentCount
             });
           }
         });
@@ -1359,7 +1355,7 @@ async function runCyclicalLearning(
   engine: RuleEngine,
   fields: PDFField[],
   pdfDoc?: PDFDocument,
-  referenceCounts?: Record<number, number>,
+  referenceCounts?: Record<number, { fields: number, entries: number, subsections: number }>,
   outputDir?: string,
   maxCycles: number = 3
 ): Promise<Record<string, CategorizedField[]>> {
@@ -1371,17 +1367,20 @@ async function runCyclicalLearning(
   log("info", `Loaded ${strictPatterns.length} strict section patterns for precise categorization`);
   
   // First, do basic categorization with the engine
-  let categorizedFields = engine.categorizeFields(fields as any);
+  log("info", "Initial categorization using rule engine...");
+  let categorizedFields = engine.categorizeFields(fields);
   
-  // Add this code after initial categorization
-  log("info", "Initial field categorization complete. Enhancing with spatial analysis...");
+  // Log initial section, subsection, and entry coverage
+  const initialSectionCount = categorizedFields.filter(f => f.section && f.section > 0).length;
+
+  log("info", `Initial coverage: Sections: ${initialSectionCount}/${fields.length} (${(initialSectionCount/fields.length*100).toFixed(1)}%)`);
   
   // Enhance fields with spatial analysis
+  log("info", "Enhancing categorization with spatial analysis...");
   const enhancedFields = enhanceFieldsWithSpatialAnalysis(categorizedFields, pdfDoc);
-  log("info", `Completed spatial analysis enhancement for ${enhancedFields.length} fields`);
   
   // Replace the original categorized fields with the enhanced ones
-  categorizedFields = enhancedFields;
+  // categorizedFields = enhancedFields;
   
   // Group by section
   let sectionFields = await groupFieldsBySection(categorizedFields);
@@ -1399,7 +1398,10 @@ async function runCyclicalLearning(
     
     // Update engine with enhanced rules based on current categorization
     if (cycle > 1) { // Skip first cycle as we already have initial rules
+      log("info", `Cycle ${cycle}: Generating improved subsection rules...`);
       await updateEnhancedSubsectionRules(engine, sectionFieldsRecord);
+      
+      log("info", `Cycle ${cycle}: Generating improved entry rules...`);
       await updateEnhancedEntryRules(engine, sectionFieldsRecord);
     }
     
@@ -1407,25 +1409,79 @@ async function runCyclicalLearning(
     log("info", `Re-categorizing fields with enhanced rules from cycle ${cycle}`);
     categorizedFields = engine.categorizeFields(fields);
     
+    // Track section, subsection, and entry coverage after each cycle
+    const cycleSectionCount = categorizedFields.filter(f => f.section && f.section > 0).length;
+    const cycleSubsectionCount = categorizedFields.filter(f => f.section && f.section > 0 && f.subsection).length;
+    const cycleEntryCount = categorizedFields.filter(f => f.section && f.section > 0 && typeof f.entry === 'number').length;
+    
+    log("info", `Cycle ${cycle} mid-progress: Sections: ${cycleSectionCount}/${fields.length} (${(cycleSectionCount/fields.length*100).toFixed(1)}%), ` +
+               `Subsections: ${cycleSubsectionCount}/${fields.length} (${(cycleSubsectionCount/fields.length*100).toFixed(1)}%), ` +
+               `Entries: ${cycleEntryCount}/${fields.length} (${(cycleEntryCount/fields.length*100).toFixed(1)}%)`);
+    
     // Apply spatial analysis to improve categorization
-    log("info", "Applying spatial analysis enhancement...");
+    log("info", `Cycle ${cycle}: Applying spatial analysis enhancement...`);
     categorizedFields = enhanceFieldsWithSpatialAnalysis(categorizedFields, pdfDoc);
     
     // Group by section
     sectionFields = await groupFieldsBySection(categorizedFields);
     sectionFieldsRecord = convertMapToRecord(sectionFields);
     
+    // Apply organization for subsections and entries based on spatial relationships
+    log("info", `Cycle ${cycle}: Organizing subsections and entries using spatial relationships...`);
+    categorizedFields = organizeSpatialSubsectionEntries(categorizedFields);
+    
+    // Regroup after spatial organization
+    sectionFields = await groupFieldsBySection(categorizedFields);
+    sectionFieldsRecord = convertMapToRecord(sectionFields);
+    
     // If we have reference counts and unknown fields, try to distribute them
     if (referenceCounts && sectionFieldsRecord["0"]?.length > 0) {
-      log("info", `Distributing ${sectionFieldsRecord["0"].length} remaining unknown fields based on reference counts and page numbers`);
+      log("info", `Cycle ${cycle}: Distributing ${sectionFieldsRecord["0"].length} remaining unknown fields based on reference counts and page numbers`);
       sectionFieldsRecord = await distributeRemainingUnknownFields(sectionFieldsRecord, referenceCounts);
+      
+      // Re-organize fields after distribution to ensure subsections and entries are properly assigned
+      const allFieldsAfterDistribution: CategorizedField[] = [];
+      Object.values(sectionFieldsRecord).forEach(fields => allFieldsAfterDistribution.push(...fields));
+      
+      // Re-apply spatial organization for subsections and entries
+      log("info", `Cycle ${cycle}: Re-organizing subsections and entries after distribution...`);
+      const organizedFields = organizeSpatialSubsectionEntries(allFieldsAfterDistribution);
+      
+      // Regroup after organization
+      sectionFields = await groupFieldsBySection(organizedFields);
+      sectionFieldsRecord = convertMapToRecord(sectionFields);
     }
     
     // Calculate coverage after this cycle
     const currentCoverage = calculateCoverage(sectionFieldsRecord);
     const improvement = currentCoverage - previousCoverage;
     
+    // Calculate subsection and entry coverage after this cycle
+    const afterCycleSectionCount = Object.values(sectionFieldsRecord).flat().filter(f => f.section && f.section > 0).length;
+    const afterCycleSubsectionCount = Object.values(sectionFieldsRecord).flat().filter(f => f.section && f.section > 0 && f.subsection).length;
+    const afterCycleEntryCount = Object.values(sectionFieldsRecord).flat().filter(f => f.section && f.section > 0 && typeof f.entry === 'number').length;
+    
     log("info", `Cycle ${cycle} complete - Coverage: ${(currentCoverage * 100).toFixed(2)}% (${improvement > 0 ? "+" : ""}${(improvement * 100).toFixed(2)}%)`);
+    log("info", `Cycle ${cycle} breakdown: Sections: ${afterCycleSectionCount}/${fields.length} (${(afterCycleSectionCount/fields.length*100).toFixed(1)}%), ` +
+               `Subsections: ${afterCycleSubsectionCount}/${fields.length} (${(afterCycleSubsectionCount/fields.length*100).toFixed(1)}%), ` +
+               `Entries: ${afterCycleEntryCount}/${fields.length} (${(afterCycleEntryCount/fields.length*100).toFixed(1)}%)`);
+    
+    // Validate section counts against reference counts if available
+    if (referenceCounts) {
+      const validation = validateSectionCounts(sectionFieldsRecord, referenceCounts);
+      if (!validation.success) {
+        log("warn", `Cycle ${cycle}: Section count validation shows deviations: ${validation.deviations.length} sections have significant deviations`);
+        // Log the most significant deviations
+        validation.deviations
+          .sort((a, b) => Math.abs(b.percentage) - Math.abs(a.percentage))
+          .slice(0, 5)
+          .forEach(dev => {
+            log("debug", `  Section ${dev.section}: Expected ${dev.expected}, actual ${dev.actual}, deviation ${dev.percentage.toFixed(1)}%`);
+          });
+      } else {
+        log("info", `Cycle ${cycle}: Section count validation passed successfully`);
+      }
+    }
     
     // Check for stagnation (no significant improvement)
     if (improvement < 0.005) { // Less than 0.5% improvement
@@ -1464,9 +1520,18 @@ async function runCyclicalLearning(
     finalSectionFieldsMap[sectionKey].push(field);
   });
   
+  // Final coverage statistics
+  const finalSectionCount = fieldsWithUniqueIds.filter(f => f.section && f.section > 0).length;
+  const finalSubsectionCount = fieldsWithUniqueIds.filter(f => f.section && f.section > 0 && f.subsection).length;
+  const finalEntryCount = fieldsWithUniqueIds.filter(f => f.section && f.section > 0 && typeof f.entry === 'number').length;
+  
   console.timeEnd("cyclicalLearning");
   log("info", `Cyclical learning complete with final coverage: ${(calculateCoverage(finalSectionFieldsMap) * 100).toFixed(2)}%`);
+  log("info", `Final breakdown: Sections: ${finalSectionCount}/${fields.length} (${(finalSectionCount/fields.length*100).toFixed(1)}%), ` +
+             `Subsections: ${finalSubsectionCount}/${fields.length} (${(finalSubsectionCount/fields.length*100).toFixed(1)}%), ` +
+             `Entries: ${finalEntryCount}/${fields.length} (${(finalEntryCount/fields.length*100).toFixed(1)}%)`);
   
+  // Return the final categorized fields
   return finalSectionFieldsMap;
 }
 
@@ -1486,8 +1551,14 @@ async function initializeRuleEngine(): Promise<RuleEngine> {
   // Create a new rule engine instance
   const engine = new RuleEngine();
   
-  // Load default rules
-  log("info", "Initializing rule engine with default rules");
+  // Initialize default rule files if they don't exist
+  engine.initializeDefaultRules();
+  
+  // Load rules from files
+  await engine.loadRules();
+  
+  // Log rule loading status
+  log("info", `Initialized rule engine with ${engine.getRules().length} rules`);
   
   return engine;
 }
@@ -1496,35 +1567,101 @@ async function initializeRuleEngine(): Promise<RuleEngine> {
  * Main function for the sectionizer
  */
 async function main() {
+  console.log("Starting sectionizer...");
   try {
     // Process command line arguments
     const args = parseCommandLineArgs();
+    console.log("Command line arguments parsed:", JSON.stringify(args, null, 2));
+
+    // Determine the input source (PDF or JSON)
+    let inputPath = args.inputFields || args.pdfPath;
     
-    // Extract fields from PDF
-    const { fields, pdfDoc } = await extractFields(args.pdfPath);
+    if (!inputPath) {
+      console.log("No input provided. Please specify either --pdf-path or --input-fields");
+      process.exit(1);
+    }
+
+    console.log(`Using input: ${inputPath}${args.force ? ' (ignoring cache)' : ''}`);
+    
+    // Extract fields from PDF or JSON
+    console.log("Extracting fields from input...");
+    const { fields, pdfDoc } = await extractFields(inputPath, args.force);
+    console.log(`Extracted ${fields.length} fields${pdfDoc ? ' and loaded PDF document' : ''}`);
     
     // Print section stats before processing
     console.log("\n--- BEFORE PROCESSING ---");
-    if (pdfDoc) {
-      // Categorize the fields before printing statistics
-      const initialCategorized = categorizeFields(fields, pdfDoc);
-      printSectionStatistics(initialCategorized);
-    } else {
-      console.log("No PDF document found");
+    
+    // Initialize the rule engine even if we don't have a PDF document
+    console.log("Initializing rule engine...");
+    const ruleEngine = await initializeRuleEngine();
+    console.log("Rule engine initialized");
+    
+    if (!fields || fields.length === 0) {
+      console.log("No fields found in the input. Please check the file.");
+      process.exit(1);
     }
     
-    // // Initialize the rule engine
-    // const ruleEngine = await initializeRuleEngine();
+    console.log(`Processing ${fields.length} fields from input`);
     
-    // // Perform basic categorization
-    // let categorizedFields = ruleEngine.categorizeFields(fields as any);
+    // Run the cyclic learning process
+    console.log("\n--- PROCESSING WITH CYCLIC LEARNING ---");
+    const finalCategorized = await runCyclicalLearning(
+      ruleEngine, 
+      fields, 
+      pdfDoc, 
+      expectedFieldCounts, 
+      args.outputDir,
+      3      
+    );
     
-    // // Group fields by section
-    // const sectionFields = await groupFieldsBySection(categorizedFields);
+    // Print final statistics
+    console.log("\n--- AFTER PROCESSING ---");
     
-    // // Print section stats after processing
-    // console.log("\n--- AFTER PROCESSING ---");
-    // printSectionStatistics(categorizedFields);
+    // Count unique sections, subsections, and entries
+    const allFields = Object.values(finalCategorized).flat();
+    
+    // Create a set of unique section numbers
+    const uniqueFinalSections = new Set<number>();
+    allFields.forEach(field => {
+      if (field.section && field.section > 0) {
+        uniqueFinalSections.add(field.section);
+      }
+    });
+    
+    // Write categorized fields to output files
+    if (args.outputDir) {
+      const outputPath = path.resolve(args.outputDir);
+      if (!fs.existsSync(outputPath)) {
+        fs.mkdirSync(outputPath, { recursive: true });
+      }
+      
+      // Write the categorized fields to a JSON file
+      const categorizedOutputFile = path.join(outputPath, 'categorized-fields.json');
+      fs.writeFileSync(categorizedOutputFile, JSON.stringify(allFields, null, 2));
+      console.log(`Wrote categorized fields to ${categorizedOutputFile}`);
+      
+      // Write the categorized fields to a JSON file
+      const extractedFieldsOutput = path.join(outputPath, 'pdf-extracted.json');
+      fs.writeFileSync(extractedFieldsOutput, JSON.stringify(fields, null, 2));
+      console.log(`Wrote extracted fields to ${extractedFieldsOutput}`);
+
+      // Write section statistics to a JSON file
+      const statsFile = path.join(outputPath, 'section-statistics.json');
+      const stats = {
+        total: fields.length,
+        uniqueSections: uniqueFinalSections.size,
+        sectionPercentage: (uniqueFinalSections.size/30*100).toFixed(1),
+        // Also keep track of field counts
+        totalSectionFields: allFields.filter(f => f.section && f.section > 0).length,
+        totalSubsectionFields: allFields.filter(f => f.subsection && f.section && f.section > 0).length, 
+        totalEntryFields: allFields.filter(f => typeof f.entry === 'number' && f.section && f.section > 0).length,
+        bySectionCount: Object.fromEntries(
+          Object.entries(finalCategorized).map(([section, fields]) => [section, fields.length])
+        )
+      };
+      fs.writeFileSync(statsFile, JSON.stringify(stats, null, 2));
+      console.log(`Wrote section statistics to ${statsFile}`);
+    }
     
     // Log success
     log("success", "Categorization complete");
@@ -1538,3 +1675,201 @@ async function main() {
 
 // Run main function
 main();
+
+/**
+ * Organizes fields into subsections and entries based on spatial relationships
+ * @param fields Fields to organize
+ * @returns Fields with organized subsections and entries
+ */
+function organizeSpatialSubsectionEntries(fields: CategorizedField[]): CategorizedField[] {
+  log("debug", `Organizing ${fields.length} fields into subsections and entries based on spatial relationships`);
+  
+  // Group fields by section
+  const fieldsBySection: Record<number, CategorizedField[]> = {};
+  fields.forEach(field => {
+    const section = field.section || 0;
+    if (!fieldsBySection[section]) {
+      fieldsBySection[section] = [];
+    }
+    fieldsBySection[section].push(field);
+  });
+  
+  // Skip section 0 (uncategorized)
+  delete fieldsBySection[0];
+  
+  // Process each section
+  const organizedFields: CategorizedField[] = [];
+  const uncategorizedFields = fields.filter(f => !f.section || f.section === 0);
+  
+  // Keep track of how many fields were updated
+  let subsectionsAssigned = 0;
+  let entriesAssigned = 0;
+  
+  // Process each section
+  Object.entries(fieldsBySection).forEach(([sectionStr, sectionFields]) => {
+    const section = parseInt(sectionStr, 10);
+    
+    // Group fields by page
+    const fieldsByPage: Record<number, CategorizedField[]> = {};
+    sectionFields.forEach(field => {
+      if (!field.page) return;
+      
+      if (!fieldsByPage[field.page]) {
+        fieldsByPage[field.page] = [];
+      }
+      fieldsByPage[field.page].push(field);
+    });
+    
+    // Process each page
+    Object.entries(fieldsByPage).forEach(([pageStr, pageFields]) => {
+      const page = parseInt(pageStr, 10);
+      
+      // Skip pages with too few fields (not enough for pattern detection)
+      if (pageFields.length < 3) {
+        organizedFields.push(...pageFields);
+        return;
+      }
+      
+      // Skip processing if all fields already have subsections and entries
+      const needsSubsection = pageFields.some(f => !f.subsection);
+      const needsEntry = pageFields.some(f => typeof f.entry !== 'number');
+      
+      if (!needsSubsection && !needsEntry) {
+        organizedFields.push(...pageFields);
+        return;
+      }
+      
+      // Sort by Y coordinate (top to bottom) - PDF coordinates have origin at bottom-left
+      const sortedByY = [...pageFields].sort((a, b) => {
+        const aY = a.rect?.y || 0;
+        const bY = b.rect?.y || 0;
+        return bY - aY; // Reverse for top-to-bottom (PDF y-coord is bottom-up)
+      });
+      
+      // Identify "rows" based on y-coordinate proximity
+      const rows: CategorizedField[][] = [];
+      let currentRow: CategorizedField[] = [];
+      let lastY = -1;
+      const yThreshold = 15; // Fields within 15 points are considered in the same row
+      
+      sortedByY.forEach(field => {
+        const y = field.rect?.y || 0;
+        
+        if (lastY === -1 || Math.abs(y - lastY) <= yThreshold) {
+          // Same row
+          currentRow.push(field);
+          lastY = y;
+        } else {
+          // New row
+          if (currentRow.length > 0) {
+            rows.push([...currentRow]);
+          }
+          currentRow = [field];
+          lastY = y;
+        }
+      });
+      
+      // Add the last row
+      if (currentRow.length > 0) {
+        rows.push(currentRow);
+      }
+      
+      // Sort each row by x-coordinate (left to right)
+      rows.forEach(row => {
+        row.sort((a, b) => {
+          const aX = a.rect?.x || 0;
+          const bX = b.rect?.x || 0;
+          return aX - bX;
+        });
+      });
+      
+      // Identify columns across rows by clustering x-coordinates
+      const allX: number[] = [];
+      rows.forEach(row => {
+        row.forEach(field => {
+          if (field.rect) {
+            allX.push(field.rect.x);
+          }
+        });
+      });
+      
+      // Sort x-coordinates and find clusters
+      allX.sort((a, b) => a - b);
+      
+      const xClusters: number[] = [];
+      let lastX = -1;
+      const xThreshold = 20; // X-coordinate threshold for columns
+      
+      allX.forEach(x => {
+        if (lastX === -1 || x - lastX > xThreshold) {
+          xClusters.push(x);
+        }
+        lastX = x;
+      });
+      
+      // Assign subsections and entries
+      rows.forEach((row, rowIndex) => {
+        // Skip processing rows with only one field
+        if (row.length <= 1) {
+          organizedFields.push(...row);
+          return;
+        }
+        
+        // Determine subsection for this row
+        // For sections that use letters for subsections
+        let subsection: string;
+        
+        // Special cases based on section number - some sections use numbers instead of letters
+        if (section >= 19 && section <= 29) {
+          // These sections typically use numbers for subsections
+          subsection = (rowIndex + 1).toString();
+        } else {
+          // Default: use letters (a, b, c, etc.)
+          subsection = String.fromCharCode(97 + Math.min(rowIndex, 25)); // a-z
+        }
+        
+        // Process each field in the row
+        row.forEach((field, colIndex) => {
+          // Assign subsection if not already assigned
+          if (!field.subsection) {
+            field.subsection = subsection;
+            subsectionsAssigned++;
+          }
+          
+          // Find entry based on column position
+          if (typeof field.entry !== 'number') {
+            // For entry fields, determine which column cluster it belongs to
+            let bestClusterIndex = -1;
+            let minDistance = Number.MAX_VALUE;
+            
+            if (field.rect) {
+              xClusters.forEach((clusterX, index) => {
+                const distance = Math.abs(field.rect!.x - clusterX);
+                if (distance < minDistance) {
+                  minDistance = distance;
+                  bestClusterIndex = index;
+                }
+              });
+              
+              // Assign entry number (1-based) if found
+              if (bestClusterIndex >= 0) {
+                field.entry = bestClusterIndex + 1;
+                entriesAssigned++;
+              }
+            }
+          }
+          
+          // Add the processed field
+          organizedFields.push(field);
+        });
+      });
+    });
+  });
+  
+  // Add back uncategorized fields
+  organizedFields.push(...uncategorizedFields);
+  
+  log("info", `Organized fields: Assigned ${subsectionsAssigned} subsections and ${entriesAssigned} entries based on spatial relationships`);
+  
+  return organizedFields;
+}
