@@ -1,9 +1,0 @@
-[
-  {
-    "pattern": "SSN",
-    "flags": "i",
-    "subSection": "_default",
-    "confidence": 0.98,
-    "description": "Distinctive pattern matching 136 fields (Precision: 100%, Recall: 98.6%, 136/138 fields)"
-  }
-]

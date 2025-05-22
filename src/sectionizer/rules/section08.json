@@ -4,53 +4,21 @@
   "rules": [
     {
       "section": 8,
-      "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.Section8\\[0\\]",
-      "confidence": 0.95,
-      "description": "Exact match for Section 8 area"
-    },
-    {
-      "section": 8,
-      "pattern": "section8",
-      "confidence": 0.9,
-      "description": "Generic section 8 field pattern"
-    },
-    {
-      "section": 8,
       "pattern": "passport",
-      "confidence": 0.85,
-      "description": "Passport related field"
-    },
-    {
-      "section": 8,
-      "pattern": "passport information",
-      "confidence": 0.88,
-      "description": "Match by section title"
-    },
-    {
-      "section": 8,
-      "pattern": "passport book",
-      "confidence": 0.86,
-      "description": "Passport book field"
-    },
-    {
-      "section": 8,
-      "pattern": "passport card",
-      "confidence": 0.86,
-      "description": "Passport card field"
-    },
-    {
-      "section": 8,
-      "subsection": "A",
-      "pattern": "section8a",
       "confidence": 0.9,
-      "description": "Section 8A field pattern"
+      "description": "Pattern from sectionFieldPatterns for section 8"
     },
     {
       "section": 8,
-      "subsection": "B",
-      "pattern": "section8b",
-      "confidence": 0.9, 
-      "description": "Section 8B field pattern"
+      "pattern": "travel",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 8"
+    },
+    {
+      "section": 8,
+      "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.Section8",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 8"
     }
   ]
-} 
+}

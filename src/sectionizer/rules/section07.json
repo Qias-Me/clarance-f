@@ -4,57 +4,27 @@
   "rules": [
     {
       "section": 7,
-      "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.Section7\\[0\\]",
-      "confidence": 0.95,
-      "description": "Exact match for Section 7 area"
-    },
-    {
-      "section": 7,
-      "pattern": "section7",
+      "pattern": "p3-t68\\[2\\]",
       "confidence": 0.9,
-      "description": "Generic section 7 field pattern"
-    },
-    {
-      "section": 7,
-      "pattern": "contact information",
-      "confidence": 0.85,
-      "description": "Match by section title"
-    },
-    {
-      "section": 7,
-      "pattern": "telephone",
-      "confidence": 0.8,
-      "description": "Telephone number field"
+      "description": "Pattern from sectionFieldPatterns for section 7"
     },
     {
       "section": 7,
       "pattern": "phone",
-      "confidence": 0.8,
-      "description": "Phone number field"
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 7"
     },
     {
       "section": 7,
       "pattern": "email",
-      "confidence": 0.8,
-      "description": "Email address field"
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 7"
     },
     {
       "section": 7,
-      "pattern": "home phone",
-      "confidence": 0.85,
-      "description": "Home phone field"
-    },
-    {
-      "section": 7,
-      "pattern": "work phone",
-      "confidence": 0.85,
-      "description": "Work phone field"
-    },
-    {
-      "section": 7,
-      "pattern": "cell phone",
-      "confidence": 0.85,
-      "description": "Cell phone field"
+      "pattern": "contact",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 7"
     }
   ]
-} 
+}

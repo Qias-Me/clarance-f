@@ -1,9 +1,0 @@
-[
-  {
-    "pattern": "section[_\\. ]*(0*26|26)\\b",
-    "flags": "i",
-    "subSection": "_default",
-    "confidence": 0.9785714285714286,
-    "description": "Fields explicitly matching /section[_\\. ]*(0*26|26)\\b/i (Precision: 98.2%, Adds 55 fields, 1 false positives)"
-  }
-]

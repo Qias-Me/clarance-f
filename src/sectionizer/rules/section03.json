@@ -4,69 +4,51 @@
   "rules": [
     {
       "section": 3,
-      "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.TextField11\\[3\\]",
-      "confidence": 0.95,
-      "description": "Exact match for Birth City field"
-    },
-    {
-      "section": 3,
-      "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.TextField11\\[4\\]",
-      "confidence": 0.95,
-      "description": "Exact match for Birth County field"
-    },
-    {
-      "section": 3,
-      "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.School6_State\\[0\\]",
-      "confidence": 0.95,
-      "description": "Exact match for Birth State field"
-    },
-    {
-      "section": 3,
-      "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.DropDownList1\\[0\\]",
-      "confidence": 0.95,
-      "description": "Exact match for Birth Country field"
-    },
-    {
-      "section": 3,
-      "pattern": "City of Birth",
+      "pattern": "Section 3",
       "confidence": 0.9,
-      "description": "Match by label for Birth City"
-    },
-    {
-      "section": 3,
-      "pattern": "County of Birth",
-      "confidence": 0.9,
-      "description": "Match by label for Birth County"
-    },
-    {
-      "section": 3,
-      "pattern": "State of Birth",
-      "confidence": 0.9,
-      "description": "Match by label for Birth State"
-    },
-    {
-      "section": 3,
-      "pattern": "Country of Birth",
-      "confidence": 0.9,
-      "description": "Match by label for Birth Country"
-    },
-    {
-      "section": 3,
-      "pattern": "section3",
-      "confidence": 0.8,
-      "description": "Generic Section 3 field pattern"
-    },
-    {
-      "section": 3,
-      "pattern": "birth",
-      "confidence": 0.7,
-      "description": "Generic birth field pattern (medium confidence)"
+      "description": "Pattern from sectionFieldPatterns for section 3"
     },
     {
       "section": 3,
       "pattern": "Place of Birth",
-      "confidence": 0.85,
-      "description": "Match by section title"
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 3"
+    },
+    {
+      "section": 3,
+      "pattern": "BirthCity",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 3"
+    },
+    {
+      "section": 3,
+      "pattern": "County",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 3"
+    },
+    {
+      "section": 3,
+      "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.TextField11\\[3\\]",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 3"
+    },
+    {
+      "section": 3,
+      "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.TextField11\\[4\\]",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 3"
+    },
+    {
+      "section": 3,
+      "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.School6_State\\[0\\]",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 3"
+    },
+    {
+      "section": 3,
+      "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.DropDownList1\\[0\\]",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 3"
     }
   ]
-} 
+}

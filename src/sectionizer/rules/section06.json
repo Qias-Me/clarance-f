@@ -4,51 +4,39 @@
   "rules": [
     {
       "section": 6,
-      "pattern": "form1\\[0\\]\\.Section6\\[0\\]\\.#area\\[0\\]",
-      "confidence": 0.95,
-      "description": "Exact match for Section 6 area"
-    },
-    {
-      "section": 6,
-      "pattern": "section6",
+      "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.DropDownList7\\[0\\]",
       "confidence": 0.9,
-      "description": "Generic section 6 field pattern"
+      "description": "Pattern from sectionFieldPatterns for section 6"
     },
     {
       "section": 6,
-      "pattern": "identifying information",
-      "confidence": 0.85,
-      "description": "Match by section title"
+      "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.DropDownList8\\[0\\]",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 6"
     },
     {
       "section": 6,
-      "pattern": "hair",
-      "confidence": 0.8,
-      "description": "Hair color field"
+      "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.DropDownList9\\[0\\]",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 6"
     },
     {
       "section": 6,
-      "pattern": "eye",
-      "confidence": 0.8,
-      "description": "Eye color field"
+      "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.DropDownList10\\[0\\]",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 6"
     },
     {
       "section": 6,
-      "pattern": "height",
-      "confidence": 0.8,
-      "description": "Height field"
+      "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.p3-rb3b\\[0\\]",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 6"
     },
     {
       "section": 6,
-      "pattern": "weight",
-      "confidence": 0.8,
-      "description": "Weight field"
-    },
-    {
-      "section": 6,
-      "pattern": "sex",
-      "confidence": 0.8,
-      "description": "Sex/gender field"
+      "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.TextField11\\[5\\]",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 6"
     }
   ]
-} 
+}

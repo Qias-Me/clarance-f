@@ -4,21 +4,57 @@
   "rules": [
     {
       "section": 16,
-      "pattern": "form1\\[0\\]\\.Section16_1\\[0\\]",
-      "confidence": 0.99,
-      "description": "Section 16 main pattern"
+      "pattern": "references",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 16"
     },
     {
       "section": 16,
-      "pattern": "form1\\[0\\]\\.Section16_1\\[0\\]\\.#area\\[0\\]\\.From_Datefield_Name_2\\[0\\]",
-      "confidence": 0.99,
-      "description": "Section 16 date field that was misidentified as section 2"
+      "pattern": "people who know",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 16"
     },
     {
       "section": 16,
-      "pattern": "Provide your period of service",
-      "confidence": 0.85,
-      "description": "Period of service label match"
+      "pattern": "know (you )?well",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 16"
+    },
+    {
+      "section": 16,
+      "pattern": "verifiers?",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 16"
+    },
+    {
+      "section": 16,
+      "pattern": "form1\\[0\\]\\.Section16",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 16"
+    },
+    {
+      "section": 16,
+      "pattern": "form1\\[0\\]\\.section16",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 16"
+    },
+    {
+      "section": 16,
+      "pattern": "reference\\d+",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 16"
+    },
+    {
+      "section": 16,
+      "pattern": "section ?16",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 16"
+    },
+    {
+      "section": 16,
+      "pattern": "\\bsect ?16\\b",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 16"
     }
   ]
-} 
+}

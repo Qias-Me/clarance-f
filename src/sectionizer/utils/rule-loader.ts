@@ -76,13 +76,13 @@ export class RuleLoader {
       };
       
       // Add strict pattern rules for this section if available
-      const sectionStr = section.toString();
-      if (strictSectionPatterns[sectionStr as keyof typeof strictSectionPatterns]) {
-        const patterns = strictSectionPatterns[sectionStr as keyof typeof strictSectionPatterns];
+      const sectionNumber = section; // Using the numeric value directly
+      if (Object.prototype.hasOwnProperty.call(strictSectionPatterns, sectionNumber)) {
+        const patterns = strictSectionPatterns[sectionNumber];
         defaultRules.rules = patterns.map((pattern: RegExp) => ({
           pattern: new RegExp(pattern.source, 'i'),
           confidence: 0.95,
-          subSection: '_default'
+          subSection: '_default' // Use string type for subsection
         }));
       }
       

@@ -1215,11 +1215,29 @@ export class RuleEngine {
   }
 
   /**
+   * Initialize default rule files for all 30 sections
+   */
+  public initializeDefaultRules(): void {
+    // Create default rule files for all sections using names from sectionStructure
+    for (let sectionNumber = 1; sectionNumber <= 30; sectionNumber++) {
+      // Get the section name from sectionStructure (first element in the array)
+      const sectionName = sectionStructure[sectionNumber][0];
+      
+      // Get the patterns for this section from strictSectionPatterns if available
+      const sectionPatterns = this.strictSectionPatterns[sectionNumber] || [];
+      
+      // Create a default rule file with the patterns
+      this.createDefaultRuleFile(sectionNumber, sectionName, sectionPatterns);
+    }
+  }
+
+  /**
    * Create a default rule file for a specific section if it doesn't exist
    * @param section Section number (1-30)
    * @param name Section name
+   * @param patterns Optional array of RegExp patterns for this section
    */
-  public createDefaultRuleFile(section: number, name: string): void {
+  public createDefaultRuleFile(section: number, name: string, patterns: RegExp[] = []): void {
     const filePath = path.join(
       this.rulesDir,
       `section${section.toString().padStart(2, "0")}.json`
@@ -1230,19 +1248,26 @@ export class RuleEngine {
       return;
     }
 
-    // Create default rule structure
+    // Create default rule structure with patterns if provided
     const defaultRule: SectionRules = {
       section,
-      name,
-      rules: [
-        {
-          section,
-          pattern: `section${section}`,
-          confidence: 0.8,
-          description: `Default pattern for section ${section} (${name})`,
-        },
-      ],
+      name: name,
+      rules: [],
     };
+
+    // Add additional rules for each pattern provided
+    if (patterns.length > 0) {
+      patterns.forEach(pattern => {
+        defaultRule.rules.push({
+          section,
+          pattern: pattern.source,
+          confidence: 0.9,
+          description: `Pattern from sectionFieldPatterns for section ${section}`,
+        });
+      });
+      
+      console.log(`Added ${patterns.length} patterns to default rules for section ${section}`);
+    }
 
     // Create the rules directory if it doesn't exist
     if (!fs.existsSync(this.rulesDir)) {
@@ -1254,18 +1279,6 @@ export class RuleEngine {
     console.log(
       `Created default rule file for section ${section} (${name}) at ${filePath}`
     );
-  }
-
-  /**
-   * Initialize default rule files for all 30 sections
-   */
-  public initializeDefaultRules(): void {
-    // Create default rule files for all sections using names from sectionStructure
-    for (let sectionNumber = 1; sectionNumber <= 30; sectionNumber++) {
-      // Get the section name from sectionStructure (first element in the array)
-      const sectionName = sectionStructure[sectionNumber][0];
-      this.createDefaultRuleFile(sectionNumber, sectionName);
-    }
   }
 
   /**

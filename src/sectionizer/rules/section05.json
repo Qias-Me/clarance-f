@@ -1,30 +1,12 @@
 {
   "section": 5,
-  "name": "Where You Have Lived",
+  "name": "Other Names Used",
   "rules": [
     {
       "section": 5,
       "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.section5\\[0\\]",
-      "confidence": 0.99,
-      "description": "Section 5 main pattern"
-    },
-    {
-      "section": 5,
-      "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.section5\\[0\\]\\.#area\\[0\\]\\.From_Datefield_Name_2\\[0\\]",
-      "confidence": 0.99,
-      "description": "Section 5 date field that was misidentified as section 2"
-    },
-    {
-      "section": 5,
-      "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.CheckBox1\\[0\\]",
-      "confidence": 0.99,
-      "description": "Not applicable checkbox for middle name"
-    },
-    {
-      "section": 5,
-      "pattern": "Time name used",
-      "confidence": 0.8,
-      "description": "Section 5 label match"
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 5"
     }
   ]
-} 
+}

@@ -1,30 +1,90 @@
 {
   "section": 13,
-  "name": "Employment Activities",
+  "name": "Employment Acitivites",
   "rules": [
     {
       "section": 13,
-      "pattern": "form1\\[0\\]\\.section_13_1\\[\\d+\\]",
-      "confidence": 0.99,
-      "description": "Section 13 main pattern"
-    },
-    {
-      "section": 13,
-      "pattern": "form1\\[0\\]\\.section_13_1\\[\\d+\\]\\.From_Datefield_Name_2\\[0\\]",
-      "confidence": 0.99,
-      "description": "Section 13 date field that was misidentified as section 2"
-    },
-    {
-      "section": 13,
-      "pattern": "13A\\.1",
+      "pattern": "employment",
       "confidence": 0.9,
-      "description": "Section 13A.1 label match"
+      "description": "Pattern from sectionFieldPatterns for section 13"
     },
     {
       "section": 13,
-      "pattern": "Provide dates of employment",
-      "confidence": 0.85,
-      "description": "Employment dates field label match"
+      "pattern": "employer",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 13"
+    },
+    {
+      "section": 13,
+      "pattern": "job title",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 13"
+    },
+    {
+      "section": 13,
+      "pattern": "position",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 13"
+    },
+    {
+      "section": 13,
+      "pattern": "salary",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 13"
+    },
+    {
+      "section": 13,
+      "pattern": "supervisor",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 13"
+    },
+    {
+      "section": 13,
+      "pattern": "work(ed)?",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 13"
+    },
+    {
+      "section": 13,
+      "pattern": "duties",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 13"
+    },
+    {
+      "section": 13,
+      "pattern": "occupation",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 13"
+    },
+    {
+      "section": 13,
+      "pattern": "form1\\[0\\]\\.Section13",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 13"
+    },
+    {
+      "section": 13,
+      "pattern": "form1\\[0\\]\\.section13",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 13"
+    },
+    {
+      "section": 13,
+      "pattern": "form1\\[0\\]\\.employment",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 13"
+    },
+    {
+      "section": 13,
+      "pattern": "section ?13",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 13"
+    },
+    {
+      "section": 13,
+      "pattern": "\\bsect ?13\\b",
+      "confidence": 0.9,
+      "description": "Pattern from sectionFieldPatterns for section 13"
     }
   ]
-} 
+}
