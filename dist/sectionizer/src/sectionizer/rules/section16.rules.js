@@ -1,12 +1,43 @@
 /**
- * Rules for Section 16: Section 16
- * Generated: 2025-05-18T16:19:00.383Z
+ * Rules for Section 16: People Who Know You Well
+ * Generated: 2025-05-26T14:43:26.916Z
+ */
+/**
+ * Section metadata
+ */
+export const sectionInfo = {
+    section: 16,
+    name: "People Who Know You Well",
+    ruleCount: 3,
+    lastUpdated: "2025-05-26T14:43:26.916Z"
+};
+/**
+ * Rules for matching fields to section 16
  */
 export const rules = [
     {
-        pattern: /\\bsection16_/i,
-        subSection: '_default',
-        confidence: 0.978974358974359,
-        description: 'Fields explicitly matching /\bsection16_/i (Precision: 98.7%, Adds 154 fields, 2 false positives)',
+        pattern: /^form1[0]/,
+        section: 16,
+        subsection: undefined,
+        confidence: 0.85,
+        description: "Fields starting with form1[0] belong to section 16",
+    },
+    {
+        pattern: /text/i,
+        section: 16,
+        subsection: undefined,
+        confidence: 0.75,
+        description: "text fields belong to section 16",
+    },
+    {
+        pattern: /date/i,
+        section: 16,
+        subsection: undefined,
+        confidence: 0.75,
+        description: "date fields belong to section 16",
     }
 ];
+export default {
+    sectionInfo,
+    rules
+};

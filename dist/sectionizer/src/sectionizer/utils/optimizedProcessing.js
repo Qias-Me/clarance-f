@@ -14,7 +14,7 @@ import * as fs from 'fs';
 import * as fsPromises from 'fs/promises';
 import * as path from 'path';
 import { RuleEngine } from '../engine.js';
-import { categorizeFields as originalCategorizeFields } from './extractFieldsBySection.js';
+import { categorizeField } from './extractFieldsBySection.js';
 import * as helpers from './commonHelpers.js';
 // Cache for expensive coordinate calculations
 const coordinateCache = new Map();
@@ -553,6 +553,13 @@ export async function generateConsolidatedOutput(fields, outputPath, enhanceCoor
     for (const sectionKey of sectionIds) {
         const sectionId = parseInt(sectionKey, 10);
         const sectionFields = fields.getFieldsForSection(sectionId);
+        // Debug: Log section 8 specifically
+        if (sectionId === 8) {
+            console.log(`Section 8 debug: Found ${sectionFields.length} fields`);
+            if (sectionFields.length > 0) {
+                console.log('Section 8 field names:', sectionFields.map(f => f.name));
+            }
+        }
         if (sectionFields.length === 0)
             continue;
         const processedFields = enhanceCoordinates ?
@@ -597,7 +604,7 @@ export async function generateExtractedFieldsJson(fields, outputPath, enhanceCoo
     // Remove the 'required' property from all fields
     const fieldsWithoutRequired = processedFields.map(field => {
         // Create a new object without the 'required' property
-        const { required, ...fieldWithoutRequired } = field;
+        const { ...fieldWithoutRequired } = field;
         // Ensure subsection and entry are included
         return {
             ...fieldWithoutRequired,
@@ -609,10 +616,6 @@ export async function generateExtractedFieldsJson(fields, outputPath, enhanceCoo
     await fsPromises.writeFile(outputPath, JSON.stringify(fieldsWithoutRequired, null, 2), 'utf8');
     return outputPath;
 }
-/**
- * Memoized version of the categorizeFields function for improved performance
- */
-export const categorizeFields = memoize(originalCategorizeFields, (fields) => `fields[${fields.length}]`, 'categorizeFields');
 /**
  * Load coordinate data from debug log
  * @returns Array of coordinate data records
@@ -685,8 +688,8 @@ export async function processSectionData(inputFields, outputPath = path.join(pro
             enhanceFieldCoordinatesOnce(batch) : batch;
         // Categorize fields
         const categorizedFields = (engine && typeof engine.categorizeFields === 'function')
-            ? engine.categorizeFields(enhancedBatch)
-            : categorizeFields(enhancedBatch);
+            ? await engine.categorizeFields(enhancedBatch)
+            : await optimizedCategorizeFields(engine, enhancedBatch);
         // Add to field collection
         fieldCollection.addFields(categorizedFields);
         // Update processed count
@@ -753,8 +756,8 @@ export async function processFieldsOptimized(fields, options = {}, ruleEngine) {
     }
     // Step 2: Categorize fields
     const categorizedFields = (engine && typeof engine.categorizeFields === 'function')
-        ? engine.categorizeFields(processedFields)
-        : categorizeFields(processedFields);
+        ? await engine.categorizeFields(processedFields)
+        : await optimizedCategorizeFields(engine, processedFields);
     // Debug: Count fields with subsection or entry values
     const fieldsWithSubsection = categorizedFields.filter(f => f.subsection !== undefined).length;
     const fieldsWithEntry = categorizedFields.filter(f => f.entry !== undefined).length;
@@ -853,3 +856,52 @@ export function reportPerformance(label, startTime, data) {
     }
     console.log(message);
 }
+/**
+ * Optimized categorization function that uses memoization with the RuleEngine
+ * @param engine RuleEngine instance to use for categorization
+ * @param fields Fields to categorize
+ * @returns Promise resolving to categorized fields
+ */
+export async function optimizedCategorizeFields(engine, fields) {
+    // Create a key based on fields content for memoization
+    const createCacheKey = (fieldsArray) => {
+        // Use a combination of field count and first/last field properties
+        const firstField = fieldsArray[0];
+        const lastField = fieldsArray[fieldsArray.length - 1];
+        return `fields[${fieldsArray.length}]_${firstField?.name || 'empty'}_${lastField?.name || 'empty'}`;
+    };
+    // Create a memoized version of the engine's categorizeFields method
+    const memoizedCategorize = memoize((fieldsToProcess) => engine.categorizeFields(fieldsToProcess), createCacheKey, 'engineCategorize');
+    // Call the memoized function
+    return memoizedCategorize(fields);
+}
+/**
+ * Optimized batch processing for categorizing large sets of fields
+ * @param engine RuleEngine instance
+ * @param fields Fields to categorize
+ * @param batchSize Size of each batch (default: 200)
+ * @returns Promise resolving to all categorized fields
+ */
+export async function batchCategorizeFields(engine, fields, batchSize = 200) {
+    // For small sets, just use direct categorization
+    if (fields.length <= batchSize) {
+        return optimizedCategorizeFields(engine, fields);
+    }
+    // Process in batches for better memory management
+    const results = [];
+    const batches = Math.ceil(fields.length / batchSize);
+    console.log(`Processing ${fields.length} fields in ${batches} batches of ${batchSize}...`);
+    for (let i = 0; i < fields.length; i += batchSize) {
+        const batchFields = fields.slice(i, i + batchSize);
+        const batchResults = await optimizedCategorizeFields(engine, batchFields);
+        results.push(...batchResults);
+        console.log(`Processed batch ${Math.floor(i / batchSize) + 1}/${batches} (${batchResults.length} fields)`);
+    }
+    return results;
+}
+/**
+ * Memoized version of the engine's categorizeFields method
+ * Important: This is a reference to the optimizedCategorizeFields function
+ * which properly calls the RuleEngine's categorizeFields method
+ */
+export const categorizeFields = optimizedCategorizeFields;

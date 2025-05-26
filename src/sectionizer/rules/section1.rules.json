@@ -1,0 +1,8 @@
+[
+  {
+    "pattern": "^form1[0]",
+    "flags": "",
+    "confidence": 0.85,
+    "description": "Fields starting with form1[0] belong to section 1"
+  }
+]

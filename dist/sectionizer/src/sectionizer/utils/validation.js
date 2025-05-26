@@ -27,84 +27,112 @@ export function validateSectionCounts(sectionFields, referenceCounts = expectedF
         success: true,
         deviations: [],
         missingMandatorySections: [],
-        oversizedSections: [],
         undersizedSections: [],
-        message: ""
+        oversizedSections: [],
+        message: "Validation successful",
+        unknownFieldCount: 0,
+        alignmentPercentage: 0
     };
-    // Keep track of numbers to identify any important missing sections
-    const missingNumbers = [];
-    const mandatorySections = options.mandatorySections || DEFAULT_MANDATORY_SECTIONS;
-    // Track non-zero sections and their counts
-    const sectionCounts = {};
-    // Convert string keys to numbers and build counts
-    for (const [key, fields] of Object.entries(sectionFields)) {
-        const sectionNum = parseInt(key, 10);
-        if (!isNaN(sectionNum)) {
-            sectionCounts[sectionNum] = fields.length;
-        }
+    // Track unknown fields (section 0)
+    if (sectionFields["0"] || sectionFields[0]) {
+        result.unknownFieldCount = (sectionFields["0"] || sectionFields[0] || []).length;
     }
-    // Check for missing sections
-    for (const section of mandatorySections) {
-        if (!(section in sectionCounts) || sectionCounts[section] === 0) {
-            result.missingMandatorySections.push(section);
-            result.success = false;
+    // Calculate deviation for each section
+    const sections = Object.keys(referenceCounts).map(Number);
+    let alignedSections = 0;
+    let totalSections = 0;
+    sections.forEach(section => {
+        // Skip ignored sections
+        if (ignoreSections.includes(section)) {
+            return;
         }
-    }
-    // Calculate deviations from expected counts
-    for (const [sectionStr, expected] of Object.entries(referenceCounts)) {
-        const section = parseInt(sectionStr, 10);
-        // Skip section 0 (uncategorized)
-        if (section === 0 || ignoreSections.includes(section)) {
-            continue;
-        }
-        const expectedCount = expected.fields; // Use fields count for comparison
-        const actual = sectionCounts[section] || 0;
-        // Skip sections with no expectation
-        if (expectedCount === 0) {
-            continue;
-        }
-        const deviation = actual - expectedCount;
-        const deviationPercent = Math.abs(deviation) / expectedCount * 100;
-        // Record this section's deviation
-        result.deviations.push({
-            section,
-            expected: expectedCount,
-            actual,
-            deviation,
-            percentage: deviationPercent
-        });
-        // Check if this deviation is too large
-        if (deviationPercent > maxDeviationPercent) {
-            // For overflow sections, we might be more lenient
-            if (section >= 20 && ignoreOverflowSections) {
-                continue;
+        totalSections++;
+        // Get expected counts for this section
+        const expected = referenceCounts[section] || { fields: 0, entries: 0, subsections: 0 };
+        // Get actual fields for this section
+        const sectionKey = section.toString();
+        const fields = sectionFields[sectionKey] || sectionFields[section] || [];
+        const actualFieldCount = fields.length;
+        // Count subsections and entries
+        const subsections = new Set();
+        const entries = new Set();
+        fields.forEach(field => {
+            if (field.subsection) {
+                subsections.add(field.subsection);
             }
-            // Otherwise, mark as problem section
-            result.success = false;
-            if (deviation < 0) {
+            if (field.entry !== undefined) {
+                entries.add(field.entry);
+            }
+        });
+        const actualSubsectionCount = subsections.size;
+        const actualEntryCount = entries.size;
+        // Calculate deviations
+        const fieldDeviation = actualFieldCount - expected.fields;
+        const fieldDeviationPercent = expected.fields > 0
+            ? Math.abs(fieldDeviation) / expected.fields * 100
+            : (actualFieldCount > 0 ? 100 : 0);
+        const subsectionDeviation = actualSubsectionCount - expected.subsections;
+        const entryDeviation = actualEntryCount - expected.entries;
+        // Calculate if this is a significant deviation
+        const isSignificant = fieldDeviationPercent > maxDeviationPercent && Math.abs(fieldDeviation) > 2;
+        // Add to the appropriate lists
+        if (expected.fields > 0 && actualFieldCount === 0) {
+            result.missingMandatorySections.push(section);
+        }
+        else if (isSignificant) {
+            if (fieldDeviation < 0) {
                 result.undersizedSections.push(section);
             }
-            else {
+            else if (!ignoreOverflowSections) {
                 result.oversizedSections.push(section);
             }
         }
-    }
-    // Build result message
-    if (result.success) {
-        result.message = "Section counts validation passed successfully.";
-    }
-    else {
-        const issues = [];
+        else {
+            // This section is within acceptable limits
+            alignedSections++;
+        }
+        // Record detailed deviation info
+        result.deviations.push({
+            section,
+            expected: expected.fields,
+            actual: actualFieldCount,
+            deviation: fieldDeviation,
+            percentage: fieldDeviationPercent,
+            isCritical: expected.fields > 0,
+            // Add subsection and entry information
+            expectedSubsections: expected.subsections,
+            actualSubsections: actualSubsectionCount,
+            subsectionDeviation: subsectionDeviation,
+            expectedEntries: expected.entries,
+            actualEntries: actualEntryCount,
+            entryDeviation: entryDeviation
+        });
+    });
+    // Calculate overall alignment percentage
+    result.alignmentPercentage = totalSections > 0 ? (alignedSections / totalSections) * 100 : 0;
+    // Determine overall success
+    result.success = result.missingMandatorySections.length === 0 &&
+        result.undersizedSections.length === 0 &&
+        (!options.strict || result.oversizedSections.length === 0);
+    // Generate human-readable message
+    if (!result.success) {
+        const messages = [];
         if (result.missingMandatorySections.length > 0) {
-            issues.push(`Missing mandatory sections: ${result.missingMandatorySections.join(", ")}`);
+            messages.push(`Missing ${result.missingMandatorySections.length} mandatory sections (${result.missingMandatorySections.join(', ')})`);
         }
         if (result.undersizedSections.length > 0) {
-            issues.push(`Undersized sections: ${result.undersizedSections.join(", ")}`);
+            messages.push(`${result.undersizedSections.length} sections have too few fields (${result.undersizedSections.join(', ')})`);
         }
-        if (result.oversizedSections.length > 0) {
-            issues.push(`Oversized sections: ${result.oversizedSections.join(", ")}`);
+        if (options.strict && result.oversizedSections.length > 0) {
+            messages.push(`${result.oversizedSections.length} sections have too many fields (${result.oversizedSections.join(', ')})`);
         }
-        result.message = `Section counts validation failed: ${issues.join("; ")}`;
+        if (result.unknownFieldCount > 0) {
+            messages.push(`${result.unknownFieldCount} fields could not be categorized`);
+        }
+        result.message = `Validation failed: ${messages.join('; ')}`;
+    }
+    else {
+        result.message = `Validation successful with ${result.alignmentPercentage.toFixed(1)}% section alignment`;
     }
     return result;
 }

@@ -1,0 +1,73 @@
+SECTION 8 REGEX PATTERN TESTS
+============================
+
+Field: "form1[0].Sections7-9[0].#area[0].To_Datefield_Name_2[0]"
+  Pattern 1: /form1\[0\]\.Sections7-9\[0\]\.p3-t68\[0\]/i
+    Result: NO MATCH ✗
+  Pattern 2: /form1\[0\]\.Sections7-9\[0\]\.\#area\[0\]\.From_Datefield_Name_2\[0\]/i
+    Result: NO MATCH ✗
+  Pattern 3: /form1\[0\]\.Sections7-9\[0\]\.\#area\[0\]\.To_Datefield_Name_2\[0\]/i
+    Result: MATCH ✓
+  Pattern 4: /form1\[0\]\.Sections7-9\[0\]\.\#area\[0\]\.\#field\[4\]/i
+    Result: NO MATCH ✗
+  Pattern 5: /form1\[0\]\.Sections7-9\[0\]\.TextField11\[0\]/i
+    Result: NO MATCH ✗
+  Field matched 1 out of 5 patterns
+  Overall: MATCHES AT LEAST ONE PATTERN ✓
+
+Field: "form1[0].Sections7-9[0].#area[0].#field[4]"
+  Pattern 1: /form1\[0\]\.Sections7-9\[0\]\.p3-t68\[0\]/i
+    Result: NO MATCH ✗
+  Pattern 2: /form1\[0\]\.Sections7-9\[0\]\.\#area\[0\]\.From_Datefield_Name_2\[0\]/i
+    Result: NO MATCH ✗
+  Pattern 3: /form1\[0\]\.Sections7-9\[0\]\.\#area\[0\]\.To_Datefield_Name_2\[0\]/i
+    Result: NO MATCH ✗
+  Pattern 4: /form1\[0\]\.Sections7-9\[0\]\.\#area\[0\]\.\#field\[4\]/i
+    Result: MATCH ✓
+  Pattern 5: /form1\[0\]\.Sections7-9\[0\]\.TextField11\[0\]/i
+    Result: NO MATCH ✗
+  Field matched 1 out of 5 patterns
+  Overall: MATCHES AT LEAST ONE PATTERN ✓
+
+Field: "form1[0].Sections7-9[0].TextField11[0]"
+  Pattern 1: /form1\[0\]\.Sections7-9\[0\]\.p3-t68\[0\]/i
+    Result: NO MATCH ✗
+  Pattern 2: /form1\[0\]\.Sections7-9\[0\]\.\#area\[0\]\.From_Datefield_Name_2\[0\]/i
+    Result: NO MATCH ✗
+  Pattern 3: /form1\[0\]\.Sections7-9\[0\]\.\#area\[0\]\.To_Datefield_Name_2\[0\]/i
+    Result: NO MATCH ✗
+  Pattern 4: /form1\[0\]\.Sections7-9\[0\]\.\#area\[0\]\.\#field\[4\]/i
+    Result: NO MATCH ✗
+  Pattern 5: /form1\[0\]\.Sections7-9\[0\]\.TextField11\[0\]/i
+    Result: MATCH ✓
+  Field matched 1 out of 5 patterns
+  Overall: MATCHES AT LEAST ONE PATTERN ✓
+
+Field: "form1[0].Sections7-9[0].p3-t68[0]"
+  Pattern 1: /form1\[0\]\.Sections7-9\[0\]\.p3-t68\[0\]/i
+    Result: MATCH ✓
+  Pattern 2: /form1\[0\]\.Sections7-9\[0\]\.\#area\[0\]\.From_Datefield_Name_2\[0\]/i
+    Result: NO MATCH ✗
+  Pattern 3: /form1\[0\]\.Sections7-9\[0\]\.\#area\[0\]\.To_Datefield_Name_2\[0\]/i
+    Result: NO MATCH ✗
+  Pattern 4: /form1\[0\]\.Sections7-9\[0\]\.\#area\[0\]\.\#field\[4\]/i
+    Result: NO MATCH ✗
+  Pattern 5: /form1\[0\]\.Sections7-9\[0\]\.TextField11\[0\]/i
+    Result: NO MATCH ✗
+  Field matched 1 out of 5 patterns
+  Overall: MATCHES AT LEAST ONE PATTERN ✓
+
+
+SIMULATED findSectionFieldsByPatterns FUNCTION
+==========================================
+
+Found 4 matches out of 4 fields
+
+  - Field "form1[0].Sections7-9[0].#area[0].To_Datefield_Name_2[0]" matched section 8 patterns
+    Matched patterns: 3
+  - Field "form1[0].Sections7-9[0].#area[0].#field[4]" matched section 8 patterns
+    Matched patterns: 4
+  - Field "form1[0].Sections7-9[0].TextField11[0]" matched section 8 patterns
+    Matched patterns: 5
+  - Field "form1[0].Sections7-9[0].p3-t68[0]" matched section 8 patterns
+    Matched patterns: 1

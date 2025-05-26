@@ -1,12 +1,50 @@
 /**
- * Rules for Section 15: Section 15
- * Generated: 2025-05-18T16:19:00.370Z
+ * Rules for Section 15: Military History
+ * Generated: 2025-05-26T14:43:26.906Z
+ */
+/**
+ * Section metadata
+ */
+export const sectionInfo = {
+    section: 15,
+    name: "Military History",
+    ruleCount: 4,
+    lastUpdated: "2025-05-26T14:43:26.906Z"
+};
+/**
+ * Rules for matching fields to section 15
  */
 export const rules = [
     {
-        pattern: /form1\\[0\\]\\.Section15_2\\[0\\]\\.#area\\[0\\]\\.RadioButtonList\\[0\\]/i,
-        subSection: '_default',
-        confidence: 0.98,
-        description: 'Field with section 15 in its value (Precision: 100.0%, Adds 1 fields, 0 false positives)',
+        pattern: /^form1[0]/,
+        section: 15,
+        subsection: undefined,
+        confidence: 0.85,
+        description: "Fields starting with form1[0] belong to section 15",
+    },
+    {
+        pattern: /text/i,
+        section: 15,
+        subsection: undefined,
+        confidence: 0.75,
+        description: "text fields belong to section 15",
+    },
+    {
+        pattern: /dropdown/i,
+        section: 15,
+        subsection: undefined,
+        confidence: 0.75,
+        description: "dropdown fields belong to section 15",
+    },
+    {
+        pattern: /date/i,
+        section: 15,
+        subsection: undefined,
+        confidence: 0.75,
+        description: "date fields belong to section 15",
     }
 ];
+export default {
+    sectionInfo,
+    rules
+};

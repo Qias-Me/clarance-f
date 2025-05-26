@@ -54,9 +54,10 @@ export interface PDFField {
  */
 export interface CategorizedField extends PDFField {
   section: number; // Section number (1-30)
-  subsection?: string; // Subsection identifier (e.g., "A", "B", "C")
+  subsection?: string; // Subsection identifier (e.g., "A", "B", "C", "1", "2", "3", "a", "b", "c", ..., "h", "H")
   entry?: number; // Entry index within subsection
   confidence: number; // Confidence score of categorization (0-1)
+  wasMovedByHealing?: boolean; // Indicates if the field was moved by the self-healing process
 }
 
 // Default to the embedded PDF under src/ for easier local development
@@ -87,15 +88,13 @@ export async function extractFields(
   // Check if file exists
   if (!fs.existsSync(pdfPath)) {
     console.error(`File not found at ${pdfPath}`);
-    // Use fallback PDF path if available
-    const fallbackPath = "C:\\Users\\Jason\\Desktop\\AI-Coding\\clarance-f\\src\\sf862.pdf";
-    console.log(`Attempting to use fallback PDF path: ${fallbackPath}`);
     
-    if (fs.existsSync(fallbackPath)) {
-      console.log(`Fallback PDF found, using it instead`);
-      pdfPath = fallbackPath;
+    // Try fallback PDF path if the specified path doesn't exist
+    if (fs.existsSync(FALLBACK_PDF_PATH)) {
+      console.log(`Using fallback PDF path: ${FALLBACK_PDF_PATH}`);
+      pdfPath = FALLBACK_PDF_PATH;
     } else {
-      throw new Error(`File not found at ${pdfPath} and fallback path ${fallbackPath} not found either`);
+      throw new Error(`File not found at ${pdfPath} and fallback path ${FALLBACK_PDF_PATH} is also unavailable`);
     }
   }
 
@@ -103,8 +102,9 @@ export async function extractFields(
     // Check if it's a JSON file with pre-extracted fields
     if (pdfPath.toLowerCase().endsWith('.json')) {
       console.log(`Loading fields from JSON file: ${pdfPath}`);
-      let jsonData;
       
+      // Read file contents
+      let jsonData;
       try {
         const fileContents = fs.readFileSync(pdfPath, 'utf-8');
         console.log(`Read ${fileContents.length} bytes from JSON file`);
@@ -114,9 +114,16 @@ export async function extractFields(
         console.log(`Successfully parsed JSON with ${jsonData.length} entries`);
       } catch (jsonError: any) {
         console.error(`Error reading/parsing JSON file: ${jsonError}`);
-        throw new Error(`Failed to read/parse JSON file: ${jsonError.message}`);
+        
+        // Try fallback PDF path if JSON loading fails
+        if (fs.existsSync(FALLBACK_PDF_PATH)) {
+          console.log(`JSON loading failed. Using fallback PDF path: ${FALLBACK_PDF_PATH}`);
+          return extractFields(FALLBACK_PDF_PATH, force);
+        } else {
+          throw new Error(`Failed to read/parse JSON file: ${jsonError.message} and fallback path ${FALLBACK_PDF_PATH} is unavailable`);
+        }
       }
-      
+
       // Convert JSON data to PDFField format
       console.log("Converting JSON data to PDFField format...");
       const processedFields = jsonData.map((field: any) => ({
@@ -149,26 +156,22 @@ export async function extractFields(
         } catch (error) {
           console.warn(`Could not load associated PDF document: ${error}`);
         }
-      } else {
+      } else if (fs.existsSync(FALLBACK_PDF_PATH)) {
         // Try the fallback PDF for dimensions if no associated PDF found
-        const fallbackPath = "C:\\Users\\Jason\\Desktop\\AI-Coding\\clarance-f\\src\\sf862.pdf";
-        if (fs.existsSync(fallbackPath)) {
-          // Try the fallback PDF for dimensions if no associated PDF found
-          try {
-            console.log(`No associated PDF found. Using fallback PDF path for dimensions: ${fallbackPath}`);
-            const pdfBytes = fs.readFileSync(fallbackPath);
-            pdfDoc = await PDFDocument.load(pdfBytes);
-            console.log(`Successfully loaded fallback PDF document for page dimensions`);
-            
-            // Cache page dimensions
-            getPageDimensions(pdfDoc);
-          } catch (error) {
-            console.warn(`Could not load fallback PDF document: ${error}`);
-          }
-        } else {
-          console.warn(`No associated PDF document found for ${pdfPath}`);
-          console.warn(`Spatial analysis features may be limited without PDF page dimensions`);
+        try {
+          console.log(`No associated PDF found. Using fallback PDF path for dimensions: ${FALLBACK_PDF_PATH}`);
+          const pdfBytes = fs.readFileSync(FALLBACK_PDF_PATH);
+          pdfDoc = await PDFDocument.load(pdfBytes);
+          console.log(`Successfully loaded fallback PDF document for page dimensions`);
+          
+          // Cache page dimensions
+          getPageDimensions(pdfDoc);
+        } catch (error) {
+          console.warn(`Could not load fallback PDF document: ${error}`);
         }
+      } else {
+        console.warn(`No associated PDF document found for ${pdfPath}`);
+        console.warn(`Spatial analysis features may be limited without PDF page dimensions`);
       }
 
       return { fields: processedFields, pdfDoc };
@@ -971,13 +974,11 @@ export function saveUnknownFields(
  *
  * @param fields Array of already categorized fields
  * @param saveUnknown Whether to save uncategorized fields to unknown.json
- * @param outputDir Directory to save unknown fields if saveUnknown is true
  * @returns Record mapping section numbers to arrays of categorized fields
  */
 export async function groupFieldsBySection(
   fields: CategorizedField[],
-  saveUnknown: boolean = true,
-  outputDir?: string
+  saveUnknown: boolean = true
 ): Promise<Record<string, CategorizedField[]>> {
   try {
     // Group fields by section
@@ -1037,16 +1038,12 @@ export async function groupFieldsBySection(
     // Save uncategorized fields for analysis if requested
     if (saveUnknown && sectionFields["0"] && sectionFields["0"].length > 0) {
       const unknownFields = sectionFields["0"];
-      // Use the provided outputDir if available, otherwise use default
-      const outputPath = outputDir 
-        ? path.resolve(outputDir) 
-        : path.resolve(process.cwd(), "output", "reports");
-        
-      if (!fs.existsSync(outputPath)) {
-        fs.mkdirSync(outputPath, { recursive: true });
+      const outputDir = path.resolve(process.cwd(), "output","reports");
+      if (!fs.existsSync(outputDir)) {
+        fs.mkdirSync(outputDir, { recursive: true });
       }
 
-      const unknownPath = path.join(outputPath, "unknown-fields.json");
+      const unknownPath = path.join(outputDir, "unknown-fields.json");
       fs.writeFileSync(unknownPath, JSON.stringify(unknownFields, null, 2));
       console.log(
         `Saved ${unknownFields.length} uncategorized fields to ${unknownPath}`
@@ -1147,65 +1144,7 @@ export function enhanceFieldsWithCoordinates(fields: PDFField[], pdfDoc?: PDFDoc
   return enhancedFields;
 }
 
-/**
- * Categorize a collection of PDF fields into their respective sections
- * @param fields The PDF fields to categorize
- * @param pdfDoc Optional PDF document to get accurate page dimensions
- * @returns Array of categorized fields
- */
-export function categorizeFields(fields: PDFField[], pdfDoc?: PDFDocument): CategorizedField[] {
 
-  
-  console.time("categorizeFields");
-
-  
-    // Then categorize each field using name-based approaches
-    const preFields = fields.map((field) => {
-      // Use the categorizeField function to assign a section
-      const result = categorizeField(field, true);
-      return result;
-    });
-  
-
-
-  // First enhance fields with coordinate data for spatial analysis
-  const fieldsWithCoordinates = enhanceFieldsWithCoordinates(fields, pdfDoc);
-
-  // Extract page dimensions from PDF document if available
-  const pageDimensions: Record<number, {width: number, height: number}> = {};
-
-  if (pdfDoc) {
-    try {
-      const pageCount = pdfDoc.getPageCount();
-      for (let i = 0; i < pageCount; i++) {
-        const page = pdfDoc.getPage(i);
-        const { width, height } = page.getSize();
-        pageDimensions[i + 1] = { width, height }; // Store as 1-based page numbers
-      }
-      console.log(`Retrieved dimensions for ${Object.keys(pageDimensions).length} pages from PDF`);
-    } catch (error) {
-      console.warn(`Could not get page dimensions from PDF: ${error}`);
-    }
-  }
-
-  // // Then categorize each field using name-based approaches
-  // const initialCategorizedFields = fieldsWithCoordinates.map((field) => {
-  //   // Use the categorizeField function to assign a section
-  //   const result = categorizeField(field, true);
-  //   return result;
-  // });
-
-  console.log("Initial categorization completed. Applying spatial enhancement...");
-
-  // Apply spatial boundary enhancement to improve categorization
-  const spatiallyEnhancedFields = enhanceSpatialCategorization(preFields);
-
-  // Organize fields by spatial relationships for better subsection and entry assignments
-  const fullyOrganizedFields = organizeSpatialSubsectionEntries(spatiallyEnhancedFields);
-
-  console.timeEnd("categorizeFields");
-  return fullyOrganizedFields;
-}
 
 // Replace the existing organizeFieldsBySpatialRelationships function with a simpler version
 // that uses our spatial analysis functions

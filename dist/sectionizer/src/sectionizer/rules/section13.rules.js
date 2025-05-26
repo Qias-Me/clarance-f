@@ -1,168 +1,78 @@
 /**
- * Rules for Section 13: Section 13
- * Generated: 2025-05-18T18:13:43.051Z
+ * Rules for Section 13: Employment Acitivites
+ * Generated: 2025-05-26T14:43:33.127Z
+ */
+/**
+ * Section metadata
+ */
+export const sectionInfo = {
+    section: 13,
+    name: "Employment Acitivites",
+    ruleCount: 8,
+    lastUpdated: "2025-05-26T14:43:33.127Z"
+};
+/**
+ * Rules for matching fields to section 13
  */
 export const rules = [
     {
-        pattern: /\\[13\\]/i,
-        subSection: '_default',
-        confidence: 0.98,
-        description: 'Fields explicitly matching /\[13\]/i',
+        pattern: /^form1[0]/,
+        section: 13,
+        subsection: undefined,
+        confidence: 0.85,
+        description: "Fields starting with form1[0] belong to section 13",
     },
     {
-        pattern: /\\bsection13_/i,
-        subSection: '_default',
-        confidence: 0.98,
-        description: 'Fields explicitly matching /\bsection13_/i',
+        pattern: /2[2]$/,
+        section: 13,
+        subsection: undefined,
+        confidence: 0.8,
+        description: "Fields ending with 2[2] belong to section 13",
     },
     {
-        pattern: /education/i,
-        subSection: '_default',
-        confidence: 0.95,
-        description: 'Education fields',
+        pattern: /date/i,
+        section: 13,
+        subsection: undefined,
+        confidence: 0.75,
+        description: "date fields belong to section 13",
     },
     {
-        pattern: /school/i,
-        subSection: '_default',
-        confidence: 0.95,
-        description: 'School fields',
+        pattern: /2[3]$/,
+        section: 13,
+        subsection: undefined,
+        confidence: 0.8,
+        description: "Fields ending with 2[3] belong to section 13",
     },
     {
-        pattern: /^form1/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1\' (24 fields)',
+        pattern: /text/i,
+        section: 13,
+        subsection: undefined,
+        confidence: 0.75,
+        description: "text fields belong to section 13",
     },
     {
-        pattern: /^form1\\[/i,,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[\' (24 fields)',
+        pattern: /dropdown/i,
+        section: 13,
+        subsection: undefined,
+        confidence: 0.75,
+        description: "dropdown fields belong to section 13",
     },
     {
-        pattern: /^form1\\[0/i,,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0\' (24 fields)',
+        pattern: /2[4]$/,
+        section: 13,
+        subsection: undefined,
+        confidence: 0.8,
+        description: "Fields ending with 2[4] belong to section 13",
     },
     {
-        pattern: /^form1\\[0\\]/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0]\' (24 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\./i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].\' (24 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.s/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].s\' (24 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.se/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].se\' (24 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.sec/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].sec\' (24 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.sect/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].sect\' (24 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.secti/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].secti\' (24 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.sectio/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].sectio\' (24 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.section/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].section\' (24 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.section_/i,
-        subSection: '_default',
-        confidence: 0.9291666666666667,
-        description: 'Fields starting with \'form1[0].section_\' (19 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.section_1/i,
-        subSection: '_default',
-        confidence: 0.9291666666666667,
-        description: 'Fields starting with \'form1[0].section_1\' (19 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.section_13/i,
-        subSection: '_default',
-        confidence: 0.9291666666666667,
-        description: 'Fields starting with \'form1[0].section_13\' (19 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.section_13_/i,
-        subSection: '_default',
-        confidence: 0.9291666666666667,
-        description: 'Fields starting with \'form1[0].section_13_\' (19 fields)',
-    },
-    {
-        pattern: /degree/i,
-        subSection: '_default',
-        confidence: 0.9,
-        description: 'Degree fields',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.section1/i,
-        subSection: '_default',
-        confidence: 0.8708333333333333,
-        description: 'Fields starting with \'form1[0].section1\' (5 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.section13/i,
-        subSection: '_default',
-        confidence: 0.8708333333333333,
-        description: 'Fields starting with \'form1[0].section13\' (5 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.section13_/i,
-        subSection: '_default',
-        confidence: 0.8708333333333333,
-        description: 'Fields starting with \'form1[0].section13_\' (5 fields)',
-    },
-    {
-        pattern: /form1/i,
-        subSection: '_default',
-        confidence: 0.87,
-        description: 'Distinctive pattern matching 24 fields',
-    },
-    {
-        pattern: /section/i,
-        subSection: '_default',
-        confidence: 0.87,
-        description: 'Distinctive pattern matching 24 fields',
-    },
-    {
-        pattern: /#field/i,
-        subSection: '_default',
-        confidence: 0.87,
-        description: 'Distinctive pattern matching 8 fields',
+        pattern: /radio/i,
+        section: 13,
+        subsection: undefined,
+        confidence: 0.75,
+        description: "radio fields belong to section 13",
     }
 ];
+export default {
+    sectionInfo,
+    rules
+};

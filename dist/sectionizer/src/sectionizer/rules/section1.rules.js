@@ -1,126 +1,29 @@
 /**
- * Rules for Section 1: Section 1
- * Generated: 2025-05-18T18:13:42.997Z
+ * Rules for Section 1: Full Name
+ * Generated: 2025-05-26T14:43:20.969Z
+ */
+/**
+ * Section metadata
+ */
+export const sectionInfo = {
+    section: 1,
+    name: "Full Name",
+    ruleCount: 1,
+    lastUpdated: "2025-05-26T14:43:20.969Z"
+};
+/**
+ * Rules for matching fields to section 1
  */
 export const rules = [
     {
-        pattern: /^form1/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1\' (5 fields)',
-    },
-    {
-        pattern: /^form1\\[/i,,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[\' (5 fields)',
-    },
-    {
-        pattern: /^form1\\[0/i,,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0\' (5 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0]\' (5 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\./i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].\' (5 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.S/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].S\' (5 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.Se/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].Se\' (5 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.Sec/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].Sec\' (5 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.Sect/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].Sect\' (5 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.Secti/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].Secti\' (5 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.Sectio/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].Sectio\' (5 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.Section/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].Section\' (5 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.Sections/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].Sections\' (5 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.Sections1/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].Sections1\' (5 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.Sections1-/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].Sections1-\' (5 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.Sections1-6/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].Sections1-6\' (5 fields)',
-    },
-    {
-        pattern: /form1/i,
-        subSection: '_default',
-        confidence: 0.87,
-        description: 'Distinctive pattern matching 5 fields',
-    },
-    {
-        pattern: /Sections1/i,
-        subSection: '_default',
-        confidence: 0.87,
-        description: 'Distinctive pattern matching 5 fields',
-    },
-    {
-        pattern: /formN\\[N\\]_sectionsN_N\\[N\\]_dropdownlistN\\[N\\]/i,
-        subSection: '_default',
-        confidence: 0.86,
-        description: 'Specific field name match: \'formN[N]_sectionsN_N[N]_dropdownlistN[N]\'',
-    },
-    {
-        pattern: /formN\\[N\\]_sectionsN_N\\[N\\]_textfieldN\\[N\\]/i,
-        subSection: '_default',
-        confidence: 0.86,
-        description: 'Specific field name match: \'formN[N]_sectionsN_N[N]_textfieldN[N]\'',
+        pattern: /^form1[0]/,
+        section: 1,
+        subsection: undefined,
+        confidence: 0.85,
+        description: "Fields starting with form1[0] belong to section 1",
     }
 ];
+export default {
+    sectionInfo,
+    rules
+};

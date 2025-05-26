@@ -1,12 +1,43 @@
 /**
- * Rules for Section 25: Section 25
- * Generated: 2025-05-18T16:19:00.476Z
+ * Rules for Section 25: Investigations and Clearance
+ * Generated: 2025-05-26T14:43:23.691Z
+ */
+/**
+ * Section metadata
+ */
+export const sectionInfo = {
+    section: 25,
+    name: "Investigations and Clearance",
+    ruleCount: 3,
+    lastUpdated: "2025-05-26T14:43:23.691Z"
+};
+/**
+ * Rules for matching fields to section 25
  */
 export const rules = [
     {
-        pattern: /section[_\\. ]*(0*25|25)\\b/i,
-        subSection: '_default',
-        confidence: 0.9787096774193549,
-        description: 'Fields explicitly matching /section[_\. ]*(0*25|25)\b/i (Precision: 98.4%, Adds 61 fields, 1 false positives)',
+        pattern: /^form1[0]/,
+        section: 25,
+        subsection: undefined,
+        confidence: 0.85,
+        description: "Fields starting with form1[0] belong to section 25",
+    },
+    {
+        pattern: /text/i,
+        section: 25,
+        subsection: undefined,
+        confidence: 0.75,
+        description: "text fields belong to section 25",
+    },
+    {
+        pattern: /date/i,
+        section: 25,
+        subsection: undefined,
+        confidence: 0.75,
+        description: "date fields belong to section 25",
     }
 ];
+export default {
+    sectionInfo,
+    rules
+};

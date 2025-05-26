@@ -1,64 +1,85 @@
 /**
  * Rules for Section 29: Association Record
- * Modified: 2025-05-18T04:02:00.000Z
+ * Generated: 2025-05-26T14:43:26.896Z
+ */
+/**
+ * Section metadata
+ */
+export const sectionInfo = {
+    section: 29,
+    name: "Association Record",
+    ruleCount: 9,
+    lastUpdated: "2025-05-26T14:43:26.896Z"
+};
+/**
+ * Rules for matching fields to section 29
  */
 export const rules = [
-    // ONLY match exact form-specific patterns
     {
-        pattern: /^form1\\[0\\]\\.#subform\\[83\\].*section29/i,
-        subSection: '_default',
-        confidence: 0.99,
-        description: 'Fields starting with specific Section 29 subform on page 83 with section29 mention',
+        pattern: /^form1[0]/,
+        section: 29,
+        subsection: undefined,
+        confidence: 0.85,
+        description: "Fields starting with form1[0] belong to section 29",
     },
     {
-        pattern: /^form1\\[0\\]\\.section29(?!.*section13|.*section27|.*section24)/i,
-        subSection: '_default',
-        confidence: 0.99,
-        description: 'Fields exactly starting with form1[0].section29 not in other sections',
-    },
-    // Explicit section29 mentions with negative lookaheads
-    {
-        pattern: /^section29(?!.*section13|.*section27|.*section24)/i,
-        subSection: '_default',
-        confidence: 0.98,
-        description: 'Fields starting with section29 not in other sections',
-    },
-    // Extremely specific subsection markers
-    {
-        pattern: /^form1\\[0\\]\\.section29_2\\b/i,
-        subSection: '2',
-        confidence: 0.99,
-        description: 'Section 29.2 fields with exact form path',
+        pattern: /#field[7]$/,
+        section: 29,
+        subsection: undefined,
+        confidence: 0.8,
+        description: "Fields ending with #field[7] belong to section 29",
     },
     {
-        pattern: /^form1\\[0\\]\\.section29_3\\b/i,
-        subSection: '3',
-        confidence: 0.99,
-        description: 'Section 29.3 fields with exact form path',
+        pattern: /text/i,
+        section: 29,
+        subsection: undefined,
+        confidence: 0.75,
+        description: "text fields belong to section 29",
     },
     {
-        pattern: /^form1\\[0\\]\\.section29_4\\b/i,
-        subSection: '4',
-        confidence: 0.99,
-        description: 'Section 29.4 fields with exact form path',
+        pattern: /dropdown/i,
+        section: 29,
+        subsection: undefined,
+        confidence: 0.75,
+        description: "dropdown fields belong to section 29",
     },
     {
-        pattern: /^form1\\[0\\]\\.section29_5\\b/i,
-        subSection: '5',
-        confidence: 0.99,
-        description: 'Section 29.5 fields with exact form path',
-    },
-    // Context-aware section mentions with association record
-    {
-        pattern: /\\bassociation record\\b.*\\bsection29\\b/i,
-        subSection: '_default',
-        confidence: 0.95,
-        description: 'Association record with explicit section29 mention',
+        pattern: /RadioButtonList[0]$/,
+        section: 29,
+        subsection: undefined,
+        confidence: 0.8,
+        description: "Fields ending with RadioButtonList[0] belong to section 29",
     },
     {
-        pattern: /\\bterrorist organization\\b.*\\bsection29\\b/i,
-        subSection: '_default',
-        confidence: 0.95,
-        description: 'Terrorist organization with explicit section29 mention',
+        pattern: /radio/i,
+        section: 29,
+        subsection: undefined,
+        confidence: 0.75,
+        description: "radio fields belong to section 29",
+    },
+    {
+        pattern: /2[0]$/,
+        section: 29,
+        subsection: undefined,
+        confidence: 0.8,
+        description: "Fields ending with 2[0] belong to section 29",
+    },
+    {
+        pattern: /date/i,
+        section: 29,
+        subsection: undefined,
+        confidence: 0.75,
+        description: "date fields belong to section 29",
+    },
+    {
+        pattern: /2[1]$/,
+        section: 29,
+        subsection: undefined,
+        confidence: 0.8,
+        description: "Fields ending with 2[1] belong to section 29",
     }
 ];
+export default {
+    sectionInfo,
+    rules
+};

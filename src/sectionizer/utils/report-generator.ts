@@ -209,11 +209,11 @@ export class ReportGenerator {
         deviation = diff === 0 ? '✓' : (diff > 0 ? `+${diff}` : String(diff));
       }
       
-      const subSections = Object.keys(output.fields)
-        .filter(s => s !== '_default')
+      const subsections = Object.keys(output.fields)
+        .filter(s => s !== undefined)
         .join(', ') || 'None';
       
-      report += `| ${sectionName} | ${fieldCount} | ${expectedCount} | ${deviation} | ${subSections} | ${(output.meta.confidence * 100).toFixed(2)}% |\n`;
+      report += `| ${sectionName} | ${fieldCount} | ${expectedCount} | ${deviation} | ${subsections} | ${(output.meta.confidence * 100).toFixed(2)}% |\n`;
     }
     
     // Sub-section breakdown for sections with sub-sections
@@ -237,11 +237,11 @@ export class ReportGenerator {
       const sortedSubsections = Object.entries(output.fields)
         .sort(([, a], [, b]) => b.length - a.length);
       
-      for (const [subSection, fields] of sortedSubsections) {
+      for (const [subsection, fields] of sortedSubsections) {
         const percentage = totalSectionFields > 0 ?
           (fields.length / totalSectionFields) * 100 : 0;
         
-        report += `| ${subSection === '_default' ? 'Default' : subSection} | ${fields.length} | ${percentage.toFixed(2)}% |\n`;
+        report += `| ${subsection === undefined ? 'No Subsections' : subsection} | ${fields.length} | ${percentage.toFixed(2)}% |\n`;
       }
       
       report += `\n`;
@@ -582,8 +582,8 @@ export class ReportGenerator {
       } else if (sectionFields[section.toString()] && 'fields' in (sectionFields[section.toString()] as SectionOutput)) {
         // Handle SectionOutput
         const sectionOutput = sectionFields[section.toString()] as SectionOutput;
-        Object.entries(sectionOutput.fields).forEach(([subSection, fields]) => {
-          subsectionCounts[subSection] = fields.length;
+        Object.entries(sectionOutput.fields).forEach(([subsection, fields]) => {
+          subsectionCounts[subsection] = fields.length;
         });
       }
       

@@ -1,0 +1,50 @@
+[
+  {
+    "pattern": "^form1[0]",
+    "flags": "",
+    "confidence": 0.85,
+    "description": "Fields starting with form1[0] belong to section 23"
+  },
+  {
+    "pattern": "RadioButtonList[2]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with RadioButtonList[2] belong to section 23"
+  },
+  {
+    "pattern": "radio",
+    "flags": "i",
+    "confidence": 0.75,
+    "description": "radio fields belong to section 23"
+  },
+  {
+    "pattern": "TextField11[8]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with TextField11[8] belong to section 23"
+  },
+  {
+    "pattern": "text",
+    "flags": "i",
+    "confidence": 0.75,
+    "description": "text fields belong to section 23"
+  },
+  {
+    "pattern": "TextField11[9]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with TextField11[9] belong to section 23"
+  },
+  {
+    "pattern": "RadioButtonList[3]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with RadioButtonList[3] belong to section 23"
+  },
+  {
+    "pattern": "date",
+    "flags": "i",
+    "confidence": 0.75,
+    "description": "date fields belong to section 23"
+  }
+]

@@ -1,0 +1,14 @@
+[
+  {
+    "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.From_Datefield_Name_2\\[0\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 2"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.#field\\[18\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 2"
+  }
+]

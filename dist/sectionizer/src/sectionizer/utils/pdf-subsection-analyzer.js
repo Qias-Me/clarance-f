@@ -9,6 +9,7 @@ import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
 import { configureUtilityCommandParser, parseUtilityArgs } from './cli-args.js';
+import { sectionPageRanges } from './field-clusterer.js';
 class SubsectionAnalyzer {
     fieldMetadata = {};
     sectionPageRanges = {};
@@ -64,13 +65,7 @@ class SubsectionAnalyzer {
                 }
                 else {
                     // Define some default ranges based on the references
-                    this.sectionPageRanges = {
-                        1: [1, 1],
-                        2: [1, 1],
-                        // ... other sections
-                        21: [73, 76],
-                        // ... remaining sections
-                    };
+                    this.sectionPageRanges = sectionPageRanges;
                     console.log('Using default section page ranges');
                 }
             }

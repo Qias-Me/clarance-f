@@ -53,7 +53,7 @@ describe('ConfidenceCalculator', () => {
         '1',
         8, // 8 matched fields
         {
-          '_default': 4,
+          undefined: 4,
           'A': 2,
           'B': 4
         }
@@ -72,7 +72,7 @@ describe('ConfidenceCalculator', () => {
       
       // fieldsBySubsection should be populated
       expect(result['1'].meta.fieldsBySubsection).toEqual({
-        '_default': 4,
+        undefined: 4,
         'A': 2,
         'B': 4
       });
@@ -83,7 +83,7 @@ describe('ConfidenceCalculator', () => {
         '2',
         0, // 0 matched fields
         {
-          '_default': 0
+          undefined: 0
         }
       );
 
@@ -104,7 +104,7 @@ describe('ConfidenceCalculator', () => {
         '3',
         5, // 5 matched fields
         {
-          '_default': 3,
+          undefined: 3,
           'A': 3,
           'B': 2
         }
@@ -129,12 +129,12 @@ describe('ConfidenceCalculator', () => {
             totalFields: 0,
             matchedFields: 3,
             fieldsBySubsection: {
-              '_default': 2,
+              undefined: 2,
               'A': 3
             }
           },
           fields: {
-            '_default': [
+            undefined: [
               createMockField('1'),
               createMockField('2')
             ],
@@ -151,7 +151,7 @@ describe('ConfidenceCalculator', () => {
       
       // Should preserve the existing fieldsBySubsection
       expect(result['4'].meta.fieldsBySubsection).toEqual({
-        '_default': 2,
+        undefined: 2,
         'A': 3
       });
     });
@@ -169,7 +169,7 @@ describe('ConfidenceCalculator', () => {
             name: 'Test Section 1'
           },
           fields: {
-            '_default': [createMockField('1'), createMockField('2')],
+            undefined: [createMockField('1'), createMockField('2')],
             'A': [createMockField('3'), createMockField('4')],
             'B': [createMockField('5'), createMockField('6')]
           }
@@ -183,7 +183,7 @@ describe('ConfidenceCalculator', () => {
             name: 'Test Section 2'
           },
           fields: {
-            '_default': [createMockField('7'), createMockField('8')]
+            undefined: [createMockField('7'), createMockField('8')]
           }
         }
       };
@@ -212,7 +212,7 @@ describe('ConfidenceCalculator', () => {
             matchedFields: 0
           },
           fields: {
-            '_default': []
+            undefined: []
           }
         }
       };
@@ -236,7 +236,7 @@ describe('ConfidenceCalculator', () => {
             name: 'Test Section 1'
           },
           fields: {
-            '_default': [],
+            undefined: [],
             'A': [],
             'B': []
           }
@@ -250,7 +250,7 @@ describe('ConfidenceCalculator', () => {
             name: 'Test Section 2'
           },
           fields: {
-            '_default': []
+            undefined: []
           }
         }
       };
@@ -292,13 +292,13 @@ describe('ConfidenceCalculator', () => {
             name: 'Name',
             pageRange: [1, 3],
             fieldsBySubsection: {
-              '_default': 4,
+              undefined: 4,
               'A': 2,
               'B': 4
             }
           },
           fields: {
-            '_default': [],
+            undefined: [],
             'A': [],
             'B': []
           }
@@ -337,7 +337,7 @@ describe('ConfidenceCalculator', () => {
             name: 'Date of Birth'
           },
           fields: {
-            '_default': []
+            undefined: []
           }
         }
       };

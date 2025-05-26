@@ -1,0 +1,56 @@
+[
+  {
+    "pattern": "^form1[0]",
+    "flags": "",
+    "confidence": 0.85,
+    "description": "Fields starting with form1[0] belong to section 29"
+  },
+  {
+    "pattern": "#field[7]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with #field[7] belong to section 29"
+  },
+  {
+    "pattern": "text",
+    "flags": "i",
+    "confidence": 0.75,
+    "description": "text fields belong to section 29"
+  },
+  {
+    "pattern": "dropdown",
+    "flags": "i",
+    "confidence": 0.75,
+    "description": "dropdown fields belong to section 29"
+  },
+  {
+    "pattern": "RadioButtonList[0]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with RadioButtonList[0] belong to section 29"
+  },
+  {
+    "pattern": "radio",
+    "flags": "i",
+    "confidence": 0.75,
+    "description": "radio fields belong to section 29"
+  },
+  {
+    "pattern": "2[0]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with 2[0] belong to section 29"
+  },
+  {
+    "pattern": "date",
+    "flags": "i",
+    "confidence": 0.75,
+    "description": "date fields belong to section 29"
+  },
+  {
+    "pattern": "2[1]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with 2[1] belong to section 29"
+  }
+]

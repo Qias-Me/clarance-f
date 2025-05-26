@@ -15,8 +15,8 @@ export class ConfidenceCalculator {
     for (const [section, output] of Object.entries(result)) {
       // Count total fields in this section
       let totalFields = 0;
-      for (const subSection of Object.values(output.fields)) {
-        totalFields += (subSection as any[]).length;
+      for (const subsection of Object.values(output.fields)) {
+        totalFields += (subsection as any[]).length;
       }
       
       // Update total fields count
@@ -31,14 +31,14 @@ export class ConfidenceCalculator {
       }
       
       // Update hasSubSections flag
-      const subSections = Object.keys(output.fields).filter(s => s !== '_default');
-      output.meta.hasSubSections = subSections.length > 0;
+      const subsections = Object.keys(output.fields).filter(s => s !== undefined);
+      output.meta.hasSubSections = subsections.length > 0;
       
       // Calculate fields by subsection if not already defined
       if (!output.meta.fieldsBySubsection) {
         output.meta.fieldsBySubsection = {};
-        for (const [subSectionKey, fields] of Object.entries(output.fields)) {
-          output.meta.fieldsBySubsection[subSectionKey] = (fields as any[]).length;
+        for (const [subsectionKey, fields] of Object.entries(output.fields)) {
+          output.meta.fieldsBySubsection[subsectionKey] = (fields as any[]).length;
         }
       }
     }
@@ -158,9 +158,9 @@ export class ConfidenceCalculator {
         report += '| Subsection | Fields | Percentage |\n';
         report += '|------------|--------|------------|\n';
         
-        for (const [subSection, count] of Object.entries(output.meta.fieldsBySubsection)) {
+        for (const [subsection, count] of Object.entries(output.meta.fieldsBySubsection)) {
           const percentage = fields > 0 ? ((count as number) / fields * 100).toFixed(2) : '0.00';
-          report += `| ${subSection} | ${count} | ${percentage}% |\n`;
+          report += `| ${subsection} | ${count} | ${percentage}% |\n`;
         }
       }
       

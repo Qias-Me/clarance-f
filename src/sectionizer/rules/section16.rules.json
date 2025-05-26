@@ -1,0 +1,20 @@
+[
+  {
+    "pattern": "^form1[0]",
+    "flags": "",
+    "confidence": 0.85,
+    "description": "Fields starting with form1[0] belong to section 16"
+  },
+  {
+    "pattern": "text",
+    "flags": "i",
+    "confidence": 0.75,
+    "description": "text fields belong to section 16"
+  },
+  {
+    "pattern": "date",
+    "flags": "i",
+    "confidence": 0.75,
+    "description": "date fields belong to section 16"
+  }
+]

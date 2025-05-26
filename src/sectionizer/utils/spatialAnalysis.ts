@@ -124,6 +124,37 @@ export function getPageDimensionForIndex(pdfDoc: PDFDocument, pageIndex: number 
   return DEFAULT_PAGE_DIMENSIONS;
 }
 
+
+  //   /**
+  //  * Group fields by pattern similarity for batch processing
+  //  * @private
+  //  * @param fields Fields to group
+  //  * @returns Map of pattern keys to field arrays
+  //  */
+  //   private groupFieldsByCoordinateRange(fields: PDFField[]): Map<string, PDFField[]> {
+  //     const groups = new Map<string, PDFField[]>();
+      
+  //     for (const field of fields) {
+  //       // Create a pattern key based on field properties
+  //       // This helps group similar fields that will likely match the same rules
+  //       const namePrefix = this.getSignificantPrefix(field.name) || '';
+  //       const type = field.type || 'unknown';
+  //       const page = field.page || -1;
+        
+  //       // Create a key that combines these properties
+  //       const key = `${namePrefix}|${type}|${page}`;
+        
+  //       if (!groups.has(key)) {
+  //         groups.set(key, []);
+  //       }
+        
+  //       groups.get(key)!.push(field);
+  //     }
+      
+  //     return groups;
+  //   }
+
+
 /**
  * Extract spatial information from field coordinates
  * @param field PDF field with potential coordinate data
@@ -140,10 +171,10 @@ export function extractSpatialInfo(field: PDFField, pdfDoc?: PDFDocument): Spati
   }
   
   // Extract coordinates from either the rect property or direct properties and round to 2 decimal places
-  const x = Math.round((field.rect?.x || (field as any).x || 0) * 100) / 100;
-  const y = Math.round((field.rect?.y || (field as any).y || 0) * 100) / 100;
-  const width = Math.round((field.rect?.width || (field as any).width || 0) * 100) / 100;
-  const height = Math.round((field.rect?.height || (field as any).height || 0) * 100) / 100;
+  const x = Math.round((field.rect?.x || 0) * 100) / 100;
+  const y = Math.round((field.rect?.y || 0) * 100) / 100;
+  const width = Math.round((field.rect?.width || 0) * 100) / 100;
+  const height = Math.round((field.rect?.height || 0) * 100) / 100;
   
   // Get page dimensions - use field's page if available, otherwise use first page
   const pageIndex = field.page ? field.page - 1 : 0; // Convert from 1-based to 0-based

@@ -1,6 +1,6 @@
 /**
  * Centralized Command Line Arguments Processing Module
- * 
+ *
  * This module provides a standardized way to handle command line arguments
  * across the sectionizer project.
  */
@@ -66,7 +66,7 @@ export function configureCommandLineParser(): Command {
       "-m, --max-iterations <number>",
       "Maximum number of iterations for self-healing",
       parseIntOption,
-      5
+      25
     )
     .option(
       "-l, --log-level <level>",
@@ -107,11 +107,11 @@ Examples:
  */
 export function parseCommandLineArgs(argv?: string[]): CommandLineOptions {
   const program = configureCommandLineParser();
-  
+
   // Parse argv if provided, otherwise use process.argv
   program.parse(argv || process.argv);
   const opts = program.opts();
-  
+
   // Convert and validate options
   const options: CommandLineOptions = {
     pdfPath: opts.pdfPath,
@@ -125,7 +125,7 @@ export function parseCommandLineArgs(argv?: string[]): CommandLineOptions {
     force: !!opts.force,
     verbose: !!opts.verbose
   };
-  
+
   return options;
 }
 
@@ -137,7 +137,7 @@ export function parseCommandLineArgs(argv?: string[]): CommandLineOptions {
  */
 function validateLogLevel(level: unknown): 'debug' | 'info' | 'warn' | 'error' | 'success' {
   if (
-    typeof level === 'string' && 
+    typeof level === 'string' &&
     ['debug', 'info', 'warn', 'error', 'success'].includes(level.toLowerCase())
   ) {
     return level.toLowerCase() as 'debug' | 'info' | 'warn' | 'error' | 'success';
@@ -157,9 +157,9 @@ export async function validatePdf(pdfPath: string): Promise<boolean> {
     const isFile = stats.isFile();
     const extension = path.extname(pdfPath).toLowerCase();
     const isValidExtension = extension === '.pdf';
-    
+
     console.log(`PDF validation results: isFile=${isFile}, extension=${extension}, isValidExtension=${isValidExtension}`);
-    
+
     return isFile && isValidExtension;
   } catch (error) {
     console.error(`Error validating PDF: ${error}`);
@@ -205,4 +205,4 @@ export function parseUtilityArgs<T extends OptionValues>(
 function parseIntOption(value: string, defaultValue: number = 0): number {
   const parsedValue = parseInt(value, 10);
   return isNaN(parsedValue) ? defaultValue : parsedValue;
-} 
+}

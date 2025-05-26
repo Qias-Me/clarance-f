@@ -21,8 +21,11 @@ import {
   subsectionPatterns,
   entryPatterns,
   sectionEntryPrefixes,
-  sectionStructure
+  sectionStructure,
+  fieldClusterer
 } from "./utils/field-clusterer.js";
+import { ruleExporter } from './utils/rule-exporter.js';
+import { applyEnhancedCategorization } from "./utils/enhanced-self-healingv1.js";
 
 /**
  * Interface for rule definition
@@ -66,6 +69,7 @@ export class RuleEngine {
   private sectionRules: Record<number, SectionRules> = {};
   // Define strict patterns for critical sections - imported from shared definition
   private strictSectionPatterns = sectionFieldPatterns;
+  private sectionStructure = sectionStructure;
   private loaded: boolean = false;
   private logger: any;
   // Add compiledPatterns Map to cache RegExp objects
@@ -121,11 +125,9 @@ export class RuleEngine {
           // Convert MatchRules to CategoryRules
           const categoryRules: CategoryRule[] = ruleSet.rules.map(
             (rule: any) => {
-              // Ensure proper subsection mapping - prefer subSection over subsection for compatibility
+              // Ensure proper subsection mapping - prefer subsection over subsection for compatibility
               const subsection =
-                rule.subSection !== undefined
-                  ? rule.subSection
-                  : rule.subsection !== undefined
+                rule.subsection !== undefined
                   ? rule.subsection
                   : undefined;
 
@@ -152,7 +154,7 @@ export class RuleEngine {
           // Create section rule entry
           this.sectionRules[section] = {
             section,
-            name: `Section ${section}`,
+            name: this.sectionStructure[section][0] || this.sectionStructure[0][0],
             rules: categoryRules,
           };
 
@@ -189,43 +191,139 @@ export class RuleEngine {
     console.time('precompilePatterns');
     
     let patternCount = 0;
+    const patternTypes: Record<string, number> = {};
+    const errors: string[] = [];
     
     // Precompile strict section patterns
     for (const [sectionStr, patterns] of Object.entries(this.strictSectionPatterns)) {
       const section = parseInt(sectionStr);
       if (isNaN(section)) continue;
       
-      (patterns as RegExp[]).forEach((pattern, idx) => {
-        if (typeof pattern === 'string') {
-          const key = `strict_${section}_${idx}`;
-          this.compiledPatterns.set(key, new RegExp(pattern, 'i'));
-          patternCount++;
+      // Cast to any to handle both string[] and RegExp[] types
+      (patterns as any[]).forEach((pattern, idx) => {
+        const patternType = typeof pattern;
+        patternTypes[patternType] = (patternTypes[patternType] || 0) + 1;
+        
+        try {
+          if (typeof pattern === 'string' && pattern.trim() !== '') {
+            const key = `strict_${section}_${idx}`;
+            this.compiledPatterns.set(key, new RegExp(pattern, 'i'));
+            patternCount++;
+          } else if (pattern instanceof RegExp) {
+            const key = `strict_${section}_${idx}`;
+            this.compiledPatterns.set(key, pattern);
+            patternCount++;
+          }
+        } catch (error: any) {
+          errors.push(`Error compiling strict pattern for section ${section}: ${error.message}`);
         }
       });
     }
     
     // Precompile rule patterns
-    for (const rule of this.rules) {
-      if (typeof rule.pattern === 'string') {
-        const key = `rule_${rule.section}_${rule.pattern}`;
-        if (!this.compiledPatterns.has(key)) {
-          this.compiledPatterns.set(key, new RegExp(rule.pattern, 'i'));
-          patternCount++;
+    if (this.rules && this.rules.length > 0) {
+      console.log(`Precompiling ${this.rules.length} rule patterns...`);
+      
+      // Debug counters
+      let stringPatterns = 0;
+      let regexPatterns = 0;
+      let otherPatterns = 0;
+      let emptyPatterns = 0;
+      
+      for (const rule of this.rules) {
+        // Track pattern types for debugging
+        const patternType = rule.pattern ? typeof rule.pattern : 'undefined';
+        patternTypes[patternType] = (patternTypes[patternType] || 0) + 1;
+        
+        if (!rule.pattern) {
+          emptyPatterns++;
+          continue;
+        }
+        
+        if (typeof rule.pattern === 'string') {
+          if (rule.pattern.trim() === '') {
+            emptyPatterns++;
+            continue;
+          }
+          
+          stringPatterns++;
+          try {
+            const key = `rule_${rule.section}_${rule.pattern.substring(0, 20).replace(/[^a-zA-Z0-9]/g, '_')}`;
+            if (!this.compiledPatterns.has(key)) {
+              this.compiledPatterns.set(key, new RegExp(rule.pattern, 'i'));
+              patternCount++;
+            }
+          } catch (error: any) {
+            errors.push(`Error compiling pattern for section ${rule.section}: ${error.message}`);
+          }
+        } else if (rule.pattern instanceof RegExp) {
+          regexPatterns++;
+          try {
+            const key = `rule_${rule.section}_regex_${patternCount}`;
+            if (!this.compiledPatterns.has(key)) {
+              this.compiledPatterns.set(key, rule.pattern);
+              patternCount++;
+            }
+          } catch (error: any) {
+            errors.push(`Error compiling RegExp pattern for section ${rule.section}: ${error.message}`);
+          }
+        } else {
+          otherPatterns++;
+        }
+        
+        // Also precompile entry patterns if they exist as strings
+        if (rule.entryPattern) {
+          const entryType = typeof rule.entryPattern;
+          patternTypes[`entry_${entryType}`] = (patternTypes[`entry_${entryType}`] || 0) + 1;
+          
+          if (typeof rule.entryPattern === 'string' && rule.entryPattern.trim() !== '') {
+            try {
+              const key = `entry_${rule.section}_${rule.entryPattern.substring(0, 20).replace(/[^a-zA-Z0-9]/g, '_')}`;
+              if (!this.compiledPatterns.has(key)) {
+                this.compiledPatterns.set(key, new RegExp(rule.entryPattern, 'i'));
+                patternCount++;
+              }
+            } catch (error: any) {
+              errors.push(`Error compiling entry pattern for section ${rule.section}: ${error.message}`);
+            }
+          } else if (rule.entryPattern instanceof RegExp) {
+            try {
+              const key = `entry_${rule.section}_regex_${patternCount}`;
+              if (!this.compiledPatterns.has(key)) {
+                this.compiledPatterns.set(key, rule.entryPattern);
+                patternCount++;
+              }
+            } catch (error: any) {
+              errors.push(`Error compiling RegExp entry pattern for section ${rule.section}: ${error.message}`);
+            }
+          }
         }
       }
       
-      // Also precompile entry patterns if they exist as strings
-      if (rule.entryPattern && typeof rule.entryPattern === 'string') {
-        const key = `entry_${rule.section}_${rule.entryPattern}`;
-        if (!this.compiledPatterns.has(key)) {
-          this.compiledPatterns.set(key, new RegExp(rule.entryPattern, 'i'));
-          patternCount++;
+      // Print debug information
+      console.log(`Pattern type counts: string=${stringPatterns}, regex=${regexPatterns}, other=${otherPatterns}, empty=${emptyPatterns}`);
+      
+      // Print pattern type distribution
+      console.log("Pattern type distribution:");
+      for (const [type, count] of Object.entries(patternTypes)) {
+        console.log(`- ${type}: ${count}`);
+      }
+      
+      // Print any errors
+      if (errors.length > 0) {
+        console.warn(`${errors.length} errors occurred during pattern compilation:`);
+        errors.slice(0, 5).forEach(error => console.warn(`- ${error}`));
+        if (errors.length > 5) {
+          console.warn(`... and ${errors.length - 5} more errors`);
         }
       }
+      
+    } else {
+      console.warn('No rules available for pattern compilation');
     }
     
     console.timeEnd('precompilePatterns');
-    console.log(`Precompiled ${patternCount} patterns for faster matching`);
+    console.log(`Precompiled ${patternCount} patterns for faster matching (map size: ${this.compiledPatterns.size})`);
   }
 
   /**
@@ -321,7 +419,7 @@ export class RuleEngine {
    * @param field Field to categorize
    * @returns Categorized field
    */
-  private categorizeField(field: PDFField): CategorizedField {
+  public categorizeField(field: PDFField): CategorizedField {
     // Initialize categorized field
     const categorized: CategorizedField = {
       ...field,
@@ -332,76 +430,127 @@ export class RuleEngine {
     // Skip if field has no name
     if (!field.name) return categorized;
 
-    // Try to use strict section patterns first (most accurate)
-    const strictSectionMatch = this.matchStrictSectionPattern(field.name);
-    if (strictSectionMatch) {
-      categorized.section = strictSectionMatch.section;
-      categorized.subsection = strictSectionMatch.subsection;
-      categorized.entry = strictSectionMatch.entry;
-      categorized.confidence = 0.95; // Very high confidence for strict patterns
-      return categorized;
-    }
-
-    // Fast path: Check if we have a direct match in the pattern cache
-    const fieldName = field.name.toLowerCase();
-    for (const rule of this.rules) {
-      // Skip rules for sections that don't match the expected count profile
-      if (rule.section && this.expectedSectionCounts[rule.section]) {
-        const expectedCount = this.expectedSectionCounts[rule.section].fields;
-        if (expectedCount === 0) continue; // Skip rules for sections with no expected fields
+    try {
+      // Try to use strict section patterns first (most accurate)
+      const strictSectionMatch = this.matchStrictSectionPattern(field.name);
+      if (strictSectionMatch) {
+        categorized.section = strictSectionMatch.section;
+        categorized.subsection = strictSectionMatch.subsection;
+        categorized.entry =  strictSectionMatch.entry;
+        categorized.entry = strictSectionMatch.entry;
+        categorized.confidence = 0.95; // Very high confidence for strict patterns
+        return categorized;
       }
 
-      // First try direct pattern matching (fastest)
-      if (rule.pattern) {
-        // Use compiled pattern if available
-        let pattern = this.compiledPatterns.get(typeof rule.pattern === 'string' ? rule.pattern : rule.pattern.toString());
-        if (!pattern) {
-          try {
-            pattern = new RegExp(rule.pattern.toString(), 'i');
-            this.compiledPatterns.set(typeof rule.pattern === 'string' ? rule.pattern : rule.pattern.toString(), pattern);
-          } catch (e) {
-            continue; // Skip invalid patterns
-          }
+      // Fast path: Check if we have a direct match in the pattern cache
+      const fieldName = field.name.toLowerCase();
+      
+      // Check field label and value too if available
+      const fieldLabel = field.label ? field.label.toLowerCase() : '';
+      const fieldValue = typeof field.value === 'string' ? field.value.toLowerCase() : '';
+      
+      for (const rule of this.rules) {
+        // Skip rules for sections that don't match the expected count profile
+        if (rule.section && this.expectedSectionCounts[rule.section]) {
+          const expectedCount = this.expectedSectionCounts[rule.section].fields;
+          if (expectedCount === 0) continue; // Skip rules for sections with no expected fields
         }
-        
-        if (pattern.test(fieldName)) {
-          categorized.section = rule.section || 0;
-          categorized.confidence = rule.confidence || 0.8;
+
+        // First try direct pattern matching (fastest)
+        if (rule.pattern) {
+          // Use compiled pattern if available
+          let pattern: RegExp;
+          const patternKey = typeof rule.pattern === 'string' ? rule.pattern : rule.pattern.toString();
           
-          // If this is a high-confidence match, we can return early
-          if (categorized.confidence > 0.85) {
-            return categorized;
+          if (this.compiledPatterns.has(patternKey)) {
+            pattern = this.compiledPatterns.get(patternKey)!;
+          } else {
+            try {
+              pattern = new RegExp(rule.pattern.toString(), 'i');
+              this.compiledPatterns.set(patternKey, pattern);
+            } catch (e) {
+              continue; // Skip invalid patterns
+            }
+          }
+          
+          // Check name, label, and value against the pattern
+          if (pattern.test(fieldName) || 
+              (fieldLabel && pattern.test(fieldLabel)) || 
+              (fieldValue && pattern.test(fieldValue))) {
+            categorized.section = rule.section || 0;
+            categorized.confidence = rule.confidence || 0.8;
+            
+            // Also extract subsection and entry if not already set
+            if (!categorized.subsection) {
+              categorized.subsection = rule.subsection || this.extractSubsection(field.name, categorized.section);
+            }
+            
+            if (!categorized.entry && rule.entryPattern) {
+              const entryMatch = fieldName.match(rule.entryPattern);
+              if (entryMatch && entryMatch.length > 1) {
+                const parsedEntry = parseInt(entryMatch[1], 10);
+                if (!isNaN(parsedEntry)) {
+                  categorized.entry = parsedEntry;
+                }
+              }
+            }
+            
+            // If this is a high-confidence match, we can return early
+            if (categorized.confidence > 0.85) {
+              return categorized;
+            }
           }
         }
       }
-    }
-    
-    // If we found a match with the fast path, return it
-    if (categorized.section > 0) {
-      return categorized;
-    }
-
-    // Slower path: Try more complex rules
-    for (const rule of this.rules) {
-      // Skip rules for sections that don't match the expected count profile
-      if (rule.section && this.expectedSectionCounts[rule.section]) {
-        const expectedCount = this.expectedSectionCounts[rule.section].fields;
-        if (expectedCount === 0) continue; // Skip rules for sections with no expected fields
+      
+      // If we found a match with the fast path, return it
+      if (categorized.section > 0) {
+        return categorized;
       }
 
-      // Check for keyword matches (slower)
-      if (rule.keywords && rule.keywords.length > 0) {
-        const keywords = rule.keywords.map((k: string) => k.toLowerCase());
-        const matchesAllKeywords = keywords.every((keyword: string) => 
-          fieldName.includes(keyword)
-        );
-        
-        if (matchesAllKeywords) {
-          categorized.section = rule.section || 0;
-          categorized.confidence = rule.confidence || 0.75;
-          break; // Stop at first keyword match
+      // Slower path: Try more complex rules
+      for (const rule of this.rules) {
+        // Skip rules for sections that don't match the expected count profile
+        if (rule.section && this.expectedSectionCounts[rule.section]) {
+          const expectedCount = this.expectedSectionCounts[rule.section].fields;
+          if (expectedCount === 0) continue; // Skip rules for sections with no expected fields
+        }
+
+        // Check for keyword matches (slower)
+        if (rule.keywords && rule.keywords.length > 0) {
+          const keywords = rule.keywords.map((k: string) => k.toLowerCase());
+          
+          // Try to match keywords in name, label, and value
+          const matchesAllKeywordsInName = keywords.every((keyword: string) => fieldName.includes(keyword));
+          const matchesAllKeywordsInLabel = fieldLabel ? keywords.every((keyword: string) => fieldLabel.includes(keyword)) : false;
+          const matchesAllKeywordsInValue = fieldValue ? keywords.every((keyword: string) => fieldValue.includes(keyword)) : false;
+          
+          if (matchesAllKeywordsInName || matchesAllKeywordsInLabel || matchesAllKeywordsInValue) {
+            categorized.section = rule.section || 0;
+            categorized.confidence = rule.confidence || 0.75;
+            
+            // Also extract subsection and entry if not already set
+            if (!categorized.subsection) {
+              categorized.subsection = rule.subsection || this.extractSubsection(field.name, categorized.section);
+            }
+            
+            if (!categorized.entry && rule.entryPattern) {
+              const entryMatch = fieldName.match(rule.entryPattern);
+              if (entryMatch && entryMatch.length > 1) {
+                const parsedEntry = parseInt(entryMatch[1], 10);
+                if (!isNaN(parsedEntry)) {
+                  categorized.entry = parsedEntry;
+                }
+              }
+            }
+            
+            break; // Stop at first keyword match
+          }
         }
       }
+    } catch (error) {
+      // If categorization fails, log the error but return a default categorization
+      console.error(`Error categorizing field ${field.name}:`, error);
     }
 
     return categorized;
@@ -524,7 +673,7 @@ export class RuleEngine {
    * @param fields PDFFields to categorize
    * @returns Categorized fields
    */
-  public categorizeFields(fields: PDFField[]): CategorizedField[] {
+  public async categorizeFields(fields: CategorizedField[]): Promise<CategorizedField[]> {
     if (!this.loaded) {
       this.logger.warn("Rules not loaded, categorization may be incomplete");
     }
@@ -539,6 +688,9 @@ export class RuleEngine {
     const totalFields = fields.length;
     let categorizedFields: CategorizedField[] = [];
     
+    // First pass: categorize using traditional rules
+    this.logger.log("First pass: Categorizing with existing rules");
+    
     // Process fields in batches to avoid memory pressure
     for (let i = 0; i < totalFields; i += batchSize) {
       const batchEnd = Math.min(i + batchSize, totalFields);
@@ -546,12 +698,13 @@ export class RuleEngine {
       
       // Group fields by name pattern for more efficient processing
       const fieldGroups = this.groupFieldsByPattern(batchFields);
+      let batchResults: CategorizedField[] = [];
       
       // Process each group with similar patterns
       for (const [pattern, groupFields] of fieldGroups.entries()) {
         // For small groups, process individually
         if (groupFields.length <= 3) {
-          const batchResults = groupFields.map(field => {
+          const groupResults = groupFields.map(field => {
             const result = this.categorizeField(field);
             return {
               ...field,
@@ -562,27 +715,17 @@ export class RuleEngine {
             } as CategorizedField;
           });
           
-          categorizedFields = categorizedFields.concat(batchResults);
-          continue;
-        }
-        
-        // For larger groups, use the first field as representative
-        const representativeField = groupFields[0];
-        const result = this.categorizeField(representativeField);
-        
-        // Apply the same result to all fields in the group
-        const batchResults = groupFields.map(field => {
-          return {
-            ...field,
-            section: result?.section || 0,
-            subsection: result?.subsection,
-            entry: result?.entry,
-            confidence: result?.confidence || 0,
-          } as CategorizedField;
-        });
-        
-        categorizedFields = categorizedFields.concat(batchResults);
+          batchResults = batchResults.concat(groupResults);
+        } 
       }
+      
+      // Verify that we're processing all fields in the batch
+      if (batchResults.length !== batchFields.length) {
+        this.logger.warn(`Batch processing mismatch: expected ${batchFields.length} results but got ${batchResults.length}`);
+      }
+      
+      // Add batch results to overall results
+      categorizedFields = categorizedFields.concat(batchResults);
       
       // Log progress for large datasets
       if (totalFields > 1000 && (i + batchSize) % 1000 === 0) {
@@ -590,27 +733,105 @@ export class RuleEngine {
       }
     }
 
+    // Verify that all fields were processed
+    if (categorizedFields.length !== totalFields) {
+      this.logger.warn(`Processing mismatch: expected ${totalFields} categorized fields but got ${categorizedFields.length}`);
+    }
+
     // Track uncategorized fields
-    const uncategorizedFields = categorizedFields.filter(
+    let uncategorizedFields = categorizedFields.filter(
       (field) => !field.section || field.section === 0
     );
 
     if (uncategorizedFields.length > 0) {
       this.logger.log(
-        `First pass left ${uncategorizedFields.length} fields uncategorized. Applying heuristics...`
+        `First pass left ${uncategorizedFields.length} fields uncategorized (${(uncategorizedFields.length / totalFields * 100).toFixed(1)}%). Applying advanced techniques...`
+      );
+      
+      // Second pass: Use field clustering, pattern analysis, and spatial techniques
+      this.logger.log("Second pass: Applying heuristics via applyHeuristicsToUncategorizedFields");
+      
+      // // Apply the comprehensive heuristics method that includes:
+      // // - Cluster-based categorization
+      // // - Pattern-based categorization
+      // // - Position-based categorization
+      // // - Neighborhood-based categorization
+      const { recategorized } = applyEnhancedCategorization(categorizedFields, this);
+      categorizedFields = recategorized;
+      // this.applyHeuristicsToUncategorizedFields(categorizedFields, uncategorizedFields);
+      
+
+      // Update count of uncategorized fields after heuristics
+      uncategorizedFields = categorizedFields.filter(
+        (field) => !field.section || field.section === 0
+      );
+      
+      // If we still have uncategorized fields, use the rule generation techniques
+      if (uncategorizedFields.length > 0) {
+        this.logger.log(
+          `After heuristics, still have ${uncategorizedFields.length} uncategorized fields (${(uncategorizedFields.length / totalFields * 100).toFixed(1)}%). Generating and applying dynamic rules...`
+        );
+        
+        // Third pass: Generate rule candidates using processUnknownFields which uses generateCandidatesForSection internally
+        const ruleCandidates = await this.processUnknownFields(uncategorizedFields, false);
+        
+        // Convert the rule candidates to category rules and apply them
+        if (ruleCandidates.size > 0) {
+          let rulesAdded = 0;
+          
+          for (const [sectionStr, rules] of ruleCandidates.entries()) {
+            const section = parseInt(sectionStr, 10);
+            if (isNaN(section) || section === 0) continue;
+            
+            // Convert MatchRules to CategoryRules
+            const categoryRules: CategoryRule[] = rules.map(rule => ({
+              section: section,
+              pattern: typeof rule.pattern === 'string' ? rule.pattern : rule.pattern.toString().replace(/^\/|\/[gimuy]*$/g, ''),
+              confidence: rule.confidence || 0.8,
+              description: rule.description || `Dynamically generated rule for section ${section}`,
+              subsection: rule.subsection
+            }));
+            
+            // Add rules to the engine
+            rulesAdded += this.addRulesForSection(section, categoryRules);
+          }
+          
+          if (rulesAdded > 0) {
+            this.logger.log(`Added ${rulesAdded} dynamically generated rules. Re-categorizing remaining fields...`);
+            
+            // Re-categorize uncategorized fields with the new rules
+            for (const field of uncategorizedFields) {
+              if (field.section === 0) {
+                const result = this.categorizeField(field);
+                if (result && result.section > 0) {
+                  field.section = result.section;
+                  field.subsection = result.subsection;
+                  field.entry = result.entry;
+                  field.confidence = result.confidence;
+                }
+              }
+            }
+          }
+        }
+      }
+      
+      // Final update of uncategorized count
+      uncategorizedFields = categorizedFields.filter(
+        (field) => !field.section || field.section === 0
+      );
+      
+      this.logger.log(
+        `Final categorization results: ${categorizedFields.length - uncategorizedFields.length}/${totalFields} fields categorized (${((categorizedFields.length - uncategorizedFields.length) / totalFields * 100).toFixed(1)}%), ${uncategorizedFields.length} remain uncategorized`
       );
     }
 
-    // Apply heuristics for uncategorized fields
-    this.applyHeuristics(categorizedFields);
-
     // Log section distribution
-    this.validateSectionDistribution(categorizedFields);
+    // this.validateSectionDistribution(categorizedFields);
 
     const [seconds, nanoseconds] = process.hrtime(startTime);
     const totalMs = seconds * 1000 + nanoseconds / 1000000;
 
-    this.logger.log(`Categorization completed in ${totalMs.toFixed(2)}ms`);
+    this.logger.log(`Categorization completed in ${totalMs.toFixed(2)}ms. Processed ${categorizedFields.length}/${totalFields} fields.`);
     return categorizedFields;
   }
   
@@ -620,29 +841,72 @@ export class RuleEngine {
    * @param fields Fields to group
    * @returns Map of pattern keys to field arrays
    */
-  private groupFieldsByPattern(fields: PDFField[]): Map<string, PDFField[]> {
-    const groups = new Map<string, PDFField[]>();
+  private groupFieldsByPattern(fields: CategorizedField[]): Map<string, CategorizedField[]> {
+    const groups = new Map<string, CategorizedField[]>();
+    
+    // Handle empty input case
+    if (!fields || fields.length === 0) {
+      return groups;
+    }
+    
+    // Default group for fields that can't be categorized by pattern
+    const defaultGroup = "0";
     
     for (const field of fields) {
-      // Create a pattern key based on field properties
-      // This helps group similar fields that will likely match the same rules
-      const namePrefix = this.getSignificantPrefix(field.name) || '';
-      const type = field.type || 'unknown';
-      const page = field.page || 0;
-      
-      // Create a key that combines these properties
-      const key = `${namePrefix}|${type}|${page}`;
-      
-      if (!groups.has(key)) {
-        groups.set(key, []);
+      try {
+        // Skip fields with no name
+        if (!field.name) {
+          if (!groups.has(defaultGroup)) {
+            groups.set(defaultGroup, []);
+          }
+          groups.get(defaultGroup)!.push(field);
+          continue;
+        }
+        
+        // Create a pattern key based on field properties
+        // This helps group similar fields that will likely match the same rules
+        const namePrefix = this.getSignificantPrefix(field.name) || 'unknown';
+        const type = field.type || 'unknown';
+        const page = field.page || -1;
+        
+        // If we couldn't get a prefix, use a simplified key
+        if (!namePrefix) {
+          const simpleKey = `${type}|${page}`;
+          if (!groups.has(simpleKey)) {
+            groups.set(simpleKey, []);
+          }
+          groups.get(simpleKey)!.push(field);
+          continue;
+        }
+        
+        // Create a key that combines these properties
+        const key = `${namePrefix}|${type}|${page}`;
+        
+        if (!groups.has(key)) {
+          groups.set(key, []);
+        }
+        
+        groups.get(key)!.push(field);
+      } catch (error) {
+        // If anything goes wrong, add to default group
+        if (!groups.has(defaultGroup)) {
+          groups.set(defaultGroup, []);
+        }
+        groups.get(defaultGroup)!.push(field);
       }
-      
-      groups.get(key)!.push(field);
+    }
+    
+    // Ensure all fields are accounted for
+    const totalGrouped = Array.from(groups.values()).reduce((sum, group) => sum + group.length, 0);
+    if (totalGrouped !== fields.length) {
+      this.logger.warn(`Grouping mismatch: ${fields.length} input fields but grouped ${totalGrouped} fields`);
     }
     
     return groups;
   }
 
+
+  
   /**
    * Validate section distribution against expected counts
    * @param fields Categorized fields to validate
@@ -658,9 +922,6 @@ export class RuleEngine {
       const section = fields[i].section || 0;
       sectionCounts[section] = (sectionCounts[section] || 0) + 1;
     }
-
-    // Log the distribution
-    console.log("=== Section Distribution ===");
 
     // Track sections that need redistribution
     const sectionsToRedistribute: number[] = [];
@@ -679,13 +940,23 @@ export class RuleEngine {
       }
     > = {};
 
+    // Summary statistics
+    let totalFields = 0;
+    let totalExpected = 0;
+    let overAllocatedCount = 0;
+    let underAllocatedCount = 0;
+    let uncategorizedCount = sectionCounts[0] || 0;
+
     // Pre-compute section status in a single pass
     for (let section = 1; section <= 30; section++) {
       const count = sectionCounts[section] || 0;
+      totalFields += count;
+      
       const expected = this.expectedSectionCounts[section] || { fields: 0, entries: 0, subsections: 0 };
       
       // Calculate total expected fields (including entries and subsections)
       const totalExpectedFields = expected.fields + expected.entries + expected.subsections;
+      totalExpected += totalExpectedFields;
 
       // Determine if there's a serious distribution problem
       const hasCount = count > 0;
@@ -707,213 +978,159 @@ export class RuleEngine {
       if (totalExpectedFields > 0) {
         if (sectionStatus[section].isOverAllocated) {
           sectionsToRedistribute.push(section);
+          overAllocatedCount++;
         }
 
         if (sectionStatus[section].isUnderAllocated) {
           targetSections.push(section);
+          underAllocatedCount++;
         }
       }
-
-      // Display warning for significant deviations
-      const warning =
-        totalExpectedFields > 0 && Math.abs(count - totalExpectedFields) > Math.max(5, totalExpectedFields * 0.2)
-          ? " ⚠️"
-          : "";
-      console.log(
-        `Section ${section}: ${count} fields | Expected: [fields: ${expected.fields}, entries: ${expected.entries}, subsections: ${expected.subsections}]${warning}`
-      );
     }
 
-    // Perform redistribution if we have serious distribution issues
-    if (sectionsToRedistribute.length > 0 && targetSections.length > 0) {
+    // Display distribution information in a more readable format
+    console.log("\n=== SECTION DISTRIBUTION SUMMARY ===");
+    console.log(`Total fields: ${totalFields} | Expected: ${totalExpected} | Uncategorized: ${uncategorizedCount}`);
+    console.log(`Sections with too many fields: ${overAllocatedCount} | Sections with too few fields: ${underAllocatedCount}`);
+    
+    console.log("\n=== SECTION DISTRIBUTION DETAILS ===");
+    console.log("Section | Actual | Expected | Diff | Status");
+    console.log("--------|--------|----------|------|-------");
+    
+    // Display sections in numerical order (1-30)
+    for (let section = 1; section <= 30; section++) {
+      const status = sectionStatus[section];
+      const expected = this.expectedSectionCounts[section] || { fields: 0, entries: 0, subsections: 0 };
+      
+      // Skip sections with no expected fields and no actual fields
+      if (expected.fields === 0) continue;
+      
+      // Calculate deviation and status indicator
+      const deviation = status.count - status.expected;
+      let statusIndicator = "✓"; // Default: OK
+      
+      if (status.isOverAllocated) {
+        statusIndicator = "⚠️ OVER";
+      } else if (status.isUnderAllocated) {
+        statusIndicator = "⚠️ UNDER";
+      } else if (Math.abs(deviation) > Math.max(5, status.expected * 0.2)) {
+        statusIndicator = "⚠️ OFF";
+      }
+      
+      // Format the output
       console.log(
-        `\nDetected distribution issues. Redistributing fields from ${sectionsToRedistribute.join(
-          ", "
-        )} to sections ${targetSections.join(", ")}`
+        `${section.toString().padStart(2, ' ')}     | ${status.count.toString().padEnd(6)} | ` +
+        `${status.expected.toString().padEnd(8)} | ${deviation > 0 ? '+' : ''}${deviation.toString().padEnd(4)} | ${statusIndicator}`
       );
-
-      // Sort the over-allocated sections by how overallocated they are (descending)
-      sectionsToRedistribute.sort((a, b) => {
-        return sectionStatus[b].ratio - sectionStatus[a].ratio;
-      });
-
-      // Sort the under-allocated sections by deficit (descending)
-      targetSections.sort((a, b) => {
-        return sectionStatus[b].deficit - sectionStatus[a].deficit;
-      });
-
-      // Create index of fields by section for faster access
-      const fieldsBySection: Record<number, CategorizedField[]> = {};
-      
-      // Only index sections that need redistribution to save memory
-      const sectionsToIndex = new Set(sectionsToRedistribute);
-      
-      // Build the index
-      for (let i = 0; i < fields.length; i++) {
-        const field = fields[i];
-        const section = field.section || 0;
-        
-        if (sectionsToIndex.has(section)) {
-          if (!fieldsBySection[section]) {
-            fieldsBySection[section] = [];
-          }
-          fieldsBySection[section].push(field);
-        }
-      }
-
-      // For each severely over-allocated section
-      for (const overAllocatedSection of sectionsToRedistribute) {
-        // Only process sections with significant overallocation
-        if (sectionStatus[overAllocatedSection].count > 500) {
-          console.log(
-            `Processing overallocated section ${overAllocatedSection} with ${sectionStatus[overAllocatedSection].count} fields (expected ${sectionStatus[overAllocatedSection].expected})`
-          );
-
-          // Get all fields from this section
-          const overAllocatedFields = fieldsBySection[overAllocatedSection] || [];
-
-          // Calculate how many fields to keep in this section
-          const keepCount = Math.min(
-            sectionStatus[overAllocatedSection].expected * 1.2, // Keep up to 120% of expected
-            sectionStatus[overAllocatedSection].count * 0.1 // But at least 10% of current
-          );
-
-          // Fields to keep (random selection to avoid bias)
-          const fieldsToKeep = overAllocatedFields.slice(
-            0,
-            Math.ceil(keepCount)
-          );
-
-          // Fields to redistribute
-          const fieldsToRedistribute = overAllocatedFields.slice(
-            Math.ceil(keepCount)
-          );
-
-          console.log(
-            `Keeping ${fieldsToKeep.length} fields in section ${overAllocatedSection}, redistributing ${fieldsToRedistribute.length}`
-          );
-
-          // Calculate total deficit across target sections
-          const totalDeficit = targetSections.reduce(
-            (sum, section) => sum + Math.max(0, sectionStatus[section].deficit),
-            0
-          );
-
-          // Distribute fields to target sections proportionally
-          let fieldsProcessed = 0;
-
-          for (const targetSection of targetSections) {
-            if (sectionStatus[targetSection].deficit <= 0) continue;
-
-            // Calculate how many fields to move to this section based on its deficit proportion
-            const proportion =
-              sectionStatus[targetSection].deficit / totalDeficit;
-            const fieldsToMove = Math.min(
-              Math.ceil(fieldsToRedistribute.length * proportion),
-              sectionStatus[targetSection].deficit,
-              fieldsToRedistribute.length - fieldsProcessed
-            );
-
-            if (fieldsToMove <= 0) continue;
-
-            // Get the fields to move
-            const selectedFields = fieldsToRedistribute.slice(
-              fieldsProcessed,
-              fieldsProcessed + fieldsToMove
-            );
-            fieldsProcessed += fieldsToMove;
-
-            console.log(
-              `Moving ${selectedFields.length} fields from section ${overAllocatedSection} to section ${targetSection}`
-            );
-
-            // Update the fields' section
-            selectedFields.forEach((field) => {
-              field.section = targetSection;
-              field.confidence = 0.7; // Lower confidence since this is a forced redistribution
-            });
-
-            // Update section status for next iterations
-            sectionStatus[targetSection].count += selectedFields.length;
-            sectionStatus[targetSection].deficit -= selectedFields.length;
-          }
-
-          // If we still have fields to redistribute, distribute evenly to all sections
-          // that have expected fields but aren't at 150% capacity yet
-          if (fieldsProcessed < fieldsToRedistribute.length) {
-            const remainingFields = fieldsToRedistribute.slice(fieldsProcessed);
-            console.log(
-              `Still have ${remainingFields.length} fields to redistribute from section ${overAllocatedSection}`
-            );
-
-            // Find all valid target sections (those with expected > 0)
-            const validTargets = Object.entries(sectionStatus)
-              .filter(
-                ([section, status]) =>
-                  parseInt(section) !== overAllocatedSection && // Not the source section
-                  status.expected > 0 && // Has expected fields
-                  status.count < status.expected * 1.5 // Not already overallocated
-              )
-              .map(([section]) => parseInt(section));
-
-            if (validTargets.length > 0) {
-              // Distribute fields evenly
-              const fieldsPerSection = Math.ceil(
-                remainingFields.length / validTargets.length
-              );
-              let distributedCount = 0;
-
-              for (const section of validTargets) {
-                const fieldBatch = remainingFields.slice(
-                  distributedCount,
-                  Math.min(
-                    distributedCount + fieldsPerSection,
-                    remainingFields.length
-                  )
-                );
-
-                if (fieldBatch.length === 0) break;
-
-                console.log(
-                  `Distributing ${fieldBatch.length} additional fields to section ${section}`
-                );
-
-                fieldBatch.forEach((field) => {
-                  field.section = section;
-                  field.confidence = 0.65; // Even lower confidence for secondary distribution
-                });
-
-                distributedCount += fieldBatch.length;
-
-                if (distributedCount >= remainingFields.length) break;
-              }
-            }
-          }
-        }
-      }
     }
     
+    // If there are uncategorized fields, show them
+    if (uncategorizedCount > 0) {
+      console.log(
+        `UNCAT  | ${uncategorizedCount.toString().padEnd(6)} | ${'-'.padEnd(8)} | ${'-'.padEnd(4)} | ⚠️ UNCATEGORIZED`
+      );
+    }
     console.timeEnd('validateSectionDistribution');
   }
 
   /**
-   * Apply heuristics to improve categorization for uncategorized fields
+   * Apply heuristics to uncategorized fields
+   * @param allFields All fields (for reference)
+   * @param uncategorizedFields Fields that need categorization
    */
-  private applyHeuristics(fields: CategorizedField[]): void {
-    // Identify fields with no section assigned
-    const uncategorizedFields = fields.filter(
-      (field) => !field.section || field.section === 0
-    );
+  private applyHeuristicsToUncategorizedFields(
+    allFields: CategorizedField[],
+    uncategorizedFields: CategorizedField[]
+  ): void {
     if (uncategorizedFields.length === 0) return;
+
+    console.time('applyHeuristics');
+    const initialUncategorizedCount = uncategorizedFields.length;
+    
+    // Cluster-based categorization (by field name, value, and label patterns)
+    this.applyClusterBasedCategorization(uncategorizedFields);
+    
+    // Get updated count of uncategorized fields
+    let remainingUncategorized = uncategorizedFields.filter(f => f.section === 0).length;
+    this.logger.log(`After cluster-based categorization: ${initialUncategorizedCount - remainingUncategorized} fields categorized, ${remainingUncategorized} remaining`);
 
     // Pattern-based categorization (by field name patterns)
     this.applyPatternBasedCategorization(uncategorizedFields);
+    
+    // Get updated count again
+    remainingUncategorized = uncategorizedFields.filter(f => f.section === 0).length;
+    this.logger.log(`After pattern-based categorization: ${initialUncategorizedCount - remainingUncategorized} fields categorized, ${remainingUncategorized} remaining`);
 
     // Position-based categorization (if rect data is available)
-    this.applyPositionBasedCategorization(fields, uncategorizedFields);
+    this.applyPositionBasedCategorization(allFields, uncategorizedFields);
+    
+    // Get updated count again
+    remainingUncategorized = uncategorizedFields.filter(f => f.section === 0).length;
+    this.logger.log(`After position-based categorization: ${initialUncategorizedCount - remainingUncategorized} fields categorized, ${remainingUncategorized} remaining`);
 
     // Neighborhood-based categorization
-    this.applyNeighborhoodCategorization(fields, uncategorizedFields);
+    this.applyNeighborhoodCategorization(allFields, uncategorizedFields);
+    
+    // Get final count
+    remainingUncategorized = uncategorizedFields.filter(f => f.section === 0).length;
+    this.logger.log(`After applying all heuristics: ${initialUncategorizedCount - remainingUncategorized} fields categorized, ${remainingUncategorized} remaining (${(remainingUncategorized / initialUncategorizedCount * 100).toFixed(1)}% of initially uncategorized)`);
+    
+    console.timeEnd('applyHeuristics');
+  }
+
+  /**
+   * Apply cluster-based categorization using field clustering
+   * Uses the fieldClusterer to group similar fields and assign sections
+   * @param allFields All fields (for reference)
+   * @param uncategorizedFields Fields that need categorization
+   */
+  private applyClusterBasedCategorization(
+    uncategorizedFields: CategorizedField[]
+  ): void {
+    console.time('applyClusterBasedCategorization');
+    
+    // Skip if no uncategorized fields
+    if (uncategorizedFields.length === 0) return;
+    
+    console.log(`Applying cluster-based categorization to ${uncategorizedFields.length} uncategorized fields`);
+    
+    // Run field clustering on uncategorized fields
+    const clusters = fieldClusterer.clusterFields(uncategorizedFields);
+    console.log(`Generated ${clusters.length} field clusters`);
+    
+    // Track how many fields we categorize
+    let categorizedCount = 0;
+    
+    // Process each cluster to assign section if possible
+    for (const cluster of clusters) {
+      // Skip clusters with too few fields
+      if (cluster.fields.length < 3) continue;
+      
+      // Skip clusters with low confidence
+      if (cluster.confidence < 0.5) continue;
+      
+      // Try to determine section for this cluster
+      const suggestion = fieldClusterer.suggestSectionForCluster(cluster);
+      
+      if (suggestion && suggestion.confidence > 0.6) {
+        const section = suggestion.section;
+        
+        // Assign section to all fields in this cluster
+        for (const field of cluster.fields) {
+          // Only assign if field isn't already categorized
+          if (field.section === 0) {
+            field.section = section;
+            field.confidence = Math.min(suggestion.confidence, 0.8); // Cap confidence
+            categorizedCount++;
+          }
+        }
+        
+        console.log(`Assigned section ${section} to ${cluster.fields.length} fields in cluster "${cluster.pattern}" (confidence: ${suggestion.confidence.toFixed(2)})`);
+      }
+    }
+    
+    console.log(`Cluster-based categorization assigned ${categorizedCount} fields to sections`);
+    console.timeEnd('applyClusterBasedCategorization');
   }
 
   /**
@@ -1237,50 +1454,56 @@ export class RuleEngine {
    * @param name Section name
    * @param patterns Optional array of RegExp patterns for this section
    */
-  public createDefaultRuleFile(section: number, name: string, patterns: RegExp[] = []): void {
-    const filePath = path.join(
-      this.rulesDir,
-      `section${section.toString().padStart(2, "0")}.json`
-    );
-
-    // Skip if the file already exists
-    if (fs.existsSync(filePath)) {
+  public async createDefaultRuleFile(section: number, name: string, patterns: RegExp[] = []): Promise<void> {
+    // Use padded section number for filename
+    const sectionPadded = section.toString().padStart(2, "0");
+    
+    // Define file paths
+    const tsFilePath = path.join(this.rulesDir, `section${sectionPadded}.rules.ts`);
+    
+    // Skip if the TypeScript file already exists
+    if (fs.existsSync(tsFilePath)) {
       return;
-    }
-
-    // Create default rule structure with patterns if provided
-    const defaultRule: SectionRules = {
-      section,
-      name: name,
-      rules: [],
-    };
-
-    // Add additional rules for each pattern provided
-    if (patterns.length > 0) {
-      patterns.forEach(pattern => {
-        defaultRule.rules.push({
-          section,
-          pattern: pattern.source,
-          confidence: 0.9,
-          description: `Pattern from sectionFieldPatterns for section ${section}`,
-        });
-      });
-      
-      console.log(`Added ${patterns.length} patterns to default rules for section ${section}`);
     }
 
     // Create the rules directory if it doesn't exist
     if (!fs.existsSync(this.rulesDir)) {
       fs.mkdirSync(this.rulesDir, { recursive: true });
     }
+    
+    // Create MatchRule objects from the provided patterns
+    const matchRules: MatchRule[] = [];
 
-    // Write the rule file
-    fs.writeFileSync(filePath, JSON.stringify(defaultRule, null, 2));
-    console.log(
-      `Created default rule file for section ${section} (${name}) at ${filePath}`
-    );
+    // Add rules for each pattern provided
+    if (patterns.length > 0) {
+      patterns.forEach(pattern => {
+        matchRules.push({
+          pattern: pattern,
+          section: section,
+          confidence: 0.9,
+          description: `Pattern from sectionFieldPatterns for section ${section}`
+        });
+      });
+      
+      console.log(`Added ${patterns.length} patterns to default rules for section ${section}`);
+    }
+    
+    try {
+      // Use the ruleExporter to create TypeScript file
+      const tsPath = await ruleExporter.exportRulesToTypeScript(section, matchRules);
+      console.log(`Created TypeScript rule file for section ${section} (${name}) at ${tsPath}`);
+      
+      // For backward compatibility, also create the JSON file
+      const jsonPath = await ruleExporter.exportRules(section.toString(), matchRules);
+      console.log(`Created JSON rule file for section ${section} (${name}) at ${jsonPath}`);
+    } catch (error) {
+      console.error(`Error creating rule files for section ${section}:`, error);
+    }
   }
 
+
+
+  
   /**
    * Process fields and generate section outputs with confidence metrics
    * @param categorizedFields The fields to process
@@ -1312,7 +1535,7 @@ export class RuleEngine {
       let matchedFields = 0;
 
       for (const field of fields) {
-        const subsectionKey = field.subsection || "_default";
+        const subsectionKey = field.subsection || "0";
         if (!subsectionMap[subsectionKey]) {
           subsectionMap[subsectionKey] = [];
         }
@@ -1327,7 +1550,7 @@ export class RuleEngine {
       // Get section name from rules
       const sectionNumber = parseInt(sectionKey, 10);
       const sectionName =
-        this.sectionRules[sectionNumber]?.name || `Section ${sectionKey}`;
+        this.sectionRules[sectionNumber]?.name || "Unknown";
 
       // Create section output
       sectionOutputs[sectionKey] = {
@@ -1407,7 +1630,7 @@ export class RuleEngine {
       maxLength: field.maxLength,
       options: field.options,
       section: field.section,
-      subSection: field.subsection,
+      subsection: field.subsection,
       entryIndex: field.entry,
       confidence: field.confidence,
     }));
@@ -1621,6 +1844,9 @@ export class RuleEngine {
    */
   private matchStrictSectionPattern(fieldName: string): { section: number, subsection?: string, entry?: number } | null {
     if (!fieldName) return null;
+    
+    // Convert to lowercase for case-insensitive matching
+    const lowerFieldName = fieldName.toLowerCase();
 
     // Check each section's strict patterns
     for (const [sectionStr, patterns] of Object.entries(this.strictSectionPatterns)) {
@@ -1629,7 +1855,7 @@ export class RuleEngine {
       
       // Check if the field matches any of the strict patterns for this section
       const matchFound = currentPatterns.some((pattern: RegExp) => {
-        return pattern.test(fieldName);
+        return pattern.test(lowerFieldName);
       });
 
       if (matchFound) {
@@ -1647,57 +1873,95 @@ export class RuleEngine {
 
     return null;
   }
-}
 
-/**
- * Create a sample rule file for testing purposes
- * @param rulesDir Directory to save the sample rule file
- */
-export function createSampleRuleFile(
-  rulesDir: string = path.resolve(process.cwd(), "src", "sectionizer", "rules")
-): void {
-  const section2Rules: SectionRules = {
-    section: 2,
-    name: "Date of Birth",
-    rules: [
-      {
-        section: 2,
-        pattern:
-          "form1\\[0\\]\\.Sections1-6\\[0\\]\\.From_Datefield_Name_2\\[0\\]",
-        confidence: 0.98,
-        description: "Exact match for Date of Birth field name",
-      },
-      {
-        section: 2,
-        pattern: "Section 2\\. Date of Birth",
-        confidence: 0.98,
-        description: "Date of Birth field by label match",
-      },
-      {
-        section: 2,
-        pattern: "form1\\[0\\]\\.Sections1-6\\[0\\]\\.#field\\[18\\]",
-        confidence: 0.98,
-        description: "Exact match for Estimate checkbox field name",
-      },
-      {
-        section: 2,
-        pattern: "Estimate",
-        confidence: 0.9,
-        description: "Estimate checkbox for Date of Birth",
-        fieldType: ["PDFCheckBox"],
-      },
-    ],
-  };
+  /**
+   * Generate enhanced subsection rules from already categorized fields
+   */
+  public generateEnhancedSubsectionRules(
+    fields: CategorizedField[],
+    section: number,
+    subsection: string
+  ): CategoryRule[] {
+    // Skip empty subsections
+    if (!subsection || subsection === "_default") return [];
 
-  // Create the rules directory if it doesn't exist
-  if (!fs.existsSync(rulesDir)) {
-    fs.mkdirSync(rulesDir, { recursive: true });
+    // Get all fields from this section and subsection
+    const subsectionFields = fields.filter(
+      (f) => f.section === section && f.subsection === subsection
+    );
+
+    // Skip if not enough fields
+    if (subsectionFields.length < 2) return [];
+
+    const sectionId = section; // Using unpadded section number
+    const rules: CategoryRule[] = [];
+    
+    // Collect common patterns
+    const patternSet = new Set<string>();
+    
+    // Analyze field names to identify patterns
+    fields.forEach(field => {
+      if (!field.name) return;
+      
+      const fieldName = field.name.toLowerCase();
+      
+      // Pattern: section21d (direct)
+      const directPattern = `section${sectionId}${subsection.toLowerCase()}`;
+      if (fieldName.includes(directPattern)) {
+        patternSet.add(directPattern);
+      }
+      
+      // Pattern: section21_d (with underscore)
+      const underscorePattern = `section${sectionId}_${subsection.toLowerCase()}`;
+      if (fieldName.includes(underscorePattern)) {
+        patternSet.add(underscorePattern);
+      }
+      
+      // Pattern: section21.d (with dot)
+      const dotPattern = `section${sectionId}.${subsection.toLowerCase()}`;
+      if (fieldName.includes(dotPattern)) {
+        patternSet.add(dotPattern);
+      }
+      
+      // Look for form1[0].section21d type patterns
+      // Use safe regex pattern checking
+      try {
+        const formPattern = `form1\\[\\d+\\]\\.section${sectionId}${subsection.toLowerCase()}`;
+        const formRegex = new RegExp(formPattern, 'i');
+        if (formRegex.test(fieldName)) {
+          patternSet.add(formPattern);
+        }
+      } catch (e) {
+        // Skip invalid pattern
+        console.warn(`Invalid form pattern for section ${sectionId}${subsection}: ${e}`);
+      }
+    });
+    
+    // Create rules from pattern set
+    patternSet.forEach(pattern => {
+      try {
+        // Verify the pattern is a valid regex before adding
+        new RegExp(pattern, 'i');
+        
+        rules.push({
+          section,
+          subsection,
+          pattern,
+          confidence: 0.9,
+          description: `Generated pattern for section ${section}${subsection}`
+        });
+      } catch (e) {
+        console.warn(`Invalid pattern for section ${section}${subsection}: ${e}`);
+      }
+    });
+    
+    return rules;
   }
 
-  // Write the sample rule file
-  const filePath = path.join(rulesDir, "section02.json");
-  fs.writeFileSync(filePath, JSON.stringify(section2Rules, null, 2));
-  console.log(
-    `Created sample rule file for section ${section2Rules.section} (${section2Rules.name}) at ${filePath}`
-  );
+  /**
+   * Get the number of compiled patterns in the rule engine
+   */
+  public getCompiledPatternsCount(): number {
+    return this.compiledPatterns.size;
+  }
 }

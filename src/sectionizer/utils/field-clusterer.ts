@@ -1,12 +1,12 @@
 /**
  * Field clustering for SF-86 form fields
- * 
+ *
  * This module implements advanced field clustering based on naming conventions
  * to help identify groups of related fields that should be processed together.
  */
 
-import type { CategorizedField } from './extractFieldsBySection.js';
-import chalk from 'chalk';
+import type { CategorizedField } from "./extractFieldsBySection.js";
+import chalk from "chalk";
 
 /**
  * Estimated field counts per section based on PDF analysis and manual review
@@ -14,27 +14,30 @@ import chalk from 'chalk';
  * the entires and subsections are not yet implemented
  * the fields are still a bit scewed.
  */
-export const expectedFieldCounts: Record<number, { fields: number, entries: number, subsections: number }> = {
+export const expectedFieldCounts: Record<
+  number,
+  { fields: number; entries: number; subsections: number }
+> = {
   1: { fields: 4, entries: 0, subsections: 0 },
   2: { fields: 2, entries: 0, subsections: 0 },
   3: { fields: 4, entries: 0, subsections: 0 },
-  4: { fields: 136, entries: 0, subsections: 0 },
+  4: { fields: 138, entries: 0, subsections: 0 },
   5: { fields: 45, entries: 4, subsections: 0 },
   6: { fields: 6, entries: 0, subsections: 0 },
   7: { fields: 17, entries: 0, subsections: 0 },
-  8: { fields: 10, entries: 0, subsections: 0 },
-  9: { fields: 78, entries: 0, subsections: 0 },
+  8: { fields: 8, entries: 0, subsections: 0 },
+  9: { fields: 80, entries: 0, subsections: 0 },
   10: { fields: 122, entries: 0, subsections: 4 },
   11: { fields: 252, entries: 0, subsections: 0 },
-  12: { fields: 118, entries: 0, subsections: 0 },
+  12: { fields: 150, entries: 0, subsections: 0 },
   13: { fields: 1086, entries: 0, subsections: 0 },
   14: { fields: 5, entries: 0, subsections: 0 },
-  15: { fields: 60, entries: 0, subsections: 0 },
-  16: { fields: 154, entries: 0, subsections: 0 },
+  15: { fields: 130, entries: 0, subsections: 0 },
+  16: { fields: 119, entries: 0, subsections: 0 },
   17: { fields: 332, entries: 0, subsections: 0 },
   18: { fields: 964, entries: 0, subsections: 0 },
   19: { fields: 277, entries: 0, subsections: 0 },
-  20: { fields: 570, entries: 0, subsections: 0 },
+  20: { fields: 790, entries: 0, subsections: 0 },
   21: { fields: 486, entries: 0, subsections: 0 },
   22: { fields: 267, entries: 0, subsections: 0 },
   23: { fields: 191, entries: 0, subsections: 0 },
@@ -60,25 +63,24 @@ export const sectionFieldPatterns: Record<number, RegExp[]> = {
     /form1\[0\]\.Sections1-6\[0\]\.#field\[18\]/i, // Second DOB field
   ],
   3: [
-    /Section 3/,
-    /Place of Birth/,
-    /BirthCity/,
-    /County/,
     /form1\[0\]\.Sections1-6\[0\]\.TextField11\[3\]/i, // Birth city
     /form1\[0\]\.Sections1-6\[0\]\.TextField11\[4\]/i, // Birth county
     /form1\[0\]\.Sections1-6\[0\]\.School6_State\[0\]/i, // Birth state
     /form1\[0\]\.Sections1-6\[0\]\.DropDownList1\[0\]/i,
   ],
   4: [
-    /Section 4/,
-    /Social Security Number/,
-    /^form1\[0\]\.Sections1-6\[0\]\.SSN/,
-    /^SSN\[/,
-    /form1\[0\]\.Sections1-6\[0\]\.SSN\[0\]/i, // Primary SSN field
-    /form1\[0\]\.Sections1-6\[0\]\.SSN\[1\]/i, // Secondary SSN field
     /SSN\[\d+\]/i,
+    /form1\[0\]\.Sections1-6\[0\]\.CheckBox1\[0\]/i,
+    /form1\[0\]\.Sections1-6\[0\]\.RadioButtonList\[0\]/i,
   ],
-  5: [/form1\[0\]\.Sections1-6\[0\]\.section5\[0\]/],
+  5: [
+    /\.section5\[(\d+)\]\.TextField11\[(\d+)\]/i,
+    /\.section5\[(\d+)\]\.#area\[(\d+)\]\.From_Datefield_Name_2\[(\d+)\]/i,
+    /Sections1-6\[\d+\]\.section5\[(\d+)\]\.([^[]+)(?:\[(\d+)\])?/i,
+    /Sections1-6\[\d+\]\.section5\[\d+\]\.TextField11\[(\d+)\]/i,
+    /Sections1-6\[\d+\]\.section5\[\d+\]\.#area\[\d+\]\.From_Datefield_Name_2\[(\d+)\]/i,
+    /form1\[0\]\.Sections1-6\[0\]\.section5\[0\]/,
+  ],
   6: [
     // STRICT: Only these 6 specific fields should be in section 6
     /form1\[0\]\.Sections1-6\[0\]\.DropDownList7\[0\]/i, // Height in inches
@@ -89,37 +91,32 @@ export const sectionFieldPatterns: Record<number, RegExp[]> = {
     /form1\[0\]\.Sections1-6\[0\]\.TextField11\[5\]/i, // Wieght in pounds
   ],
   7: [
-    /p3-t68\[2\]/i,
-    /phone/i,
-    /email/i,
-    /contact/i
+    /form1\[0\]\.Sections7-9\[0\]\.p3-t68\[2\]/i,
+    /form1\[0\]\.Sections7-9\[0\]\.TextField11\[13\]/i, // Home Email
   ],
   8: [
-    /passport/i,
-    /travel/i,
-    /form1\[0\]\.Sections7-9\[0\]\.Section8/i
+    /form1\[0\]\.Sections7-9\[0\]\.p3-t68\[0\]/i,
+    /form1\[0\]\.Sections7-9\[0\]\.#area\[0\]\.From_Datefield_Name_2\[0\]/i,
+    /form1\[0\]\.Sections7-9\[0\]\.#area\[0\]\.To_Datefield_Name_2\[0\]/i,
+    /form1\[0\]\.Sections7-9\[0\]\.#area\[0\]\.#field\[4\]/i,
+    /form1\[0\]\.Sections7-9\[0\]\.TextField11\[0\]/i,
+    // Additional patterns for section 8 (U.S. Passport Information)
+    /form1\[0\]\.Sections7-9\[0\]\..*passport/i,
+    /form1\[0\]\.Sections7-9\[0\]\..*section8/i,
+    /form1\[0\]\.Sections7-9\[0\]\..*p3-t68\[\d+\]/i,
   ],
   9: [
-    /citizenship/i,
-    /citizen/i,
-    /form1\[0\]\.Sections7-9\[0\]\.Section9/i
+    /form1\[0\]\.Sections7-9\[0\]\.Section9/i,
+    /form1\[0\]\.Sections7-9\[0\]\.TextField11\[18\]/i, // Work Email
+    /form1\[0\]\.Section9\.1-9\.4\[0\]\./i,
   ],
   // Add patterns for section 13 (Employment)
   13: [
-    /employment/i,
-    /employer/i,
-    /job title/i,
-    /position/i,
-    /salary/i,
-    /supervisor/i,
-    /work(ed)?/i, 
-    /duties/i,
-    /occupation/i,
     /form1\[0\]\.Section13/i,
     /form1\[0\]\.section13/i,
     /form1\[0\]\.employment/i,
     /section ?13/i,
-    /\bsect ?13\b/i
+    /\bsect ?13\b/i,
   ],
   // Add patterns for section 16 (References)
   16: [
@@ -127,23 +124,24 @@ export const sectionFieldPatterns: Record<number, RegExp[]> = {
     /people who know/i,
     /know (you )?well/i,
     /verifiers?/i,
-    /form1\[0\]\.Section16/i, 
+    /form1\[0\]\.Section16/i,
     /form1\[0\]\.section16/i,
     /reference\d+/i,
     /section ?16/i,
-    /\bsect ?16\b/i
+    /\bsect ?16\b/i,
   ],
   // Adding more accurate patterns for other sections
   29: [
     /association/i,
     /organization/i,
     /membership/i,
-    /^form1\[0\]\.Section29/i
-  ]
+    /^form1\[0\]\.Section29/i,
+  ],
+  30: [/form1\[0\]\.continuation/i],
 };
 
 // Define section keywords for content matching
-const sectionKeywords: Record<number, string[]> = {
+export const sectionKeywords: Record<number, string[]> = {
   1: ["name", "last", "first", "middle", "suffix"],
   2: ["birth", "dob", "date of birth"],
   3: ["place of birth", "city", "county", "country"],
@@ -158,10 +156,26 @@ const sectionKeywords: Record<number, string[]> = {
   12: ["education", "school", "college", "university", "degree"],
   13: ["employment", "employer", "job", "work", "position"],
   14: ["selective", "service", "register", "registration"],
-  15: ["military", "service", "army", "navy", "air force", "marines", "coast guard"],
+  15: [
+    "military",
+    "service",
+    "army",
+    "navy",
+    "air force",
+    "marines",
+    "coast guard",
+  ],
   16: ["people", "know", "references", "verifier", "verifiers"],
   17: ["marital", "relationship", "spouse", "cohabitant", "partner"],
-  18: ["relatives", "family", "father", "mother", "sibling", "child", "children"],
+  18: [
+    "relatives",
+    "family",
+    "father",
+    "mother",
+    "sibling",
+    "child",
+    "children",
+  ],
   19: ["foreign", "contact", "contacts", "relationship", "allegiance"],
   20: ["foreign", "activity", "activities", "business", "government"],
   21: ["psychological", "mental", "health", "counseling", "treatment"],
@@ -173,42 +187,42 @@ const sectionKeywords: Record<number, string[]> = {
   27: ["technology", "computer", "unauthorized", "illegal", "system"],
   28: ["civil", "court", "action", "lawsuit", "legal"],
   29: ["association", "record", "organization", "membership", "terror"],
-  30: ["continuation", "additional", "information", "comments"]
+  30: ["continuation", "additional", "information", "comments"],
 };
 
 // Add this section structure definition to replace the existing mapping
 export const sectionStructure: Record<number, string[]> = {
-  0:[ "Unknown" ],
-  1:[ "Full Name" ],
-  2:[ "Date of Birth" ],
-  3:[ "Place of Birth" ],
-  4:[ "Social Security Number" ],
-  5:[ "Other Names Used" ],
-  6:[ "Your Identifying Information" ],
-  7:[ "Your Contact Information" ],
-  8:[ "U.S. Passport Information" ],
-  9:[ "Citizenship" ],
-  10:[ "Dual/Multiple Citizenship & Foreign Passport Info" ],
-  11:[ "Where You Have Lived" ],
-  12:[ "Where you went to School" ],
-  13:[ "Employment Acitivites" ],
-  14:[ "Selective Service" ],
-  15:[ "Military History" ],
-  16:[ "People Who Know You Well" ],
-  17:[ "Maritial/Relationship Status" ],
-  18:[ "Relatives" ],
-  19:[ "Foreign Contacts" ],
-  20:[ "Foreign Business, Activities, Government Contacts" ],
-  21:[ "Psycological and Emotional Health" ],
-  22:[ "Police Record" ],
-  23:[ "Illegal Use of Drugs and Drug Activity" ],
-  24:[ "Use of Alcohol" ],
-  25:[ "Investigations and Clearance" ],
-  26:[ "Financial Record" ],
-  27:[ "Use of Information Technology Systems" ],
-  28:[ "Involvement in Non-Criminal Court Actions" ],
-  29:[ "Association Record" ],
-  30:[ "Continuation Space" ]
+  0: ["Unknown"],
+  1: ["Full Name"],
+  2: ["Date of Birth"],
+  3: ["Place of Birth"],
+  4: ["Social Security Number"],
+  5: ["Other Names Used"],
+  6: ["Your Identifying Information"],
+  7: ["Your Contact Information"],
+  8: ["U.S. Passport Information"],
+  9: ["Citizenship"],
+  10: ["Dual/Multiple Citizenship & Foreign Passport Info"],
+  11: ["Where You Have Lived"],
+  12: ["Where you went to School"],
+  13: ["Employment Acitivites"],
+  14: ["Selective Service"],
+  15: ["Military History"],
+  16: ["People Who Know You Well"],
+  17: ["Maritial/Relationship Status"],
+  18: ["Relatives"],
+  19: ["Foreign Contacts"],
+  20: ["Foreign Business, Activities, Government Contacts"],
+  21: ["Psycological and Emotional Health"],
+  22: ["Police Record"],
+  23: ["Illegal Use of Drugs and Drug Activity"],
+  24: ["Use of Alcohol"],
+  25: ["Investigations and Clearance"],
+  26: ["Financial Record"],
+  27: ["Use of Information Technology Systems"],
+  28: ["Involvement in Non-Criminal Court Actions"],
+  29: ["Association Record"],
+  30: ["Continuation Space"],
 };
 
 /**
@@ -225,7 +239,7 @@ export const subsectionPatterns: Record<number, RegExp[]> = {
     // Pattern: Section17_1_2 (section 17, subsection 1, entry 2)
     /section(\d+)_(\d+)_(\d+)/i,
     // Pattern: Section17_1 (section 17, subsection 1)
-    /section(\d+)_(\d+)(?![_\d])/i
+    /section(\d+)_(\d+)(?![_\d])/i,
   ],
   // Section-specific subsection patterns
   1: [],
@@ -235,40 +249,32 @@ export const subsectionPatterns: Record<number, RegExp[]> = {
     // SSN fields in Section 4
     /\.SSN\[(\d+)\]/i,
     // RadioButtonList in Sections1-6 format (Section 4)
-    /Sections1-6\[\d+\]\.RadioButtonList\[\d+\]/i
+    /Sections1-6\[\d+\]\.RadioButtonList\[\d+\]/i,
   ],
   5: [
     // Section 5 control fields (radio/checkbox)
-    /(Sections1-6|\.)section5[\[\.].*?(Radio|YES|NO)/i
+    /(Sections1-6|\.)section5[\[\.].*?(Radio|YES|NO)/i,
   ],
   6: [],
   7: [],
   8: [],
   9: [],
-  10: [
-
-  ],
+  10: [],
   11: [],
   12: [],
-  13: [
-
-  ],
+  13: [],
   14: [],
   15: [],
   16: [],
-  17: [
-
-  ],
+  17: [],
   18: [],
   19: [],
   20: [
     // Foreign activities subsections
     /foreign[._-]?activity[._-]?(\d+)/i,
-    /foreign[._-]?government[._-]?(\d+)/i
+    /foreign[._-]?government[._-]?(\d+)/i,
   ],
-  21: [
-
-  ],
+  21: [],
   22: [],
   23: [],
   24: [],
@@ -276,9 +282,8 @@ export const subsectionPatterns: Record<number, RegExp[]> = {
   26: [],
   27: [],
   28: [],
-  29: [
-  ],
-  30: []
+  29: [],
+  30: [],
 };
 
 /**
@@ -297,7 +302,7 @@ export const entryPatterns: Record<number, RegExp[]> = {
     // Pattern: section_21_2 (section 21, entry 2)
     /section[_\s]?(\d+)[_\s]?(\d+)/i,
     // Pattern: formX[entry].SectionY or similar
-    /form\d+\[(\d+)\][._].*?(?:section(?:s)?(\d+)|sections(\d+)-\d+)/i
+    /form\d+\[(\d+)\][._].*?(?:section(?:s)?(\d+)|sections(\d+)-\d+)/i,
   ],
   // Section-specific entry patterns
   1: [],
@@ -307,7 +312,8 @@ export const entryPatterns: Record<number, RegExp[]> = {
     // SSN fields in Section 4
     /\.SSN\[(\d+)\]/i,
     // RadioButtonList in Sections1-6 format (Section 4)
-    /Sections1-6\[\d+\]\.RadioButtonList\[\d+\]/i
+    /Sections1-6\[\d+\]\.RadioButtonList\[\d+\]/i,
+
   ],
   5: [
     // Other names used
@@ -319,7 +325,7 @@ export const entryPatterns: Record<number, RegExp[]> = {
     /\.section5\[(\d+)\]\.#area\[(\d+)\]\.From_Datefield_Name_2\[(\d+)\]/i,
     /Sections1-6\[\d+\]\.section5\[(\d+)\]\.([^[]+)(?:\[(\d+)\])?/i,
     /Sections1-6\[\d+\]\.section5\[\d+\]\.TextField11\[(\d+)\]/i,
-    /Sections1-6\[\d+\]\.section5\[\d+\]\.#area\[\d+\]\.From_Datefield_Name_2\[(\d+)\]/i
+    /Sections1-6\[\d+\]\.section5\[\d+\]\.#area\[\d+\]\.From_Datefield_Name_2\[(\d+)\]/i,
   ],
   6: [],
   7: [],
@@ -330,70 +336,70 @@ export const entryPatterns: Record<number, RegExp[]> = {
     // Residence history
     /residence[._-]?(\d+)/i,
     /address[._-]?(\d+)/i,
-    /lived[._-]?(\d+)/i
+    /lived[._-]?(\d+)/i,
   ],
   12: [
     // Education history
     /school[._-]?(\d+)/i,
     /education[._-]?(\d+)/i,
-    /degree[._-]?(\d+)/i
+    /degree[._-]?(\d+)/i,
   ],
   13: [
     // Employment history
     /employer[._-]?(\d+)/i,
     /employment[._-]?(\d+)/i,
     /job[._-]?(\d+)/i,
-    /position[._-]?(\d+)/i
+    /position[._-]?(\d+)/i,
   ],
   14: [],
   15: [
     // Military history
     /military[._-]?(\d+)/i,
     /service[._-]?(\d+)/i,
-    /branch[._-]?(\d+)/i
+    /branch[._-]?(\d+)/i,
   ],
   16: [
     // References
     /reference[._-]?(\d+)/i,
     /knowsyou[._-]?(\d+)/i,
-    /contact[._-]?(\d+)/i
+    /contact[._-]?(\d+)/i,
   ],
   17: [
     // Relationships
     /spouse[._-]?(\d+)/i,
     /partner[._-]?(\d+)/i,
     /relationship[._-]?(\d+)/i,
-    /cohabitant[._-]?(\d+)/i
+    /cohabitant[._-]?(\d+)/i,
   ],
   18: [
     // Relatives
     /relative[._-]?(\d+)/i,
     /family[._-]?(\d+)/i,
-    /member[._-]?(\d+)/i
+    /member[._-]?(\d+)/i,
   ],
   19: [
     // Foreign contacts
     /foreign[._-]?contact[._-]?(\d+)/i,
-    /nonuscitizen[._-]?(\d+)/i
+    /nonuscitizen[._-]?(\d+)/i,
   ],
   20: [
     // Foreign activities
     /foreignbus[._-]?(\d+)/i,
     /foreigngov[._-]?(\d+)/i,
-    /activity[._-]?(\d+)/i
+    /activity[._-]?(\d+)/i,
   ],
   21: [],
   22: [
     // Police record
     /offense[._-]?(\d+)/i,
     /arrest[._-]?(\d+)/i,
-    /charge[._-]?(\d+)/i
+    /charge[._-]?(\d+)/i,
   ],
   23: [
     // Drug use
     /drug[._-]?(\d+)/i,
     /substance[._-]?(\d+)/i,
-    /controlled[._-]?(\d+)/i
+    /controlled[._-]?(\d+)/i,
   ],
   24: [],
   25: [],
@@ -401,12 +407,12 @@ export const entryPatterns: Record<number, RegExp[]> = {
     // Financial record
     /financial[._-]?(\d+)/i,
     /debt[._-]?(\d+)/i,
-    /bankruptcy[._-]?(\d+)/i
+    /bankruptcy[._-]?(\d+)/i,
   ],
   27: [],
   28: [],
   29: [],
-  30: []
+  30: [],
 };
 
 /**
@@ -418,32 +424,32 @@ export const sectionEntryPrefixes: Record<number, string[]> = {
   2: [],
   3: [],
   4: [],
-  5: ["othername", "alias", "maiden"],      // Other names used
+  5: ["othername", "alias", "maiden"], // Other names used
   6: [],
   7: [],
   8: [],
   9: [],
   10: [],
-  11: ["residence", "address", "lived"],     // Where you have lived
-  12: ["school", "education", "degree"],     // Schools attended
-  13: ["employer", "employment", "job"],     // Employment history
+  11: ["residence", "address", "lived"], // Where you have lived
+  12: ["school", "education", "degree"], // Schools attended
+  13: ["employer", "employment", "job"], // Employment history
   14: [],
-  15: ["military", "service", "branch"],     // Military history
-  16: ["reference", "knowsyou", "contact"],  // References
+  15: ["military", "service", "branch"], // Military history
+  16: ["reference", "knowsyou", "contact"], // References
   17: ["spouse", "partner", "relationship"], // Relationships
-  18: ["relative", "family", "member"],      // Relatives
+  18: ["relative", "family", "member"], // Relatives
   19: ["foreign", "contact", "nonuscitizen"], // Foreign contacts
   20: ["foreignbus", "foreigngov", "activity"], // Foreign activities
   21: [],
-  22: ["offense", "arrest", "charge"],       // Police record
-  23: ["drug", "substance", "controlled"],   // Drug use
+  22: ["offense", "arrest", "charge"], // Police record
+  23: ["drug", "substance", "controlled"], // Drug use
   24: [],
   25: [],
-  26: ["financial", "debt", "bankruptcy"],   // Financial record
+  26: ["financial", "debt", "bankruptcy"], // Financial record
   27: [],
   28: [],
   29: [],
-  30: []
+  30: [],
 };
 
 // Define more accurate section page ranges based on validation
@@ -480,6 +486,83 @@ export const sectionPageRanges: Record<number, [number, number]> = {
   30: [133, 136], // Continuation Space (4 pages)
 };
 
+// Function to calculate related sections based on page ranges
+export const calculateRelatedSections = (
+  relatedSections: Record<number, number[]>
+) => {
+  // Process each section
+  for (const [sectionStr, range] of Object.entries(sectionPageRanges)) {
+    const section = parseInt(sectionStr, 10);
+    if (isNaN(section)) continue;
+
+    const [startPage, endPage] = range;
+    const sectionPageSpan = endPage - startPage;
+
+    // Initialize array for this section
+    relatedSections[section] = [];
+
+    // Find sections with adjacent or nearby page ranges
+    for (const [otherSectionStr, otherRange] of Object.entries(
+      sectionPageRanges
+    )) {
+      const otherSection = parseInt(otherSectionStr, 10);
+      if (isNaN(otherSection) || otherSection === section) continue;
+
+      const [otherStart, otherEnd] = otherRange;
+
+      // Calculate page proximity - lower means closer
+      // 1. Adjacent sections (right after or before)
+      if (
+        Math.abs(startPage - otherEnd) <= 1 ||
+        Math.abs(endPage - otherStart) <= 1
+      ) {
+        relatedSections[section].push(otherSection);
+      }
+      // 2. Sections within reasonable proximity (within 5 pages)
+      else if (
+        Math.abs(startPage - otherEnd) <= 5 ||
+        Math.abs(endPage - otherStart) <= 5
+      ) {
+        relatedSections[section].push(otherSection);
+      }
+      // 3. Special case for long sections - sections contained within
+      else if (
+        sectionPageSpan > 10 &&
+        otherStart >= startPage &&
+        otherEnd <= endPage
+      ) {
+        relatedSections[section].push(otherSection);
+      }
+    }
+
+    // Add some manually validated relationships based on content domains
+    const contentRelationships: Record<number, number[]> = {
+      11: [12, 13], // Where you lived -> School, Employment
+      12: [11, 13], // School -> Where you lived, Employment
+      13: [11, 12, 16], // Employment -> Where you lived, School, References
+      15: [16], // Military -> References
+      16: [13, 15], // References -> Employment, Military
+      17: [18, 19], // Relationships -> Relatives, Foreign Contacts
+      18: [17, 19], // Relatives -> Relationships, Foreign Contacts
+      19: [17, 18, 20], // Foreign Contacts -> Relationships, Relatives, Foreign Activities
+      20: [19], // Foreign Activities -> Foreign Contacts
+      22: [23, 24], // Police Record -> Drug Use, Alcohol
+      23: [22, 24], // Drug Use -> Police Record, Alcohol
+      24: [22, 23], // Alcohol -> Police Record, Drug Use
+    };
+
+    // Add content-based relationships if they exist
+    if (contentRelationships[section]) {
+      // Add relationships but ensure no duplicates
+      for (const related of contentRelationships[section]) {
+        if (!relatedSections[section].includes(related)) {
+          relatedSections[section].push(related);
+        }
+      }
+    }
+  }
+};
+
 /**
  * Field cluster result interface
  */
@@ -514,8 +597,7 @@ export interface ClusteringOptions {
   usePositionalInfo?: boolean;
 }
 
-export const PageAnalysisSettings = {}
-
+export const PageAnalysisSettings = {};
 
 /**
  * Field clusterer for grouping SF-86 form fields based on naming patterns
@@ -528,9 +610,9 @@ export class FieldClusterer {
     maxClusterSize: 30,
     useAdvancedNLP: false,
     analyzeValues: true,
-    usePositionalInfo: true
+    usePositionalInfo: true,
   };
-  
+
   // Common field name patterns derived from enhanced-pdf-validation.ts
   private readonly commonPatterns = {
     // Direct section references
@@ -543,23 +625,46 @@ export class FieldClusterer {
     subsectionDot: /(\d+)\.(\d+)/,
     subsectionUnderscore: /(\d+)_(\d+)/,
     // Form pattern: form1[0].Section5[0].someField[0]
-    formPattern: /form1\[0\]\.(\w+)\[0\]\.(\w+)/i
+    formPattern: /form1\[0\]\.(\w+)\[0\]\.(\w+)/i,
   };
-  
+
   // Common prefixes in field names
   private readonly commonPrefixes = [
-    'TextField', 'CheckBox', 'DropDownList', 'RadioButton',
-    'Date', 'SSN', 'Email', 'Phone', 'Address',
-    'Name', 'Birth', 'Citizenship', 'Employment'
+    "TextField",
+    "CheckBox",
+    "DropDownList",
+    "RadioButton",
+    "Date",
+    "SSN",
+    "Email",
+    "Phone",
+    "Address",
+    "Name",
+    "Birth",
+    "Citizenship",
+    "Employment",
   ];
-  
+
   // Common suffixes in field names
   private readonly commonSuffixes = [
-    'Name', 'Date', 'ID', 'Number', 'Code', 'Status',
-    'City', 'State', 'Zip', 'Country', 'Street',
-    'First', 'Last', 'Middle', 'Full', 'Suffix'
+    "Name",
+    "Date",
+    "ID",
+    "Number",
+    "Code",
+    "Status",
+    "City",
+    "State",
+    "Zip",
+    "Country",
+    "Street",
+    "First",
+    "Last",
+    "Middle",
+    "Full",
+    "Suffix",
   ];
-  
+
   /**
    * Create a new field clusterer
    * @param options Clustering options
@@ -568,13 +673,13 @@ export class FieldClusterer {
     // Merge with default options
     this.options = {
       ...this.defaultOptions,
-      ...options
+      ...options,
     };
   }
-  
+
   /**
    * Cluster fields based on naming patterns
-   * 
+   *
    * @param fields Fields to cluster
    * @param options Optional clustering options to override instance options
    * @returns Array of field clusters
@@ -587,70 +692,84 @@ export class FieldClusterer {
     const mergedOptions: Required<ClusteringOptions> = {
       ...this.defaultOptions,
       ...this.options,
-      ...options
+      ...options,
     };
-    
+
     // Skip if no fields
     if (!fields || fields.length === 0) {
       return [];
     }
-    
-    console.log(chalk.cyan(`Starting field clustering for ${fields.length} fields`));
-    
+
+    console.log(
+      chalk.cyan(`Starting field clustering for ${fields.length} fields`)
+    );
+
     // Step 1: Extract naming patterns from fields
     const patterns = this.extractNamePatterns(fields);
     console.log(chalk.cyan(`Extracted ${patterns.size} distinct patterns`));
-    
+
     // Step 2: Group fields by primary pattern
-    const initialClusters = this.groupFieldsByPrimaryPattern(fields, patterns, mergedOptions);
-    console.log(chalk.cyan(`Created ${initialClusters.length} initial clusters`));
-    
+    const initialClusters = this.groupFieldsByPrimaryPattern(
+      fields,
+      patterns,
+      mergedOptions
+    );
+    console.log(
+      chalk.cyan(`Created ${initialClusters.length} initial clusters`)
+    );
+
     // Step 3: Refine clusters - split large ones, merge similar ones
     const refinedClusters = this.refineClusters(initialClusters, mergedOptions);
     console.log(chalk.cyan(`Refined into ${refinedClusters.length} clusters`));
-    
+
     // Step 4: Calculate confidence for each cluster
     const scoredClusters = this.calculateClusterConfidence(refinedClusters);
     console.log(chalk.cyan(`Final clusters: ${scoredClusters.length}`));
-    
+
     // Sort clusters by confidence (descending)
     return scoredClusters.sort((a, b) => b.confidence - a.confidence);
   }
-  
+
   /**
    * Extract name patterns from fields
-   * 
+   *
    * @param fields Fields to analyze
    * @returns Map of pattern to matching field names
    */
-  private extractNamePatterns(fields: CategorizedField[]): Map<string, string[]> {
+  private extractNamePatterns(
+    fields: CategorizedField[]
+  ): Map<string, string[]> {
     // Hold patterns with field names that match
     const patternMap = new Map<string, string[]>();
-    
+
     // Process each field
     for (const field of fields) {
       const fieldName = field.name;
-      
+
       // Try each pattern matcher
-      
+
       // 1. Check for direct section reference
       const sectionRefMatch = fieldName.match(this.commonPatterns.sectionRef);
       if (sectionRefMatch) {
         const section = sectionRefMatch[1];
         const subsection = sectionRefMatch[2] || "";
-        const pattern = subsection ? `section${section}_${subsection}` : `section${section}`;
+        const pattern = subsection
+          ? `section${section}_${subsection}`
+          : `section${section}`;
         this.addToPatternMap(patternMap, pattern, fieldName);
         continue;
       }
-      
+
       // 2. Check for section range
-      const sectionRangeMatch = fieldName.match(this.commonPatterns.sectionRange);
+      const sectionRangeMatch = fieldName.match(
+        this.commonPatterns.sectionRange
+      );
       if (sectionRangeMatch) {
         const pattern = `sections${sectionRangeMatch[1]}-${sectionRangeMatch[2]}`;
         this.addToPatternMap(patternMap, pattern, fieldName);
         continue;
       }
-      
+
       // 3. Check for form pattern
       const formMatch = fieldName.match(this.commonPatterns.formPattern);
       if (formMatch) {
@@ -660,7 +779,7 @@ export class FieldClusterer {
         this.addToPatternMap(patternMap, pattern, fieldName);
         continue;
       }
-      
+
       // 4. Check for indexed fields
       const indexMatch = fieldName.match(this.commonPatterns.indexedField);
       if (indexMatch) {
@@ -670,49 +789,53 @@ export class FieldClusterer {
         this.addToPatternMap(patternMap, pattern, fieldName);
         continue;
       }
-      
+
       // 5. Extract common prefix if found
-      const prefix = this.commonPrefixes.find(p => fieldName.startsWith(p));
+      const prefix = this.commonPrefixes.find((p) => fieldName.startsWith(p));
       if (prefix) {
         const pattern = `prefix:${prefix}`;
         this.addToPatternMap(patternMap, pattern, fieldName);
         continue;
       }
-      
+
       // 6. Extract common suffix if found
-      const suffix = this.commonSuffixes.find(s => fieldName.endsWith(s));
+      const suffix = this.commonSuffixes.find((s) => fieldName.endsWith(s));
       if (suffix) {
         const pattern = `suffix:${suffix}`;
         this.addToPatternMap(patternMap, pattern, fieldName);
         continue;
       }
-      
+
       // Default pattern - use first part of name (up to first digit or special char)
-      const defaultPattern = fieldName.replace(/[^a-zA-Z].*$/, '');
+      const defaultPattern = fieldName.replace(/[^a-zA-Z].*$/, "");
       if (defaultPattern && defaultPattern !== fieldName) {
         this.addToPatternMap(patternMap, `base:${defaultPattern}`, fieldName);
       } else {
         // For fields that didn't match any pattern, use a general bucket
-        this.addToPatternMap(patternMap, 'other', fieldName);
+        this.addToPatternMap(patternMap, "other", fieldName);
       }
     }
-    
+
     return patternMap;
   }
-  
+
   /**
    * Helper to add field to pattern map
    */
-  private addToPatternMap(map: Map<string, string[]>, pattern: string, fieldName: string): void {
+  private addToPatternMap(
+    map: Map<string, string[]>,
+    pattern: string,
+    fieldName: string
+  ): void {
     if (!map.has(pattern)) {
       map.set(pattern, []);
     }
     map.get(pattern)!.push(fieldName);
   }
-  
+
   /**
    * Group fields by primary pattern
-   * 
+   *
    * @param fields All fields to group
    * @param patterns Pattern map from extractNamePatterns
    * @param options Clustering options
@@ -725,65 +848,65 @@ export class FieldClusterer {
   ): FieldCluster[] {
     const clusters: FieldCluster[] = [];
     const fieldMap = new Map<string, CategorizedField>();
-    
+
     // Create a lookup map for fields by name
-    fields.forEach(field => fieldMap.set(field.name, field));
-    
+    fields.forEach((field) => fieldMap.set(field.name, field));
+
     // Process each pattern
     for (const [pattern, fieldNames] of patterns.entries()) {
       // Skip patterns with too few fields
       if (fieldNames.length < options.minClusterSize) {
         continue;
       }
-      
+
       // Create cluster fields array
       const clusterFields = fieldNames
-        .map(name => fieldMap.get(name))
+        .map((name) => fieldMap.get(name))
         .filter(Boolean) as CategorizedField[];
-      
+
       // Skip if we don't have enough fields
       if (clusterFields.length < options.minClusterSize) {
         continue;
       }
-      
+
       // Generate description for this pattern
       const description = this.generatePatternDescription(pattern);
-      
+
       // Create the cluster
       const cluster: FieldCluster = {
         pattern,
         fields: clusterFields,
         confidence: 0.5, // Initial confidence
-        description
+        description,
       };
-      
+
       // Try to determine section for this cluster
       const suggestedSection = this.suggestSectionForCluster(cluster);
       if (suggestedSection && suggestedSection.confidence > 0.6) {
         cluster.suggestedSection = suggestedSection.section;
       }
-      
+
       clusters.push(cluster);
     }
-    
+
     return clusters;
   }
-  
+
   /**
    * Generate human-readable description for a pattern
-   * 
+   *
    * @param pattern The pattern string
    * @returns Human-readable description
    */
   private generatePatternDescription(pattern: string): string {
     // Handle special pattern prefixes
-    if (pattern.startsWith('section')) {
+    if (pattern.startsWith("section")) {
       // Extract section number
       const match = pattern.match(/section(\d+)(?:_(\d+))?/);
       if (match) {
         const section = match[1];
         const subsection = match[2];
-        
+
         if (subsection) {
           return `Section ${section}.${subsection} fields`;
         }
@@ -791,45 +914,21 @@ export class FieldClusterer {
       }
       return `Section fields`;
     }
-    
-    if (pattern.startsWith('sections')) {
-      const match = pattern.match(/sections(\d+)-(\d+)/);
-      if (match) {
-        return `Sections ${match[1]}-${match[2]} range`;
-      }
-      return `Multiple sections range`;
-    }
-    
-    if (pattern.startsWith('form.')) {
-      const parts = pattern.split('.');
+
+    if (pattern.startsWith("form1[0].")) {
+      const parts = pattern.split(".");
       if (parts.length >= 3) {
         return `Form fields: ${parts[1]} - ${parts[2]}`;
       }
       return `Form fields: ${pattern}`;
     }
-    
-    if (pattern.startsWith('prefix:')) {
-      return `Fields with prefix: ${pattern.substring(7)}`;
-    }
-    
-    if (pattern.startsWith('suffix:')) {
-      return `Fields with suffix: ${pattern.substring(7)}`;
-    }
-    
-    if (pattern.startsWith('base:')) {
-      return `Base name: ${pattern.substring(5)}`;
-    }
-    
-    if (pattern.includes('[idx]')) {
-      return `Indexed fields: ${pattern.replace('[idx]', '')}`;
-    }
-    
+
     return `Pattern: ${pattern}`;
   }
-  
+
   /**
    * Refine clusters by splitting large ones and merging similar ones
-   * 
+   *
    * @param clusters Initial clusters to refine
    * @param options Clustering options
    * @returns Refined clusters
@@ -839,7 +938,7 @@ export class FieldClusterer {
     options: Required<ClusteringOptions>
   ): FieldCluster[] {
     const result: FieldCluster[] = [];
-    
+
     // First, split large clusters
     for (const cluster of clusters) {
       if (cluster.fields.length > options.maxClusterSize) {
@@ -851,13 +950,13 @@ export class FieldClusterer {
         result.push(cluster);
       }
     }
-    
+
     return result;
   }
-  
+
   /**
    * Subdivide a large cluster into smaller ones
-   * 
+   *
    * @param cluster Large cluster to subdivide
    * @param options Clustering options
    * @returns Array of smaller clusters
@@ -867,13 +966,13 @@ export class FieldClusterer {
     options: Required<ClusteringOptions>
   ): FieldCluster[] {
     const result: FieldCluster[] = [];
-    
+
     // Try different subdivision strategies
-    
+
     // 1. Try to subdivide by page
     if (options.usePositionalInfo) {
       const fieldsByPage: Record<number, CategorizedField[]> = {};
-      
+
       // Group fields by page
       for (const field of cluster.fields) {
         if (field.page) {
@@ -883,7 +982,7 @@ export class FieldClusterer {
           fieldsByPage[field.page].push(field);
         }
       }
-      
+
       // Create clusters for pages with enough fields
       for (const [page, pageFields] of Object.entries(fieldsByPage)) {
         if (pageFields.length >= options.minClusterSize) {
@@ -891,29 +990,29 @@ export class FieldClusterer {
             pattern: `${cluster.pattern}_page${page}`,
             fields: pageFields,
             confidence: 0.6, // Slightly higher than default
-            description: `${cluster.description} on page ${page}`
+            description: `${cluster.description} on page ${page}`,
           });
         }
       }
-      
+
       // If we successfully subdivided, return the result
       if (result.length > 0) {
         return result;
       }
     }
-    
+
     // 2. Try to subdivide by field type
     const fieldsByType: Record<string, CategorizedField[]> = {};
-    
+
     // Group fields by type
     for (const field of cluster.fields) {
-      const type = field.type || 'unknown';
+      const type = field.type || "unknown";
       if (!fieldsByType[type]) {
         fieldsByType[type] = [];
       }
       fieldsByType[type].push(field);
     }
-    
+
     // Create clusters for types with enough fields
     for (const [type, typeFields] of Object.entries(fieldsByType)) {
       if (typeFields.length >= options.minClusterSize) {
@@ -921,87 +1020,93 @@ export class FieldClusterer {
           pattern: `${cluster.pattern}_${type}`,
           fields: typeFields,
           confidence: 0.55,
-          description: `${cluster.description} (${type})`
+          description: `${cluster.description} (${type})`,
         });
       }
     }
-    
+
     // If we successfully subdivided, return the result
     if (result.length > 0) {
       return result;
     }
-    
+
     // 3. If all subdivision strategies failed, just split the cluster arbitrarily
     const chunks: CategorizedField[][] = [];
     const chunkSize = options.maxClusterSize;
-    
+
     for (let i = 0; i < cluster.fields.length; i += chunkSize) {
       chunks.push(cluster.fields.slice(i, i + chunkSize));
     }
-    
+
     // Create clusters for each chunk
     chunks.forEach((chunk, index) => {
       result.push({
         pattern: `${cluster.pattern}_part${index + 1}`,
         fields: chunk,
         confidence: 0.5,
-        description: `${cluster.description} (Part ${index + 1})`
+        description: `${cluster.description} (Part ${index + 1})`,
       });
     });
-    
+
     return result;
   }
-  
+
   /**
    * Calculate confidence scores for clusters
-   * 
+   *
    * @param clusters Clusters to score
    * @returns Clusters with confidence scores
    */
   private calculateClusterConfidence(clusters: FieldCluster[]): FieldCluster[] {
-    return clusters.map(cluster => {
+    return clusters.map((cluster) => {
       // Start with basic confidence based on number of fields
-      let confidence = Math.min(0.5 + (cluster.fields.length / 20) * 0.25, 0.75);
-      
+      let confidence = Math.min(
+        0.5 + (cluster.fields.length / 20) * 0.25,
+        0.75
+      );
+
       // Factor 1: Field naming consistency
       const nameConsistency = this.calculateNamingConsistency(cluster.fields);
-      
+
       // Factor 2: Page consistency (if all fields are on same/adjacent pages)
       const pageConsistency = this.calculatePageConsistency(cluster.fields);
-      
+
       // Factor 3: Value pattern consistency
       const valueConsistency = this.calculateValueConsistency(cluster.fields);
-      
+
       // Factor 4: Match to known section patterns
-      const sectionPatternMatch = this.calculateSectionPatternMatch(cluster.fields);
-      
+      const sectionPatternMatch = this.calculateSectionPatternMatch(
+        cluster.fields
+      );
+
       // Combine all factors, giving more weight to naming consistency and section matches
-      confidence = 0.3 * confidence + 
-                  0.25 * nameConsistency + 
-                  0.15 * pageConsistency + 
-                  0.1 * valueConsistency +
-                  0.2 * sectionPatternMatch;
-      
+      confidence =
+        0.3 * confidence +
+        0.25 * nameConsistency +
+        0.15 * pageConsistency +
+        0.1 * valueConsistency +
+        0.2 * sectionPatternMatch;
+
       // Ensure confidence is between 0 and 1
       confidence = Math.max(0, Math.min(1, confidence));
-      
+
       // Return updated cluster
       return {
         ...cluster,
-        confidence
+        confidence,
       };
     });
   }
-  
+
   /**
    * Calculate naming consistency score for fields in a cluster
    */
   private calculateNamingConsistency(fields: CategorizedField[]): number {
     if (fields.length < 2) return 0.5;
-    
+
     // Look for shared prefix/suffix patterns
-    const names = fields.map(f => f.name);
-    
+    const names = fields.map((f) => f.name);
+
     // Get longest common prefix
     let prefix = names[0];
     for (let i = 1; i < names.length; i++) {
@@ -1010,7 +1115,7 @@ export class FieldClusterer {
       }
       if (prefix.length === 0) break;
     }
-    
+
     // Get longest common suffix
     let suffix = names[0];
     for (let i = 1; i < names.length; i++) {
@@ -1019,138 +1124,137 @@ export class FieldClusterer {
       }
       if (suffix.length === 0) break;
     }
-    
+
     // Calculate score based on common prefix/suffix
     const prefixScore = prefix.length > 3 ? prefix.length / 10 : 0;
     const suffixScore = suffix.length > 3 ? suffix.length / 10 : 0;
-    
+
     // Check for sequential numbering
     let sequentialScore = 0;
     const numbers: number[] = [];
     const pattern = /(\D+)(\d+)(\D*)/;
-    
+
     for (const name of names) {
       const match = name.match(pattern);
       if (match) {
         numbers.push(parseInt(match[2], 10));
       }
     }
-    
+
     if (numbers.length > 0) {
       numbers.sort((a, b) => a - b);
       let sequential = 0;
       for (let i = 1; i < numbers.length; i++) {
-        if (numbers[i] === numbers[i-1] + 1) {
+        if (numbers[i] === numbers[i - 1] + 1) {
           sequential++;
         }
       }
       sequentialScore = sequential / (numbers.length - 1);
     }
-    
+
     // Combine scores
     return Math.min(prefixScore + suffixScore + sequentialScore, 1);
   }
-  
+
   /**
    * Calculate page consistency score for fields in a cluster
    */
   private calculatePageConsistency(fields: CategorizedField[]): number {
     // Extract pages from fields
-    const pages = fields
-      .map(f => f.page)
-      .filter(Boolean);
-    
+    const pages = fields.map((f) => f.page).filter(Boolean);
+
     if (pages.length < 2) return 0.5;
-    
+
     // If all on same page, perfect consistency
     const uniquePages = new Set(pages);
     if (uniquePages.size === 1) {
       return 1.0;
     }
-    
+
     // If pages span 2-3 consecutive pages, good consistency
     const minPage = Math.min(...pages);
     const maxPage = Math.max(...pages);
-    
+
     if (maxPage - minPage <= 2) {
       return 0.8;
     }
-    
+
     // If pages span within section range, reasonable consistency
     const pageInSection = (page: number, section: number): boolean => {
       const range = sectionPageRanges[section];
       return range && page >= range[0] && page <= range[1];
     };
-    
+
     // Get section from first field, check if all pages are in that section
     const firstSectionMatch = fields[0].name.match(/section(\d+)/i);
     if (firstSectionMatch) {
       const section = parseInt(firstSectionMatch[1], 10);
-      if (section && pages.every(page => pageInSection(page, section))) {
+      if (section && pages.every((page) => pageInSection(page, section))) {
         return 0.7;
       }
     }
-    
+
     // Otherwise, score based on page spread
     return Math.max(0.1, 1 - (maxPage - minPage) / 10);
   }
-  
+
   /**
    * Calculate value consistency score for fields in a cluster
    */
   private calculateValueConsistency(fields: CategorizedField[]): number {
     // Count fields with values
-    const fieldsWithValues = fields.filter(f => f.value !== undefined);
+    const fieldsWithValues = fields.filter((f) => f.value !== undefined);
     if (fieldsWithValues.length < 2) return 0.5;
-    
+
     // Check if values follow a common pattern
     let patternCount = 0;
-    
+
     // Look for section number in values
     const sectionPattern = /^(?:sect)?(\d+)(?:\.|_)/i;
     const sectionMatches = fieldsWithValues
-      .map(f => String(f.value).match(sectionPattern))
+      .map((f) => String(f.value).match(sectionPattern))
       .filter(Boolean);
-      
+
     if (sectionMatches.length > fieldsWithValues.length * 0.6) {
       patternCount++;
     }
-    
+
     // Look for empty but present values (placeholder fields)
-    const emptyValues = fieldsWithValues
-      .filter(f => String(f.value).trim() === '');
-      
+    const emptyValues = fieldsWithValues.filter(
+      (f) => String(f.value).trim() === ""
+    );
+
     if (emptyValues.length > fieldsWithValues.length * 0.8) {
       patternCount++;
     }
-    
+
     // Look for similar lengths
-    const valueLengths = fieldsWithValues
-      .map(f => String(f.value).length);
-      
-    const averageLength = valueLengths.reduce((sum, len) => sum + len, 0) / valueLengths.length;
-    const similarLengths = valueLengths
-      .filter(len => Math.abs(len - averageLength) < 5)
-      .length;
-      
+    const valueLengths = fieldsWithValues.map((f) => String(f.value).length);
+
+    const averageLength =
+      valueLengths.reduce((sum, len) => sum + len, 0) / valueLengths.length;
+    const similarLengths = valueLengths.filter(
+      (len) => Math.abs(len - averageLength) < 5
+    ).length;
+
     if (similarLengths > fieldsWithValues.length * 0.7) {
       patternCount++;
     }
-    
+
     return patternCount / 3;
   }
-  
+
   /**
    * Calculate section pattern match score for fields in a cluster
    */
   private calculateSectionPatternMatch(fields: CategorizedField[]): number {
     // For each section, check what percentage of fields match its patterns
     const scores: Record<number, number> = {};
-    
+
     // Check each section's patterns
     for (const [section, patterns] of Object.entries(sectionFieldPatterns)) {
       const sectionNum = parseInt(section, 10);
-      
+
       // Count fields matching this section's patterns
       let matchCount = 0;
       for (const field of fields) {
@@ -1161,48 +1265,48 @@ export class FieldClusterer {
           }
         }
       }
-      
+
       // Calculate score for this section
       scores[sectionNum] = matchCount / fields.length;
     }
-    
+
     // Check for section keywords in field values
     for (const [section, keywords] of Object.entries(sectionKeywords)) {
       const sectionNum = parseInt(section, 10);
-      
+
       // Initialize score for this section if not already set
       if (!scores[sectionNum]) {
         scores[sectionNum] = 0;
       }
-      
+
       // Count fields with values matching this section's keywords
       let valueMatchCount = 0;
       let fieldsWithValues = 0;
-      
+
       for (const field of fields) {
         if (field.value) {
           fieldsWithValues++;
           const value = String(field.value).toLowerCase();
-          if (keywords.some(keyword => value.includes(keyword))) {
+          if (keywords.some((keyword) => value.includes(keyword))) {
             valueMatchCount++;
           }
         }
       }
-      
+
       // Add value match score (weighted less than pattern matches)
       if (fieldsWithValues > 0) {
         scores[sectionNum] += (valueMatchCount / fieldsWithValues) * 0.5;
       }
     }
-    
+
     // Return highest score for any section
     const bestScore = Math.max(0, ...Object.values(scores));
     return Math.min(bestScore, 1);
   }
-  
+
   /**
    * Suggest section for a cluster based on name patterns, page ranges, etc.
-   * 
+   *
    * @param cluster Cluster to analyze
    * @returns Suggested section with confidence score
    */
@@ -1213,24 +1317,24 @@ export class FieldClusterer {
     if (cluster.suggestedSection) {
       return {
         section: cluster.suggestedSection,
-        confidence: cluster.confidence
+        confidence: cluster.confidence,
       };
     }
-    
+
     // Scoring for each section
     const sectionScores: Record<number, number> = {};
-    
+
     // Method 1: Check pattern name for section references
     const sectionMatch = cluster.pattern.match(/section(\d+)/i);
     if (sectionMatch) {
       const section = parseInt(sectionMatch[1], 10);
       sectionScores[section] = (sectionScores[section] || 0) + 0.8;
     }
-    
+
     // Method 2: Check field naming patterns for each section
     for (const [section, patterns] of Object.entries(sectionFieldPatterns)) {
       const sectionNum = parseInt(section, 10);
-      
+
       // Count fields matching this section's patterns
       let matchCount = 0;
       for (const field of cluster.fields) {
@@ -1241,58 +1345,60 @@ export class FieldClusterer {
           }
         }
       }
-      
+
       // Calculate score for this section (0-1)
       const patternScore = matchCount / cluster.fields.length;
-      sectionScores[sectionNum] = (sectionScores[sectionNum] || 0) + patternScore * 0.6;
+      sectionScores[sectionNum] =
+        (sectionScores[sectionNum] || 0) + patternScore * 0.6;
     }
-    
+
     // Method 3: Check page ranges
-    const pages = cluster.fields
-      .map(f => f.page)
-      .filter(Boolean);
-      
+    const pages = cluster.fields.map((f) => f.page).filter(Boolean);
+
     if (pages.length > 0) {
       const avgPage = pages.reduce((sum, page) => sum + page, 0) / pages.length;
-      
+
       // Find sections whose page range contains this average
-      for (const [section, [minPage, maxPage]] of Object.entries(sectionPageRanges)) {
+      for (const [section, [minPage, maxPage]] of Object.entries(
+        sectionPageRanges
+      )) {
         const sectionNum = parseInt(section, 10);
         if (avgPage >= minPage && avgPage <= maxPage) {
           sectionScores[sectionNum] = (sectionScores[sectionNum] || 0) + 0.4;
         }
       }
     }
-    
+
     // Method 4: Check field values for section keywords
     for (const [section, keywords] of Object.entries(sectionKeywords)) {
       const sectionNum = parseInt(section, 10);
-      
+
       // Count fields with values matching this section's keywords
       let valueMatchCount = 0;
       let fieldsWithValues = 0;
-      
+
       for (const field of cluster.fields) {
         if (field.value) {
           fieldsWithValues++;
           const value = String(field.value).toLowerCase();
-          if (keywords.some(keyword => value.includes(keyword))) {
+          if (keywords.some((keyword) => value.includes(keyword))) {
             valueMatchCount++;
           }
         }
       }
-      
+
       // Add value match score
       if (fieldsWithValues > 0) {
         const keywordScore = (valueMatchCount / fieldsWithValues) * 0.3;
-        sectionScores[sectionNum] = (sectionScores[sectionNum] || 0) + keywordScore;
+        sectionScores[sectionNum] =
+          (sectionScores[sectionNum] || 0) + keywordScore;
       }
     }
-    
+
     // Find section with highest score
     let bestSection = 0;
     let bestScore = 0;
-    
+
     for (const [section, score] of Object.entries(sectionScores)) {
       const sectionNum = parseInt(section, 10);
       if (score > bestScore) {
@@ -1300,20 +1406,18 @@ export class FieldClusterer {
         bestSection = sectionNum;
       }
     }
-    
+
     // Return section if confidence is reasonable
     if (bestScore >= 0.4 && bestSection > 0) {
       return {
         section: bestSection,
-        confidence: Math.min(bestScore, 1)
+        confidence: Math.min(bestScore, 1),
       };
     }
-    
+
     return null;
   }
-
-
 }
 
 // Export singleton instance for easier usage
-export const fieldClusterer = new FieldClusterer(); 
+export const fieldClusterer = new FieldClusterer();

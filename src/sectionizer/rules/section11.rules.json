@@ -1,0 +1,92 @@
+[
+  {
+    "pattern": "^form1[0]",
+    "flags": "",
+    "confidence": 0.85,
+    "description": "Fields starting with form1[0] belong to section 11"
+  },
+  {
+    "pattern": "TextField11[14]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with TextField11[14] belong to section 11"
+  },
+  {
+    "pattern": "text",
+    "flags": "i",
+    "confidence": 0.75,
+    "description": "text fields belong to section 11"
+  },
+  {
+    "pattern": "TextField11[2]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with TextField11[2] belong to section 11"
+  },
+  {
+    "pattern": "TextField11[5]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with TextField11[5] belong to section 11"
+  },
+  {
+    "pattern": "TextField11[16]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with TextField11[16] belong to section 11"
+  },
+  {
+    "pattern": "TextField11[20]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with TextField11[20] belong to section 11"
+  },
+  {
+    "pattern": "TextField11[22]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with TextField11[22] belong to section 11"
+  },
+  {
+    "pattern": "TextField11[9]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with TextField11[9] belong to section 11"
+  },
+  {
+    "pattern": "#field[5]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with #field[5] belong to section 11"
+  },
+  {
+    "pattern": "Cell2[0]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with Cell2[0] belong to section 11"
+  },
+  {
+    "pattern": "Cell3[0]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with Cell3[0] belong to section 11"
+  },
+  {
+    "pattern": "Cell4[0]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with Cell4[0] belong to section 11"
+  },
+  {
+    "pattern": "Cell3[1]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with Cell3[1] belong to section 11"
+  },
+  {
+    "pattern": "#field[4]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with #field[4] belong to section 11"
+  }
+]

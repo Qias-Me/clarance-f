@@ -150,7 +150,8 @@ export async function groupFieldsBySection<T extends SectionedField>(
   // Log stats
   const totalFields = deduplicate ? processedFieldIds.size : fields.length;
   const sectionCount = returnType === 'map' ? sectionMap.size : Object.keys(sectionFields).length;
-  console.log(`Grouped ${totalFields} ${deduplicate ? 'unique ' : ''}fields into ${sectionCount} sections`);
+
+  console.log(`Grouped ${totalFields} ${deduplicate ? 'unique ' : ''}fields into ${sectionCount - 1} sections`);
   
   // Save unknown fields if requested and there are any
   if (saveUnknown) {

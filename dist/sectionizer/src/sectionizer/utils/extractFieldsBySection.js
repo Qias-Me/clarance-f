@@ -13,39 +13,145 @@ import * as bridgeAdapter from "./bridgeAdapter.js";
 import { PDFDocument } from "pdf-lib";
 import { expectedFieldCounts } from "./field-clusterer.js";
 import chalk from 'chalk';
+import { createSectionBoundaryMap, enhanceSpatialCategorization, organizeSpatialSubsectionEntries, getPageDimensions } from "./spatialAnalysis.js";
 // Default to the embedded PDF under src/ for easier local development
 const DEFAULT_PDF_PATH = path.resolve(process.cwd(), "src", "sf862.pdf");
+// Fallback PDF path for when both input path and JSON loading fail
+const FALLBACK_PDF_PATH = "C:\\Users\\Jason\\Desktop\\AI-Coding\\clarance-f\\src\\sf862.pdf";
 /**
  * Extract all fields from the SF-86 PDF
  *
  * @param pdfPath Path to the SF-86 PDF file or JSON fields file
+ * @param force If true, bypass cache and extract fields directly from PDF
  * @returns Promise resolving to an array of PDF fields and the PDFDocument
  */
-export async function extractFields(pdfPath = DEFAULT_PDF_PATH) {
+export async function extractFields(pdfPath = DEFAULT_PDF_PATH, force = false) {
+    console.log(`extractFields called with path: ${pdfPath}, force: ${force}`);
     // Check if file exists
     if (!fs.existsSync(pdfPath)) {
-        throw new Error(`File not found at ${pdfPath}`);
+        console.error(`File not found at ${pdfPath}`);
+        // Try fallback PDF path if the specified path doesn't exist
+        if (fs.existsSync(FALLBACK_PDF_PATH)) {
+            console.log(`Using fallback PDF path: ${FALLBACK_PDF_PATH}`);
+            pdfPath = FALLBACK_PDF_PATH;
+        }
+        else {
+            throw new Error(`File not found at ${pdfPath} and fallback path ${FALLBACK_PDF_PATH} is also unavailable`);
+        }
     }
     try {
         // Check if it's a JSON file with pre-extracted fields
         if (pdfPath.toLowerCase().endsWith('.json')) {
             console.log(`Loading fields from JSON file: ${pdfPath}`);
-            const jsonData = JSON.parse(fs.readFileSync(pdfPath, 'utf-8'));
+            // Read file contents
+            let jsonData;
+            try {
+                const fileContents = fs.readFileSync(pdfPath, 'utf-8');
+                console.log(`Read ${fileContents.length} bytes from JSON file`);
+                // Parse JSON data
+                jsonData = JSON.parse(fileContents);
+                console.log(`Successfully parsed JSON with ${jsonData.length} entries`);
+            }
+            catch (jsonError) {
+                console.error(`Error reading/parsing JSON file: ${jsonError}`);
+                // Try fallback PDF path if JSON loading fails
+                if (fs.existsSync(FALLBACK_PDF_PATH)) {
+                    console.log(`JSON loading failed. Using fallback PDF path: ${FALLBACK_PDF_PATH}`);
+                    return extractFields(FALLBACK_PDF_PATH, force);
+                }
+                else {
+                    throw new Error(`Failed to read/parse JSON file: ${jsonError.message} and fallback path ${FALLBACK_PDF_PATH} is unavailable`);
+                }
+            }
             // Convert JSON data to PDFField format
+            console.log("Converting JSON data to PDFField format...");
             const processedFields = jsonData.map((field) => ({
-                id: field.id,
-                name: field.name,
-                value: field.value,
+                id: field.id || `field_${Math.random().toString(36).substring(2, 15)}`,
+                name: field.name || '',
+                value: field.value || '',
                 page: field.page || 0,
-                label: field.label,
-                type: field.type,
-                maxLength: field.maxLength,
-                options: field.options,
-                required: field.required,
+                label: field.label || '',
+                type: field.type || 'text',
+                maxLength: field.maxLength || 0,
+                options: field.options || [],
+                required: field.required || false,
                 rect: field.rect || null
             }));
-            return { fields: processedFields };
+            console.log(`Loaded ${processedFields.length} fields from JSON file`);
+            // Try to load PDF document if it exists in the same directory
+            let pdfDoc;
+            const possiblePdfPath = pdfPath.replace(/\.json$/, '.pdf');
+            if (fs.existsSync(possiblePdfPath)) {
+                try {
+                    console.log(`Found associated PDF file: ${possiblePdfPath}`);
+                    const pdfBytes = fs.readFileSync(possiblePdfPath);
+                    pdfDoc = await PDFDocument.load(pdfBytes);
+                    console.log(`Successfully loaded associated PDF document`);
+                    // Cache page dimensions
+                    getPageDimensions(pdfDoc);
+                }
+                catch (error) {
+                    console.warn(`Could not load associated PDF document: ${error}`);
+                }
+            }
+            else if (fs.existsSync(FALLBACK_PDF_PATH)) {
+                // Try the fallback PDF for dimensions if no associated PDF found
+                try {
+                    console.log(`No associated PDF found. Using fallback PDF path for dimensions: ${FALLBACK_PDF_PATH}`);
+                    const pdfBytes = fs.readFileSync(FALLBACK_PDF_PATH);
+                    pdfDoc = await PDFDocument.load(pdfBytes);
+                    console.log(`Successfully loaded fallback PDF document for page dimensions`);
+                    // Cache page dimensions
+                    getPageDimensions(pdfDoc);
+                }
+                catch (error) {
+                    console.warn(`Could not load fallback PDF document: ${error}`);
+                }
+            }
+            else {
+                console.warn(`No associated PDF document found for ${pdfPath}`);
+                console.warn(`Spatial analysis features may be limited without PDF page dimensions`);
+            }
+            return { fields: processedFields, pdfDoc };
         }
+        // Check for a cached version of the extracted fields
+        const cacheFilename = `${pdfPath}.cache.json`;
+        // Check if cache exists and is newer than PDF file
+        if (!force && fs.existsSync(cacheFilename)) {
+            const pdfStats = fs.statSync(pdfPath);
+            const cacheStats = fs.statSync(cacheFilename);
+            if (cacheStats.mtime > pdfStats.mtime) {
+                console.log(`Loading fields from cache: ${cacheFilename}`);
+                const cachedData = JSON.parse(fs.readFileSync(cacheFilename, 'utf-8'));
+                // Convert JSON data to PDFField format
+                const processedFields = cachedData.map((field) => ({
+                    id: field.id,
+                    name: field.name,
+                    value: field.value,
+                    page: field.page || 0,
+                    label: field.label,
+                    type: field.type,
+                    maxLength: field.maxLength,
+                    options: field.options,
+                    required: field.required,
+                    rect: field.rect || null
+                }));
+                console.log(`Loaded ${processedFields.length} fields from cache`);
+                // We still need to load the PDF document for page dimensions
+                let pdfDoc;
+                try {
+                    const pdfBytes = fs.readFileSync(pdfPath);
+                    pdfDoc = await PDFDocument.load(pdfBytes);
+                    // Cache page dimensions
+                    getPageDimensions(pdfDoc);
+                }
+                catch (error) {
+                    console.warn(`Could not load PDF document, spatial analysis may be limited: ${error}`);
+                }
+                return { fields: processedFields, pdfDoc };
+            }
+        }
+        console.log(`Extracting fields from PDF: ${pdfPath}${force ? ' (cache bypassed)' : ''}`);
         // Use the existing PdfService to extract field metadata
         const pdfService = new PdfService();
         // Load the PDF document first - can't use private loadPdf
@@ -54,6 +160,8 @@ export async function extractFields(pdfPath = DEFAULT_PDF_PATH) {
             // Load the PDF bytes and create a document
             const pdfBytes = fs.readFileSync(pdfPath);
             pdfDoc = await PDFDocument.load(pdfBytes);
+            // Cache page dimensions
+            getPageDimensions(pdfDoc);
         }
         catch (error) {
             console.error(`Error loading PDF: ${error}`);
@@ -68,7 +176,7 @@ export async function extractFields(pdfPath = DEFAULT_PDF_PATH) {
             id: field.id,
             name: field.name,
             value: field.value,
-            page: field.page || -1, // Default to 0 if page is undefined
+            page: field.page || -1, // Default to -1 if page is undefined
             label: field.label,
             type: field.type,
             maxLength: field.maxLength,
@@ -76,6 +184,14 @@ export async function extractFields(pdfPath = DEFAULT_PDF_PATH) {
             rect: field.rect || undefined
         }));
         console.log(`Extracted ${fieldMetadata.length} raw fields, ${processedFields.length} unique fields after deduplication`);
+        // Save to cache for future use
+        try {
+            fs.writeFileSync(cacheFilename, JSON.stringify(processedFields, null, 2));
+            console.log(`Saved extracted fields to cache: ${cacheFilename}`);
+        }
+        catch (error) {
+            console.warn(`Could not save fields to cache: ${error}`);
+        }
         return {
             fields: processedFields,
             pdfDoc: pdfDoc // Make the PDFDocument available
@@ -91,14 +207,20 @@ export async function extractFields(pdfPath = DEFAULT_PDF_PATH) {
                 return { fields: mockData };
             }
         }
+        // Try the fallback PDF as a last resort
+        if (pdfPath !== FALLBACK_PDF_PATH && fs.existsSync(FALLBACK_PDF_PATH)) {
+            console.log(`Error processing ${pdfPath}. Using fallback PDF path as last resort: ${FALLBACK_PDF_PATH}`);
+            return extractFields(FALLBACK_PDF_PATH, force);
+        }
         // Re-throw the error if no fallback is available
         throw new Error(`Failed to extract fields from PDF: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
 /**
- * Categorize a single field based on various metadata
+ * Categorize a single field based only on name-related metadata
+ * This function focuses solely on analyzing field names and labels
  */
-export function categorizeField(field, useEnhanced = true, pageDimensions = {}) {
+export function categorizeField(field, useEnhanced = true) {
     const result = {
         ...field,
         section: 0, // Default to unknown section
@@ -119,28 +241,19 @@ export function categorizeField(field, useEnhanced = true, pageDimensions = {}) 
         if (sectionInfo.entry) {
             result.entry = sectionInfo.entry;
         }
-        // Apply spatial confidence boost if coordinates are available
-        if (field.rect && typeof field.rect.x === 'number' && typeof field.rect.y === 'number') {
-            // Boost confidence based on spatial position
-            const spatialBoost = calculateSpatialConfidenceBoost(field, result.section, pageDimensions);
-            result.confidence = Math.min(1.0, result.confidence + spatialBoost);
-        }
         return result;
     }
     // Try enhanced categorization if enabled
     if (useEnhanced) {
         // Use the bridgeAdapter enhanced categorization for better results
         try {
-            // Get neighboring fields based on coordinates if available
+            // Get neighboring fields based on name patterns
             const neighborFields = [];
-            // If field has coordinates, try to find spatially adjacent fields
-            if (field.rect && typeof field.rect.x === 'number' && typeof field.rect.y === 'number') {
-                // Look for fields with similar naming patterns that might be neighbors
-                const fieldNameBase = field.name.replace(/\d+$/, '');
-                if (fieldNameBase !== field.name) {
-                    // This field has a numeric suffix, suggesting it's part of a sequence
-                    neighborFields.push(fieldNameBase + '*');
-                }
+            // Look for fields with similar naming patterns that might be neighbors
+            const fieldNameBase = field.name.replace(/\d+$/, '');
+            if (fieldNameBase !== field.name) {
+                // This field has a numeric suffix, suggesting it's part of a sequence
+                neighborFields.push(fieldNameBase + '*');
             }
             const enhancedResult = enhancedMultiDimensionalCategorization(field.name, field.label || "", field.page, typeof field.value === "string" ? field.value : "", neighborFields);
             if (enhancedResult && enhancedResult.section > 0) {
@@ -152,45 +265,11 @@ export function categorizeField(field, useEnhanced = true, pageDimensions = {}) 
                     result.entry = enhancedResult.entry;
                 }
                 result.confidence = enhancedResult.confidence;
-                // Apply spatial confidence boost if coordinates are available
-                if (field.rect && typeof field.rect.x === 'number' && typeof field.rect.y === 'number') {
-                    // Boost confidence based on spatial position
-                    const spatialBoost = calculateSpatialConfidenceBoost(field, result.section, pageDimensions);
-                    result.confidence = Math.min(1.0, result.confidence + spatialBoost);
-                }
                 return result;
             }
         }
         catch (error) {
             console.warn("Error during enhanced categorization:", error);
-        }
-    }
-    // If we reached here, no section was found
-    // Try spatial analysis as a last resort
-    if (field.rect && typeof field.rect.x === 'number' && typeof field.rect.y === 'number' && field.page) {
-        try {
-            // Use page number to estimate section based on typical page ranges
-            // This is a simplified approach - in a real implementation, you would use
-            // the refinedSectionPageRanges from fieldParsing.js
-            const pageNum = field.page;
-            let estimatedSection = Math.max(1, Math.min(30, Math.ceil(pageNum / 4)));
-            let estimatedConfidence = 0.3;
-            // If the field is on a page that's likely to be in a specific section,
-            // use that as our best guess
-            if (pageNum > 0) {
-                // Apply spatial confidence boost
-                const spatialBoost = calculateSpatialConfidenceBoost(field, estimatedSection, pageDimensions);
-                estimatedConfidence = Math.min(0.6, estimatedConfidence + spatialBoost);
-                result.section = estimatedSection;
-                result.confidence = estimatedConfidence;
-                // If confidence is reasonable, return this result
-                if (result.confidence > 0.4) {
-                    return result;
-                }
-            }
-        }
-        catch (error) {
-            console.warn("Error during spatial analysis:", error);
         }
     }
     // If we reached here, no section was found
@@ -557,90 +636,88 @@ export function printSectionStatistics(fields) {
         }
         console.log(`${String(section).padStart(2)} | ${String(count).padEnd(5)} | ${String(expectedStr).padEnd(8)} | ${differenceChalk(`${statusSymbol}${differenceStr}`)}`);
     }
-    // Add ASCII chart visualization
-    console.log(chalk.bold("\nSection Distribution Chart:"));
-    console.log(chalk.bold("========================="));
-    // Find the maximum count for scaling
-    const maxCount = Math.max(...Object.values(sectionCounts));
-    const chartWidth = 50; // Maximum chart width in characters
-    // Generate the chart
-    for (const section of sortedSections) {
-        // Skip section 0 (unknown) in the chart as it can skew visualization
-        if (section === 0)
-            continue;
-        const count = sectionCounts[section];
-        const barLength = Math.round((count / maxCount) * chartWidth);
-        const bar = "█".repeat(barLength);
-        // Display section number, bar, and count
-        console.log(`Section ${String(section).padStart(2)}: ${chalk.blue(bar)} ${count}`);
-    }
-    // Additional subsection statistics
-    console.log(chalk.bold("\nSubsection Breakdown:"));
-    console.log(chalk.bold("===================="));
-    for (const section of sortedSections) {
-        // Collect subsection counts for this section
-        const subsectionCounts = {};
-        fields
-            .filter((f) => f.section === section && f.subsection)
-            .forEach((f) => {
-            const sub = f.subsection;
-            subsectionCounts[sub] = (subsectionCounts[sub] || 0) + 1;
-        });
-        if (Object.keys(subsectionCounts).length === 0) {
-            continue; // No subsections for this section
-        }
-        // Add expected subsection count if available
-        const expectedSubsections = referenceCounts[section]?.subsections;
-        const subsectionInfo = expectedSubsections ? ` (Expected: ${expectedSubsections})` : '';
-        console.log(`Section ${section}${subsectionInfo}`);
-        // Get the maximum count for subsection visualization
-        const maxSubCount = Math.max(...Object.values(subsectionCounts));
-        const subChartWidth = 30; // Smaller width for subsections
-        // Generate chart for each subsection
-        Object.entries(subsectionCounts)
-            .sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true, sensitivity: "base" }))
-            .forEach(([sub, cnt]) => {
-            const barLength = Math.round((cnt / maxSubCount) * subChartWidth);
-            const bar = "▓".repeat(barLength);
-            console.log(`  ${sub.padEnd(2)} : ${chalk.cyan(bar)} ${cnt}`);
-        });
-    }
-    // Entry distribution
-    console.log(chalk.bold("\nEntry Distribution:"));
-    console.log(chalk.bold("=================="));
-    // Collect entry counts by section
-    const sectionEntries = {};
-    fields
-        .filter((f) => typeof f.entry === 'number' && f.entry > 0)
-        .forEach((f) => {
-        const section = f.section !== undefined ? f.section : 0;
-        const entry = f.entry;
-        if (!sectionEntries[section]) {
-            sectionEntries[section] = {};
-        }
-        sectionEntries[section][entry] = (sectionEntries[section][entry] || 0) + 1;
-    });
-    // Display entry distribution for sections that have entries
-    for (const section of Object.keys(sectionEntries).map(Number).sort((a, b) => a - b)) {
-        const entries = sectionEntries[section];
-        if (Object.keys(entries).length === 0)
-            continue;
-        // Add expected entry count if available
-        const expectedEntryCount = referenceCounts[section]?.entries;
-        const entryInfo = expectedEntryCount ? ` (Expected: ${expectedEntryCount})` : '';
-        console.log(`Section ${section}${entryInfo}`);
-        // Get the maximum count for entry visualization
-        const maxEntryCount = Math.max(...Object.values(entries));
-        const entryChartWidth = 25; // Even smaller width for entries
-        // Generate chart for each entry
-        Object.entries(entries)
-            .sort((a, b) => Number(a[0]) - Number(b[0]))
-            .forEach(([entry, cnt]) => {
-            const barLength = Math.round((cnt / maxEntryCount) * entryChartWidth);
-            const bar = "▒".repeat(barLength);
-            console.log(`  Entry ${String(entry).padEnd(2)}: ${chalk.magenta(bar)} ${cnt}`);
-        });
-    }
+    // // Add ASCII chart visualization
+    // console.log(chalk.bold("\nSection Distribution Chart:"));
+    // console.log(chalk.bold("========================="));
+    // // Find the maximum count for scaling
+    // const maxCount = Math.max(...Object.values(sectionCounts));
+    // const chartWidth = 50; // Maximum chart width in characters
+    // // Generate the chart
+    // for (const section of sortedSections) {
+    //   // Skip section 0 (unknown) in the chart as it can skew visualization
+    //   if (section === 0) continue;
+    //   const count = sectionCounts[section];
+    //   const barLength = Math.round((count / maxCount) * chartWidth);
+    //   const bar = "█".repeat(barLength);
+    //   // Display section number, bar, and count
+    //   console.log(`Section ${String(section).padStart(2)}: ${chalk.blue(bar)} ${count}`);
+    // }
+    // // Additional subsection statistics
+    // console.log(chalk.bold("\nSubsection Breakdown:"));
+    // console.log(chalk.bold("===================="));
+    // for (const section of sortedSections) {
+    //   // Collect subsection counts for this section
+    //   const subsectionCounts: Record<string, number> = {};
+    //   fields
+    //     .filter((f) => f.section === section && f.subsection)
+    //     .forEach((f) => {
+    //       const sub = f.subsection as string;
+    //       subsectionCounts[sub] = (subsectionCounts[sub] || 0) + 1;
+    //     });
+    //   if (Object.keys(subsectionCounts).length === 0) {
+    //     continue; // No subsections for this section
+    //   }
+    //   // Add expected subsection count if available
+    //   const expectedSubsections = referenceCounts[section]?.subsections;
+    //   const subsectionInfo = expectedSubsections ? ` (Expected: ${expectedSubsections})` : '';
+    //   console.log(`Section ${section}${subsectionInfo}`);
+    //   // Get the maximum count for subsection visualization
+    //   const maxSubCount = Math.max(...Object.values(subsectionCounts));
+    //   const subChartWidth = 30; // Smaller width for subsections
+    //   // Generate chart for each subsection
+    //   Object.entries(subsectionCounts)
+    //     .sort((a, b) => a[0].localeCompare(b[0], undefined, { numeric: true, sensitivity: "base" }))
+    //     .forEach(([sub, cnt]) => {
+    //       const barLength = Math.round((cnt / maxSubCount) * subChartWidth);
+    //       const bar = "▓".repeat(barLength);
+    //       console.log(`  ${sub.padEnd(2)} : ${chalk.cyan(bar)} ${cnt}`);
+    //     });
+    // }
+    // // Entry distribution
+    // console.log(chalk.bold("\nEntry Distribution:"));
+    // console.log(chalk.bold("=================="));
+    // // Collect entry counts by section
+    // const sectionEntries: Record<number, Record<number, number>> = {};
+    // fields
+    //   .filter((f) => typeof f.entry === 'number' && f.entry > 0)
+    //   .forEach((f) => {
+    //     const section = f.section !== undefined ? f.section : 0;
+    //     const entry = f.entry as number;
+    //     if (!sectionEntries[section]) {
+    //       sectionEntries[section] = {};
+    //     }
+    //     sectionEntries[section][entry] = (sectionEntries[section][entry] || 0) + 1;
+    //   });
+    // // Display entry distribution for sections that have entries
+    // for (const section of Object.keys(sectionEntries).map(Number).sort((a, b) => a - b)) {
+    //   const entries = sectionEntries[section];
+    //   if (Object.keys(entries).length === 0) continue;
+    //   // Add expected entry count if available
+    //   const expectedEntryCount = referenceCounts[section]?.entries;
+    //   const entryInfo = expectedEntryCount ? ` (Expected: ${expectedEntryCount})` : '';
+    //   console.log(`Section ${section}${entryInfo}`);
+    //   // Get the maximum count for entry visualization
+    //   const maxEntryCount = Math.max(...Object.values(entries));
+    //   const entryChartWidth = 25; // Even smaller width for entries
+    //   // Generate chart for each entry
+    //   Object.entries(entries)
+    //     .sort((a, b) => Number(a[0]) - Number(b[0]))
+    //     .forEach(([entry, cnt]) => {
+    //       const barLength = Math.round((cnt / maxEntryCount) * entryChartWidth);
+    //       const bar = "▒".repeat(barLength);
+    //       console.log(`  Entry ${String(entry).padEnd(2)}: ${chalk.magenta(bar)} ${cnt}`);
+    //     });
+    // }
     // Log the overall stats
     const totalFields = fields.length;
     const categorizedFields = fields.filter((field) => field.section > 0).length;
@@ -726,7 +803,7 @@ export async function groupFieldsBySection(fields, saveUnknown = true) {
         // Save uncategorized fields for analysis if requested
         if (saveUnknown && sectionFields["0"] && sectionFields["0"].length > 0) {
             const unknownFields = sectionFields["0"];
-            const outputDir = path.resolve(process.cwd(), "reports");
+            const outputDir = path.resolve(process.cwd(), "output", "reports");
             if (!fs.existsSync(outputDir)) {
                 fs.mkdirSync(outputDir, { recursive: true });
             }
@@ -812,189 +889,14 @@ export function enhanceFieldsWithCoordinates(fields, pdfDoc) {
     }
     return enhancedFields;
 }
-/**
- * Categorize a collection of PDF fields into their respective sections
- * @param fields The PDF fields to categorize
- * @param pdfDoc Optional PDF document to get accurate page dimensions
- * @returns Array of categorized fields
- */
-export function categorizeFields(fields, pdfDoc) {
-    console.time("categorizeFields");
-    // First enhance fields with coordinate data for spatial analysis
-    const fieldsWithCoordinates = enhanceFieldsWithCoordinates(fields, pdfDoc);
-    // Extract page dimensions from PDF document if available
-    const pageDimensions = {};
-    if (pdfDoc) {
-        try {
-            const pageCount = pdfDoc.getPageCount();
-            for (let i = 0; i < pageCount; i++) {
-                const page = pdfDoc.getPage(i);
-                const { width, height } = page.getSize();
-                pageDimensions[i + 1] = { width, height }; // Store as 1-based page numbers
-            }
-            console.log(`Retrieved dimensions for ${Object.keys(pageDimensions).length} pages from PDF`);
-        }
-        catch (error) {
-            console.warn(`Could not get page dimensions from PDF: ${error}`);
-        }
-    }
-    // Then categorize each field
-    const categorizedFields = fieldsWithCoordinates.map((field) => {
-        // Use the categorizeField function to assign a section
-        const result = categorizeField(field, true, pageDimensions);
-        return result;
-    });
-    // Apply spatial organization to improve subsection and entry assignments
-    const spatiallyOrganizedFields = organizeFieldsBySpatialRelationships(categorizedFields, pageDimensions);
-    console.timeEnd("categorizeFields");
-    return spatiallyOrganizedFields;
-}
-/**
- * Organize fields by their spatial relationships to improve section, subsection, and entry assignments
- * This function uses field coordinates to better group related fields together
- *
- * @param fields Array of categorized fields
- * @param pageDimensions Optional record of page dimensions
- * @returns Array of fields with improved organization
- */
+// Replace the existing organizeFieldsBySpatialRelationships function with a simpler version
+// that uses our spatial analysis functions
 function organizeFieldsBySpatialRelationships(fields, pageDimensions = {}) {
+    // This is now just a wrapper around our spatial analysis functions,
+    // keeping it for backward compatibility
     console.log(`Organizing ${fields.length} fields by spatial relationships...`);
-    // Group fields by section first
-    const fieldsBySection = {};
-    fields.forEach(field => {
-        const section = field.section || 0;
-        if (!fieldsBySection[section]) {
-            fieldsBySection[section] = [];
-        }
-        fieldsBySection[section].push(field);
-    });
-    // Process each section separately
-    const organizedFields = [];
-    Object.entries(fieldsBySection).forEach(([sectionStr, sectionFields]) => {
-        const section = parseInt(sectionStr, 10);
-        // Skip section 0 (unknown)
-        if (section === 0) {
-            organizedFields.push(...sectionFields);
-            return;
-        }
-        // Group fields by page
-        const fieldsByPage = {};
-        sectionFields.forEach(field => {
-            const page = field.page || 1;
-            if (!fieldsByPage[page]) {
-                fieldsByPage[page] = [];
-            }
-            fieldsByPage[page].push(field);
-        });
-        // Process each page
-        Object.entries(fieldsByPage).forEach(([pageStr, pageFields]) => {
-            // Get page dimensions
-            const page = parseInt(pageStr, 10);
-            const pageDim = pageDimensions[page] || { width: 612, height: 792 }; // Default to US Letter if not available
-            // Sort fields by vertical position (top to bottom)
-            pageFields.sort((a, b) => {
-                const aY = a.rect?.y || 0;
-                const bY = b.rect?.y || 0;
-                return bY - aY; // Reverse order because PDF coordinates start from bottom
-            });
-            // Group fields into rows based on vertical proximity
-            const rows = [];
-            let currentRow = [];
-            let lastY = -1;
-            // Calculate threshold based on page height (approximately 2.5% of page height)
-            const yThreshold = Math.max(15, Math.round(pageDim.height * 0.025));
-            pageFields.forEach(field => {
-                const fieldY = field.rect?.y || 0;
-                if (lastY === -1 || Math.abs(fieldY - lastY) <= yThreshold) {
-                    // Add to current row
-                    currentRow.push(field);
-                }
-                else {
-                    // Start a new row
-                    if (currentRow.length > 0) {
-                        rows.push([...currentRow]);
-                    }
-                    currentRow = [field];
-                }
-                lastY = fieldY;
-            });
-            // Add the last row if not empty
-            if (currentRow.length > 0) {
-                rows.push(currentRow);
-            }
-            // Sort each row by horizontal position (left to right)
-            rows.forEach(row => {
-                row.sort((a, b) => {
-                    const aX = a.rect?.x || 0;
-                    const bX = b.rect?.x || 0;
-                    return aX - bX;
-                });
-            });
-            // Assign subsections and entries based on spatial organization
-            // Subsections typically go across rows, entries go down columns
-            // Detect if this section has subsections
-            const hasSubsections = sectionFields.some(f => f.subsection);
-            if (hasSubsections) {
-                // Assign subsections based on rows (top rows are earlier subsections)
-                rows.forEach((row, rowIndex) => {
-                    // Use alphabetical subsections (a, b, c, etc.)
-                    const subsection = String.fromCharCode(97 + Math.min(rowIndex, 25)); // a-z
-                    row.forEach(field => {
-                        if (!field.subsection) {
-                            field.subsection = subsection;
-                        }
-                    });
-                });
-            }
-            // Detect if this section has entries
-            const hasEntries = sectionFields.some(f => typeof f.entry === 'number' && f.entry > 0);
-            if (hasEntries) {
-                // Create columns by grouping fields with similar x-coordinates
-                const columns = [];
-                const allFields = rows.flat();
-                // Group by x-coordinate proximity
-                const xCoordinates = allFields
-                    .map(f => f.rect?.x || 0)
-                    .sort((a, b) => a - b);
-                // Find distinct x-coordinate clusters
-                const xClusters = [];
-                let lastX = -1;
-                // Calculate threshold based on page width (approximately 5% of page width)
-                const xThreshold = Math.max(20, Math.round(pageDim.width * 0.05));
-                xCoordinates.forEach(x => {
-                    if (lastX === -1 || Math.abs(x - lastX) > xThreshold) {
-                        xClusters.push(x);
-                    }
-                    lastX = x;
-                });
-                // Assign fields to columns
-                xClusters.forEach(clusterX => {
-                    // Adjust threshold based on position in the page
-                    // Fields at the edges might need more flexibility
-                    const positionFactor = Math.min(clusterX, pageDim.width - clusterX) / (pageDim.width / 2);
-                    const adjustedThreshold = xThreshold * (1 + (1 - positionFactor) * 0.5);
-                    const columnFields = allFields.filter(f => {
-                        const fieldX = f.rect?.x || 0;
-                        return Math.abs(fieldX - clusterX) <= adjustedThreshold;
-                    });
-                    if (columnFields.length > 0) {
-                        columns.push(columnFields);
-                    }
-                });
-                // Assign entries based on columns (left columns are earlier entries)
-                columns.forEach((column, columnIndex) => {
-                    // Use numeric entries (1, 2, 3, etc.)
-                    const entry = columnIndex + 1;
-                    column.forEach(field => {
-                        if (typeof field.entry !== 'number' || field.entry === 0) {
-                            field.entry = entry;
-                        }
-                    });
-                });
-            }
-            // Add all processed fields from this page
-            organizedFields.push(...pageFields);
-        });
-    });
-    return organizedFields;
+    // Enhance categorization using spatial boundaries
+    const enhancedFields = enhanceSpatialCategorization(fields);
+    // Organize subsections and entries
+    return organizeSpatialSubsectionEntries(enhancedFields);
 }

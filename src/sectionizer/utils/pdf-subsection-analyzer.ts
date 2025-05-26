@@ -10,6 +10,7 @@ import fs from 'fs';
 import path from 'path';
 import readline from 'readline';
 import { configureUtilityCommandParser, parseUtilityArgs } from './cli-args.js';
+import { sectionPageRanges } from './field-clusterer.js';
 
 // Define field data structure with subsection support
 interface FieldData {
@@ -101,13 +102,8 @@ class SubsectionAnalyzer {
           console.log(`Loaded section page ranges for ${Object.keys(this.sectionPageRanges).length} sections`);
         } else {
           // Define some default ranges based on the references
-          this.sectionPageRanges = {
-            1: [1, 1],
-            2: [1, 1],
-            // ... other sections
-            21: [73, 76],
-            // ... remaining sections
-          };
+          this.sectionPageRanges = sectionPageRanges; 
+
           console.log('Using default section page ranges');
         }
       } catch (error) {

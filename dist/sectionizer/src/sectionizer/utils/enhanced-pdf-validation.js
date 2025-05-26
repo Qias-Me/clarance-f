@@ -35,7 +35,7 @@ export class EnhancedPdfValidator {
             const sectionInfo = bridge.extractSectionInfo(field.name);
             if (sectionInfo) {
                 enhanced.section = sectionInfo.section;
-                enhanced.subSection = sectionInfo.subsection;
+                enhanced.subsection = sectionInfo.subsection;
                 enhanced.entryIndex = sectionInfo.entry;
                 enhanced.confidence = sectionInfo.confidence || 0.7;
             }
@@ -52,7 +52,7 @@ export class EnhancedPdfValidator {
                 const fallbackResult = bridge.fallbackCategorization(field);
                 if (fallbackResult) {
                     enhanced.section = fallbackResult.section;
-                    enhanced.subSection = fallbackResult.subsection;
+                    enhanced.subsection = fallbackResult.subsection;
                     enhanced.entryIndex = fallbackResult.entry;
                     enhanced.confidence = fallbackResult.confidence;
                 }
@@ -65,7 +65,7 @@ export class EnhancedPdfValidator {
                     if (!enhanced.section || (enhanced.confidence !== undefined && enhanced.confidence < 0.5)) {
                         enhanced.section = parseInt(sectionMatch[1]);
                         if (sectionMatch[2]) {
-                            enhanced.subSection = sectionMatch[2].toUpperCase();
+                            enhanced.subsection = sectionMatch[2].toUpperCase();
                         }
                         enhanced.confidence = 0.75; // Higher confidence for explicit section label
                     }

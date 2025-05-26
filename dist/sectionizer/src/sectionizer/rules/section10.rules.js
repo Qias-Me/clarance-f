@@ -1,12 +1,43 @@
 /**
- * Rules for Section 10: Section 10
- * Generated: 2025-05-18T16:19:00.339Z
+ * Rules for Section 10: Dual/Multiple Citizenship & Foreign Passport Info
+ * Generated: 2025-05-26T14:43:34.313Z
+ */
+/**
+ * Section metadata
+ */
+export const sectionInfo = {
+    section: 10,
+    name: "Dual/Multiple Citizenship & Foreign Passport Info",
+    ruleCount: 3,
+    lastUpdated: "2025-05-26T14:43:34.313Z"
+};
+/**
+ * Rules for matching fields to section 10
  */
 export const rules = [
     {
-        pattern: /section[_\\. ]*(0*10|10)\\b/i,
-        subSection: '_default',
-        confidence: 0.9787096774193549,
-        description: 'Fields explicitly matching /section[_\. ]*(0*10|10)\b/i (Precision: 98.4%, Adds 122 fields, 2 false positives)',
+        pattern: /^form1[0]/,
+        section: 10,
+        subsection: undefined,
+        confidence: 0.85,
+        description: "Fields starting with form1[0] belong to section 10",
+    },
+    {
+        pattern: /2[0]$/,
+        section: 10,
+        subsection: undefined,
+        confidence: 0.8,
+        description: "Fields ending with 2[0] belong to section 10",
+    },
+    {
+        pattern: /date/i,
+        section: 10,
+        subsection: undefined,
+        confidence: 0.75,
+        description: "date fields belong to section 10",
     }
 ];
+export default {
+    sectionInfo,
+    rules
+};

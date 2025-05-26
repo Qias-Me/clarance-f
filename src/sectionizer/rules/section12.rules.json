@@ -1,0 +1,56 @@
+[
+  {
+    "pattern": "^form1[0]",
+    "flags": "",
+    "confidence": 0.85,
+    "description": "Fields starting with form1[0] belong to section 12"
+  },
+  {
+    "pattern": "Cell4[0]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with Cell4[0] belong to section 12"
+  },
+  {
+    "pattern": "Cell5[0]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with Cell5[0] belong to section 12"
+  },
+  {
+    "pattern": "2[1]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with 2[1] belong to section 12"
+  },
+  {
+    "pattern": "date",
+    "flags": "i",
+    "confidence": 0.75,
+    "description": "date fields belong to section 12"
+  },
+  {
+    "pattern": "text",
+    "flags": "i",
+    "confidence": 0.75,
+    "description": "text fields belong to section 12"
+  },
+  {
+    "pattern": "dropdown",
+    "flags": "i",
+    "confidence": 0.75,
+    "description": "dropdown fields belong to section 12"
+  },
+  {
+    "pattern": "Cell1[0]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with Cell1[0] belong to section 12"
+  },
+  {
+    "pattern": "Cell2[0]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with Cell2[0] belong to section 12"
+  }
+]

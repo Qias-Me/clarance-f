@@ -320,7 +320,6 @@ export class SelfHealingManager {
                     type: field.type,
                     maxLength: field.maxLength,
                     options: field.options,
-                    required: field.required,
                     section,
                     confidence: field.confidence
                 }));
@@ -464,10 +463,9 @@ export class SelfHealingManager {
                                         type: field.type,
                                         maxLength: field.maxLength,
                                         options: field.options,
-                                        required: field.required,
                                         section: bestTarget.section,
-                                        subSection: field.subsection,
-                                        entryIndex: field.entry,
+                                        subsection: field.subsection,
+                                        entry: field.entry || 0,
                                         confidence: field.confidence
                                     }));
                                     // Generate rules for this specific group
@@ -511,10 +509,9 @@ export class SelfHealingManager {
                                 type: field.type,
                                 maxLength: field.maxLength,
                                 options: field.options,
-                                required: field.required,
                                 section: bestTarget.section,
-                                subSection: field.subsection,
-                                entryIndex: field.entry,
+                                subsection: field.subsection,
+                                entry: field.entry || 0,
                                 confidence: field.confidence
                             }));
                             // Generate rules for this specific sequence
@@ -750,21 +747,7 @@ export class SelfHealingManager {
      */
     async recategorizeUnknownFields(ruleEngine, fields) {
         // Categorize each field
-        const recategorized = fields.map(field => {
-            const result = ruleEngine.categorizeField(field);
-            if (result) {
-                // Update categorization
-                return {
-                    ...field,
-                    section: result.section,
-                    subsection: result.subsection,
-                    entry: result.entry,
-                    confidence: result.confidence
-                };
-            }
-            // No match, return original field
-            return field;
-        });
+        const recategorized = await ruleEngine.categorizeFields(fields);
         // Return fields that are still uncategorized (section 0 or no section)
         return recategorized.filter(field => !field.section || field.section === 0);
     }
@@ -790,8 +773,24 @@ export class SelfHealingManager {
     calculateDeviations(sectionFields, referenceCounts, threshold = 0.2) {
         const deviations = [];
         // Calculate deviations for each section
-        for (const [sectionStr, expectedCount] of Object.entries(referenceCounts)) {
+        for (const [sectionStr, countData] of Object.entries(referenceCounts)) {
             const section = parseInt(sectionStr);
+            if (isNaN(section))
+                continue;
+            // Get expected count - support both simple number and complex object formats
+            let expectedCount = 0;
+            if (typeof countData === 'number') {
+                expectedCount = countData;
+            }
+            else if (typeof countData === 'object' && countData !== null) {
+                // Extract the 'fields' property if it exists
+                if ('fields' in countData) {
+                    expectedCount = countData.fields;
+                }
+            }
+            // Skip if we couldn't determine expected count
+            if (expectedCount <= 0)
+                continue;
             const actualCount = (sectionFields[section.toString()] || []).length;
             const deviation = actualCount - expectedCount;
             const deviationPercentage = Math.abs(deviation) / expectedCount;
@@ -863,17 +862,17 @@ export class SelfHealingManager {
     /**
      * Run iterative self-healing until convergence or max iterations reached
      * @param ruleEngine Rule engine instance
-     * @param extractFieldsFn Function to extract fields from PDF
-     * @param pdfPath Path to PDF file
+     * @param fields Array of categorized fields to process
      * @param keepUnknown Whether to keep unknown field history
      * @param referenceCounts Optional reference counts for validation
+     * @param outputDir Optional output directory for saving history files
      * @returns Result of self-healing process
      */
-    async runIterativeSelfHealing(ruleEngine, extractFieldsFn, pdfPath, keepUnknown = false, referenceCounts) {
+    async runIterativeSelfHealing(ruleEngine, fields, keepUnknown = false, referenceCounts, outputDir) {
         // Reset iteration counter
         this.iteration = 0;
-        // Initialize with the fields from PDF
-        let currentSectionFields = await extractFieldsFn(pdfPath);
+        // Organize fields by section
+        let currentSectionFields = this.reorganizeFieldsBySections(fields);
         let remainingUnknown = currentSectionFields['0'] || [];
         let initialUnknownCount = remainingUnknown.length;
         // Track subsection and entry rules generated
@@ -892,7 +891,9 @@ export class SelfHealingManager {
         console.log(chalk.cyan(`Starting self-healing process with ${initialUnknownCount} unknown fields...`));
         // Keep track of unknown fields between iterations if requested
         if (keepUnknown) {
-            const unknownDir = path.resolve(process.cwd(), 'scripts/unknown-history');
+            const unknownDir = outputDir
+                ? path.resolve(process.cwd(), outputDir, 'unknown-history')
+                : path.resolve(process.cwd(), 'scripts/unknown-history');
             if (!fs.existsSync(unknownDir)) {
                 fs.mkdirSync(unknownDir, { recursive: true });
             }
@@ -913,7 +914,7 @@ export class SelfHealingManager {
                 .flatMap(([_, fields]) => fields);
             // Add the remaining unknown fields after processing
             const allFieldsWithProcessed = [...allFields, ...processResult.remainingUnknown];
-            // Get new section fields - reorganize them internally since we can't call extractFieldsFn with field array
+            // Get new section fields - reorganize them internally
             const updatedFields = this.reorganizeFieldsBySections(allFieldsWithProcessed);
             currentSectionFields = updatedFields;
             // Generate subsection rules for all sections with sufficient data
@@ -931,14 +932,14 @@ export class SelfHealingManager {
                 for (const rule of subsectionRules) {
                     // Find which section this rule belongs to
                     let sectionId = 0;
-                    for (const [sectionStr, fields] of Object.entries(currentSectionFields)) {
+                    for (const [sectionStr, sectionFields] of Object.entries(currentSectionFields)) {
                         if (sectionStr === '0')
                             continue;
                         const section = parseInt(sectionStr, 10);
                         if (isNaN(section))
                             continue;
                         // Check if this rule matches any fields in this section
-                        const matchesSection = fields.some(field => rule.pattern instanceof RegExp && rule.pattern.test(field.name));
+                        const matchesSection = sectionFields.some(field => rule.pattern instanceof RegExp && rule.pattern.test(field.name));
                         if (matchesSection) {
                             sectionId = section;
                             break;
@@ -948,7 +949,7 @@ export class SelfHealingManager {
                         // Convert MatchRule to CategoryRule
                         const categoryRule = {
                             section: sectionId,
-                            subsection: rule.subSection,
+                            subsection: rule.subsection,
                             pattern: rule.pattern,
                             confidence: rule.confidence || 0.8,
                             description: rule.description
@@ -957,26 +958,25 @@ export class SelfHealingManager {
                     }
                 }
                 // Re-apply categorization to improve subsection and entry classification
-                // This approach creates a nested cycle for subsection/entry classification
                 const beforeSubCatCount = this.countFieldsWithoutSubsectionOrEntry(currentSectionFields);
                 // Apply the new rules to re-categorize the fields
-                for (const [sectionStr, fields] of Object.entries(currentSectionFields)) {
+                for (const [sectionStr, sectionFields] of Object.entries(currentSectionFields)) {
                     if (sectionStr === '0')
                         continue; // Skip unknown fields
                     const sectionId = parseInt(sectionStr, 10);
                     if (isNaN(sectionId))
                         continue;
-                    // Re-apply subsection rules
-                    const updatedFields = fields.map(field => {
-                        // Skip if field already has subsection/entry categorized properly
-                        if (field.subsection && field.entry)
-                            return field;
-                        // Try to match with all the subsection rules
-                        const result = ruleEngine.categorizeField(field);
-                        return result || field; // Return original field if categorization doesn't change anything
-                    });
-                    // Update the section fields with type safety
-                    currentSectionFields[sectionStr] = updatedFields;
+                    try {
+                        // Recategorize all fields in this section by sending them through the engine again
+                        const recategorizedFields = await ruleEngine.categorizeFields(sectionFields);
+                        // Update the section fields with type safety - only if we got results back
+                        if (recategorizedFields && recategorizedFields.length > 0) {
+                            currentSectionFields[sectionStr] = recategorizedFields;
+                        }
+                    }
+                    catch (error) {
+                        console.warn(`Error recategorizing fields for section ${sectionStr}:`, error);
+                    }
                 }
                 // Check if we've improved subsection/entry categorization
                 const afterSubCatCount = this.countFieldsWithoutSubsectionOrEntry(currentSectionFields);
@@ -989,7 +989,10 @@ export class SelfHealingManager {
             remainingUnknown = currentSectionFields['0'] || [];
             // Save current state if requested
             if (keepUnknown && remainingUnknown.length > 0) {
-                const iterationFilePath = path.join(path.resolve(process.cwd(), 'scripts/unknown-history'), `unknown-iteration-${this.iteration}.json`);
+                const unknownDir = outputDir
+                    ? path.resolve(process.cwd(), outputDir, 'unknown-history')
+                    : path.resolve(process.cwd(), 'scripts/unknown-history');
+                const iterationFilePath = path.join(unknownDir, `unknown-iteration-${this.iteration}.json`);
                 fs.writeFileSync(iterationFilePath, JSON.stringify(remainingUnknown, null, 2));
             }
             // Check if we've improved
@@ -1011,7 +1014,24 @@ export class SelfHealingManager {
             // If reference counts are provided, also try to correct miscategorized fields
             if (referenceCounts && Object.keys(referenceCounts).length > 0) {
                 console.log(chalk.cyan('Checking for miscategorized fields based on reference counts...'));
-                const correctionResult = await this.correctMiscategorizedFields(ruleEngine, currentSectionFields, referenceCounts);
+                // Convert complex reference counts to simple number format if needed
+                const simplifiedCounts = {};
+                for (const [sectionStr, countData] of Object.entries(referenceCounts)) {
+                    const section = parseInt(sectionStr, 10);
+                    if (isNaN(section))
+                        continue;
+                    // Support both simple number and complex object formats
+                    if (typeof countData === 'number') {
+                        simplifiedCounts[section] = countData;
+                    }
+                    else if (typeof countData === 'object' && countData !== null) {
+                        // Extract the 'fields' property if it exists
+                        if ('fields' in countData) {
+                            simplifiedCounts[section] = countData.fields;
+                        }
+                    }
+                }
+                const correctionResult = await this.correctMiscategorizedFields(ruleEngine, currentSectionFields, simplifiedCounts);
                 if (correctionResult.corrections > 0) {
                     console.log(chalk.green(`Corrected ${correctionResult.corrections} miscategorized fields.`));
                     currentSectionFields = correctionResult.finalSectionFields;
@@ -1474,7 +1494,8 @@ export class SelfHealingManager {
                 for (const [subsection, pattern] of detectedPatterns.entries()) {
                     rules.push({
                         pattern: new RegExp(pattern, 'i'),
-                        subSection: subsection,
+                        section: sectionId,
+                        subsection: subsection,
                         confidence: 0.85,
                         description: `Detected pattern for subsection ${subsection} in section ${sectionId}`
                     });
@@ -1549,10 +1570,11 @@ export class SelfHealingManager {
                     entryPatterns.forEach(patternStr => {
                         rules.push({
                             pattern: new RegExp(patternStr, 'i'),
-                            subSection: subsection,
+                            section: sectionId,
+                            subsection: subsection,
                             confidence: 0.92,
                             description: `Entry ${entry} pattern for subsection ${subsection} in section ${sectionId}`,
-                            entryIndex: () => entry
+                            entryIndex: (m) => entry
                         });
                     });
                 });
@@ -1561,7 +1583,8 @@ export class SelfHealingManager {
             patternSet.forEach(patternStr => {
                 rules.push({
                     pattern: new RegExp(patternStr, 'i'),
-                    subSection: subsection,
+                    section: sectionId,
+                    subsection: subsection,
                     confidence: 0.9,
                     description: `Subsection ${subsection} pattern for section ${sectionId}`
                 });
@@ -1571,7 +1594,8 @@ export class SelfHealingManager {
                 const genericPattern = `section[-_]?${sectionId}.*?[^a-z]${subsection.toLowerCase()}[^a-z0-9]`;
                 rules.push({
                     pattern: new RegExp(genericPattern, 'i'),
-                    subSection: subsection,
+                    section: sectionId,
+                    subsection: subsection,
                     confidence: 0.75,
                     description: `Generic pattern for subsection ${subsection} in section ${sectionId}`
                 });
@@ -1628,7 +1652,8 @@ export class SelfHealingManager {
                 ].forEach(({ sub, pattern, desc }) => {
                     specialRules.push({
                         pattern: new RegExp(pattern, 'i'),
-                        subSection: sub,
+                        section: 17, // Set section explicitly 
+                        subsection: sub,
                         confidence: 0.9,
                         description: `${desc} subsection in Section 17`
                     });
@@ -1643,7 +1668,8 @@ export class SelfHealingManager {
                 ].forEach(({ sub, pattern, desc }) => {
                     specialRules.push({
                         pattern: new RegExp(pattern, 'i'),
-                        subSection: sub,
+                        section: 21,
+                        subsection: sub,
                         confidence: 0.92,
                         description: `${desc} subsection in Section 21`
                     });
@@ -1657,7 +1683,8 @@ export class SelfHealingManager {
                 ].forEach(({ sub, pattern, desc }) => {
                     specialRules.push({
                         pattern: new RegExp(pattern, 'i'),
-                        subSection: sub,
+                        section: 20,
+                        subsection: sub,
                         confidence: 0.92,
                         description: `${desc} subsection in Section 20`
                     });
@@ -1700,10 +1727,11 @@ export class SelfHealingManager {
                     new RegExp(patternStr, 'i');
                     rules.push({
                         pattern: new RegExp(patternStr, 'i'),
-                        subSection: subsection,
+                        section: sectionId,
+                        subsection: subsection,
                         confidence: 0.92,
                         description: `Entry ${entry} pattern for subsection ${subsection} in section ${sectionId}`,
-                        entryIndex: () => entry
+                        entryIndex: (m) => entry
                     });
                 }
                 catch (error) {
@@ -1720,10 +1748,11 @@ export class SelfHealingManager {
                         new RegExp(pattern, 'i');
                         rules.push({
                             pattern: new RegExp(pattern, 'i'),
-                            subSection: subsection,
+                            section: sectionId,
+                            subsection: subsection,
                             confidence: 0.88,
                             description: `Custom entry ${entry} pattern for subsection ${subsection} in section ${sectionId}`,
-                            entryIndex: () => entry
+                            entryIndex: (m) => entry
                         });
                     }
                     catch (error) {
@@ -1828,7 +1857,8 @@ export class SelfHealingManager {
                 ].forEach(({ sub, patternStr, desc }) => {
                     rules.push({
                         pattern: new RegExp(patternStr, 'i'),
-                        subSection: sub,
+                        section: 17, // Set section explicitly 
+                        subsection: sub,
                         confidence: 0.9,
                         description: `${desc} subsection in Section 17`
                     });
@@ -1845,7 +1875,8 @@ export class SelfHealingManager {
                     if (!rules.some(r => r.pattern instanceof RegExp && r.pattern.source === patternStr)) {
                         rules.push({
                             pattern: new RegExp(patternStr, 'i'),
-                            subSection: sub,
+                            section: 21,
+                            subsection: sub,
                             confidence: 0.92,
                             description: `${desc} subsection in Section 21`
                         });
@@ -1862,7 +1893,8 @@ export class SelfHealingManager {
                     if (!rules.some(r => r.pattern instanceof RegExp && r.pattern.source === patternStr)) {
                         rules.push({
                             pattern: new RegExp(patternStr, 'i'),
-                            subSection: sub,
+                            section: 20,
+                            subsection: sub,
                             confidence: 0.92,
                             description: `${desc} subsection in Section 20`
                         });
@@ -1906,10 +1938,11 @@ export class SelfHealingManager {
             if (commonPrefix && commonPrefix.length > 3) {
                 rules.push({
                     pattern: new RegExp(`${commonPrefix}.*`, 'i'),
-                    subSection: '_default',
+                    section: sectionId,
+                    subsection: undefined,
                     confidence: 0.8,
                     description: `Entry ${entry} pattern for section ${sectionId}`,
-                    entryIndex: () => entry
+                    entryIndex: (m) => entry
                 });
             }
             // Try specific entry patterns
@@ -1922,10 +1955,11 @@ export class SelfHealingManager {
             entryPatterns.forEach(patternStr => {
                 rules.push({
                     pattern: new RegExp(patternStr, 'i'),
-                    subSection: '_default',
+                    section: sectionId,
+                    subsection: undefined,
                     confidence: 0.9,
                     description: `Entry ${entry} pattern for section ${sectionId}`,
-                    entryIndex: () => entry
+                    entryIndex: (m) => entry
                 });
             });
         });
@@ -2205,7 +2239,7 @@ export class SelfHealingManager {
             if (!field.section)
                 continue;
             // Key format: "section.subsection"
-            const subsection = field.subsection || '_default';
+            const subsection = field.subsection || undefined;
             const key = `${field.section}.${subsection}`;
             if (!sectionSubsectionGroups[key]) {
                 sectionSubsectionGroups[key] = [];

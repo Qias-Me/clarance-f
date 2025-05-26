@@ -1,0 +1,104 @@
+/**
+ * Rules for Section 5: Other Names Used
+ * Generated: 2025-05-26T18:44:17.725Z
+ */
+
+import type { MatchRule } from '../types.js';
+
+/**
+ * Section metadata
+ */
+export const sectionInfo = {
+  section: 5,
+  name: "Other Names Used",
+  ruleCount: 11,
+  lastUpdated: "2025-05-26T18:44:17.725Z"
+};
+
+/**
+ * Rules for matching fields to section 5
+ */
+export const rules: MatchRule[] = [
+  {
+    pattern: /^form1[0]/,
+    section: 5,
+    subsection: undefined,
+    confidence: 0.85,
+    description: "Fields starting with form1[0] belong to section 5",
+  },
+  {
+    pattern: /TextField11[3]$/,
+    section: 5,
+    subsection: undefined,
+    confidence: 0.8,
+    description: "Fields ending with TextField11[3] belong to section 5",
+  },
+  {
+    pattern: /text/i,
+    section: 5,
+    subsection: undefined,
+    confidence: 0.75,
+    description: "text fields belong to section 5",
+  },
+  {
+    pattern: /TextField11[4]$/,
+    section: 5,
+    subsection: undefined,
+    confidence: 0.8,
+    description: "Fields ending with TextField11[4] belong to section 5",
+  },
+  {
+    pattern: /dropdown/i,
+    section: 5,
+    subsection: undefined,
+    confidence: 0.75,
+    description: "dropdown fields belong to section 5",
+  },
+  {
+    pattern: /State[0]$/,
+    section: 5,
+    subsection: undefined,
+    confidence: 0.8,
+    description: "Fields ending with State[0] belong to section 5",
+  },
+  {
+    pattern: /TextField11[5]$/,
+    section: 5,
+    subsection: undefined,
+    confidence: 0.8,
+    description: "Fields ending with TextField11[5] belong to section 5",
+  },
+  {
+    pattern: /suffix[0]$/,
+    section: 5,
+    subsection: undefined,
+    confidence: 0.8,
+    description: "Fields ending with suffix[0] belong to section 5",
+  },
+  {
+    pattern: /2[0]$/,
+    section: 5,
+    subsection: undefined,
+    confidence: 0.8,
+    description: "Fields ending with 2[0] belong to section 5",
+  },
+  {
+    pattern: /date/i,
+    section: 5,
+    subsection: undefined,
+    confidence: 0.75,
+    description: "date fields belong to section 5",
+  },
+  {
+    pattern: /radio/i,
+    section: 5,
+    subsection: undefined,
+    confidence: 0.75,
+    description: "radio fields belong to section 5",
+  }
+];
+
+export default {
+  sectionInfo,
+  rules
+};

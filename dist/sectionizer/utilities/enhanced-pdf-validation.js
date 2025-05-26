@@ -310,7 +310,17 @@ function parseFieldNamePattern(fieldName) {
             };
         }
         // Fall back to basic section extraction
-        return extractSectionInfoFromName(fieldName);
+        const extracted = extractSectionInfoFromName(fieldName);
+        if (extracted && extracted.section !== undefined) {
+            return {
+                section: extracted.section,
+                subsection: extracted.subsection,
+                entry: extracted.entry,
+                subEntry: extracted.subEntry,
+                confidence: extracted.confidence
+            };
+        }
+        return null;
     }
     catch (error) {
         console.warn(`Error parsing field pattern for ${fieldName}:`, error);
@@ -363,7 +373,7 @@ function extractSectionFromFieldName(fieldName) {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 // Default PDF path if not specified
-const DEFAULT_PDF_PATH = path.join(__dirname, "../utilities/externalTools/sf862.pdf");
+const DEFAULT_PDF_PATH = path.join(__dirname, "../src/sf862.pdf");
 // Command line args
 const args = process.argv.slice(2);
 const DEBUG = args.includes("--debug");
@@ -496,8 +506,51 @@ function categorizeSections1to6Field(fieldName, fieldLabel, fieldValue) {
     // Default to a moderate-confidence assignment to section 6
     return { section: 6, confidence: 0.6 };
 }
-// Import the utility functions from scripts/enhanced-pdf-validation.ts
-import { saveSectionSummaryToAllDirectories, saveUnidentifiedFieldsToAllDirectories } from '../scripts/enhanced-pdf-validation.js';
+// Define these functions locally instead of importing from a non-existent module
+function saveSectionSummaryToAllDirectories(sectionSummary) {
+    try {
+        // Save to reports directory
+        const reportsDir = path.join(__dirname, "../reports");
+        if (!fs.existsSync(reportsDir)) {
+            fs.mkdirSync(reportsDir, { recursive: true });
+        }
+        const reportPath = path.join(reportsDir, "section-summary.json");
+        fs.writeFileSync(reportPath, JSON.stringify(sectionSummary, null, 2));
+        // Save to section-data directory
+        const sectionDataDir = path.join(__dirname, "../section-data");
+        if (!fs.existsSync(sectionDataDir)) {
+            fs.mkdirSync(sectionDataDir, { recursive: true });
+        }
+        const sectionDataPath = path.join(sectionDataDir, "section-summary.json");
+        fs.writeFileSync(sectionDataPath, JSON.stringify(sectionSummary, null, 2));
+        console.log(`Saved section summary to multiple directories`);
+    }
+    catch (error) {
+        console.error("Error saving section summary:", error);
+    }
+}
+function saveUnidentifiedFieldsToAllDirectories(unidentifiedData) {
+    try {
+        // Save to reports directory
+        const reportsDir = path.join(__dirname, "./reports");
+        if (!fs.existsSync(reportsDir)) {
+            fs.mkdirSync(reportsDir, { recursive: true });
+        }
+        const reportPath = path.join(reportsDir, "unidentified-fields.json");
+        fs.writeFileSync(reportPath, JSON.stringify(unidentifiedData, null, 2));
+        // Save to section-data directory
+        const sectionDataDir = path.join(__dirname, "./section-data");
+        if (!fs.existsSync(sectionDataDir)) {
+            fs.mkdirSync(sectionDataDir, { recursive: true });
+        }
+        const sectionDataPath = path.join(sectionDataDir, "unidentified-fields.json");
+        fs.writeFileSync(sectionDataPath, JSON.stringify(unidentifiedData, null, 2));
+        console.log(`Saved unidentified fields to multiple directories`);
+    }
+    catch (error) {
+        console.error("Error saving unidentified fields:", error);
+    }
+}
 /**
  * Main function to run enhanced PDF validation
  */
@@ -533,7 +586,6 @@ async function main() {
                 value: field.value,
                 maxLength: field.maxLength,
                 options: field.options,
-                required: field.required,
             };
         });
         // Save page mapping to a JSON file for reference
@@ -1182,7 +1234,7 @@ function organizeFieldsHierarchically(fieldMetadata, fieldCategories) {
     const hierarchy = {};
     // First pass - collect expected field counts per section
     const expectedCounts = {};
-    const sectionSummary = getSectionSummary(); // Placeholder - implement this to get section summary
+    const sectionSummary = getSectionSummary(); // Get section summary
     // Get sections that are over-allocated (have more fields than expected)
     const overallocatedSections = {};
     const underallocatedSections = {};
@@ -1193,28 +1245,34 @@ function organizeFieldsHierarchically(fieldMetadata, fieldCategories) {
         sectionCounts[section] = (sectionCounts[section] || 0) + 1;
     });
     // Calculate deviations
-    Object.entries(sectionSummary?.sections || {}).forEach(([sectionId, data]) => {
-        const section = parseInt(sectionId, 10);
-        if (!isNaN(section)) {
-            const expected = data.fieldCount;
-            const actual = sectionCounts[section] || 0;
-            if (actual > expected * 1.2) { // Over by 20%
-                overallocatedSections[section] = {
-                    expected,
-                    actual,
-                    excess: actual - expected
-                };
+    if (sectionSummary && typeof sectionSummary === 'object' && sectionSummary.sections) {
+        Object.entries(sectionSummary.sections).forEach(([sectionId, sectionData]) => {
+            const section = parseInt(sectionId, 10);
+            if (!isNaN(section)) {
+                // Add type safety check
+                const sectionDataObj = sectionData;
+                if (sectionDataObj && typeof sectionDataObj === 'object' && 'fieldCount' in sectionDataObj) {
+                    const expected = sectionDataObj.fieldCount;
+                    const actual = sectionCounts[section] || 0;
+                    if (actual > expected * 1.2) { // Over by 20%
+                        overallocatedSections[section] = {
+                            expected,
+                            actual,
+                            excess: actual - expected
+                        };
+                    }
+                    else if (actual < expected * 0.8) { // Under by 20%
+                        underallocatedSections[section] = {
+                            expected,
+                            actual,
+                            missing: expected - actual
+                        };
+                    }
+                    expectedCounts[section] = expected;
+                }
             }
-            else if (actual < expected * 0.8) { // Under by 20%
-                underallocatedSections[section] = {
-                    expected,
-                    actual,
-                    missing: expected - actual
-                };
-            }
-            expectedCounts[section] = expected;
-        }
-    });
+        });
+    }
     // Group fields by page
     fieldMetadata.forEach((field) => {
         const page = field.page || 0;
@@ -1277,7 +1335,7 @@ function organizeFieldsHierarchically(fieldMetadata, fieldCategories) {
             alternativeSections = findPotentialAlternativeSections(field, fieldCategories, Object.keys(underallocatedSections).map(s => parseInt(s, 10)));
         }
         // Add field to context
-        hierarchy[page].fieldsByValuePattern[valuePattern].fieldsByRegex[regexPattern].contextMap[context].push({
+        const fieldInfo = {
             name: field.name,
             value: field.value,
             context,
@@ -1285,10 +1343,16 @@ function organizeFieldsHierarchically(fieldMetadata, fieldCategories) {
             confidence: fieldConfidence,
             x: field.x || 0,
             y: field.y || 0,
-            page,
-            deviationInfo,
-            alternativeSections: alternativeSections.length > 0 ? alternativeSections : undefined
-        });
+            page
+        };
+        // Add optional properties conditionally
+        if (deviationInfo) {
+            fieldInfo.deviationInfo = deviationInfo;
+        }
+        if (alternativeSections.length > 0) {
+            fieldInfo.alternativeSections = alternativeSections;
+        }
+        hierarchy[page].fieldsByValuePattern[valuePattern].fieldsByRegex[regexPattern].contextMap[context].push(fieldInfo);
         // Update confidence scores
         const contextMapObj = hierarchy[page].fieldsByValuePattern[valuePattern].fieldsByRegex[regexPattern].contextMap;
         const confidenceSum = Object.values(contextMapObj).reduce((sum, fields) => sum + fields.reduce((s, f) => s + f.confidence, 0), 0);
@@ -1634,16 +1698,12 @@ function getFieldLabel(fieldName) {
 function getSectionName(section) {
     return sectionStructure[section]?.name || `Section ${section}`;
 }
-// Add the getSectionSummary function implementation
-/**
- * Get the section summary data from already processed sections
- * This function returns section information including expected field counts
- */
+// Function to get section summary using global cache
 function getSectionSummary() {
     try {
         // If we already have a sectionSummary loaded for this run, return it
-        if (globalThis.cachedSectionSummary) {
-            return globalThis.cachedSectionSummary;
+        if (global.cachedSectionSummary) {
+            return global.cachedSectionSummary;
         }
         // First, try to get section summary from our generated data in the reports directory
         const reportSummaryPath = path.join(__dirname, '../reports/section-summary.json');
@@ -1661,12 +1721,12 @@ function getSectionSummary() {
                         }
                     });
                     const result = { sections };
-                    globalThis.cachedSectionSummary = result;
+                    global.cachedSectionSummary = result;
                     return result;
                 }
                 else if (summaryData && summaryData.sections) {
                     // Already in correct format
-                    globalThis.cachedSectionSummary = summaryData;
+                    global.cachedSectionSummary = summaryData;
                     return summaryData;
                 }
             }
@@ -1690,12 +1750,12 @@ function getSectionSummary() {
                         }
                     });
                     const result = { sections };
-                    globalThis.cachedSectionSummary = result;
+                    global.cachedSectionSummary = result;
                     return result;
                 }
                 else if (summaryData && summaryData.sections) {
                     // Already in correct format
-                    globalThis.cachedSectionSummary = summaryData;
+                    global.cachedSectionSummary = summaryData;
                     return summaryData;
                 }
             }

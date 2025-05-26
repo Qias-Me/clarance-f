@@ -1,11 +1,13 @@
 import fs from 'fs/promises';
 import path from 'path';
+import { sectionStructure } from './field-clusterer.js';
+import { ruleLoader } from './rule-loader.js';
 /**
- * Exports rules to JSON format for easier editing
+ * Exports rules to TypeScript and JSON formats
  */
 export class RuleExporter {
     /**
-     * Exports rules to JSON format
+     * Exports rules to JSON format for backwards compatibility
      * @param section Section number
      * @param rules Rules to export
      * @returns Promise resolving when export is complete
@@ -17,7 +19,7 @@ export class RuleExporter {
         const jsonRules = rules.map(rule => ({
             pattern: rule.pattern.source,
             flags: rule.pattern.flags,
-            subSection: rule.subSection,
+            subsection: rule.subsection,
             entryIndexFn: rule.entryIndex ?
                 rule.entryIndex.toString().replace(/^\(.*?\)\s*=>\s*/, '') :
                 undefined,
@@ -42,54 +44,189 @@ export class RuleExporter {
         return Promise.all(exportPromises);
     }
     /**
-     * Creates a TypeScript rules file from JSON rules
+     * Generate JSON files from TypeScript rules (for backwards compatibility)
+     * @param section Section number
+     * @returns Promise resolving when conversion is complete
+     */
+    async generateJsonFromTypescript(section) {
+        const rulesDir = path.join(process.cwd(), 'src', 'sectionizer', 'rules');
+        // Use the correct .rules.ts pattern matching what we see in the photo
+        const tsPath = path.join(rulesDir, `section${section}.rules.ts`);
+        try {
+            // Check if TypeScript file exists
+            try {
+                await fs.access(tsPath);
+            }
+            catch (err) {
+                console.warn(`TypeScript rules file for section ${section} does not exist`);
+                return null;
+            }
+            // For server-side environments, we could use dynamic imports
+            // For simplicity here, we'll just read the file and extract the rules
+            const tsContent = await fs.readFile(tsPath, 'utf-8');
+            // Extract the rules section using regex (a basic approach)
+            const rulesMatch = tsContent.match(/export const rules: MatchRule\[] = \[([\s\S]*?)\];/);
+            if (!rulesMatch) {
+                console.warn(`Could not extract rules from ${tsPath}`);
+                return null;
+            }
+            // Create a basic parser to extract rules
+            const rulesText = rulesMatch[1];
+            const rules = this.parseRulesFromTypeScript(rulesText, section);
+            // Export to JSON with .rules.json extension
+            return await this.exportRules(section, rules);
+        }
+        catch (error) {
+            console.error(`Error generating JSON from TypeScript for section ${section}:`, error);
+            return null;
+        }
+    }
+    /**
+     * Basic parser to extract rules from TypeScript content
+     * Note: This is a simplified approach and may not handle all edge cases
+     * @param rulesText The rules array text content
+     * @param section Section number for error reporting
+     * @returns Parsed MatchRule objects
+     */
+    parseRulesFromTypeScript(rulesText, section) {
+        // This method has been moved to rule-loader.ts with improvements
+        // Import the ruleLoader instance and use its method instead
+        return ruleLoader.parseRulesFromTypeScriptExternal(rulesText, section);
+    }
+    /**
+     * Exports rules to TypeScript format
+     * @param section Section number
+     * @param rules Rules to export
+     * @param name Optional section name (overrides default)
+     * @returns Promise resolving to the path of the exported file
+     */
+    async exportRulesToTypeScript(section, rules) {
+        // Format section number for file naming
+        const sectionStr = section.toString();
+        // Get section name from sectionStructure or use provided name or default
+        const sectionName = sectionStructure[section] ? sectionStructure[section][0] : "Unknown";
+        const rulesDir = path.join(process.cwd(), 'src', 'sectionizer', 'rules');
+        const tsPath = path.join(rulesDir, `section${section}.rules.ts`);
+        await fs.mkdir(rulesDir, { recursive: true });
+        // Use the existing createTypeScriptRulesFile method and return its result
+        return await this.createTypeScriptRulesFile(sectionStr, rules, sectionName, tsPath);
+    }
+    /**
+     * Creates a TypeScript rules file as the primary source of truth
      * @param section Section number
      * @param rules Rules to export
      * @param name Section name (optional)
+     * @param tsPath Path to write the TS file
      * @returns Promise resolving to the path of the generated file
      */
-    async createTypeScriptRulesFile(section, rules, name = `Section ${section}`) {
-        const rulesDir = path.join(process.cwd(), 'src', 'sectionizer', 'rules');
-        const tsPath = path.join(rulesDir, `section${section}.rules.ts`);
+    async createTypeScriptRulesFile(section, rules, name = `Section ${section}`, tsPath) {
         console.log(`Creating TypeScript rules file for section ${section} with ${rules.length} rules`);
         try {
-            // Make sure the rules directory exists
-            await fs.mkdir(rulesDir, { recursive: true });
-            // Generate TypeScript content
+            // Generate TypeScript content with improved structure
             let content = `/**\n`;
             content += ` * Rules for Section ${section}: ${name}\n`;
             content += ` * Generated: ${new Date().toISOString()}\n`;
             content += ` */\n\n`;
             content += `import type { MatchRule } from '../types.js';\n\n`;
+            // Add section metadata
+            content += `/**\n`;
+            content += ` * Section metadata\n`;
+            content += ` */\n`;
+            content += `export const sectionInfo = {\n`;
+            content += `  section: ${parseInt(section, 10)},\n`;
+            content += `  name: "${name}",\n`;
+            content += `  ruleCount: ${rules.length},\n`;
+            content += `  lastUpdated: "${new Date().toISOString()}"\n`;
+            content += `};\n\n`;
+            // Add the rules array with better typing
+            content += `/**\n`;
+            content += ` * Rules for matching fields to section ${section}\n`;
+            content += ` */\n`;
             content += `export const rules: MatchRule[] = [\n`;
-            // Add each rule
+            // Add each rule with proper escaping and formatting
             rules.forEach((rule, index) => {
                 content += `  {\n`;
-                content += `    pattern: /${rule.pattern.source.replace(/\\/g, "\\\\")}/${rule.pattern.flags},\n`;
-                content += `    subSection: '${rule.subSection || "_default"}',\n`;
+                // Pattern with proper escaping for special regex characters
+                const escapedPattern = rule.pattern.source
+                    .replace(/\\/g, "\\\\") // Double escape backslashes first
+                    .replace(/"/g, '\\"') // Escape double quotes
+                    .replace(/\//g, "\\/"); // Escape forward slashes
+                // Make sure brackets are properly escaped for regex pattern formatting
+                // The pattern will be written as /pattern/flags, so we need to ensure
+                // square brackets are properly represented
+                let safePattern = escapedPattern;
+                // When escaping for regex patterns, we need to be especially careful with brackets
+                // The pattern will be written as /pattern/flags, so we need to ensure
+                // square brackets are properly escaped to avoid "Unterminated character class" errors
+                content += `    pattern: /${safePattern}/${rule.pattern.flags},\n`;
+                // Add section property (ensuring it's numeric)
+                content += `    section: ${parseInt(section, 10)},\n`;
+                // Add subsection with proper null handling
+                content += rule.subsection
+                    ? `    subsection: "${rule.subsection.replace(/"/g, '\\"')}",\n`
+                    : `    subsection: undefined,\n`;
                 // Add entryIndex function if exists
                 if (rule.entryIndex) {
                     try {
                         const fnString = rule.entryIndex.toString();
-                        content += `    entryIndex: ${fnString},\n`;
+                        // Format as a proper function with RegExpMatchArray parameter
+                        if (fnString.includes('(m)') || fnString.includes('(match)')) {
+                            // Already has correct parameter format
+                            content += `    entryIndex: ${fnString},\n`;
+                        }
+                        else if (fnString.includes('=>')) {
+                            // Arrow function but needs parameter added
+                            content += `    entryIndex: (m: RegExpMatchArray) ${fnString.replace(/^\(\)/, '')},\n`;
+                        }
+                        else {
+                            // Standard function needing conversion
+                            content += `    entryIndex: (m: RegExpMatchArray) => ${rule.entryIndex.toString().replace(/^function.*?\{/, '').replace(/\}$/, '').trim()},\n`;
+                        }
                     }
                     catch (fnError) {
                         console.warn(`Warning: Could not convert entryIndex function to string for rule in section ${section}`, fnError);
-                        // Skip this property if it can't be converted
+                        // Provide a default function that preserves the original intent if possible
+                        try {
+                            // Create a mock RegExpMatchArray to safely call the function
+                            const mockMatch = [''];
+                            const returnValue = rule.entryIndex(mockMatch);
+                            if (typeof returnValue === 'number') {
+                                content += `    entryIndex: (m: RegExpMatchArray) => ${returnValue},\n`;
+                            }
+                            else {
+                                content += `    entryIndex: (m: RegExpMatchArray) => 1, // Default fallback\n`;
+                            }
+                        }
+                        catch (evalError) {
+                            content += `    entryIndex: (m: RegExpMatchArray) => 1, // Default fallback due to error\n`;
+                        }
                     }
                 }
                 // Add confidence if exists
                 if (rule.confidence !== undefined) {
                     content += `    confidence: ${rule.confidence},\n`;
                 }
+                else {
+                    content += `    confidence: 0.8, // Default confidence\n`;
+                }
                 // Add description if exists
                 if (rule.description) {
-                    content += `    description: '${rule.description.replace(/'/g, "\\'")}',\n`;
+                    // Properly escape description string
+                    const escapedDesc = rule.description.replace(/"/g, '\\"').replace(/\n/g, '\\n');
+                    content += `    description: "${escapedDesc}",\n`;
+                }
+                else {
+                    content += `    description: "Pattern for section ${section}",\n`;
                 }
                 content += `  }${index < rules.length - 1 ? ',' : ''}\n`;
             });
-            content += `];\n`;
-            // Write to file - use fs.writeFile directly with error handling
+            content += `];\n\n`;
+            // Add a default export for compatibility with various import styles
+            content += `export default {\n`;
+            content += `  sectionInfo,\n`;
+            content += `  rules\n`;
+            content += `};\n`;
+            // Write to file with careful error handling
             try {
                 await fs.writeFile(tsPath, content, 'utf-8');
                 console.log(`Successfully wrote TypeScript rules file for section ${section} at ${tsPath}`);
@@ -97,16 +234,17 @@ export class RuleExporter {
             }
             catch (writeError) {
                 console.error(`Error writing TypeScript rules file for section ${section}:`, writeError);
-                // Create a backup JSON file instead
-                const backupPath = path.join(rulesDir, `section${section}.rules.backup.json`);
-                await fs.writeFile(backupPath, JSON.stringify(rules, null, 2), 'utf-8');
-                console.log(`Created backup JSON rules file instead at ${backupPath}`);
-                throw writeError; // Re-throw for caller to handle
+                // Create a backup file
+                const rulesDir = path.dirname(tsPath);
+                const backupPath = path.join(rulesDir, `section${section}.rules.backup.ts`);
+                await fs.writeFile(backupPath, content, 'utf-8');
+                console.log(`Created backup TypeScript rules file at ${backupPath}`);
+                throw writeError;
             }
         }
         catch (error) {
             console.error(`Error creating TypeScript rules file for section ${section}:`, error);
-            throw error; // Re-throw for caller to handle
+            throw error;
         }
     }
 }

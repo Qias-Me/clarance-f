@@ -1,120 +1,78 @@
 /**
- * Rules for Section 17: Section 17
- * Generated: 2025-05-18T18:13:43.066Z
+ * Rules for Section 17: Maritial/Relationship Status
+ * Generated: 2025-05-26T14:43:29.124Z
+ */
+/**
+ * Section metadata
+ */
+export const sectionInfo = {
+    section: 17,
+    name: "Maritial/Relationship Status",
+    ruleCount: 8,
+    lastUpdated: "2025-05-26T14:43:29.124Z"
+};
+/**
+ * Rules for matching fields to section 17
  */
 export const rules = [
     {
-        pattern: /\\bsection17_/i,
-        subSection: '_default',
-        confidence: 0.98,
-        description: 'Fields explicitly matching /\bsection17_/i',
+        pattern: /^form1[0]/,
+        section: 17,
+        subsection: undefined,
+        confidence: 0.85,
+        description: "Fields starting with form1[0] belong to section 17",
     },
     {
-        pattern: /^form1/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1\' (5 fields)',
+        pattern: /text/i,
+        section: 17,
+        subsection: undefined,
+        confidence: 0.75,
+        description: "text fields belong to section 17",
     },
     {
-        pattern: /^form1\\[/i,,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[\' (5 fields)',
+        pattern: /2[0]$/,
+        section: 17,
+        subsection: undefined,
+        confidence: 0.8,
+        description: "Fields ending with 2[0] belong to section 17",
     },
     {
-        pattern: /^form1\\[0/i,,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0\' (5 fields)',
+        pattern: /date/i,
+        section: 17,
+        subsection: undefined,
+        confidence: 0.75,
+        description: "date fields belong to section 17",
     },
     {
-        pattern: /^form1\\[0\\]/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0]\' (5 fields)',
+        pattern: /radio/i,
+        section: 17,
+        subsection: undefined,
+        confidence: 0.75,
+        description: "radio fields belong to section 17",
     },
     {
-        pattern: /^form1\\[0\\]\\./i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].\' (5 fields)',
+        pattern: /2[1]$/,
+        section: 17,
+        subsection: undefined,
+        confidence: 0.8,
+        description: "Fields ending with 2[1] belong to section 17",
     },
     {
-        pattern: /^form1\\[0\\]\\.S/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].S\' (5 fields)',
+        pattern: /dropdown/i,
+        section: 17,
+        subsection: undefined,
+        confidence: 0.75,
+        description: "dropdown fields belong to section 17",
     },
     {
-        pattern: /^form1\\[0\\]\\.Se/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].Se\' (5 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.Sec/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].Sec\' (5 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.Sect/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].Sect\' (5 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.Secti/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].Secti\' (5 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.Sectio/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].Sectio\' (5 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.Section/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].Section\' (5 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.Section1/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].Section1\' (5 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.Section17/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].Section17\' (5 fields)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.Section17_/i,
-        subSection: '_default',
-        confidence: 0.93,
-        description: 'Fields starting with \'form1[0].Section17_\' (5 fields)',
-    },
-    {
-        pattern: /form1/i,
-        subSection: '_default',
-        confidence: 0.87,
-        description: 'Distinctive pattern matching 5 fields',
-    },
-    {
-        pattern: /Section17/i,
-        subSection: '_default',
-        confidence: 0.87,
-        description: 'Distinctive pattern matching 5 fields',
-    },
-    {
-        pattern: /RadioButtonList/i,
-        subSection: '_default',
-        confidence: 0.87,
-        description: 'Distinctive pattern matching 5 fields',
+        pattern: /2[2]$/,
+        section: 17,
+        subsection: undefined,
+        confidence: 0.8,
+        description: "Fields ending with 2[2] belong to section 17",
     }
 ];
+export default {
+    sectionInfo,
+    rules
+};

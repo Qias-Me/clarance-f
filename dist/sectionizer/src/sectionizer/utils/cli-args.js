@@ -8,6 +8,7 @@ import { Command } from 'commander';
 import path from 'path';
 import * as fsPromises from 'fs/promises';
 import * as fs from 'fs';
+import { PDFDocument } from 'pdf-lib';
 /**
  * Setup and configure command line parser with standard options
  * @returns Configured Commander instance ready for parsing
@@ -24,9 +25,11 @@ export function configureCommandLineParser() {
         .option("-o, --output-dir <directory>", "Output directory for generated files", "./output")
         .option("--no-self-healing", "Disable self-healing mechanism for unknown fields")
         .option("--no-validate", "Disable validation of section counts against reference data")
-        .option("-m, --max-iterations <number>", "Maximum number of iterations for self-healing", parseIntOption, 5)
+        .option("-m, --max-iterations <number>", "Maximum number of iterations for self-healing", parseIntOption, 25)
         .option("-l, --log-level <level>", "Set log level (debug, info, warn, error, success)", "info")
-        .option("-r, --generate-report", "Generate summary report after processing");
+        .option("-r, --generate-report", "Generate summary report after processing")
+        .option("-f, --force", "Force extraction even when cache exists", false)
+        .option("--verbose", "Show detailed output");
     program.addHelpText("after", `
 Examples:
   $ sf86-sectionizer --pdf-path ./example.pdf
@@ -54,7 +57,9 @@ export function parseCommandLineArgs(argv) {
         validate: !!opts.validate,
         maxIterations: opts.maxIterations,
         logLevel: opts.logLevel,
-        generateReport: !!opts.generateReport
+        generateReport: !!opts.generateReport,
+        force: !!opts.force,
+        verbose: !!opts.verbose
     };
     return options;
 }
@@ -77,11 +82,17 @@ function validateLogLevel(level) {
  * @returns True if valid, false otherwise
  */
 export async function validatePdf(pdfPath) {
+    console.log(`Validating PDF path: ${pdfPath}`);
     try {
         const stats = await fs.promises.stat(pdfPath);
-        return stats.isFile() && path.extname(pdfPath).toLowerCase() === '.pdf';
+        const isFile = stats.isFile();
+        const extension = path.extname(pdfPath).toLowerCase();
+        const isValidExtension = extension === '.pdf';
+        console.log(`PDF validation results: isFile=${isFile}, extension=${extension}, isValidExtension=${isValidExtension}`);
+        return isFile && isValidExtension;
     }
     catch (error) {
+        console.error(`Error validating PDF: ${error}`);
         return false;
     }
 }

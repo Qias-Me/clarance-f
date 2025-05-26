@@ -43,7 +43,7 @@ export interface EnhancedField extends FieldMetadata {
   section?: string | number;
   
   /** Subsection identifier (e.g., "A", "B", "C") */
-  subSection?: string;
+  subsection?: string;
   
   /** Entry index within subsection */
   entryIndex?: number;
@@ -58,9 +58,12 @@ export interface EnhancedField extends FieldMetadata {
 export interface MatchRule {
   /** Regular expression pattern to match field names */
   pattern: RegExp;
+
+  /** Section number (1-30) */
+  section: number;
   
   /** Subsection identifier (e.g., "A", "B", "C") */
-  subSection: string;
+  subsection?: string;
   
   /** Function to extract entry index from regex match */
   entryIndex?: (m: RegExpMatchArray) => number;

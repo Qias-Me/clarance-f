@@ -1,0 +1,50 @@
+[
+  {
+    "pattern": "^form1[0]",
+    "flags": "",
+    "confidence": 0.85,
+    "description": "Fields starting with form1[0] belong to section 13"
+  },
+  {
+    "pattern": "2[2]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with 2[2] belong to section 13"
+  },
+  {
+    "pattern": "date",
+    "flags": "i",
+    "confidence": 0.75,
+    "description": "date fields belong to section 13"
+  },
+  {
+    "pattern": "2[3]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with 2[3] belong to section 13"
+  },
+  {
+    "pattern": "text",
+    "flags": "i",
+    "confidence": 0.75,
+    "description": "text fields belong to section 13"
+  },
+  {
+    "pattern": "dropdown",
+    "flags": "i",
+    "confidence": 0.75,
+    "description": "dropdown fields belong to section 13"
+  },
+  {
+    "pattern": "2[4]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with 2[4] belong to section 13"
+  },
+  {
+    "pattern": "radio",
+    "flags": "i",
+    "confidence": 0.75,
+    "description": "radio fields belong to section 13"
+  }
+]

@@ -1,36 +1,43 @@
 /**
- * Rules for Section 21: Section 21
- * Generated: 2025-05-18T16:19:00.459Z
+ * Rules for Section 21: Psycological and Emotional Health
+ * Generated: 2025-05-26T14:43:30.248Z
+ */
+/**
+ * Section metadata
+ */
+export const sectionInfo = {
+    section: 21,
+    name: "Psycological and Emotional Health",
+    ruleCount: 3,
+    lastUpdated: "2025-05-26T14:43:30.248Z"
+};
+/**
+ * Rules for matching fields to section 21
  */
 export const rules = [
     {
-        pattern: /section21D1/i,
-        subSection: 'D1',
-        confidence: 0.9788235294117648,
-        description: 'Subsection D1 field pattern (Precision: 98.5%, Adds 67 fields, 1 false positives)',
+        pattern: /^form1[0]/,
+        section: 21,
+        subsection: undefined,
+        confidence: 0.85,
+        description: "Fields starting with form1[0] belong to section 21",
     },
     {
-        pattern: /section21D2/i,
-        subSection: 'D2',
-        confidence: 0.9788059701492537,
-        description: 'Subsection D2 field pattern (Precision: 98.5%, Adds 66 fields, 1 false positives)',
+        pattern: /date/i,
+        section: 21,
+        subsection: undefined,
+        confidence: 0.75,
+        description: "date fields belong to section 21",
     },
     {
-        pattern: /section21E/i,
-        subSection: 'E',
-        confidence: 0.9787596899224806,
-        description: 'Subsection E field pattern (Precision: 98.4%, Adds 127 fields, 2 false positives)',
-    },
-    {
-        pattern: /section21C/i,
-        subSection: 'C',
-        confidence: 0.9787096774193549,
-        description: 'Subsection C field pattern (Precision: 98.4%, Adds 61 fields, 1 false positives)',
-    },
-    {
-        pattern: /^form1\\[0\\]\\.section21d/i,
-        subSection: '_default',
-        confidence: 0.9786813186813187,
-        description: 'Fields starting with \'form1[0].section21d\' (133 fields) (Precision: 98.4%, Adds 46 fields, 3 false positives)',
+        pattern: /text/i,
+        section: 21,
+        subsection: undefined,
+        confidence: 0.75,
+        description: "text fields belong to section 21",
     }
 ];
+export default {
+    sectionInfo,
+    rules
+};

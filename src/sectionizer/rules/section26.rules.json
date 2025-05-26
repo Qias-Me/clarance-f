@@ -1,0 +1,104 @@
+[
+  {
+    "pattern": "^form1[0]",
+    "flags": "",
+    "confidence": 0.85,
+    "description": "Fields starting with form1[0] belong to section 26"
+  },
+  {
+    "pattern": "TextField11[1]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with TextField11[1] belong to section 26"
+  },
+  {
+    "pattern": "text",
+    "flags": "i",
+    "confidence": 0.75,
+    "description": "text fields belong to section 26"
+  },
+  {
+    "pattern": "#field[4]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with #field[4] belong to section 26"
+  },
+  {
+    "pattern": "NumericField2[0]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with NumericField2[0] belong to section 26"
+  },
+  {
+    "pattern": "radio",
+    "flags": "i",
+    "confidence": 0.75,
+    "description": "radio fields belong to section 26"
+  },
+  {
+    "pattern": "#field[6]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with #field[6] belong to section 26"
+  },
+  {
+    "pattern": "#field[7]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with #field[7] belong to section 26"
+  },
+  {
+    "pattern": "TextField11[2]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with TextField11[2] belong to section 26"
+  },
+  {
+    "pattern": "TextField11[3]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with TextField11[3] belong to section 26"
+  },
+  {
+    "pattern": "TextField11[4]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with TextField11[4] belong to section 26"
+  },
+  {
+    "pattern": "#field[11]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with #field[11] belong to section 26"
+  },
+  {
+    "pattern": "#field[12]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with #field[12] belong to section 26"
+  },
+  {
+    "pattern": "#field[13]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with #field[13] belong to section 26"
+  },
+  {
+    "pattern": "TextField11[5]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with TextField11[5] belong to section 26"
+  },
+  {
+    "pattern": "2[0]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with 2[0] belong to section 26"
+  },
+  {
+    "pattern": "date",
+    "flags": "i",
+    "confidence": 0.75,
+    "description": "date fields belong to section 26"
+  }
+]

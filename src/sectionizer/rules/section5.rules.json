@@ -1,0 +1,68 @@
+[
+  {
+    "pattern": "^form1[0]",
+    "flags": "",
+    "confidence": 0.85,
+    "description": "Fields starting with form1[0] belong to section 5"
+  },
+  {
+    "pattern": "TextField11[3]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with TextField11[3] belong to section 5"
+  },
+  {
+    "pattern": "text",
+    "flags": "i",
+    "confidence": 0.75,
+    "description": "text fields belong to section 5"
+  },
+  {
+    "pattern": "TextField11[4]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with TextField11[4] belong to section 5"
+  },
+  {
+    "pattern": "dropdown",
+    "flags": "i",
+    "confidence": 0.75,
+    "description": "dropdown fields belong to section 5"
+  },
+  {
+    "pattern": "State[0]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with State[0] belong to section 5"
+  },
+  {
+    "pattern": "TextField11[5]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with TextField11[5] belong to section 5"
+  },
+  {
+    "pattern": "suffix[0]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with suffix[0] belong to section 5"
+  },
+  {
+    "pattern": "2[0]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with 2[0] belong to section 5"
+  },
+  {
+    "pattern": "date",
+    "flags": "i",
+    "confidence": 0.75,
+    "description": "date fields belong to section 5"
+  },
+  {
+    "pattern": "radio",
+    "flags": "i",
+    "confidence": 0.75,
+    "description": "radio fields belong to section 5"
+  }
+]

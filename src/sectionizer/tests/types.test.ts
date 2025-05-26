@@ -41,7 +41,7 @@ const enhancedFieldTest: EnhancedField = {
   value: true,
   page: 53,
   section: 22,
-  subSection: 'B',
+  subsection: 'B',
   entryIndex: 3,
   confidence: 0.95
 };
@@ -49,7 +49,7 @@ const enhancedFieldTest: EnhancedField = {
 // Test match rule interface
 const matchRuleTest: MatchRule = {
   pattern: /^section21d(\d+)$/i,
-  subSection: 'D',
+  subsection: 'D',
   entryIndex: (m: RegExpMatchArray) => Number(m[1]),
   confidence: 0.9,
   description: 'Section 21D fields with entry number'

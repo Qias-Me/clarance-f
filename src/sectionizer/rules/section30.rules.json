@@ -1,0 +1,62 @@
+[
+  {
+    "pattern": "^form1[0]",
+    "flags": "",
+    "confidence": 0.85,
+    "description": "Fields starting with form1[0] belong to section 30"
+  },
+  {
+    "pattern": "SSN[0]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with SSN[0] belong to section 30"
+  },
+  {
+    "pattern": "t2[0]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with t2[0] belong to section 30"
+  },
+  {
+    "pattern": "t1[0]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with t1[0] belong to section 30"
+  },
+  {
+    "pattern": "SSN[1]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with SSN[1] belong to section 30"
+  },
+  {
+    "pattern": "t3[0]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with t3[0] belong to section 30"
+  },
+  {
+    "pattern": "t6[0]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with t6[0] belong to section 30"
+  },
+  {
+    "pattern": "t8[0]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with t8[0] belong to section 30"
+  },
+  {
+    "pattern": "t9[0]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with t9[0] belong to section 30"
+  },
+  {
+    "pattern": "t10[0]$",
+    "flags": "",
+    "confidence": 0.8,
+    "description": "Fields ending with t10[0] belong to section 30"
+  }
+]
