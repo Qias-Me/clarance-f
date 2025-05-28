@@ -1,6 +1,6 @@
 /**
  * Rules for Section 3: Place of Birth
- * Generated: 2025-05-28T22:50:54.326Z
+ * Generated: 2025-05-28T23:19:08.561Z
  */
 
 import type { MatchRule } from '../types.js';
@@ -12,7 +12,7 @@ export const sectionInfo = {
   section: 3,
   name: "Place of Birth",
   ruleCount: 4,
-  lastUpdated: "2025-05-28T22:50:54.326Z"
+  lastUpdated: "2025-05-28T23:19:08.561Z"
 };
 
 /**

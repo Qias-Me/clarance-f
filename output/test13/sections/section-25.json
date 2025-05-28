@@ -1,0 +1,4690 @@
+{
+  "metadata": {
+    "sectionId": 25,
+    "sectionName": "Investigation and Clearance Record",
+    "totalFields": 79,
+    "subsectionCount": 1,
+    "entryCount": 1,
+    "exportDate": "2025-05-28T23:19:11.285Z",
+    "averageConfidence": 0.99,
+    "pageRange": [
+      116,
+      117
+    ]
+  },
+  "fields": [
+    {
+      "id": "15728 0 R",
+      "name": "form1[0].Section25[0].TextField11[0]",
+      "page": 116,
+      "label": "If foreign government selected, provide name of government.",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 421.79,
+        "y": 614.99,
+        "width": 170.24,
+        "height": 15.75
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0__TextField11_0_"
+    },
+    {
+      "id": "15727 0 R",
+      "name": "form1[0].Section25[0].From_Datefield_Name_2[0]",
+      "page": 116,
+      "label": "Date the investigation was completed (Month/Year)",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 36,
+        "y": 513.88,
+        "width": 180,
+        "height": 17.73
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0__From_Datefield_Name_2_0_"
+    },
+    {
+      "id": "15726 0 R",
+      "name": "form1[0].Section25[0].#field[4]",
+      "value": false,
+      "page": 116,
+      "label": "Estimate",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 220.25,
+        "y": 515.39,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_4_"
+    },
+    {
+      "id": "15725 0 R",
+      "name": "form1[0].Section25[0].#field[5]",
+      "value": false,
+      "page": 116,
+      "label": "Date the investigation was completed (Month/Year). I don't know",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 220.25,
+        "y": 528.68,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_5_"
+    },
+    {
+      "id": "15724 0 R",
+      "name": "form1[0].Section25[0].From_Datefield_Name_2[1]",
+      "page": 116,
+      "label": "Provide the date clearance eligibility/access was granted. (Month/Year)",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 283.5,
+        "y": 513.88,
+        "width": 249.75,
+        "height": 17.73
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0__From_Datefield_Name_2_1_"
+    },
+    {
+      "id": "15723 0 R",
+      "name": "form1[0].Section25[0].#field[7]",
+      "value": false,
+      "page": 116,
+      "label": "Estimate",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 535.25,
+        "y": 515.39,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_7_"
+    },
+    {
+      "id": "15722 0 R",
+      "name": "form1[0].Section25[0].#field[8]",
+      "value": false,
+      "page": 116,
+      "label": "Provide the date clearance eligibility/access was granted. (Month/Year). I don't know",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 535.25,
+        "y": 528.68,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_8_"
+    },
+    {
+      "id": "15721 0 R",
+      "name": "form1[0].Section25[0].TextField11[1]",
+      "page": 116,
+      "label": "If foreign government selected, provide name of government.",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 421.11,
+        "y": 362.99,
+        "width": 172.75,
+        "height": 15.75
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0__TextField11_1_"
+    },
+    {
+      "id": "15720 0 R",
+      "name": "form1[0].Section25[0].From_Datefield_Name_2[2]",
+      "page": 116,
+      "label": "Date the investigation was completed (Month/Year)",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 34.02,
+        "y": 261.88,
+        "width": 180,
+        "height": 17.73
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0__From_Datefield_Name_2_2_"
+    },
+    {
+      "id": "15719 0 R",
+      "name": "form1[0].Section25[0].#field[11]",
+      "value": false,
+      "page": 116,
+      "label": "Estimate",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 220.25,
+        "y": 263.39,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_11_"
+    },
+    {
+      "id": "15718 0 R",
+      "name": "form1[0].Section25[0].#field[12]",
+      "value": false,
+      "page": 116,
+      "label": "Date the investigation was completed (Month/Year). I don't know",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 220.25,
+        "y": 276.68,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_12_"
+    },
+    {
+      "id": "15717 0 R",
+      "name": "form1[0].Section25[0].From_Datefield_Name_2[3]",
+      "page": 116,
+      "label": "Provide the date clearance eligibility/access was granted. (Month/Year)",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 281.52,
+        "y": 261.88,
+        "width": 249.75,
+        "height": 17.73
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0__From_Datefield_Name_2_3_"
+    },
+    {
+      "id": "15716 0 R",
+      "name": "form1[0].Section25[0].#field[14]",
+      "value": false,
+      "page": 116,
+      "label": "Estimate",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 533.28,
+        "y": 263.39,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_14_"
+    },
+    {
+      "id": "15715 0 R",
+      "name": "form1[0].Section25[0].#field[15]",
+      "value": false,
+      "page": 116,
+      "label": "Provide the date clearance eligibility/access was granted. (Month/Year). I don't know",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 533.27,
+        "y": 276.68,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_15_"
+    },
+    {
+      "id": "15714 0 R",
+      "name": "form1[0].Section25[0].#field[16]",
+      "value": false,
+      "page": 116,
+      "label": "Entry #2. Provide the investigating agency: U.S. Department of Defense",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 35.9,
+        "y": 380.99,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_16_"
+    },
+    {
+      "id": "15713 0 R",
+      "name": "form1[0].Section25[0].#field[17]",
+      "value": false,
+      "page": 116,
+      "label": "U.S. Department of State",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 35.9,
+        "y": 366.36,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_17_"
+    },
+    {
+      "id": "15712 0 R",
+      "name": "form1[0].Section25[0].#field[18]",
+      "value": false,
+      "page": 116,
+      "label": "U.S. Office of Personnel Management",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 35.9,
+        "y": 351.74,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_18_"
+    },
+    {
+      "id": "15711 0 R",
+      "name": "form1[0].Section25[0].#field[19]",
+      "value": false,
+      "page": 116,
+      "label": "Federal Bureau of Investigation",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 35.9,
+        "y": 337.12,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_19_"
+    },
+    {
+      "id": "15710 0 R",
+      "name": "form1[0].Section25[0].#field[20]",
+      "value": false,
+      "page": 116,
+      "label": "U.S. Department of Treasury",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 35.9,
+        "y": 322.49,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_20_"
+    },
+    {
+      "id": "15709 0 R",
+      "name": "form1[0].Section25[0].#field[21]",
+      "value": false,
+      "page": 116,
+      "label": "U.S. Department of Homeland Security",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 220.25,
+        "y": 380.99,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_21_"
+    },
+    {
+      "id": "15708 0 R",
+      "name": "form1[0].Section25[0].#field[22]",
+      "value": false,
+      "page": 116,
+      "label": "Foreign government ",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 220.25,
+        "y": 366.36,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_22_"
+    },
+    {
+      "id": "15707 0 R",
+      "name": "form1[0].Section25[0].#field[23]",
+      "value": false,
+      "page": 116,
+      "label": "I don't know",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 220.25,
+        "y": 351.74,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_23_"
+    },
+    {
+      "id": "15706 0 R",
+      "name": "form1[0].Section25[0].#field[24]",
+      "value": false,
+      "page": 116,
+      "label": "Other (Provide explanation)",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 220.25,
+        "y": 337.12,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_24_"
+    },
+    {
+      "id": "15705 0 R",
+      "name": "form1[0].Section25[0].TextField11[2]",
+      "page": 116,
+      "label": "If OTHER, provide explanation.",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 340.73,
+        "y": 333.74,
+        "width": 250.8,
+        "height": 15.75
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0__TextField11_2_"
+    },
+    {
+      "id": "15704 0 R",
+      "name": "form1[0].Section25[0].From_Datefield_Name_2[4]",
+      "page": 116,
+      "label": "Provide the name of agency that issued the clearance eligibility/access if different from the investigating agency.",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 34.02,
+        "y": 290.25,
+        "width": 558,
+        "height": 18.31
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0__From_Datefield_Name_2_4_"
+    },
+    {
+      "id": "15703 0 R",
+      "name": "form1[0].Section25[0].#field[27]",
+      "value": false,
+      "page": 116,
+      "label": "Provide the level of clearance eligibility/access granted: None",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 35.9,
+        "y": 232.49,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_27_"
+    },
+    {
+      "id": "15702 0 R",
+      "name": "form1[0].Section25[0].#field[28]",
+      "value": false,
+      "page": 116,
+      "label": "Confidential",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 35.9,
+        "y": 217.86,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_28_"
+    },
+    {
+      "id": "15701 0 R",
+      "name": "form1[0].Section25[0].#field[29]",
+      "value": false,
+      "page": 116,
+      "label": "Secret",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 35.9,
+        "y": 203.24,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_29_"
+    },
+    {
+      "id": "15700 0 R",
+      "name": "form1[0].Section25[0].#field[30]",
+      "value": false,
+      "page": 116,
+      "label": "Top Secret",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 35.9,
+        "y": 188.62,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_30_"
+    },
+    {
+      "id": "15699 0 R",
+      "name": "form1[0].Section25[0].#field[31]",
+      "value": false,
+      "page": 116,
+      "label": "Sensitive Compartmented Information (SCI)",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 35.9,
+        "y": 173.99,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_31_"
+    },
+    {
+      "id": "15698 0 R",
+      "name": "form1[0].Section25[0].#field[32]",
+      "value": false,
+      "page": 116,
+      "label": "Q",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 220.25,
+        "y": 232.49,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_32_"
+    },
+    {
+      "id": "15697 0 R",
+      "name": "form1[0].Section25[0].#field[33]",
+      "value": false,
+      "page": 116,
+      "label": "L",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 220.25,
+        "y": 217.86,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_33_"
+    },
+    {
+      "id": "15696 0 R",
+      "name": "form1[0].Section25[0].#field[34]",
+      "value": false,
+      "page": 116,
+      "label": "I don't know",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 220.25,
+        "y": 203.24,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_34_"
+    },
+    {
+      "id": "15695 0 R",
+      "name": "form1[0].Section25[0].#field[35]",
+      "value": false,
+      "page": 116,
+      "label": "Other (Provide explanation)",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 220.25,
+        "y": 173.99,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_35_"
+    },
+    {
+      "id": "15694 0 R",
+      "name": "form1[0].Section25[0].TextField11[3]",
+      "page": 116,
+      "label": "If OTHER, provide explanation.",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 339.18,
+        "y": 171.59,
+        "width": 252.85,
+        "height": 12.19
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0__TextField11_3_"
+    },
+    {
+      "id": "15693 0 R",
+      "name": "form1[0].Section25[0].#field[37]",
+      "value": false,
+      "page": 116,
+      "label": "Issued by foreign country",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 220.25,
+        "y": 188.62,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_37_"
+    },
+    {
+      "id": "16478 0 R",
+      "name": "form1[0].Section25[0].RadioButtonList[0]",
+      "page": 116,
+      "label": "RadioButtonList",
+      "type": "PDFRadioGroup",
+      "options": [],
+      "rect": {
+        "x": 452.83,
+        "y": 704.45,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0__RadioButtonList_0_"
+    },
+    {
+      "id": "15690 0 R",
+      "name": "form1[0].Section25[0].#field[38]",
+      "value": false,
+      "page": 116,
+      "label": "Complete the following if you responded 'Yes' to the U.S. Government (or a foreign government) having investigated your background and/or having granted you a security clearance eligibility/access. Entry #1. Provide the investigating agency: U.S. Department of Defense",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 37.88,
+        "y": 632.99,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_38_"
+    },
+    {
+      "id": "15689 0 R",
+      "name": "form1[0].Section25[0].#field[39]",
+      "value": false,
+      "page": 116,
+      "label": "U.S. Department of State",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 37.88,
+        "y": 618.36,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_39_"
+    },
+    {
+      "id": "15688 0 R",
+      "name": "form1[0].Section25[0].#field[40]",
+      "value": false,
+      "page": 116,
+      "label": "U.S. Office of Personnel Management",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 37.88,
+        "y": 603.74,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_40_"
+    },
+    {
+      "id": "15687 0 R",
+      "name": "form1[0].Section25[0].#field[41]",
+      "value": false,
+      "page": 116,
+      "label": "Federal Bureau of Investigation",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 37.88,
+        "y": 589.12,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_41_"
+    },
+    {
+      "id": "15686 0 R",
+      "name": "form1[0].Section25[0].#field[42]",
+      "value": false,
+      "page": 116,
+      "label": "U.S. Department of Treasury",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 37.88,
+        "y": 574.49,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_42_"
+    },
+    {
+      "id": "15685 0 R",
+      "name": "form1[0].Section25[0].#field[43]",
+      "value": false,
+      "page": 116,
+      "label": "U.S. Department of Homeland Security",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 220.25,
+        "y": 632.99,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_43_"
+    },
+    {
+      "id": "15684 0 R",
+      "name": "form1[0].Section25[0].#field[44]",
+      "value": false,
+      "page": 116,
+      "label": "Foreign government ",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 220.25,
+        "y": 618.36,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_44_"
+    },
+    {
+      "id": "15683 0 R",
+      "name": "form1[0].Section25[0].#field[45]",
+      "value": false,
+      "page": 116,
+      "label": "I don't know",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 220.25,
+        "y": 603.74,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_45_"
+    },
+    {
+      "id": "15682 0 R",
+      "name": "form1[0].Section25[0].#field[46]",
+      "value": false,
+      "page": 116,
+      "label": "Other (Provide explanation)",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 220.25,
+        "y": 589.12,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_46_"
+    },
+    {
+      "id": "15681 0 R",
+      "name": "form1[0].Section25[0].TextField11[4]",
+      "page": 116,
+      "label": "If OTHER, provide explanation.",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 340.73,
+        "y": 585.74,
+        "width": 251.29,
+        "height": 15.75
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0__TextField11_4_"
+    },
+    {
+      "id": "15680 0 R",
+      "name": "form1[0].Section25[0].From_Datefield_Name_2[5]",
+      "page": 116,
+      "label": "Provide the name of agency that issued the clearance eligibility/access if different from the investigating agency.",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 36,
+        "y": 542.25,
+        "width": 558,
+        "height": 18.31
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0__From_Datefield_Name_2_5_"
+    },
+    {
+      "id": "15679 0 R",
+      "name": "form1[0].Section25[0].#field[49]",
+      "value": false,
+      "page": 116,
+      "label": "Provide the level of clearance eligibility/access granted: None",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 37.88,
+        "y": 484.49,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_49_"
+    },
+    {
+      "id": "15678 0 R",
+      "name": "form1[0].Section25[0].#field[50]",
+      "value": false,
+      "page": 116,
+      "label": "Confidential",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 37.88,
+        "y": 469.86,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_50_"
+    },
+    {
+      "id": "15677 0 R",
+      "name": "form1[0].Section25[0].#field[51]",
+      "value": false,
+      "page": 116,
+      "label": "Secret",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 37.88,
+        "y": 455.24,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_51_"
+    },
+    {
+      "id": "15676 0 R",
+      "name": "form1[0].Section25[0].#field[52]",
+      "value": false,
+      "page": 116,
+      "label": "Top Secret",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 37.88,
+        "y": 440.62,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_52_"
+    },
+    {
+      "id": "15675 0 R",
+      "name": "form1[0].Section25[0].#field[53]",
+      "value": false,
+      "page": 116,
+      "label": "Sensitive Compartmented Information (SCI)",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 37.88,
+        "y": 425.99,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_53_"
+    },
+    {
+      "id": "15674 0 R",
+      "name": "form1[0].Section25[0].#field[54]",
+      "value": false,
+      "page": 116,
+      "label": "Q",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 220.25,
+        "y": 484.49,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_54_"
+    },
+    {
+      "id": "15673 0 R",
+      "name": "form1[0].Section25[0].#field[55]",
+      "value": false,
+      "page": 116,
+      "label": "L",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 220.25,
+        "y": 469.86,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_55_"
+    },
+    {
+      "id": "15672 0 R",
+      "name": "form1[0].Section25[0].#field[56]",
+      "value": false,
+      "page": 116,
+      "label": "I don't know",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 220.25,
+        "y": 455.24,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_56_"
+    },
+    {
+      "id": "15671 0 R",
+      "name": "form1[0].Section25[0].#field[57]",
+      "value": false,
+      "page": 116,
+      "label": "Other (Provide explanation)",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 220.25,
+        "y": 425.99,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_57_"
+    },
+    {
+      "id": "15670 0 R",
+      "name": "form1[0].Section25[0].TextField11[5]",
+      "page": 116,
+      "label": "If OTHER, provide explanation.",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 340.39,
+        "y": 422.61,
+        "width": 251.82,
+        "height": 15.75
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0__TextField11_5_"
+    },
+    {
+      "id": "15669 0 R",
+      "name": "form1[0].Section25[0].#field[59]",
+      "value": false,
+      "page": 116,
+      "label": "Issued by foreign country",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 220.25,
+        "y": 440.62,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0___field_59_"
+    },
+    {
+      "id": "15668 0 R",
+      "name": "form1[0].Section25[0].TextField11[6]",
+      "page": 116,
+      "label": "If U.S. Department of Treasury, provide name of bureau",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 258.35,
+        "y": 571.12,
+        "width": 333.87,
+        "height": 15.75
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0__TextField11_6_"
+    },
+    {
+      "id": "15667 0 R",
+      "name": "form1[0].Section25[0].TextField11[7]",
+      "page": 116,
+      "label": "If U.S. Department of Treasury, provide name of bureau",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 258.35,
+        "y": 319.12,
+        "width": 334.54,
+        "height": 15.75
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_0__TextField11_7_"
+    },
+    {
+      "id": "15747 0 R",
+      "name": "form1[0].Section25_2[0].From_Datefield_Name_2[0]",
+      "page": 117,
+      "label": "Entry #2. Provide the date security clearance eligibility/access authorization was denied, suspended or revoked. (Month/Year)",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 36.13,
+        "y": 546.75,
+        "width": 150.75,
+        "height": 19.92
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_0_"
+    },
+    {
+      "id": "15746 0 R",
+      "name": "form1[0].Section25_2[0].#field[3]",
+      "value": false,
+      "page": 117,
+      "label": "Estimate",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 188.87,
+        "y": 551.99,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_2_0___field_3_"
+    },
+    {
+      "id": "15745 0 R",
+      "name": "form1[0].Section25_2[0].From_Datefield_Name_2[1]",
+      "page": 117,
+      "label": "Provide the name of the agency that took the action.",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 222.87,
+        "y": 546.75,
+        "width": 146.03,
+        "height": 29.24
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_1_"
+    },
+    {
+      "id": "15744 0 R",
+      "name": "form1[0].Section25_2[0].From_Datefield_Name_2[2]",
+      "page": 117,
+      "label": "Provide an explanation of the circumstances of the denial,suspension or revocation action.",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 378.12,
+        "y": 546.75,
+        "width": 211.5,
+        "height": 29.24
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_2_"
+    },
+    {
+      "id": "15743 0 R",
+      "name": "form1[0].Section25_2[0].From_Datefield_Name_2[3]",
+      "page": 117,
+      "label": "Complete the following if you responded 'Yes' to having EVER been debarred from government employment. Entry #1. Provide the name of the government agency taking debarment action. ",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 36,
+        "y": 445.5,
+        "width": 148.5,
+        "height": 29.24
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_3_"
+    },
+    {
+      "id": "15742 0 R",
+      "name": "form1[0].Section25_2[0].#field[7]",
+      "value": false,
+      "page": 117,
+      "label": "Estimate",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 343.74,
+        "y": 450.74,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_2_0___field_7_"
+    },
+    {
+      "id": "15741 0 R",
+      "name": "form1[0].Section25_2[0].From_Datefield_Name_2[4]",
+      "page": 117,
+      "label": "Provide the date the debarment occurred. (Month/Year)",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 193.5,
+        "y": 445.5,
+        "width": 148.68,
+        "height": 29.68
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_4_"
+    },
+    {
+      "id": "15740 0 R",
+      "name": "form1[0].Section25_2[0].From_Datefield_Name_2[5]",
+      "page": 117,
+      "label": "Entry #2. Provide the name of the government agency taking debarment action.",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 36,
+        "y": 384.62,
+        "width": 148.5,
+        "height": 29.24
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_5_"
+    },
+    {
+      "id": "15739 0 R",
+      "name": "form1[0].Section25_2[0].#field[10]",
+      "value": false,
+      "page": 117,
+      "label": "Estimate",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 343.74,
+        "y": 389.86,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_2_0___field_10_"
+    },
+    {
+      "id": "15738 0 R",
+      "name": "form1[0].Section25_2[0].From_Datefield_Name_2[6]",
+      "page": 117,
+      "label": "Provide the date the debarment occurred. (Month/Year)",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 193.5,
+        "y": 384.62,
+        "width": 148.68,
+        "height": 29.68
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_6_"
+    },
+    {
+      "id": "15737 0 R",
+      "name": "form1[0].Section25_2[0].From_Datefield_Name_2[7]",
+      "page": 117,
+      "label": "Provide an explanation of the circumstances of the debarment.",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 378.26,
+        "y": 384.62,
+        "width": 211.5,
+        "height": 29.24
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_7_"
+    },
+    {
+      "id": "16476 0 R",
+      "name": "form1[0].Section25_2[0].RadioButtonList[0]",
+      "page": 117,
+      "label": "RadioButtonList",
+      "type": "PDFRadioGroup",
+      "options": [],
+      "rect": {
+        "x": 452.83,
+        "y": 704.45,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_2_0__RadioButtonList_0_"
+    },
+    {
+      "id": "15734 0 R",
+      "name": "form1[0].Section25_2[0].From_Datefield_Name_2[8]",
+      "page": 117,
+      "label": "Complete the following if you responded 'Yes' to having EVER had a security clearance eligibility/access authorization denied, suspended, or revoked. Entry #1. Provide the date security clearance eligibility/access authorization was denied, suspended or revoked. (Month/Year)",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 36,
+        "y": 607.5,
+        "width": 150.75,
+        "height": 19.92
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_8_"
+    },
+    {
+      "id": "15733 0 R",
+      "name": "form1[0].Section25_2[0].#field[14]",
+      "value": false,
+      "page": 117,
+      "label": "Estimate",
+      "type": "PDFCheckBox",
+      "options": [],
+      "rect": {
+        "x": 188.75,
+        "y": 612.74,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_2_0___field_14_"
+    },
+    {
+      "id": "15732 0 R",
+      "name": "form1[0].Section25_2[0].From_Datefield_Name_2[9]",
+      "page": 117,
+      "label": "Provide the name of the agency that took the action.",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 222.75,
+        "y": 607.5,
+        "width": 146.03,
+        "height": 29.24
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_9_"
+    },
+    {
+      "id": "15731 0 R",
+      "name": "form1[0].Section25_2[0].From_Datefield_Name_2[10]",
+      "page": 117,
+      "label": "Provide an explanation of the circumstances of the denial,suspension or revocation action.",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 378,
+        "y": 607.5,
+        "width": 211.5,
+        "height": 29.24
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_10_"
+    },
+    {
+      "id": "16477 0 R",
+      "name": "form1[0].Section25_2[0].RadioButtonList[1]",
+      "page": 117,
+      "label": "RadioButtonList",
+      "type": "PDFRadioGroup",
+      "options": [],
+      "rect": {
+        "x": 434.83,
+        "y": 526.7,
+        "width": 9,
+        "height": 9
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_2_0__RadioButtonList_1_"
+    },
+    {
+      "id": "15749 0 R",
+      "name": "form1[0].Section25_2[0].From_Datefield_Name_2[11]",
+      "page": 117,
+      "label": "Provide an explanation of the circumstances of the debarment.",
+      "type": "PDFTextField",
+      "options": [],
+      "rect": {
+        "x": 378.26,
+        "y": 445.5,
+        "width": 211.5,
+        "height": 29.24
+      },
+      "section": 25,
+      "confidence": 0.99,
+      "wasMovedByHealing": false,
+      "isExplicitlyDetected": true,
+      "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_11_"
+    }
+  ],
+  "fieldsBySubsection": {
+    "default": [
+      {
+        "id": "15728 0 R",
+        "name": "form1[0].Section25[0].TextField11[0]",
+        "page": 116,
+        "label": "If foreign government selected, provide name of government.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 421.79,
+          "y": 614.99,
+          "width": 170.24,
+          "height": 15.75
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__TextField11_0_"
+      },
+      {
+        "id": "15727 0 R",
+        "name": "form1[0].Section25[0].From_Datefield_Name_2[0]",
+        "page": 116,
+        "label": "Date the investigation was completed (Month/Year)",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 36,
+          "y": 513.88,
+          "width": 180,
+          "height": 17.73
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__From_Datefield_Name_2_0_"
+      },
+      {
+        "id": "15726 0 R",
+        "name": "form1[0].Section25[0].#field[4]",
+        "value": false,
+        "page": 116,
+        "label": "Estimate",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 515.39,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_4_"
+      },
+      {
+        "id": "15725 0 R",
+        "name": "form1[0].Section25[0].#field[5]",
+        "value": false,
+        "page": 116,
+        "label": "Date the investigation was completed (Month/Year). I don't know",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 528.68,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_5_"
+      },
+      {
+        "id": "15724 0 R",
+        "name": "form1[0].Section25[0].From_Datefield_Name_2[1]",
+        "page": 116,
+        "label": "Provide the date clearance eligibility/access was granted. (Month/Year)",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 283.5,
+          "y": 513.88,
+          "width": 249.75,
+          "height": 17.73
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__From_Datefield_Name_2_1_"
+      },
+      {
+        "id": "15723 0 R",
+        "name": "form1[0].Section25[0].#field[7]",
+        "value": false,
+        "page": 116,
+        "label": "Estimate",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 535.25,
+          "y": 515.39,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_7_"
+      },
+      {
+        "id": "15722 0 R",
+        "name": "form1[0].Section25[0].#field[8]",
+        "value": false,
+        "page": 116,
+        "label": "Provide the date clearance eligibility/access was granted. (Month/Year). I don't know",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 535.25,
+          "y": 528.68,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_8_"
+      },
+      {
+        "id": "15721 0 R",
+        "name": "form1[0].Section25[0].TextField11[1]",
+        "page": 116,
+        "label": "If foreign government selected, provide name of government.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 421.11,
+          "y": 362.99,
+          "width": 172.75,
+          "height": 15.75
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__TextField11_1_"
+      },
+      {
+        "id": "15720 0 R",
+        "name": "form1[0].Section25[0].From_Datefield_Name_2[2]",
+        "page": 116,
+        "label": "Date the investigation was completed (Month/Year)",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 34.02,
+          "y": 261.88,
+          "width": 180,
+          "height": 17.73
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__From_Datefield_Name_2_2_"
+      },
+      {
+        "id": "15719 0 R",
+        "name": "form1[0].Section25[0].#field[11]",
+        "value": false,
+        "page": 116,
+        "label": "Estimate",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 263.39,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_11_"
+      },
+      {
+        "id": "15718 0 R",
+        "name": "form1[0].Section25[0].#field[12]",
+        "value": false,
+        "page": 116,
+        "label": "Date the investigation was completed (Month/Year). I don't know",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 276.68,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_12_"
+      },
+      {
+        "id": "15717 0 R",
+        "name": "form1[0].Section25[0].From_Datefield_Name_2[3]",
+        "page": 116,
+        "label": "Provide the date clearance eligibility/access was granted. (Month/Year)",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 281.52,
+          "y": 261.88,
+          "width": 249.75,
+          "height": 17.73
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__From_Datefield_Name_2_3_"
+      },
+      {
+        "id": "15716 0 R",
+        "name": "form1[0].Section25[0].#field[14]",
+        "value": false,
+        "page": 116,
+        "label": "Estimate",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 533.28,
+          "y": 263.39,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_14_"
+      },
+      {
+        "id": "15715 0 R",
+        "name": "form1[0].Section25[0].#field[15]",
+        "value": false,
+        "page": 116,
+        "label": "Provide the date clearance eligibility/access was granted. (Month/Year). I don't know",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 533.27,
+          "y": 276.68,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_15_"
+      },
+      {
+        "id": "15714 0 R",
+        "name": "form1[0].Section25[0].#field[16]",
+        "value": false,
+        "page": 116,
+        "label": "Entry #2. Provide the investigating agency: U.S. Department of Defense",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 35.9,
+          "y": 380.99,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_16_"
+      },
+      {
+        "id": "15713 0 R",
+        "name": "form1[0].Section25[0].#field[17]",
+        "value": false,
+        "page": 116,
+        "label": "U.S. Department of State",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 35.9,
+          "y": 366.36,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_17_"
+      },
+      {
+        "id": "15712 0 R",
+        "name": "form1[0].Section25[0].#field[18]",
+        "value": false,
+        "page": 116,
+        "label": "U.S. Office of Personnel Management",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 35.9,
+          "y": 351.74,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_18_"
+      },
+      {
+        "id": "15711 0 R",
+        "name": "form1[0].Section25[0].#field[19]",
+        "value": false,
+        "page": 116,
+        "label": "Federal Bureau of Investigation",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 35.9,
+          "y": 337.12,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_19_"
+      },
+      {
+        "id": "15710 0 R",
+        "name": "form1[0].Section25[0].#field[20]",
+        "value": false,
+        "page": 116,
+        "label": "U.S. Department of Treasury",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 35.9,
+          "y": 322.49,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_20_"
+      },
+      {
+        "id": "15709 0 R",
+        "name": "form1[0].Section25[0].#field[21]",
+        "value": false,
+        "page": 116,
+        "label": "U.S. Department of Homeland Security",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 380.99,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_21_"
+      },
+      {
+        "id": "15708 0 R",
+        "name": "form1[0].Section25[0].#field[22]",
+        "value": false,
+        "page": 116,
+        "label": "Foreign government ",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 366.36,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_22_"
+      },
+      {
+        "id": "15707 0 R",
+        "name": "form1[0].Section25[0].#field[23]",
+        "value": false,
+        "page": 116,
+        "label": "I don't know",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 351.74,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_23_"
+      },
+      {
+        "id": "15706 0 R",
+        "name": "form1[0].Section25[0].#field[24]",
+        "value": false,
+        "page": 116,
+        "label": "Other (Provide explanation)",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 337.12,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_24_"
+      },
+      {
+        "id": "15705 0 R",
+        "name": "form1[0].Section25[0].TextField11[2]",
+        "page": 116,
+        "label": "If OTHER, provide explanation.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 340.73,
+          "y": 333.74,
+          "width": 250.8,
+          "height": 15.75
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__TextField11_2_"
+      },
+      {
+        "id": "15704 0 R",
+        "name": "form1[0].Section25[0].From_Datefield_Name_2[4]",
+        "page": 116,
+        "label": "Provide the name of agency that issued the clearance eligibility/access if different from the investigating agency.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 34.02,
+          "y": 290.25,
+          "width": 558,
+          "height": 18.31
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__From_Datefield_Name_2_4_"
+      },
+      {
+        "id": "15703 0 R",
+        "name": "form1[0].Section25[0].#field[27]",
+        "value": false,
+        "page": 116,
+        "label": "Provide the level of clearance eligibility/access granted: None",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 35.9,
+          "y": 232.49,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_27_"
+      },
+      {
+        "id": "15702 0 R",
+        "name": "form1[0].Section25[0].#field[28]",
+        "value": false,
+        "page": 116,
+        "label": "Confidential",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 35.9,
+          "y": 217.86,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_28_"
+      },
+      {
+        "id": "15701 0 R",
+        "name": "form1[0].Section25[0].#field[29]",
+        "value": false,
+        "page": 116,
+        "label": "Secret",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 35.9,
+          "y": 203.24,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_29_"
+      },
+      {
+        "id": "15700 0 R",
+        "name": "form1[0].Section25[0].#field[30]",
+        "value": false,
+        "page": 116,
+        "label": "Top Secret",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 35.9,
+          "y": 188.62,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_30_"
+      },
+      {
+        "id": "15699 0 R",
+        "name": "form1[0].Section25[0].#field[31]",
+        "value": false,
+        "page": 116,
+        "label": "Sensitive Compartmented Information (SCI)",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 35.9,
+          "y": 173.99,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_31_"
+      },
+      {
+        "id": "15698 0 R",
+        "name": "form1[0].Section25[0].#field[32]",
+        "value": false,
+        "page": 116,
+        "label": "Q",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 232.49,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_32_"
+      },
+      {
+        "id": "15697 0 R",
+        "name": "form1[0].Section25[0].#field[33]",
+        "value": false,
+        "page": 116,
+        "label": "L",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 217.86,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_33_"
+      },
+      {
+        "id": "15696 0 R",
+        "name": "form1[0].Section25[0].#field[34]",
+        "value": false,
+        "page": 116,
+        "label": "I don't know",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 203.24,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_34_"
+      },
+      {
+        "id": "15695 0 R",
+        "name": "form1[0].Section25[0].#field[35]",
+        "value": false,
+        "page": 116,
+        "label": "Other (Provide explanation)",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 173.99,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_35_"
+      },
+      {
+        "id": "15694 0 R",
+        "name": "form1[0].Section25[0].TextField11[3]",
+        "page": 116,
+        "label": "If OTHER, provide explanation.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 339.18,
+          "y": 171.59,
+          "width": 252.85,
+          "height": 12.19
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__TextField11_3_"
+      },
+      {
+        "id": "15693 0 R",
+        "name": "form1[0].Section25[0].#field[37]",
+        "value": false,
+        "page": 116,
+        "label": "Issued by foreign country",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 188.62,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_37_"
+      },
+      {
+        "id": "16478 0 R",
+        "name": "form1[0].Section25[0].RadioButtonList[0]",
+        "page": 116,
+        "label": "RadioButtonList",
+        "type": "PDFRadioGroup",
+        "options": [],
+        "rect": {
+          "x": 452.83,
+          "y": 704.45,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__RadioButtonList_0_"
+      },
+      {
+        "id": "15690 0 R",
+        "name": "form1[0].Section25[0].#field[38]",
+        "value": false,
+        "page": 116,
+        "label": "Complete the following if you responded 'Yes' to the U.S. Government (or a foreign government) having investigated your background and/or having granted you a security clearance eligibility/access. Entry #1. Provide the investigating agency: U.S. Department of Defense",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 37.88,
+          "y": 632.99,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_38_"
+      },
+      {
+        "id": "15689 0 R",
+        "name": "form1[0].Section25[0].#field[39]",
+        "value": false,
+        "page": 116,
+        "label": "U.S. Department of State",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 37.88,
+          "y": 618.36,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_39_"
+      },
+      {
+        "id": "15688 0 R",
+        "name": "form1[0].Section25[0].#field[40]",
+        "value": false,
+        "page": 116,
+        "label": "U.S. Office of Personnel Management",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 37.88,
+          "y": 603.74,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_40_"
+      },
+      {
+        "id": "15687 0 R",
+        "name": "form1[0].Section25[0].#field[41]",
+        "value": false,
+        "page": 116,
+        "label": "Federal Bureau of Investigation",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 37.88,
+          "y": 589.12,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_41_"
+      },
+      {
+        "id": "15686 0 R",
+        "name": "form1[0].Section25[0].#field[42]",
+        "value": false,
+        "page": 116,
+        "label": "U.S. Department of Treasury",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 37.88,
+          "y": 574.49,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_42_"
+      },
+      {
+        "id": "15685 0 R",
+        "name": "form1[0].Section25[0].#field[43]",
+        "value": false,
+        "page": 116,
+        "label": "U.S. Department of Homeland Security",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 632.99,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_43_"
+      },
+      {
+        "id": "15684 0 R",
+        "name": "form1[0].Section25[0].#field[44]",
+        "value": false,
+        "page": 116,
+        "label": "Foreign government ",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 618.36,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_44_"
+      },
+      {
+        "id": "15683 0 R",
+        "name": "form1[0].Section25[0].#field[45]",
+        "value": false,
+        "page": 116,
+        "label": "I don't know",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 603.74,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_45_"
+      },
+      {
+        "id": "15682 0 R",
+        "name": "form1[0].Section25[0].#field[46]",
+        "value": false,
+        "page": 116,
+        "label": "Other (Provide explanation)",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 589.12,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_46_"
+      },
+      {
+        "id": "15681 0 R",
+        "name": "form1[0].Section25[0].TextField11[4]",
+        "page": 116,
+        "label": "If OTHER, provide explanation.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 340.73,
+          "y": 585.74,
+          "width": 251.29,
+          "height": 15.75
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__TextField11_4_"
+      },
+      {
+        "id": "15680 0 R",
+        "name": "form1[0].Section25[0].From_Datefield_Name_2[5]",
+        "page": 116,
+        "label": "Provide the name of agency that issued the clearance eligibility/access if different from the investigating agency.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 36,
+          "y": 542.25,
+          "width": 558,
+          "height": 18.31
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__From_Datefield_Name_2_5_"
+      },
+      {
+        "id": "15679 0 R",
+        "name": "form1[0].Section25[0].#field[49]",
+        "value": false,
+        "page": 116,
+        "label": "Provide the level of clearance eligibility/access granted: None",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 37.88,
+          "y": 484.49,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_49_"
+      },
+      {
+        "id": "15678 0 R",
+        "name": "form1[0].Section25[0].#field[50]",
+        "value": false,
+        "page": 116,
+        "label": "Confidential",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 37.88,
+          "y": 469.86,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_50_"
+      },
+      {
+        "id": "15677 0 R",
+        "name": "form1[0].Section25[0].#field[51]",
+        "value": false,
+        "page": 116,
+        "label": "Secret",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 37.88,
+          "y": 455.24,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_51_"
+      },
+      {
+        "id": "15676 0 R",
+        "name": "form1[0].Section25[0].#field[52]",
+        "value": false,
+        "page": 116,
+        "label": "Top Secret",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 37.88,
+          "y": 440.62,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_52_"
+      },
+      {
+        "id": "15675 0 R",
+        "name": "form1[0].Section25[0].#field[53]",
+        "value": false,
+        "page": 116,
+        "label": "Sensitive Compartmented Information (SCI)",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 37.88,
+          "y": 425.99,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_53_"
+      },
+      {
+        "id": "15674 0 R",
+        "name": "form1[0].Section25[0].#field[54]",
+        "value": false,
+        "page": 116,
+        "label": "Q",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 484.49,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_54_"
+      },
+      {
+        "id": "15673 0 R",
+        "name": "form1[0].Section25[0].#field[55]",
+        "value": false,
+        "page": 116,
+        "label": "L",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 469.86,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_55_"
+      },
+      {
+        "id": "15672 0 R",
+        "name": "form1[0].Section25[0].#field[56]",
+        "value": false,
+        "page": 116,
+        "label": "I don't know",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 455.24,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_56_"
+      },
+      {
+        "id": "15671 0 R",
+        "name": "form1[0].Section25[0].#field[57]",
+        "value": false,
+        "page": 116,
+        "label": "Other (Provide explanation)",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 425.99,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_57_"
+      },
+      {
+        "id": "15670 0 R",
+        "name": "form1[0].Section25[0].TextField11[5]",
+        "page": 116,
+        "label": "If OTHER, provide explanation.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 340.39,
+          "y": 422.61,
+          "width": 251.82,
+          "height": 15.75
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__TextField11_5_"
+      },
+      {
+        "id": "15669 0 R",
+        "name": "form1[0].Section25[0].#field[59]",
+        "value": false,
+        "page": 116,
+        "label": "Issued by foreign country",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 440.62,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_59_"
+      },
+      {
+        "id": "15668 0 R",
+        "name": "form1[0].Section25[0].TextField11[6]",
+        "page": 116,
+        "label": "If U.S. Department of Treasury, provide name of bureau",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 258.35,
+          "y": 571.12,
+          "width": 333.87,
+          "height": 15.75
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__TextField11_6_"
+      },
+      {
+        "id": "15667 0 R",
+        "name": "form1[0].Section25[0].TextField11[7]",
+        "page": 116,
+        "label": "If U.S. Department of Treasury, provide name of bureau",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 258.35,
+          "y": 319.12,
+          "width": 334.54,
+          "height": 15.75
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__TextField11_7_"
+      },
+      {
+        "id": "15747 0 R",
+        "name": "form1[0].Section25_2[0].From_Datefield_Name_2[0]",
+        "page": 117,
+        "label": "Entry #2. Provide the date security clearance eligibility/access authorization was denied, suspended or revoked. (Month/Year)",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 36.13,
+          "y": 546.75,
+          "width": 150.75,
+          "height": 19.92
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_0_"
+      },
+      {
+        "id": "15746 0 R",
+        "name": "form1[0].Section25_2[0].#field[3]",
+        "value": false,
+        "page": 117,
+        "label": "Estimate",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 188.87,
+          "y": 551.99,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0___field_3_"
+      },
+      {
+        "id": "15745 0 R",
+        "name": "form1[0].Section25_2[0].From_Datefield_Name_2[1]",
+        "page": 117,
+        "label": "Provide the name of the agency that took the action.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 222.87,
+          "y": 546.75,
+          "width": 146.03,
+          "height": 29.24
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_1_"
+      },
+      {
+        "id": "15744 0 R",
+        "name": "form1[0].Section25_2[0].From_Datefield_Name_2[2]",
+        "page": 117,
+        "label": "Provide an explanation of the circumstances of the denial,suspension or revocation action.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 378.12,
+          "y": 546.75,
+          "width": 211.5,
+          "height": 29.24
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_2_"
+      },
+      {
+        "id": "15743 0 R",
+        "name": "form1[0].Section25_2[0].From_Datefield_Name_2[3]",
+        "page": 117,
+        "label": "Complete the following if you responded 'Yes' to having EVER been debarred from government employment. Entry #1. Provide the name of the government agency taking debarment action. ",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 36,
+          "y": 445.5,
+          "width": 148.5,
+          "height": 29.24
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_3_"
+      },
+      {
+        "id": "15742 0 R",
+        "name": "form1[0].Section25_2[0].#field[7]",
+        "value": false,
+        "page": 117,
+        "label": "Estimate",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 343.74,
+          "y": 450.74,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0___field_7_"
+      },
+      {
+        "id": "15741 0 R",
+        "name": "form1[0].Section25_2[0].From_Datefield_Name_2[4]",
+        "page": 117,
+        "label": "Provide the date the debarment occurred. (Month/Year)",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 193.5,
+          "y": 445.5,
+          "width": 148.68,
+          "height": 29.68
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_4_"
+      },
+      {
+        "id": "15740 0 R",
+        "name": "form1[0].Section25_2[0].From_Datefield_Name_2[5]",
+        "page": 117,
+        "label": "Entry #2. Provide the name of the government agency taking debarment action.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 36,
+          "y": 384.62,
+          "width": 148.5,
+          "height": 29.24
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_5_"
+      },
+      {
+        "id": "15739 0 R",
+        "name": "form1[0].Section25_2[0].#field[10]",
+        "value": false,
+        "page": 117,
+        "label": "Estimate",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 343.74,
+          "y": 389.86,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0___field_10_"
+      },
+      {
+        "id": "15738 0 R",
+        "name": "form1[0].Section25_2[0].From_Datefield_Name_2[6]",
+        "page": 117,
+        "label": "Provide the date the debarment occurred. (Month/Year)",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 193.5,
+          "y": 384.62,
+          "width": 148.68,
+          "height": 29.68
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_6_"
+      },
+      {
+        "id": "15737 0 R",
+        "name": "form1[0].Section25_2[0].From_Datefield_Name_2[7]",
+        "page": 117,
+        "label": "Provide an explanation of the circumstances of the debarment.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 378.26,
+          "y": 384.62,
+          "width": 211.5,
+          "height": 29.24
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_7_"
+      },
+      {
+        "id": "16476 0 R",
+        "name": "form1[0].Section25_2[0].RadioButtonList[0]",
+        "page": 117,
+        "label": "RadioButtonList",
+        "type": "PDFRadioGroup",
+        "options": [],
+        "rect": {
+          "x": 452.83,
+          "y": 704.45,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__RadioButtonList_0_"
+      },
+      {
+        "id": "15734 0 R",
+        "name": "form1[0].Section25_2[0].From_Datefield_Name_2[8]",
+        "page": 117,
+        "label": "Complete the following if you responded 'Yes' to having EVER had a security clearance eligibility/access authorization denied, suspended, or revoked. Entry #1. Provide the date security clearance eligibility/access authorization was denied, suspended or revoked. (Month/Year)",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 36,
+          "y": 607.5,
+          "width": 150.75,
+          "height": 19.92
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_8_"
+      },
+      {
+        "id": "15733 0 R",
+        "name": "form1[0].Section25_2[0].#field[14]",
+        "value": false,
+        "page": 117,
+        "label": "Estimate",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 188.75,
+          "y": 612.74,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0___field_14_"
+      },
+      {
+        "id": "15732 0 R",
+        "name": "form1[0].Section25_2[0].From_Datefield_Name_2[9]",
+        "page": 117,
+        "label": "Provide the name of the agency that took the action.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 222.75,
+          "y": 607.5,
+          "width": 146.03,
+          "height": 29.24
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_9_"
+      },
+      {
+        "id": "15731 0 R",
+        "name": "form1[0].Section25_2[0].From_Datefield_Name_2[10]",
+        "page": 117,
+        "label": "Provide an explanation of the circumstances of the denial,suspension or revocation action.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 378,
+          "y": 607.5,
+          "width": 211.5,
+          "height": 29.24
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_10_"
+      },
+      {
+        "id": "16477 0 R",
+        "name": "form1[0].Section25_2[0].RadioButtonList[1]",
+        "page": 117,
+        "label": "RadioButtonList",
+        "type": "PDFRadioGroup",
+        "options": [],
+        "rect": {
+          "x": 434.83,
+          "y": 526.7,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__RadioButtonList_1_"
+      },
+      {
+        "id": "15749 0 R",
+        "name": "form1[0].Section25_2[0].From_Datefield_Name_2[11]",
+        "page": 117,
+        "label": "Provide an explanation of the circumstances of the debarment.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 378.26,
+          "y": 445.5,
+          "width": 211.5,
+          "height": 29.24
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_11_"
+      }
+    ]
+  },
+  "fieldsByEntry": {
+    "default": [
+      {
+        "id": "15728 0 R",
+        "name": "form1[0].Section25[0].TextField11[0]",
+        "page": 116,
+        "label": "If foreign government selected, provide name of government.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 421.79,
+          "y": 614.99,
+          "width": 170.24,
+          "height": 15.75
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__TextField11_0_"
+      },
+      {
+        "id": "15727 0 R",
+        "name": "form1[0].Section25[0].From_Datefield_Name_2[0]",
+        "page": 116,
+        "label": "Date the investigation was completed (Month/Year)",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 36,
+          "y": 513.88,
+          "width": 180,
+          "height": 17.73
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__From_Datefield_Name_2_0_"
+      },
+      {
+        "id": "15726 0 R",
+        "name": "form1[0].Section25[0].#field[4]",
+        "value": false,
+        "page": 116,
+        "label": "Estimate",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 515.39,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_4_"
+      },
+      {
+        "id": "15725 0 R",
+        "name": "form1[0].Section25[0].#field[5]",
+        "value": false,
+        "page": 116,
+        "label": "Date the investigation was completed (Month/Year). I don't know",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 528.68,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_5_"
+      },
+      {
+        "id": "15724 0 R",
+        "name": "form1[0].Section25[0].From_Datefield_Name_2[1]",
+        "page": 116,
+        "label": "Provide the date clearance eligibility/access was granted. (Month/Year)",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 283.5,
+          "y": 513.88,
+          "width": 249.75,
+          "height": 17.73
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__From_Datefield_Name_2_1_"
+      },
+      {
+        "id": "15723 0 R",
+        "name": "form1[0].Section25[0].#field[7]",
+        "value": false,
+        "page": 116,
+        "label": "Estimate",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 535.25,
+          "y": 515.39,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_7_"
+      },
+      {
+        "id": "15722 0 R",
+        "name": "form1[0].Section25[0].#field[8]",
+        "value": false,
+        "page": 116,
+        "label": "Provide the date clearance eligibility/access was granted. (Month/Year). I don't know",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 535.25,
+          "y": 528.68,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_8_"
+      },
+      {
+        "id": "15721 0 R",
+        "name": "form1[0].Section25[0].TextField11[1]",
+        "page": 116,
+        "label": "If foreign government selected, provide name of government.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 421.11,
+          "y": 362.99,
+          "width": 172.75,
+          "height": 15.75
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__TextField11_1_"
+      },
+      {
+        "id": "15720 0 R",
+        "name": "form1[0].Section25[0].From_Datefield_Name_2[2]",
+        "page": 116,
+        "label": "Date the investigation was completed (Month/Year)",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 34.02,
+          "y": 261.88,
+          "width": 180,
+          "height": 17.73
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__From_Datefield_Name_2_2_"
+      },
+      {
+        "id": "15719 0 R",
+        "name": "form1[0].Section25[0].#field[11]",
+        "value": false,
+        "page": 116,
+        "label": "Estimate",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 263.39,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_11_"
+      },
+      {
+        "id": "15718 0 R",
+        "name": "form1[0].Section25[0].#field[12]",
+        "value": false,
+        "page": 116,
+        "label": "Date the investigation was completed (Month/Year). I don't know",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 276.68,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_12_"
+      },
+      {
+        "id": "15717 0 R",
+        "name": "form1[0].Section25[0].From_Datefield_Name_2[3]",
+        "page": 116,
+        "label": "Provide the date clearance eligibility/access was granted. (Month/Year)",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 281.52,
+          "y": 261.88,
+          "width": 249.75,
+          "height": 17.73
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__From_Datefield_Name_2_3_"
+      },
+      {
+        "id": "15716 0 R",
+        "name": "form1[0].Section25[0].#field[14]",
+        "value": false,
+        "page": 116,
+        "label": "Estimate",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 533.28,
+          "y": 263.39,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_14_"
+      },
+      {
+        "id": "15715 0 R",
+        "name": "form1[0].Section25[0].#field[15]",
+        "value": false,
+        "page": 116,
+        "label": "Provide the date clearance eligibility/access was granted. (Month/Year). I don't know",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 533.27,
+          "y": 276.68,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_15_"
+      },
+      {
+        "id": "15714 0 R",
+        "name": "form1[0].Section25[0].#field[16]",
+        "value": false,
+        "page": 116,
+        "label": "Entry #2. Provide the investigating agency: U.S. Department of Defense",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 35.9,
+          "y": 380.99,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_16_"
+      },
+      {
+        "id": "15713 0 R",
+        "name": "form1[0].Section25[0].#field[17]",
+        "value": false,
+        "page": 116,
+        "label": "U.S. Department of State",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 35.9,
+          "y": 366.36,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_17_"
+      },
+      {
+        "id": "15712 0 R",
+        "name": "form1[0].Section25[0].#field[18]",
+        "value": false,
+        "page": 116,
+        "label": "U.S. Office of Personnel Management",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 35.9,
+          "y": 351.74,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_18_"
+      },
+      {
+        "id": "15711 0 R",
+        "name": "form1[0].Section25[0].#field[19]",
+        "value": false,
+        "page": 116,
+        "label": "Federal Bureau of Investigation",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 35.9,
+          "y": 337.12,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_19_"
+      },
+      {
+        "id": "15710 0 R",
+        "name": "form1[0].Section25[0].#field[20]",
+        "value": false,
+        "page": 116,
+        "label": "U.S. Department of Treasury",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 35.9,
+          "y": 322.49,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_20_"
+      },
+      {
+        "id": "15709 0 R",
+        "name": "form1[0].Section25[0].#field[21]",
+        "value": false,
+        "page": 116,
+        "label": "U.S. Department of Homeland Security",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 380.99,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_21_"
+      },
+      {
+        "id": "15708 0 R",
+        "name": "form1[0].Section25[0].#field[22]",
+        "value": false,
+        "page": 116,
+        "label": "Foreign government ",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 366.36,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_22_"
+      },
+      {
+        "id": "15707 0 R",
+        "name": "form1[0].Section25[0].#field[23]",
+        "value": false,
+        "page": 116,
+        "label": "I don't know",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 351.74,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_23_"
+      },
+      {
+        "id": "15706 0 R",
+        "name": "form1[0].Section25[0].#field[24]",
+        "value": false,
+        "page": 116,
+        "label": "Other (Provide explanation)",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 337.12,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_24_"
+      },
+      {
+        "id": "15705 0 R",
+        "name": "form1[0].Section25[0].TextField11[2]",
+        "page": 116,
+        "label": "If OTHER, provide explanation.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 340.73,
+          "y": 333.74,
+          "width": 250.8,
+          "height": 15.75
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__TextField11_2_"
+      },
+      {
+        "id": "15704 0 R",
+        "name": "form1[0].Section25[0].From_Datefield_Name_2[4]",
+        "page": 116,
+        "label": "Provide the name of agency that issued the clearance eligibility/access if different from the investigating agency.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 34.02,
+          "y": 290.25,
+          "width": 558,
+          "height": 18.31
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__From_Datefield_Name_2_4_"
+      },
+      {
+        "id": "15703 0 R",
+        "name": "form1[0].Section25[0].#field[27]",
+        "value": false,
+        "page": 116,
+        "label": "Provide the level of clearance eligibility/access granted: None",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 35.9,
+          "y": 232.49,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_27_"
+      },
+      {
+        "id": "15702 0 R",
+        "name": "form1[0].Section25[0].#field[28]",
+        "value": false,
+        "page": 116,
+        "label": "Confidential",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 35.9,
+          "y": 217.86,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_28_"
+      },
+      {
+        "id": "15701 0 R",
+        "name": "form1[0].Section25[0].#field[29]",
+        "value": false,
+        "page": 116,
+        "label": "Secret",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 35.9,
+          "y": 203.24,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_29_"
+      },
+      {
+        "id": "15700 0 R",
+        "name": "form1[0].Section25[0].#field[30]",
+        "value": false,
+        "page": 116,
+        "label": "Top Secret",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 35.9,
+          "y": 188.62,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_30_"
+      },
+      {
+        "id": "15699 0 R",
+        "name": "form1[0].Section25[0].#field[31]",
+        "value": false,
+        "page": 116,
+        "label": "Sensitive Compartmented Information (SCI)",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 35.9,
+          "y": 173.99,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_31_"
+      },
+      {
+        "id": "15698 0 R",
+        "name": "form1[0].Section25[0].#field[32]",
+        "value": false,
+        "page": 116,
+        "label": "Q",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 232.49,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_32_"
+      },
+      {
+        "id": "15697 0 R",
+        "name": "form1[0].Section25[0].#field[33]",
+        "value": false,
+        "page": 116,
+        "label": "L",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 217.86,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_33_"
+      },
+      {
+        "id": "15696 0 R",
+        "name": "form1[0].Section25[0].#field[34]",
+        "value": false,
+        "page": 116,
+        "label": "I don't know",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 203.24,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_34_"
+      },
+      {
+        "id": "15695 0 R",
+        "name": "form1[0].Section25[0].#field[35]",
+        "value": false,
+        "page": 116,
+        "label": "Other (Provide explanation)",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 173.99,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_35_"
+      },
+      {
+        "id": "15694 0 R",
+        "name": "form1[0].Section25[0].TextField11[3]",
+        "page": 116,
+        "label": "If OTHER, provide explanation.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 339.18,
+          "y": 171.59,
+          "width": 252.85,
+          "height": 12.19
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__TextField11_3_"
+      },
+      {
+        "id": "15693 0 R",
+        "name": "form1[0].Section25[0].#field[37]",
+        "value": false,
+        "page": 116,
+        "label": "Issued by foreign country",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 188.62,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_37_"
+      },
+      {
+        "id": "16478 0 R",
+        "name": "form1[0].Section25[0].RadioButtonList[0]",
+        "page": 116,
+        "label": "RadioButtonList",
+        "type": "PDFRadioGroup",
+        "options": [],
+        "rect": {
+          "x": 452.83,
+          "y": 704.45,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__RadioButtonList_0_"
+      },
+      {
+        "id": "15690 0 R",
+        "name": "form1[0].Section25[0].#field[38]",
+        "value": false,
+        "page": 116,
+        "label": "Complete the following if you responded 'Yes' to the U.S. Government (or a foreign government) having investigated your background and/or having granted you a security clearance eligibility/access. Entry #1. Provide the investigating agency: U.S. Department of Defense",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 37.88,
+          "y": 632.99,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_38_"
+      },
+      {
+        "id": "15689 0 R",
+        "name": "form1[0].Section25[0].#field[39]",
+        "value": false,
+        "page": 116,
+        "label": "U.S. Department of State",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 37.88,
+          "y": 618.36,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_39_"
+      },
+      {
+        "id": "15688 0 R",
+        "name": "form1[0].Section25[0].#field[40]",
+        "value": false,
+        "page": 116,
+        "label": "U.S. Office of Personnel Management",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 37.88,
+          "y": 603.74,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_40_"
+      },
+      {
+        "id": "15687 0 R",
+        "name": "form1[0].Section25[0].#field[41]",
+        "value": false,
+        "page": 116,
+        "label": "Federal Bureau of Investigation",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 37.88,
+          "y": 589.12,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_41_"
+      },
+      {
+        "id": "15686 0 R",
+        "name": "form1[0].Section25[0].#field[42]",
+        "value": false,
+        "page": 116,
+        "label": "U.S. Department of Treasury",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 37.88,
+          "y": 574.49,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_42_"
+      },
+      {
+        "id": "15685 0 R",
+        "name": "form1[0].Section25[0].#field[43]",
+        "value": false,
+        "page": 116,
+        "label": "U.S. Department of Homeland Security",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 632.99,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_43_"
+      },
+      {
+        "id": "15684 0 R",
+        "name": "form1[0].Section25[0].#field[44]",
+        "value": false,
+        "page": 116,
+        "label": "Foreign government ",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 618.36,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_44_"
+      },
+      {
+        "id": "15683 0 R",
+        "name": "form1[0].Section25[0].#field[45]",
+        "value": false,
+        "page": 116,
+        "label": "I don't know",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 603.74,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_45_"
+      },
+      {
+        "id": "15682 0 R",
+        "name": "form1[0].Section25[0].#field[46]",
+        "value": false,
+        "page": 116,
+        "label": "Other (Provide explanation)",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 589.12,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_46_"
+      },
+      {
+        "id": "15681 0 R",
+        "name": "form1[0].Section25[0].TextField11[4]",
+        "page": 116,
+        "label": "If OTHER, provide explanation.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 340.73,
+          "y": 585.74,
+          "width": 251.29,
+          "height": 15.75
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__TextField11_4_"
+      },
+      {
+        "id": "15680 0 R",
+        "name": "form1[0].Section25[0].From_Datefield_Name_2[5]",
+        "page": 116,
+        "label": "Provide the name of agency that issued the clearance eligibility/access if different from the investigating agency.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 36,
+          "y": 542.25,
+          "width": 558,
+          "height": 18.31
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__From_Datefield_Name_2_5_"
+      },
+      {
+        "id": "15679 0 R",
+        "name": "form1[0].Section25[0].#field[49]",
+        "value": false,
+        "page": 116,
+        "label": "Provide the level of clearance eligibility/access granted: None",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 37.88,
+          "y": 484.49,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_49_"
+      },
+      {
+        "id": "15678 0 R",
+        "name": "form1[0].Section25[0].#field[50]",
+        "value": false,
+        "page": 116,
+        "label": "Confidential",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 37.88,
+          "y": 469.86,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_50_"
+      },
+      {
+        "id": "15677 0 R",
+        "name": "form1[0].Section25[0].#field[51]",
+        "value": false,
+        "page": 116,
+        "label": "Secret",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 37.88,
+          "y": 455.24,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_51_"
+      },
+      {
+        "id": "15676 0 R",
+        "name": "form1[0].Section25[0].#field[52]",
+        "value": false,
+        "page": 116,
+        "label": "Top Secret",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 37.88,
+          "y": 440.62,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_52_"
+      },
+      {
+        "id": "15675 0 R",
+        "name": "form1[0].Section25[0].#field[53]",
+        "value": false,
+        "page": 116,
+        "label": "Sensitive Compartmented Information (SCI)",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 37.88,
+          "y": 425.99,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_53_"
+      },
+      {
+        "id": "15674 0 R",
+        "name": "form1[0].Section25[0].#field[54]",
+        "value": false,
+        "page": 116,
+        "label": "Q",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 484.49,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_54_"
+      },
+      {
+        "id": "15673 0 R",
+        "name": "form1[0].Section25[0].#field[55]",
+        "value": false,
+        "page": 116,
+        "label": "L",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 469.86,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_55_"
+      },
+      {
+        "id": "15672 0 R",
+        "name": "form1[0].Section25[0].#field[56]",
+        "value": false,
+        "page": 116,
+        "label": "I don't know",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 455.24,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_56_"
+      },
+      {
+        "id": "15671 0 R",
+        "name": "form1[0].Section25[0].#field[57]",
+        "value": false,
+        "page": 116,
+        "label": "Other (Provide explanation)",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 425.99,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_57_"
+      },
+      {
+        "id": "15670 0 R",
+        "name": "form1[0].Section25[0].TextField11[5]",
+        "page": 116,
+        "label": "If OTHER, provide explanation.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 340.39,
+          "y": 422.61,
+          "width": 251.82,
+          "height": 15.75
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__TextField11_5_"
+      },
+      {
+        "id": "15669 0 R",
+        "name": "form1[0].Section25[0].#field[59]",
+        "value": false,
+        "page": 116,
+        "label": "Issued by foreign country",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 220.25,
+          "y": 440.62,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0___field_59_"
+      },
+      {
+        "id": "15668 0 R",
+        "name": "form1[0].Section25[0].TextField11[6]",
+        "page": 116,
+        "label": "If U.S. Department of Treasury, provide name of bureau",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 258.35,
+          "y": 571.12,
+          "width": 333.87,
+          "height": 15.75
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__TextField11_6_"
+      },
+      {
+        "id": "15667 0 R",
+        "name": "form1[0].Section25[0].TextField11[7]",
+        "page": 116,
+        "label": "If U.S. Department of Treasury, provide name of bureau",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 258.35,
+          "y": 319.12,
+          "width": 334.54,
+          "height": 15.75
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_0__TextField11_7_"
+      },
+      {
+        "id": "15747 0 R",
+        "name": "form1[0].Section25_2[0].From_Datefield_Name_2[0]",
+        "page": 117,
+        "label": "Entry #2. Provide the date security clearance eligibility/access authorization was denied, suspended or revoked. (Month/Year)",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 36.13,
+          "y": 546.75,
+          "width": 150.75,
+          "height": 19.92
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_0_"
+      },
+      {
+        "id": "15746 0 R",
+        "name": "form1[0].Section25_2[0].#field[3]",
+        "value": false,
+        "page": 117,
+        "label": "Estimate",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 188.87,
+          "y": 551.99,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0___field_3_"
+      },
+      {
+        "id": "15745 0 R",
+        "name": "form1[0].Section25_2[0].From_Datefield_Name_2[1]",
+        "page": 117,
+        "label": "Provide the name of the agency that took the action.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 222.87,
+          "y": 546.75,
+          "width": 146.03,
+          "height": 29.24
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_1_"
+      },
+      {
+        "id": "15744 0 R",
+        "name": "form1[0].Section25_2[0].From_Datefield_Name_2[2]",
+        "page": 117,
+        "label": "Provide an explanation of the circumstances of the denial,suspension or revocation action.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 378.12,
+          "y": 546.75,
+          "width": 211.5,
+          "height": 29.24
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_2_"
+      },
+      {
+        "id": "15743 0 R",
+        "name": "form1[0].Section25_2[0].From_Datefield_Name_2[3]",
+        "page": 117,
+        "label": "Complete the following if you responded 'Yes' to having EVER been debarred from government employment. Entry #1. Provide the name of the government agency taking debarment action. ",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 36,
+          "y": 445.5,
+          "width": 148.5,
+          "height": 29.24
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_3_"
+      },
+      {
+        "id": "15742 0 R",
+        "name": "form1[0].Section25_2[0].#field[7]",
+        "value": false,
+        "page": 117,
+        "label": "Estimate",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 343.74,
+          "y": 450.74,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0___field_7_"
+      },
+      {
+        "id": "15741 0 R",
+        "name": "form1[0].Section25_2[0].From_Datefield_Name_2[4]",
+        "page": 117,
+        "label": "Provide the date the debarment occurred. (Month/Year)",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 193.5,
+          "y": 445.5,
+          "width": 148.68,
+          "height": 29.68
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_4_"
+      },
+      {
+        "id": "15740 0 R",
+        "name": "form1[0].Section25_2[0].From_Datefield_Name_2[5]",
+        "page": 117,
+        "label": "Entry #2. Provide the name of the government agency taking debarment action.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 36,
+          "y": 384.62,
+          "width": 148.5,
+          "height": 29.24
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_5_"
+      },
+      {
+        "id": "15739 0 R",
+        "name": "form1[0].Section25_2[0].#field[10]",
+        "value": false,
+        "page": 117,
+        "label": "Estimate",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 343.74,
+          "y": 389.86,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0___field_10_"
+      },
+      {
+        "id": "15738 0 R",
+        "name": "form1[0].Section25_2[0].From_Datefield_Name_2[6]",
+        "page": 117,
+        "label": "Provide the date the debarment occurred. (Month/Year)",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 193.5,
+          "y": 384.62,
+          "width": 148.68,
+          "height": 29.68
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_6_"
+      },
+      {
+        "id": "15737 0 R",
+        "name": "form1[0].Section25_2[0].From_Datefield_Name_2[7]",
+        "page": 117,
+        "label": "Provide an explanation of the circumstances of the debarment.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 378.26,
+          "y": 384.62,
+          "width": 211.5,
+          "height": 29.24
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_7_"
+      },
+      {
+        "id": "16476 0 R",
+        "name": "form1[0].Section25_2[0].RadioButtonList[0]",
+        "page": 117,
+        "label": "RadioButtonList",
+        "type": "PDFRadioGroup",
+        "options": [],
+        "rect": {
+          "x": 452.83,
+          "y": 704.45,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__RadioButtonList_0_"
+      },
+      {
+        "id": "15734 0 R",
+        "name": "form1[0].Section25_2[0].From_Datefield_Name_2[8]",
+        "page": 117,
+        "label": "Complete the following if you responded 'Yes' to having EVER had a security clearance eligibility/access authorization denied, suspended, or revoked. Entry #1. Provide the date security clearance eligibility/access authorization was denied, suspended or revoked. (Month/Year)",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 36,
+          "y": 607.5,
+          "width": 150.75,
+          "height": 19.92
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_8_"
+      },
+      {
+        "id": "15733 0 R",
+        "name": "form1[0].Section25_2[0].#field[14]",
+        "value": false,
+        "page": 117,
+        "label": "Estimate",
+        "type": "PDFCheckBox",
+        "options": [],
+        "rect": {
+          "x": 188.75,
+          "y": 612.74,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0___field_14_"
+      },
+      {
+        "id": "15732 0 R",
+        "name": "form1[0].Section25_2[0].From_Datefield_Name_2[9]",
+        "page": 117,
+        "label": "Provide the name of the agency that took the action.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 222.75,
+          "y": 607.5,
+          "width": 146.03,
+          "height": 29.24
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_9_"
+      },
+      {
+        "id": "15731 0 R",
+        "name": "form1[0].Section25_2[0].From_Datefield_Name_2[10]",
+        "page": 117,
+        "label": "Provide an explanation of the circumstances of the denial,suspension or revocation action.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 378,
+          "y": 607.5,
+          "width": 211.5,
+          "height": 29.24
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_10_"
+      },
+      {
+        "id": "16477 0 R",
+        "name": "form1[0].Section25_2[0].RadioButtonList[1]",
+        "page": 117,
+        "label": "RadioButtonList",
+        "type": "PDFRadioGroup",
+        "options": [],
+        "rect": {
+          "x": 434.83,
+          "y": 526.7,
+          "width": 9,
+          "height": 9
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__RadioButtonList_1_"
+      },
+      {
+        "id": "15749 0 R",
+        "name": "form1[0].Section25_2[0].From_Datefield_Name_2[11]",
+        "page": 117,
+        "label": "Provide an explanation of the circumstances of the debarment.",
+        "type": "PDFTextField",
+        "options": [],
+        "rect": {
+          "x": 378.26,
+          "y": 445.5,
+          "width": 211.5,
+          "height": 29.24
+        },
+        "section": 25,
+        "confidence": 0.99,
+        "wasMovedByHealing": false,
+        "isExplicitlyDetected": true,
+        "uniqueId": "section_25_field_form1_0__Section25_2_0__From_Datefield_Name_2_11_"
+      }
+    ]
+  },
+  "statistics": {
+    "fieldTypes": {
+      "PDFTextField": 26,
+      "PDFCheckBox": 50,
+      "PDFRadioGroup": 3
+    },
+    "confidenceDistribution": {
+      "high": 79,
+      "medium": 0,
+      "low": 0
+    }
+  }
+}

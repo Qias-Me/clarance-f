@@ -26,6 +26,7 @@ export interface CommandLineOptions {
   generateReport?: boolean;
   force?: boolean;
   verbose?: boolean;
+  exportSections?: boolean;
 }
 
 /**
@@ -85,6 +86,10 @@ export function configureCommandLineParser(): Command {
     .option(
       "--verbose",
       "Show detailed output"
+    )
+    .option(
+      "--export-sections",
+      "Export each section to separate JSON files in output/sections/ directory"
     );
 
   program.addHelpText(
@@ -94,6 +99,7 @@ Examples:
   $ sf86-sectionizer --pdf-path ./example.pdf
   $ sf86-sectionizer --input-fields ./extracted-fields.json --output-dir ./output
   $ sf86-sectionizer -p ./example.pdf --no-self-healing --log-level debug
+  $ sf86-sectionizer -p ./example.pdf --export-sections --output-dir ./output
 `
   );
 
@@ -123,7 +129,8 @@ export function parseCommandLineArgs(argv?: string[]): CommandLineOptions {
     logLevel: opts.logLevel,
     generateReport: !!opts.generateReport,
     force: !!opts.force,
-    verbose: !!opts.verbose
+    verbose: !!opts.verbose,
+    exportSections: !!opts.exportSections
   };
 
   return options;

@@ -1,6 +1,6 @@
 /**
  * Rules for Section 9: Citizenship
- * Generated: 2025-05-28T22:50:54.329Z
+ * Generated: 2025-05-28T23:19:08.563Z
  */
 
 import type { MatchRule } from '../types.js';
@@ -12,7 +12,7 @@ export const sectionInfo = {
   section: 9,
   name: "Citizenship",
   ruleCount: 10,
-  lastUpdated: "2025-05-28T22:50:54.329Z"
+  lastUpdated: "2025-05-28T23:19:08.563Z"
 };
 
 /**

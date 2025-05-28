@@ -1,0 +1,187 @@
+{
+  "exportDate": "2025-05-28T23:19:11.297Z",
+  "totalSections": 30,
+  "totalFiles": 30,
+  "sections": [
+    {
+      "sectionId": 1,
+      "sectionName": "Information About You",
+      "fieldCount": 4,
+      "fileName": "section-1.json"
+    },
+    {
+      "sectionId": 2,
+      "sectionName": "Citizenship",
+      "fieldCount": 2,
+      "fileName": "section-2.json"
+    },
+    {
+      "sectionId": 3,
+      "sectionName": "Where You Have Lived",
+      "fieldCount": 4,
+      "fileName": "section-3.json"
+    },
+    {
+      "sectionId": 4,
+      "sectionName": "Activities",
+      "fieldCount": 138,
+      "fileName": "section-4.json"
+    },
+    {
+      "sectionId": 5,
+      "sectionName": "Education",
+      "fieldCount": 45,
+      "fileName": "section-5.json"
+    },
+    {
+      "sectionId": 6,
+      "sectionName": "Employment Activities",
+      "fieldCount": 6,
+      "fileName": "section-6.json"
+    },
+    {
+      "sectionId": 7,
+      "sectionName": "Where You Have Lived",
+      "fieldCount": 17,
+      "fileName": "section-7.json"
+    },
+    {
+      "sectionId": 8,
+      "sectionName": "U.S. Passport Information",
+      "fieldCount": 10,
+      "fileName": "section-8.json"
+    },
+    {
+      "sectionId": 9,
+      "sectionName": "Citizenship",
+      "fieldCount": 78,
+      "fileName": "section-9.json"
+    },
+    {
+      "sectionId": 10,
+      "sectionName": "Relatives and Associates",
+      "fieldCount": 122,
+      "fileName": "section-10.json"
+    },
+    {
+      "sectionId": 11,
+      "sectionName": "Where You Have Lived",
+      "fieldCount": 252,
+      "fileName": "section-11.json"
+    },
+    {
+      "sectionId": 12,
+      "sectionName": "Where You Went to School",
+      "fieldCount": 150,
+      "fileName": "section-12.json"
+    },
+    {
+      "sectionId": 13,
+      "sectionName": "Employment Activities",
+      "fieldCount": 1086,
+      "fileName": "section-13.json"
+    },
+    {
+      "sectionId": 14,
+      "sectionName": "Military History",
+      "fieldCount": 5,
+      "fileName": "section-14.json"
+    },
+    {
+      "sectionId": 15,
+      "sectionName": "Military History",
+      "fieldCount": 95,
+      "fileName": "section-15.json"
+    },
+    {
+      "sectionId": 16,
+      "sectionName": "Foreign Activities",
+      "fieldCount": 154,
+      "fileName": "section-16.json"
+    },
+    {
+      "sectionId": 17,
+      "sectionName": "Marital Status",
+      "fieldCount": 332,
+      "fileName": "section-17.json"
+    },
+    {
+      "sectionId": 18,
+      "sectionName": "Relatives and Associates",
+      "fieldCount": 964,
+      "fileName": "section-18.json"
+    },
+    {
+      "sectionId": 19,
+      "sectionName": "Foreign Activities",
+      "fieldCount": 277,
+      "fileName": "section-19.json"
+    },
+    {
+      "sectionId": 20,
+      "sectionName": "Foreign Activities",
+      "fieldCount": 790,
+      "fileName": "section-20.json"
+    },
+    {
+      "sectionId": 21,
+      "sectionName": "Psychological and Emotional Health",
+      "fieldCount": 486,
+      "fileName": "section-21.json"
+    },
+    {
+      "sectionId": 22,
+      "sectionName": "Police Record",
+      "fieldCount": 267,
+      "fileName": "section-22.json"
+    },
+    {
+      "sectionId": 23,
+      "sectionName": "Illegal Use of Drugs or Drug Activity",
+      "fieldCount": 191,
+      "fileName": "section-23.json"
+    },
+    {
+      "sectionId": 24,
+      "sectionName": "Use of Alcohol",
+      "fieldCount": 160,
+      "fileName": "section-24.json"
+    },
+    {
+      "sectionId": 25,
+      "sectionName": "Investigation and Clearance Record",
+      "fieldCount": 79,
+      "fileName": "section-25.json"
+    },
+    {
+      "sectionId": 26,
+      "sectionName": "Financial Record",
+      "fieldCount": 237,
+      "fileName": "section-26.json"
+    },
+    {
+      "sectionId": 27,
+      "sectionName": "Use of Information Technology Systems",
+      "fieldCount": 57,
+      "fileName": "section-27.json"
+    },
+    {
+      "sectionId": 28,
+      "sectionName": "Involvement in Non-Criminal Court Actions",
+      "fieldCount": 23,
+      "fileName": "section-28.json"
+    },
+    {
+      "sectionId": 29,
+      "sectionName": "Association Record",
+      "fieldCount": 141,
+      "fileName": "section-29.json"
+    },
+    {
+      "sectionId": 30,
+      "sectionName": "General Remarks",
+      "fieldCount": 25,
+      "fileName": "section-30.json"
+    }
+  ]
+}

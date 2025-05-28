@@ -11,22 +11,8 @@
 		"typecheck": "npm run cf-typegen && react-router typegen && tsc -b",
 		"validate-subsections": "ts-node scripts/analysis/subsectionValidation.ts",
 		"test": "vitest run",
-		"extract-form-fields": "tsx scripts/extractFormFields.ts",
-		"extract-fields-by-section": "tsx scripts/extractFieldsBySection.ts",
-		"fill-form": "tsx scripts/fillForm.ts",
-		"fill-section2": "tsx scripts/fillSection2.ts",
-		"validate-form-sections": "tsx scripts/validateFormSections.ts",
-		"playwright-demo": "tsx scripts/playwrightFormDemo.ts",
-		"generate-section-fillers": "tsx scripts/generateSectionFillers.ts",
-		"fill-all-sections": "tsx scripts/fillAllSections.ts",
-		"validate-form-coverage": "tsx scripts/validateFormCoverage.ts",
-		"achieve-100-percent-coverage": "tsx scripts/achieve100PercentCoverage.ts",
-		"validate-section-contexts": "tsx scripts/validateSectionContexts.ts",
-		"merge-context-updates": "tsx scripts/mergeContextUpdates.ts",
-		"generate-context-report": "tsx scripts/generateContextCoverageReport.ts",
 		"sectionizer:build": "tsc -p src/sectionizer/tsconfig.json",
-		"sectionizer": "tsx src/sectionizer/index.ts",
-		"show-stats": "tsx scripts/show-section-statistics.ts"
+		"sectionizer": "tsx src/sectionizer/index.ts"
 	},
 	"dependencies": {
 		"@reduxjs/toolkit": "^2.7.0",

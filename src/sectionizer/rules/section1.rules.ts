@@ -1,6 +1,6 @@
 /**
  * Rules for Section 1: Full Name
- * Generated: 2025-05-28T22:50:54.325Z
+ * Generated: 2025-05-28T23:19:08.561Z
  */
 
 import type { MatchRule } from '../types.js';
@@ -12,7 +12,7 @@ export const sectionInfo = {
   section: 1,
   name: "Full Name",
   ruleCount: 4,
-  lastUpdated: "2025-05-28T22:50:54.325Z"
+  lastUpdated: "2025-05-28T23:19:08.561Z"
 };
 
 /**

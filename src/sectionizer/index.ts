@@ -148,6 +148,9 @@ import {
 } from "./utils/enhanced-self-healingv1.js";
 import { EnhancedSelfHealer } from "./utils/enhanced-self-healing.js";
 
+// Import section export functionality
+import { exportSectionFiles, type SectionExportOptions } from "./utils/section-exporter.js";
+
 // Extend the CategorizedField to include our additional properties
 interface CategorizedField extends BaseCategorizedField {
   coordinates?: {
@@ -2494,6 +2497,34 @@ async function main() {
       };
       fs.writeFileSync(statsFile, JSON.stringify(stats, null, 2));
       console.log(`Wrote section statistics to ${statsFile}`);
+
+      // Export sections to separate files if requested
+      if (options.exportSections) {
+        try {
+          log("info", "Exporting sections to separate JSON files...");
+
+          const exportOptions: SectionExportOptions = {
+            includeUncategorized: true,
+            createEmptyFiles: false,
+            includeStatistics: true
+          };
+
+          const exportResult = await exportSectionFiles(
+            improvedCategorized,
+            outputPath,
+            exportOptions
+          );
+
+          if (exportResult.errors.length > 0) {
+            log("warn", `Section export completed with ${exportResult.errors.length} errors:`);
+            exportResult.errors.forEach(error => log("warn", `  - ${error}`));
+          } else {
+            log("success", `Successfully exported ${exportResult.sectionsExported} sections to ${exportResult.filesCreated.length} files`);
+          }
+        } catch (error) {
+          log("error", `Failed to export sections: ${error}`);
+        }
+      }
     }
 
     // Log success

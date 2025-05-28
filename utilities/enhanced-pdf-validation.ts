@@ -655,54 +655,8 @@ function categorizeSections1to6Field(fieldName: string, fieldLabel?: string, fie
   return { section: 6, confidence: 0.6 };
 }
 
-// Define these functions locally instead of importing from a non-existent module
-function saveSectionSummaryToAllDirectories(sectionSummary: any): void {
-  try {
-    // Save to reports directory
-    const reportsDir = path.join(__dirname, "../reports");
-    if (!fs.existsSync(reportsDir)) {
-      fs.mkdirSync(reportsDir, { recursive: true });
-    }
-    const reportPath = path.join(reportsDir, "section-summary.json");
-    fs.writeFileSync(reportPath, JSON.stringify(sectionSummary, null, 2));
-    
-    // Save to section-data directory
-    const sectionDataDir = path.join(__dirname, "../section-data");
-    if (!fs.existsSync(sectionDataDir)) {
-      fs.mkdirSync(sectionDataDir, { recursive: true });
-    }
-    const sectionDataPath = path.join(sectionDataDir, "section-summary.json");
-    fs.writeFileSync(sectionDataPath, JSON.stringify(sectionSummary, null, 2));
-    
-    console.log(`Saved section summary to multiple directories`);
-  } catch (error) {
-    console.error("Error saving section summary:", error);
-  }
-}
 
-function saveUnidentifiedFieldsToAllDirectories(unidentifiedData: any): void {
-  try {
-    // Save to reports directory
-    const reportsDir = path.join(__dirname, "./reports");
-    if (!fs.existsSync(reportsDir)) {
-      fs.mkdirSync(reportsDir, { recursive: true });
-    }
-    const reportPath = path.join(reportsDir, "unidentified-fields.json");
-    fs.writeFileSync(reportPath, JSON.stringify(unidentifiedData, null, 2));
-    
-    // Save to section-data directory
-    const sectionDataDir = path.join(__dirname, "./section-data");
-    if (!fs.existsSync(sectionDataDir)) {
-      fs.mkdirSync(sectionDataDir, { recursive: true });
-    }
-    const sectionDataPath = path.join(sectionDataDir, "unidentified-fields.json");
-    fs.writeFileSync(sectionDataPath, JSON.stringify(unidentifiedData, null, 2));
-    
-    console.log(`Saved unidentified fields to multiple directories`);
-  } catch (error) {
-    console.error("Error saving unidentified fields:", error);
-  }
-}
+
 
 /**
  * Main function to run enhanced PDF validation
@@ -1248,9 +1202,7 @@ async function main(): Promise<void> {
     fs.writeFileSync(summaryPath, JSON.stringify(sectionSummary, null, 2));
     console.log(`Saved section summary to ${summaryPath}`);
     
-    // Use the new function to save section summary to all directories
-    saveSectionSummaryToAllDirectories(sectionSummary);
-
+  
     // Create backward compatible format in section-data directory 
     const backwardCompatSummary: {
       sections: Record<number, { fieldCount: number }>
@@ -1289,9 +1241,7 @@ async function main(): Promise<void> {
         subsections: undefined // Make sure this field is included to match the expected type
       });
       
-      // Save updated summary with section 0 included - use our utility function
-      saveSectionSummaryToAllDirectories(sectionSummary);
-      
+    
       // Save unidentified fields separately for reference
       const unidentifiedFieldList = Object.entries(fieldCategories)
         .filter(([_, category]) => category.section === 0)
@@ -1300,18 +1250,11 @@ async function main(): Promise<void> {
           label: fieldLabels[fieldName] || fieldName
         }));
       
-      // Use our utility function to save unidentified fields to all locations
-      saveUnidentifiedFieldsToAllDirectories({
-        count: unidentifiedFields.length,
-        fields: unidentifiedFieldList
-      });
-      
+
       console.log(`Saved ${unidentifiedFields.length} unidentified fields to multiple directories`);
     }
     
-    // Save backward compatible format - use our utility function for this too
-    saveSectionSummaryToAllDirectories(backwardCompatSummary);
-
+  
     // Update the console output to use the aggregated data
     console.log("\nSection Distribution:");
     for (const section of sectionSummary) {
@@ -1656,7 +1599,6 @@ function organizeFieldsHierarchically(
 
   // First pass - collect expected field counts per section
   const expectedCounts: Record<number, number> = {};
-  const sectionSummary = getSectionSummary(); // Get section summary
   
   // Get sections that are over-allocated (have more fields than expected)
   const overallocatedSections: Record<number, { expected: number; actual: number; excess: number }> = {};
@@ -1669,36 +1611,7 @@ function organizeFieldsHierarchically(
     sectionCounts[section] = (sectionCounts[section] || 0) + 1;
   });
   
-  // Calculate deviations
-  if (sectionSummary && typeof sectionSummary === 'object' && sectionSummary.sections) {
-    Object.entries(sectionSummary.sections).forEach(([sectionId, sectionData]) => {
-      const section = parseInt(sectionId, 10);
-      if (!isNaN(section)) {
-        // Add type safety check
-        const sectionDataObj = sectionData as any;
-        if (sectionDataObj && typeof sectionDataObj === 'object' && 'fieldCount' in sectionDataObj) {
-          const expected = sectionDataObj.fieldCount;
-          const actual = sectionCounts[section] || 0;
-          
-          if (actual > expected * 1.2) { // Over by 20%
-            overallocatedSections[section] = {
-              expected,
-              actual,
-              excess: actual - expected
-            };
-          } else if (actual < expected * 0.8) { // Under by 20%
-            underallocatedSections[section] = {
-              expected,
-              actual,
-              missing: expected - actual
-            };
-          }
-          
-          expectedCounts[section] = expected;
-        }
-      }
-    });
-  }
+
 
   // Group fields by page
   fieldMetadata.forEach((field) => {
@@ -2238,79 +2151,7 @@ declare global {
   var cachedSectionSummary: any;
 }
 
-// Function to get section summary using global cache
-function getSectionSummary(): any {
-  try {
-    // If we already have a sectionSummary loaded for this run, return it
-    if (global.cachedSectionSummary) {
-      return global.cachedSectionSummary;
-    }
-    
-    // First, try to get section summary from our generated data in the reports directory
-    const reportSummaryPath = path.join(__dirname, '../reports/section-summary.json');
-    if (fs.existsSync(reportSummaryPath)) {
-      try {
-        const summaryContent = fs.readFileSync(reportSummaryPath, 'utf8');
-        const summaryData = JSON.parse(summaryContent);
-        
-        // Check if we have section data in expected format
-        if (Array.isArray(summaryData)) {
-          // Convert array format to sections object format
-          const sections: Record<string, any> = {};
-          summaryData.forEach(section => {
-            if (section.sectionId !== undefined && section.fieldCount !== undefined) {
-              sections[section.sectionId] = { fieldCount: section.fieldCount };
-            }
-          });
-          const result = { sections };
-          global.cachedSectionSummary = result;
-          return result;
-        } else if (summaryData && summaryData.sections) {
-          // Already in correct format
-          global.cachedSectionSummary = summaryData;
-          return summaryData;
-        }
-      } catch (error) {
-        console.error('Error parsing section summary from reports directory:', error);
-      }
-    }
-    
-    // Next, try section-data directory
-    const sectionDataPath = path.join(__dirname, '../section-data/section-summary.json');
-    if (fs.existsSync(sectionDataPath)) {
-      try {
-        const summaryContent = fs.readFileSync(sectionDataPath, 'utf8');
-        const summaryData = JSON.parse(summaryContent);
-        
-        // Similar conversion as above if needed
-        if (Array.isArray(summaryData)) {
-          // Convert array format to sections object format
-          const sections: Record<string, any> = {};
-          summaryData.forEach(section => {
-            if (section.sectionId !== undefined && section.fieldCount !== undefined) {
-              sections[section.sectionId] = { fieldCount: section.fieldCount };
-            }
-          });
-          const result = { sections };
-          global.cachedSectionSummary = result;
-          return result;
-        } else if (summaryData && summaryData.sections) {
-          // Already in correct format
-          global.cachedSectionSummary = summaryData;
-          return summaryData;
-        }
-      } catch (error) {
-        console.error('Error parsing section summary from section-data directory:', error);
-      }
-    }
-    
-    // Return empty structure if we couldn't find or parse the data
-    return { sections: {} };
-  } catch (error) {
-    console.error('Error in getSectionSummary:', error);
-    return { sections: {} };
-  }
-}
+
 
 // Run the main function
 main().catch(console.error);

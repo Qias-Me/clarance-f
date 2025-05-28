@@ -1,6 +1,6 @@
 /**
  * Rules for Section 4: Social Security Number
- * Generated: 2025-05-28T22:50:54.326Z
+ * Generated: 2025-05-28T23:19:08.562Z
  */
 
 import type { MatchRule } from '../types.js';
@@ -12,7 +12,7 @@ export const sectionInfo = {
   section: 4,
   name: "Social Security Number",
   ruleCount: 14,
-  lastUpdated: "2025-05-28T22:50:54.326Z"
+  lastUpdated: "2025-05-28T23:19:08.562Z"
 };
 
 /**
