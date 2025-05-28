@@ -1,6 +1,6 @@
 /**
  * Rules for Section 20: Foreign Business, Activities, Government Contacts
- * Generated: 2025-05-26T18:44:29.313Z
+ * Generated: 2025-05-28T17:48:23.448Z
  */
 
 import type { MatchRule } from '../types.js';
@@ -11,8 +11,8 @@ import type { MatchRule } from '../types.js';
 export const sectionInfo = {
   section: 20,
   name: "Foreign Business, Activities, Government Contacts",
-  ruleCount: 5,
-  lastUpdated: "2025-05-26T18:44:29.313Z"
+  ruleCount: 13,
+  lastUpdated: "2025-05-28T17:48:23.448Z"
 };
 
 /**
@@ -20,39 +20,95 @@ export const sectionInfo = {
  */
 export const rules: MatchRule[] = [
   {
-    pattern: /^form1[0]/,
+    pattern: /form1\\[0\\]\\.Section20/i,
     section: 20,
     subsection: undefined,
-    confidence: 0.85,
-    description: "Fields starting with form1[0] belong to section 20",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 20",
   },
   {
-    pattern: /date/i,
+    pattern: /form1\\[0\\]\\.section20/i,
     section: 20,
     subsection: undefined,
-    confidence: 0.75,
-    description: "date fields belong to section 20",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 20",
   },
   {
-    pattern: /radio/i,
+    pattern: /foreign.*business/i,
     section: 20,
     subsection: undefined,
-    confidence: 0.75,
-    description: "radio fields belong to section 20",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 20",
   },
   {
-    pattern: /text/i,
+    pattern: /foreign.*government/i,
     section: 20,
     subsection: undefined,
-    confidence: 0.75,
-    description: "text fields belong to section 20",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 20",
   },
   {
-    pattern: /dropdown/i,
+    pattern: /foreign.*activity/i,
     section: 20,
     subsection: undefined,
-    confidence: 0.75,
-    description: "dropdown fields belong to section 20",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 20",
+  },
+  {
+    pattern: /foreign.*activities/i,
+    section: 20,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 20",
+  },
+  {
+    pattern: /foreignbus/i,
+    section: 20,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 20",
+  },
+  {
+    pattern: /foreigngov/i,
+    section: 20,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 20",
+  },
+  {
+    pattern: /overseas.*business/i,
+    section: 20,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 20",
+  },
+  {
+    pattern: /international.*business/i,
+    section: 20,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 20",
+  },
+  {
+    pattern: /diplomatic/i,
+    section: 20,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 20",
+  },
+  {
+    pattern: /embassy/i,
+    section: 20,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 20",
+  },
+  {
+    pattern: /consulate/i,
+    section: 20,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 20",
   }
 ];
 

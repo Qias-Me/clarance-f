@@ -477,6 +477,34 @@ async generateJSON_fromPDF(
       const pages = this.getFieldPages(field, pdfDoc);
       const fieldId = field.ref.tag.toString();
       
+      // Extract label from acroField dict
+      let fieldLabel: string | undefined;
+      try {
+        const dict = field.acroField.dict;
+        const tuRaw = dict.get(PDFName.of("TU"));
+        if (tuRaw instanceof PDFString) {
+          fieldLabel = tuRaw.decodeText();
+        }
+        
+        // If TU not available, try TT (tooltip)
+        if (!fieldLabel) {
+          const ttRaw = dict.get(PDFName.of("TT"));
+          if (ttRaw instanceof PDFString) {
+            fieldLabel = ttRaw.decodeText();
+          }
+        }
+        
+        // If no label found, use a formatted version of the field name
+        if (!fieldLabel) {
+          fieldLabel = fieldName.replace(/([A-Z])/g, ' $1')
+            .replace(/^_*/, '')
+            .replace(/_/g, ' ')
+            .trim();
+        }
+      } catch (error) {
+        console.warn(`Could not extract label for field ${fieldName}: ${error}`);
+      }
+      
       // If we've already processed this fieldId, skip it
       if (seenFieldIds.has(fieldId)) {
         continue;
@@ -520,7 +548,7 @@ async generateJSON_fromPDF(
         // Log sample data
         const logSample = (type: string, currentLogged: number) => {
           if (currentLogged < SAMPLE_LOG_LIMIT) {
-            console.log(`  [Sample] Type: ${fieldType}, Name: ${fieldName}, Page: ${pageIndex !== null ? pageIndex + 1 : 'N/A'}, Coords: ${JSON.stringify(coordinates)}`);
+            console.log(`  [Sample] Type: ${fieldType}, Name: ${fieldName}, Label: ${fieldLabel}, Page: ${pageIndex !== null ? pageIndex + 1 : 'N/A'}, Coords: ${JSON.stringify(coordinates)}`);
             return currentLogged + 1;
           }
           return currentLogged;
@@ -547,6 +575,7 @@ async generateJSON_fromPDF(
           id: fieldId,
           name: fieldName,
           type: fieldType,
+          label: fieldLabel,
           value: this.getFieldValue(field),
           page: pageIndex !== null ? pageIndex + 1 : 1,
           rect: coordinates
@@ -560,6 +589,7 @@ async generateJSON_fromPDF(
             id: fieldId,
             name: fieldName,
             type: fieldType,
+            label: fieldLabel,
             value: this.getFieldValue(field),
             page: pages.length > 0 ? pages[0] + 1 : 1, // Use getFieldPages as fallback
             // Use -1 to indicate failure to extract actual coordinates

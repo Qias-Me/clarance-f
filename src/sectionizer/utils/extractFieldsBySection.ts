@@ -56,8 +56,10 @@ export interface CategorizedField extends PDFField {
   section: number; // Section number (1-30)
   subsection?: string; // Subsection identifier (e.g., "A", "B", "C", "1", "2", "3", "a", "b", "c", ..., "h", "H")
   entry?: number; // Entry index within subsection
+  uniqueId?: string; // Unique identifier for the field
   confidence: number; // Confidence score of categorization (0-1)
   wasMovedByHealing?: boolean; // Indicates if the field was moved by the self-healing process
+  isExplicitlyDetected?: boolean; // Indicates if the field was explicitly detected and should be protected from self-healing
 }
 
 // Default to the embedded PDF under src/ for easier local development
@@ -84,11 +86,11 @@ export async function extractFields(
   force: boolean = false
 ): Promise<{ fields: PDFField[], pdfDoc?: PDFDocument }> {
   console.log(`extractFields called with path: ${pdfPath}, force: ${force}`);
-  
+
   // Check if file exists
   if (!fs.existsSync(pdfPath)) {
     console.error(`File not found at ${pdfPath}`);
-    
+
     // Try fallback PDF path if the specified path doesn't exist
     if (fs.existsSync(FALLBACK_PDF_PATH)) {
       console.log(`Using fallback PDF path: ${FALLBACK_PDF_PATH}`);
@@ -102,19 +104,19 @@ export async function extractFields(
     // Check if it's a JSON file with pre-extracted fields
     if (pdfPath.toLowerCase().endsWith('.json')) {
       console.log(`Loading fields from JSON file: ${pdfPath}`);
-      
+
       // Read file contents
       let jsonData;
       try {
         const fileContents = fs.readFileSync(pdfPath, 'utf-8');
         console.log(`Read ${fileContents.length} bytes from JSON file`);
-        
+
         // Parse JSON data
         jsonData = JSON.parse(fileContents);
         console.log(`Successfully parsed JSON with ${jsonData.length} entries`);
       } catch (jsonError: any) {
         console.error(`Error reading/parsing JSON file: ${jsonError}`);
-        
+
         // Try fallback PDF path if JSON loading fails
         if (fs.existsSync(FALLBACK_PDF_PATH)) {
           console.log(`JSON loading failed. Using fallback PDF path: ${FALLBACK_PDF_PATH}`);
@@ -140,7 +142,7 @@ export async function extractFields(
       }));
 
       console.log(`Loaded ${processedFields.length} fields from JSON file`);
-      
+
       // Try to load PDF document if it exists in the same directory
       let pdfDoc: PDFDocument | undefined;
       const possiblePdfPath = pdfPath.replace(/\.json$/, '.pdf');
@@ -150,7 +152,7 @@ export async function extractFields(
           const pdfBytes = fs.readFileSync(possiblePdfPath);
           pdfDoc = await PDFDocument.load(pdfBytes);
           console.log(`Successfully loaded associated PDF document`);
-          
+
           // Cache page dimensions
           getPageDimensions(pdfDoc);
         } catch (error) {
@@ -163,7 +165,7 @@ export async function extractFields(
           const pdfBytes = fs.readFileSync(FALLBACK_PDF_PATH);
           pdfDoc = await PDFDocument.load(pdfBytes);
           console.log(`Successfully loaded fallback PDF document for page dimensions`);
-          
+
           // Cache page dimensions
           getPageDimensions(pdfDoc);
         } catch (error) {
@@ -179,16 +181,16 @@ export async function extractFields(
 
     // Check for a cached version of the extracted fields
     const cacheFilename = `${pdfPath}.cache.json`;
-    
+
     // Check if cache exists and is newer than PDF file
     if (!force && fs.existsSync(cacheFilename)) {
       const pdfStats = fs.statSync(pdfPath);
       const cacheStats = fs.statSync(cacheFilename);
-      
+
       if (cacheStats.mtime > pdfStats.mtime) {
         console.log(`Loading fields from cache: ${cacheFilename}`);
         const cachedData = JSON.parse(fs.readFileSync(cacheFilename, 'utf-8'));
-        
+
         // Convert JSON data to PDFField format
         const processedFields = cachedData.map((field: any) => ({
           id: field.id,
@@ -202,25 +204,25 @@ export async function extractFields(
           required: field.required,
           rect: field.rect || null
         }));
-        
+
         console.log(`Loaded ${processedFields.length} fields from cache`);
-        
+
         // We still need to load the PDF document for page dimensions
         let pdfDoc: PDFDocument | undefined;
         try {
           const pdfBytes = fs.readFileSync(pdfPath);
           pdfDoc = await PDFDocument.load(pdfBytes);
-          
+
           // Cache page dimensions
           getPageDimensions(pdfDoc);
         } catch (error) {
           console.warn(`Could not load PDF document, spatial analysis may be limited: ${error}`);
         }
-        
+
         return { fields: processedFields, pdfDoc };
       }
     }
-    
+
     console.log(`Extracting fields from PDF: ${pdfPath}${force ? ' (cache bypassed)' : ''}`);
 
     // Use the existing PdfService to extract field metadata
@@ -232,7 +234,7 @@ export async function extractFields(
       // Load the PDF bytes and create a document
       const pdfBytes = fs.readFileSync(pdfPath);
       pdfDoc = await PDFDocument.load(pdfBytes);
-      
+
       // Cache page dimensions
       getPageDimensions(pdfDoc);
     } catch (error) {

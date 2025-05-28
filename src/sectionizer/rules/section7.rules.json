@@ -1,14 +1,128 @@
 [
   {
-    "pattern": "^form1[0]",
-    "flags": "",
-    "confidence": 0.85,
-    "description": "Fields starting with form1[0] belong to section 7"
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.p3-t68\\[3\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 7"
   },
   {
-    "pattern": "text",
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.#field\\[35\\]",
     "flags": "i",
-    "confidence": 0.75,
-    "description": "text fields belong to section 7"
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 7"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.p3-t68\\[2\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 7"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.TextField11\\[13\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 7"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.TextField11\\[14\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 7"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.p3-t68\\[1\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 7"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.TextField11\\[1\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 7"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.TextField11\\[2\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 7"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.TextField11\\[3\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 7"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.TextField11\\[4\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 7"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.TextField11\\[5\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 7"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.TextField11\\[6\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 7"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.TextField11\\[7\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 7"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.TextField11\\[8\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 7"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.TextField11\\[9\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 7"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.TextField11\\[10\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 7"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.TextField11\\[11\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 7"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.TextField11\\[12\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 7"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.TextField11\\[15\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 7"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.TextField11\\[16\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 7"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.TextField11\\[17\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 7"
   }
 ]

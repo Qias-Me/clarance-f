@@ -1,26 +1,62 @@
 [
   {
-    "pattern": "^form1[0]",
-    "flags": "",
-    "confidence": 0.85,
-    "description": "Fields starting with form1[0] belong to section 9"
-  },
-  {
-    "pattern": "2[0]$",
-    "flags": "",
-    "confidence": 0.8,
-    "description": "Fields ending with 2[0] belong to section 9"
-  },
-  {
-    "pattern": "date",
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.#field\\[(?!4\\])\\d+\\]",
     "flags": "i",
-    "confidence": 0.75,
-    "description": "date fields belong to section 9"
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 9"
   },
   {
-    "pattern": "text",
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.#field\\[25\\]",
     "flags": "i",
-    "confidence": 0.75,
-    "description": "text fields belong to section 9"
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 9"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.#field\\[28\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 9"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.RadioButtonList\\[1\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 9"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.Section9",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 9"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.TextField11\\[18\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 9"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.School6_State\\[0\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 9"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.RadioButtonList\\[2\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 9"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections7-9\\[0\\]\\.RadioButtonList\\[3\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 9"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Section9\\.1-9\\.4\\[0\\]\\.",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 9"
   }
 ]

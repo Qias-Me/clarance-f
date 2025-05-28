@@ -1,14 +1,32 @@
 [
   {
-    "pattern": "^form1[0]",
-    "flags": "",
-    "confidence": 0.85,
-    "description": "Fields starting with form1[0] belong to section 14"
+    "pattern": "form1\\[0\\]\\.Section14_1\\[0\\]\\.#area\\[0\\]\\.RadioButtonList\\[0\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 14"
   },
   {
-    "pattern": "text",
+    "pattern": "form1\\[0\\]\\.Section14_1\\[0\\]\\.TextField11\\[0\\]",
     "flags": "i",
-    "confidence": 0.75,
-    "description": "text fields belong to section 14"
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 14"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Section14_1\\[0\\]\\.TextField11\\[1\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 14"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Section14_1\\[0\\]\\.#field\\[24\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 14"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Section14_1\\[0\\]\\.#field\\[25\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 14"
   }
 ]

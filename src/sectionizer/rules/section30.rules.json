@@ -1,62 +1,68 @@
 [
   {
-    "pattern": "^form1[0]",
-    "flags": "",
-    "confidence": 0.85,
-    "description": "Fields starting with form1[0] belong to section 30"
+    "pattern": "form1\\[0\\]\\.continuation",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 30"
   },
   {
-    "pattern": "SSN[0]$",
-    "flags": "",
-    "confidence": 0.8,
-    "description": "Fields ending with SSN[0] belong to section 30"
+    "pattern": "form1\\[0\\]\\.Section30",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 30"
   },
   {
-    "pattern": "t2[0]$",
-    "flags": "",
-    "confidence": 0.8,
-    "description": "Fields ending with t2[0] belong to section 30"
+    "pattern": "form1\\[0\\]\\.section30",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 30"
   },
   {
-    "pattern": "t1[0]$",
-    "flags": "",
-    "confidence": 0.8,
-    "description": "Fields ending with t1[0] belong to section 30"
+    "pattern": "continuation",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 30"
   },
   {
-    "pattern": "SSN[1]$",
-    "flags": "",
-    "confidence": 0.8,
-    "description": "Fields ending with SSN[1] belong to section 30"
+    "pattern": "additional.*information",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 30"
   },
   {
-    "pattern": "t3[0]$",
-    "flags": "",
-    "confidence": 0.8,
-    "description": "Fields ending with t3[0] belong to section 30"
+    "pattern": "comments",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 30"
   },
   {
-    "pattern": "t6[0]$",
-    "flags": "",
-    "confidence": 0.8,
-    "description": "Fields ending with t6[0] belong to section 30"
+    "pattern": "remarks",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 30"
   },
   {
-    "pattern": "t8[0]$",
-    "flags": "",
-    "confidence": 0.8,
-    "description": "Fields ending with t8[0] belong to section 30"
+    "pattern": "notes",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 30"
   },
   {
-    "pattern": "t9[0]$",
-    "flags": "",
-    "confidence": 0.8,
-    "description": "Fields ending with t9[0] belong to section 30"
+    "pattern": "supplemental",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 30"
   },
   {
-    "pattern": "t10[0]$",
-    "flags": "",
-    "confidence": 0.8,
-    "description": "Fields ending with t10[0] belong to section 30"
+    "pattern": "overflow",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 30"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.#subform\\[\\d+\\]\\..*unclassified",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 30"
   }
 ]

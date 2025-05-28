@@ -1,6 +1,6 @@
 /**
  * Rules for Section 17: Maritial/Relationship Status
- * Generated: 2025-05-26T18:44:26.283Z
+ * Generated: 2025-05-28T17:48:23.447Z
  */
 
 import type { MatchRule } from '../types.js';
@@ -11,8 +11,8 @@ import type { MatchRule } from '../types.js';
 export const sectionInfo = {
   section: 17,
   name: "Maritial/Relationship Status",
-  ruleCount: 8,
-  lastUpdated: "2025-05-26T18:44:26.283Z"
+  ruleCount: 7,
+  lastUpdated: "2025-05-28T17:48:23.447Z"
 };
 
 /**
@@ -20,60 +20,53 @@ export const sectionInfo = {
  */
 export const rules: MatchRule[] = [
   {
-    pattern: /^form1[0]/,
+    pattern: /form1\\[0\\]\\.Section17/i,
     section: 17,
     subsection: undefined,
-    confidence: 0.85,
-    description: "Fields starting with form1[0] belong to section 17",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 17",
   },
   {
-    pattern: /text/i,
+    pattern: /form1\\[0\\]\\.section17/i,
     section: 17,
     subsection: undefined,
-    confidence: 0.75,
-    description: "text fields belong to section 17",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 17",
   },
   {
-    pattern: /2[0]$/,
+    pattern: /marital/i,
     section: 17,
     subsection: undefined,
-    confidence: 0.8,
-    description: "Fields ending with 2[0] belong to section 17",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 17",
   },
   {
-    pattern: /date/i,
+    pattern: /relationship/i,
     section: 17,
     subsection: undefined,
-    confidence: 0.75,
-    description: "date fields belong to section 17",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 17",
   },
   {
-    pattern: /radio/i,
+    pattern: /spouse/i,
     section: 17,
     subsection: undefined,
-    confidence: 0.75,
-    description: "radio fields belong to section 17",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 17",
   },
   {
-    pattern: /2[1]$/,
+    pattern: /cohabitant/i,
     section: 17,
     subsection: undefined,
-    confidence: 0.8,
-    description: "Fields ending with 2[1] belong to section 17",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 17",
   },
   {
-    pattern: /dropdown/i,
+    pattern: /partner/i,
     section: 17,
     subsection: undefined,
-    confidence: 0.75,
-    description: "dropdown fields belong to section 17",
-  },
-  {
-    pattern: /2[2]$/,
-    section: 17,
-    subsection: undefined,
-    confidence: 0.8,
-    description: "Fields ending with 2[2] belong to section 17",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 17",
   }
 ];
 

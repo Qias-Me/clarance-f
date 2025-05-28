@@ -1,8 +1,26 @@
 [
   {
-    "pattern": "^form1[0]",
-    "flags": "",
-    "confidence": 0.85,
-    "description": "Fields starting with form1[0] belong to section 1"
+    "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.TextField11\\[0\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 1"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.TextField11\\[1\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 1"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.TextField11\\[2\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 1"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.suffix\\[0\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 1"
   }
 ]

@@ -1,6 +1,6 @@
 /**
  * Rules for Section 6: Your Identifying Information
- * Generated: 2025-05-26T18:44:17.753Z
+ * Generated: 2025-05-28T22:50:54.327Z
  */
 
 import type { MatchRule } from '../types.js';
@@ -11,8 +11,8 @@ import type { MatchRule } from '../types.js';
 export const sectionInfo = {
   section: 6,
   name: "Your Identifying Information",
-  ruleCount: 1,
-  lastUpdated: "2025-05-26T18:44:17.753Z"
+  ruleCount: 6,
+  lastUpdated: "2025-05-28T22:50:54.327Z"
 };
 
 /**
@@ -20,11 +20,46 @@ export const sectionInfo = {
  */
 export const rules: MatchRule[] = [
   {
-    pattern: /^form1[0]/,
+    pattern: /form1\\[0\\]\\.Sections1-6\\[0\\]\\.DropDownList7\\[0\\]/i,
     section: 6,
     subsection: undefined,
-    confidence: 0.85,
-    description: "Fields starting with form1[0] belong to section 6",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 6",
+  },
+  {
+    pattern: /form1\\[0\\]\\.Sections1-6\\[0\\]\\.DropDownList8\\[0\\]/i,
+    section: 6,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 6",
+  },
+  {
+    pattern: /form1\\[0\\]\\.Sections1-6\\[0\\]\\.DropDownList9\\[0\\]/i,
+    section: 6,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 6",
+  },
+  {
+    pattern: /form1\\[0\\]\\.Sections1-6\\[0\\]\\.DropDownList10\\[0\\]/i,
+    section: 6,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 6",
+  },
+  {
+    pattern: /form1\\[0\\]\\.Sections1-6\\[0\\]\\.p3-rb3b\\[0\\]/i,
+    section: 6,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 6",
+  },
+  {
+    pattern: /form1\\[0\\]\\.Sections1-6\\[0\\]\\.TextField11\\[5\\]/i,
+    section: 6,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 6",
   }
 ];
 

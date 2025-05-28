@@ -1,50 +1,44 @@
 [
   {
-    "pattern": "^form1[0]",
-    "flags": "",
-    "confidence": 0.85,
-    "description": "Fields starting with form1[0] belong to section 17"
-  },
-  {
-    "pattern": "text",
+    "pattern": "form1\\[0\\]\\.Section17",
     "flags": "i",
-    "confidence": 0.75,
-    "description": "text fields belong to section 17"
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 17"
   },
   {
-    "pattern": "2[0]$",
-    "flags": "",
-    "confidence": 0.8,
-    "description": "Fields ending with 2[0] belong to section 17"
-  },
-  {
-    "pattern": "date",
+    "pattern": "form1\\[0\\]\\.section17",
     "flags": "i",
-    "confidence": 0.75,
-    "description": "date fields belong to section 17"
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 17"
   },
   {
-    "pattern": "radio",
+    "pattern": "marital",
     "flags": "i",
-    "confidence": 0.75,
-    "description": "radio fields belong to section 17"
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 17"
   },
   {
-    "pattern": "2[1]$",
-    "flags": "",
-    "confidence": 0.8,
-    "description": "Fields ending with 2[1] belong to section 17"
-  },
-  {
-    "pattern": "dropdown",
+    "pattern": "relationship",
     "flags": "i",
-    "confidence": 0.75,
-    "description": "dropdown fields belong to section 17"
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 17"
   },
   {
-    "pattern": "2[2]$",
-    "flags": "",
-    "confidence": 0.8,
-    "description": "Fields ending with 2[2] belong to section 17"
+    "pattern": "spouse",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 17"
+  },
+  {
+    "pattern": "cohabitant",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 17"
+  },
+  {
+    "pattern": "partner",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 17"
   }
 ]

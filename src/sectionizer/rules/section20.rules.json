@@ -1,32 +1,80 @@
 [
   {
-    "pattern": "^form1[0]",
-    "flags": "",
-    "confidence": 0.85,
-    "description": "Fields starting with form1[0] belong to section 20"
+    "pattern": "form1\\[0\\]\\.Section20",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 20"
   },
   {
-    "pattern": "date",
+    "pattern": "form1\\[0\\]\\.section20",
     "flags": "i",
-    "confidence": 0.75,
-    "description": "date fields belong to section 20"
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 20"
   },
   {
-    "pattern": "radio",
+    "pattern": "foreign.*business",
     "flags": "i",
-    "confidence": 0.75,
-    "description": "radio fields belong to section 20"
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 20"
   },
   {
-    "pattern": "text",
+    "pattern": "foreign.*government",
     "flags": "i",
-    "confidence": 0.75,
-    "description": "text fields belong to section 20"
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 20"
   },
   {
-    "pattern": "dropdown",
+    "pattern": "foreign.*activity",
     "flags": "i",
-    "confidence": 0.75,
-    "description": "dropdown fields belong to section 20"
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 20"
+  },
+  {
+    "pattern": "foreign.*activities",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 20"
+  },
+  {
+    "pattern": "foreignbus",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 20"
+  },
+  {
+    "pattern": "foreigngov",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 20"
+  },
+  {
+    "pattern": "overseas.*business",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 20"
+  },
+  {
+    "pattern": "international.*business",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 20"
+  },
+  {
+    "pattern": "diplomatic",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 20"
+  },
+  {
+    "pattern": "embassy",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 20"
+  },
+  {
+    "pattern": "consulate",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 20"
   }
 ]

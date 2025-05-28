@@ -1,20 +1,56 @@
 [
   {
-    "pattern": "^form1[0]",
-    "flags": "",
-    "confidence": 0.85,
-    "description": "Fields starting with form1[0] belong to section 16"
+    "pattern": "references",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 16"
   },
   {
-    "pattern": "text",
+    "pattern": "people who know",
     "flags": "i",
-    "confidence": 0.75,
-    "description": "text fields belong to section 16"
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 16"
   },
   {
-    "pattern": "date",
+    "pattern": "know (you )?well",
     "flags": "i",
-    "confidence": 0.75,
-    "description": "date fields belong to section 16"
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 16"
+  },
+  {
+    "pattern": "verifiers?",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 16"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Section16",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 16"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.section16",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 16"
+  },
+  {
+    "pattern": "reference\\d+",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 16"
+  },
+  {
+    "pattern": "section ?16",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 16"
+  },
+  {
+    "pattern": "\\bsect ?16\\b",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 16"
   }
 ]

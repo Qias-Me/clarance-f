@@ -1,8 +1,38 @@
 [
   {
-    "pattern": "^form1[0]",
-    "flags": "",
-    "confidence": 0.85,
-    "description": "Fields starting with form1[0] belong to section 6"
+    "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.DropDownList7\\[0\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 6"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.DropDownList8\\[0\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 6"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.DropDownList9\\[0\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 6"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.DropDownList10\\[0\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 6"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.p3-rb3b\\[0\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 6"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.TextField11\\[5\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 6"
   }
 ]

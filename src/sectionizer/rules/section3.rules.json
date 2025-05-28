@@ -1,8 +1,26 @@
 [
   {
-    "pattern": "^form1[0]",
-    "flags": "",
-    "confidence": 0.85,
-    "description": "Fields starting with form1[0] belong to section 3"
+    "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.TextField11\\[3\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 3"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.TextField11\\[4\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 3"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.School6_State\\[0\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 3"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.Sections1-6\\[0\\]\\.DropDownList1\\[0\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 3"
   }
 ]

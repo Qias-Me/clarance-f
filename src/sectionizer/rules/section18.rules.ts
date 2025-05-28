@@ -1,6 +1,6 @@
 /**
  * Rules for Section 18: Relatives
- * Generated: 2025-05-26T18:44:30.011Z
+ * Generated: 2025-05-28T17:48:23.448Z
  */
 
 import type { MatchRule } from '../types.js';
@@ -11,8 +11,8 @@ import type { MatchRule } from '../types.js';
 export const sectionInfo = {
   section: 18,
   name: "Relatives",
-  ruleCount: 12,
-  lastUpdated: "2025-05-26T18:44:30.011Z"
+  ruleCount: 4,
+  lastUpdated: "2025-05-28T17:48:23.448Z"
 };
 
 /**
@@ -20,88 +20,32 @@ export const sectionInfo = {
  */
 export const rules: MatchRule[] = [
   {
-    pattern: /^form1[0]/,
+    pattern: /form1\\[0\\]\\.Section18/i,
     section: 18,
     subsection: undefined,
-    confidence: 0.85,
-    description: "Fields starting with form1[0] belong to section 18",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 18",
   },
   {
-    pattern: /radio/i,
+    pattern: /form1\\[0\\]\\.section18/i,
     section: 18,
     subsection: undefined,
-    confidence: 0.75,
-    description: "radio fields belong to section 18",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 18",
   },
   {
-    pattern: /text/i,
+    pattern: /sect18/i,
     section: 18,
     subsection: undefined,
-    confidence: 0.75,
-    description: "text fields belong to section 18",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 18",
   },
   {
-    pattern: /dropdown/i,
+    pattern: /section_18/i,
     section: 18,
     subsection: undefined,
-    confidence: 0.75,
-    description: "dropdown fields belong to section 18",
-  },
-  {
-    pattern: /2[0]$/,
-    section: 18,
-    subsection: undefined,
-    confidence: 0.8,
-    description: "Fields ending with 2[0] belong to section 18",
-  },
-  {
-    pattern: /date/i,
-    section: 18,
-    subsection: undefined,
-    confidence: 0.75,
-    description: "date fields belong to section 18",
-  },
-  {
-    pattern: /TextField11[10]$/,
-    section: 18,
-    subsection: undefined,
-    confidence: 0.8,
-    description: "Fields ending with TextField11[10] belong to section 18",
-  },
-  {
-    pattern: /TextField11[11]$/,
-    section: 18,
-    subsection: undefined,
-    confidence: 0.8,
-    description: "Fields ending with TextField11[11] belong to section 18",
-  },
-  {
-    pattern: /TextField11[12]$/,
-    section: 18,
-    subsection: undefined,
-    confidence: 0.8,
-    description: "Fields ending with TextField11[12] belong to section 18",
-  },
-  {
-    pattern: /2[1]$/,
-    section: 18,
-    subsection: undefined,
-    confidence: 0.8,
-    description: "Fields ending with 2[1] belong to section 18",
-  },
-  {
-    pattern: /2[2]$/,
-    section: 18,
-    subsection: undefined,
-    confidence: 0.8,
-    description: "Fields ending with 2[2] belong to section 18",
-  },
-  {
-    pattern: /2[3]$/,
-    section: 18,
-    subsection: undefined,
-    confidence: 0.8,
-    description: "Fields ending with 2[3] belong to section 18",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 18",
   }
 ];
 

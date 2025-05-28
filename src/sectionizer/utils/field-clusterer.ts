@@ -25,15 +25,15 @@ export const expectedFieldCounts: Record<
   5: { fields: 45, entries: 4, subsections: 0 },
   6: { fields: 6, entries: 0, subsections: 0 },
   7: { fields: 17, entries: 0, subsections: 0 },
-  8: { fields: 8, entries: 0, subsections: 0 },
-  9: { fields: 80, entries: 0, subsections: 0 },
+  8: { fields: 10, entries: 0, subsections: 0 },
+  9: { fields: 78, entries: 0, subsections: 0 },
   10: { fields: 122, entries: 0, subsections: 4 },
   11: { fields: 252, entries: 0, subsections: 0 },
   12: { fields: 150, entries: 0, subsections: 0 },
   13: { fields: 1086, entries: 0, subsections: 0 },
   14: { fields: 5, entries: 0, subsections: 0 },
-  15: { fields: 130, entries: 0, subsections: 0 },
-  16: { fields: 119, entries: 0, subsections: 0 },
+  15: { fields: 95, entries: 0, subsections: 0 },
+  16: { fields: 154, entries: 0, subsections: 0 },
   17: { fields: 332, entries: 0, subsections: 0 },
   18: { fields: 964, entries: 0, subsections: 0 },
   19: { fields: 277, entries: 0, subsections: 0 },
@@ -69,7 +69,24 @@ export const sectionFieldPatterns: Record<number, RegExp[]> = {
     /form1\[0\]\.Sections1-6\[0\]\.DropDownList1\[0\]/i,
   ],
   4: [
-    /SSN\[\d+\]/i,
+    // CRITICAL: ALL SSN fields should go to Section 4, regardless of their location in the form
+    // These patterns have HIGHEST PRIORITY and override any section-specific patterns
+    /\.SSN\[\d+\]/i,                                    // Basic SSN pattern - catches any .SSN[0], .SSN[1], etc.
+    /form1\[0\]\.Sections1-6\[0\]\.SSN\[\d+\]/i,       // Sections1-6 SSN fields
+    /form1\[0\]\.Sections7-9\[0\]\.SSN\[\d+\]/i,       // Sections7-9 SSN fields
+    /form1\[0\]\.Section\d+.*\.SSN\[\d+\]/i,           // Any Section with SSN (e.g., Section18_3[5].SSN[0])
+    /form1\[0\]\.section\d+.*\.SSN\[\d+\]/i,           // Any section with SSN (lowercase)
+    /form1\[0\]\.#subform\[\d+\]\.SSN\[\d+\]/i,        // Subform SSN fields
+    /form1\[0\]\.#subform\[\d+\]\.#subform\[\d+\]\.SSN\[\d+\]/i, // Nested subform SSN
+    /form1\[0\]\.continuation\d*\[0\]\.SSN\[\d+\]/i,   // Continuation SSN fields
+    /form1\[0\]\.Section_\d+.*\.SSN\[\d+\]/i,          // Section_ format SSN fields
+
+    // SPECIFIC: Handle the exact patterns that are being missed
+    /form1\[0\]\.Section18_3\[5\]\.SSN\[0\]/i,         // Specific field: form1[0].Section18_3[5].SSN[0]
+    /form1\[0\]\.Section18_\d+\[\d+\]\.SSN\[\d+\]/i,   // All Section18_X[Y].SSN[Z] patterns
+    /form1\[0\]\.Section\d+_\d+\[\d+\]\.SSN\[\d+\]/i,  // All SectionX_Y[Z].SSN[W] patterns
+
+    // Original Section 4 specific patterns (non-SSN)
     /form1\[0\]\.Sections1-6\[0\]\.CheckBox1\[0\]/i,
     /form1\[0\]\.Sections1-6\[0\]\.RadioButtonList\[0\]/i,
   ],
@@ -91,32 +108,215 @@ export const sectionFieldPatterns: Record<number, RegExp[]> = {
     /form1\[0\]\.Sections1-6\[0\]\.TextField11\[5\]/i, // Wieght in pounds
   ],
   7: [
+    /form1\[0\]\.Sections7-9\[0\]\.p3-t68\[3\]/i, // Phone number field
+
+    // CRITICAL: Specific pattern for the field mentioned by user
+    /form1\[0\]\.Sections7-9\[0\]\.#field\[35\]/i, // Specific field that was being incorrectly assigned to Section 1
+
+
+    // Specific patterns for Section 7 (Your Contact Information)
     /form1\[0\]\.Sections7-9\[0\]\.p3-t68\[2\]/i,
     /form1\[0\]\.Sections7-9\[0\]\.TextField11\[13\]/i, // Home Email
+    /form1\[0\]\.Sections7-9\[0\]\.TextField11\[14\]/i, // Work Email - FIXED MISSING PATTERN
+    /form1\[0\]\.Sections7-9\[0\]\.p3-t68\[1\]/i, // Phone number field
+    /form1\[0\]\.Sections7-9\[0\]\.TextField11\[1\]/i, // Extension field
+    /form1\[0\]\.Sections7-9\[0\]\.TextField11\[2\]/i, // Additional phone field
+    /form1\[0\]\.Sections7-9\[0\]\.TextField11\[3\]/i, // Additional contact field
+    /form1\[0\]\.Sections7-9\[0\]\.TextField11\[4\]/i, // Additional contact field
+    /form1\[0\]\.Sections7-9\[0\]\.TextField11\[5\]/i, // Additional contact field
+    /form1\[0\]\.Sections7-9\[0\]\.TextField11\[6\]/i, // Additional contact field
+    /form1\[0\]\.Sections7-9\[0\]\.TextField11\[7\]/i, // Additional contact field
+    /form1\[0\]\.Sections7-9\[0\]\.TextField11\[8\]/i, // Additional contact field
+    /form1\[0\]\.Sections7-9\[0\]\.TextField11\[9\]/i, // Additional contact field
+    /form1\[0\]\.Sections7-9\[0\]\.TextField11\[10\]/i, // Additional contact field
+    /form1\[0\]\.Sections7-9\[0\]\.TextField11\[11\]/i, // Additional contact field
+    /form1\[0\]\.Sections7-9\[0\]\.TextField11\[12\]/i, // Additional contact field
+    /form1\[0\]\.Sections7-9\[0\]\.TextField11\[15\]/i, // Extension fields for contact info
+    /form1\[0\]\.Sections7-9\[0\]\.TextField11\[16\]/i, // Extension fields for contact info
+    /form1\[0\]\.Sections7-9\[0\]\.TextField11\[17\]/i, // Extension fields for contact info
+
   ],
   8: [
-    /form1\[0\]\.Sections7-9\[0\]\.p3-t68\[0\]/i,
     /form1\[0\]\.Sections7-9\[0\]\.#area\[0\]\.From_Datefield_Name_2\[0\]/i,
     /form1\[0\]\.Sections7-9\[0\]\.#area\[0\]\.To_Datefield_Name_2\[0\]/i,
     /form1\[0\]\.Sections7-9\[0\]\.#area\[0\]\.#field\[4\]/i,
     /form1\[0\]\.Sections7-9\[0\]\.TextField11\[0\]/i,
-    // Additional patterns for section 8 (U.S. Passport Information)
-    /form1\[0\]\.Sections7-9\[0\]\..*passport/i,
-    /form1\[0\]\.Sections7-9\[0\]\..*section8/i,
-    /form1\[0\]\.Sections7-9\[0\]\..*p3-t68\[\d+\]/i,
+    /form1\[0\]\.Sections7-9\[0\]\.TextField11\[1\]/i,
+    /form1\[0\]\.Sections7-9\[0\]\.RadioButtonList\[0\]/i, // Passport eligibility question
+    /form1\[0\]\.Sections7-9\[0\]\.#field\[23\]/i, // Passport estimate checkbox (spatially positioned in passport area)
+    /form1\[0\]\.Sections7-9\[0\]\.p3-t68\[0\]/i,
   ],
   9: [
+    /form1\[0\]\.Sections7-9\[0\]\.#field\[(?!4\])\d+\]/i, // All #field except [4] which goes to Section 8
+    /form1\[0\]\.Sections7-9\[0\]\.#field\[25\]/i, // Citizenship-related estimate checkbox (spatially near citizenship fields)
+    /form1\[0\]\.Sections7-9\[0\]\.#field\[28\]/i, // Citizenship-related estimate checkbox (spatially positioned in citizenship area)
+    /form1\[0\]\.Sections7-9\[0\]\.RadioButtonList\[1\]/i, // Citizenship status question
     /form1\[0\]\.Sections7-9\[0\]\.Section9/i,
     /form1\[0\]\.Sections7-9\[0\]\.TextField11\[18\]/i, // Work Email
+    /form1\[0\]\.Sections7-9\[0\]\.School6_State\[0\]/i, // Citizenship documentation state
+    /form1\[0\]\.Sections7-9\[0\]\.RadioButtonList\[2\]/i, // Citizenship status questions
+    /form1\[0\]\.Sections7-9\[0\]\.RadioButtonList\[3\]/i, // Citizenship documentation type
     /form1\[0\]\.Section9\.1-9\.4\[0\]\./i,
+  ],
+  11: [
+    /form1\[0\]\.Section11/i
+  ],
+  // Section 12 (Education - Where you went to School)
+  12: [
+    /form1\[0\]\.section_12_2\[0\]\.Table1\[0\]\.Row1\[0\]\.Cell4\[0\]/i,
+    /form1\[0\]\.section_12/i,
+    // CRITICAL: Main section_12[0] container - highest priority
+    /form1\[0\]\.section_12\[0\]\./i, // All fields under section_12[0] must be Section 12
+    // Specific section_12 patterns (most reliable)
+    /form1\[0\]\.section_12_1\[0\]/i,
+    /form1\[0\]\.section_12_2\[0\]/i,
+    /form1\[0\]\.section_12_3\[0\]/i,
+    /form1\[0\]\.section_12_4\[0\]/i,
+    /form1\[0\]\.section_12_5\[0\]/i,
+    // Specific field patterns that are being miscategorized as Section 9
+    /form1\[0\]\.section_12\[0\]\.pg10r2\[0\]/i, // Radio button fields
+    /form1\[0\]\.section_12\[0\]\.pg10r4\[0\]/i, // Radio button fields
+    /form1\[0\]\.section_12\[0\]\.pg2r5\[0\]/i, // Radio button fields
+    /form1\[0\]\.section_12\[0\]\.From_Datefield_Name_2\[\d+\]/i, // Date fields
+    /form1\[0\]\.section_12\[0\]\.TextField11\[\d+\]/i, // Text fields
+    /form1\[0\]\.section_12\[0\]\.School6_State\[\d+\]/i, // State dropdown fields
+    /form1\[0\]\.section_12\[0\]\.DropDownList28\[\d+\]/i, // Country dropdown fields
+    /form1\[0\]\.section_12\[0\]\.#field\[\d+\]/i, // Generic field patterns
+    // Table patterns specific to Section 12 education entries
+    /form1\[0\]\.section_12_\d+\[0\]\.Table1\[0\]\.Row\d+\[0\]\.Cell\d+\[0\]/i,
+    // Value-based patterns for Section 12 content
+    /sect12/i, // Fields with sect12 values
+    // ENHANCED: More specific education patterns to reduce over-assignment from #subform
+    /\beducation\b/i,
+    /\bschool\b/i,
+    /\bcollege\b/i,
+    /\buniversity\b/i,
+    /\bdegree\b/i,
+    /\bdiploma\b/i,
+    /\bgraduate\b/i,
+    /\bstudent\b/i,
+    /\bacademic\b/i,
+    /educational.*institution/i,
+    // SPECIFIC: Only #subform fields that are clearly education-related and on correct pages
+    /form1\[0\]\.#subform\[\d+\]\..*school/i,
+    /form1\[0\]\.#subform\[\d+\]\..*education/i,
+    /form1\[0\]\.#subform\[\d+\]\..*college/i,
+    /form1\[0\]\.#subform\[\d+\]\..*university/i,
+    /form1\[0\]\.#subform\[\d+\]\..*degree/i,
   ],
   // Add patterns for section 13 (Employment)
   13: [
     /form1\[0\]\.Section13/i,
     /form1\[0\]\.section13/i,
-    /form1\[0\]\.employment/i,
-    /section ?13/i,
-    /\bsect ?13\b/i,
+  ],
+  // CRITICAL: Section 15 patterns MUST be processed BEFORE Section 14 patterns
+  // This ensures most Section14_1 fields are captured by Section 15 (Military History)
+  // before Section 14 (Selective Service) gets a chance to see them
+  15: [
+    // Section 15 (Military History) - should include most Section14_1 fields
+    /form1\[0\]\.Section15/i, // Direct Section15 references
+    // COMPREHENSIVE Section14_1 patterns that should go to Section 15 (Military History)
+    // These patterns will capture most Section14_1 fields BEFORE Section 14 sees them
+
+    // SPECIFIC: The field user mentioned should go to Section 15
+    /form1\[0\]\.Section14_1\[0\]\.#area\[16\]\.From_Datefield_Name_2\[4\]/i, // SPECIFIC: The field user mentioned
+
+    // All #area patterns except the one reserved for Section 14
+    /form1\[0\]\.Section14_1\[0\]\.#area\[1\]/i, // #area[1] and above go to Section 15
+    /form1\[0\]\.Section14_1\[0\]\.#area\[2\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.#area\[3\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.#area\[4\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.#area\[5\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.#area\[6\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.#area\[7\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.#area\[8\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.#area\[9\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.#area\[1[0-6]\]/i, // #area[10-16] (EXCLUDING #area[17])
+    /form1\[0\]\.Section14_1\[0\]\.#area\[1[8-9]\]/i, // #area[18-19] (EXCLUDING #area[17])
+    /form1\[0\]\.Section14_1\[0\]\.#area\[2\d+\]/i, // #area[20] and above
+
+    // All TextField11 patterns except [0], [1], and [2] reserved for Section 14
+    // EXCLUDE TextField11[2] - this belongs to Section 14
+    /form1\[0\]\.Section14_1\[0\]\.TextField11\[3\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.TextField11\[4\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.TextField11\[5\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.TextField11\[6\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.TextField11\[7\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.TextField11\[8\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.TextField11\[9\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.TextField11\[1\d+\]/i, // TextField11[10] and above
+    /form1\[0\]\.Section14_1\[0\]\.TextField11\[2\d+\]/i, // TextField11[20] and above
+
+    // All #field patterns except [24] and [25] reserved for Section 14
+    /form1\[0\]\.Section14_1\[0\]\.#field\[0\]/i, // #field[0] to [23] go to Section 15
+    /form1\[0\]\.Section14_1\[0\]\.#field\[1\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.#field\[2\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.#field\[3\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.#field\[4\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.#field\[5\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.#field\[6\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.#field\[7\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.#field\[8\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.#field\[9\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.#field\[1\d+\]/i, // #field[10-19]
+    /form1\[0\]\.Section14_1\[0\]\.#field\[2[0-3]\]/i, // #field[20-23]
+    /form1\[0\]\.Section14_1\[0\]\.#field\[2[6-9]\]/i, // #field[26-29]
+    /form1\[0\]\.Section14_1\[0\]\.#field\[3\d+\]/i, // #field[30] and above
+
+    // All other Section14_1 field types go to Section 15 (EXCLUDING Section 14 specific fields)
+    /form1\[0\]\.Section14_1\[0\]\.From_Datefield_Name_2\[\d+\]/i, // Military service dates
+    /form1\[0\]\.Section14_1\[0\]\.To_Datefield_Name_2\[\d+\]/i, // Military service end dates
+    /form1\[0\]\.Section14_1\[0\]\.DropDownList\[\d+\]/i, // Military dropdown fields
+    /form1\[0\]\.Section14_1\[0\]\.CheckBox\[\d+\]/i, // Military checkboxes
+    /form1\[0\]\.Section14_1\[0\]\.NumericField\[\d+\]/i, // Military numeric fields
+    /form1\[0\]\.Section14_1\[0\]\.School6_State\[\d+\]/i, // CRITICAL: School6_State fields belong to Section 15 (Military History)
+    /form1\[0\]\.Section14_1\[0\]\.RadioButtonList\[1\]/i, // RadioButtonList[1] and above (EXCLUDING RadioButtonList[0] and RadioButtonList[10])
+    /form1\[0\]\.Section14_1\[0\]\.RadioButtonList\[2\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.RadioButtonList\[3\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.RadioButtonList\[4\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.RadioButtonList\[5\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.RadioButtonList\[6\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.RadioButtonList\[7\]/i, // Specific RadioButtonList patterns (EXCLUDING 0 and 10)
+    /form1\[0\]\.Section14_1\[0\]\.RadioButtonList\[8\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.RadioButtonList\[9\]/i,
+    /form1\[0\]\.Section14_1\[0\]\.RadioButtonList\[11\]/i, // RadioButtonList[11] and above
+    /form1\[0\]\.Section14_1\[0\]\.RadioButtonList\[1[2-9]\]/i, // RadioButtonList[12-19]
+    /form1\[0\]\.Section14_1\[0\]\.RadioButtonList\[2\d+\]/i, // RadioButtonList[20] and above
+    // EXCLUDE TextField11[0], TextField11[1], TextField11[2] - these belong to Section 14
+    /form1\[0\]\.Section14_1\[0\]\.TextField11\[3\]/i, // TextField11[3] and above go to Section 15
+    /form1\[0\]\.Section14_1\[0\]\.TextField11\[[4-9]\]/i, // TextField11[4-9]
+    /form1\[0\]\.Section14_1\[0\]\.TextField11\[1\d+\]/i, // TextField11[10] and above
+    // EXCLUDE #area[0].RadioButtonList[0] and #area[17].RadioButtonList[10] - these belong to Section 14
+    /form1\[0\]\.Section14_1\[0\]\.#area\[1\](?!\d)/i, // #area[1] ONLY (not #area[10-19])
+    /form1\[0\]\.Section14_1\[0\]\.#area\[[2-9]\](?!\d)/i, // #area[2-9] ONLY (not #area[20-99])
+    /form1\[0\]\.Section14_1\[0\]\.#area\[1[0-6]\]/i, // #area[10-16] (EXCLUDING #area[17])
+    /form1\[0\]\.Section14_1\[0\]\.#area\[1[8-9]\]/i, // #area[18-19]
+    /form1\[0\]\.Section14_1\[0\]\.#area\[2\d+\]/i, // #area[20] and above
+    // EXCLUDE #field[24] and #field[25] - these should go to Section 15 (Military History)
+    /form1\[0\]\.Section14_1\[0\]\.#field\[24\]/i, // #field[24] goes to Section 15
+    /form1\[0\]\.Section14_1\[0\]\.#field\[25\]/i, // #field[25] goes to Section 15
+  ],
+  14: [
+    // STRICT: Only these 5 specific fields should remain in Section 14 (Selective Service)
+    // All other Section14_1 fields should be captured by Section 15 above
+    /form1\[0\]\.Section14_1\[0\]\.#area\[0\]\.RadioButtonList\[0\]/i, // 1. Main selective service question
+    /form1\[0\]\.Section14_1\[0\]\.TextField11\[0\]/i, // 2. Selective service number
+    /form1\[0\]\.Section14_1\[0\]\.TextField11\[1\]/i, // 3. Additional selective service field
+    /form1\[0\]\.Section14_1\[0\]\.TextField11\[2\]/i, // 4. Additional selective service field
+    /form1\[0\]\.Section14_1\[0\]\.#area\[17\]\.RadioButtonList\[10\]/i, // 5. Additional selective service field
+  ],
+  // Section 18 (Relatives) - ENHANCED: Removed overly broad #subform patterns
+  // #subform fields will now be handled by enhanced categorization logic
+  18: [
+    /form1\[0\]\.Section18/i,
+    /form1\[0\]\.section18/i,
+
+
+    // Section 18 specific content patterns
+    /sect18/i,
+    /section_18/i,
+
+
   ],
   // Add patterns for section 16 (References)
   16: [
@@ -130,6 +330,34 @@ export const sectionFieldPatterns: Record<number, RegExp[]> = {
     /section ?16/i,
     /\bsect ?16\b/i,
   ],
+  // Add patterns for section 17 (Marital/Relationship Status)
+  17: [
+    /form1\[0\]\.Section17/i,
+    /form1\[0\]\.section17/i,
+    /marital/i,
+    /relationship/i,
+    /spouse/i,
+    /cohabitant/i,
+    /partner/i,
+  ],
+  20: [
+    /form1\[0\]\.Section20/i,
+    /form1\[0\]\.section20/i,
+    // ENHANCED: More specific Section 20 patterns for foreign business/government activities
+    /foreign.*business/i,
+    /foreign.*government/i,
+    /foreign.*activity/i,
+    /foreign.*activities/i,
+    /foreignbus/i,
+    /foreigngov/i,
+    /overseas.*business/i,
+    /international.*business/i,
+    /diplomatic/i,
+    /embassy/i,
+    /consulate/i,
+    // Only include fields that are clearly foreign business/government related
+  ],
+
   // Adding more accurate patterns for other sections
   29: [
     /association/i,
@@ -137,7 +365,21 @@ export const sectionFieldPatterns: Record<number, RegExp[]> = {
     /membership/i,
     /^form1\[0\]\.Section29/i,
   ],
-  30: [/form1\[0\]\.continuation/i],
+  30: [
+    // ENHANCED: Section 30 (Continuation Space) patterns
+    /form1\[0\]\.continuation/i,
+    /form1\[0\]\.Section30/i,
+    /form1\[0\]\.section30/i,
+    /continuation/i,
+    /additional.*information/i,
+    /comments/i,
+    /remarks/i,
+    /notes/i,
+    /supplemental/i,
+    /overflow/i,
+    // Catch-all patterns for unclassified fields that should go to continuation
+    /form1\[0\]\.#subform\[\d+\]\..*unclassified/i,
+  ],
 };
 
 // Define section keywords for content matching
@@ -562,6 +804,628 @@ export const calculateRelatedSections = (
     }
   }
 };
+
+/**
+ * Section capacity information for capacity-aware field assignment
+ */
+export interface SectionCapacityInfo {
+  /** Current field count per section */
+  currentCounts: Record<number, number>;
+  /** Expected field count per section */
+  expectedCounts: Record<number, number>;
+  /** Sections that are currently over-allocated */
+  overAllocatedSections: number[];
+  /** Sections that are currently under-allocated */
+  underAllocatedSections: number[];
+}
+
+/**
+ * Create SectionCapacityInfo from current field distribution
+ */
+export function createSectionCapacityInfo(fields: CategorizedField[]): SectionCapacityInfo {
+  // Count current fields per section
+  const currentCounts: Record<number, number> = {};
+
+  for (const field of fields) {
+    const section = field.section || 0;
+    currentCounts[section] = (currentCounts[section] || 0) + 1;
+  }
+
+  // Get expected counts from the expectedFieldCounts constant
+  const expectedCounts: Record<number, number> = {};
+  const overAllocatedSections: number[] = [];
+  const underAllocatedSections: number[] = [];
+
+  for (const [sectionStr, counts] of Object.entries(expectedFieldCounts)) {
+    const section = parseInt(sectionStr, 10);
+    const expectedTotal = counts.fields + counts.entries + counts.subsections;
+    expectedCounts[section] = expectedTotal;
+
+    const currentCount = currentCounts[section] || 0;
+
+    // Consider a section over-allocated if it has more than 110% of expected
+    if (currentCount > expectedTotal * 1.1) {
+      overAllocatedSections.push(section);
+    }
+    // Consider a section under-allocated if it has less than 90% of expected
+    else if (currentCount < expectedTotal * 0.9) {
+      underAllocatedSections.push(section);
+    }
+  }
+
+  return {
+    currentCounts,
+    expectedCounts,
+    overAllocatedSections,
+    underAllocatedSections,
+  };
+}
+
+/**
+ * Find sections that are adjacent to a given page
+ */
+function findAdjacentSections(page: number): number[] {
+  const adjacentSections: number[] = [];
+  const proximityThreshold = 3; // Pages within 3 pages are considered adjacent
+
+  for (const [sectionStr, [startPage, endPage]] of Object.entries(sectionPageRanges)) {
+    const section = parseInt(sectionStr, 10);
+
+    // Check if page is within proximity of this section's range
+    const distanceToStart = Math.abs(page - startPage);
+    const distanceToEnd = Math.abs(page - endPage);
+    const minDistance = Math.min(distanceToStart, distanceToEnd);
+
+    if (minDistance <= proximityThreshold) {
+      adjacentSections.push(section);
+    }
+  }
+
+  // Sort by proximity (closest first)
+  adjacentSections.sort((a, b) => {
+    const aRange = sectionPageRanges[a];
+    const bRange = sectionPageRanges[b];
+
+    const aDistance = Math.min(
+      Math.abs(page - aRange[0]),
+      Math.abs(page - aRange[1])
+    );
+    const bDistance = Math.min(
+      Math.abs(page - bRange[0]),
+      Math.abs(page - bRange[1])
+    );
+
+    return aDistance - bDistance;
+  });
+
+  return adjacentSections;
+}
+
+/**
+ * Check if a field legitimately belongs to Section 20 (Foreign Activities)
+ */
+function isLegitimateSection20Field(field: CategorizedField): boolean {
+  const fieldName = field.name.toLowerCase();
+  const fieldValue = typeof field.value === 'string' ? field.value.toLowerCase() : '';
+  const fieldLabel = field.label?.toLowerCase() || '';
+
+  // Section 20 is about Foreign Activities - look for relevant keywords
+  const section20Keywords = [
+    'foreign', 'country', 'countries', 'travel', 'passport', 'visa',
+    'embassy', 'consulate', 'abroad', 'overseas', 'international',
+    'citizenship', 'dual', 'naturalization', 'immigration',
+    'business', 'employment', 'work', 'job', 'contract',
+    'government', 'official', 'military', 'service',
+    'contact', 'relationship', 'family', 'relative',
+    'section20', 'section_20'
+  ];
+
+  // Check if field name, value, or label contains Section 20 keywords
+  const hasSection20Content = section20Keywords.some(keyword =>
+    fieldName.includes(keyword) ||
+    fieldValue.includes(keyword) ||
+    fieldLabel.includes(keyword)
+  );
+
+  // Also check if field name explicitly references Section 20
+  const hasExplicitSection20Reference =
+    fieldName.includes('section20') ||
+    fieldName.includes('section_20') ||
+    fieldName.includes('section-20');
+
+  return hasSection20Content || hasExplicitSection20Reference;
+}
+
+/**
+ * Check if a section is under its target field count (helper function)
+ * This is enhanced to work with capacity information when available
+ */
+function isUnderTarget(section: number, capacityInfo?: SectionCapacityInfo): boolean {
+  if (capacityInfo) {
+    return capacityInfo.underAllocatedSections.includes(section);
+  }
+
+  // Fallback logic when no capacity info is available
+  // Prioritize sections that are commonly under-allocated based on historical data
+  const commonlyUnderAllocatedSections = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13, 14, 15, 16, 17, 19, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30];
+  return commonlyUnderAllocatedSections.includes(section);
+}
+
+/**
+ * Enhanced #subform categorization result
+ */
+export interface SubformCategorizationResult {
+  /** Suggested section for the #subform field */
+  section: number;
+  /** Confidence score (0-1) */
+  confidence: number;
+  /** Reason for the categorization */
+  reason: string;
+  /** Analysis details */
+  analysis: {
+    pageAnalysis?: string;
+    spatialAnalysis?: string;
+    valueAnalysis?: string;
+    contextAnalysis?: string;
+    capacityAnalysis?: string;
+  };
+}
+
+/**
+ * Enhanced #subform field categorization using page-based and spatial analysis
+ * This function properly categorizes #subform fields based on their context rather than
+ * blindly assigning them all to Section 18 (Relatives)
+ */
+export function categorizeSubformField(
+  field: CategorizedField,
+  capacityInfo?: SectionCapacityInfo
+): SubformCategorizationResult {
+  const fieldName = field.name || "";
+  const fieldValue = typeof field.value === "string" ? field.value : "";
+  const fieldLabel = field.label || "";
+  const page = field.page || 0;
+
+  console.log(`🔍 SUBFORM ANALYSIS: ${fieldName} (page: ${page})`);
+
+  // Step 1: Page-based analysis (primary factor) - now capacity-aware
+  const pageBasedSection = analyzeSubformByPage(page, capacityInfo);
+
+  // Step 2: Spatial proximity analysis (secondary factor)
+  const spatialSection = analyzeSubformBySpatialProximity(field);
+
+  // Step 3: Value-based analysis (tertiary factor)
+  const valueBasedSection = analyzeSubformByValue(fieldValue, fieldLabel);
+
+  // Step 4: Context analysis (field name patterns)
+  const contextSection = analyzeSubformByContext(fieldName);
+
+  // Step 5: Combine analyses to determine final section
+  const result = combineSubformAnalyses({
+    pageAnalysis: pageBasedSection,
+    spatialAnalysis: spatialSection,
+    valueAnalysis: valueBasedSection,
+    contextAnalysis: contextSection,
+    field,
+    capacityInfo
+  });
+
+  console.log(`   📊 SUBFORM RESULT: Section ${result.section} (${result.confidence.toFixed(2)}) - ${result.reason}`);
+
+  return result;
+}
+
+/**
+ * Enhanced page-based analysis for #subform fields (PRIMARY classification method)
+ * Uses precise page-to-section mapping with high confidence scoring
+ */
+function analyzeSubformByPage(
+  page: number,
+  capacityInfo?: SectionCapacityInfo
+): { section: number; confidence: number; reason: string } {
+  if (page === 0 || !page) {
+    return { section: 0, confidence: 0, reason: "No page information available" };
+  }
+
+  console.log(`   📍 PAGE ANALYSIS: Analyzing page ${page}`);
+
+  // ENHANCED: Find exact section match with high confidence
+  for (const [sectionStr, [startPage, endPage]] of Object.entries(sectionPageRanges)) {
+    const section = parseInt(sectionStr, 10);
+    if (page >= startPage && page <= endPage) {
+      // High confidence for exact page range matches
+      let confidence = 0.85; // Increased confidence for page-based analysis
+
+      // CAPACITY-AWARE: Boost confidence for under-allocated sections
+      if (capacityInfo && capacityInfo.underAllocatedSections.includes(section)) {
+        confidence = Math.min(confidence + 0.1, 0.95); // Boost by 0.1, cap at 0.95
+        console.log(`   🎯 CAPACITY BOOST: Section ${section} is under-allocated, boosting confidence to ${confidence.toFixed(2)}`);
+      }
+
+      const reason = `Page ${page} falls within Section ${section} range (${startPage}-${endPage})`;
+      console.log(`   ✅ EXACT MATCH: ${reason}`);
+      return { section, confidence, reason };
+    }
+  }
+
+  // ENHANCED: Find closest section with distance-based confidence
+  let closestSection = 0;
+  let minDistance = Infinity;
+  let closestSectionInfo = "";
+
+  for (const [sectionStr, [startPage, endPage]] of Object.entries(sectionPageRanges)) {
+    const section = parseInt(sectionStr, 10);
+
+    // Calculate distance to section range
+    let distance;
+    if (page < startPage) {
+      distance = startPage - page; // Distance to start of section
+    } else if (page > endPage) {
+      distance = page - endPage; // Distance from end of section
+    } else {
+      distance = 0; // Within range (should have been caught above)
+    }
+
+    if (distance < minDistance) {
+      minDistance = distance;
+      closestSection = section;
+      closestSectionInfo = `Section ${section} (${startPage}-${endPage})`;
+    }
+  }
+
+  // ENHANCED: Calculate confidence based on distance with improved scoring
+  let confidence;
+  if (minDistance === 0) {
+    confidence = 0.85; // Within range
+  } else if (minDistance <= 2) {
+    confidence = 0.8; // IMPROVED: Very close (1-2 pages away) - increased from 0.7
+  } else if (minDistance <= 5) {
+    confidence = 0.6; // IMPROVED: Moderately close (3-5 pages away) - increased from 0.5
+  } else if (minDistance <= 10) {
+    confidence = 0.4; // IMPROVED: Somewhat close (6-10 pages away) - increased from 0.3
+  } else {
+    confidence = 0.2; // IMPROVED: Far away (>10 pages) - increased from 0.1
+  }
+
+  // CAPACITY-AWARE: Boost confidence for under-allocated sections
+  if (capacityInfo && capacityInfo.underAllocatedSections.includes(closestSection)) {
+    const originalConfidence = confidence;
+    confidence = Math.min(confidence + 0.15, 0.95); // Boost by 0.15, cap at 0.95
+    console.log(`   🎯 CAPACITY BOOST: Section ${closestSection} is under-allocated, boosting confidence from ${originalConfidence.toFixed(2)} to ${confidence.toFixed(2)}`);
+  }
+
+  // CAPACITY-AWARE: Reduce confidence for over-allocated sections
+  if (capacityInfo && capacityInfo.overAllocatedSections.includes(closestSection)) {
+    const originalConfidence = confidence;
+    confidence = Math.max(confidence - 0.2, 0.1); // Reduce by 0.2, floor at 0.1
+    console.log(`   ⚠️  CAPACITY PENALTY: Section ${closestSection} is over-allocated, reducing confidence from ${originalConfidence.toFixed(2)} to ${confidence.toFixed(2)}`);
+  }
+
+  const reason = `Page ${page} closest to ${closestSectionInfo}, distance: ${minDistance} pages`;
+  console.log(`   📍 CLOSEST MATCH: ${reason} (confidence: ${confidence.toFixed(2)})`);
+
+  return { section: closestSection, confidence, reason };
+}
+
+/**
+ * Enhanced spatial proximity analysis for #subform fields (SECONDARY classification method)
+ * Uses actual field coordinates to determine spatial relationships with other categorized fields
+ */
+function analyzeSubformBySpatialProximity(field: CategorizedField): { section: number; confidence: number; reason: string } {
+  const fieldRect = field.rect;
+  const fieldPage = field.page;
+
+  if (!fieldRect || !fieldPage) {
+    return {
+      section: 0,
+      confidence: 0,
+      reason: "No spatial coordinates available for proximity analysis"
+    };
+  }
+
+  console.log(`   🎯 SPATIAL ANALYSIS: Field at (${fieldRect.x}, ${fieldRect.y}) on page ${fieldPage}`);
+
+  // This would ideally analyze proximity to other already-categorized fields
+  // For now, we'll use the field's position on the page to make educated guesses
+
+  const fieldX = fieldRect.x;
+  const fieldY = fieldRect.y;
+
+  // Analyze field position patterns based on typical form layout
+  let spatialSection = 0;
+  let confidence = 0;
+  let reason = "";
+
+  // Top of page (header area) - likely section headers or navigation
+  if (fieldY > 700) {
+    spatialSection = 0; // Neutral - header area
+    confidence = 0.1;
+    reason = `Field in header area (y: ${fieldY}) - likely navigation or section header`;
+  }
+  // Middle-left area - often main content
+  else if (fieldX < 300 && fieldY > 300 && fieldY < 600) {
+    confidence = 0.3;
+    reason = `Field in main content area (x: ${fieldX}, y: ${fieldY}) - moderate spatial confidence`;
+  }
+  // Right side - often continuation or secondary content
+  else if (fieldX > 400) {
+    confidence = 0.2;
+    reason = `Field in right area (x: ${fieldX}, y: ${fieldY}) - possible continuation content`;
+  }
+  // Bottom area - often continuation or additional information
+  else if (fieldY < 200) {
+    confidence = 0.2;
+    reason = `Field in bottom area (y: ${fieldY}) - possible continuation content`;
+  }
+  else {
+    confidence = 0.1;
+    reason = `Field at (${fieldX}, ${fieldY}) - neutral spatial position`;
+  }
+
+  console.log(`   🎯 SPATIAL RESULT: Section ${spatialSection} (confidence: ${confidence.toFixed(2)}) - ${reason}`);
+
+  return { section: spatialSection, confidence, reason };
+}
+
+/**
+ * Analyze #subform field based on field value and label content
+ */
+function analyzeSubformByValue(value: string, label: string): { section: number; confidence: number; reason: string } {
+  const combinedText = `${value} ${label}`.toLowerCase();
+
+  // Employment-related keywords
+  if (/\b(employer|employment|job|work|position|company|occupation|supervisor|salary|income)\b/i.test(combinedText)) {
+    return { section: 13, confidence: 0.7, reason: "Contains employment-related keywords" };
+  }
+
+  // Education-related keywords
+  if (/\b(school|education|college|university|degree|diploma|student|teacher|course|grade)\b/i.test(combinedText)) {
+    return { section: 12, confidence: 0.7, reason: "Contains education-related keywords" };
+  }
+
+  // Address/residence-related keywords
+  if (/\b(address|residence|lived|home|apartment|street|city|state|zip|country)\b/i.test(combinedText)) {
+    return { section: 11, confidence: 0.7, reason: "Contains address/residence-related keywords" };
+  }
+
+  // Relatives-related keywords
+  if (/\b(relative|family|father|mother|sibling|child|children|parent|spouse|brother|sister)\b/i.test(combinedText)) {
+    return { section: 18, confidence: 0.7, reason: "Contains relatives-related keywords" };
+  }
+
+  // References-related keywords
+  if (/\b(reference|contact|know|friend|colleague|acquaintance|verifier)\b/i.test(combinedText)) {
+    return { section: 16, confidence: 0.7, reason: "Contains references-related keywords" };
+  }
+
+  // Foreign contacts-related keywords
+  if (/\b(foreign|international|overseas|citizen|nationality|passport|visa)\b/i.test(combinedText)) {
+    return { section: 19, confidence: 0.7, reason: "Contains foreign contacts-related keywords" };
+  }
+
+  return { section: 0, confidence: 0, reason: "No specific value-based indicators" };
+}
+
+/**
+ * Analyze #subform field based on field name context patterns
+ */
+function analyzeSubformByContext(fieldName: string): { section: number; confidence: number; reason: string } {
+  // Look for section-specific patterns in the field name structure
+
+  // Employment patterns
+  if (/employment|employer|job|work|position/i.test(fieldName)) {
+    return { section: 13, confidence: 0.6, reason: "Field name contains employment context" };
+  }
+
+  // Education patterns
+  if (/education|school|college|university|degree/i.test(fieldName)) {
+    return { section: 12, confidence: 0.6, reason: "Field name contains education context" };
+  }
+
+  // Address/residence patterns
+  if (/address|residence|lived|home/i.test(fieldName)) {
+    return { section: 11, confidence: 0.6, reason: "Field name contains residence context" };
+  }
+
+  // Relatives patterns
+  if (/relative|family|father|mother|sibling|child/i.test(fieldName)) {
+    return { section: 18, confidence: 0.6, reason: "Field name contains relatives context" };
+  }
+
+  // References patterns
+  if (/reference|contact|know|friend/i.test(fieldName)) {
+    return { section: 16, confidence: 0.6, reason: "Field name contains references context" };
+  }
+
+  return { section: 0, confidence: 0, reason: "No specific context patterns in field name" };
+}
+
+
+
+/**
+ * Combine multiple analyses to determine final section assignment
+ */
+function combineSubformAnalyses(analyses: {
+  pageAnalysis: { section: number; confidence: number; reason: string };
+  spatialAnalysis: { section: number; confidence: number; reason: string };
+  valueAnalysis: { section: number; confidence: number; reason: string };
+  contextAnalysis: { section: number; confidence: number; reason: string };
+  field: CategorizedField;
+  capacityInfo?: SectionCapacityInfo;
+}): SubformCategorizationResult {
+  const { pageAnalysis, spatialAnalysis, valueAnalysis, contextAnalysis, field, capacityInfo } = analyses;
+
+  // ENHANCED: Weighted scoring with page-based analysis as primary method
+  // Page analysis (60%), Spatial analysis (25%), Value analysis (10%), Context analysis (5%)
+  const weights = {
+    page: 0.6,    // PRIMARY: Page-based location analysis
+    spatial: 0.25, // SECONDARY: Spatial proximity analysis
+    value: 0.1,   // TERTIARY: Value-based content analysis
+    context: 0.05 // QUATERNARY: Context-based pattern analysis
+  };
+
+  // Calculate weighted scores for each potential section
+  const sectionScores: Record<number, number> = {};
+
+  // Add page analysis score
+  if (pageAnalysis.section > 0) {
+    sectionScores[pageAnalysis.section] = (sectionScores[pageAnalysis.section] || 0) +
+      (pageAnalysis.confidence * weights.page);
+  }
+
+  // Add value analysis score
+  if (valueAnalysis.section > 0) {
+    sectionScores[valueAnalysis.section] = (sectionScores[valueAnalysis.section] || 0) +
+      (valueAnalysis.confidence * weights.value);
+  }
+
+  // Add context analysis score
+  if (contextAnalysis.section > 0) {
+    sectionScores[contextAnalysis.section] = (sectionScores[contextAnalysis.section] || 0) +
+      (contextAnalysis.confidence * weights.context);
+  }
+
+  // Add spatial analysis score
+  if (spatialAnalysis.section > 0) {
+    sectionScores[spatialAnalysis.section] = (sectionScores[spatialAnalysis.section] || 0) +
+      (spatialAnalysis.confidence * weights.spatial);
+  }
+
+  // Find the section with the highest score
+  let bestSection = 0;
+  let bestScore = 0;
+
+  for (const [sectionStr, score] of Object.entries(sectionScores)) {
+    const section = parseInt(sectionStr, 10);
+    if (score > bestScore) {
+      bestScore = score;
+      bestSection = section;
+    }
+  }
+
+  // ENHANCED: Capacity-aware section assignment with lower confidence threshold
+  // IMPROVED: Lower confidence threshold from 0.3 to 0.2 for better assignment rates
+  if (bestSection === 0 || bestScore < 0.2) {
+    // Try to infer section from page location even with lower confidence
+    if (pageAnalysis.section > 0 && pageAnalysis.confidence >= 0.2) {
+      // CAPACITY-AWARE: Check if the page-based section is over-allocated
+      if (capacityInfo && capacityInfo.overAllocatedSections.includes(pageAnalysis.section)) {
+        console.log(`   ⚠️  CAPACITY CHECK: Page-based Section ${pageAnalysis.section} is over-allocated, looking for alternatives`);
+
+        // Try to find an under-allocated section that's close to this page
+        const page = field.page || 0;
+        const adjacentSections = findAdjacentSections(page);
+        const underAllocatedAdjacent = adjacentSections.filter(section =>
+          capacityInfo.underAllocatedSections.includes(section)
+        );
+
+        if (underAllocatedAdjacent.length > 0) {
+          bestSection = underAllocatedAdjacent[0];
+          bestScore = pageAnalysis.confidence * 0.9; // Slight penalty for redirection
+          console.log(`   🎯 CAPACITY REDIRECT: Redirecting to under-allocated adjacent Section ${bestSection}`);
+        } else {
+          // Use the page-based section anyway but with reduced confidence
+          bestSection = pageAnalysis.section;
+          bestScore = pageAnalysis.confidence * 0.7; // Penalty for over-allocation
+          console.log(`   📍 FALLBACK: Using over-allocated page-based Section ${bestSection} with penalty`);
+        }
+      } else {
+        bestSection = pageAnalysis.section;
+        bestScore = pageAnalysis.confidence;
+        console.log(`   📍 FALLBACK: Using page-based assignment to Section ${bestSection}`);
+      }
+    }
+    // Try value-based analysis with lower threshold
+    else if (valueAnalysis.section > 0 && valueAnalysis.confidence >= 0.3) {
+      bestSection = valueAnalysis.section;
+      bestScore = valueAnalysis.confidence;
+      console.log(`   📝 FALLBACK: Using value-based assignment to Section ${bestSection}`);
+    }
+    // Try context-based analysis with lower threshold
+    else if (contextAnalysis.section > 0 && contextAnalysis.confidence >= 0.3) {
+      bestSection = contextAnalysis.section;
+      bestScore = contextAnalysis.confidence;
+      console.log(`   🔤 FALLBACK: Using context-based assignment to Section ${bestSection}`);
+    }
+    // Enhanced page proximity analysis for fields near section boundaries
+    else if (pageAnalysis.section > 0) {
+      // Check if this field is close to a section boundary and might belong to adjacent section
+      const page = field.page || 0;
+      const adjacentSections = findAdjacentSections(page);
+
+      if (adjacentSections.length > 0) {
+        // Prefer sections that are under their target count
+        const undersizedSection = adjacentSections.find(section => isUnderTarget(section, capacityInfo));
+        if (undersizedSection) {
+          bestSection = undersizedSection;
+          bestScore = 0.4;
+          console.log(`   🎯 FALLBACK: Assigning to undersized adjacent Section ${bestSection}`);
+        } else {
+          bestSection = adjacentSections[0];
+          bestScore = 0.3;
+          console.log(`   📍 FALLBACK: Assigning to adjacent Section ${bestSection}`);
+        }
+      } else {
+        // CRITICAL FIX: Use Section 30 (Continuation Space) instead of Section 20
+        bestSection = 30;
+        bestScore = 0.3;
+        console.log(`   ⚠️  LAST RESORT: Defaulting to Section 30 (Continuation Space)`);
+      }
+    } else {
+      // CRITICAL FIX: Use Section 30 (Continuation Space) for unclassified fields
+      bestSection = 30;
+      bestScore = 0.3;
+      console.log(`   ⚠️  ABSOLUTE FALLBACK: No analysis available, defaulting to Section 30 (Continuation Space)`);
+    }
+  }
+
+  // PROTECTION: Prevent Section 20 over-assignment
+  if (bestSection === 20) {
+    // Check if this field actually belongs to Section 20 based on content
+    const isLegitimateSection20 = isLegitimateSection20Field(field);
+    if (!isLegitimateSection20) {
+      console.log(`   🛡️  PROTECTION: Field doesn't appear to be legitimate Section 20, redirecting to Section 30`);
+      bestSection = 30;
+      bestScore = 0.3;
+    }
+  }
+
+  // Build comprehensive reason
+  const reasons = [];
+  if (pageAnalysis.section > 0) reasons.push(`Page: ${pageAnalysis.reason}`);
+  if (valueAnalysis.section > 0) reasons.push(`Value: ${valueAnalysis.reason}`);
+  if (contextAnalysis.section > 0) reasons.push(`Context: ${contextAnalysis.reason}`);
+  if (spatialAnalysis.section > 0) reasons.push(`Spatial: ${spatialAnalysis.reason}`);
+
+  // Add capacity analysis information
+  let capacityAnalysis = "No capacity information available";
+  if (capacityInfo) {
+    const isOverAllocated = capacityInfo.overAllocatedSections.includes(bestSection);
+    const isUnderAllocated = capacityInfo.underAllocatedSections.includes(bestSection);
+    const currentCount = capacityInfo.currentCounts[bestSection] || 0;
+    const expectedCount = capacityInfo.expectedCounts[bestSection] || 0;
+
+    if (isOverAllocated) {
+      capacityAnalysis = `Section ${bestSection} is over-allocated (${currentCount}/${expectedCount})`;
+    } else if (isUnderAllocated) {
+      capacityAnalysis = `Section ${bestSection} is under-allocated (${currentCount}/${expectedCount})`;
+    } else {
+      capacityAnalysis = `Section ${bestSection} capacity is balanced (${currentCount}/${expectedCount})`;
+    }
+  }
+
+  return {
+    section: bestSection,
+    confidence: bestScore,
+    reason: reasons.length > 0 ? reasons.join("; ") : "Default assignment to continuation section",
+    analysis: {
+      pageAnalysis: pageAnalysis.reason,
+      spatialAnalysis: spatialAnalysis.reason,
+      valueAnalysis: valueAnalysis.reason,
+      contextAnalysis: contextAnalysis.reason,
+      capacityAnalysis: capacityAnalysis,
+    }
+  };
+}
 
 /**
  * Field cluster result interface

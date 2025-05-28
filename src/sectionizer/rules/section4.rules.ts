@@ -1,6 +1,6 @@
 /**
  * Rules for Section 4: Social Security Number
- * Generated: 2025-05-26T18:44:23.562Z
+ * Generated: 2025-05-28T22:50:54.326Z
  */
 
 import type { MatchRule } from '../types.js';
@@ -11,8 +11,8 @@ import type { MatchRule } from '../types.js';
 export const sectionInfo = {
   section: 4,
   name: "Social Security Number",
-  ruleCount: 5,
-  lastUpdated: "2025-05-26T18:44:23.562Z"
+  ruleCount: 14,
+  lastUpdated: "2025-05-28T22:50:54.326Z"
 };
 
 /**
@@ -20,39 +20,102 @@ export const sectionInfo = {
  */
 export const rules: MatchRule[] = [
   {
-    pattern: /^form1[0]/,
+    pattern: /\\.SSN\\[\\d+\\]/i,
     section: 4,
     subsection: undefined,
-    confidence: 0.85,
-    description: "Fields starting with form1[0] belong to section 4",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 4",
   },
   {
-    pattern: /text/i,
+    pattern: /form1\\[0\\]\\.Sections1-6\\[0\\]\\.SSN\\[\\d+\\]/i,
     section: 4,
     subsection: undefined,
-    confidence: 0.75,
-    description: "text fields belong to section 4",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 4",
   },
   {
-    pattern: /TextField11[9]$/,
+    pattern: /form1\\[0\\]\\.Sections7-9\\[0\\]\\.SSN\\[\\d+\\]/i,
     section: 4,
     subsection: undefined,
-    confidence: 0.8,
-    description: "Fields ending with TextField11[9] belong to section 4",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 4",
   },
   {
-    pattern: /dropdown/i,
+    pattern: /form1\\[0\\]\\.Section\\d+.*\\.SSN\\[\\d+\\]/i,
     section: 4,
     subsection: undefined,
-    confidence: 0.75,
-    description: "dropdown fields belong to section 4",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 4",
   },
   {
-    pattern: /radio/i,
+    pattern: /form1\\[0\\]\\.section\\d+.*\\.SSN\\[\\d+\\]/i,
     section: 4,
     subsection: undefined,
-    confidence: 0.75,
-    description: "radio fields belong to section 4",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 4",
+  },
+  {
+    pattern: /form1\\[0\\]\\.#subform\\[\\d+\\]\\.SSN\\[\\d+\\]/i,
+    section: 4,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 4",
+  },
+  {
+    pattern: /form1\\[0\\]\\.#subform\\[\\d+\\]\\.#subform\\[\\d+\\]\\.SSN\\[\\d+\\]/i,
+    section: 4,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 4",
+  },
+  {
+    pattern: /form1\\[0\\]\\.continuation\\d*\\[0\\]\\.SSN\\[\\d+\\]/i,
+    section: 4,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 4",
+  },
+  {
+    pattern: /form1\\[0\\]\\.Section_\\d+.*\\.SSN\\[\\d+\\]/i,
+    section: 4,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 4",
+  },
+  {
+    pattern: /form1\\[0\\]\\.Section18_3\\[5\\]\\.SSN\\[0\\]/i,
+    section: 4,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 4",
+  },
+  {
+    pattern: /form1\\[0\\]\\.Section18_\\d+\\[\\d+\\]\\.SSN\\[\\d+\\]/i,
+    section: 4,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 4",
+  },
+  {
+    pattern: /form1\\[0\\]\\.Section\\d+_\\d+\\[\\d+\\]\\.SSN\\[\\d+\\]/i,
+    section: 4,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 4",
+  },
+  {
+    pattern: /form1\\[0\\]\\.Sections1-6\\[0\\]\\.CheckBox1\\[0\\]/i,
+    section: 4,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 4",
+  },
+  {
+    pattern: /form1\\[0\\]\\.Sections1-6\\[0\\]\\.RadioButtonList\\[0\\]/i,
+    section: 4,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 4",
   }
 ];
 

@@ -1,6 +1,6 @@
 /**
  * SF-86 Sectionizer - Spatial Analysis Utility
- * 
+ *
  * This utility provides spatial analysis functions for better field categorization
  * based on field coordinates within the form.
  */
@@ -35,7 +35,7 @@ export function getPageDimensions(pdfDoc?: PDFDocument): Record<number, { width:
 
   // Create new dimensions record
   const dimensions: Record<number, { width: number, height: number }> = {};
-  
+
   if (pdfDoc) {
     try {
       const pageCount = pdfDoc.getPageCount();
@@ -45,7 +45,7 @@ export function getPageDimensions(pdfDoc?: PDFDocument): Record<number, { width:
         dimensions[i + 1] = { width, height }; // Store as 1-based page numbers
       }
       console.log(`Retrieved dimensions for ${Object.keys(dimensions).length} pages from PDF`);
-      
+
       // Cache the dimensions
       cachedPageDimensions = dimensions;
     } catch (error) {
@@ -119,7 +119,7 @@ export function getPageDimensionForIndex(pdfDoc: PDFDocument, pageIndex: number 
   } catch (error) {
     console.warn(`Could not get page dimensions for page ${pageIndex}: ${error}`);
   }
-  
+
   // Return default dimensions if we couldn't get them from the PDF
   return DEFAULT_PAGE_DIMENSIONS;
 }
@@ -133,24 +133,24 @@ export function getPageDimensionForIndex(pdfDoc: PDFDocument, pageIndex: number 
   //  */
   //   private groupFieldsByCoordinateRange(fields: PDFField[]): Map<string, PDFField[]> {
   //     const groups = new Map<string, PDFField[]>();
-      
+
   //     for (const field of fields) {
   //       // Create a pattern key based on field properties
   //       // This helps group similar fields that will likely match the same rules
   //       const namePrefix = this.getSignificantPrefix(field.name) || '';
   //       const type = field.type || 'unknown';
   //       const page = field.page || -1;
-        
+
   //       // Create a key that combines these properties
   //       const key = `${namePrefix}|${type}|${page}`;
-        
+
   //       if (!groups.has(key)) {
   //         groups.set(key, []);
   //       }
-        
+
   //       groups.get(key)!.push(field);
   //     }
-      
+
   //     return groups;
   //   }
 
@@ -163,55 +163,55 @@ export function getPageDimensionForIndex(pdfDoc: PDFDocument, pageIndex: number 
  */
 export function extractSpatialInfo(field: PDFField, pdfDoc?: PDFDocument): SpatialInfo | null {
   // Check if we have coordinate data for dimensional analysis
-  const hasCoordinates = field.rect !== undefined || 
+  const hasCoordinates = field.rect !== undefined ||
                         ('x' in field && 'y' in field && 'width' in field && 'height' in field);
-  
+
   if (!hasCoordinates) {
     return null;
   }
-  
+
   // Extract coordinates from either the rect property or direct properties and round to 2 decimal places
   const x = Math.round((field.rect?.x || 0) * 100) / 100;
   const y = Math.round((field.rect?.y || 0) * 100) / 100;
   const width = Math.round((field.rect?.width || 0) * 100) / 100;
   const height = Math.round((field.rect?.height || 0) * 100) / 100;
-  
+
   // Get page dimensions - use field's page if available, otherwise use first page
   const pageIndex = field.page ? field.page - 1 : 0; // Convert from 1-based to 0-based
   const pageDimensions = pdfDoc ? getPageDimensionForIndex(pdfDoc, pageIndex) : DEFAULT_PAGE_DIMENSIONS;
-  
+
   // Calculate relative positions (as percentages of page dimensions)
   const relativeX = x / pageDimensions.width;
   const relativeY = y / pageDimensions.height;
   const relativeWidth = width / pageDimensions.width;
   const relativeHeight = height / pageDimensions.height;
-  
+
   // Determine if the field is in a header, footer, or main content area
   const isInHeader = relativeY > 0.8; // Top 20% of page
   const isInFooter = relativeY < 0.2; // Bottom 20% of page
   const isInLeftColumn = relativeX < 0.5 && relativeWidth < 0.4; // Left half and not too wide
   const isInRightColumn = relativeX > 0.5 && relativeWidth < 0.4; // Right half and not too wide
-  
+
   // Determine page region
   let region = '';
-  
+
   // Vertical regions
   if (relativeY > 0.8) region += 'top-';
   else if (relativeY < 0.2) region += 'bottom-';
   else region += 'middle-';
-  
+
   // Horizontal regions
   if (relativeX < 0.33) region += 'left';
   else if (relativeX > 0.67) region += 'right';
   else region += 'center';
-  
+
   // Determine quadrant (1-4, like mathematical quadrants)
   let quadrant = 0;
   if (relativeX >= 0.5 && relativeY >= 0.5) quadrant = 1; // Top-right
   else if (relativeX < 0.5 && relativeY >= 0.5) quadrant = 2; // Top-left
   else if (relativeX < 0.5 && relativeY < 0.5) quadrant = 3; // Bottom-left
   else if (relativeX >= 0.5 && relativeY < 0.5) quadrant = 4; // Bottom-right
-  
+
   // Create position hint
   const positionHint = [
     isInHeader ? 'header' : '',
@@ -219,7 +219,7 @@ export function extractSpatialInfo(field: PDFField, pdfDoc?: PDFDocument): Spati
     isInLeftColumn ? 'left' : '',
     isInRightColumn ? 'right' : ''
   ].filter(Boolean).join(' ');
-  
+
   return {
     relativeX,
     relativeY,
@@ -251,30 +251,30 @@ export function calculateSpatialConfidenceBoost(
   if (!spatialInfo) {
     return 0;
   }
-  
+
   let confidenceBoost = 0;
-  
+
   // Boost for section headers at top of page
   if (field.name?.toLowerCase().includes('section') && spatialInfo.isInHeader) {
     confidenceBoost += 0.15;
   }
-  
+
   // Boost for fields in left column when they contain section indicators
   if (spatialInfo.isInLeftColumn && field.name?.toLowerCase().includes('section')) {
     confidenceBoost += 0.1;
   }
-  
+
   // Apply page-based confidence boost if field has a page
   if (field.page) {
     // Check if the field's page falls within this section's page range
     for (const [sectionStr, [startPage, endPage]] of Object.entries(refinedSectionPageRanges)) {
       const sectionNum = parseInt(sectionStr, 10);
       if (isNaN(sectionNum) || sectionNum !== candidateSection) continue;
-      
+
       if (field.page >= startPage && field.page <= endPage) {
         // Field's page is within this section's page range
         confidenceBoost += 0.1;
-        
+
         // Additional boost if field is in expected position for this section
         if (spatialInfo.isInHeader && field.name?.toLowerCase().includes(`section ${sectionNum}`)) {
           confidenceBoost += 0.15;
@@ -282,14 +282,14 @@ export function calculateSpatialConfidenceBoost(
       }
     }
   }
-  
+
   return Math.min(0.2, confidenceBoost); // Cap at 0.2
 }
 
 /**
  * Check if a field's coordinates suggest it belongs to a specific section
  * based on the spatial characteristics of fields in that section
- * 
+ *
  * @param field Field to analyze
  * @param sectionFields Array of fields already known to be in the target section
  * @param sectionNumber Target section number
@@ -304,62 +304,62 @@ export function getPositionalSectionScore(
   if (!spatialInfo || !field.page) {
     return 0;
   }
-  
+
   // See if any fields in this section are on the same page and in a similar position
   const fieldsOnSamePage = sectionFields.filter(
     f => f.page === field.page
   );
-  
+
   if (fieldsOnSamePage.length === 0) {
     return 0;
   }
-  
+
   // Get spatial info for other fields on this page
   const spatialComp = fieldsOnSamePage
     .map(f => extractSpatialInfo(f))
     .filter((info): info is SpatialInfo => info !== null);
-  
+
   // No valid comparison points
   if (spatialComp.length === 0) {
     return 0;
   }
-  
+
   // Calculate regional matches - more precise than simple area matching
   let regionMatches = 0;
   let quadrantMatches = 0;
-  
+
   for (const comp of spatialComp) {
     // Check if field is in the same region
     if (spatialInfo.region === comp.region) {
       regionMatches++;
     }
-    
+
     // Check if field is in the same quadrant
     if (spatialInfo.quadrant === comp.quadrant) {
       quadrantMatches++;
     }
   }
-  
+
   // Calculate similarity scores (0-1)
   const regionSimilarityScore = regionMatches / spatialComp.length;
   const quadrantSimilarityScore = quadrantMatches / spatialComp.length;
-  
+
   // Weighted combined similarity score
   const spatialSimilarityScore = (regionSimilarityScore * 0.6) + (quadrantSimilarityScore * 0.4);
-  
+
   // Apply page range confidence
   let pageRangeConfidence = 0;
   for (const [sectionStr, [startPage, endPage]] of Object.entries(refinedSectionPageRanges)) {
     const sectionNum = parseInt(sectionStr, 10);
     if (isNaN(sectionNum) || sectionNum !== sectionNumber) continue;
-    
+
     if (field.page >= startPage && field.page <= endPage) {
       // Field is within this section's page range
       pageRangeConfidence = 0.7;
       break;
     }
   }
-  
+
   // Combine scores, weighted toward page range confidence
   return Math.min(0.9, (pageRangeConfidence * 0.6) + (spatialSimilarityScore * 0.4));
 }
@@ -376,60 +376,60 @@ export function clusterFieldsSpatially(
 ): SpatialCluster[] {
   // Initialize clusters array
   const clusters: SpatialCluster[] = [];
-  
+
   // Group fields by page using Map for better performance
   const fieldsByPage = new Map<number, Array<{field: CategorizedField, spatialInfo: SpatialInfo}>>();
-  
+
   // Pre-process fields to extract spatial info only once
   fields.forEach(field => {
     if (!field.page) return;
-    
+
     const spatialInfo = extractSpatialInfo(field);
     if (!spatialInfo) return;
-    
+
     if (!fieldsByPage.has(field.page)) {
       fieldsByPage.set(field.page, []);
     }
-    
+
     fieldsByPage.get(field.page)!.push({ field, spatialInfo });
   });
-  
+
   // Process each page separately
   fieldsByPage.forEach((fieldsWithSpatialInfo, page) => {
     // Skip if no fields have spatial info
     if (fieldsWithSpatialInfo.length === 0) return;
-    
+
     // Simple clustering algorithm:
     // For each field, check if it belongs to an existing cluster or create a new one
     for (const { field, spatialInfo } of fieldsWithSpatialInfo) {
       // Find the closest cluster on this page
       let closestCluster: SpatialCluster | null = null;
       let minDistance = Number.MAX_VALUE;
-      
+
       // Only check clusters on the same page
       const pageClusters = clusters.filter(c => c.page === page);
-      
+
       for (const cluster of pageClusters) {
         // Calculate distance to cluster centroid using squared distance for efficiency
         // (avoiding unnecessary square root operations when comparing distances)
-        const squaredDistance = 
+        const squaredDistance =
           Math.pow(spatialInfo.relativeX - cluster.centroid.x, 2) +
           Math.pow(spatialInfo.relativeY - cluster.centroid.y, 2);
-        
+
         if (squaredDistance < minDistance) {
           minDistance = squaredDistance;
           closestCluster = cluster;
         }
       }
-      
+
       // Convert back to actual distance for threshold comparison
       minDistance = Math.sqrt(minDistance);
-      
+
       // If within threshold, add to closest cluster, otherwise create new cluster
       if (closestCluster !== null && minDistance <= maxDistance) {
         // Add field to existing cluster
         closestCluster.fields.push(field);
-        
+
         // Update cluster properties efficiently
         updateClusterProperties(closestCluster);
       } else {
@@ -448,10 +448,10 @@ export function clusterFieldsSpatially(
       }
     }
   });
-  
+
   // Calculate dominant section for each cluster
   clusters.forEach(updateClusterDominantSection);
-  
+
   return clusters;
 }
 
@@ -464,29 +464,29 @@ function updateClusterProperties(cluster: SpatialCluster): void {
   const allSpatialInfos = cluster.fields
     .map(f => extractSpatialInfo(f))
     .filter((info): info is SpatialInfo => info !== null);
-  
+
   if (allSpatialInfos.length === 0) return;
-  
+
   // Calculate new centroid
   const sumX = allSpatialInfos.reduce((sum, info) => sum + info.relativeX, 0);
   const sumY = allSpatialInfos.reduce((sum, info) => sum + info.relativeY, 0);
-  
+
   cluster.centroid = {
     x: sumX / allSpatialInfos.length,
     y: sumY / allSpatialInfos.length
   };
-  
+
   // Update radius to encompass all points
   let maxRadiusSquared = 0;
-  
+
   for (const info of allSpatialInfos) {
-    const distanceSquared = 
+    const distanceSquared =
       Math.pow(info.relativeX - cluster.centroid.x, 2) +
       Math.pow(info.relativeY - cluster.centroid.y, 2);
-    
+
     maxRadiusSquared = Math.max(maxRadiusSquared, distanceSquared);
   }
-  
+
   cluster.radius = Math.sqrt(maxRadiusSquared);
 }
 
@@ -498,30 +498,30 @@ function updateClusterDominantSection(cluster: SpatialCluster): void {
   // Use Map for better performance with numeric keys
   const sectionCounts = new Map<number, number>();
   let totalFields = 0;
-  
+
   // Count sections in cluster
   for (const field of cluster.fields) {
     if (!field.section) continue;
-    
+
     const count = (sectionCounts.get(field.section) || 0) + 1;
     sectionCounts.set(field.section, count);
     totalFields++;
   }
-  
+
   // Find dominant section
   let dominantSection = 0;
   let maxCount = 0;
-  
+
   sectionCounts.forEach((count, section) => {
     if (count > maxCount) {
       maxCount = count;
       dominantSection = section;
     }
   });
-  
+
   // Calculate confidence based on percentage of dominant section
   const confidence = totalFields > 0 ? maxCount / totalFields : 0;
-  
+
   cluster.dominantSection = dominantSection;
   cluster.confidence = confidence;
 }
@@ -540,30 +540,30 @@ export function predictSectionBySpatialProximity(
   if (!spatialInfo || !field.page) {
     return { section: 0, confidence: 0 };
   }
-  
+
   // Default result
   let bestSection = 0;
   let bestConfidence = 0;
-  
+
   // Find fields on the same page
   for (const [sectionKey, fields] of Object.entries(sectionFields)) {
     const sectionNum = parseInt(sectionKey, 10);
     if (isNaN(sectionNum) || sectionNum === 0) continue;
-    
+
     // Filter fields on same page
     const samePageFields = fields.filter(f => f.page === field.page);
     if (samePageFields.length === 0) continue;
-    
+
     // Calculate confidence score
     const score = getPositionalSectionScore(field, samePageFields, sectionNum);
-    
+
     // Update best match if this is better
     if (score > bestConfidence) {
       bestSection = sectionNum;
       bestConfidence = score;
     }
   }
-  
+
   return { section: bestSection, confidence: bestConfidence };
 }
 
@@ -583,32 +583,32 @@ export function getSpatialNeighbors(
   if (!spatialInfo || !field.page) {
     return [];
   }
-  
+
   // Filter fields on the same page
-  const samePageFields = allFields.filter(f => 
+  const samePageFields = allFields.filter(f =>
     f.page === field.page && f !== field
   );
-  
+
   // Get spatial info for other fields
   const neighborsWithDistance = samePageFields
     .map(f => {
       const otherSpatialInfo = extractSpatialInfo(f);
       if (!otherSpatialInfo) return null;
-      
+
       // Calculate Euclidean distance
       const distance = Math.sqrt(
         Math.pow(spatialInfo.relativeX - otherSpatialInfo.relativeX, 2) +
         Math.pow(spatialInfo.relativeY - otherSpatialInfo.relativeY, 2)
       );
-      
+
       return { field: f, distance };
     })
     .filter((n): n is { field: PDFField, distance: number } => n !== null)
     .filter(n => n.distance <= maxDistance);
-  
+
   // Sort by distance (closest first)
   neighborsWithDistance.sort((a, b) => a.distance - b.distance);
-  
+
   // Return just the fields
   return neighborsWithDistance.map(n => n.field);
 }
@@ -621,43 +621,43 @@ export function getSpatialNeighbors(
 export function createSectionBoundaryMap(fields: CategorizedField[]): Map<number, SectionBoundary> {
   console.log('Creating section boundary map...');
   const boundaryMap = new Map<number, SectionBoundary>();
-  
+
   // Group fields by section
   const fieldsBySection: Record<number, CategorizedField[]> = {};
   fields.forEach(field => {
     const section = field.section || 0;
     if (section === 0) return; // Skip uncategorized fields
-    
+
     if (!fieldsBySection[section]) {
       fieldsBySection[section] = [];
     }
     fieldsBySection[section].push(field);
   });
-  
+
   // Process each section to create boundaries
   Object.entries(fieldsBySection).forEach(([sectionStr, sectionFields]) => {
     const section = parseInt(sectionStr, 10);
     if (section === 0) return;
-    
+
     // Group fields by page
     const fieldsByPage: Record<number, CategorizedField[]> = {};
     sectionFields.forEach(field => {
       if (!field.page || !field.rect) return;
-      
+
       if (!fieldsByPage[field.page]) {
         fieldsByPage[field.page] = [];
       }
       fieldsByPage[field.page].push(field);
     });
-    
+
     const pages: number[] = Object.keys(fieldsByPage).map(p => parseInt(p, 10)).sort((a, b) => a - b);
     const topLeft: { x: number, y: number }[] = [];
     const bottomRight: { x: number, y: number }[] = [];
-    
+
     // Create page ranges for consecutive pages
     const pageRanges: { start: number, end: number }[] = [];
     let currentRange: { start: number, end: number } | null = null;
-    
+
     pages.forEach(page => {
       if (!currentRange) {
         currentRange = { start: page, end: page };
@@ -667,36 +667,36 @@ export function createSectionBoundaryMap(fields: CategorizedField[]): Map<number
         pageRanges.push(currentRange);
         currentRange = { start: page, end: page };
       }
-      
+
       // Find extreme coordinates to create a bounding box for this page
       const pageFields = fieldsByPage[page];
       if (!pageFields || pageFields.length === 0) return;
-      
+
       let minX = Number.MAX_VALUE;
       let maxX = Number.MIN_VALUE;
       let minY = Number.MAX_VALUE;
       let maxY = Number.MIN_VALUE;
-      
+
       pageFields.forEach(field => {
         if (!field.rect) return;
-        
+
         const { x, y, width, height } = field.rect;
         minX = Math.min(minX, x);
         maxX = Math.max(maxX, x + width);
         minY = Math.min(minY, y);
         maxY = Math.max(maxY, y + height);
       });
-      
+
       // Store the bounding box coordinates for this page
       topLeft.push({ x: minX, y: maxY }); // Top-left (PDF coordinates start from bottom)
       bottomRight.push({ x: maxX, y: minY }); // Bottom-right
     });
-    
+
     // Add the last range
     if (currentRange) {
       pageRanges.push(currentRange);
     }
-    
+
     // Find the first and last fields in this section (based on page number and Y position)
     sectionFields.sort((a, b) => {
       // Sort by page first, then by Y position (top to bottom in PDF coordinates)
@@ -705,32 +705,32 @@ export function createSectionBoundaryMap(fields: CategorizedField[]): Map<number
       }
       return (b.rect?.y || 0) - (a.rect?.y || 0); // Reverse Y order since PDF coordinates start from bottom
     });
-    
+
     const firstField = sectionFields[0];
     const lastField = sectionFields[sectionFields.length - 1];
-    
+
     // Create subsection boundaries if applicable
     const subsectionMap = new Map<string, {
       topLeft: { x: number, y: number, page: number };
       bottomRight: { x: number, y: number, page: number };
       fields: CategorizedField[];
     }>();
-    
+
     // Group fields by subsection
     const fieldsBySubsection: Record<string, CategorizedField[]> = {};
     sectionFields.forEach(field => {
       if (!field.subsection) return;
-      
+
       if (!fieldsBySubsection[field.subsection]) {
         fieldsBySubsection[field.subsection] = [];
       }
       fieldsBySubsection[field.subsection].push(field);
     });
-    
+
     // Create boundary for each subsection
     Object.entries(fieldsBySubsection).forEach(([subsection, subsectionFields]) => {
       if (subsectionFields.length === 0 || !subsectionFields[0].page || !subsectionFields[0].rect) return;
-      
+
       // Sort by page and position
       subsectionFields.sort((a, b) => {
         if ((a.page || 0) !== (b.page || 0)) {
@@ -738,28 +738,28 @@ export function createSectionBoundaryMap(fields: CategorizedField[]): Map<number
         }
         return (b.rect?.y || 0) - (a.rect?.y || 0);
       });
-      
+
       const firstSubField = subsectionFields[0];
       const lastSubField = subsectionFields[subsectionFields.length - 1];
-      
+
       if (!firstSubField.page || !firstSubField.rect || !lastSubField.page || !lastSubField.rect) return;
-      
+
       // For subsection boundary, we'll use the first and last field directly
       subsectionMap.set(subsection, {
-        topLeft: { 
-          x: firstSubField.rect.x, 
+        topLeft: {
+          x: firstSubField.rect.x,
           y: firstSubField.rect.y + firstSubField.rect.height,
           page: firstSubField.page
         },
-        bottomRight: { 
-          x: lastSubField.rect.x + lastSubField.rect.width, 
+        bottomRight: {
+          x: lastSubField.rect.x + lastSubField.rect.width,
           y: lastSubField.rect.y,
           page: lastSubField.page
         },
         fields: subsectionFields
       });
     });
-    
+
     // Create the boundary object
     boundaryMap.set(section, {
       section,
@@ -772,7 +772,7 @@ export function createSectionBoundaryMap(fields: CategorizedField[]): Map<number
       subsections: subsectionMap.size > 0 ? subsectionMap : undefined
     });
   });
-  
+
   console.log(`Created boundaries for ${boundaryMap.size} sections`);
   return boundaryMap;
 }
@@ -784,20 +784,20 @@ export function createSectionBoundaryMap(fields: CategorizedField[]): Map<number
  * @returns The section number and confidence level
  */
 export function categorizeBySpatialBoundary(
-  field: PDFField, 
+  field: PDFField,
   boundaryMap: Map<number, SectionBoundary>
 ): { section: number, confidence: number, subsection?: string, entry?: number } {
   if (!field.page || !field.rect) {
     return { section: 0, confidence: 0 };
   }
-  
+
   const fieldPage = field.page;
   const { x, y, width, height } = field.rect;
-  
+
   let bestSection = 0;
   let bestConfidence = 0;
   let bestSubsection: string | undefined;
-  
+
   // Check each section boundary
   boundaryMap.forEach((boundary, section) => {
     // First check if field is on a page within this section's ranges
@@ -808,57 +808,57 @@ export function categorizeBySpatialBoundary(
         break;
       }
     }
-    
+
     if (!inSectionRange) return; // Field's page is not in this section
-    
+
     // Find the page index in the boundary pages
     const pageIndex = boundary.pages.indexOf(fieldPage);
     if (pageIndex === -1) return; // Field is not on a page for this section
-    
+
     // Get the bounding box for this page
     const tl = boundary.topLeft[pageIndex];
     const br = boundary.bottomRight[pageIndex];
-    
+
     // Check if field is within the bounding box
     // Add some margin to the boundaries (5% of the dimensions)
     const marginX = (br.x - tl.x) * 0.05;
     const marginY = (tl.y - br.y) * 0.05;
-    
-    if (x >= tl.x - marginX && x <= br.x + marginX && 
+
+    if (x >= tl.x - marginX && x <= br.x + marginX &&
         y >= br.y - marginY && y <= tl.y + marginY) {
       // Field is within this section's boundary
-      
+
       // Calculate how central the field is within the boundary
       // Fields closer to the center have higher confidence
       const boundaryWidth = br.x - tl.x + 2 * marginX;
       const boundaryHeight = tl.y - br.y + 2 * marginY;
-      
+
       const centerX = tl.x + boundaryWidth / 2;
       const centerY = br.y + boundaryHeight / 2;
-      
+
       // Calculate distance from center as a percentage of the half-width/height
       const distanceX = Math.abs(x - centerX) / (boundaryWidth / 2);
       const distanceY = Math.abs(y - centerY) / (boundaryHeight / 2);
-      
+
       // Average distance from center (0 = center, 1 = edge)
       const averageDistance = (distanceX + distanceY) / 2;
-      
+
       // Convert to confidence (0.5 for edge, 0.9 for center)
       const spatialConfidence = 0.9 - (averageDistance * 0.4);
-      
+
       // Consider distance to first and last fields as additional confidence factor
       let sequenceConfidence = 0;
       if (boundary.firstField?.rect && boundary.lastField?.rect) {
         const firstRect = boundary.firstField.rect;
         const lastRect = boundary.lastField.rect;
-        
+
         // Check if field is between first and last in the sequence
         if (
-          (boundary.firstField.page === fieldPage || boundary.lastField.page === fieldPage) && 
+          (boundary.firstField.page === fieldPage || boundary.lastField.page === fieldPage) &&
           (
             // Between first and last on same page
-            (boundary.firstField.page === boundary.lastField.page && 
-             y <= Math.max(firstRect.y, lastRect.y) && 
+            (boundary.firstField.page === boundary.lastField.page &&
+             y <= Math.max(firstRect.y, lastRect.y) &&
              y >= Math.min(firstRect.y, lastRect.y)) ||
             // After first field on first field's page
             (boundary.firstField.page === fieldPage && y <= firstRect.y) ||
@@ -869,10 +869,10 @@ export function categorizeBySpatialBoundary(
           sequenceConfidence = 0.2;
         }
       }
-      
+
       // Combine spatial and sequence confidence
       const confidence = Math.min(0.95, spatialConfidence + sequenceConfidence);
-      
+
       // Update best match if this is better
       if (confidence > bestConfidence) {
         bestSection = section;
@@ -880,8 +880,27 @@ export function categorizeBySpatialBoundary(
       }
     }
   });
-  
+
   return { section: bestSection, confidence: bestConfidence };
+}
+
+/**
+ * Detects if a field might be misclassified based on field name vs assigned section
+ * @param field The field to check
+ * @returns True if the field appears to be misclassified
+ */
+function isPotentialMisclassification(field: CategorizedField): boolean {
+  if (!field.name || !field.section) return false;
+
+  // Extract section number from field name (e.g., "Section11" from field name)
+  const nameMatch = field.name.match(/Section(\d+)/i);
+  if (nameMatch) {
+    const nameSection = parseInt(nameMatch[1], 10);
+    // If field name indicates a different section than assigned, it's likely misclassified
+    return nameSection !== field.section;
+  }
+
+  return false;
 }
 
 /**
@@ -891,51 +910,63 @@ export function categorizeBySpatialBoundary(
  */
 export function enhanceSpatialCategorization(fields: CategorizedField[]): CategorizedField[] {
   console.log('Enhancing field categorization using spatial boundaries...');
-  
+
   // Create a boundary map from fields that have already been categorized with high confidence
-  const highConfidenceFields = fields.filter(f => f.section > 0 && f.confidence >= 0.7);
+  // Lower the confidence threshold to get more boundary data for spatial analysis
+  const highConfidenceFields = fields.filter(f => f.section > 0 && f.confidence >= 0.6);
   const boundaryMap = createSectionBoundaryMap(highConfidenceFields);
-  
+
   if (boundaryMap.size === 0) {
     console.log('No section boundaries could be created, skipping spatial enhancement');
     return fields;
   }
-  
+
+  console.log(`Created spatial boundaries for ${boundaryMap.size} sections`);
   let enhancedCount = 0;
   let changedCount = 0;
-  
+  let correctedMisclassifications = 0;
+
   // Apply boundary-based categorization to improve results
   const enhancedFields = fields.map(field => {
-    // Skip fields with very high confidence
-    if (field.confidence >= 0.9) {
+    // Skip fields with very high confidence unless they might be misclassified
+    if (field.confidence >= 0.9 && !isPotentialMisclassification(field)) {
       return field;
     }
-    
+
     // Apply spatial boundary categorization
     const { section, confidence } = categorizeBySpatialBoundary(field, boundaryMap);
-    
-    // Only apply the new categorization if it's better than existing confidence
-    if (section > 0 && confidence > field.confidence) {
+
+    // Special handling for potential misclassifications
+    const isMisclassified = isPotentialMisclassification(field);
+    const shouldApply = section > 0 && (
+      confidence > field.confidence ||
+      (isMisclassified && confidence >= 0.6) // Lower threshold for correcting misclassifications
+    );
+
+    if (shouldApply) {
       enhancedCount++;
-      
+
       // Check if this changes the assigned section
       if (field.section !== section) {
         changedCount++;
+        if (isMisclassified) {
+          correctedMisclassifications++;
+        }
       }
-      
+
       return {
         ...field,
         section,
-        confidence,
+        confidence: Math.max(confidence, 0.7), // Boost confidence for spatial corrections
         // Note: Preserve existing subsection/entry if they exist,
         // otherwise they'll be assigned in organizeFieldsBySpatialRelationships
       };
     }
-    
+
     return field;
   });
-  
-  console.log(`Enhanced ${enhancedCount} fields using spatial boundaries. Changed section for ${changedCount} fields.`);
+
+  console.log(`Enhanced ${enhancedCount} fields using spatial boundaries. Changed section for ${changedCount} fields. Corrected ${correctedMisclassifications} misclassifications.`);
   return enhancedFields;
 }
 
@@ -948,7 +979,7 @@ export function organizeSpatialSubsectionEntries(
   fields: CategorizedField[]
 ): CategorizedField[] {
   console.log('Organizing subsections and entries using spatial relationships...');
-  
+
   // Group fields by section
   const fieldsBySection: Record<number, CategorizedField[]> = {};
   fields.forEach(field => {
@@ -958,33 +989,33 @@ export function organizeSpatialSubsectionEntries(
     }
     fieldsBySection[section].push(field);
   });
-  
+
   // Process each section
   const organizedFields: CategorizedField[] = [];
-  
+
   Object.entries(fieldsBySection).forEach(([sectionStr, sectionFields]) => {
     const section = parseInt(sectionStr, 10);
-    
+
     // Skip uncategorized fields
     if (section === 0) {
       organizedFields.push(...sectionFields);
       return;
     }
-    
+
     // Group fields by page
     const fieldsByPage: Record<number, CategorizedField[]> = {};
     sectionFields.forEach(field => {
       if (!field.page) return;
-      
+
       if (!fieldsByPage[field.page]) {
         fieldsByPage[field.page] = [];
       }
       fieldsByPage[field.page].push(field);
     });
-    
+
     // Process each page of this section
     const processedFields: CategorizedField[] = [];
-    
+
     Object.entries(fieldsByPage).forEach(([pageStr, pageFields]) => {
       // Sort fields by y-coordinate (top to bottom)
       pageFields.sort((a, b) => {
@@ -992,16 +1023,16 @@ export function organizeSpatialSubsectionEntries(
         const bY = b.rect?.y || 0;
         return bY - aY; // Reverse order since PDF coordinates start from bottom
       });
-      
+
       // Identify rows based on y-coordinate proximity
       const rows: CategorizedField[][] = [];
       let currentRow: CategorizedField[] = [];
       let lastY = -1;
       const yThreshold = 15; // Fields within 15 points are considered in the same row
-      
+
       pageFields.forEach(field => {
         const y = field.rect?.y || 0;
-        
+
         if (lastY === -1 || Math.abs(y - lastY) <= yThreshold) {
           // Same row
           currentRow.push(field);
@@ -1012,15 +1043,15 @@ export function organizeSpatialSubsectionEntries(
           }
           currentRow = [field];
         }
-        
+
         lastY = y;
       });
-      
+
       // Add the last row
       if (currentRow.length > 0) {
         rows.push(currentRow);
       }
-      
+
       // Sort fields in each row by x-coordinate (left to right)
       rows.forEach(row => {
         row.sort((a, b) => {
@@ -1029,10 +1060,10 @@ export function organizeSpatialSubsectionEntries(
           return aX - bX;
         });
       });
-      
+
       // Determine subsection letters and entry numbers
       // Rows typically represent subsections, columns represent entries
-      
+
       // Identify columns by analyzing x-coordinates across all rows
       const allX: number[] = [];
       rows.forEach(row => {
@@ -1042,38 +1073,38 @@ export function organizeSpatialSubsectionEntries(
           }
         });
       });
-      
+
       // Sort x-coordinates and identify clusters
       allX.sort((a, b) => a - b);
-      
+
       const xClusters: number[] = [];
       let lastX = -1;
       const xThreshold = 20; // X-coordinate threshold for columns
-      
+
       allX.forEach(x => {
         if (lastX === -1 || Math.abs(x - lastX) > xThreshold) {
           xClusters.push(x);
         }
         lastX = x;
       });
-      
+
       // Assign subsections (letters) and entries (numbers)
       rows.forEach((row, rowIndex) => {
         // Use letters for subsections
         const subsection = String.fromCharCode(97 + Math.min(rowIndex, 25)); // a-z
-        
+
         row.forEach(field => {
           // Assign subsection if not already assigned
           if (!field.subsection) {
             field.subsection = subsection;
           }
-          
+
           // Find column (entry) for this field
           if (!field.entry && field.rect) {
             // Find closest x-cluster
             let closestCluster = -1;
             let minDistance = Number.MAX_VALUE;
-            
+
             xClusters.forEach((cluster, index) => {
               const distance = Math.abs(field.rect!.x - cluster);
               if (distance < minDistance) {
@@ -1081,7 +1112,7 @@ export function organizeSpatialSubsectionEntries(
                 closestCluster = index;
               }
             });
-            
+
             // Assign entry based on column index (1-based)
             if (closestCluster !== -1) {
               field.entry = closestCluster + 1;
@@ -1089,14 +1120,14 @@ export function organizeSpatialSubsectionEntries(
           }
         });
       });
-      
+
       // Add all processed fields from this page
       processedFields.push(...pageFields);
     });
-    
+
     // Add all processed fields from this section
     organizedFields.push(...processedFields);
   });
-  
+
   return organizedFields;
-} 
+}

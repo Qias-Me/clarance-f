@@ -1,6 +1,6 @@
 /**
  * Rules for Section 1: Full Name
- * Generated: 2025-05-26T18:44:17.765Z
+ * Generated: 2025-05-28T22:50:54.325Z
  */
 
 import type { MatchRule } from '../types.js';
@@ -11,8 +11,8 @@ import type { MatchRule } from '../types.js';
 export const sectionInfo = {
   section: 1,
   name: "Full Name",
-  ruleCount: 1,
-  lastUpdated: "2025-05-26T18:44:17.765Z"
+  ruleCount: 4,
+  lastUpdated: "2025-05-28T22:50:54.325Z"
 };
 
 /**
@@ -20,11 +20,32 @@ export const sectionInfo = {
  */
 export const rules: MatchRule[] = [
   {
-    pattern: /^form1[0]/,
+    pattern: /form1\\[0\\]\\.Sections1-6\\[0\\]\\.TextField11\\[0\\]/i,
     section: 1,
     subsection: undefined,
-    confidence: 0.85,
-    description: "Fields starting with form1[0] belong to section 1",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 1",
+  },
+  {
+    pattern: /form1\\[0\\]\\.Sections1-6\\[0\\]\\.TextField11\\[1\\]/i,
+    section: 1,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 1",
+  },
+  {
+    pattern: /form1\\[0\\]\\.Sections1-6\\[0\\]\\.TextField11\\[2\\]/i,
+    section: 1,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 1",
+  },
+  {
+    pattern: /form1\\[0\\]\\.Sections1-6\\[0\\]\\.suffix\\[0\\]/i,
+    section: 1,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 1",
   }
 ];
 

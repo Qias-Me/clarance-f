@@ -20,14 +20,15 @@ let currentLogLevel: LogLevel = 'info';
 
 /**
  * Map of log levels to numeric values for comparison
+ * Lower values are more verbose (debug shows everything, none shows nothing)
  */
 const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
-  'debug': 0,
-  'info': 1,
-  'success': 2,
-  'warn': 3,
-  'error': 4,
-  'none': 5
+  'debug': 0,  // Most verbose - shows all logs
+  'info': 1,   // Shows info, success, warn, error
+  'success': 2, // Shows success, warn, error
+  'warn': 3,   // Shows warn, error
+  'error': 4,  // Shows only errors
+  'none': 5    // Shows nothing
 };
 
 /**
@@ -35,7 +36,18 @@ const LOG_LEVEL_VALUES: Record<LogLevel, number> = {
  * @param level New log level to set
  */
 export function setLogLevel(level: LogLevel): void {
+  if (!Object.keys(LOG_LEVEL_VALUES).includes(level)) {
+    console.warn(`Invalid log level: ${level}. Using 'info' instead.`);
+    currentLogLevel = 'info';
+    return;
+  }
+  
   currentLogLevel = level;
+  
+  // Log the level change, but only if it's not 'none'
+  if (level !== 'none') {
+    console.log(chalk.blue(`[CONFIG] Log level set to: ${level}`));
+  }
 }
 
 /**
@@ -52,6 +64,8 @@ export function getLogLevel(): LogLevel {
  * @returns True if the level should be displayed
  */
 function shouldLog(level: LogLevel): boolean {
+  // A message should be logged if its level value is >= the current log level value
+  // For example, with currentLogLevel='info' (1), we'll log info (1), success (2), warn (3), and error (4), but not debug (0)
   return LOG_LEVEL_VALUES[level] >= LOG_LEVEL_VALUES[currentLogLevel];
 }
 

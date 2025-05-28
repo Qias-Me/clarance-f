@@ -505,7 +505,7 @@ export function extractSectionInfoFromName(fieldName: string): {
     /form1\[0\]\.Sections1-6\[0\]\.TextField11\[2\]/i, // Middle name
     /form1\[0\]\.Sections1-6\[0\]\.suffix\[0\]/i, // Name suffix
   ];
-  
+
   for (let i = 0; i < section1Patterns.length; i++) {
     if (section1Patterns[i].test(fieldName)) {
       return {
@@ -515,36 +515,36 @@ export function extractSectionInfoFromName(fieldName: string): {
       };
     }
   }
-  
+
   // Complex multidimensional pattern matching - Example: sect13A.1Entry2StartDate
   // This pattern includes section, subsection, and entry in a complex format
   const complexPatterns = [
     // Pattern: sect13A.1Entry2StartDate -> section 13, subsection A.1, entry 2
     /sect(\d+)([A-Za-z])\.?(\d*)Entry(\d+)/i,
-    
+
     // Pattern: section13A.1_entry2_startDate -> section 13, subsection A.1, entry 2
     /section(\d+)([A-Za-z])\.?(\d*)[_\s]?entry(\d+)/i,
-    
+
     // Pattern: section13A.1_instance2_date -> section 13, subsection A.1, entry 2
     /section(\d+)([A-Za-z])\.?(\d*)[_\s]?instance(\d+)/i,
-    
+
     // Pattern: sect13_subsecA_entry2 -> section 13, subsection A, entry 2
     /sect(\d+)[_\s]?subsec([A-Za-z])[_\s]?entry(\d+)/i,
-    
+
     // Pattern: section13_subA1_entry2 -> section 13, subsection A1, entry 2
     /section(\d+)[_\s]?sub([A-Za-z]\d*)[_\s]?entry(\d+)/i
   ];
-  
+
   for (const pattern of complexPatterns) {
     const match = fieldName.match(pattern);
     if (match) {
       const section = parseInt(match[1]);
       const subsectionLetter = match[2].toUpperCase();
-      
+
       // Handle different pattern variations
       let subsectionNumber = "";
       let entry = 0;
-      
+
       if (pattern.source.includes("subsec") || pattern.source.includes("sub")) {
         // For patterns like sect13_subsecA_entry2 or section13_subA1_entry2
         subsectionNumber = match[3] && match[3] !== "" ? match[3] : "";
@@ -554,10 +554,10 @@ export function extractSectionInfoFromName(fieldName: string): {
         subsectionNumber = match[3] && match[3] !== "" ? match[3] : "";
         entry = parseInt(match[4]);
       }
-      
+
       // Combine subsection letter and number if both exist
       const subsection = subsectionNumber ? `${subsectionLetter}.${subsectionNumber}` : subsectionLetter;
-      
+
       return {
         section,
         subsection,
@@ -575,11 +575,11 @@ export function extractSectionInfoFromName(fieldName: string): {
     const section = parseInt(explicitSubsectionEntryMatch[1]);
     const subsection = explicitSubsectionEntryMatch[2].toUpperCase();
     let entry = 0; // Default to 0 (base content) if not specified
-    
+
     if (explicitSubsectionEntryMatch[3]) {
       entry = parseInt(explicitSubsectionEntryMatch[3]); // Keep this as entry 1+ for repetitive instances
     }
-    
+
     return {
       section,
       subsection,
@@ -594,7 +594,7 @@ export function extractSectionInfoFromName(fieldName: string): {
   if (sectionEntryMatch) {
     const section = parseInt(sectionEntryMatch[1]);
     const entry = parseInt(sectionEntryMatch[2]);
-    
+
     return {
       section,
       entry, // Keep this as entry 1+ for repetitive instances
@@ -609,7 +609,7 @@ export function extractSectionInfoFromName(fieldName: string): {
     const section = parseInt(sectionSubEntryMatch[1]);
     const subsection = sectionSubEntryMatch[2];
     const entry = parseInt(sectionSubEntryMatch[3]);
-    
+
     return {
       section,
       subsection,
@@ -624,7 +624,7 @@ export function extractSectionInfoFromName(fieldName: string): {
   if (sectionSubMatch) {
     const section = parseInt(sectionSubMatch[1]);
     const subsection = sectionSubMatch[2];
-    
+
     return {
       section,
       subsection,
@@ -641,7 +641,7 @@ export function extractSectionInfoFromName(fieldName: string): {
     const section = parseInt(camelCaseMatch[1]);
     const subsection = camelCaseMatch[2].toUpperCase();
     const entry = parseInt(camelCaseMatch[3]);
-    
+
     return {
       section,
       subsection,
@@ -656,7 +656,7 @@ export function extractSectionInfoFromName(fieldName: string): {
   const section7Match = fieldName.match(section7Pattern);
   if (section7Match) {
     const textFieldIndex = parseInt(section7Match[1]);
-    
+
     // Determine entry based on TextField11 index in section 7
     // This is a heuristic based on the given examples
     let entry = 0; // Default to 0 (base content)
@@ -667,7 +667,7 @@ export function extractSectionInfoFromName(fieldName: string): {
     } else if (textFieldIndex < 10) {
       entry = 1; // 1st repetitive instance
     }
-    
+
     return {
       section: 7,
       entry,
@@ -680,10 +680,10 @@ export function extractSectionInfoFromName(fieldName: string): {
   const section12TablePattern = /section_12_(\d+).*?Table(\d+)\[.*?Row(\d+)/i;
   const section12TableMatch = fieldName.match(section12TablePattern);
   if (section12TableMatch) {
-    const entry = parseInt(section12TableMatch[1]); 
+    const entry = parseInt(section12TableMatch[1]);
     const tableNum = parseInt(section12TableMatch[2]);
     const rowNum = parseInt(section12TableMatch[3]);
-    
+
     return {
       section: 12,
       entry, // Keep entry 1+ for repetitive instances
@@ -697,7 +697,7 @@ export function extractSectionInfoFromName(fieldName: string): {
   const sections1To6Match = fieldName.match(sections1To6Pattern);
   if (sections1To6Match) {
     const textFieldIndex = parseInt(sections1To6Match[1]);
-    
+
     // Map TextField11 indices to appropriate sections
     // This mapping is based on the strict patterns in rule-loader.ts
     if (textFieldIndex <= 2) {
@@ -730,11 +730,11 @@ export function extractSectionInfoFromName(fieldName: string): {
     const sectionMatch = fieldName.match(/section[_\s]?([1-8])\b/i);
     if (sectionMatch) {
       const section = parseInt(sectionMatch[1]);
-      
+
       // Look for any entry indicators (assume 0 if none found)
-      const entryMatch = fieldName.match(/entry[_\s]?(\d+)/i) || 
+      const entryMatch = fieldName.match(/entry[_\s]?(\d+)/i) ||
                           fieldName.match(/instance[_\s]?(\d+)/i);
-      
+
       return {
         section,
         entry: entryMatch ? parseInt(entryMatch[1]) : 0, // Default to 0 (base content) if no entry indicator
@@ -748,7 +748,7 @@ export function extractSectionInfoFromName(fieldName: string): {
   const basicMatch = fieldName.match(basicSectionPattern);
   if (basicMatch) {
     const section = parseInt(basicMatch[1]);
-    
+
     return {
       section,
       entry: 0, // Default to 0 (base content) for basic section detection
@@ -779,13 +779,13 @@ export function detectSectionFromFieldValue(
   // Enhanced patterns to detect section and subsection information
   // Pattern 1: sect9.2FieldName (e.g., sect9.2CertificateState)
   const pattern1 = /^sect(\d+)\.(\d+)([A-Z]|[_-])/i;
-  
+
   // Pattern 2: 9.1FieldName (e.g., 9.1MiddleName)
   const pattern2 = /^(\d+)\.(\d+)([A-Z]|[_-])/i;
-  
+
   // Pattern 3: sect9.2.1FieldName (e.g., sect9.2.1Value)
   const pattern3 = /^sect(\d+)\.(\d+)\.(\d+)/i;
-  
+
   // Pattern 4: 9.2.1FieldName (e.g., 9.2.1Value)
   const pattern4 = /^(\d+)\.(\d+)\.(\d+)/i;
 
@@ -793,12 +793,12 @@ export function detectSectionFromFieldValue(
   const pattern5 = /(\d+)\.(\d+)$/i;
 
   let match;
-  
+
   // Try pattern 1 first (most specific with 'sect' prefix)
   if ((match = strValue.match(pattern1))) {
     const section = parseInt(match[1]);
     const subsection = match[2];
-    
+
     return {
       section,
       sectionName: getSectionNameById(section),
@@ -806,13 +806,13 @@ export function detectSectionFromFieldValue(
       confidence: 0.95
     };
   }
-  
+
   // Try pattern 3 (with 'sect' prefix and entry)
   if ((match = strValue.match(pattern3))) {
     const section = parseInt(match[1]);
     const subsection = match[2];
     const entry = parseInt(match[3]);
-    
+
     return {
       section,
       sectionName: getSectionNameById(section),
@@ -821,12 +821,12 @@ export function detectSectionFromFieldValue(
       confidence: 0.92
     };
   }
-  
+
   // Try pattern 2 (direct numbers without 'sect')
   if ((match = strValue.match(pattern2))) {
     const section = parseInt(match[1]);
     const subsection = match[2];
-    
+
     return {
       section,
       sectionName: getSectionNameById(section),
@@ -834,13 +834,13 @@ export function detectSectionFromFieldValue(
       confidence: 0.90
     };
   }
-  
+
   // Try pattern 4 (direct numbers with entry)
   if ((match = strValue.match(pattern4))) {
     const section = parseInt(match[1]);
     const subsection = match[2];
     const entry = parseInt(match[3]);
-    
+
     return {
       section,
       sectionName: getSectionNameById(section),
@@ -854,7 +854,7 @@ export function detectSectionFromFieldValue(
   if ((match = strValue.match(pattern5))) {
     const section = parseInt(match[1]);
     const subsection = match[2];
-    
+
     return {
       section,
       sectionName: getSectionNameById(section),
@@ -2609,6 +2609,44 @@ export function enhancedMultiDimensionalCategorization(
   entry?: number;
   confidence: number;
 } | null {
+  // 🎯 CRITICAL: Apply high-priority protection logic FIRST for Sections7-9 fields with sect7/8/9 values
+  // This ensures fields like "sect7homeEmail" get maximum confidence and correct section assignment
+  if (fieldName && fieldName.includes("Sections7-9[") && fieldValue) {
+    const value = fieldValue.toString().toLowerCase();
+
+    // 🚨 DEBUG: Log when we encounter Sections7-9 fields to verify this function is being called
+    console.log(`🚨 HIGH-PRIORITY DEBUG: enhancedMultiDimensionalCategorization called for ${fieldName} = "${fieldValue}"`);
+    console.log(`   Processed value: "${value}"`);
+    console.log(`   Contains sect7: ${value.includes("sect7")}`);
+    console.log(`   Contains sect8: ${value.includes("sect8")}`);
+    console.log(`   Contains sect9: ${value.includes("sect9")}`);
+
+    // Check for sect7, sect8, or sect9 values and assign to correct sections with maximum confidence
+    if (value.includes("sect7")) {
+      console.log(`   ✅ RETURNING SECTION 7 with confidence 0.99`);
+      return {
+        section: 7,
+        confidence: 0.99, // Maximum confidence for explicit value-based matching
+      };
+    }
+    if (value.includes("sect8")) {
+      console.log(`   ✅ RETURNING SECTION 8 with confidence 0.99`);
+      return {
+        section: 8,
+        confidence: 0.99, // Maximum confidence for explicit value-based matching
+      };
+    }
+    if (value.includes("sect9")) {
+      console.log(`   ✅ RETURNING SECTION 9 with confidence 0.99`);
+      return {
+        section: 9,
+        confidence: 0.99, // Maximum confidence for explicit value-based matching
+      };
+    }
+
+    console.log(`   ❌ NO SECT7/8/9 MATCH - proceeding to regular categorization`);
+  }
+
   // OPTIMIZATION: Check for complex pattern match first
   // This gives precedence to precise pattern matching before more generic heuristics
   const complexInfo = extractSectionInfoFromName(fieldName);
@@ -2740,12 +2778,12 @@ export function enhancedMultiDimensionalCategorization(
     if (!bestMatch || confidence > bestMatch.confidence) {
       // Get section ID from classification
       const sectionId = classification.sectionId;
-      
+
       // Try to extract subsection and entry information
       // If we have lower confidence match from pattern extraction, use it
       let subsection: string | undefined = undefined;
       let entry: number | undefined = undefined;
-      
+
       if (complexInfo && complexInfo.section === sectionId) {
         subsection = complexInfo.subsection;
         entry = complexInfo.entry;
@@ -2753,28 +2791,28 @@ export function enhancedMultiDimensionalCategorization(
         // Try to extract subsection and entry from the field name
         // This handles cases where the field name contains subsection/entry info
         // but wasn't matched with high confidence in the first pass
-        
+
         // For entry detection in specific sections:
         if (sectionId >= 1 && sectionId <= 8) {
           // Lower-numbered sections (1-8) typically don't have subsections
           // Look for entry patterns
-          const entryMatch = fieldName.match(/entry[_\s]?(\d+)/i) || 
+          const entryMatch = fieldName.match(/entry[_\s]?(\d+)/i) ||
                             fieldName.match(/instance[_\s]?(\d+)/i);
-                            
+
           entry = entryMatch ? parseInt(entryMatch[1]) : 0; // Default to entry 0 for base content
         } else {
           // Higher-numbered sections (9+) may have both subsections and entries
           // Look for subsection patterns first
           const subsectionMatch = fieldName.match(/subsection[_\s]?([A-Za-z])/i) ||
                                   fieldName.match(/sub[_\s]?([A-Za-z])/i);
-                                  
+
           if (subsectionMatch) {
             subsection = subsectionMatch[1].toUpperCase();
-            
+
             // If we found a subsection, look for entry
-            const entryMatch = fieldName.match(/entry[_\s]?(\d+)/i) || 
+            const entryMatch = fieldName.match(/entry[_\s]?(\d+)/i) ||
                               fieldName.match(/instance[_\s]?(\d+)/i);
-                              
+
             entry = entryMatch ? parseInt(entryMatch[1]) : 1; // Default to entry 1 for first instance
           }
         }

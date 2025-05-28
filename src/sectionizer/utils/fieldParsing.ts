@@ -11,6 +11,7 @@ import {
   sectionEntryPrefixes,
   expectedFieldCounts
 } from './field-clusterer.js';
+import { EncapsulatedFieldParser, FieldHierarchy } from './encapsulated-field-parser.js';
 
 /**
  * Result of section information extraction
@@ -49,15 +50,56 @@ export function extractSectionInfo(
 ): SectionInfo | null {
   if (!fieldName) return null;
 
+  // 🎯 DEBUG: Track our target field
+  const isTargetField = fieldName.includes("Section11[0].From_Datefield_Name_2[2]");
+
+  if (isTargetField) {
+    console.log(`\n🔍 FIELD PARSING - extractSectionInfo DEBUG:`);
+    console.log(`   Field Name: "${fieldName}"`);
+  }
+
   const { verbose = false, minConfidence = 0 } = options;
   let matchDetails: string | undefined;
 
   // Normalize the field name for consistent pattern matching
   const normalizedName = fieldName.toLowerCase().trim();
 
-  // Try to identify section number first
-  let sectionMatch = normalizedName.match(/[Ss]ection(\d+)/);
-  let sectionHint = sectionMatch ? parseInt(sectionMatch[1], 10) : 0;
+  if (isTargetField) {
+    console.log(`   Normalized Name: "${normalizedName}"`);
+    console.log(`   Min Confidence: ${minConfidence}`);
+    console.log(`   Calling EncapsulatedFieldParser...`);
+  }
+
+  // FIRST PRIORITY: Try the new encapsulated field parser (highest accuracy)
+  const encapsulatedResult = EncapsulatedFieldParser.parseFieldHierarchy(fieldName, verbose);
+
+  if (isTargetField) {
+    console.log(`   EncapsulatedFieldParser Result: ${encapsulatedResult ? JSON.stringify(encapsulatedResult) : 'null'}`);
+    if (encapsulatedResult) {
+      console.log(`   Confidence Check: ${encapsulatedResult.confidence} >= ${minConfidence} = ${encapsulatedResult.confidence >= minConfidence}`);
+    }
+  }
+
+  if (encapsulatedResult && encapsulatedResult.confidence >= minConfidence) {
+    // Convert FieldHierarchy to SectionInfo format
+    const result = {
+      section: encapsulatedResult.section,
+      ...(encapsulatedResult.subsection !== -1 && { subsection: String(encapsulatedResult.subsection) }),
+      ...(encapsulatedResult.entry !== -1 && { entry: encapsulatedResult.entry }),
+      confidence: encapsulatedResult.confidence,
+      ...(encapsulatedResult.matchDetails && { matchDetails: encapsulatedResult.matchDetails })
+    };
+
+    if (isTargetField) {
+      console.log(`   ✅ ENCAPSULATED PARSER SUCCESS: ${JSON.stringify(result)}`);
+    }
+
+    return result;
+  }
+
+  if (isTargetField) {
+    console.log(`   ❌ ENCAPSULATED PARSER FAILED: Continuing to other methods...`);
+  }
 
   // Match against section field patterns first
   for (const [sectionStr, patterns] of Object.entries(sectionFieldPatterns)) {
@@ -207,32 +249,37 @@ export function extractSectionInfo(
     };
   }
 
-  // Pattern: form1[0].Sections7-9[0] -> Section 8 (middle section of range)
+  // Pattern: form1[0].Sections7-9[0] -> Requires specific field analysis (NO DEFAULT ASSIGNMENT)
   const formSectionRangePattern = /form\d+\[\d+\]\.sections(\d+)-(\d+)\[\d+\]/i;
   const formSectionRangeMatch = normalizedName.match(formSectionRangePattern);
   if (formSectionRangeMatch) {
     const startSection = parseInt(formSectionRangeMatch[1]);
     const endSection = parseInt(formSectionRangeMatch[2]);
 
-    // For sections7-9, we need deeper analysis to determine exact section
-    // Check for specific field patterns within the range
-    let targetSection = Math.floor((startSection + endSection) / 2); // Default to middle section
+    // ONLY assign if we have SPECIFIC indicators - no default assignment based on range
+    let targetSection: number | null = null;
 
-    // Look for specific indicators in the field name
-    if (normalizedName.includes('passport') || normalizedName.includes('p3-t68')) {
+    // Look for SPECIFIC and UNAMBIGUOUS indicators in the field name
+    if (normalizedName.includes('passport') || normalizedName.includes('p3-t68') || normalizedName.includes('travel') || normalizedName.includes('document')) {
       targetSection = 8; // Passport info typically in section 8
-    } else if (normalizedName.includes('citizenship') || normalizedName.includes('radiobutton')) {
+    } else if (normalizedName.includes('citizenship') || normalizedName.includes('citizen') || normalizedName.includes('naturalization')) {
       targetSection = 9; // Citizenship questions typically in section 9
-    } else if (normalizedName.includes('contact') || normalizedName.includes('email') || normalizedName.includes('phone')) {
+    } else if (normalizedName.includes('contact') || normalizedName.includes('email') || normalizedName.includes('phone') || normalizedName.includes('address')) {
       targetSection = 7; // Contact info typically in section 7
     }
 
-    matchDetails = verbose ? `Form section range pattern: ${formSectionRangeMatch[0]} -> Section ${targetSection}` : undefined;
-    return {
-      section: targetSection,
-      confidence: 0.85, // Lower confidence due to range ambiguity
-      ...(matchDetails && { matchDetails })
-    };
+    // Only return a result if we found a specific indicator
+    if (targetSection !== null && targetSection >= startSection && targetSection <= endSection) {
+      matchDetails = verbose ? `Form section range pattern: ${formSectionRangeMatch[0]} -> Section ${targetSection} (specific indicator found)` : undefined;
+      return {
+        section: targetSection,
+        confidence: 0.85,
+        ...(matchDetails && { matchDetails })
+      };
+    }
+
+    // If no specific indicator found, return null to let other patterns handle it
+    return null;
   }
 
   // Pattern: section21c -> section 21 subsection c (needs deeper analysis)
@@ -363,6 +410,48 @@ export function extractSectionInfoFromField(field: any): SectionInfo | null {
   }
 
   return null;
+}
+
+/**
+ * Handle Section14 edge case where some fields with "Section14" in their names
+ * actually belong to Section 15. This is similar to the "Sections1-6" and "Sections7-9" patterns.
+ *
+ * @param fieldName The field name to analyze
+ * @param detectedSection The section detected by standard parsing
+ * @returns Corrected section number if edge case applies, otherwise original section
+ */
+export function handleSection14EdgeCase(fieldName: string, detectedSection: number): number {
+  if (detectedSection !== 14 || !fieldName.includes('Section14')) {
+    return detectedSection; // No edge case applies
+  }
+
+  const normalizedName = fieldName.toLowerCase();
+
+  // Analyze field patterns to determine if this Section14 field should actually go to Section 15
+  // Based on SF-86 form structure, some Section14 fields are continuation fields for Section 15
+
+  // Look for specific indicators that suggest this field belongs to Section 15
+  const section15Indicators = [
+    'continuation',
+    'additional',
+    'other',
+    'specify',
+    'details',
+    'explanation',
+    'textfield11[3]', // Higher index text fields often continue to next section
+    'textfield11[4]',
+    'textfield11[5]'
+  ];
+
+  const hasSection15Indicator = section15Indicators.some(indicator =>
+    normalizedName.includes(indicator)
+  );
+
+  if (hasSection15Indicator) {
+    return 15; // This Section14 field actually belongs to Section 15
+  }
+
+  return detectedSection; // Keep original section assignment
 }
 
 /**

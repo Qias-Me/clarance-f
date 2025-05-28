@@ -1,0 +1,2 @@
+# No unclassified fields found in test45 results
+# All 6197 fields have been assigned to sections

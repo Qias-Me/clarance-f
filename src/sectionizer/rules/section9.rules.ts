@@ -1,6 +1,6 @@
 /**
  * Rules for Section 9: Citizenship
- * Generated: 2025-05-26T18:44:20.846Z
+ * Generated: 2025-05-28T22:50:54.329Z
  */
 
 import type { MatchRule } from '../types.js';
@@ -11,8 +11,8 @@ import type { MatchRule } from '../types.js';
 export const sectionInfo = {
   section: 9,
   name: "Citizenship",
-  ruleCount: 4,
-  lastUpdated: "2025-05-26T18:44:20.846Z"
+  ruleCount: 10,
+  lastUpdated: "2025-05-28T22:50:54.329Z"
 };
 
 /**
@@ -20,32 +20,74 @@ export const sectionInfo = {
  */
 export const rules: MatchRule[] = [
   {
-    pattern: /^form1[0]/,
+    pattern: /form1\\[0\\]\\.Sections7-9\\[0\\]\\.#field\\[(?!4\\])\\d+\\]/i,
     section: 9,
     subsection: undefined,
-    confidence: 0.85,
-    description: "Fields starting with form1[0] belong to section 9",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 9",
   },
   {
-    pattern: /2[0]$/,
+    pattern: /form1\\[0\\]\\.Sections7-9\\[0\\]\\.#field\\[25\\]/i,
     section: 9,
     subsection: undefined,
-    confidence: 0.8,
-    description: "Fields ending with 2[0] belong to section 9",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 9",
   },
   {
-    pattern: /date/i,
+    pattern: /form1\\[0\\]\\.Sections7-9\\[0\\]\\.#field\\[28\\]/i,
     section: 9,
     subsection: undefined,
-    confidence: 0.75,
-    description: "date fields belong to section 9",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 9",
   },
   {
-    pattern: /text/i,
+    pattern: /form1\\[0\\]\\.Sections7-9\\[0\\]\\.RadioButtonList\\[1\\]/i,
     section: 9,
     subsection: undefined,
-    confidence: 0.75,
-    description: "text fields belong to section 9",
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 9",
+  },
+  {
+    pattern: /form1\\[0\\]\\.Sections7-9\\[0\\]\\.Section9/i,
+    section: 9,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 9",
+  },
+  {
+    pattern: /form1\\[0\\]\\.Sections7-9\\[0\\]\\.TextField11\\[18\\]/i,
+    section: 9,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 9",
+  },
+  {
+    pattern: /form1\\[0\\]\\.Sections7-9\\[0\\]\\.School6_State\\[0\\]/i,
+    section: 9,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 9",
+  },
+  {
+    pattern: /form1\\[0\\]\\.Sections7-9\\[0\\]\\.RadioButtonList\\[2\\]/i,
+    section: 9,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 9",
+  },
+  {
+    pattern: /form1\\[0\\]\\.Sections7-9\\[0\\]\\.RadioButtonList\\[3\\]/i,
+    section: 9,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 9",
+  },
+  {
+    pattern: /form1\\[0\\]\\.Section9\\.1-9\\.4\\[0\\]\\./i,
+    section: 9,
+    subsection: undefined,
+    confidence: 0.9,
+    description: "Pattern from sectionFieldPatterns for section 9",
   }
 ];
 

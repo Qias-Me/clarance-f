@@ -1,56 +1,200 @@
 [
   {
-    "pattern": "^form1[0]",
-    "flags": "",
-    "confidence": 0.85,
-    "description": "Fields starting with form1[0] belong to section 12"
-  },
-  {
-    "pattern": "Cell4[0]$",
-    "flags": "",
-    "confidence": 0.8,
-    "description": "Fields ending with Cell4[0] belong to section 12"
-  },
-  {
-    "pattern": "Cell5[0]$",
-    "flags": "",
-    "confidence": 0.8,
-    "description": "Fields ending with Cell5[0] belong to section 12"
-  },
-  {
-    "pattern": "2[1]$",
-    "flags": "",
-    "confidence": 0.8,
-    "description": "Fields ending with 2[1] belong to section 12"
-  },
-  {
-    "pattern": "date",
+    "pattern": "form1\\[0\\]\\.section_12_2\\[0\\]\\.Table1\\[0\\]\\.Row1\\[0\\]\\.Cell4\\[0\\]",
     "flags": "i",
-    "confidence": 0.75,
-    "description": "date fields belong to section 12"
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
   },
   {
-    "pattern": "text",
+    "pattern": "form1\\[0\\]\\.section_12",
     "flags": "i",
-    "confidence": 0.75,
-    "description": "text fields belong to section 12"
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
   },
   {
-    "pattern": "dropdown",
+    "pattern": "form1\\[0\\]\\.section_12\\[0\\]\\.",
     "flags": "i",
-    "confidence": 0.75,
-    "description": "dropdown fields belong to section 12"
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
   },
   {
-    "pattern": "Cell1[0]$",
-    "flags": "",
-    "confidence": 0.8,
-    "description": "Fields ending with Cell1[0] belong to section 12"
+    "pattern": "form1\\[0\\]\\.section_12_1\\[0\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
   },
   {
-    "pattern": "Cell2[0]$",
-    "flags": "",
-    "confidence": 0.8,
-    "description": "Fields ending with Cell2[0] belong to section 12"
+    "pattern": "form1\\[0\\]\\.section_12_2\\[0\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.section_12_3\\[0\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.section_12_4\\[0\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.section_12_5\\[0\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.section_12\\[0\\]\\.pg10r2\\[0\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.section_12\\[0\\]\\.pg10r4\\[0\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.section_12\\[0\\]\\.pg2r5\\[0\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.section_12\\[0\\]\\.From_Datefield_Name_2\\[\\d+\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.section_12\\[0\\]\\.TextField11\\[\\d+\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.section_12\\[0\\]\\.School6_State\\[\\d+\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.section_12\\[0\\]\\.DropDownList28\\[\\d+\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.section_12\\[0\\]\\.#field\\[\\d+\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.section_12_\\d+\\[0\\]\\.Table1\\[0\\]\\.Row\\d+\\[0\\]\\.Cell\\d+\\[0\\]",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "sect12",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "\\beducation\\b",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "\\bschool\\b",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "\\bcollege\\b",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "\\buniversity\\b",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "\\bdegree\\b",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "\\bdiploma\\b",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "\\bgraduate\\b",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "\\bstudent\\b",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "\\bacademic\\b",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "educational.*institution",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.#subform\\[\\d+\\]\\..*school",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.#subform\\[\\d+\\]\\..*education",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.#subform\\[\\d+\\]\\..*college",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.#subform\\[\\d+\\]\\..*university",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
+  },
+  {
+    "pattern": "form1\\[0\\]\\.#subform\\[\\d+\\]\\..*degree",
+    "flags": "i",
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 12"
   }
 ]

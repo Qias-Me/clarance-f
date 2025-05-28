@@ -1,74 +1,26 @@
 [
   {
-    "pattern": "^form1[0]",
-    "flags": "",
-    "confidence": 0.85,
-    "description": "Fields starting with form1[0] belong to section 18"
-  },
-  {
-    "pattern": "radio",
+    "pattern": "form1\\[0\\]\\.Section18",
     "flags": "i",
-    "confidence": 0.75,
-    "description": "radio fields belong to section 18"
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 18"
   },
   {
-    "pattern": "text",
+    "pattern": "form1\\[0\\]\\.section18",
     "flags": "i",
-    "confidence": 0.75,
-    "description": "text fields belong to section 18"
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 18"
   },
   {
-    "pattern": "dropdown",
+    "pattern": "sect18",
     "flags": "i",
-    "confidence": 0.75,
-    "description": "dropdown fields belong to section 18"
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 18"
   },
   {
-    "pattern": "2[0]$",
-    "flags": "",
-    "confidence": 0.8,
-    "description": "Fields ending with 2[0] belong to section 18"
-  },
-  {
-    "pattern": "date",
+    "pattern": "section_18",
     "flags": "i",
-    "confidence": 0.75,
-    "description": "date fields belong to section 18"
-  },
-  {
-    "pattern": "TextField11[10]$",
-    "flags": "",
-    "confidence": 0.8,
-    "description": "Fields ending with TextField11[10] belong to section 18"
-  },
-  {
-    "pattern": "TextField11[11]$",
-    "flags": "",
-    "confidence": 0.8,
-    "description": "Fields ending with TextField11[11] belong to section 18"
-  },
-  {
-    "pattern": "TextField11[12]$",
-    "flags": "",
-    "confidence": 0.8,
-    "description": "Fields ending with TextField11[12] belong to section 18"
-  },
-  {
-    "pattern": "2[1]$",
-    "flags": "",
-    "confidence": 0.8,
-    "description": "Fields ending with 2[1] belong to section 18"
-  },
-  {
-    "pattern": "2[2]$",
-    "flags": "",
-    "confidence": 0.8,
-    "description": "Fields ending with 2[2] belong to section 18"
-  },
-  {
-    "pattern": "2[3]$",
-    "flags": "",
-    "confidence": 0.8,
-    "description": "Fields ending with 2[3] belong to section 18"
+    "confidence": 0.9,
+    "description": "Pattern from sectionFieldPatterns for section 18"
   }
 ]

@@ -14,6 +14,12 @@ import type { SectionedField } from "./fieldGrouping.js";
  * Analyzes unknown fields and proposes new rules to improve categorization
  */
 export class RulesGenerator {
+  private skipGenericPatterns: boolean;
+
+  constructor(skipGenericPatterns: boolean = true) {
+    this.skipGenericPatterns = skipGenericPatterns;
+  }
+
   /**
    * Analyzes unknown fields and generates new rule candidates
    * @param unknownFields Array of uncategorized fields
@@ -413,23 +419,13 @@ export class RulesGenerator {
     // 4. Only proceed with more complex pattern generation if we don't have enough explicit matches
     const needsMorePatterns = matchedByExplicit.size < fieldNames.length * 0.5;
 
-    if (needsMorePatterns) {
-      // 5. Prefix-based rules - find common prefixes in field names
-      this.generatePrefixBasedRules(
-        fieldNames,
-        fieldNames.length,
-        sectionNum,
-        ruleCandidates.prefix
-      );
+    if (needsMorePatterns && !this.skipGenericPatterns) {
+      // CRITICAL: Skip generic pattern generation for ALL sections to prevent overly broad patterns
+      // Only use explicit patterns and special case rules to avoid "^form1[0]" type patterns
+      console.log(`⚠️  Skipping generic pattern generation for section ${sectionNum} to prevent overly broad patterns like "^form1[0]"`);
 
-      // 6. Pattern-based rules - extract distinctive patterns from field names
-      this.generatePatternBasedRules(
-        fieldNames,
-        matchedByExplicit,
-        sectionNum,
-        ruleCandidates.pattern,
-        ruleCandidates.explicit
-      );
+      // NOTE: We completely disable prefix-based and pattern-based rules that create overly broad patterns
+      // This prevents the generation of patterns that match across multiple sections
 
       // 7. Add rules based on field values
       if (fieldValues.length > 0) {
@@ -527,15 +523,93 @@ export class RulesGenerator {
       Math.floor(totalFieldCount * 0.05)
     );
 
-    // Skip common generic prefixes
+    // Skip common generic prefixes that would match too many fields across sections
     const skipPrefixes = new Set([
       "form",
+      "form1",
+      "form1[0]",
+      "form1[0].",
       "field",
       "input",
       "sect",
       "cont",
       "text",
       "data",
+      // Additional overly broad patterns that should never be generated
+      "radio",
+      "checkbox",
+      "dropdown",
+      "date",
+      "textfield",
+      "button",
+      "list",
+      "area",
+      "name",
+      "value",
+      "label",
+      "type",
+      "id",
+      "class",
+      "style",
+      "div",
+      "span",
+      "p",
+      "h1",
+      "h2",
+      "h3",
+      "table",
+      "row",
+      "cell",
+      "column",
+      "header",
+      "footer",
+      "main",
+      "section",
+      "article",
+      "aside",
+      "nav",
+      "ul",
+      "ol",
+      "li",
+      "a",
+      "img",
+      "video",
+      "audio",
+      "canvas",
+      "svg",
+      "path",
+      "g",
+      "rect",
+      "circle",
+      "line",
+      "polygon",
+      "polyline",
+      "ellipse",
+      "text",
+      "tspan",
+      "defs",
+      "use",
+      "symbol",
+      "marker",
+      "pattern",
+      "clipPath",
+      "mask",
+      "filter",
+      "feGaussianBlur",
+      "feOffset",
+      "feFlood",
+      "feComposite",
+      "feMorphology",
+      "feColorMatrix",
+      "animate",
+      "animateTransform",
+      "animateMotion",
+      "set",
+      "switch",
+      "foreignObject",
+      "metadata",
+      "title",
+      "desc"
     ]);
 
     // Generate rules from significant prefixes
@@ -544,8 +618,31 @@ export class RulesGenerator {
         // Skip if it's a common generic prefix
         if (skipPrefixes.has(prefix.toLowerCase())) continue;
 
-        // Calculate confidence based on prevalence and specificity
+        // Enhanced check: skip any patterns that start with form1[0] as they are too broad
+        if (prefix.match(/^form1\[0\]/i)) continue;
+
+        // Additional check: skip other overly broad patterns that would match across sections
+        if (prefix.match(/^form\d*\[/i)) continue; // Skip any form[N] patterns
+
+        // Skip patterns that are too generic (high coverage across all fields)
         const coverage = count / totalFieldCount;
+        if (coverage > 0.8) continue; // Skip if matches more than 80% of fields
+
+        // Additional check: Skip patterns that are known to be overly broad
+        const lowerPrefix = prefix.toLowerCase();
+        if (lowerPrefix.includes('text') ||
+            lowerPrefix.includes('radio') ||
+            lowerPrefix.includes('dropdown') ||
+            lowerPrefix.includes('date') ||
+            lowerPrefix.includes('checkbox') ||
+            lowerPrefix.includes('button') ||
+            lowerPrefix.includes('field') ||
+            lowerPrefix.includes('input') ||
+            lowerPrefix.length < 8) { // Very short patterns are usually too broad
+          continue;
+        }
+
+        // Calculate confidence based on prevalence and specificity
         const specificity = Math.min(1, prefix.length / 10); // Longer prefixes are more specific
         const confidence = 0.85 + coverage * 0.05 + specificity * 0.05;
 
@@ -625,6 +722,22 @@ export class RulesGenerator {
         if (count >= 3 && token.length >= 5) {
           const coverage = count / unmatchedFields.length;
 
+          // Skip overly broad tokens
+          const lowerToken = token.toLowerCase();
+          if (lowerToken.includes('text') ||
+              lowerToken.includes('radio') ||
+              lowerToken.includes('dropdown') ||
+              lowerToken.includes('date') ||
+              lowerToken.includes('checkbox') ||
+              lowerToken.includes('button') ||
+              lowerToken.includes('field') ||
+              lowerToken.includes('input') ||
+              lowerToken.includes('form1[0]') ||
+              lowerToken.match(/^form\d*\[/) ||
+              coverage > 0.7) { // Skip if matches more than 70% of unmatched fields
+            continue;
+          }
+
           patternRules.push({
             pattern: new RegExp(this.escapeRegExp(token), "i"),
             section: sectionNum,
@@ -681,10 +794,17 @@ export class RulesGenerator {
       }
     }
 
-    // Return only tokens that appear multiple times
+    // Return only tokens that appear multiple times and are not overly broad
     return new Map(
       [...tokenCounts.entries()]
-        .filter(([token, count]) => count >= 2)
+        .filter(([token, count]) => {
+          const lowerToken = token.toLowerCase();
+          return count >= 2 &&
+                 !lowerToken.includes('form1') &&
+                 !lowerToken.includes('form[') &&
+                 lowerToken !== 'form' &&
+                 lowerToken !== '0';
+        })
         .sort(([tokenA, countA], [tokenB, countB]) => countB - countA)
         .slice(0, 10)
     ); // Take only top 10 tokens
@@ -721,6 +841,23 @@ export class RulesGenerator {
     const minCount = Math.max(3, Math.ceil(fieldNames.length * 0.3));
     const significantParts = Object.entries(partCounts)
       .filter(([part, count]) => count >= minCount && part.length >= 3)
+      .filter(([part]) => {
+        // Filter out overly broad patterns
+        const lowerPart = part.toLowerCase();
+        return !lowerPart.includes('form1') &&
+               !lowerPart.includes('form[') &&
+               !lowerPart.includes('text') &&
+               !lowerPart.includes('radio') &&
+               !lowerPart.includes('dropdown') &&
+               !lowerPart.includes('date') &&
+               !lowerPart.includes('checkbox') &&
+               !lowerPart.includes('button') &&
+               !lowerPart.includes('field') &&
+               !lowerPart.includes('input') &&
+               lowerPart !== 'form' &&
+               lowerPart !== '0' &&
+               lowerPart.length >= 5; // Require minimum length for specificity
+      })
       .map(([part]) => part);
 
     // Create regex patterns for each significant part
@@ -762,6 +899,145 @@ export class RulesGenerator {
   }
 
   /**
+   * Remove conflicting generic rules that could cause cross-section contamination
+   * @param allRules Map of section numbers to their rules
+   * @returns Map with conflicting rules removed
+   */
+  public removeConflictingGenericRules(allRules: Map<number, MatchRule[]>): Map<number, MatchRule[]> {
+    console.log("🔍 Detecting and removing conflicting generic rules...");
+
+    // Track patterns that appear in multiple sections with same confidence
+    const patternTracker = new Map<string, Array<{section: number, confidence: number, rule: MatchRule}>>();
+
+    // First pass: collect all patterns and their sections
+    for (const [section, rules] of allRules.entries()) {
+      for (const rule of rules) {
+        const patternKey = `${rule.pattern.source}_${rule.pattern.flags}`;
+
+        if (!patternTracker.has(patternKey)) {
+          patternTracker.set(patternKey, []);
+        }
+
+        patternTracker.get(patternKey)!.push({
+          section,
+          confidence: rule.confidence || 0,
+          rule
+        });
+      }
+    }
+
+    // Second pass: identify conflicting patterns
+    const conflictingPatterns = new Set<string>();
+    const genericPatternsToRemove = new Set<string>();
+
+    for (const [patternKey, occurrences] of patternTracker.entries()) {
+      // Check if it's a generic pattern (regardless of how many sections it appears in)
+      const pattern = occurrences[0].rule.pattern.source;
+      const isGenericPattern =
+        // CRITICAL: Remove ALL form1[0] patterns - these are overly broad
+        pattern.startsWith('^form1[0]') ||
+        pattern.startsWith('^form1\\[0\\]') ||
+        pattern === '^form1[0]' ||
+        pattern === '^form1\\[0\\]' ||
+        pattern.includes('form1[0]') ||
+        pattern.includes('form1\\[0\\]') ||
+        // Remove other overly broad patterns
+        pattern === 'text' ||
+        pattern === 'dropdown' ||
+        pattern === 'radio' ||
+        pattern === 'date' ||
+        pattern === 'marital' ||
+        pattern === 'spouse' ||
+        pattern === 'partner' ||
+        pattern.match(/^form\d*\[/) ||
+        pattern.match(/^\\^form\d*\\?\[/) ||
+        pattern.match(/^sect\d+$/) ||
+        pattern.match(/^section\d+$/) ||
+        // Additional overly broad patterns that should never be section-specific
+        pattern.length < 8 || // Very short patterns are usually too broad
+        (pattern.includes('form1') && pattern.length < 15) || // Short form1 patterns
+        // Remove patterns that match too broadly across field types
+        (pattern.includes('text') && pattern.length < 12) ||
+        (pattern.includes('radio') && pattern.length < 12) ||
+        (pattern.includes('dropdown') && pattern.length < 12) ||
+        (pattern.includes('date') && pattern.length < 12);
+
+      if (isGenericPattern) {
+        // CRITICAL: Do NOT remove field-clusterer patterns - they are carefully crafted
+        const isFieldClustererPattern =
+          pattern.includes('Sections7-9') ||
+          pattern.includes('Section11') ||
+          pattern.includes('section_12') ||
+          pattern.includes('Section14_1') ||
+          pattern.includes('Section15') ||
+          pattern.includes('Section16') ||
+          pattern.includes('Section17') ||
+          pattern.includes('Section18') ||
+          pattern.includes('Section20') ||
+          pattern.includes('Section29') ||
+          pattern.includes('Section30') ||
+          pattern.includes('SSN[');
+
+        if (isFieldClustererPattern) {
+          console.log(`✅ Keeping field-clusterer pattern: ${pattern}`);
+          console.log(`   This is a carefully crafted pattern that should not be removed`);
+          continue; // Keep this pattern
+        }
+
+        console.log(`❌ Found overly broad generic pattern: ${pattern}`);
+        console.log(`   Appears in sections: ${occurrences.map(o => o.section).join(', ')}`);
+        console.log(`   Removing this pattern as it's too generic for section-specific rules`);
+
+        conflictingPatterns.add(patternKey);
+        genericPatternsToRemove.add(pattern);
+      }
+      // Also check for patterns that appear in multiple sections with similar confidence
+      else if (occurrences.length > 1) {
+        const confidences = occurrences.map(o => o.confidence);
+        const minConf = Math.min(...confidences);
+        const maxConf = Math.max(...confidences);
+
+        if (maxConf - minConf <= 0.1) {
+          console.log(`❌ Found conflicting multi-section pattern: ${pattern}`);
+          console.log(`   Appears in sections: ${occurrences.map(o => o.section).join(', ')}`);
+          console.log(`   Confidence range: ${minConf} - ${maxConf}`);
+
+          conflictingPatterns.add(patternKey);
+          genericPatternsToRemove.add(pattern);
+        }
+      }
+    }
+
+    // Third pass: remove conflicting generic patterns
+    const cleanedRules = new Map<number, MatchRule[]>();
+    let totalRemoved = 0;
+
+    for (const [section, rules] of allRules.entries()) {
+      const filteredRules = rules.filter(rule => {
+        const patternKey = `${rule.pattern.source}_${rule.pattern.flags}`;
+        const shouldRemove = conflictingPatterns.has(patternKey);
+
+        if (shouldRemove) {
+          console.log(`🗑️  Removing conflicting rule from section ${section}: ${rule.pattern.source} (confidence: ${rule.confidence})`);
+          totalRemoved++;
+        }
+
+        return !shouldRemove;
+      });
+
+      cleanedRules.set(section, filteredRules);
+    }
+
+    console.log(`✅ Removed ${totalRemoved} conflicting generic rules from ${conflictingPatterns.size} patterns`);
+
+    if (genericPatternsToRemove.size > 0) {
+      console.log("📋 Removed patterns:", Array.from(genericPatternsToRemove).join(', '));
+    }
+
+    return cleanedRules;
+  }
+
+  /**
    * Add special case rules for specific sections based on known content
    * @param section Section number string
    * @param fields Fields in the section
@@ -784,15 +1060,39 @@ export class RulesGenerator {
         [/foreign.*national/i, "Foreign national fields", 0.95],
         [/foreign.*associate/i, "Foreign associate fields", 0.95],
       ],
-      "12": [
-        [/employment.*record/i, "Employment record fields", 0.95],
-        [/employer/i, "Employer fields", 0.9],
-        [/employment/i, "Employment fields", 0.9],
+      "11": [
+        [/Section11/i, "Fields containing 'Section11' belong to section 11", 0.99],
+        [/\.Section11\[/i, "Fields with .Section11[ pattern", 0.99],
+        [/residence/i, "Residence fields", 0.90],
+        [/address/i, "Address fields", 0.85],
+        [/lived/i, "Where you lived fields", 0.85],
+        [/landlord/i, "Landlord fields", 0.90],
+        [/verifier/i, "Verifier fields", 0.90],
       ],
-      "13": [
+      "8": [
+        [/passport/i, "Passport fields", 0.95],
+        [/travel.*document/i, "Travel document fields", 0.9],
+        [/document.*number/i, "Document number fields", 0.85],
+        [/issued.*date/i, "Document issued date fields", 0.85],
+        [/expir.*date/i, "Document expiration date fields", 0.85],
+        [/country.*issu/i, "Country of issuance fields", 0.85],
+      ],
+      "12": [
         [/education/i, "Education fields", 0.95],
         [/school/i, "School fields", 0.95],
         [/degree/i, "Degree fields", 0.9],
+        [/college/i, "College fields", 0.9],
+        [/university/i, "University fields", 0.9],
+        [/diploma/i, "Diploma fields", 0.85],
+        [/graduate/i, "Graduate fields", 0.85],
+      ],
+      "13": [
+        [/employment.*record/i, "Employment record fields", 0.95],
+        [/employer/i, "Employer fields", 0.9],
+        [/employment/i, "Employment fields", 0.9],
+        [/job/i, "Job fields", 0.85],
+        [/work/i, "Work fields", 0.8],
+        [/occupation/i, "Occupation fields", 0.85],
       ],
       "16": [
         [/financial.*record/i, "Financial record fields", 0.95],

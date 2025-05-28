@@ -47,6 +47,70 @@ import {
   refinedSectionPageRanges,
 } from "./utils/fieldParsing.js";
 
+// Import field-clusterer patterns for Section14_1 categorization
+import { sectionFieldPatterns } from "./utils/field-clusterer.js";
+
+/**
+ * Categorize Section14_1 fields using field-clusterer patterns
+ * This ensures proper distribution between Section 14 (5 specific fields) and Section 15 (most others)
+ */
+function categorizeSection14_1Field(field: CategorizedField): {section: number, confidence: number, reason: string} {
+  const fieldName = field.name;
+
+  // CRITICAL: Apply Section 15 patterns FIRST to capture most Section14_1 fields (military history)
+  // This follows the field-clusterer design where Section 15 should get most fields
+  const section15Patterns = sectionFieldPatterns[15];
+  if (section15Patterns) {
+    for (const pattern of section15Patterns) {
+      if (pattern.test(fieldName)) {
+        return {
+          section: 15,
+          confidence: 0.93,
+          reason: "Section14_1 field matched Section 15 pattern (military history)"
+        };
+      }
+    }
+  }
+
+  // Apply Section 14 patterns SECOND (only 5 specific selective service fields)
+  // These are the only Section14_1 fields that should remain in Section 14
+  const section14Patterns = sectionFieldPatterns[14];
+  if (section14Patterns) {
+    for (const pattern of section14Patterns) {
+      if (pattern.test(fieldName)) {
+        return {
+          section: 14,
+          confidence: 0.95,
+          reason: "Section14_1 field matched Section 14 pattern (selective service)"
+        };
+      }
+    }
+  }
+
+  return {section: 0, confidence: 0, reason: "No Section14_1 pattern matched"};
+}
+
+/**
+ * Check if a field legitimately belongs to Section 20 (Foreign Activities)
+ * Used for content-based filtering of #subform fields
+ */
+function isLegitimateSection20Field(field: CategorizedField): boolean {
+  const fieldName = field.name.toLowerCase();
+  const fieldValue = typeof field.value === 'string' ? field.value.toLowerCase() : '';
+  const fieldLabel = field.label?.toLowerCase() || '';
+
+  const section20Keywords = [
+    'foreign', 'country', 'business', 'government', 'activity', 'activities',
+    'embassy', 'consulate', 'abroad', 'overseas', 'international'
+  ];
+
+  return section20Keywords.some(keyword =>
+    fieldName.includes(keyword) ||
+    fieldValue.includes(keyword) ||
+    fieldLabel.includes(keyword)
+  );
+}
+
 // Import only the necessary bridge adapter functions
 import { getLimitedNeighborContext } from "./utils/bridgeAdapter.js";
 
@@ -652,12 +716,25 @@ async function afterSelfHealing(
 
     // Define default sections for remaining uncategorized fields
     // Use sections that commonly have more fields than expected
-    const defaultSections = [15, 20, 12, 19, 27, 16, 8, 13];
+    // MODIFIED: Moved Section 20 to end to reduce over-allocation
+    const defaultSections = [15, 12, 19, 27, 16, 8, 13, 20];
 
     for (const field of stillRemainingFields) {
       // Cycle through default sections
       const sectionIndex = totalAssigned % defaultSections.length;
-      const assignedSection = defaultSections[sectionIndex];
+      let assignedSection = defaultSections[sectionIndex];
+
+      // ADD capacity checking before assignment to Section 20
+      if (assignedSection === 20) {
+        const currentSection20Count = (result["20"] || []).length;
+        const expectedSection20Count = 750;
+        if (currentSection20Count >= expectedSection20Count * 1.05) { // Allow 5% over
+          // Try next default section instead
+          const nextSectionIndex = (totalAssigned + 1) % (defaultSections.length - 1);
+          assignedSection = defaultSections[nextSectionIndex];
+          console.log(`⚠️ Section 20 capacity check: ${currentSection20Count}/${expectedSection20Count}, redirecting to Section ${assignedSection}`);
+        }
+      }
 
       const sectionKey = assignedSection.toString();
       if (!result[sectionKey]) {
@@ -972,7 +1049,7 @@ async function updateEnhancedSubsectionRules(
 /**
  * Update the rule engine with entry rules based on current field categorization
  */
-async function updateEnhancedEntryRules(
+async function updateEnhancedSectionEntryRules(
   engine: RuleEngine,
   sectionFields: Record<string, CategorizedField[]>
 ): Promise<void> {
@@ -1029,7 +1106,7 @@ async function updateEnhancedEntryRules(
  * @param sectionFields Fields grouped by section
  * @returns Array of rules for entry detection
  */
-function generateEntryRules(
+function generateSectionEntryRules(
   sectionFields: Record<string, CategorizedField[]>
 ): MatchRule[] {
   const entryRules: MatchRule[] = [];
@@ -1080,7 +1157,7 @@ function generateEntryRules(
 
         if (entryNumbers.length >= 2) {
           // Try to find patterns in field names that correlate with entry numbers
-          const entryPatterns = findEntryPatterns(fieldsWithEntries);
+          const entryPatterns = findSectionEntryPatterns(fieldsWithEntries);
 
           if (entryPatterns.length > 0) {
             // Store patterns for this section/subsection
@@ -1132,7 +1209,7 @@ function generateEntryRules(
  * @param fields Fields with entry assignments
  * @returns Array of pattern strings
  */
-function findEntryPatterns(fields: CategorizedField[]): string[] {
+function findSectionEntryPatterns(fields: CategorizedField[]): string[] {
   const patterns: Set<string> = new Set();
 
   // Group fields by entry
@@ -1174,7 +1251,7 @@ function findEntryPatterns(fields: CategorizedField[]): string[] {
       // Compare each field in current entry with each in the next
       for (const current of currentFields) {
         for (const next of nextFields) {
-          const pattern = extractEntryPattern(
+          const pattern = extractSectionEntryPattern(
             current.name,
             next.name,
             currentEntryNum,
@@ -1271,7 +1348,7 @@ function findEntryPatterns(fields: CategorizedField[]): string[] {
  * @param entry2 Second entry number
  * @returns Pattern string or null if no pattern found
  */
-function extractEntryPattern(
+function extractSectionEntryPattern(
   name1: string,
   name2: string,
   entry1: number,
@@ -1379,7 +1456,7 @@ function findLongestCommonSubsequence(
  * @param sectionFields Fields grouped by section
  * @returns Array of simple subsection rules
  */
-function generateSimpleSubsectionRules(
+function generateSimpleSectionSubsectionRules(
   sectionFields: Record<string, CategorizedField[]>
 ): MatchRule[] {
   const rules: MatchRule[] = [];
@@ -1647,6 +1724,101 @@ async function initializeRuleEngine(): Promise<RuleEngine> {
   return engine;
 }
 
+
+    // Helper function for explicit section detection (extracted from consolidated-self-healing.ts)
+    function extractExplicitSectionFromName(fieldName: string): { section: number; confidence: number; reason: string } {
+      // SPECIAL CASE: ALL SSN fields should go to Section 4 (ABSOLUTE highest priority)
+      // This overrides ALL other categorization methods including explicit section references
+      if (fieldName.includes('SSN[')) {
+        return {
+          section: 4,
+          confidence: 1, // Higher than explicit section references (0.99)
+          reason: 'SSN field - all SSN fields belong in Section 4 (overrides explicit section references)'
+        };
+      }
+
+      // SPECIAL CASE: #subform fields should be assigned based on page number (HIGH priority)
+      // This prevents them from being caught by overly broad Section 14 rules
+      if (fieldName.includes('#subform[')) {
+        // We need the field object to get the page number, but we only have the field name here
+        // This will be handled in the main mapping function where we have access to the field object
+        return { section: 0, confidence: 0, reason: '#subform field - needs page-based categorization' };
+      }
+
+      // 🎯 DEBUG: Track our target field
+      const isTargetField = fieldName.includes("Section11[0].From_Datefield_Name_2[2]");
+
+      if (isTargetField) {
+        console.log(`\n🔍 INDEX.TS EXPLICIT SECTION EXTRACTION DEBUG:`);
+        console.log(`   Field Name: "${fieldName}"`);
+      }
+
+      // Pattern 1: form1[0].Section10\\.1-10\\.2[0]... or form1[0].Section10-2[0]... or form1[0].Section14_1[0]... (most explicit)
+      const sectionPattern1 = /form1\[0\]\.Section(\d+)(?:_\d+|\\\\\.|\.|_|-|\[)/i;
+
+      if (isTargetField) {
+        console.log(`   Testing Pattern 1: ${sectionPattern1.source}`);
+      }
+
+      const match1 = fieldName.match(sectionPattern1);
+
+      if (isTargetField) {
+        console.log(`   Pattern 1 Match: ${match1 ? `Found: ${match1[0]}, captured: ${match1[1]}` : 'No match'}`);
+      }
+
+      if (match1) {
+        const sectionNum = parseInt(match1[1], 10);
+        if (isTargetField) {
+          console.log(`   Parsed Section: ${sectionNum}, valid range (1-30): ${sectionNum >= 1 && sectionNum <= 30}`);
+        }
+
+        if (sectionNum >= 1 && sectionNum <= 30) {
+          const result = {
+            section: sectionNum,
+            confidence: 0.99,
+            reason: `Explicit section reference in form path: Section${sectionNum}`
+          };
+
+          if (isTargetField) {
+            console.log(`   ✅ INDEX.TS PATTERN 1 SUCCESS: ${JSON.stringify(result)}`);
+          }
+
+          return result;
+        }
+      }
+
+      // Pattern 2: section21c, section18a, section_12, etc. (direct section references)
+      const sectionPattern2 = /section_?(\d+)([a-z]?)/i;
+      const match2 = fieldName.match(sectionPattern2);
+      if (match2) {
+        const sectionNum = parseInt(match2[1], 10);
+        if (sectionNum >= 1 && sectionNum <= 30) {
+          return {
+            section: sectionNum,
+            confidence: 0.95,
+            reason: `Direct section reference: section${sectionNum}${match2[2] || ''}`
+          };
+        }
+      }
+
+      // Pattern 4: Look for section numbers in structured field paths
+      const sectionPattern4 = /(?:Section|section)_?(\d+)/i;
+      const match4 = fieldName.match(sectionPattern4);
+      if (match4) {
+        const sectionNum = parseInt(match4[1], 10);
+        if (sectionNum >= 1 && sectionNum <= 30) {
+          return {
+            section: sectionNum,
+            confidence: 0.85,
+            reason: `Section reference found: ${match4[0]}`
+          };
+        }
+      }
+
+      return { section: 0, confidence: 0, reason: 'No explicit section reference found' };
+    }
+
+
 /**
  * Main function for the sectionizer
  */
@@ -1722,7 +1894,7 @@ async function main() {
     console.log("\n--- APPLYING ENHANCED SELF-HEALING ---");
 
     // Initialize all fields with section 0 if they don't have a section already
-    const initializedFields = fields.map((field) => ({
+    let initializedFields = fields.map((field) => ({
       ...field,
       section: 0,
       confidence: 0.3, // Add a low initial confidence
@@ -1732,14 +1904,394 @@ async function main() {
       `Initialized ${initializedFields.length} fields with section 0 for self-healing`
     );
 
-    // Group fields by section
-    const sectionFieldsMap: Record<string, CategorizedField[]> = {
-      "0": initializedFields,
-    };
+    // ENHANCEMENT: Apply explicit section detection before self-healing
+    console.log("\n--- APPLYING EXPLICIT SECTION DETECTION ---");
+    let explicitlyDetectedCount = 0;
+
+    initializedFields = initializedFields.map((field) => {
+      // 🎯 DEBUG: Track our target fields
+      const isTargetField = field.id === "9782 0 R" || field.id === "9858 0 R" ||
+                           field.name.includes("Section11[0].From_Datefield_Name_2[2]") ||
+                           field.name.includes("Section11-2[0].TextField11[10]");
+
+      if (isTargetField) {
+        console.log(`\n🔍 TARGET FIELD TRACKING - EXPLICIT DETECTION PHASE:`);
+        console.log(`   Field ID: ${field.id}`);
+        console.log(`   Field Name: ${field.name}`);
+        console.log(`   Current Section: ${field.section}`);
+        console.log(`   Current isExplicitlyDetected: ${field.isExplicitlyDetected}`);
+      }
+
+      // SPECIAL CASE: Handle #subform fields with page-based categorization FIRST
+      // This prevents them from being caught by overly broad Section 14 rules
+      // BUT: Check for explicit section references first to avoid overriding them
+      if (field.name.includes('#subform[') && !field.name.includes('SSN[')) {
+        // Check if this #subform field has explicit section references that should take priority
+        const hasExplicitSectionRef =
+          field.name.includes('Sections7-9') ||
+          field.name.includes('Section7') ||
+          field.name.includes('Section9') ||
+          field.name.includes('Section15') ||
+          field.name.match(/Section\d+/);
+
+        if (hasExplicitSectionRef) {
+          // Let explicit section detection handle this field
+          console.log(`⚠️  #subform field has explicit section reference, skipping page-based: ${field.name}`);
+        } else {
+          // #subform fields should be assigned to Section 20 based on page range (67-87) AND content filtering
+          // Exception: SSN fields always go to Section 4 (handled above)
+          if (field.page >= 67 && field.page <= 87) {
+            // Add content-based filtering to reduce over-allocation to Section 20
+            const isLegitimateSection20 = isLegitimateSection20Field(field);
+            if (isLegitimateSection20) {
+              explicitlyDetectedCount++;
+              console.log(`🎯 #subform page-based detection with content validation: ${field.name} → Section 20 (page ${field.page}, Foreign Activities content)`);
+
+              return {
+                ...field,
+                section: 20,
+                confidence: 0.88, // Lower than explicit section references (0.9) but higher than broad patterns (0.85)
+                wasMovedByHealing: false,
+                isExplicitlyDetected: false, // Not explicitly detected, but page-based with content validation
+                reason: `#subform field on page ${field.page} with Section 20 content (Foreign Activities)`
+              };
+            } else {
+              // Let other categorization methods handle it instead of forcing to Section 20
+              console.log(`⚠️  #subform field on page ${field.page} lacks Section 20 content: ${field.name}`);
+              // Continue with other categorization logic
+            }
+          } else {
+            // #subform field outside Section 20 page range - let self-healing handle it
+            console.log(`⚠️  #subform field outside Section 20 range: ${field.name} (page ${field.page})`);
+          }
+        }
+      }
+
+      // 🎯 ULTRA-CRITICAL: SSN fields ALWAYS go to Section 4 (HIGHEST priority)
+      // This overrides ALL other logic, including Sections7-9 protection
+      if (field.name && (field.name.toLowerCase().includes("ssn") || field.type === "SSN")) {
+        explicitlyDetectedCount++;
+        console.log(`🔒 ULTRA-HIGH-PRIORITY SSN DETECTION: ${field.name} → Section 4 (confidence 0.999)`);
+        return {
+          ...field,
+          section: 4,
+          confidence: 0.999, // MAXIMUM confidence for SSN fields
+          wasMovedByHealing: false,
+          isExplicitlyDetected: true, // Mark as explicitly detected for protection
+          reason: `SSN field - ALWAYS goes to Section 4 (SSN Information) [ULTRA-HIGH-PRIORITY SSN DETECTION]`
+        };
+      }
+
+      // 🎯 CRITICAL: Apply high-priority value-based detection FIRST for Sections7-9 fields
+      // This ensures fields like "sect7homeEmail" get maximum confidence and protection
+      if (field.name && field.name.includes("Sections7-9[") && field.value) {
+        const value = field.value.toString().toLowerCase();
+
+        if (value.includes("sect7")) {
+          explicitlyDetectedCount++;
+          console.log(`🎯 HIGH-PRIORITY VALUE DETECTION: ${field.name} = "${field.value}" → Section 7 (confidence 0.999)`);
+          return {
+            ...field,
+            section: 7,
+            confidence: 0.999, // MAXIMUM confidence for explicit value-based matching
+            wasMovedByHealing: false,
+            isExplicitlyDetected: true, // Mark as explicitly detected for protection
+            reason: `Sections7-9 field - value contains "sect7" → Section 7 (Contact Information) [HIGH-PRIORITY VALUE DETECTION]`
+          };
+        }
+
+        if (value.includes("sect8")) {
+          explicitlyDetectedCount++;
+          console.log(`🎯 HIGH-PRIORITY VALUE DETECTION: ${field.name} = "${field.value}" → Section 8 (confidence 0.999)`);
+          return {
+            ...field,
+            section: 8,
+            confidence: 0.999, // MAXIMUM confidence for explicit value-based matching
+            wasMovedByHealing: false,
+            isExplicitlyDetected: true, // Mark as explicitly detected for protection
+            reason: `Sections7-9 field - value contains "sect8" → Section 8 (Passport Information) [HIGH-PRIORITY VALUE DETECTION]`
+          };
+        }
+
+        if (value.includes("sect9") || value.includes("9.1") || value.includes("9.2") || value.includes("9.3") || value.includes("9.4")) {
+          explicitlyDetectedCount++;
+          console.log(`🎯 HIGH-PRIORITY VALUE DETECTION: ${field.name} = "${field.value}" → Section 9 (confidence 0.999)`);
+          return {
+            ...field,
+            section: 9,
+            confidence: 0.999, // MAXIMUM confidence for explicit value-based matching
+            wasMovedByHealing: false,
+            isExplicitlyDetected: true, // Mark as explicitly detected for protection
+            reason: `Sections7-9 field - value contains citizenship pattern (sect9/9.1/9.2/9.3/9.4) → Section 9 (Citizenship) [HIGH-PRIORITY VALUE DETECTION]`
+          };
+        }
+      }
+
+      // 🎯 NEW: Apply high-priority label-based detection for Sections7-9 fields
+      // This catches fields that don't have sect7/8/9 values but should be categorized by their labels
+      if (field.name && field.name.includes("Sections7-9[") && field.label) {
+        const label = field.label.toLowerCase();
+
+        // Section 7 (Contact Information) keywords
+        if (label.includes("telephone") || label.includes("phone") ||
+            label.includes("email") || label.includes("contact") ||
+            label.includes("address") || label.includes("home") ||
+            label.includes("work") || label.includes("mobile") ||
+            label.includes("cell") || label.includes("extension")) {
+          explicitlyDetectedCount++;
+          console.log(`🎯 HIGH-PRIORITY LABEL DETECTION: ${field.name} with label "${field.label}" → Section 7 (confidence 0.99)`);
+          return {
+            ...field,
+            section: 7,
+            confidence: 0.99, // High confidence for label-based matching (slightly lower than value-based)
+            wasMovedByHealing: false,
+            isExplicitlyDetected: true, // Mark as explicitly detected for protection
+            reason: `Sections7-9 field - label contains contact keywords → Section 7 (Contact Information) [HIGH-PRIORITY LABEL DETECTION]`
+          };
+        }
+
+        // Section 8 (Passport Information) keywords
+        // CRITICAL: Exclude SSN fields from passport detection
+        if ((label.includes("passport") || label.includes("issue") ||
+            label.includes("expiration") || label.includes("expire") ||
+            label.includes("document") ||
+            (label.includes("number") && !label.includes("social security") && !field.name.toLowerCase().includes("ssn"))) &&
+            !field.name.toLowerCase().includes("ssn")) {
+          explicitlyDetectedCount++;
+          console.log(`🎯 HIGH-PRIORITY LABEL DETECTION: ${field.name} with label "${field.label}" → Section 8 (confidence 0.99)`);
+          return {
+            ...field,
+            section: 8,
+            confidence: 0.99, // High confidence for label-based matching
+            wasMovedByHealing: false,
+            isExplicitlyDetected: true, // Mark as explicitly detected for protection
+            reason: `Sections7-9 field - label contains passport keywords → Section 8 (Passport Information) [HIGH-PRIORITY LABEL DETECTION]`
+          };
+        }
+
+        // Section 9 (Citizenship) keywords
+        if (label.includes("citizenship") || label.includes("citizen") ||
+            label.includes("naturalization") || label.includes("country") ||
+            label.includes("birth") || label.includes("born")) {
+          explicitlyDetectedCount++;
+          console.log(`🎯 HIGH-PRIORITY LABEL DETECTION: ${field.name} with label "${field.label}" → Section 9 (confidence 0.99)`);
+          return {
+            ...field,
+            section: 9,
+            confidence: 0.99, // High confidence for label-based matching
+            wasMovedByHealing: false,
+            isExplicitlyDetected: true, // Mark as explicitly detected for protection
+            reason: `Sections7-9 field - label contains citizenship keywords → Section 9 (Citizenship) [HIGH-PRIORITY LABEL DETECTION]`
+          };
+        }
+      }
+
+      // 🎯 CRITICAL: Apply comprehensive protection for ALL Sections7-9 fields
+      // This ensures NO Sections7-9 fields get moved to Section 14 by the healing process
+      if (field.name && field.name.includes("Sections7-9[")) {
+        // PRIORITY 1: ENHANCED PATTERN DETECTION (HIGHEST PRIORITY)
+        // Check specific field patterns identified in manual analysis FIRST
+
+        // Check if it's a Section 8 field (passport-related)
+        if (field.name.includes("RadioButtonList[0]") || // Passport eligibility questions
+            field.name.includes("#field[23]") || // Passport estimate checkbox (spatially positioned in passport area)
+            field.name.includes("#area[0]") || field.name.includes("p3-t68[0]") ||
+            (field.label && (field.label.toLowerCase().includes("passport") ||
+                           field.label.toLowerCase().includes("issue") ||
+                           field.label.toLowerCase().includes("expiration")))) {
+          explicitlyDetectedCount++;
+          console.log(`🎯 ENHANCED PATTERN DETECTION: ${field.name} → Section 8 (passport-related)`);
+          return {
+            ...field,
+            section: 8,
+            confidence: 0.999, // MAXIMUM confidence to override all other logic
+            wasMovedByHealing: false,
+            isExplicitlyDetected: true, // Mark as explicitly detected for protection
+            reason: `Sections7-9 field - passport-related pattern → Section 8 (Passport Information) [ENHANCED PATTERN DETECTION]`
+          };
+        }
+
+        // Check if it's a Section 9 field (citizenship-related)
+        if (field.name.includes("RadioButtonList[1]") || // Citizenship status questions
+            field.name.includes("School6_State[0]") || // Citizenship documentation state
+            field.name.includes("RadioButtonList[2]") || // Citizenship status questions
+            field.name.includes("RadioButtonList[3]") || // Citizenship documentation type
+            field.name.includes("Section9") ||
+            (field.name.includes("#field[25]") && field.name.includes("Sections7-9[")) || // Only Sections7-9 #field[25], not Section14_1
+            (field.name.includes("#field[28]") && field.name.includes("Sections7-9[")) || // Only Sections7-9 #field[28], not Section14_1
+            (field.label && (field.label.toLowerCase().includes("citizenship") ||
+                           field.label.toLowerCase().includes("citizen") ||
+                           field.label.toLowerCase().includes("country")))) {
+          explicitlyDetectedCount++;
+          console.log(`🎯 ENHANCED PATTERN DETECTION: ${field.name} → Section 9 (citizenship-related)`);
+          return {
+            ...field,
+            section: 9,
+            confidence: 0.999, // MAXIMUM confidence to override all other logic
+            wasMovedByHealing: false,
+            isExplicitlyDetected: true, // Mark as explicitly detected for protection
+            reason: `Sections7-9 field - citizenship-related pattern → Section 9 (Citizenship) [ENHANCED PATTERN DETECTION]`
+          };
+        }
+
+        // Default: All other Sections7-9 fields go to Section 7 (Contact Information)
+        explicitlyDetectedCount++;
+        console.log(`🎯 COMPREHENSIVE PROTECTION: ${field.name} → Section 7 (default for Sections7-9)`);
+        return {
+          ...field,
+          section: 7,
+          confidence: 0.95, // High confidence for pattern-based matching
+          wasMovedByHealing: false,
+          isExplicitlyDetected: true, // Mark as explicitly detected for protection
+          reason: `Sections7-9 field - default assignment → Section 7 (Contact Information) [COMPREHENSIVE PROTECTION]`
+        };
+      }
+
+      // Use the same explicit section detection logic from consolidated self-healing
+      const explicitResult = extractExplicitSectionFromName(field.name);
+
+      if (explicitResult.section > 0) {
+        explicitlyDetectedCount++;
+        console.log(`🎯 Explicit detection: ${field.name} → Section ${explicitResult.section} (${explicitResult.reason})`);
+
+        // Distinguish between form path patterns and truly explicit references
+        const isFormPathPattern = explicitResult.reason.includes('form path');
+
+        // REFINED PROTECTION: Only protect form path patterns for sections that need protection
+        // Check if the field name has a clear section indicator that matches the detected section
+        // Handle patterns like "Section11[", "Section11-2[", "Section11_3[", etc.
+        const sectionPattern = new RegExp(`section${explicitResult.section}(?:[-_]\\d+)?\\[`, 'i');
+        const hasExplicitSectionInName = sectionPattern.test(field.name);
+
+        // ENHANCED: Proper Section14_1 categorization using field-clusterer patterns
+        // Apply the carefully crafted patterns to ensure correct Section 14 vs Section 15 distribution
+        if (field.name.includes("Section14_1")) {
+          const section14_1Result = categorizeSection14_1Field(field);
+          if (section14_1Result.section > 0) {
+            if (isTargetField) {
+              console.log(`   ✅ Section14_1 field categorized: ${field.name} → Section ${section14_1Result.section} (${section14_1Result.reason})`);
+            }
+            return {
+              ...field,
+              section: section14_1Result.section,
+              confidence: section14_1Result.confidence,
+              wasMovedByHealing: false,
+              isExplicitlyDetected: true, // Mark as explicitly detected to protect from self-healing
+              reason: section14_1Result.reason
+            };
+          } else {
+            if (isTargetField) {
+              console.log(`   ⚠️  Section14_1 field no pattern match: ${field.name}`);
+            }
+          }
+        }
+
+        // EDGE CASE HANDLING: Some "Section14" fields might actually belong to Section 15
+        // This is similar to how "Sections1-6" and "Sections7-9" patterns work
+        const hasSection14EdgeCase = field.name.includes('Section14') && explicitResult.section === 14;
+
+        // SELECTIVE PROTECTION: Only protect for sections that are typically under-assigned
+        // Sections 14 and 16 are often over-assigned, so be more selective with protection
+        // Also, don't over-protect Section14 fields that might belong to Section 15
+        const isProblematicSection = [14, 16].includes(explicitResult.section);
+        const shouldProtectFormPath = hasExplicitSectionInName && explicitResult.confidence >= 0.99 && !isProblematicSection && !hasSection14EdgeCase;
+
+        const shouldMarkAsExplicit = !isFormPathPattern || shouldProtectFormPath;
+
+        const updatedField = {
+          ...field,
+          section: explicitResult.section,
+          confidence: explicitResult.confidence,
+          wasMovedByHealing: false, // This was detected explicitly, not by healing
+          isExplicitlyDetected: shouldMarkAsExplicit // Mark as explicitly detected for high-confidence patterns in correct section
+        };
+
+        if (isTargetField) {
+          console.log(`   🔄 EXPLICIT DETECTION RESULT:`);
+          console.log(`      Detected Section: ${explicitResult.section}`);
+          console.log(`      Confidence: ${explicitResult.confidence}`);
+          console.log(`      Reason: ${explicitResult.reason}`);
+          console.log(`      Is Form Path Pattern: ${isFormPathPattern}`);
+          console.log(`      Section Pattern: ${sectionPattern.source}`);
+          console.log(`      Has Explicit Section In Name: ${hasExplicitSectionInName}`);
+          console.log(`      Has Section14 Edge Case: ${hasSection14EdgeCase}`);
+          console.log(`      Is Problematic Section: ${isProblematicSection} (sections 14, 16)`);
+          console.log(`      Should Protect Form Path: ${shouldProtectFormPath}`);
+          console.log(`      Should Mark As Explicit: ${shouldMarkAsExplicit}`);
+          console.log(`      Final isExplicitlyDetected: ${updatedField.isExplicitlyDetected}`);
+          console.log(`      Final Section: ${updatedField.section}`);
+        }
+
+        return updatedField;
+      }
+
+      if (isTargetField) {
+        console.log(`   ❌ NO EXPLICIT DETECTION: Field will proceed with current section ${field.section}`);
+      }
+
+      return field;
+    });
+
+    console.log(`Explicitly detected ${explicitlyDetectedCount} fields with clear section references`);
+
+
+    // Group fields by section (including explicitly detected ones)
+    const sectionFieldsMap: Record<string, CategorizedField[]> = {};
+
+    // Initialize with empty arrays for all sections
+    for (let i = 0; i <= 30; i++) {
+      sectionFieldsMap[i.toString()] = [];
+    }
+
+    // Distribute fields to their assigned sections
+    for (const field of initializedFields) {
+      const sectionKey = field.section.toString();
+      sectionFieldsMap[sectionKey].push(field);
+    }
+
+    // Log the distribution after explicit detection
+    const explicitlyDetectedSections = Object.entries(sectionFieldsMap)
+      .filter(([section, fields]) => section !== "0" && fields.length > 0)
+      .map(([section, fields]) => `Section ${section}: ${fields.length} fields`)
+      .join(", ");
+
+    if (explicitlyDetectedSections) {
+      console.log(`Pre-categorized sections: ${explicitlyDetectedSections}`);
+    }
+
+    console.log(`Remaining in Section 0 (unknown): ${sectionFieldsMap["0"].length} fields`);
+
+    // Count unique sections, subsections, and entries
+    const allFields2 = Object.values(
+      sectionFieldsMap
+    ).flat() as CategorizedField[];
+
+
+    printSectionStatistics(allFields2);
+
 
     const consolidatedSelfHealingManager = new ConsolidatedSelfHealingManager(
       args.maxIterations || 150 // Use command line arg or default to 25 to ensure all fields get categorized
     );
+
+    // 🎯 DEBUG: Track target field before self-healing
+    console.log(`\n🔍 TARGET FIELD TRACKING - BEFORE SELF-HEALING:`);
+    const allFieldsBeforeHealing = Object.values(sectionFieldsMap).flat();
+    const targetFieldBeforeHealing = allFieldsBeforeHealing.find(f =>
+      f.id === "9782 0 R" || f.id === "9858 0 R" ||
+      f.name.includes("Section11[0].From_Datefield_Name_2[2]") ||
+      f.name.includes("Section11-2[0].TextField11[10]")
+    );
+    if (targetFieldBeforeHealing) {
+      console.log(`   Field ID: ${targetFieldBeforeHealing.id}`);
+      console.log(`   Field Name: ${targetFieldBeforeHealing.name}`);
+      console.log(`   Section: ${targetFieldBeforeHealing.section}`);
+      console.log(`   Confidence: ${targetFieldBeforeHealing.confidence}`);
+      console.log(`   isExplicitlyDetected: ${targetFieldBeforeHealing.isExplicitlyDetected}`);
+      console.log(`   wasMovedByHealing: ${targetFieldBeforeHealing.wasMovedByHealing}`);
+    } else {
+      console.log(`   ❌ TARGET FIELD NOT FOUND BEFORE SELF-HEALING!`);
+    }
 
     // Pass the initialized fields directly to enhanced self-healing
     const enhancedResult = await consolidatedSelfHealingManager.runSelfHealing(
@@ -1757,6 +2309,30 @@ async function main() {
     //   args.outputDir,
     //   0.1
     // );
+
+    // 🎯 DEBUG: Track target field after self-healing
+    console.log(`\n🔍 TARGET FIELD TRACKING - AFTER SELF-HEALING:`);
+    const allFieldsAfterHealing = Object.values(enhancedResult.finalSectionFields).flat();
+    const targetFieldAfterHealing = allFieldsAfterHealing.find(f =>
+      f.id === "9782 0 R" || f.id === "9858 0 R" ||
+      f.name.includes("Section11[0].From_Datefield_Name_2[2]") ||
+      f.name.includes("Section11-2[0].TextField11[10]")
+    );
+    if (targetFieldAfterHealing) {
+      console.log(`   Field ID: ${targetFieldAfterHealing.id}`);
+      console.log(`   Field Name: ${targetFieldAfterHealing.name}`);
+      console.log(`   Section: ${targetFieldAfterHealing.section}`);
+      console.log(`   Confidence: ${targetFieldAfterHealing.confidence}`);
+      console.log(`   isExplicitlyDetected: ${targetFieldAfterHealing.isExplicitlyDetected}`);
+      console.log(`   wasMovedByHealing: ${targetFieldAfterHealing.wasMovedByHealing}`);
+
+      // Compare before and after
+      if (targetFieldBeforeHealing && targetFieldAfterHealing.section !== targetFieldBeforeHealing.section) {
+        console.log(`   🚨 SECTION CHANGED: ${targetFieldBeforeHealing.section} → ${targetFieldAfterHealing.section}`);
+      }
+    } else {
+      console.log(`   ❌ TARGET FIELD NOT FOUND AFTER SELF-HEALING!`);
+    }
 
     // Log the results of the self-healing process
     console.log(
@@ -1882,6 +2458,7 @@ async function main() {
         outputPath,
         "categorized-fields.json"
       );
+
       fs.writeFileSync(
         categorizedOutputFile,
         JSON.stringify(allFields, null, 2)
