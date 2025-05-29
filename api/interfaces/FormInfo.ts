@@ -1,12 +1,18 @@
-import { Field } from "./formDefinition";
+import { type Field } from "./formDefinition";
 
-enum SuffixOptions {
-  MakeASelection = "Make A Selection",
+export enum SuffixOptions {
+  None = "None",
   Jr = "Jr.",
   Sr = "Sr.",
   III = "III",
   IV = "IV",
-  None = "None", // Assuming you want to give an option for no suffix
+  V = "V",
+  VI = "VI",
+  VII = "VII",
+  VIII = "VIII",
+  IX = "IX",
+  X = "X",
+  Other = "Other",
 }
 
 interface FormInfo {
@@ -14,4 +20,4 @@ interface FormInfo {
   suffix: SuffixOptions;
 }
 
-export default FormInfo;
+export type { FormInfo };

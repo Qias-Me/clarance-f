@@ -1,6 +1,6 @@
 import { SuffixOptions } from "api/enums/enums";
-import FormInfo from "api/interfaces2.0/FormInfo";
-import { PersonalInfo } from "api/interfaces2.0/sections/personalInfo";
+import { FormInfo } from "api/interfaces/FormInfo";
+import { PersonalInfo } from "api/interfaces/sections/personalInfo";
 
 
 type FormProps = {

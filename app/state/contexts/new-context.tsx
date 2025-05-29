@@ -2,9 +2,9 @@ import React, {
   createContext,
   useContext,
   useState,
-  ReactNode,
   useEffect,
   useCallback,
+  type ReactNode,
 } from "react";
 import  {type ApplicantFormValues } from "../../../api/interfaces/formDefinition";
 import DynamicService from "../../../api/service/dynamicService";
@@ -180,10 +180,10 @@ export const EmployeeProvider: React.FC<EmployeeProviderProps> = ({
 
       // Define all array fields in the form
       const arrayFields: (keyof ApplicantFormValues)[] = [
-        "residencyInfo",
-        "schoolInfo",
-        "employmentInfo",
-        "peopleThatKnow",
+        // "residencyInfo",
+        // "schoolInfo",
+        // "employmentInfo",
+        // "peopleThatKnow",
       ];
 
       // Special case handling for initially empty arrays
@@ -210,29 +210,30 @@ export const EmployeeProvider: React.FC<EmployeeProviderProps> = ({
 
       const fields: (keyof ApplicantFormValues)[] = [
         "personalInfo",
-        "birthInfo",
-        "contactInfo",
-        "citizenshipInfo",
-        "dualCitizenshipInfo",
-        "physicalAttributes",
-        "namesInfo",
         "aknowledgementInfo",
-        "passportInfo",
-        "serviceInfo",
-        "militaryHistoryInfo",
-        "relativesInfo",
-        "relationshipInfo",
-        "foreignContacts",
-        "foreignActivities",
-        "mentalHealth",
-        "policeRecord",
-        "drugActivity",
-        "alcoholUse",
-        "investigationsInfo",
-        "finances",
-        "technology",
-        "civil",
-        "association",
+
+        // "birthInfo",
+        // "contactInfo",
+        // "citizenshipInfo",
+        // "dualCitizenshipInfo",
+        // "physicalAttributes",
+        // "namesInfo",
+        // "passportInfo",
+        // "serviceInfo",
+        // "militaryHistoryInfo",
+        // "relativesInfo",
+        // "relationshipInfo",
+        // "foreignContacts",
+        // "foreignActivities",
+        // "mentalHealth",
+        // "policeRecord",
+        // "drugActivity",
+        // "alcoholUse",
+        // "investigationsInfo",
+        // "finances",
+        // "technology",
+        // "civil",
+        // "association",
         "signature",
       ];
 

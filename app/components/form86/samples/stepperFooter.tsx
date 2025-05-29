@@ -2,7 +2,7 @@ import { useDispatch, useSelector } from "react-redux";
 import {
   goToStep,
   selectCurrentStep,
-} from "../../../state/user/formSice"; // Ensure the correct import paths
+} from "../../../state/user/formSlice"; // Ensure the correct import paths
 
 interface StepperFooterProps {
   onStepChange?: (step: number) => void; // This now supports directly setting the step
