@@ -1,6 +1,26 @@
 import React from "react";
-import FormInfo from "api_v2/interfaces/FormInfo";
-import { Association } from "api_v2/interfaces/association";
+// import FormInfo from "api_v2/interfaces/FormInfo"; // Temporarily commented out
+// import { Association } from "api_v2/interfaces/association"; // Temporarily commented out
+// import type { Section29 as Association } from "api/interfaces/sections/section29";
+
+// Temporary mock interface to match component expectations
+interface Association {
+  terrorismMember?: boolean;
+  actsOfTerrorism?: boolean;
+  overthrowByForce?: boolean;
+  dedicatedViolent?: boolean;
+  advocatesViolence?: boolean;
+  engagedInOverthrow?: boolean;
+  terrorismAssociate?: boolean;
+  section29_1?: any[];
+  section29_2?: any[];
+  section29_3?: any[];
+  section29_4?: any[];
+  section29_5?: any[];
+  section29_6?: any[];
+  section29_7?: any[];
+  [key: string]: any; // Allow dynamic property access
+}
 
 import { RenderSection29_1 } from "../_association/section29_1";
 import { RenderSection29_2 } from "../_association/section29_2";
@@ -18,7 +38,7 @@ interface FormProps {
   getDefaultNewItem: (itemType: string) => any;
   isReadOnlyField: (fieldName: string) => boolean;
   path: string;
-  formInfo: FormInfo;
+  // formInfo: FormInfo; // Temporarily commented out
 }
 
 const RenderAssociation: React.FC<FormProps> = ({
@@ -84,7 +104,7 @@ const RenderAssociation: React.FC<FormProps> = ({
 
   const renderBooleanInput = (
     label: string,
-    value: boolean,
+    value: boolean | undefined,
     onChange: (value: boolean) => void
   ) => (
     <div className="flex flex-col space-y-2 p-4  shadow-md rounded-lg">

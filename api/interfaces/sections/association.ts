@@ -3,12 +3,12 @@ import { type Field } from "api/interfaces/formDefinition";
 
 interface Association {
     _id: number;
-    terrorismMember: Field<"YES" | "NO">; // (If NO, proceed to 29.2)
-    actsOfTerrorism: Field<"YES" | "NO">; // (If NO, proceed to 29.3)
-    overthrowByForce: Field<"YES" | "NO">; // (If NO, proceed to 29.4)
-    dedicatedViolent: Field<"YES" | "NO">; // (If NO, proceed to 29.5)
-    advocatesViolence: Field<"YES" | "NO">; // (If NO, proceed to 29.6)
-    engagedInOverthrow: Field<"YES" | "NO">; // (If NO, proceed to 29.7)
+    terrorismMember: Field<"YES" | "(If NO, proceed to 29.2)">
+    actsOfTerrorism: Field<"YES" | "(If NO, proceed to 29.3)">
+    overthrowByForce: Field<"YES" | "(If NO, proceed to 29.4)">
+    dedicatedViolent: Field<"YES" | "(If NO, proceed to 29.5)">
+    advocatesViolence: Field<"YES" | "(If NO, proceed to 29.6)">
+    engagedInOverthrow: Field<"YES" | "(If NO, proceed to 29.7)">
     terrorismAssociate: Field<"YES" | "NO">;
     section29_1?: Section29_1[];
     section29_2?: Section29_2[];

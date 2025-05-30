@@ -1,12 +1,12 @@
-import { ApplicantAknowledgeInfo } from "../../../api/interfaces2.0/formDefinition"; // Assuming this import path is correct
-import FormInfo from "api_v2/interfaces/FormInfo";
+import { ApplicantAknowledgeInfo } from "../../../api/interfaces/formDefinition2.0"; // Updated to correct path
+// import FormInfo from "api_v2/interfaces/FormInfo"; // Commented out - not available
 
 interface FormProps {
   data: ApplicantAknowledgeInfo; // Use the correct data type
   onInputChange: (path: string, value: any) => void;
   isValidValue: (path: string, value: any) => boolean;
   path: string;
-  formInfo: FormInfo;
+  // formInfo: FormInfo; // Commented out - not available
 }
 
 const RenderAcknowledgementInfo = ({
@@ -37,7 +37,7 @@ const RenderAcknowledgementInfo = ({
       </label>
 
       <label className="block">
-        SSN 
+        SSN
         <input
           type="text"
           defaultValue={data.ssn || ""}

@@ -50,6 +50,7 @@ import { aknowledgementInfo } from "~/state/contexts/sections/aknowledgementInfo
 // import { birthInfo } from "~/state/contexts/sections/birthInfo";
 import { personalInfo } from "~/state/contexts/sections/personalInfo";
 import type { FormInfo } from "api/interfaces/FormInfo";
+import { RenderAssociation } from "~/components/Rendered/RenderAssociation";
 // import { passportInfo } from "~/state/contexts/sections/passportInfo";
 // import { contactInfo } from "~/state/contexts/sections/contactInfo";
 // import { print } from "~/state/contexts/sections/print";
@@ -86,9 +87,9 @@ interface DynamicFormProps {
 
 // Define the ordered form sections for consistent step navigation
 const ORDERED_FORM_SECTIONS = [
-  "personalInfo", // Step 1
+//   "personalInfo", // Step 1
 //   "birthInfo", // Step 2
-  "aknowledgementInfo", // Step 3
+//   "aknowledgementInfo", // Step 3
 //   "namesInfo", // Step 4
 //   "physicalAttributes", // Step 5
 //   "contactInfo", // Step 6
@@ -113,14 +114,14 @@ const ORDERED_FORM_SECTIONS = [
 //   "finances", // Step 25
 //   "technology", // Step 26
 //   "civil", // Step 27
-//   "association", // Step 28
-  "signature", // Step 29
+  "association", // Step 28
+//   "signature", // Step 29
   "print", // Step 30
 ];
 
 // Section context map for template data
 const SECTION_CONTEXT_MAP = {
-  aknowledgementInfo,
+//   aknowledgementInfo,
 //   namesInfo,
 //   physicalAttributes,
 //   birthInfo,
@@ -433,8 +434,8 @@ const DynamicForm3: React.FC<DynamicFormProps> = ({
         return <RenderBasicInfo key={path} {...props} />;
     //   case "birthInfo":
     //     return <RenderBirthInfo key={path} {...props} />;
-      case "aknowledgementInfo":
-        return <RenderAcknowledgementInfo key={path} {...props} />;
+    //   case "aknowledgementInfo":
+    //     return <RenderAcknowledgementInfo key={path} {...props} />;
     //   case "namesInfo":
     //     return <RenderNames key={path} {...props} />;
     //   case "physicalAttributes":
@@ -483,10 +484,10 @@ const DynamicForm3: React.FC<DynamicFormProps> = ({
     //     return <RenderTechnology key={path} {...props} />;
     //   case "civil":
     //     return <RenderCivil key={path} {...props} />;
-    //   case "association":
-    //     return <RenderAssociation key={path} {...props} />;
-      case "signature":
-        return <RenderSignature key={path} {...props} />;
+      case "association":
+        return <RenderAssociation key={path} {...props} />;
+    //   case "signature":
+    //     return <RenderSignature key={path} {...props} />;
       case "print":
         return <RenderPrintPDF key={path} {...props} />;
       default:

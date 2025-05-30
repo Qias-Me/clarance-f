@@ -37,7 +37,8 @@ interface Field<T> {
   label: string;
 }
 
-interface ApplicantFormValues {
+export interface ApplicantFormValues {
+  [key: string]: any;
   personalInfo?: PersonalInfo;
   // namesInfo?: NamesInfo;
   aknowledgementInfo?: AknowledgeInfo;
@@ -71,4 +72,4 @@ interface ApplicantFormValues {
   print?: Print;
 }
 
-export type { Field, ApplicantFormValues };
+export type { Field };

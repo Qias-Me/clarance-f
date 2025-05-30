@@ -15,7 +15,8 @@ const requestHandler = createRequestHandler(
 );
 
 export default {
-  async fetch(request, env, ctx) {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext) {
+    // Handle all requests with the React Router (client-side PDF processing only)
     return requestHandler(request, {
       cloudflare: { env, ctx },
     });

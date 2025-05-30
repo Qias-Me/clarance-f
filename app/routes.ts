@@ -1,4 +1,4 @@
-import { type RouteConfig, index } from "@react-router/dev/routes";
+import { type RouteConfig, index, route } from "@react-router/dev/routes";
 
 export default [
   index("routes/home.tsx"),
@@ -11,5 +11,20 @@ export default [
         file: "routes/startForm._index.tsx"
       }
     ]
-  }
+  },
+  {
+    path: "test",
+    file: "routes/test.tsx",
+    children: [
+      {
+        index: true,
+        file: "routes/test._index.tsx"
+      }
+    ]
+  },
+  // API Routes for PDF operations
+  route("api/pdf-proxy", "routes/api/pdf-proxy.ts"),
+  route("api/generate-pdf", "routes/api/generate-pdf.ts"),
+  route("api/validate-pdf", "routes/api/validate-pdf.ts"),
+
 ] satisfies RouteConfig;

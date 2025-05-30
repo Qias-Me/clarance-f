@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Section 29 PDF Mapping Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 20px; margin: 5px; }
+        pre { background: #f8f9fa; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Section 29 PDF Field Mapping Test</h1>
+    
+    <div class="test-section info">
+        <h3>Test Instructions</h3>
+        <ol>
+            <li>Open the SF-86 form: <a href="http://localhost:5173/startForm" target="_blank">http://localhost:5173/startForm</a></li>
+            <li>Navigate to the Association tab</li>
+            <li>Select "YES" to enable entry addition</li>
+            <li>Add an organization with test data</li>
+            <li>Generate PDF and check console logs</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h3>Expected Console Output (Success)</h3>
+        <pre>
+✅ SUCCESS INDICATORS:
+- "Collected data from section29: {Object with terrorismOrganizations data}"
+- "Found numeric ID 16435 for field name form1[0].Section29[0].RadioButtonList[0]"
+- "Found numeric ID XXXXX for field name form1[0].Section29[0].TextField11[1]"
+- "Applying X fields to PDF" (where X > 0)
+- "Successfully applied X values to the PDF"
+- "PDF generated successfully. Fields mapped: X, Fields applied: X"
+        </pre>
+    </div>
+
+    <div class="test-section">
+        <h3>Previous Output (Before Fix)</h3>
+        <pre>
+❌ FAILURE INDICATORS:
+- "Applying 0 fields to PDF"
+- "Successfully applied 0 values to the PDF"
+- "PDF generated successfully. Fields mapped: 0, Fields applied: 0"
+- No "Found numeric ID" messages
+        </pre>
+    </div>
+
+    <div class="test-section">
+        <h3>Field ID Mapping Reference</h3>
+        <p>Based on Section 29 JSON analysis, these field mappings should work:</p>
+        <pre>
+Field Name: "form1[0].Section29[0].RadioButtonList[0]"
+Field ID: "16435 0 R" → Numeric ID: "16435"
+
+Field Name: "form1[0].Section29[0].TextField11[1]" (Entry 1 Organization Name)
+Field ID: Should be found in PDF field mapping
+
+Field Name: "form1[0].Section29[0].#area[1].TextField11[0]" (Entry 1 Street)
+Field ID: Should be found in PDF field mapping
+        </pre>
+    </div>
+
+    <div class="test-section">
+        <h3>Troubleshooting</h3>
+        <p>If the test still fails:</p>
+        <ul>
+            <li>Check that Section29Provider is properly registered with the integration system</li>
+            <li>Verify that Section 29 data is being collected in collectAllSectionData()</li>
+            <li>Ensure the PDF field mapping contains Section 29 fields</li>
+            <li>Check that field names match exactly between generator and PDF mapping</li>
+        </ul>
+    </div>
+
+    <script>
+        // Auto-refresh every 30 seconds to check for updates
+        setTimeout(() => {
+            location.reload();
+        }, 30000);
+        
+        console.log('Section 29 PDF Mapping Test Page Loaded');
+        console.log('Navigate to http://localhost:5173/startForm to test the form');
+    </script>
+</body>
+</html>

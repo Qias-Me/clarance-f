@@ -1,5 +1,15 @@
 import React from "react";
-import { Section29_1 } from "api_v2/interfaces/association";
+// import { Section29_1 } from "api_v2/interfaces/association"; // Temporarily commented out
+
+// Temporary mock interface
+interface Section29_1 {
+  activityDescription?: string;
+  dateRange?: {
+    from: { date: string; estimated: boolean };
+    to: { date: string; estimated: boolean };
+    present: boolean;
+  };
+}
 
 interface Section29_1Props {
   data: Section29_1[];
