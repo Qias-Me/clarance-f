@@ -1,6 +1,6 @@
 /**
  * Rules for Section 2: Date of Birth
- * Generated: 2025-05-28T23:19:08.559Z
+ * Generated: 2025-05-30T14:50:30.758Z
  */
 
 import type { MatchRule } from '../types.js';
@@ -12,7 +12,7 @@ export const sectionInfo = {
   section: 2,
   name: "Date of Birth",
   ruleCount: 2,
-  lastUpdated: "2025-05-28T23:19:08.560Z"
+  lastUpdated: "2025-05-30T14:50:30.758Z"
 };
 
 /**

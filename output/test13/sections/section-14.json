@@ -5,7 +5,7 @@
     "totalFields": 5,
     "subsectionCount": 1,
     "entryCount": 1,
-    "exportDate": "2025-05-28T23:19:11.218Z",
+    "exportDate": "2025-05-30T14:50:35.250Z",
     "averageConfidence": 0.95,
     "pageRange": [
       34,
@@ -20,7 +20,12 @@
       "page": 34,
       "label": "RadioButtonList",
       "type": "PDFRadioGroup",
-      "options": [],
+      "maxLength": 0,
+      "options": [
+        "Yes",
+        "No",
+        "1"
+      ],
       "rect": {
         "x": 38,
         "y": 662.02,
@@ -41,7 +46,7 @@
       "page": 34,
       "label": "If yes. provide registration number",
       "type": "PDFTextField",
-      "options": [],
+      "maxLength": 0,
       "rect": {
         "x": 223.97,
         "y": 661.69,
@@ -62,7 +67,7 @@
       "page": 34,
       "label": "If no. Provide explanation",
       "type": "PDFTextField",
-      "options": [],
+      "maxLength": 0,
       "rect": {
         "x": 204.01,
         "y": 643.69,
@@ -83,7 +88,7 @@
       "page": 34,
       "label": "If I don't know selected, provide explanation",
       "type": "PDFTextField",
-      "options": [],
+      "maxLength": 0,
       "rect": {
         "x": 204.01,
         "y": 625.69,
@@ -104,7 +109,11 @@
       "page": 34,
       "label": "RadioButtonList",
       "type": "PDFRadioGroup",
-      "options": [],
+      "maxLength": 0,
+      "options": [
+        "YES",
+        "NO "
+      ],
       "rect": {
         "x": 38.71,
         "y": 195.08,
@@ -128,7 +137,12 @@
         "page": 34,
         "label": "RadioButtonList",
         "type": "PDFRadioGroup",
-        "options": [],
+        "maxLength": 0,
+        "options": [
+          "Yes",
+          "No",
+          "1"
+        ],
         "rect": {
           "x": 38,
           "y": 662.02,
@@ -149,7 +163,7 @@
         "page": 34,
         "label": "If yes. provide registration number",
         "type": "PDFTextField",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 223.97,
           "y": 661.69,
@@ -170,7 +184,7 @@
         "page": 34,
         "label": "If no. Provide explanation",
         "type": "PDFTextField",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 204.01,
           "y": 643.69,
@@ -191,7 +205,7 @@
         "page": 34,
         "label": "If I don't know selected, provide explanation",
         "type": "PDFTextField",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 204.01,
           "y": 625.69,
@@ -212,7 +226,11 @@
         "page": 34,
         "label": "RadioButtonList",
         "type": "PDFRadioGroup",
-        "options": [],
+        "maxLength": 0,
+        "options": [
+          "YES",
+          "NO "
+        ],
         "rect": {
           "x": 38.71,
           "y": 195.08,
@@ -237,7 +255,12 @@
         "page": 34,
         "label": "RadioButtonList",
         "type": "PDFRadioGroup",
-        "options": [],
+        "maxLength": 0,
+        "options": [
+          "Yes",
+          "No",
+          "1"
+        ],
         "rect": {
           "x": 38,
           "y": 662.02,
@@ -258,7 +281,7 @@
         "page": 34,
         "label": "If yes. provide registration number",
         "type": "PDFTextField",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 223.97,
           "y": 661.69,
@@ -279,7 +302,7 @@
         "page": 34,
         "label": "If no. Provide explanation",
         "type": "PDFTextField",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 204.01,
           "y": 643.69,
@@ -300,7 +323,7 @@
         "page": 34,
         "label": "If I don't know selected, provide explanation",
         "type": "PDFTextField",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 204.01,
           "y": 625.69,
@@ -321,7 +344,11 @@
         "page": 34,
         "label": "RadioButtonList",
         "type": "PDFRadioGroup",
-        "options": [],
+        "maxLength": 0,
+        "options": [
+          "YES",
+          "NO "
+        ],
         "rect": {
           "x": 38.71,
           "y": 195.08,

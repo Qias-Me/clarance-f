@@ -5,7 +5,7 @@
     "totalFields": 10,
     "subsectionCount": 1,
     "entryCount": 1,
-    "exportDate": "2025-05-28T23:19:11.192Z",
+    "exportDate": "2025-05-30T14:50:35.203Z",
     "averageConfidence": 1,
     "pageRange": [
       6,
@@ -20,7 +20,11 @@
       "page": 6,
       "label": "RadioButtonList",
       "type": "PDFRadioGroup",
-      "options": [],
+      "maxLength": 0,
+      "options": [
+        "YES",
+        "NO (If NO, proceed to Section 9)"
+      ],
       "rect": {
         "x": 29.96,
         "y": 571.2,
@@ -41,7 +45,7 @@
       "page": 6,
       "label": "Provide the following information for the most recent U.S. passport you currently possess. Passport number",
       "type": "PDFTextField",
-      "options": [],
+      "maxLength": 0,
       "rect": {
         "x": 27.12,
         "y": 527.2,
@@ -62,7 +66,7 @@
       "page": 6,
       "label": "Issue date (Month/Day/Year)",
       "type": "PDFTextField",
-      "options": [],
+      "maxLength": 0,
       "rect": {
         "x": 175.5,
         "y": 527.2,
@@ -83,7 +87,7 @@
       "page": 6,
       "label": "Expiration date (Month/Day/Year)",
       "type": "PDFTextField",
-      "options": [],
+      "maxLength": 0,
       "rect": {
         "x": 281,
         "y": 527.2,
@@ -104,7 +108,7 @@
       "page": 6,
       "label": "Estimate",
       "type": "PDFCheckBox",
-      "options": [],
+      "maxLength": 0,
       "rect": {
         "x": 249.5,
         "y": 531.44,
@@ -125,7 +129,7 @@
       "page": 6,
       "label": "Middle name",
       "type": "PDFTextField",
-      "options": [],
+      "maxLength": 0,
       "rect": {
         "x": 390.88,
         "y": 490.03,
@@ -146,7 +150,7 @@
       "page": 6,
       "label": "Provide the name in which passport was first issued. Last name",
       "type": "PDFTextField",
-      "options": [],
+      "maxLength": 0,
       "rect": {
         "x": 27.12,
         "y": 490.03,
@@ -167,7 +171,7 @@
       "page": 6,
       "label": "First name",
       "type": "PDFTextField",
-      "options": [],
+      "maxLength": 0,
       "rect": {
         "x": 210.88,
         "y": 490.03,
@@ -190,7 +194,21 @@
       "page": 6,
       "label": "Suffix",
       "type": "PDFDropdown",
-      "options": [],
+      "maxLength": 0,
+      "options": [
+        "Jr",
+        "Sr",
+        "II",
+        "III",
+        "IV",
+        "V",
+        "VI",
+        "VII",
+        "VIII",
+        "IX",
+        "X",
+        "Other"
+      ],
       "rect": {
         "x": 523.88,
         "y": 487.2,
@@ -211,7 +229,7 @@
       "page": 6,
       "label": "Estimate",
       "type": "PDFCheckBox",
-      "options": [],
+      "maxLength": 0,
       "rect": {
         "x": 361.52,
         "y": 531.45,
@@ -235,7 +253,11 @@
         "page": 6,
         "label": "RadioButtonList",
         "type": "PDFRadioGroup",
-        "options": [],
+        "maxLength": 0,
+        "options": [
+          "YES",
+          "NO (If NO, proceed to Section 9)"
+        ],
         "rect": {
           "x": 29.96,
           "y": 571.2,
@@ -256,7 +278,7 @@
         "page": 6,
         "label": "Provide the following information for the most recent U.S. passport you currently possess. Passport number",
         "type": "PDFTextField",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 27.12,
           "y": 527.2,
@@ -277,7 +299,7 @@
         "page": 6,
         "label": "Issue date (Month/Day/Year)",
         "type": "PDFTextField",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 175.5,
           "y": 527.2,
@@ -298,7 +320,7 @@
         "page": 6,
         "label": "Expiration date (Month/Day/Year)",
         "type": "PDFTextField",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 281,
           "y": 527.2,
@@ -319,7 +341,7 @@
         "page": 6,
         "label": "Estimate",
         "type": "PDFCheckBox",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 249.5,
           "y": 531.44,
@@ -340,7 +362,7 @@
         "page": 6,
         "label": "Middle name",
         "type": "PDFTextField",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 390.88,
           "y": 490.03,
@@ -361,7 +383,7 @@
         "page": 6,
         "label": "Provide the name in which passport was first issued. Last name",
         "type": "PDFTextField",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 27.12,
           "y": 490.03,
@@ -382,7 +404,7 @@
         "page": 6,
         "label": "First name",
         "type": "PDFTextField",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 210.88,
           "y": 490.03,
@@ -405,7 +427,21 @@
         "page": 6,
         "label": "Suffix",
         "type": "PDFDropdown",
-        "options": [],
+        "maxLength": 0,
+        "options": [
+          "Jr",
+          "Sr",
+          "II",
+          "III",
+          "IV",
+          "V",
+          "VI",
+          "VII",
+          "VIII",
+          "IX",
+          "X",
+          "Other"
+        ],
         "rect": {
           "x": 523.88,
           "y": 487.2,
@@ -426,7 +462,7 @@
         "page": 6,
         "label": "Estimate",
         "type": "PDFCheckBox",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 361.52,
           "y": 531.45,
@@ -451,7 +487,11 @@
         "page": 6,
         "label": "RadioButtonList",
         "type": "PDFRadioGroup",
-        "options": [],
+        "maxLength": 0,
+        "options": [
+          "YES",
+          "NO (If NO, proceed to Section 9)"
+        ],
         "rect": {
           "x": 29.96,
           "y": 571.2,
@@ -472,7 +512,7 @@
         "page": 6,
         "label": "Provide the following information for the most recent U.S. passport you currently possess. Passport number",
         "type": "PDFTextField",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 27.12,
           "y": 527.2,
@@ -493,7 +533,7 @@
         "page": 6,
         "label": "Issue date (Month/Day/Year)",
         "type": "PDFTextField",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 175.5,
           "y": 527.2,
@@ -514,7 +554,7 @@
         "page": 6,
         "label": "Expiration date (Month/Day/Year)",
         "type": "PDFTextField",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 281,
           "y": 527.2,
@@ -535,7 +575,7 @@
         "page": 6,
         "label": "Estimate",
         "type": "PDFCheckBox",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 249.5,
           "y": 531.44,
@@ -556,7 +596,7 @@
         "page": 6,
         "label": "Middle name",
         "type": "PDFTextField",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 390.88,
           "y": 490.03,
@@ -577,7 +617,7 @@
         "page": 6,
         "label": "Provide the name in which passport was first issued. Last name",
         "type": "PDFTextField",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 27.12,
           "y": 490.03,
@@ -598,7 +638,7 @@
         "page": 6,
         "label": "First name",
         "type": "PDFTextField",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 210.88,
           "y": 490.03,
@@ -621,7 +661,21 @@
         "page": 6,
         "label": "Suffix",
         "type": "PDFDropdown",
-        "options": [],
+        "maxLength": 0,
+        "options": [
+          "Jr",
+          "Sr",
+          "II",
+          "III",
+          "IV",
+          "V",
+          "VI",
+          "VII",
+          "VIII",
+          "IX",
+          "X",
+          "Other"
+        ],
         "rect": {
           "x": 523.88,
           "y": 487.2,
@@ -642,7 +696,7 @@
         "page": 6,
         "label": "Estimate",
         "type": "PDFCheckBox",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 361.52,
           "y": 531.45,

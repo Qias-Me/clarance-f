@@ -63,7 +63,7 @@ export class PdfService {
 
   async mapFilledValuesfrom_PDF(pdfDoc: PDFDocument) {
     const form = pdfDoc.getForm();
-  
+
     return form.getFields().reduce((acc, field) => {
       const type = field.constructor.name;
       const value =
@@ -78,8 +78,8 @@ export class PdfService {
           : field instanceof PDFRadioGroup
           ? field.getSelected()
           : undefined;
-          
-  
+
+
       if (value && (!Array.isArray(value) || value.length > 0)) {
         acc.push({
           name: field.getName(),
@@ -92,10 +92,10 @@ export class PdfService {
       return acc;
     }, [] as any[]);
   }
-  
+
   async mapFormValuesToJsonData(json: any[], formValues: ApplicantFormValues) {
     const idValueMap = new Map<string, string>();
-  
+
     const flattenFormValues = (data: any) => {
       Object.values(data).forEach((val: any) => {
         if (val && typeof val === "object") {
@@ -107,16 +107,16 @@ export class PdfService {
         }
       });
     };
-  
+
     flattenFormValues(formValues);
-  
+
     json.forEach((item) => {
       if (idValueMap.has(item.id)) item.value = idValueMap.get(item.id);
     });
-  
+
     return json;
   }
-  
+
 
   async mapFormFields(pdfDoc: PDFDocument) {
     const form = pdfDoc.getForm();
@@ -144,7 +144,7 @@ export class PdfService {
       if (tuRaw instanceof PDFString) {
           label = tuRaw.decodeText();
       }
-      
+
       return {
         name,
         id,
@@ -196,17 +196,17 @@ async applyValues_toPDF(formData: ApplicantFormValues): Promise<UserServiceRespo
     const appliedFields = finalForm.filter(field => {
       // Skip fields with no value
       if (!field.value) return false;
-      
+
       // Skip empty arrays
       if (Array.isArray(field.value) && field.value.length === 0) return false;
-      
+
       // Skip "No", "NO", or empty string values
       if (field.value === "No" || field.value === "NO" || field.value === "") return false;
-      
+
       // Include all other values
       return true;
     });
-    
+
     fs.writeFileSync(
       join(__dirname, "../../tools/externalTools/Labels.json"),
       JSON.stringify(appliedFields, null, 2)
@@ -329,11 +329,11 @@ async generateJSON_fromPDF(
       // Get the field widget annotations to determine page
       const widget = field.acroField.getWidgets()[0];
       if (!widget) return undefined;
-      
+
       // Get the page reference for this widget
       const pageRef = widget.P();
       if (!pageRef) return undefined;
-      
+
       // Find the matching page by comparing page references
       for (let i = 0; i < pdfDoc.getPageCount(); i++) {
         const page = pdfDoc.getPage(i);
@@ -341,7 +341,7 @@ async generateJSON_fromPDF(
           return i + 1; // Return 1-based page index
         }
       }
-      
+
       return undefined;
     } catch (error) {
       console.warn(`Could not determine page for field: ${field.getName()}`);
@@ -356,14 +356,14 @@ async generateJSON_fromPDF(
   private extractRectFromWidget(widget: any): { x: number; y: number; width: number; height: number } | null {
     try {
       if (!widget) return null;
-      
+
       // Get the Rect array from the widget dictionary
       // Use type assertion to handle the TypeScript type issue with dict property
       const widgetDict = (widget as any).dict;
       if (!widgetDict) return null;
-      
+
       const rectArray = widgetDict.lookup(PDFName.of('Rect'));
-      
+
       if (rectArray instanceof PDFArray && rectArray.size() === 4) {
         try {
           // PDF coordinates are [left, bottom, right, top]
@@ -371,7 +371,7 @@ async generateJSON_fromPDF(
           const y1 = rectArray.lookup(1, PDFNumber).asNumber();
           const x2 = rectArray.lookup(2, PDFNumber).asNumber();
           const y2 = rectArray.lookup(3, PDFNumber).asNumber();
-          
+
           // Ensure coordinates are properly ordered (x1,y1 is lower-left) and round to 2 decimal places
           return {
             x: Math.round(Math.min(x1, x2) * 100) / 100,
@@ -387,7 +387,7 @@ async generateJSON_fromPDF(
     } catch (e) {
       console.warn('Error accessing widget dictionary:', e);
     }
-    
+
     return null;
   }
 
@@ -400,30 +400,30 @@ async generateJSON_fromPDF(
       // Get all annotations on this page
       const annotations = page.node.lookup(PDFName.of('Annots'));
       if (!(annotations instanceof PDFArray)) return [];
-      
+
       const fieldId = field.ref.toString();
       const fieldAnnotations = [];
-      
+
       // Check each annotation to see if it belongs to our field
       for (let i = 0; i < annotations.size(); i++) {
         const annotation = annotations.lookup(i);
         if (!annotation) continue;
-        
+
         // Check if this annotation belongs to our field
         // Use type assertion to handle the TypeScript type issue with dict property
         const annotDict = (annotation as any).dict;
         if (!annotDict) continue;
-        
+
         // The annotation may refer to the field directly or via a Parent reference
         const parent = annotDict.get(PDFName.of('Parent'));
         const isDirectField = annotation.toString().includes(fieldId);
         const isParentField = parent && parent.toString().includes(fieldId);
-        
+
         if (isDirectField || isParentField) {
           fieldAnnotations.push(annotation);
         }
       }
-      
+
       return fieldAnnotations;
     } catch (e) {
       console.warn(`Error finding annotations for field: ${e}`);
@@ -476,7 +476,7 @@ async generateJSON_fromPDF(
       const widgets = field.acroField.getWidgets();
       const pages = this.getFieldPages(field, pdfDoc);
       const fieldId = field.ref.tag.toString();
-      
+
       // Extract label from acroField dict
       let fieldLabel: string | undefined;
       try {
@@ -485,7 +485,7 @@ async generateJSON_fromPDF(
         if (tuRaw instanceof PDFString) {
           fieldLabel = tuRaw.decodeText();
         }
-        
+
         // If TU not available, try TT (tooltip)
         if (!fieldLabel) {
           const ttRaw = dict.get(PDFName.of("TT"));
@@ -493,7 +493,7 @@ async generateJSON_fromPDF(
             fieldLabel = ttRaw.decodeText();
           }
         }
-        
+
         // If no label found, use a formatted version of the field name
         if (!fieldLabel) {
           fieldLabel = fieldName.replace(/([A-Z])/g, ' $1')
@@ -504,7 +504,7 @@ async generateJSON_fromPDF(
       } catch (error) {
         console.warn(`Could not extract label for field ${fieldName}: ${error}`);
       }
-      
+
       // If we've already processed this fieldId, skip it
       if (seenFieldIds.has(fieldId)) {
         continue;
@@ -514,11 +514,11 @@ async generateJSON_fromPDF(
       // We'll take the data from the first widget for deduplication purposes
       if (widgets.length > 0) {
         const widget = widgets[0]; // Process only the first widget for this field
-        
+
         // Try to extract coordinates using different methods
         let coordinates = this.extractRectFromWidget(widget);
         let extractionMethod = "widget";
-        
+
         if (coordinates) {
           directExtractionCount++;
         } else {
@@ -544,7 +544,7 @@ async generateJSON_fromPDF(
 
         // Get page number (0-based)
         const pageIndex = this.getWidgetPage(widget, pdfDoc);
-        
+
         // Log sample data
         const logSample = (type: string, currentLogged: number) => {
           if (currentLogged < SAMPLE_LOG_LIMIT) {
@@ -560,7 +560,7 @@ async generateJSON_fromPDF(
           radioSampleLogged = logSample("RadioGroup", radioSampleLogged);
         } else if (fieldType === "PDFTextField") {
           textSampleLogged = logSample("TextField", textSampleLogged);
-        
+
         } else {
           // Log any other field types encountered, just once per type for brevity
           if (!seenFieldIds.has(`otherTypeLogged_${fieldType}`)) {
@@ -570,6 +570,15 @@ async generateJSON_fromPDF(
         }
 
 
+        // Extract field options for dropdown and radio button fields
+        let fieldOptions: string[] | undefined;
+        try {
+          fieldOptions = this.extractFieldOptions(field);
+        } catch (error) {
+          console.warn(`Could not extract options for field: ${fieldName}`, error);
+          fieldOptions = undefined;
+        }
+
         // Create field metadata object
         fieldDataList.push({
           id: fieldId,
@@ -577,7 +586,8 @@ async generateJSON_fromPDF(
           type: fieldType,
           label: fieldLabel,
           value: this.getFieldValue(field),
-          page: pageIndex !== null ? pageIndex + 1 : 1,
+          options: fieldOptions,
+          page: pageIndex !== null ? pageIndex + 1 : undefined,
           rect: coordinates
         });
         seenFieldIds.add(fieldId); // Mark this fieldId as processed
@@ -608,7 +618,7 @@ async generateJSON_fromPDF(
       if (!fs.existsSync(outputDir)) {
         fs.mkdirSync(outputDir, { recursive: true });
       }
-      
+
       fs.writeFileSync(
         path.join(outputDir, 'coordinates-debug.json'),
         JSON.stringify(fieldDataList, null, 2)
@@ -618,9 +628,9 @@ async generateJSON_fromPDF(
     }
 
     // Count how many fields have valid coordinates
-    const fieldsWithCoordinates = fieldDataList.filter(field => field.rect && 
+    const fieldsWithCoordinates = fieldDataList.filter(field => field.rect &&
       (field.rect.width > 0 || field.rect.height > 0)); // A width or height > 0 implies valid rect
-    
+
     console.log(`Extracted coordinates for ${fieldsWithCoordinates.length} out of ${fieldDataList.length} unique fields (${(fieldDataList.length > 0 ? (fieldsWithCoordinates.length/fieldDataList.length*100) : 0).toFixed(1)}%)`);
     console.log(`Extraction method breakdown:
       - Direct widget extraction: ${directExtractionCount}
@@ -634,7 +644,7 @@ async generateJSON_fromPDF(
 
   /**
    * Validates PDF form fields for a specific section by setting values and reading them back
-   * 
+   *
    * @param sectionId Section ID
    * @param testValues Test values to set and validate
    * @returns Validation report
@@ -657,36 +667,36 @@ async generateJSON_fromPDF(
       const pdfPath = join(__dirname, "src/sf862.pdf");
       const pdfDoc = await PDFDocument.load(fs.readFileSync(pdfPath));
       const form = pdfDoc.getForm();
-      
+
       // Create a mapping of field names to PDF form fields
       const fieldMap = new Map(form.getFields().map((f) => [f.getName(), f]));
-      
+
       // 2. Set the test values
       const fieldsToTest: string[] = [];
-      
+
       for (const [fieldName, value] of Object.entries(testValues)) {
         if (fieldMap.has(fieldName)) {
           await this.setFieldValue(fieldMap.get(fieldName), value);
           fieldsToTest.push(fieldName);
         }
       }
-      
+
       // 3. Save the PDF with test values - use a single temporary file for all validations
       const validationPdfPath = join(__dirname, `../../tools/externalTools/validation_temp.pdf`);
       const modifiedPdfBytes = await pdfDoc.save();
       fs.writeFileSync(validationPdfPath, modifiedPdfBytes);
-      
+
       // 4. Read back the PDF to verify values
       const verificationDoc = await PDFDocument.load(fs.readFileSync(validationPdfPath));
       const verificationFields = await this.mapFormFields(verificationDoc);
-      
+
       // 5. Compare input and output values
       const discrepancies = [];
       for (const fieldName of fieldsToTest) {
         const expectedValue = testValues[fieldName];
         const fieldInfo = verificationFields.find(f => f.name === fieldName);
         const actualValue = fieldInfo?.value?.toString() || null;
-        
+
         if (expectedValue !== actualValue) {
           discrepancies.push({
             fieldName,
@@ -721,10 +731,10 @@ async generateJSON_fromPDF(
       };
     }
   }
-  
+
   /**
    * Batch validate multiple sections of the PDF
-   * 
+   *
    * @param sectionData Map of section IDs to test values
    * @returns Consolidated validation report for all sections
    */
@@ -739,19 +749,19 @@ async generateJSON_fromPDF(
     const sectionReports: Array<Awaited<ReturnType<PdfService['validatePdfFormBySection']>>> = [];
     let totalFieldsValidated = 0;
     let totalDiscrepancies = 0;
-    
+
     try {
       for (const [sectionId, testValues] of sectionData.entries()) {
         // We need to await the promise before we can use its results
         const report = await this.validatePdfFormBySection(sectionId, testValues);
         sectionReports.push(report);
-        
+
         totalFieldsValidated += report.fieldsValidated;
         totalDiscrepancies += report.fieldsWithDiscrepancies;
       }
-      
+
       const sectionsWithDiscrepancies = sectionReports.filter(report => !report.success).length;
-      
+
       return {
         overallSuccess: sectionsWithDiscrepancies === 0,
         sectionsValidated: sectionReports.length,
@@ -772,34 +782,34 @@ async generateJSON_fromPDF(
       }
     }
   }
-  
+
   /**
    * Generates a human-readable validation report for PDF form fields
-   * 
+   *
    * @param batchReport The batch validation report
    * @returns Formatted string with validation results
    */
   generateValidationReport(batchReport: Awaited<ReturnType<PdfService['batchValidatePdfSections']>>): string {
     let report = `PDF FORM FIELD VALIDATION REPORT\n`;
     report += `================================\n\n`;
-    
+
     report += `Summary:\n`;
     report += `- Sections validated: ${batchReport.sectionsValidated}\n`;
     report += `- Overall success: ${batchReport.overallSuccess ? 'YES ✓' : 'NO ✗'}\n`;
     report += `- Sections with discrepancies: ${batchReport.sectionsWithDiscrepancies}\n`;
     report += `- Total fields validated: ${batchReport.totalFieldsValidated}\n`;
     report += `- Total discrepancies: ${batchReport.totalDiscrepancies}\n\n`;
-    
+
     if (batchReport.totalDiscrepancies > 0) {
       report += `SECTIONS WITH DISCREPANCIES:\n`;
       report += `-------------------------\n\n`;
-      
+
       for (const sectionReport of batchReport.sectionReports) {
         if (!sectionReport.success) {
           report += `Section ${sectionReport.section} (${sectionReport.sectionName}):\n`;
           report += `- Fields validated: ${sectionReport.fieldsValidated}\n`;
           report += `- Fields with discrepancies: ${sectionReport.fieldsWithDiscrepancies}\n\n`;
-          
+
           report += `  Discrepancies:\n`;
           for (const discrepancy of sectionReport.discrepancies) {
             report += `  - Field: ${discrepancy.fieldName}\n`;
@@ -809,10 +819,10 @@ async generateJSON_fromPDF(
         }
       }
     }
-    
+
     report += `SECTION DETAILS:\n`;
     report += `---------------\n\n`;
-    
+
     for (const sectionReport of batchReport.sectionReports) {
       report += `Section ${sectionReport.section} (${sectionReport.sectionName}):\n`;
       report += `- Status: ${sectionReport.success ? 'SUCCESS ✓' : 'FAILED ✗'}\n`;
@@ -820,7 +830,7 @@ async generateJSON_fromPDF(
       report += `- Fields with discrepancies: ${sectionReport.fieldsWithDiscrepancies}\n`;
       report += `- Message: ${sectionReport.message}\n\n`;
     }
-    
+
     return report;
   }
 
@@ -849,7 +859,7 @@ async generateJSON_fromPDF(
     const pages: number[] = [];
     try {
       const widgets = field.acroField.getWidgets();
-      
+
       for (const widget of widgets) {
         const pageIndex = this.getWidgetPage(widget, pdfDoc);
         if (pageIndex !== null && !pages.includes(pageIndex)) {
@@ -900,27 +910,27 @@ async generateJSON_fromPDF(
     try {
       const pages = pdfDoc.getPages();
       const fieldPages = this.getFieldPages(field, pdfDoc);
-      
+
       for (const pageIndex of fieldPages) {
         const page = pages[pageIndex];
         if (!page) continue;
-        
+
         // Get annotations for the page
         const annotations = page.node.lookup(PDFName.of('Annots'));
         if (!(annotations instanceof PDFArray)) continue;
-        
+
         // Find the annotation for this field
         for (let i = 0; i < annotations.size(); i++) {
           const annot = annotations.lookup(i);
           if (!annot) continue;
-          
+
           const annotDict = (annot as any).dict;
           if (!annotDict) continue;
-          
+
           // Check if this annotation belongs to our field
           const fieldRef = annotDict.get(PDFName.of('Parent')) || annot;
           const fieldObj = field.acroField;
-          
+
           if (fieldRef && fieldRef.toString() === fieldObj.ref.toString()) {
             // Found matching annotation, get its rectangle
             const annotRect = annotDict.lookup(PDFName.of('Rect'));
@@ -929,7 +939,7 @@ async generateJSON_fromPDF(
               const y1 = annotRect.lookup(1, PDFNumber).asNumber();
               const x2 = annotRect.lookup(2, PDFNumber).asNumber();
               const y2 = annotRect.lookup(3, PDFNumber).asNumber();
-              
+
               return {
                 x: Math.round(Math.min(x1, x2) * 100) / 100,
                 y: Math.round(Math.min(y1, y2) * 100) / 100,
@@ -947,6 +957,33 @@ async generateJSON_fromPDF(
   }
 
   /**
+   * Extract field options for dropdown and radio button fields using pdf-lib API
+   * @param field PDF form field
+   * @returns Array of option values or undefined if field has no options
+   */
+  private extractFieldOptions(field: PDFField): string[] | undefined {
+    try {
+      // Handle different field types that have options
+      if (field instanceof PDFDropdown) {
+        // For dropdown fields, get all available options
+        const options = field.getOptions();
+        return options.length > 0 ? options : undefined;
+      } else if (field instanceof PDFRadioGroup) {
+        // For radio groups, get all available option values
+        const options = field.getOptions();
+        return options.length > 0 ? options : undefined;
+      } else {
+        // For other field types (text fields, checkboxes), there are no options
+        // Note: PDFOptionList (list boxes) would also have getOptions() but it's not commonly used in SF-86
+        return undefined;
+      }
+    } catch (error) {
+      console.warn(`Error extracting options for field ${field.getName()}:`, error);
+      return undefined;
+    }
+  }
+
+  /**
    * Extract rectangle directly from the field object
    * @param field PDF form field
    * @returns Rectangle coordinates or null if not found
@@ -955,16 +992,16 @@ async generateJSON_fromPDF(
     try {
       const dict = field.acroField.dict;
       if (!dict) return null;
-      
+
       // Some fields store coordinates directly
       const rectArray = dict.lookup(PDFName.of('Rect'));
-      
+
       if (rectArray instanceof PDFArray && rectArray.size() === 4) {
         const x1 = rectArray.lookup(0, PDFNumber).asNumber();
         const y1 = rectArray.lookup(1, PDFNumber).asNumber();
         const x2 = rectArray.lookup(2, PDFNumber).asNumber();
         const y2 = rectArray.lookup(3, PDFNumber).asNumber();
-        
+
         return {
           x: Math.round(Math.min(x1, x2) * 100) / 100,
           y: Math.round(Math.min(y1, y2) * 100) / 100,

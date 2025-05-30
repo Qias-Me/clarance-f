@@ -5,7 +5,7 @@
     "totalFields": 2,
     "subsectionCount": 2,
     "entryCount": 1,
-    "exportDate": "2025-05-28T23:19:11.183Z",
+    "exportDate": "2025-05-30T14:50:35.193Z",
     "averageConfidence": 0.3,
     "pageRange": [
       5,
@@ -20,7 +20,7 @@
       "page": 5,
       "label": "Section 2. Date of Birth. Provide your date of birth (month/day/year).",
       "type": "PDFTextField",
-      "options": [],
+      "maxLength": 0,
       "rect": {
         "x": 27,
         "y": 552.76,
@@ -40,7 +40,7 @@
       "page": 5,
       "label": "Estimate",
       "type": "PDFCheckBox",
-      "options": [],
+      "maxLength": 0,
       "rect": {
         "x": 104.6,
         "y": 555.26,
@@ -64,7 +64,7 @@
         "page": 5,
         "label": "Section 2. Date of Birth. Provide your date of birth (month/day/year).",
         "type": "PDFTextField",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 27,
           "y": 552.76,
@@ -86,7 +86,7 @@
         "page": 5,
         "label": "Estimate",
         "type": "PDFCheckBox",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 104.6,
           "y": 555.26,
@@ -111,7 +111,7 @@
         "page": 5,
         "label": "Section 2. Date of Birth. Provide your date of birth (month/day/year).",
         "type": "PDFTextField",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 27,
           "y": 552.76,
@@ -131,7 +131,7 @@
         "page": 5,
         "label": "Estimate",
         "type": "PDFCheckBox",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 104.6,
           "y": 555.26,

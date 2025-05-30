@@ -129,16 +129,15 @@ export async function extractFields(
       // Convert JSON data to PDFField format
       console.log("Converting JSON data to PDFField format...");
       const processedFields = jsonData.map((field: any) => ({
-        id: field.id || `field_${Math.random().toString(36).substring(2, 15)}`,
-        name: field.name || '',
-        value: field.value || '',
-        page: field.page || 0,
-        label: field.label || '',
-        type: field.type || 'text',
+        id: field.id || undefined,
+        name: field.name || undefined,
+        value: field.value || undefined,
+        page: field.page || undefined,
+        label: field.label || undefined,
+        type: field.type || undefined,
         maxLength: field.maxLength || 0,
-        options: field.options || [],
-        required: field.required || false,
-        rect: field.rect || null
+        options: field.options || undefined,
+        rect: field.rect || undefined
       }));
 
       console.log(`Loaded ${processedFields.length} fields from JSON file`);
@@ -251,13 +250,13 @@ export async function extractFields(
         .filter((field: any) => field.name) // Filter out fields without names
         .map((field: any) => ({
           id: field.id,
-          name: field.name,
-          value: field.value,
-          page: field.page || -1, // Default to -1 if page is undefined
-          label: field.label,
-          type: field.type,
-          maxLength: field.maxLength,
-          options: field.options || [],
+          name: field.name || undefined,
+          value: field.value || undefined,
+          page: field.page || undefined,
+          label: field.label || undefined,
+          type: field.type || undefined,
+          maxLength: field.maxLength || 0,
+          options: field.options || undefined,
           rect: field.rect || undefined
         })
     );

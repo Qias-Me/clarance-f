@@ -1,6 +1,6 @@
 /**
  * Rules for Section 8: U.S. Passport Information
- * Generated: 2025-05-28T23:19:08.563Z
+ * Generated: 2025-05-30T14:50:30.760Z
  */
 
 import type { MatchRule } from '../types.js';
@@ -12,7 +12,7 @@ export const sectionInfo = {
   section: 8,
   name: "U.S. Passport Information",
   ruleCount: 8,
-  lastUpdated: "2025-05-28T23:19:08.563Z"
+  lastUpdated: "2025-05-30T14:50:30.760Z"
 };
 
 /**

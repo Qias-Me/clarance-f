@@ -5,7 +5,7 @@
     "totalFields": 6,
     "subsectionCount": 2,
     "entryCount": 2,
-    "exportDate": "2025-05-28T23:19:11.188Z",
+    "exportDate": "2025-05-30T14:50:35.200Z",
     "averageConfidence": 0.3,
     "pageRange": [
       5,
@@ -20,7 +20,11 @@
       "page": 5,
       "label": "p3-rb3b",
       "type": "PDFRadioGroup",
-      "options": [],
+      "maxLength": 0,
+      "options": [
+        "Male",
+        "Female"
+      ],
       "rect": {
         "x": 534.02,
         "y": 147.94,
@@ -41,7 +45,7 @@
       "page": 5,
       "label": "Weight (in pounds)",
       "type": "PDFTextField",
-      "options": [],
+      "maxLength": 0,
       "rect": {
         "x": 159.5,
         "y": 147.83,
@@ -63,7 +67,23 @@
       "page": 5,
       "label": "Hair color",
       "type": "PDFDropdown",
-      "options": [],
+      "maxLength": 0,
+      "options": [
+        "Bald",
+        "Black",
+        "Blonde or Strawberry",
+        "Brown",
+        "Gray or Partially Gray",
+        "Red or Auburn",
+        "Sandy",
+        "White",
+        "Blue",
+        "Green",
+        "Orange",
+        "Pink",
+        "Purple",
+        "Unspecified or Unknown"
+      ],
       "rect": {
         "x": 237.08,
         "y": 147.83,
@@ -85,7 +105,19 @@
       "page": 5,
       "label": "Eye color",
       "type": "PDFDropdown",
-      "options": [],
+      "maxLength": 0,
+      "options": [
+        "Black",
+        "Blue",
+        "Brown",
+        "Gray",
+        "Green",
+        "Hazel",
+        "Maroon",
+        "Multicolored",
+        "Pink",
+        "Unknown"
+      ],
       "rect": {
         "x": 389.08,
         "y": 147.83,
@@ -107,7 +139,18 @@
       "page": 5,
       "label": "Section 6. Your Identifying Information. Provide your identifying information. Height (feet).",
       "type": "PDFDropdown",
-      "options": [],
+      "maxLength": 0,
+      "options": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
       "rect": {
         "x": 27,
         "y": 147.83,
@@ -129,7 +172,21 @@
       "page": 5,
       "label": "Height (inches)",
       "type": "PDFDropdown",
-      "options": [],
+      "maxLength": 0,
+      "options": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ],
       "rect": {
         "x": 85.5,
         "y": 147.83,
@@ -152,7 +209,11 @@
         "page": 5,
         "label": "p3-rb3b",
         "type": "PDFRadioGroup",
-        "options": [],
+        "maxLength": 0,
+        "options": [
+          "Male",
+          "Female"
+        ],
         "rect": {
           "x": 534.02,
           "y": 147.94,
@@ -175,7 +236,7 @@
         "page": 5,
         "label": "Weight (in pounds)",
         "type": "PDFTextField",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 159.5,
           "y": 147.83,
@@ -197,7 +258,23 @@
         "page": 5,
         "label": "Hair color",
         "type": "PDFDropdown",
-        "options": [],
+        "maxLength": 0,
+        "options": [
+          "Bald",
+          "Black",
+          "Blonde or Strawberry",
+          "Brown",
+          "Gray or Partially Gray",
+          "Red or Auburn",
+          "Sandy",
+          "White",
+          "Blue",
+          "Green",
+          "Orange",
+          "Pink",
+          "Purple",
+          "Unspecified or Unknown"
+        ],
         "rect": {
           "x": 237.08,
           "y": 147.83,
@@ -219,7 +296,19 @@
         "page": 5,
         "label": "Eye color",
         "type": "PDFDropdown",
-        "options": [],
+        "maxLength": 0,
+        "options": [
+          "Black",
+          "Blue",
+          "Brown",
+          "Gray",
+          "Green",
+          "Hazel",
+          "Maroon",
+          "Multicolored",
+          "Pink",
+          "Unknown"
+        ],
         "rect": {
           "x": 389.08,
           "y": 147.83,
@@ -241,7 +330,18 @@
         "page": 5,
         "label": "Section 6. Your Identifying Information. Provide your identifying information. Height (feet).",
         "type": "PDFDropdown",
-        "options": [],
+        "maxLength": 0,
+        "options": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9"
+        ],
         "rect": {
           "x": 27,
           "y": 147.83,
@@ -263,7 +363,21 @@
         "page": 5,
         "label": "Height (inches)",
         "type": "PDFDropdown",
-        "options": [],
+        "maxLength": 0,
+        "options": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11"
+        ],
         "rect": {
           "x": 85.5,
           "y": 147.83,
@@ -287,7 +401,11 @@
         "page": 5,
         "label": "p3-rb3b",
         "type": "PDFRadioGroup",
-        "options": [],
+        "maxLength": 0,
+        "options": [
+          "Male",
+          "Female"
+        ],
         "rect": {
           "x": 534.02,
           "y": 147.94,
@@ -310,7 +428,23 @@
         "page": 5,
         "label": "Hair color",
         "type": "PDFDropdown",
-        "options": [],
+        "maxLength": 0,
+        "options": [
+          "Bald",
+          "Black",
+          "Blonde or Strawberry",
+          "Brown",
+          "Gray or Partially Gray",
+          "Red or Auburn",
+          "Sandy",
+          "White",
+          "Blue",
+          "Green",
+          "Orange",
+          "Pink",
+          "Purple",
+          "Unspecified or Unknown"
+        ],
         "rect": {
           "x": 237.08,
           "y": 147.83,
@@ -332,7 +466,19 @@
         "page": 5,
         "label": "Eye color",
         "type": "PDFDropdown",
-        "options": [],
+        "maxLength": 0,
+        "options": [
+          "Black",
+          "Blue",
+          "Brown",
+          "Gray",
+          "Green",
+          "Hazel",
+          "Maroon",
+          "Multicolored",
+          "Pink",
+          "Unknown"
+        ],
         "rect": {
           "x": 389.08,
           "y": 147.83,
@@ -354,7 +500,18 @@
         "page": 5,
         "label": "Section 6. Your Identifying Information. Provide your identifying information. Height (feet).",
         "type": "PDFDropdown",
-        "options": [],
+        "maxLength": 0,
+        "options": [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9"
+        ],
         "rect": {
           "x": 27,
           "y": 147.83,
@@ -376,7 +533,21 @@
         "page": 5,
         "label": "Height (inches)",
         "type": "PDFDropdown",
-        "options": [],
+        "maxLength": 0,
+        "options": [
+          "0",
+          "1",
+          "2",
+          "3",
+          "4",
+          "5",
+          "6",
+          "7",
+          "8",
+          "9",
+          "10",
+          "11"
+        ],
         "rect": {
           "x": 85.5,
           "y": 147.83,
@@ -398,7 +569,7 @@
         "page": 5,
         "label": "Weight (in pounds)",
         "type": "PDFTextField",
-        "options": [],
+        "maxLength": 0,
         "rect": {
           "x": 159.5,
           "y": 147.83,
