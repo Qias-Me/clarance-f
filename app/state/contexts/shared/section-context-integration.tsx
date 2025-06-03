@@ -59,7 +59,7 @@ export function useSection86FormIntegration<T>(
 
       switch (payload.action) {
         case 'loaded':
-          // Only sync on initial load, not on subsequent data_synchronized events
+          // Only sync on initial load from storage, not on subsequent syncs
           if (payload.formData && payload.formData[sectionId] && !isInitializedRef.current) {
             const newSectionData = payload.formData[sectionId];
             if (isDebugMode) {
@@ -68,24 +68,28 @@ export function useSection86FormIntegration<T>(
               console.log(`   📊 Data keys: ${newSectionData ? Object.keys(newSectionData) : 'N/A'}`);
             }
             setSectionData(cloneDeep(newSectionData));
+            isInitializedRef.current = true; // Mark as initialized to prevent future overwrites
           }
           break;
 
         case 'data_synchronized':
-          // FIXED: Don't overwrite local section data with potentially stale global data
-          // The section context is the source of truth for its own data
+          // FIXED: Never overwrite local section data with global data
+          // The section context is always the source of truth for its own data
           if (isDebugMode) {
             console.log(`🔄 ${sectionId}: Ignoring data_synchronized to prevent overwriting local changes`);
           }
           break;
 
         case 'data_loaded':
-          // Individual section data update - only if it's explicitly for this section
-          if (event.sectionId === sectionId && payload.data) {
+          // FIXED: Only accept individual section data updates if they're explicitly from storage
+          // and not from other section contexts to prevent circular updates
+          if (event.sectionId === sectionId && payload.data && payload.fromStorage === true) {
             if (isDebugMode) {
-              console.log(`🔄 ${sectionId}: Updating with individual section data`);
+              console.log(`🔄 ${sectionId}: Updating with individual section data from storage`);
             }
             setSectionData(cloneDeep(payload.data));
+          } else if (isDebugMode) {
+            console.log(`🔄 ${sectionId}: Ignoring data_loaded event (not from storage or wrong section)`);
           }
           break;
 
