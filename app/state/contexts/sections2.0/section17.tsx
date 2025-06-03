@@ -34,7 +34,8 @@ import {
   isSection17Complete
 } from '../../../../api/interfaces/sections2.0/section17';
 
-import { useSection86FormIntegration } from '../shared/section-context-integration';
+// Temporarily disable the problematic integration to fix the infinite loop issue
+// import { useSection86FormIntegration } from '../shared/section-context-integration';
 import type { ValidationResult, ValidationError, ChangeSet } from '../shared/base-interfaces';
 
 // ============================================================================
@@ -595,18 +596,19 @@ export const Section17Provider: React.FC<Section17ProviderProps> = ({ children }
     });
   }, [updateFieldValue]);
 
+  // TEMPORARILY DISABLED: Integration with main form context to fix infinite loop issue
   // Integration with main form context using Section 29 gold standard pattern
   // Note: integration variable is used internally by the hook for registration
   // Restored updateFieldValue parameter to match Section 29 pattern exactly
-  const integration = useSection86FormIntegration(
-    'section17',
-    'Section 17: Marital Status',
-    section17Data,
-    setSection17Data,
-    () => ({ isValid: validateSection().isValid, errors: [], warnings: [] }), // Anonymous function like Section 29
-    () => getChanges(), // Anonymous function like Section 29
-    updateFieldValueWrapper // Pass wrapper function that matches expected signature
-  );
+  // const integration = useSection86FormIntegration(
+  //   'section17',
+  //   'Section 17: Marital Status',
+  //   section17Data,
+  //   setSection17Data,
+  //   () => ({ isValid: validateSection().isValid, errors: [], warnings: [] }), // Anonymous function like Section 29
+  //   () => getChanges(), // Anonymous function like Section 29
+  //   updateFieldValueWrapper // Pass wrapper function that matches expected signature
+  // );
 
   // ============================================================================
   // CONTEXT VALUE

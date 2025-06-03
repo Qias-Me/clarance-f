@@ -69,9 +69,6 @@ export const Section17Component: React.FC<Section17ComponentProps> = ({
 
   // Handle validation on component mount and when data changes
   useEffect(() => {
-    console.log('🔄 Section17Component: useEffect triggered - section17Data changed');
-    console.log('📊 Section17Component: Current spouse count:', section17Data.section17.currentSpouse.length);
-
     const validationResult = validateSection();
     setIsValid(validationResult.isValid);
     onValidationChange?.(validationResult.isValid);
