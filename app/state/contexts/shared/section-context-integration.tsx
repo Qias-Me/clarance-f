@@ -1,6 +1,6 @@
 /**
  * Section Context Integration Framework
- * 
+ *
  * This framework allows individual section contexts to integrate with the central
  * SF86FormContext while maintaining their independence and section-specific functionality.
  * It provides hooks and utilities for seamless bidirectional data synchronization.
@@ -8,192 +8,247 @@
 
 import React, { useEffect, useCallback, useRef } from 'react';
 import { cloneDeep, isEqual } from 'lodash';
-import type { 
+import type {
   BaseSectionContext,
   SectionId,
   ValidationResult,
   ChangeSet
 } from './base-interfaces';
 import { useSF86Form } from '../SF86FormContext';
-import { useSectionContextIntegration } from './section-integration';
+import { useSectionIntegration } from './section-integration';
 
 // ============================================================================
 // INTEGRATION HOOK FOR SECTION CONTEXTS
 // ============================================================================
 
 /**
- * Hook that integrates a section context with the central SF86FormContext
- * This should be used by every section context to enable central coordination
+ * Enhanced Section Context Integration Hook
+ *
+ * This hook provides seamless integration between individual section contexts
+ * and the main SF86FormContext, with enhanced IndexedDB persistence support.
  */
-export function useSection86FormIntegration<T = any>(
+export function useSection86FormIntegration<T>(
   sectionId: SectionId,
   sectionName: string,
   sectionData: T,
-  setSectionData: (data: T) => void,
-  validateSection?: () => ValidationResult,
-  getChanges?: () => ChangeSet
+  setSectionData: React.Dispatch<React.SetStateAction<T>>,
+  validateSection: () => any,
+  getChanges: () => any,
+  updateFieldValue?: (path: string, value: any) => void
 ) {
-  const sf86Form = useSF86Form();
-  const previousDataRef = useRef<T>(sectionData);
+  const integration = useSectionIntegration();
+  const lastRegistrationRef = useRef<Date>(new Date());
   const isInitializedRef = useRef(false);
-  
-  // Create section context interface
-  const sectionContext: BaseSectionContext = {
-    sectionId,
-    sectionName,
-    sectionData,
-    isLoading: false,
-    errors: [],
-    isDirty: !isEqual(sectionData, previousDataRef.current),
-    
-    updateFieldValue: (path: string, value: any) => {
-      setSectionData(prevData => {
-        const newData = cloneDeep(prevData);
-        const pathParts = path.split('.');
-        let current = newData as any;
-        
-        for (let i = 0; i < pathParts.length - 1; i++) {
-          if (!current[pathParts[i]]) {
-            current[pathParts[i]] = {};
+
+  const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('debug=true');
+
+  // REMOVED: createSectionContext function - now creating context inline to prevent dependency loops
+
+  // REMOVED: registerSection function - now doing registration directly in useEffect to prevent dependency issues
+
+  /**
+   * Handle data synchronization events from global context
+   */
+  const handleDataSyncEvent = useCallback((event: any) => {
+    if (event.sectionId === 'global' || event.sectionId === sectionId) {
+      const { payload } = event;
+
+      if (isDebugMode) {
+        console.log(`📡 ${sectionId}: Received data sync event:`, payload.action);
+      }
+
+      switch (payload.action) {
+        case 'loaded':
+          // Only sync on initial load, not on subsequent data_synchronized events
+          if (payload.formData && payload.formData[sectionId] && !isInitializedRef.current) {
+            const newSectionData = payload.formData[sectionId];
+            if (isDebugMode) {
+              console.log(`🔄 ${sectionId}: Synchronizing with loaded data (initial load only)`);
+              console.log(`   📊 Data type: ${typeof newSectionData}`);
+              console.log(`   📊 Data keys: ${newSectionData ? Object.keys(newSectionData) : 'N/A'}`);
+            }
+            setSectionData(cloneDeep(newSectionData));
           }
-          current = current[pathParts[i]];
+          break;
+
+        case 'data_synchronized':
+          // FIXED: Don't overwrite local section data with potentially stale global data
+          // The section context is the source of truth for its own data
+          if (isDebugMode) {
+            console.log(`🔄 ${sectionId}: Ignoring data_synchronized to prevent overwriting local changes`);
+          }
+          break;
+
+        case 'data_loaded':
+          // Individual section data update - only if it's explicitly for this section
+          if (event.sectionId === sectionId && payload.data) {
+            if (isDebugMode) {
+              console.log(`🔄 ${sectionId}: Updating with individual section data`);
+            }
+            setSectionData(cloneDeep(payload.data));
+          }
+          break;
+
+        case 'saved':
+          if (isDebugMode) {
+            console.log(`✅ ${sectionId}: Data successfully saved to IndexedDB`);
+          }
+          break;
+
+        case 'save_failed':
+        case 'load_failed':
+          if (isDebugMode) {
+            console.error(`❌ ${sectionId}: Data persistence error:`, payload.error);
+          }
+          break;
+      }
+    }
+  }, [sectionId, setSectionData, isDebugMode]);
+
+  /**
+   * Handle section update events
+   */
+  const handleSectionUpdateEvent = useCallback((event: any) => {
+    if (event.sectionId === sectionId) {
+      const { payload } = event;
+
+      if (isDebugMode) {
+        console.log(`📡 ${sectionId}: Received section update event:`, payload.action);
+      }
+
+      switch (payload.action) {
+        case 'data_loaded':
+          if (payload.data) {
+            if (isDebugMode) {
+              console.log(`🔄 ${sectionId}: Loading data from section update`);
+            }
+            setSectionData(cloneDeep(payload.data));
+          }
+          break;
+
+        case 'reset':
+          if (isDebugMode) {
+            console.log(`🔄 ${sectionId}: Resetting section data`);
+          }
+          // Section should reset to default state
+          break;
+      }
+    }
+  }, [sectionId, setSectionData, isDebugMode]);
+
+  /**
+   * Subscribe to global events
+   */
+  useEffect(() => {
+    if (isDebugMode) {
+      console.log(`🔗 ${sectionId}: Setting up event subscriptions`);
+    }
+
+    // Subscribe to data sync events
+    const unsubscribeDataSync = integration.subscribeToEvents('DATA_SYNC', handleDataSyncEvent);
+
+    // Subscribe to section update events
+    const unsubscribeSectionUpdate = integration.subscribeToEvents('SECTION_UPDATE', handleSectionUpdateEvent);
+
+    return () => {
+      if (isDebugMode) {
+        console.log(`🔌 ${sectionId}: Cleaning up event subscriptions`);
+      }
+      unsubscribeDataSync();
+      unsubscribeSectionUpdate();
+    };
+  }, [integration, handleDataSyncEvent, handleSectionUpdateEvent, isDebugMode, sectionId]);
+
+  /**
+   * Register section ONLY on mount - FIXED: Register once and update context data separately
+   * No re-registration on data changes to prevent infinite loops
+   */
+  useEffect(() => {
+    if (!isInitializedRef.current) {
+      const now = new Date();
+      lastRegistrationRef.current = now;
+
+      if (isDebugMode) {
+        console.log(`📝 ${sectionId}: Registering section context (one-time only)`);
+        console.log(`   🕒 Registration time: ${now.toISOString()}`);
+      }
+
+      // Register with initial context - data will be updated separately
+      integration.registerSection({
+        sectionId,
+        sectionName,
+        lastUpdated: now,
+        isActive: true,
+        context: {
+          sectionId,
+          sectionName,
+          sectionData,
+          isLoading: false,
+          errors: [],
+          isDirty: false,
+          validateSection: () => validateSection(),
+          resetSection: () => {},
+          getChanges: () => getChanges(),
+          updateFieldValue: updateFieldValue || (() => {}),
+          loadSection: (data: T) => {
+            if (isDebugMode) {
+              console.log(`🔄 ${sectionId}: Loading section data from global context`);
+            }
+            setSectionData(cloneDeep(data));
+          }
         }
-        
-        current[pathParts[pathParts.length - 1]] = value;
-        return newData;
+      });
+
+      isInitializedRef.current = true;
+    }
+  }, [sectionId, sectionName, integration, isDebugMode]); // FIXED: Only stable dependencies
+
+  /**
+   * Sync section data to integration cache when data changes
+   * This ensures SF86FormContext can get current data via syncSectionData
+   */
+  useEffect(() => {
+    if (isInitializedRef.current) {
+      // Sync current data to integration cache
+      integration.syncSectionData(sectionId, sectionData);
+
+      if (isDebugMode) {
+        console.log(`🔄 ${sectionId}: Synced current data to integration cache`);
+      }
+    }
+  }, [sectionData, integration, sectionId, isDebugMode]);
+
+  // REMOVED: Problematic second useEffect that caused infinite re-registrations
+  // Section contexts should only register once on mount, not re-register on every data change
+
+  /**
+   * Cleanup on unmount
+   */
+  useEffect(() => {
+    return () => {
+      if (isDebugMode) {
+        console.log(`🧹 ${sectionId}: Unregistering section context`);
+      }
+      integration.unregisterSection(sectionId);
+    };
+  }, [integration, sectionId, isDebugMode]);
+
+  // Return integration utilities
+  return {
+    emitSectionUpdate: (action: string, payload: any) => {
+      integration.emitEvent({
+        type: 'SECTION_UPDATE',
+        sectionId,
+        payload: { action, ...payload }
       });
     },
-    
-    validateSection: validateSection || (() => ({ isValid: true, errors: [], warnings: [] })),
-    
-    resetSection: () => {
-      setSectionData(cloneDeep(previousDataRef.current));
-    },
-    
-    loadSection: (data: T) => {
-      setSectionData(cloneDeep(data));
-      previousDataRef.current = cloneDeep(data);
-    },
-    
-    getChanges: getChanges || (() => ({}))
-  };
-  
-  // Register with section integration framework
-  const integration = useSectionContextIntegration(sectionId, sectionName, sectionContext);
-  
-  // ============================================================================
-  // BIDIRECTIONAL DATA SYNCHRONIZATION
-  // ============================================================================
-  
-  /**
-   * Sync section data to central form when it changes
-   */
-  useEffect(() => {
-    if (isInitializedRef.current && !isEqual(sectionData, previousDataRef.current)) {
-      sf86Form.updateSectionData(sectionId, sectionData);
-      previousDataRef.current = cloneDeep(sectionData);
+    emitDataSync: (action: string, data: T) => {
+      integration.emitEvent({
+        type: 'DATA_SYNC',
+        sectionId,
+        payload: { action, data }
+      });
     }
-  }, [sectionData, sectionId, sf86Form]);
-  
-  /**
-   * Load initial data from central form on mount
-   */
-  useEffect(() => {
-    const centralData = sf86Form.getSectionData(sectionId);
-    if (centralData && !isInitializedRef.current) {
-      setSectionData(cloneDeep(centralData));
-      previousDataRef.current = cloneDeep(centralData);
-    }
-    isInitializedRef.current = true;
-  }, [sectionId, sf86Form, setSectionData]);
-  
-  /**
-   * Listen for external data updates from central form
-   */
-  useEffect(() => {
-    const unsubscribe = integration.subscribeToEvents('DATA_SYNC', (event) => {
-      if (event.sectionId === sectionId && event.payload.action === 'loaded') {
-        const newData = event.payload.formData[sectionId];
-        if (newData && !isEqual(newData, sectionData)) {
-          setSectionData(cloneDeep(newData));
-          previousDataRef.current = cloneDeep(newData);
-        }
-      }
-    });
-    
-    return unsubscribe;
-  }, [sectionId, sectionData, setSectionData, integration]);
-  
-  // ============================================================================
-  // INTEGRATION UTILITIES
-  // ============================================================================
-  
-  /**
-   * Mark section as complete in central form
-   */
-  const markComplete = useCallback(() => {
-    sf86Form.markSectionComplete(sectionId);
-  }, [sf86Form, sectionId]);
-  
-  /**
-   * Mark section as incomplete in central form
-   */
-  const markIncomplete = useCallback(() => {
-    sf86Form.markSectionIncomplete(sectionId);
-  }, [sf86Form, sectionId]);
-  
-  /**
-   * Trigger global form validation
-   */
-  const triggerGlobalValidation = useCallback(() => {
-    return sf86Form.validateForm();
-  }, [sf86Form]);
-  
-  /**
-   * Get global form state
-   */
-  const getGlobalFormState = useCallback(() => {
-    return {
-      formData: sf86Form.formData,
-      isDirty: sf86Form.isDirty,
-      isValid: sf86Form.isValid,
-      completedSections: sf86Form.completedSections
-    };
-  }, [sf86Form]);
-  
-  /**
-   * Navigate to another section
-   */
-  const navigateToSection = useCallback((targetSectionId: string) => {
-    sf86Form.navigateToSection(targetSectionId);
-  }, [sf86Form]);
-  
-  /**
-   * Save the entire form
-   */
-  const saveForm = useCallback(async () => {
-    return sf86Form.saveForm();
-  }, [sf86Form]);
-  
-  return {
-    // Integration utilities
-    markComplete,
-    markIncomplete,
-    triggerGlobalValidation,
-    getGlobalFormState,
-    navigateToSection,
-    saveForm,
-    
-    // Event system
-    emitEvent: integration.emitEvent,
-    subscribeToEvents: integration.subscribeToEvents,
-    notifyChange: integration.notifyChange,
-    
-    // Central form access
-    sf86Form,
-    
-    // Section context
-    sectionContext
   };
 }
 
@@ -214,9 +269,9 @@ export function withSF86FormIntegration<P extends object>(
       <WrappedProvider {...props} />
     );
   };
-  
+
   IntegratedProvider.displayName = `withSF86FormIntegration(${WrappedProvider.displayName || WrappedProvider.name})`;
-  
+
   return IntegratedProvider;
 }
 
@@ -234,33 +289,38 @@ export function createIntegratedSectionContext<T>(
 ) {
   const SectionContext = React.createContext<{
     sectionData: T;
-    setSectionData: (data: T) => void;
-    integration: ReturnType<typeof useSection86FormIntegration>;
+    setSectionData: React.Dispatch<React.SetStateAction<T>>;
+    integration: {
+      emitSectionUpdate: (action: string, payload: any) => void;
+      emitDataSync: (action: string, data: T) => void;
+    };
   } | null>(null);
-  
+
   const SectionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [sectionData, setSectionData] = React.useState<T>(defaultData);
-    
+
     const integration = useSection86FormIntegration(
       sectionId,
       sectionName,
       sectionData,
-      setSectionData
+      setSectionData,
+      () => ({ isValid: true, errors: [], warnings: [] }), // Default validation
+      () => ({}) // Default change tracking
     );
-    
+
     const contextValue = {
       sectionData,
       setSectionData,
       integration
     };
-    
+
     return (
       <SectionContext.Provider value={contextValue}>
         {children}
       </SectionContext.Provider>
     );
   };
-  
+
   const useSection = () => {
     const context = React.useContext(SectionContext);
     if (!context) {
@@ -268,7 +328,7 @@ export function createIntegratedSectionContext<T>(
     }
     return context;
   };
-  
+
   return {
     SectionContext,
     SectionProvider,
@@ -288,30 +348,30 @@ export function useSectionValidationIntegration(
   validateSection: () => ValidationResult
 ) {
   const sf86Form = useSF86Form();
-  
+
   /**
    * Validate section and update global form state
    */
   const validateAndSync = useCallback(() => {
     const result = validateSection();
-    
+
     // Update global form validation state if needed
     if (!result.isValid) {
       // The central form will pick up validation errors through the section context
     }
-    
+
     return result;
   }, [validateSection]);
-  
+
   /**
    * Listen for global validation requests
    */
   useEffect(() => {
-    const unsubscribe = sf86Form.registeredSections.find(r => r.sectionId === sectionId)?.context.validateSection;
     // The section context will be called automatically by the central form
+    // No explicit subscription needed as the central form will call validateSection directly
     return () => {};
   }, [sectionId, sf86Form]);
-  
+
   return {
     validateAndSync
   };
@@ -330,20 +390,20 @@ export function useSectionChangeTracking<T>(
   initialData: T
 ) {
   const sf86Form = useSF86Form();
-  
+
   /**
    * Check if section has changes
    */
   const isDirty = React.useMemo(() => {
     return !isEqual(sectionData, initialData);
   }, [sectionData, initialData]);
-  
+
   /**
    * Get section changes
    */
   const getChanges = useCallback((): ChangeSet => {
     const changes: ChangeSet = {};
-    
+
     // Simple change detection (can be enhanced)
     if (!isEqual(sectionData, initialData)) {
       changes[sectionId] = {
@@ -352,17 +412,17 @@ export function useSectionChangeTracking<T>(
         timestamp: new Date()
       };
     }
-    
+
     return changes;
   }, [sectionData, initialData, sectionId]);
-  
+
   /**
    * Reset section to initial state
    */
   const resetToInitial = useCallback(() => {
     sf86Form.updateSectionData(sectionId, cloneDeep(initialData));
   }, [sf86Form, sectionId, initialData]);
-  
+
   return {
     isDirty,
     getChanges,

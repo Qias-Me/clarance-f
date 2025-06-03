@@ -1,24 +1,25 @@
 /**
  * Section 1: Information About You
  *
- * TypeScript interface definitions for SF-86 Section 1 personal information data structure.
- * Based on the established Field<T> interface patterns and PDF field ID mappings.
+ * TypeScript interface definitions for SF-86 Section 1 (Information About You) data structure.
+ * Based on the established Field<T> interface patterns and PDF field ID mappings from section-1.json.
  */
 
-import type { Field } from '../formDefinition2.0';
+import type { Field, FieldWithOptions } from '../formDefinition2.0';
+import { createFieldFromReference, validateSectionFieldCount } from '../../utils/sections-references-loader';
 
 // ============================================================================
 // CORE INTERFACES
 // ============================================================================
 
 /**
- * Full name components
+ * Personal information structure for Section 1
  */
-export interface FullName {
+export interface PersonalInformation {
   lastName: Field<string>;
   firstName: Field<string>;
   middleName: Field<string>;
-  suffix: Field<string>;
+  suffix: FieldWithOptions<string>;
 }
 
 /**
@@ -26,9 +27,7 @@ export interface FullName {
  */
 export interface Section1 {
   _id: number;
-  personalInfo: {
-    fullName: FullName;
-  };
+  section1: PersonalInformation;
 }
 
 // ============================================================================
@@ -38,7 +37,35 @@ export interface Section1 {
 /**
  * Section 1 subsection keys for type safety
  */
-export type Section1SubsectionKey = 'personalInfo';
+export type Section1SubsectionKey = 'personalInformation';
+
+// ============================================================================
+// FIELD ID MAPPINGS
+// ============================================================================
+
+/**
+ * PDF field ID mappings for Section 1 (Information About You)
+ * Based on the actual field IDs from section-1.json (4-digit format)
+ */
+export const SECTION1_FIELD_IDS = {
+  // Personal information fields
+  LAST_NAME: "9449", // form1[0].Sections1-6[0].TextField11[0]
+  FIRST_NAME: "9448", // form1[0].Sections1-6[0].TextField11[1]
+  MIDDLE_NAME: "9447", // form1[0].Sections1-6[0].TextField11[2]
+  SUFFIX: "9435", // form1[0].Sections1-6[0].suffix[0]
+} as const;
+
+/**
+ * Field name mappings for Section 1 (Information About You)
+ * Full field paths from section-1.json
+ */
+export const SECTION1_FIELD_NAMES = {
+  // Personal information fields
+  LAST_NAME: "form1[0].Sections1-6[0].TextField11[0]",
+  FIRST_NAME: "form1[0].Sections1-6[0].TextField11[1]",
+  MIDDLE_NAME: "form1[0].Sections1-6[0].TextField11[2]",
+  SUFFIX: "form1[0].Sections1-6[0].suffix[0]",
+} as const;
 
 // ============================================================================
 // VALIDATION INTERFACES
@@ -64,22 +91,6 @@ export interface Section1ValidationContext {
 }
 
 // ============================================================================
-// FIELD ID MAPPINGS
-// ============================================================================
-
-/**
- * PDF field ID patterns for Section 1
- * Based on the Sections1-6 pattern from the JSON reference
- */
-export const SECTION1_FIELD_IDS = {
-  // Full name fields
-  LAST_NAME: "form1[0].Sections1-6[0].TextField11[0]",
-  FIRST_NAME: "form1[0].Sections1-6[0].TextField11[1]", 
-  MIDDLE_NAME: "form1[0].Sections1-6[0].TextField11[2]",
-  SUFFIX: "form1[0].Sections1-6[0].suffix[0]"
-} as const;
-
-// ============================================================================
 // HELPER TYPES
 // ============================================================================
 
@@ -97,6 +108,13 @@ export const NAME_SUFFIXES = {
 } as const;
 
 /**
+ * Suffix options for dropdown
+ */
+export const SUFFIX_OPTIONS = [
+  "Jr", "Sr", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "Other"
+] as const;
+
+/**
  * Name validation patterns
  */
 export const NAME_VALIDATION = {
@@ -111,18 +129,11 @@ export const NAME_VALIDATION = {
 // ============================================================================
 
 /**
- * Type for creating new Section 1 data
- */
-export type CreateSection1Params = {
-  defaultSuffix?: string;
-};
-
-/**
- * Type for Section 1 field updates
+ * Type for personal information field updates
  */
 export type Section1FieldUpdate = {
-  fieldPath: 'lastName' | 'firstName' | 'middleName' | 'suffix';
-  newValue: string;
+  fieldPath: string;
+  newValue: any;
 };
 
 /**
@@ -135,30 +146,75 @@ export type NameValidationResult = {
 };
 
 // ============================================================================
-// FACTORY FUNCTIONS
+// HELPER FUNCTIONS
 // ============================================================================
 
 /**
- * Creates a default Section 1 data structure
+ * Creates a default Section 1 data structure using DRY approach with sections-references
+ * This eliminates hardcoded values and uses the single source of truth
  */
-export function createDefaultSection1(): Section1 {
+export const createDefaultSection1 = (): Section1 => {
+  // Validate field count against sections-references
+  validateSectionFieldCount(1);
+
   return {
     _id: 1,
-    personalInfo: {
-      fullName: {
-        lastName: { value: '', id: SECTION1_FIELD_IDS.LAST_NAME },
-        firstName: { value: '', id: SECTION1_FIELD_IDS.FIRST_NAME },
-        middleName: { value: '', id: SECTION1_FIELD_IDS.MIDDLE_NAME },
-        suffix: { value: '', id: SECTION1_FIELD_IDS.SUFFIX }
+    section1: {
+      lastName: createFieldFromReference(
+        1,
+        'form1[0].Sections1-6[0].TextField11[0]',
+        ''
+      ),
+      firstName: createFieldFromReference(
+        1,
+        'form1[0].Sections1-6[0].TextField11[1]',
+        ''
+      ),
+      middleName: createFieldFromReference(
+        1,
+        'form1[0].Sections1-6[0].TextField11[2]',
+        ''
+      ),
+      suffix: {
+        ...createFieldFromReference(
+          1,
+          'form1[0].Sections1-6[0].suffix[0]',
+          ''
+        ),
+        options: SUFFIX_OPTIONS
       }
     }
   };
-}
+};
+
+/**
+ * Updates a specific field in the Section 1 data structure
+ */
+export const updateSection1Field = (
+  section1Data: Section1,
+  update: Section1FieldUpdate
+): Section1 => {
+  const { fieldPath, newValue } = update;
+  const newData = { ...section1Data };
+
+  // Update the specified field
+  if (fieldPath === 'section1.lastName') {
+    newData.section1.lastName.value = newValue;
+  } else if (fieldPath === 'section1.firstName') {
+    newData.section1.firstName.value = newValue;
+  } else if (fieldPath === 'section1.middleName') {
+    newData.section1.middleName.value = newValue;
+  } else if (fieldPath === 'section1.suffix') {
+    newData.section1.suffix.value = newValue;
+  }
+
+  return newData;
+};
 
 /**
  * Validates a full name entry
  */
-export function validateFullName(fullName: FullName, context: Section1ValidationContext): NameValidationResult {
+export function validateFullName(fullName: PersonalInformation, context: Section1ValidationContext): NameValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
@@ -172,19 +228,23 @@ export function validateFullName(fullName: FullName, context: Section1Validation
   }
 
   // Length validation
-  const fields = [fullName.lastName, fullName.firstName, fullName.middleName, fullName.suffix];
-  fields.forEach((field, index) => {
-    const fieldNames = ['Last name', 'First name', 'Middle name', 'Suffix'];
+  const fields = [
+    { value: fullName.lastName.value, name:  fullName.lastName.name, label: fullName.lastName.label },
+    { value: fullName.firstName.value, name: fullName.firstName.name, label: fullName.firstName.label },
+    { value: fullName.middleName.value, name: fullName.middleName.name, label: fullName.middleName.label },
+    { value: fullName.suffix.value, name: fullName.suffix.name, label: fullName.suffix.label }
+  ];
+
+  fields.forEach(field => {
     if (field.value.length > context.rules.maxNameLength) {
-      errors.push(`${fieldNames[index]} exceeds maximum length of ${context.rules.maxNameLength} characters`);
+      errors.push(`${field.name} exceeds maximum length of ${context.rules.maxNameLength} characters`);
     }
   });
 
   // Character validation
-  fields.forEach((field, index) => {
-    const fieldNames = ['Last name', 'First name', 'Middle name', 'Suffix'];
+  fields.forEach(field => {
     if (field.value && !NAME_VALIDATION.ALLOWED_CHARACTERS.test(field.value)) {
-      errors.push(`${fieldNames[index]} contains invalid characters`);
+      errors.push(`${field.name} contains invalid characters`);
     }
   });
 
@@ -203,31 +263,4 @@ export function validateFullName(fullName: FullName, context: Section1Validation
     errors,
     warnings
   };
-}
-
-/**
- * Updates a specific field in Section 1
- */
-export function updateSection1Field(
-  section1: Section1, 
-  update: Section1FieldUpdate
-): Section1 {
-  const updated = { ...section1 };
-  
-  switch (update.fieldPath) {
-    case 'lastName':
-      updated.personalInfo.fullName.lastName.value = update.newValue;
-      break;
-    case 'firstName':
-      updated.personalInfo.fullName.firstName.value = update.newValue;
-      break;
-    case 'middleName':
-      updated.personalInfo.fullName.middleName.value = update.newValue;
-      break;
-    case 'suffix':
-      updated.personalInfo.fullName.suffix.value = update.newValue;
-      break;
-  }
-  
-  return updated;
 }

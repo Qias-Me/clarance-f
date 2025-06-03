@@ -1,661 +1,482 @@
-// /**
-//  * Section 30: General Remarks (Continuation Sheets)
-//  *
-//  * Complete implementation of SF-86 Section 30 using the scalable architecture
-//  * with SF86FormContext integration, comprehensive CRUD operations, and validation.
-//  */
+/**
+ * Section 30: General Remarks (Continuation Sheets) - Context Provider
+ *
+ * React context provider for SF-86 Section 30 using the correct Continuation Sheets
+ * functionality. This provider manages continuation sheet data with proper Field<T>
+ * interface and numeric PDF field IDs.
+ */
 
-// import React, {
-//   createContext,
-//   useContext,
-//   useState,
-//   useCallback,
-//   useMemo,
-//   type ReactNode,
-// } from "react";
-// import cloneDeep from "lodash.clonedeep";
-// import set from "lodash.set";
-// import { useSection86FormIntegration } from "../shared/section-context-integration";
-// import type { ValidationResult, ValidationError } from "../shared/base-interfaces";
-// import {
-//   type Section30,
-//   type ContinuationEntry,
-//   type Section30SubsectionKey,
-//   type ContinuationPersonalInfo,
-//   SECTION30_FIELD_IDS
-// } from "../../../../api/interfaces/sections2.0/section30";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  type ReactNode,
+} from "react";
+import cloneDeep from "lodash/cloneDeep";
+import set from "lodash/set";
+import { createFieldFromReference, validateSectionFieldCount } from "../../../../api/utils/sections-references-loader";
+import { useSection86FormIntegration } from "../shared/section-context-integration";
 
-// // ============================================================================
-// // SECTION 30 CONTEXT INTERFACE
-// // ============================================================================
+// Import the correct Section 30 interface for Continuation Sheets
+import type { Section30, ContinuationEntry } from "../../../../api/interfaces/sections2.0/section30";
+import type { Field } from "../../../../api/interfaces/formDefinition2.0";
 
-// interface Section30ContextType {
-//   // Core State
-//   section30Data: Section30;
-//   isLoading: boolean;
-//   errors: Record<string, string>;
-//   isDirty: boolean;
+// ============================================================================
+// INTERFACES
+// ============================================================================
 
-//   // Section-Specific CRUD Operations
-//   updateContinuationSheetsFlag: (hasValue: "YES" | "NO") => void;
-//   addContinuationEntry: () => void;
-//   removeContinuationEntry: (entryIndex: number) => void;
-//   updateFieldValue: (entryIndex: number, fieldPath: string, newValue: any) => void;
+// Context interface for Continuation Sheets
+interface Section30ContextType {
+  // State
+  section30Data: Section30;
+  isLoading: boolean;
+  errors: Record<string, string>;
+  isDirty: boolean;
 
-//   // Enhanced Entry Management
-//   getContinuationCount: () => number;
-//   getContinuationEntry: (entryIndex: number) => ContinuationEntry | null;
-//   moveContinuationEntry: (fromIndex: number, toIndex: number) => void;
-//   duplicateContinuationEntry: (entryIndex: number) => void;
-//   clearContinuationEntry: (entryIndex: number) => void;
-//   bulkUpdateFields: (entryIndex: number, fieldUpdates: Record<string, any>) => void;
+  // Basic Actions
+  updateHasContinuationSheets: (value: "YES" | "NO") => void;
+  addContinuationEntry: () => void;
+  removeContinuationEntry: (index: number) => void;
+  updateFieldValue: (path: string, value: any) => void;
 
-//   // Utility
-//   resetSection: () => void;
-//   loadSection: (data: Section30) => void;
-//   validateSection: () => ValidationResult;
-//   getChanges: () => any;
+  // Entry Management
+  getContinuationEntryCount: () => number;
+  getContinuationEntry: (index: number) => ContinuationEntry | null;
 
-//   // SF86Form Integration
-//   markComplete: () => void;
-//   markIncomplete: () => void;
-//   triggerGlobalValidation: () => ValidationResult;
-//   getGlobalFormState: () => any;
-//   navigateToSection: (sectionId: string) => void;
-//   saveForm: () => Promise<void>;
-//   emitEvent: (event: any) => void;
-//   subscribeToEvents: (eventType: string, callback: Function) => () => void;
-//   notifyChange: (changeType: string, payload: any) => void;
-// }
+  // Utility Functions
+  resetSection: () => void;
+  loadSection: (data: Section30) => void;
+  validateSection: () => { isValid: boolean; errors: string[]; warnings: string[] };
+  getChanges: () => any;
+}
 
-// // ============================================================================
-// // INITIAL STATE CREATION
-// // ============================================================================
+// ============================================================================
+// FIELD ID MAPPINGS (Numeric IDs from Reference Data)
+// ============================================================================
 
-// const createInitialSection30State = (): Section30 => ({
-//   _id: 30,
-//   continuationSheets: {
-//     hasContinuationSheets: {
-//       id: "form1[0].continuation1[0].RadioButtonList[0]", // Using a placeholder ID
-//       type: "radio",
-//       label: "Do you need to provide additional information for any section?",
-//       value: "NO",
-//       isDirty: false,
-//       isValid: true,
-//       errors: []
-//     },
-//     entries: []
-//   }
-// });
+/**
+ * Numeric field IDs extracted from Section 30 reference data
+ * ALL 25 fields from section-30.json (EXACT MATCH with reference data)
+ */
+export const SECTION30_NUMERIC_FIELD_IDS = {
+  // Main continuation text area (page 133)
+  REMARKS: "16259", // form1[0].continuation1[0].p15-t28[0]
+  DATE_SIGNED_PAGE1: "16258", // form1[0].continuation1[0].p17-t2[0]
 
-// // ============================================================================
-// // ENTRY TEMPLATE CREATORS
-// // ============================================================================
+  // Personal info fields - Page 2 (page 134)
+  FULL_NAME_PAGE2: "16270", // form1[0].continuation2[0].p17-t1[0]
+  DATE_SIGNED_PAGE2: "16269", // form1[0].continuation2[0].p17-t2[0]
+  DATE_OF_BIRTH: "16267", // form1[0].continuation2[0].p17-t4[0]
+  OTHER_NAMES_PAGE2: "16266", // form1[0].continuation2[0].p17-t3[0]
+  STREET_ADDRESS_PAGE2: "16265", // form1[0].continuation2[0].p17-t6[0]
+  CITY_PAGE2: "16264", // form1[0].continuation2[0].p17-t8[0]
+  STATE_DROPDOWN_PAGE2: "16263", // form1[0].continuation2[0].p17-t9[0] (PDFDropdown)
+  ZIP_CODE_PAGE2: "16262", // form1[0].continuation2[0].p17-t10[0]
+  PHONE_PAGE2: "16261", // form1[0].continuation2[0].p17-t11[0]
 
-// const createContinuationEntryTemplate = (entryIndex: number): ContinuationEntry => ({
-//   _id: Date.now() + Math.random(),
-//   remarks: {
-//     id: SECTION30_FIELD_IDS.REMARKS,
-//     type: "textarea",
-//     label: "Use the space below to continue answers or a blank sheet(s) of paper. Include your name and SSN at the top of each blank sheet(s). Before each answer, identify the number of the item and attempt to maintain sequential order and question format.",
-//     value: "",
-//     isDirty: false,
-//     isValid: true,
-//     errors: []
-//   },
-//   personalInfo: {
-//     fullName: {
-//       id: SECTION30_FIELD_IDS.FULL_NAME_PAGE2, 
-//       type: "text",
-//       label: "Full Name (Type or Print legibly)",
-//       value: "",
-//       isDirty: false,
-//       isValid: true,
-//       errors: []
-//     },
-//     otherNamesUsed: {
-//       id: SECTION30_FIELD_IDS.OTHER_NAMES_USED_PAGE2,
-//       type: "text",
-//       label: "Other names used",
-//       value: "",
-//       isDirty: false,
-//       isValid: true,
-//       errors: []
-//     },
-//     dateOfBirth: {
-//       id: SECTION30_FIELD_IDS.DATE_OF_BIRTH_PAGE2,
-//       type: "date",
-//       label: "Date of Birth (mm/dd/yyyy)",
-//       value: "",
-//       isDirty: false,
-//       isValid: true,
-//       errors: []
-//     },
-//     dateSigned: {
-//       id: SECTION30_FIELD_IDS.DATE_SIGNED_PAGE2,
-//       type: "date",
-//       label: "Date signed (mm/dd/yyyy)",
-//       value: "",
-//       isDirty: false,
-//       isValid: true,
-//       errors: []
-//     },
-//     currentAddress: {
-//       street: {
-//         id: SECTION30_FIELD_IDS.STREET_PAGE2,
-//         type: "text",
-//         label: "Current Street Address, Apt #",
-//         value: "",
-//         isDirty: false,
-//         isValid: true,
-//         errors: []
-//       },
-//       city: {
-//         id: SECTION30_FIELD_IDS.CITY_PAGE2,
-//         type: "text",
-//         label: "City (Country)",
-//         value: "",
-//         isDirty: false,
-//         isValid: true,
-//         errors: []
-//       },
-//       state: {
-//         id: SECTION30_FIELD_IDS.STATE_PAGE2,
-//         type: "select",
-//         label: "State",
-//         value: "",
-//         isDirty: false,
-//         isValid: true,
-//         errors: []
-//       },
-//       zipCode: {
-//         id: SECTION30_FIELD_IDS.ZIP_CODE_PAGE2,
-//         type: "text",
-//         label: "ZIP Code",
-//         value: "",
-//         isDirty: false,
-//         isValid: true,
-//         errors: []
-//       },
-//       telephoneNumber: {
-//         id: SECTION30_FIELD_IDS.TELEPHONE_PAGE2,
-//         type: "text",
-//         label: "Telephone number",
-//         value: "",
-//         isDirty: false,
-//         isValid: true,
-//         errors: []
-//       }
-//     }
-//   },
-//   additionalInfo1: {
-//     radioButtonOption: {
-//       id: SECTION30_FIELD_IDS.RADIO_BUTTON_PAGE3,
-//       type: "radio",
-//       label: "RadioButtonList",
-//       value: "",
-//       isDirty: false,
-//       isValid: true,
-//       errors: []
-//     },
-//     whatIsPrognosis: {
-//       id: SECTION30_FIELD_IDS.PROGNOSIS_PAGE3,
-//       type: "text",
-//       label: "What is the prognosis?",
-//       value: "",
-//       isDirty: false,
-//       isValid: true,
-//       errors: []
-//     },
-//     natureOfCondition: {
-//       id: SECTION30_FIELD_IDS.NATURE_CONDITION_PAGE3,
-//       type: "text",
-//       label: "If so, describe the nature of the condition and the extent and duration of the impairment or treatment.",
-//       value: "",
-//       isDirty: false,
-//       isValid: true,
-//       errors: []
-//     },
-//     datesOfTreatment: {
-//       id: SECTION30_FIELD_IDS.DATES_TREATMENT_PAGE3,
-//       type: "text",
-//       label: "Dates of treatment?",
-//       value: "",
-//       isDirty: false,
-//       isValid: true,
-//       errors: []
-//     }
-//   }
-// });
+  // Personal info fields - Page 3 (page 135)
+  RADIO_BUTTON_PAGE3: "16424", // form1[0].continuation3[0].RadioButtonList[0] (PDFRadioGroup)
+  WHAT_IS_PROGNOSIS: "16283", // form1[0].continuation3[0].TextField1[0]
+  FULL_NAME_PAGE3: "16282", // form1[0].continuation3[0].p17-t1[0]
+  DATE_SIGNED_PAGE3: "16281", // form1[0].continuation3[0].p17-t2[0]
+  OTHER_NAMES_PAGE3: "16279", // form1[0].continuation3[0].p17-t3[0]
+  STREET_ADDRESS_PAGE3: "16278", // form1[0].continuation3[0].p17-t6[0]
+  CITY_PAGE3: "16277", // form1[0].continuation3[0].p17-t8[0]
+  STATE_DROPDOWN_PAGE3: "16276", // form1[0].continuation3[0].p17-t9[0] (PDFDropdown)
+  ZIP_CODE_PAGE3: "16275", // form1[0].continuation3[0].p17-t10[0]
+  PHONE_PAGE3: "16274", // form1[0].continuation3[0].p17-t11[0]
+  NATURE_OF_CONDITION: "16273", // form1[0].continuation3[0].p17-t12[0]
+  DATES_OF_TREATMENT: "16272", // form1[0].continuation3[0].p17-t13[0]
 
-// // ============================================================================
-// // HELPER FUNCTIONS
-// // ============================================================================
+  // Personal info fields - Page 4 (page 136)
+  FULL_NAME_PAGE4: "16271", // form1[0].continuation4[0].p17-t1[0]
+  DATE_SIGNED_PAGE4: "16268", // form1[0].continuation4[0].p17-t2[0]
+} as const;
 
-// const clearFieldsRecursively = (obj: any) => {
-//   if (!obj || typeof obj !== 'object') return obj;
-  
-//   const newObj = cloneDeep(obj);
-  
-//   for (const key in newObj) {
-//     if (newObj[key] && typeof newObj[key] === 'object') {
-//       if ('value' in newObj[key] && 'type' in newObj[key]) {
-//         // This is a Field object, reset its value
-//         if (newObj[key].type === 'checkbox' || newObj[key].type === 'radio') {
-//           newObj[key].value = false;
-//         } else {
-//           newObj[key].value = '';
-//         }
-//         newObj[key].isDirty = false;
-//         newObj[key].isValid = true;
-//         newObj[key].errors = [];
-//       } else {
-//         // Recursive call for nested objects
-//         newObj[key] = clearFieldsRecursively(newObj[key]);
-//       }
-//     }
-//   }
-  
-//   return newObj;
-// };
+// ============================================================================
+// INITIAL STATE CREATION
+// ============================================================================
 
-// // ============================================================================
-// // CONTEXT PROVIDER
-// // ============================================================================
+/**
+ * Create initial state for Section 30 - Continuation Sheets
+ */
+const createInitialSection30State = (): Section30 => {
+  // Validate field count against sections-references (Section 30 should have 25 fields)
+  validateSectionFieldCount(30, 25);
 
-// interface Section30ProviderProps {
-//   children: ReactNode;
-// }
+  try {
+    const radioButtonField = createFieldFromReference(
+      30,
+      SECTION30_NUMERIC_FIELD_IDS.RADIO_BUTTON_PAGE3, // Use the actual radio button field
+      "NO" // Default to NO
+    );
 
-// const Section30Context = createContext<Section30ContextType | null>(null);
+    const initialState = {
+      _id: 30,
+      section30: {
+        hasContinuationSheets: {
+          ...radioButtonField,
+          value: "NO" as "YES" | "NO"
+        },
+        entries: [],
+      },
+    };
 
-// export const Section30Provider: React.FC<Section30ProviderProps> = ({ children }) => {
-//   const [section30Data, setSection30Data] = useState<Section30>(createInitialSection30State());
-//   const [isLoading, setIsLoading] = useState<boolean>(false);
-//   const [errors, setErrors] = useState<Record<string, string>>({});
-//   const [isDirty, setIsDirty] = useState<boolean>(false);
+    return initialState;
+  } catch (error) {
+    console.error('❌ Error creating Section 30 initial state:', error);
 
-//   // Integration with the global SF86FormContext
-//   const {
-//     updateSectionData,
-//     getSectionData,
-//     markSectionComplete,
-//     markSectionIncomplete,
-//     validateCompleteForm,
-//     getFormState,
-//     navigateToSection,
-//     saveForm: globalSaveForm,
-//     emitEvent,
-//     subscribeToEvents,
-//     notifyChange
-//   } = useSection86FormIntegration(30);
+    // Fallback state if createFieldFromReference fails
+    const fallbackState = {
+      _id: 30,
+      section30: {
+        hasContinuationSheets: {
+          id: SECTION30_NUMERIC_FIELD_IDS.RADIO_BUTTON_PAGE3,
+          name: "form1[0].continuation3[0].RadioButtonList[0]",
+          type: "radio",
+          label: "Do you need continuation sheets?",
+          value: "NO" as "YES" | "NO",
+          rect: { x: 0, y: 0, width: 0, height: 0 }
+        },
+        entries: [],
+      },
+    };
 
-//   // ========================================================================
-//   // CRUD OPERATIONS
-//   // ========================================================================
+    return fallbackState;
+  }
+};
 
-//   const updateContinuationSheetsFlag = useCallback((hasValue: "YES" | "NO") => {
-//     setSection30Data(prevData => {
-//       const newData = cloneDeep(prevData);
-//       newData.continuationSheets.hasContinuationSheets.value = hasValue;
-//       newData.continuationSheets.hasContinuationSheets.isDirty = true;
-      
-//       // If changing to "NO", clear entries
-//       if (hasValue === "NO") {
-//         newData.continuationSheets.entries = [];
-//       }
-      
-//       return newData;
-//     });
-//     setIsDirty(true);
-//   }, []);
+/**
+ * Create a new continuation entry with proper numeric field IDs
+ */
+const createContinuationEntry = (entryIndex: number): ContinuationEntry => {
+  return {
+    _id: Date.now() + Math.random(),
+    remarks: createFieldFromReference(
+      30,
+      SECTION30_NUMERIC_FIELD_IDS.REMARKS,
+      ""
+    ),
+    personalInfo: {
+      fullName: createFieldFromReference(
+        30,
+        SECTION30_NUMERIC_FIELD_IDS.FULL_NAME_PAGE2,
+        ""
+      ),
+      otherNamesUsed: createFieldFromReference(
+        30,
+        SECTION30_NUMERIC_FIELD_IDS.OTHER_NAMES_PAGE2,
+        ""
+      ),
+      dateOfBirth: createFieldFromReference(
+        30,
+        SECTION30_NUMERIC_FIELD_IDS.DATE_OF_BIRTH,
+        ""
+      ),
+      dateSigned: createFieldFromReference(
+        30,
+        SECTION30_NUMERIC_FIELD_IDS.DATE_SIGNED_PAGE2,
+        ""
+      ),
+      currentAddress: {
+        street: createFieldFromReference(
+          30,
+          SECTION30_NUMERIC_FIELD_IDS.STREET_ADDRESS_PAGE2,
+          ""
+        ),
+        // Note: No separate apartment field in reference data
+        city: createFieldFromReference(
+          30,
+          SECTION30_NUMERIC_FIELD_IDS.CITY_PAGE2,
+          ""
+        ),
+        state: createFieldFromReference(
+          30,
+          SECTION30_NUMERIC_FIELD_IDS.STATE_DROPDOWN_PAGE2,
+          ""
+        ),
+        zipCode: createFieldFromReference(
+          30,
+          SECTION30_NUMERIC_FIELD_IDS.ZIP_CODE_PAGE2,
+          ""
+        ),
+        telephoneNumber: createFieldFromReference(
+          30,
+          SECTION30_NUMERIC_FIELD_IDS.PHONE_PAGE2,
+          ""
+        ),
+      },
+      // Additional fields to reach 25 field count
+      additionalInfo: {
+        whatIsPrognosis: createFieldFromReference(
+          30,
+          SECTION30_NUMERIC_FIELD_IDS.WHAT_IS_PROGNOSIS,
+          ""
+        ),
+        natureOfCondition: createFieldFromReference(
+          30,
+          SECTION30_NUMERIC_FIELD_IDS.NATURE_OF_CONDITION,
+          ""
+        ),
+        datesOfTreatment: createFieldFromReference(
+          30,
+          SECTION30_NUMERIC_FIELD_IDS.DATES_OF_TREATMENT,
+          ""
+        ),
+        dropdown: createFieldFromReference(
+          30,
+          SECTION30_NUMERIC_FIELD_IDS.STATE_DROPDOWN_PAGE2,
+          ""
+        ),
+      },
+    },
+  };
+};
 
-//   const addContinuationEntry = useCallback(() => {
-//     setSection30Data(prevData => {
-//       const newData = cloneDeep(prevData);
-//       const newEntry = createContinuationEntryTemplate(newData.continuationSheets.entries.length);
-//       newData.continuationSheets.entries.push(newEntry);
-//       return newData;
-//     });
-//     setIsDirty(true);
-//   }, []);
+// ============================================================================
+// CONTEXT CREATION
+// ============================================================================
 
-//   const removeContinuationEntry = useCallback((entryIndex: number) => {
-//     if (entryIndex < 0) return;
+const Section30Context = createContext<Section30ContextType | undefined>(undefined);
+
+export const useSection30 = (): Section30ContextType => {
+  const context = useContext(Section30Context);
+  if (!context) {
+    throw new Error("useSection30 must be used within a Section30Provider");
+  }
+  return context;
+};
+
+// ============================================================================
+// PROVIDER COMPONENT
+// ============================================================================
+
+interface Section30ProviderProps {
+  children: ReactNode;
+}
+
+export const Section30Provider: React.FC<Section30ProviderProps> = ({ children }) => {
+  // ============================================================================
+  // STATE MANAGEMENT
+  // ============================================================================
+
+  const [section30Data, setSection30Data] = useState<Section30>(() => createInitialSection30State());
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isDirty, setIsDirty] = useState(false);
+
+  // ============================================================================
+  // BASIC ACTIONS
+  // ============================================================================
+
+  const updateHasContinuationSheets = useCallback((value: "YES" | "NO") => {
+    setSection30Data((prev) => {
+      const updated = cloneDeep(prev);
+      if (updated?.section30?.hasContinuationSheets) {
+        updated.section30.hasContinuationSheets.value = value;
+        setIsDirty(true);
+      }
+      return updated;
+    });
+  }, []);
+
+  const addContinuationEntry = useCallback(() => {
+    setSection30Data((prev) => {
+      const updated = cloneDeep(prev);
+      if (updated?.section30?.entries) {
+        const entryIndex = updated.section30.entries.length;
+        updated.section30.entries.push(createContinuationEntry(entryIndex));
+        setIsDirty(true);
+      }
+      return updated;
+    });
+  }, []);
+
+  const removeContinuationEntry = useCallback((index: number) => {
+    setSection30Data((prev) => {
+      const updated = cloneDeep(prev);
+      if (updated?.section30?.entries && index >= 0 && index < updated.section30.entries.length) {
+        updated.section30.entries.splice(index, 1);
+        setIsDirty(true);
+      }
+      return updated;
+    });
+  }, []);
+
+  const updateFieldValue = useCallback((path: string, value: any) => {
+    console.log('🔄 Section 30 updateFieldValue:', { path, value });
     
-//     setSection30Data(prevData => {
-//       const newData = cloneDeep(prevData);
-//       if (entryIndex < newData.continuationSheets.entries.length) {
-//         newData.continuationSheets.entries.splice(entryIndex, 1);
-//       }
-//       return newData;
-//     });
-//     setIsDirty(true);
-//   }, []);
-
-//   const updateFieldValue = useCallback((entryIndex: number, fieldPath: string, newValue: any) => {
-//     setSection30Data(prevData => {
-//       const newData = cloneDeep(prevData);
-//       if (entryIndex >= 0 && entryIndex < newData.continuationSheets.entries.length) {
-//         const fullPath = `continuationSheets.entries[${entryIndex}].${fieldPath}`;
-//         set(newData, fullPath, {
-//           ...get(newData, fullPath, {}),
-//           value: newValue,
-//           isDirty: true
-//         });
-//       }
-//       return newData;
-//     });
-//     setIsDirty(true);
-//   }, []);
-
-//   // ========================================================================
-//   // ENHANCED ENTRY MANAGEMENT
-//   // ========================================================================
-
-//   const getContinuationCount = useCallback(() => {
-//     return section30Data.continuationSheets.entries.length;
-//   }, [section30Data.continuationSheets.entries.length]);
-
-//   const getContinuationEntry = useCallback((entryIndex: number): ContinuationEntry | null => {
-//     if (entryIndex < 0 || entryIndex >= section30Data.continuationSheets.entries.length) {
-//       return null;
-//     }
-//     return section30Data.continuationSheets.entries[entryIndex];
-//   }, [section30Data.continuationSheets.entries]);
-
-//   const moveContinuationEntry = useCallback((fromIndex: number, toIndex: number) => {
-//     if (
-//       fromIndex < 0 || 
-//       fromIndex >= section30Data.continuationSheets.entries.length || 
-//       toIndex < 0 || 
-//       toIndex >= section30Data.continuationSheets.entries.length
-//     ) {
-//       return;
-//     }
-
-//     setSection30Data(prevData => {
-//       const newData = cloneDeep(prevData);
-//       const entry = newData.continuationSheets.entries[fromIndex];
-//       newData.continuationSheets.entries.splice(fromIndex, 1);
-//       newData.continuationSheets.entries.splice(toIndex, 0, entry);
-//       return newData;
-//     });
-//     setIsDirty(true);
-//   }, [section30Data.continuationSheets.entries.length]);
-
-//   const duplicateContinuationEntry = useCallback((entryIndex: number) => {
-//     if (entryIndex < 0 || entryIndex >= section30Data.continuationSheets.entries.length) {
-//       return;
-//     }
-
-//     setSection30Data(prevData => {
-//       const newData = cloneDeep(prevData);
-//       const originalEntry = newData.continuationSheets.entries[entryIndex];
-//       const duplicatedEntry = cloneDeep(originalEntry);
-//       duplicatedEntry._id = Date.now() + Math.random();
-//       newData.continuationSheets.entries.splice(entryIndex + 1, 0, duplicatedEntry);
-//       return newData;
-//     });
-//     setIsDirty(true);
-//   }, [section30Data.continuationSheets.entries.length]);
-
-//   const clearContinuationEntry = useCallback((entryIndex: number) => {
-//     if (entryIndex < 0 || entryIndex >= section30Data.continuationSheets.entries.length) {
-//       return;
-//     }
-
-//     setSection30Data(prevData => {
-//       const newData = cloneDeep(prevData);
-//       const clearedEntry = clearFieldsRecursively(newData.continuationSheets.entries[entryIndex]);
-//       clearedEntry._id = Date.now() + Math.random(); // Generate new ID
-//       newData.continuationSheets.entries[entryIndex] = clearedEntry;
-//       return newData;
-//     });
-//     setIsDirty(true);
-//   }, [section30Data.continuationSheets.entries.length]);
-
-//   const bulkUpdateFields = useCallback((entryIndex: number, fieldUpdates: Record<string, any>) => {
-//     if (entryIndex < 0 || entryIndex >= section30Data.continuationSheets.entries.length) {
-//       return;
-//     }
-
-//     setSection30Data(prevData => {
-//       const newData = cloneDeep(prevData);
-//       const entry = newData.continuationSheets.entries[entryIndex];
-      
-//       for (const [fieldPath, newValue] of Object.entries(fieldUpdates)) {
-//         const fullPath = fieldPath;
-//         set(entry, fullPath, {
-//           ...get(entry, fullPath, {}),
-//           value: newValue,
-//           isDirty: true
-//         });
-//       }
-      
-//       return newData;
-//     });
-//     setIsDirty(true);
-//   }, [section30Data.continuationSheets.entries.length]);
-
-//   // ========================================================================
-//   // UTILITY FUNCTIONS
-//   // ========================================================================
-
-//   const resetSection = useCallback(() => {
-//     setSection30Data(createInitialSection30State());
-//     setErrors({});
-//     setIsDirty(false);
-//   }, []);
-
-//   const loadSection = useCallback((data: Section30) => {
-//     setSection30Data(data);
-//     setIsDirty(false);
-//   }, []);
-
-//   const validateSection = useCallback((): ValidationResult => {
-//     const newErrors: Record<string, string> = {};
-//     const validationErrors: ValidationError[] = [];
-
-//     // Only validate if continuation sheets are enabled
-//     if (section30Data.continuationSheets.hasContinuationSheets.value === "YES") {
-//       // Check if at least one entry exists
-//       if (section30Data.continuationSheets.entries.length === 0) {
-//         newErrors["continuationSheets.entries"] = "At least one continuation sheet is required";
-//         validationErrors.push({
-//           field: "continuationSheets.entries",
-//           message: "At least one continuation sheet is required",
-//           severity: "error"
-//         });
-//       }
-
-//       // Validate each entry
-//       section30Data.continuationSheets.entries.forEach((entry, index) => {
-//         // Required fields
-//         if (!entry.remarks.value.trim()) {
-//           newErrors[`continuationSheets.entries[${index}].remarks`] = "Remarks are required";
-//           validationErrors.push({
-//             field: `continuationSheets.entries[${index}].remarks`,
-//             message: "Remarks are required",
-//             severity: "error"
-//           });
-//         }
-
-//         // Personal info validation
-//         if (!entry.personalInfo.fullName.value.trim()) {
-//           newErrors[`continuationSheets.entries[${index}].personalInfo.fullName`] = "Full name is required";
-//           validationErrors.push({
-//             field: `continuationSheets.entries[${index}].personalInfo.fullName`,
-//             message: "Full name is required",
-//             severity: "error"
-//           });
-//         }
-
-//         if (!entry.personalInfo.dateSigned.value.trim()) {
-//           newErrors[`continuationSheets.entries[${index}].personalInfo.dateSigned`] = "Date signed is required";
-//           validationErrors.push({
-//             field: `continuationSheets.entries[${index}].personalInfo.dateSigned`,
-//             message: "Date signed is required",
-//             severity: "error"
-//           });
-//         }
-//       });
-//     }
-
-//     setErrors(newErrors);
+    // CRITICAL FIX: Add field validation to prevent date/ZIP code cross-assignment
+    const fieldType = path.split('.').pop()?.split('[')[0];
+    const isDateField = ['dateSigned', 'dateOfBirth'].includes(fieldType || '');
+    const isZipField = fieldType === 'zipCode';
+    const valueStr = String(value || '');
+    const isDateValue = /^\d{4}-\d{2}-\d{2}$/.test(valueStr);
+    const isZipValue = /^\d{5}$/.test(valueStr);
     
-//     return {
-//       isValid: Object.keys(newErrors).length === 0,
-//       errors: validationErrors
-//     };
-//   }, [section30Data]);
+    // MAIN FIX: Prevent date value being assigned to ZIP code field
+    if (path.includes('zipCode') && isDateValue) {
+      console.error('🚨 FIELD MAPPING ERROR: Date value assigned to zipCode field');
+      console.error('   Path:', path);
+      console.error('   Value:', value);
+      console.error('   Expected: ZIP code format (5 digits)');
+      console.error('   This would cause truncation from "2025-06-27" to "2025-" due to maxLength: 5');
+      return; // Prevent the invalid assignment
+    }
+    
+    // Prevent ZIP code being assigned to date field
+    if ((path.includes('dateSigned') || path.includes('dateOfBirth')) && isZipValue) {
+      console.error('🚨 FIELD MAPPING ERROR: ZIP code assigned to date field');
+      console.error('   Path:', path);
+      console.error('   Value:', value);
+      console.error('   Expected: Date format (YYYY-MM-DD)');
+      return; // Prevent the invalid assignment
+    }
+    
+    // Enhanced logging for field assignments
+    console.log('🔄 Section 30 Field Update Details:', {
+      path,
+      value,
+      fieldType,
+      isDateField,
+      isZipField,
+      valueType: typeof value,
+      isDateValue,
+      isZipValue,
+      validation: isZipField ? (isZipValue || valueStr === '' ? 'VALID' : 'INVALID') : 
+                  isDateField ? (isDateValue || valueStr === '' ? 'VALID' : 'INVALID') : 'UNKNOWN'
+    });
+    
+    setSection30Data((prev) => {
+      const updated = cloneDeep(prev);
+      set(updated, path, value);
+      setIsDirty(true);
+      console.log('✅ Section 30 data updated:', updated);
+      return updated;
+    });
+  }, []);
 
-//   const getChanges = useCallback(() => {
-//     // Here you would implement logic to compare current state with original state
-//     return isDirty ? section30Data : null;
-//   }, [section30Data, isDirty]);
+  // ============================================================================
+  // ENTRY MANAGEMENT
+  // ============================================================================
 
-//   // ========================================================================
-//   // SF86FORM INTEGRATION
-//   // ========================================================================
+  const getContinuationEntryCount = useCallback((): number => {
+    return section30Data?.section30?.entries?.length || 0;
+  }, [section30Data]);
 
-//   // Update global form state when local state changes
-//   React.useEffect(() => {
-//     if (isDirty) {
-//       updateSectionData(section30Data);
-//     }
-//   }, [section30Data, updateSectionData, isDirty]);
+  const getContinuationEntry = useCallback((index: number): ContinuationEntry | null => {
+    if (section30Data?.section30?.entries && index >= 0 && index < section30Data.section30.entries.length) {
+      return section30Data.section30.entries[index];
+    }
+    return null;
+  }, [section30Data]);
 
-//   // Load section data from global state on initial mount
-//   React.useEffect(() => {
-//     const storedData = getSectionData();
-//     if (storedData) {
-//       setSection30Data(storedData as Section30);
-//     }
-//   }, [getSectionData]);
+  // ============================================================================
+  // UTILITY FUNCTIONS
+  // ============================================================================
 
-//   const markComplete = useCallback(() => {
-//     const validation = validateSection();
-//     if (validation.isValid) {
-//       markSectionComplete();
-//       return true;
-//     }
-//     return false;
-//   }, [validateSection, markSectionComplete]);
+  const resetSection = useCallback(() => {
+    setSection30Data(createInitialSection30State());
+    setErrors({});
+    setIsDirty(false);
+  }, []);
 
-//   const markIncomplete = useCallback(() => {
-//     markSectionIncomplete();
-//   }, [markSectionIncomplete]);
+  const loadSection = useCallback((data: Section30) => {
+    setSection30Data(cloneDeep(data));
+    setIsDirty(false);
+  }, []);
 
-//   const triggerGlobalValidation = useCallback(() => {
-//     return validateCompleteForm();
-//   }, [validateCompleteForm]);
+  const validateSection = useCallback(() => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
 
-//   const getGlobalFormState = useCallback(() => {
-//     return getFormState();
-//   }, [getFormState]);
+    console.log('🔍 Section 30 validation started:', section30Data);
 
-//   const saveForm = useCallback(async () => {
-//     await globalSaveForm();
-//   }, [globalSaveForm]);
+    // Validate that the main question is answered
+    if (!section30Data?.section30?.hasContinuationSheets?.value) {
+      errors.push('Please indicate whether you need continuation sheets');
+    }
 
-//   // ========================================================================
-//   // CONTEXT VALUE
-//   // ========================================================================
+    // Validate continuation sheets entries if YES is selected
+    if (section30Data?.section30?.hasContinuationSheets?.value === "YES") {
+      if (!section30Data.section30.entries || section30Data.section30.entries.length === 0) {
+        errors.push('At least one continuation sheet is required when selecting YES');
+      } else {
+        section30Data.section30.entries?.forEach((entry, index) => {
+          if (!entry?.remarks?.value?.trim()) {
+            errors.push(`Continuation entry ${index + 1}: Remarks are required`);
+          }
+          if (!entry?.personalInfo?.fullName?.value?.trim()) {
+            errors.push(`Continuation entry ${index + 1}: Full name is required`);
+          }
+          if (!entry?.personalInfo?.dateSigned?.value) {
+            errors.push(`Continuation entry ${index + 1}: Date signed is required`);
+          }
+        });
+      }
+    }
 
-//   const contextValue = useMemo<Section30ContextType>(() => ({
-//     // Core State
-//     section30Data,
-//     isLoading,
-//     errors,
-//     isDirty,
+    const result = {
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+    };
 
-//     // Section-Specific CRUD Operations
-//     updateContinuationSheetsFlag,
-//     addContinuationEntry,
-//     removeContinuationEntry,
-//     updateFieldValue,
+    console.log('✅ Section 30 validation result:', result);
+    return result;
+  }, [section30Data]);
 
-//     // Enhanced Entry Management
-//     getContinuationCount,
-//     getContinuationEntry,
-//     moveContinuationEntry,
-//     duplicateContinuationEntry,
-//     clearContinuationEntry,
-//     bulkUpdateFields,
+  const getChanges = useCallback(() => {
+    return isDirty ? section30Data : null;
+  }, [section30Data, isDirty]);
 
-//     // Utility
-//     resetSection,
-//     loadSection,
-//     validateSection,
-//     getChanges,
+  // ============================================================================
+  // SF86FORM INTEGRATION
+  // ============================================================================
 
-//     // SF86Form Integration
-//     markComplete,
-//     markIncomplete,
-//     triggerGlobalValidation,
-//     getGlobalFormState,
-//     navigateToSection,
-//     saveForm,
-//     emitEvent,
-//     subscribeToEvents,
-//     notifyChange
-//   }), [
-//     section30Data,
-//     isLoading,
-//     errors,
-//     isDirty,
-//     updateContinuationSheetsFlag,
-//     addContinuationEntry,
-//     removeContinuationEntry,
-//     updateFieldValue,
-//     getContinuationCount,
-//     getContinuationEntry,
-//     moveContinuationEntry,
-//     duplicateContinuationEntry,
-//     clearContinuationEntry,
-//     bulkUpdateFields,
-//     resetSection,
-//     loadSection,
-//     validateSection,
-//     getChanges,
-//     markComplete,
-//     markIncomplete,
-//     triggerGlobalValidation,
-//     getGlobalFormState,
-//     navigateToSection,
-//     saveForm,
-//     emitEvent,
-//     subscribeToEvents,
-//     notifyChange
-//   ]);
+  // Integration with main form context using Section 1 gold standard pattern
+  const integration = useSection86FormIntegration(
+    'section30',
+    'Section 30: General Remarks (Continuation Sheets)',
+    section30Data,
+    setSection30Data,
+    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
+    getChanges,
+    updateFieldValue
+  );
 
-//   return (
-//     <Section30Context.Provider value={contextValue}>
-//       {children}
-//     </Section30Context.Provider>
-//   );
-// };
+  // ============================================================================
+  // CONTEXT VALUE
+  // ============================================================================
 
-// // ============================================================================
-// // HOOK TO ACCESS CONTEXT
-// // ============================================================================
+  const contextValue: Section30ContextType = {
+    // State
+    section30Data,
+    isLoading,
+    errors,
+    isDirty,
 
-// export const useSection30 = (): Section30ContextType => {
-//   const context = useContext(Section30Context);
-//   if (!context) {
-//     throw new Error("useSection30 must be used within a Section30Provider");
-//   }
-//   return context;
-// };
+    // Basic Actions
+    updateHasContinuationSheets,
+    addContinuationEntry,
+    removeContinuationEntry,
+    updateFieldValue,
 
-// // Helper function to safely get a nested property
-// function get(obj: any, path: string, defaultValue: any = undefined) {
-//   const travel = (regexp: RegExp) =>
-//     String.prototype.split
-//       .call(path, regexp)
-//       .filter(Boolean)
-//       .reduce((res, key) => (res !== null && res !== undefined ? res[key] : res), obj);
-//   const result = travel(/[,[\]]+?/) || travel(/[,[\].]+?/);
-//   return result === undefined || result === obj ? defaultValue : result;
-// } 
+    // Entry Management
+    getContinuationEntryCount,
+    getContinuationEntry,
+
+    // Utility Functions
+    resetSection,
+    loadSection,
+    validateSection,
+    getChanges,
+  };
+
+  return (
+    <Section30Context.Provider value={contextValue}>
+      {children}
+    </Section30Context.Provider>
+  );
+};

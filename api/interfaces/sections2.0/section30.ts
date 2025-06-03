@@ -26,6 +26,13 @@ export interface ContinuationPersonalInfo {
     zipCode: Field<string>;
     telephoneNumber: Field<string>;
   };
+  // Additional fields to support all 25 fields from reference data
+  additionalInfo?: {
+    whatIsPrognosis: Field<string>;
+    natureOfCondition: Field<string>;
+    datesOfTreatment: Field<string>;
+    dropdown: Field<string>;
+  };
 }
 
 /**
@@ -35,7 +42,7 @@ export interface ContinuationEntry {
   _id: number | string;
   remarks: Field<string>;
   personalInfo: ContinuationPersonalInfo;
-  
+
   // Additional fields from page 2 (page 134)
   additionalInfo1?: {
     whatIsPrognosis: Field<string>;
@@ -50,7 +57,7 @@ export interface ContinuationEntry {
  */
 export interface Section30 {
   _id: number;
-  continuationSheets: {
+  section30: {
     hasContinuationSheets: Field<"YES" | "NO">;
     entries: ContinuationEntry[];
   };
@@ -63,7 +70,7 @@ export interface Section30 {
 /**
  * Section 30 subsection keys for type safety
  */
-export type Section30SubsectionKey = 'continuationSheets';
+export type Section30SubsectionKey = 'section30';
 
 // ============================================================================
 // FIELD ID MAPPINGS
@@ -76,10 +83,10 @@ export type Section30SubsectionKey = 'continuationSheets';
 export const SECTION30_FIELD_IDS = {
   // Main continuation fields
   REMARKS: "form1[0].continuation1[0].p15-t28[0]",
-  
+
   // Personal info fields - Page 1 (page 133)
   DATE_SIGNED_PAGE1: "form1[0].continuation1[0].p17-t2[0]",
-  
+
   // Personal info fields - Page 2 (page 134)
   FULL_NAME_PAGE2: "form1[0].continuation2[0].p17-t1[0]",
   DATE_SIGNED_PAGE2: "form1[0].continuation2[0].p17-t2[0]",
@@ -90,13 +97,13 @@ export const SECTION30_FIELD_IDS = {
   STATE_PAGE2: "form1[0].continuation2[0].p17-t9[0]",
   ZIP_CODE_PAGE2: "form1[0].continuation2[0].p17-t10[0]",
   TELEPHONE_PAGE2: "form1[0].continuation2[0].p17-t11[0]",
-  
+
   // Additional info fields - Page 3 (page 135)
   RADIO_BUTTON_PAGE3: "form1[0].continuation3[0].RadioButtonList[0]",
   PROGNOSIS_PAGE3: "form1[0].continuation3[0].TextField1[0]",
   NATURE_CONDITION_PAGE3: "form1[0].continuation3[0].TextField1[1]",
   DATES_TREATMENT_PAGE3: "form1[0].continuation3[0].TextField1[2]",
-  
+
   // Personal info fields - Page 3 (page 135)
   FULL_NAME_PAGE3: "form1[0].continuation3[0].p17-t1[0]",
   DATE_SIGNED_PAGE3: "form1[0].continuation3[0].p17-t2[0]",
@@ -106,7 +113,7 @@ export const SECTION30_FIELD_IDS = {
   STATE_PAGE3: "form1[0].continuation3[0].p17-t9[0]",
   ZIP_CODE_PAGE3: "form1[0].continuation3[0].p17-t10[0]",
   TELEPHONE_PAGE3: "form1[0].continuation3[0].p17-t11[0]",
-  
+
   // Personal info fields - Page 4 (page 136)
   PRINT_NAME_PAGE4: "form1[0].continuation4[0].p17-t1[0]",
   DATE_SIGNED_PAGE4: "form1[0].continuation4[0].p17-t2[0]"
@@ -140,4 +147,4 @@ export type BulkContinuationOperation = {
   entryIndex?: number;
   targetIndex?: number;
   data?: Partial<ContinuationEntry>;
-}; 
+};

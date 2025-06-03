@@ -10,7 +10,7 @@
  * - Total: 141 fields across all subsections
  */
 
-import section29Data from '../../../../api/sections-reference/section-29.json';
+import section29Data from '../../../../api/sections-references/section-29.json';
 import { SECTION29_RADIO_FIELD_IDS, SECTION29_RADIO_FIELD_NAMES } from '../../../../api/interfaces/sections2.0/section29';
 
 // Types for the JSON structure
@@ -551,26 +551,26 @@ export function getFieldBySubsectionAndType(
 // Export the raw data for advanced usage
 export { section29Fields, fieldNameToDataMap, fieldIdToDataMap };
 
-// Log initialization info
-console.log(`🔧 Section 29 Field Mapping initialized with ${section29Fields.length} fields`);
-console.log(`🗂️ Field name mapping: ${fieldNameToDataMap.size} entries`);
-console.log(`🆔 Field ID mapping: ${fieldIdToDataMap.size} entries`);
+// // Log initialization info
+// console.log(`🔧 Section 29 Field Mapping initialized with ${section29Fields.length} fields`);
+// console.log(`🗂️ Field name mapping: ${fieldNameToDataMap.size} entries`);
+// console.log(`🆔 Field ID mapping: ${fieldIdToDataMap.size} entries`);
 
-// Debug: Show first few field names to verify data is loaded correctly
-console.log(`📋 First 5 field names:`, Array.from(fieldNameToDataMap.keys()).slice(0, 5));
+// // Debug: Show first few field names to verify data is loaded correctly
+// console.log(`📋 First 5 field names:`, Array.from(fieldNameToDataMap.keys()).slice(0, 5));
 
-// Debug: Check if specific expected fields exist
-const expectedFields = [
-  'form1[0].Section29[0].RadioButtonList[0]',
-  'form1[0].Section29[0].TextField11[1]',
-  'form1[0].Section29[0].#area[1].TextField11[4]'
-];
+// // Debug: Check if specific expected fields exist
+// const expectedFields = [
+//   'form1[0].Section29[0].RadioButtonList[0]',
+//   'form1[0].Section29[0].TextField11[1]',
+//   'form1[0].Section29[0].#area[1].TextField11[4]'
+// ];
 
-expectedFields.forEach(fieldName => {
-  const exists = fieldNameToDataMap.has(fieldName);
-  console.log(`🔍 Field "${fieldName}" exists: ${exists}`);
-  if (exists) {
-    const field = fieldNameToDataMap.get(fieldName);
-    console.log(`   📄 Field details: ID=${field?.id}, Type=${field?.type}`);
-  }
-});
+// expectedFields.forEach(fieldName => {
+//   const exists = fieldNameToDataMap.has(fieldName);
+//   console.log(`🔍 Field "${fieldName}" exists: ${exists}`);
+//   if (exists) {
+//     const field = fieldNameToDataMap.get(fieldName);
+//     console.log(`   📄 Field details: ID=${field?.id}, Type=${field?.type}`);
+//   }
+// });

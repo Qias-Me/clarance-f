@@ -1,9 +1,8 @@
 /**
  * Section 2: Date of Birth - Context Provider
  *
- * React context provider for SF-86 Section 2 using the new Form Architecture 2.0.
- * This provider manages date of birth data with full CRUD operations,
- * validation, and integration with the central SF86FormContext.
+ * Refactored to match Section 1's simple, direct approach.
+ * Eliminates complex enhanced template patterns in favor of straightforward React context.
  */
 
 import React, {
@@ -11,18 +10,16 @@ import React, {
   useContext,
   useState,
   useCallback,
-  useEffect,
-  useRef
+  useEffect
 } from 'react';
-import cloneDeep from 'lodash.clonedeep';
-import set from 'lodash.set';
+import cloneDeep from 'lodash/cloneDeep';
+
+import { useSection86FormIntegration } from '../shared/section-context-integration';
 import type {
   Section2,
-  Section2SubsectionKey,
   Section2FieldUpdate,
-  Section2ValidationRules,
-  Section2ValidationContext,
-  DateValidationResult
+  DateValidationResult,
+  Section2ValidationContext
 } from '../../../../api/interfaces/sections2.0/section2';
 import {
   createDefaultSection2,
@@ -30,8 +27,7 @@ import {
   updateSection2Field,
   calculateAge
 } from '../../../../api/interfaces/sections2.0/section2';
-import { useSection86FormIntegration } from '../shared/section-context-integration';
-import type { ValidationResult, ValidationError } from '../shared/base-interfaces';
+import type { ValidationResult, ValidationError, ChangeSet } from '../shared/base-interfaces';
 
 // ============================================================================
 // CONTEXT INTERFACE
@@ -48,13 +44,14 @@ export interface Section2ContextType {
   updateDateOfBirth: (date: string) => void;
   updateEstimated: (estimated: boolean) => void;
   updateDateField: (update: Section2FieldUpdate) => void;
-
-  // Computed Values
-  getAge: () => number | null;
+  updateFieldValue: (path: string, value: any) => void;
 
   // Validation
   validateSection: () => ValidationResult;
   validateDateOfBirth: () => DateValidationResult;
+
+  // Computed Values
+  getAge: () => number | null;
 
   // Utility
   resetSection: () => void;
@@ -66,31 +63,16 @@ export interface Section2ContextType {
 // INITIAL STATE CREATION
 // ============================================================================
 
-const createInitialSection2State = (): Section2 => ({
-  _id: 2,
-  dateOfBirth: {
-    date: {
-      value: '',
-      id: "form1[0].Sections1-6[0].From_Datefield_Name_2[0]",
-      type: 'date',
-      label: 'Date of Birth',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    estimated: {
-      value: false,
-      id: "form1[0].Sections1-6[0].#field[18]",
-      type: 'checkbox',
-      label: 'Estimated',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    }
-  }
-});
+// Use the DRY approach with sections-references instead of hardcoded values
+const createInitialSection2State = (): Section2 => {
+  return createDefaultSection2();
+};
 
 // ============================================================================
 // VALIDATION RULES
 // ============================================================================
 
-const defaultValidationRules: Section2ValidationRules = {
+const defaultValidationRules = {
   requiresDateOfBirth: true,
   minimumAge: 18,
   maximumAge: 120,
@@ -121,6 +103,7 @@ export const Section2Provider: React.FC<Section2ProviderProps> = ({ children }) 
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [initialData] = useState<Section2>(createInitialSection2State());
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // ============================================================================
   // COMPUTED VALUES
@@ -128,18 +111,10 @@ export const Section2Provider: React.FC<Section2ProviderProps> = ({ children }) 
 
   const isDirty = JSON.stringify(section2Data) !== JSON.stringify(initialData);
 
-  const getAge = useCallback((): number | null => {
-    if (!section2Data.dateOfBirth.date.value) return null;
-
-    try {
-      const birthDate = new Date(section2Data.dateOfBirth.date.value);
-      if (isNaN(birthDate.getTime())) return null;
-
-      return calculateAge(birthDate, new Date());
-    } catch {
-      return null;
-    }
-  }, [section2Data.dateOfBirth.date.value]);
+  // Set initialized flag after component mounts
+  useEffect(() => {
+    setIsInitialized(true);
+  }, []);
 
   // ============================================================================
   // VALIDATION FUNCTIONS
@@ -155,12 +130,12 @@ export const Section2Provider: React.FC<Section2ProviderProps> = ({ children }) 
       rules: defaultValidationRules
     };
 
-    const dateValidation = validateDateOfBirth(section2Data.dateOfBirth, validationContext);
+    const dateValidation = validateDateOfBirth(section2Data.section2, validationContext);
 
     if (!dateValidation.isValid) {
       dateValidation.errors.forEach(error => {
         validationErrors.push({
-          field: 'dateOfBirth',
+          field: 'section2.date',
           message: error,
           code: 'VALIDATION_ERROR',
           severity: 'error'
@@ -170,19 +145,12 @@ export const Section2Provider: React.FC<Section2ProviderProps> = ({ children }) 
 
     dateValidation.warnings.forEach(warning => {
       validationWarnings.push({
-        field: 'dateOfBirth',
+        field: 'section2.date',
         message: warning,
         code: 'VALIDATION_WARNING',
         severity: 'warning'
       });
     });
-
-    // Update local errors
-    const newErrors: Record<string, string> = {};
-    validationErrors.forEach(error => {
-      newErrors[error.field] = error.message;
-    });
-    setErrors(newErrors);
 
     return {
       isValid: validationErrors.length === 0,
@@ -197,25 +165,49 @@ export const Section2Provider: React.FC<Section2ProviderProps> = ({ children }) 
       rules: defaultValidationRules
     };
 
-    return validateDateOfBirth(section2Data.dateOfBirth, validationContext);
+    return validateDateOfBirth(section2Data.section2, validationContext);
   }, [section2Data]);
+
+  // Update errors when section data changes (but not during initial render)
+  useEffect(() => {
+    // Skip validation on initial render to avoid infinite loops
+    if (!isInitialized) return;
+
+    const validationResult = validateSection();
+    const newErrors: Record<string, string> = {};
+
+    validationResult.errors.forEach(error => {
+      newErrors[error.field] = error.message;
+    });
+
+    // Only update errors if they actually changed
+    const currentErrorKeys = Object.keys(errors);
+    const newErrorKeys = Object.keys(newErrors);
+    const errorsChanged =
+      currentErrorKeys.length !== newErrorKeys.length ||
+      currentErrorKeys.some(key => errors[key] !== newErrors[key]);
+
+    if (errorsChanged) {
+      setErrors(newErrors);
+    }
+  }, [section2Data, isInitialized, errors]);
 
   // ============================================================================
   // CRUD OPERATIONS
   // ============================================================================
 
-  const updateDateOfBirthValue = useCallback((date: string) => {
+  const updateDateOfBirth = useCallback((date: string) => {
     setSection2Data(prevData => {
       const newData = cloneDeep(prevData);
-      newData.dateOfBirth.date.value = date;
+      newData.section2.date.value = date;
       return newData;
     });
   }, []);
 
-  const updateEstimatedValue = useCallback((estimated: boolean) => {
+  const updateEstimated = useCallback((estimated: boolean) => {
     setSection2Data(prevData => {
       const newData = cloneDeep(prevData);
-      newData.dateOfBirth.estimated.value = estimated;
+      newData.section2.isEstimated.value = estimated;
       return newData;
     });
   }, []);
@@ -225,6 +217,49 @@ export const Section2Provider: React.FC<Section2ProviderProps> = ({ children }) 
       return updateSection2Field(prevData, update);
     });
   }, []);
+
+  /**
+   * Generic field update function for integration compatibility
+   * Maps generic field paths to Section 2 specific update functions
+   */
+  const updateFieldValue = useCallback((path: string, value: any) => {
+    // Parse path to update the correct field
+    if (path === 'section2.date') {
+      updateDateOfBirth(value);
+    } else if (path === 'section2.isEstimated') {
+      updateEstimated(value);
+    }
+  }, [updateDateOfBirth, updateEstimated]);
+
+  // ============================================================================
+  // COMPUTED VALUES
+  // ============================================================================
+
+  const getAge = useCallback((): number | null => {
+    if (!section2Data?.section2?.date?.value) return null;
+
+    try {
+      const dateValue = section2Data.section2.date.value;
+
+      // Parse MM/DD/YYYY format properly
+      let parsedDate: Date;
+
+      if (dateValue.includes('/')) {
+        // Handle MM/DD/YYYY format
+        const [month, day, year] = dateValue.split('/');
+        parsedDate = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      } else {
+        // Fallback for other formats
+        parsedDate = new Date(dateValue);
+      }
+
+      if (isNaN(parsedDate.getTime())) return null;
+
+      return calculateAge(parsedDate, new Date());
+    } catch {
+      return null;
+    }
+  }, [section2Data]);
 
   // ============================================================================
   // UTILITY FUNCTIONS
@@ -241,23 +276,35 @@ export const Section2Provider: React.FC<Section2ProviderProps> = ({ children }) 
     setErrors({});
   }, []);
 
-  const getChanges = useCallback(() => {
-    return isDirty ? { section2: section2Data } : {};
-  }, [section2Data, isDirty]);
+  const getChanges = useCallback((): ChangeSet => {
+    const changes: ChangeSet = {};
+
+    // Simple change detection - compare with initial data
+    if (JSON.stringify(section2Data) !== JSON.stringify(initialData)) {
+      changes['section2'] = {
+        oldValue: initialData,
+        newValue: section2Data,
+        timestamp: new Date()
+      };
+    }
+
+    return changes;
+  }, [section2Data, initialData]);
 
   // ============================================================================
   // SF86FORM INTEGRATION
   // ============================================================================
 
-  // Integration with main form context (optional)
-  // const integration = useSection86FormIntegration(
-  //   'section2',
-  //   'Section 2: Date of Birth',
-  //   section2Data,
-  //   setSection2Data,
-  //   validateSection,
-  //   getChanges
-  // );
+  // Integration with main form context using standard pattern
+  const integration = useSection86FormIntegration(
+    'section2',
+    'Section 2: Date of Birth',
+    section2Data,
+    setSection2Data,
+    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
+    getChanges,
+    updateFieldValue
+  );
 
   // ============================================================================
   // CONTEXT VALUE
@@ -271,16 +318,17 @@ export const Section2Provider: React.FC<Section2ProviderProps> = ({ children }) 
     isDirty,
 
     // Basic Actions
-    updateDateOfBirth: updateDateOfBirthValue,
-    updateEstimated: updateEstimatedValue,
+    updateDateOfBirth,
+    updateEstimated,
     updateDateField: updateDateFieldValue,
-
-    // Computed Values
-    getAge,
+    updateFieldValue,
 
     // Validation
     validateSection,
     validateDateOfBirth: validateDateOfBirthOnly,
+
+    // Computed Values
+    getAge,
 
     // Utility
     resetSection,

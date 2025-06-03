@@ -1,12 +1,13 @@
 import type { Route } from "./+types/startForm._index";
 import { useState } from "react";
-import { Section29Provider, useSection29 } from "~/state/contexts/sections2.0/section29";
-import type {
-  SubsectionKey,
-  OrganizationSubsectionKey,
-  ActivitySubsectionKey,
-  ActivityEntryType
-} from "~/state/contexts/sections2.0/section29-field-generator";
+import { useSection1 } from "~/state/contexts/sections2.0/section1";
+import { useSection2 } from "~/state/contexts/sections2.0/section2";
+import { useSection8 } from "~/state/contexts/sections2.0/section8";
+import { useSection9 } from "~/state/contexts/sections2.0/section9";
+import { useSection27 } from "~/state/contexts/sections2.0/section27";
+import { useSection29 } from "~/state/contexts/sections2.0/section29";
+import { CompleteSF86FormProvider, useSF86Form } from "~/state/contexts/SF86FormContext";
+// PDF service import removed to fix build issues
 
 export function loader({}: Route.LoaderArgs) {
   try {
@@ -18,317 +19,893 @@ export function loader({}: Route.LoaderArgs) {
 }
 
 /**
- * Section29 Test Component - Realistic Form Scenarios
+ * Multi-Section Test Component - Comprehensive SF-86 Form Testing
  *
- * This component demonstrates Section29Provider integration with realistic form scenarios
- * for comprehensive Playwright testing. It includes all CRUD operations, field ID generation,
- * ApplicantFormValues integration, and advanced entry management features.
+ * This component provides comprehensive testing for all integrated SF-86 sections
+ * including sections 1, 2, 7, 29 with CRUD operations, field value persistence,
+ * defensive check logic testing, and cross-section integration validation.
  */
 
 // ============================================================================
-// SECTION29 BASIC FORM COMPONENT
+// SECTION TEST COMPONENTS
 // ============================================================================
 
-function Section29BasicFormTest() {
-  const {
-    section29Data,
-    updateSubsectionFlag,
-    addOrganizationEntry,
-    addActivityEntry,
-    removeEntry,
-    updateFieldValue,
-    getEntryCount,
-    isDirty,
-    validateSection,
-    errors
-  } = useSection29();
+/**
+ * Section 1 Test Component - Name Information
+ */
+function Section1TestComponent() {
+  const section1 = useSection1();
 
-  const [testResults, setTestResults] = useState<Record<string, boolean>>({});
-
-  const handleSubsectionChange = (subsectionKey: SubsectionKey, value: "YES" | "NO") => {
-    updateSubsectionFlag(subsectionKey, value);
-    setTestResults(prev => ({
-      ...prev,
-      [`subsection_${subsectionKey}_${value}`]: true
-    }));
+  const handleUpdateName = () => {
+    section1.updateFullName({ fieldPath: 'section1.lastName', newValue: 'TestLastName' });
+    section1.updateFullName({ fieldPath: 'section1.firstName', newValue: 'TestFirstName' });
+    section1.updateFullName({ fieldPath: 'section1.middleName', newValue: 'TestMiddleName' });
+    section1.updateFullName({ fieldPath: 'section1.suffix', newValue: 'Jr' });
   };
 
-  const handleAddOrganization = (subsectionKey: OrganizationSubsectionKey) => {
-    addOrganizationEntry(subsectionKey);
-    setTestResults(prev => ({
-      ...prev,
-      [`add_org_${subsectionKey}`]: true
-    }));
-  };
-
-  const handleAddActivity = (subsectionKey: ActivitySubsectionKey, entryType: ActivityEntryType) => {
-    addActivityEntry(subsectionKey, entryType);
-    setTestResults(prev => ({
-      ...prev,
-      [`add_activity_${subsectionKey}_${entryType}`]: true
-    }));
-  };
-
-  const handleFieldChange = (
-    subsectionKey: SubsectionKey,
-    entryIndex: number,
-    fieldPath: string,
-    value: any
-  ) => {
-    updateFieldValue(subsectionKey, entryIndex, fieldPath, value);
-    setTestResults(prev => ({
-      ...prev,
-      [`field_update_${subsectionKey}_${entryIndex}_${fieldPath}`]: true
-    }));
-  };
-
-  const handleRemoveEntry = (subsectionKey: SubsectionKey, entryIndex: number) => {
-    removeEntry(subsectionKey, entryIndex);
-    setTestResults(prev => ({
-      ...prev,
-      [`remove_entry_${subsectionKey}_${entryIndex}`]: true
-    }));
-  };
-
-  const handleValidate = () => {
-    const isValid = validateSection();
-    setTestResults(prev => ({
-      ...prev,
-      validation_executed: true,
-      validation_result: isValid
-    }));
+  const handleClearName = () => {
+    section1.updateFullName({ fieldPath: 'section1.lastName', newValue: '' });
+    section1.updateFullName({ fieldPath: 'section1.firstName', newValue: '' });
+    section1.updateFullName({ fieldPath: 'section1.middleName', newValue: '' });
+    section1.updateFullName({ fieldPath: 'section1.suffix', newValue: '' });
   };
 
   return (
-    <div className="section29-basic-test" data-testid="section29-basic-form">
-      <h2 className="text-2xl font-bold mb-6">Section 29: Associations - Basic Form Test</h2>
+    <div className="section-test-panel border rounded-lg p-4 mb-4" data-testid="section1-test-panel">
+      <h3 className="text-lg font-semibold mb-3">Section 1: Name Information</h3>
 
-      {/* Test Results Display */}
-      <div className="test-results mb-6 p-4 bg-gray-100 rounded" data-testid="test-results">
-        <h3 className="font-semibold mb-2">Test Results:</h3>
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          {Object.entries(testResults).map(([key, value]) => (
-            <div key={key} className={`p-1 rounded ${value ? 'bg-green-200' : 'bg-red-200'}`}>
-              {key}: {value ? '✓' : '✗'}
-            </div>
-          ))}
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Last Name</label>
+          <input
+            type="text"
+            value={section1.section1Data.section1.lastName.value || ''}
+            onChange={(e) => section1.updateFullName({ fieldPath: 'section1.lastName', newValue: e.target.value })}
+            className="w-full border rounded px-3 py-2"
+            data-testid="section1-lastname-input"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">First Name</label>
+          <input
+            type="text"
+            value={section1.section1Data.section1.firstName.value || ''}
+            onChange={(e) => section1.updateFullName({ fieldPath: 'section1.firstName', newValue: e.target.value })}
+            className="w-full border rounded px-3 py-2"
+            data-testid="section1-firstname-input"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Middle Name</label>
+          <input
+            type="text"
+            value={section1.section1Data.section1.middleName.value || ''}
+            onChange={(e) => section1.updateFullName({ fieldPath: 'section1.middleName', newValue: e.target.value })}
+            className="w-full border rounded px-3 py-2"
+            data-testid="section1-middlename-input"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Suffix</label>
+          <input
+            type="text"
+            value={section1.section1Data.section1.suffix.value || ''}
+            onChange={(e) => section1.updateFullName({ fieldPath: 'section1.suffix', newValue: e.target.value })}
+            className="w-full border rounded px-3 py-2"
+            data-testid="section1-suffix-input"
+          />
         </div>
       </div>
 
-      {/* Form Status */}
-      <div className="form-status mb-6 p-4 bg-blue-50 rounded" data-testid="form-status">
-        <p><strong>Form has changes:</strong> <span data-testid="is-dirty">{isDirty ? 'Yes' : 'No'}</span></p>
-        <p><strong>Validation errors:</strong> <span data-testid="error-count">{Object.keys(errors).length}</span></p>
+      <div className="flex space-x-2 mb-4">
         <button
-          onClick={handleValidate}
-          className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          data-testid="validate-button"
+          onClick={handleUpdateName}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          data-testid="section1-update-name-btn"
         >
-          Validate Section
+          Fill Test Data
+        </button>
+        <button
+          onClick={handleClearName}
+          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+          data-testid="section1-clear-name-btn"
+        >
+          Clear Data
         </button>
       </div>
 
-      {/* Terrorism Organizations Subsection */}
-      <div className="subsection mb-8 p-4 border rounded" data-testid="terrorism-organizations">
-        <h3 className="text-lg font-semibold mb-4">Terrorism Organizations</h3>
+      <div className="text-sm text-gray-600">
+        <p><strong>Validation:</strong> {section1.validateSection().isValid ? '✅ Valid' : '❌ Invalid'}</p>
+        <p><strong>Has Changes:</strong> {section1.isDirty ? '🔄 Yes' : '✅ No'}</p>
+      </div>
+    </div>
+  );
+}
 
-        <div className="question mb-4">
-          <p className="mb-2">{section29Data.terrorismOrganizations?.hasAssociation.label}</p>
-          <label className="mr-4">
+/**
+ * Section 2 Test Component - Date of Birth
+ */
+function Section2TestComponent() {
+  const section2 = useSection2();
+  const sf86Form = useSF86Form();
+
+  const handleUpdateDate = () => {
+    console.log('🔍 Testing Section 2 custom actions...');
+    console.log('📊 Before update - Section 2 data:', section2.sectionData);
+    console.log('📊 Custom actions available:', Object.keys(section2.customActions || {}));
+
+    // Test custom actions
+    if (section2.customActions?.updateDateOfBirth) {
+      section2.customActions.updateDateOfBirth('01/15/1990');
+      console.log('✅ Called updateDateOfBirth');
+    } else {
+      console.error('❌ updateDateOfBirth not available');
+    }
+
+    if (section2.customActions?.updateEstimated) {
+      section2.customActions.updateEstimated(false);
+      console.log('✅ Called updateEstimated');
+    } else {
+      console.error('❌ updateEstimated not available');
+    }
+
+    // Wait a bit and check the data again
+    setTimeout(() => {
+      console.log('📊 After update - Section 2 data:', section2.sectionData);
+
+      // Test SF86FormContext integration
+      console.log('🔍 Testing SF86FormContext integration...');
+      console.log('📊 Registered sections:', sf86Form.registeredSections.map(s => s.sectionId));
+      console.log('📊 Section 2 in registry:', sf86Form.registeredSections.find(s => s.sectionId === 'section2'));
+
+      // Test data collection
+      const collectedData = sf86Form.exportForm();
+      console.log('📊 Collected form data:', collectedData);
+      console.log('📊 Section 2 in collected data:', collectedData.section2);
+    }, 100);
+  };
+
+  const handleClearDate = () => {
+    if (section2.customActions?.updateDateOfBirth) {
+      section2.customActions.updateDateOfBirth('');
+    }
+    if (section2.customActions?.updateEstimated) {
+      section2.customActions.updateEstimated(false);
+    }
+  };
+
+  return (
+    <div className="section-test-panel border rounded-lg p-4 mb-4" data-testid="section2-test-panel">
+      <h3 className="text-lg font-semibold mb-3">Section 2: Date of Birth</h3>
+
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Date of Birth</label>
+          <input
+            type="text"
+            value={section2.sectionData.section2.date?.value || ''}
+            onChange={(e) => {
+              console.log('🔧 Test Page: Date input changed:', e.target.value);
+              section2.customActions?.updateDateOfBirth?.(e.target.value);
+              console.log('🔧 Test Page: After updateDateOfBirth, sectionData:', section2.sectionData);
+            }}
+            className="w-full border rounded px-3 py-2"
+            placeholder="MM/DD/YYYY"
+            data-testid="section2-date-input"
+          />
+        </div>
+        <div className="flex items-center">
+          <label className="flex items-center">
             <input
-              type="radio"
-              name="terrorismOrganizations"
-              value="YES"
-              checked={section29Data.terrorismOrganizations?.hasAssociation.value === "YES"}
-              onChange={() => handleSubsectionChange('terrorismOrganizations', 'YES')}
-              data-testid="terrorism-orgs-yes"
+              type="checkbox"
+              checked={section2.sectionData.section2.isEstimated?.value || false}
+              onChange={(e) => {
+                console.log('🔧 Test Page: Estimated checkbox changed:', e.target.checked);
+                section2.customActions?.updateEstimated?.(e.target.checked);
+                console.log('🔧 Test Page: After updateEstimated, sectionData:', section2.sectionData);
+              }}
+              className="mr-2"
+              data-testid="section2-estimated-checkbox"
             />
-            Yes
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="terrorismOrganizations"
-              value="NO"
-              checked={section29Data.terrorismOrganizations?.hasAssociation.value === "NO"}
-              onChange={() => handleSubsectionChange('terrorismOrganizations', 'NO')}
-              data-testid="terrorism-orgs-no"
-            />
-            No
+            Estimated
           </label>
         </div>
-
-        {section29Data.terrorismOrganizations?.hasAssociation.value === "YES" && (
-          <div className="entries" data-testid="terrorism-orgs-entries">
-            <button
-              onClick={() => handleAddOrganization('terrorismOrganizations')}
-              className="mb-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-              data-testid="add-terrorism-org-button"
-            >
-              Add Organization Entry
-            </button>
-
-            {section29Data.terrorismOrganizations.entries.map((entry, index) => (
-              <div key={entry._id} className="entry mb-6 p-4 border-l-4 border-blue-500 bg-gray-50" data-testid={`terrorism-org-entry-${index}`}>
-                <h4 className="font-semibold mb-3">Entry #{index + 1}</h4>
-
-                <div className="field mb-3">
-                  <label className="block text-sm font-medium mb-1">{entry.organizationName.label}</label>
-                  <input
-                    type="text"
-                    value={entry.organizationName.value}
-                    onChange={(e) => handleFieldChange('terrorismOrganizations', index, 'organizationName.value', e.target.value)}
-                    className="w-full p-2 border rounded"
-                    data-testid={`terrorism-org-name-${index}`}
-                    data-field-id={entry.organizationName.id}
-                  />
-                </div>
-
-                <div className="address-group mb-3">
-                  <h5 className="font-medium mb-2">Address</h5>
-                  <div className="grid grid-cols-2 gap-2">
-                    <input
-                      type="text"
-                      placeholder="Street"
-                      value={entry.address.street.value}
-                      onChange={(e) => handleFieldChange('terrorismOrganizations', index, 'address.street.value', e.target.value)}
-                      className="p-2 border rounded"
-                      data-testid={`terrorism-org-street-${index}`}
-                      data-field-id={entry.address.street.id}
-                    />
-                    <input
-                      type="text"
-                      placeholder="City"
-                      value={entry.address.city.value}
-                      onChange={(e) => handleFieldChange('terrorismOrganizations', index, 'address.city.value', e.target.value)}
-                      className="p-2 border rounded"
-                      data-testid={`terrorism-org-city-${index}`}
-                      data-field-id={entry.address.city.id}
-                    />
-                  </div>
-                </div>
-
-                <div className="date-range mb-3">
-                  <h5 className="font-medium mb-2">Date Range</h5>
-                  <div className="grid grid-cols-3 gap-2">
-                    <input
-                      type="month"
-                      value={entry.dateRange.from.date.value}
-                      onChange={(e) => handleFieldChange('terrorismOrganizations', index, 'dateRange.from.date.value', e.target.value)}
-                      className="p-2 border rounded"
-                      data-testid={`terrorism-org-from-date-${index}`}
-                      data-field-id={entry.dateRange.from.date.id}
-                    />
-                    <input
-                      type="month"
-                      value={entry.dateRange.to.date.value}
-                      onChange={(e) => handleFieldChange('terrorismOrganizations', index, 'dateRange.to.date.value', e.target.value)}
-                      className="p-2 border rounded"
-                      data-testid={`terrorism-org-to-date-${index}`}
-                      data-field-id={entry.dateRange.to.date.id}
-                    />
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={entry.dateRange.present.value}
-                        onChange={(e) => handleFieldChange('terrorismOrganizations', index, 'dateRange.present.value', e.target.checked)}
-                        className="mr-2"
-                        data-testid={`terrorism-org-present-${index}`}
-                        data-field-id={entry.dateRange.present.id}
-                      />
-                      Present
-                    </label>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => handleRemoveEntry('terrorismOrganizations', index)}
-                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                  data-testid={`remove-terrorism-org-${index}`}
-                >
-                  Remove Entry
-                </button>
-              </div>
-            ))}
-
-            <p className="text-sm text-gray-600" data-testid="terrorism-orgs-count">
-              Total entries: {getEntryCount('terrorismOrganizations')}
-            </p>
-          </div>
-        )}
       </div>
 
-      {/* Terrorism Activities Subsection */}
-      <div className="subsection mb-8 p-4 border rounded" data-testid="terrorism-activities">
-        <h3 className="text-lg font-semibold mb-4">Terrorism Activities</h3>
+      {/* Test Section 2 Data Flow Button */}
+      <div className="mb-4">
+        <button
+          onClick={async () => {
+            console.log('\n🔍 ===== TESTING SECTION 2 DATA FLOW =====');
+            console.log('📊 Current Section 2 data:', section2.sectionData);
+            console.log('📊 Date value:', section2.sectionData.section2.date?.value);
+            console.log('📊 Estimated value:', section2.sectionData.section2.isEstimated?.value);
 
-        <div className="question mb-4">
-          <p className="mb-2">{section29Data.terrorismActivities?.hasActivity.label}</p>
-          <label className="mr-4">
-            <input
-              type="radio"
-              name="terrorismActivities"
-              value="YES"
-              checked={section29Data.terrorismActivities?.hasActivity.value === "YES"}
-              onChange={() => handleSubsectionChange('terrorismActivities', 'YES')}
-              data-testid="terrorism-activities-yes"
-            />
-            Yes
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="terrorismActivities"
-              value="NO"
-              checked={section29Data.terrorismActivities?.hasActivity.value === "NO"}
-              onChange={() => handleSubsectionChange('terrorismActivities', 'NO')}
-              data-testid="terrorism-activities-no"
-            />
-            No
-          </label>
+            // Test SF86FormContext integration
+            console.log('🔧 Testing SF86FormContext updateSectionData...');
+            sf86Form.updateSectionData('section2', section2.sectionData);
+
+            console.log('🔧 Testing SF86FormContext saveForm...');
+            await sf86Form.saveForm();
+
+            console.log('✅ Section 2 data flow test completed');
+          }}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Test Section 2 Data Flow
+        </button>
+      </div>
+
+      <div className="flex space-x-2 mb-4">
+        <button
+          onClick={handleUpdateDate}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          data-testid="section2-update-date-btn"
+        >
+          Fill Test Data
+        </button>
+        <button
+          onClick={handleClearDate}
+          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+          data-testid="section2-clear-date-btn"
+        >
+          Clear Data
+        </button>
+        <button
+          onClick={async () => {
+            console.log('🔍 Testing Section 2 persistence...');
+            try {
+              // Update SF86FormContext with Section 2 data
+              sf86Form.updateSectionData('section2', section2.sectionData);
+              console.log('✅ Updated SF86FormContext with Section 2 data');
+
+              // Save to IndexedDB
+              await sf86Form.saveForm();
+              console.log('✅ Saved form to IndexedDB');
+
+              // Test data collection
+              const exportedData = sf86Form.exportForm();
+              console.log('📊 Exported form data:', exportedData);
+              console.log('📊 Section 2 in exported data:', exportedData.section2);
+            } catch (error) {
+              console.error('❌ Persistence test failed:', error);
+            }
+          }}
+          className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+          data-testid="section2-test-persistence-btn"
+        >
+          Test Persistence
+        </button>
+      </div>
+
+      <div className="text-sm text-gray-600">
+        <p><strong>Validation:</strong> {section2.validateSection().isValid ? '✅ Valid' : '❌ Invalid'}</p>
+        <p><strong>Has Changes:</strong> {section2.isDirty ? '🔄 Yes' : '✅ No'}</p>
+        <p><strong>Custom Actions:</strong> {section2.customActions ? Object.keys(section2.customActions).join(', ') : 'None'}</p>
+        <p><strong>Date Value:</strong> {section2.sectionData.section2.date?.value || 'Empty'}</p>
+        <p><strong>Estimated Value:</strong> {section2.sectionData.section2.isEstimated?.value ? 'Yes' : 'No'}</p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Section 8 Test Component - U.S. Passport Information
+ */
+function Section8TestComponent() {
+  const section8 = useSection8();
+
+  const handleUpdatePassport = () => {
+    section8.updatePassportFlag('YES');
+    section8.updatePassportNumber('A12345678');
+    section8.updatePassportName('lastName', 'TestLastName');
+    section8.updatePassportName('firstName', 'TestFirstName');
+    section8.updatePassportDate('issueDate', '01/01/2020');
+    section8.updatePassportDate('expirationDate', '01/01/2030');
+  };
+
+  const handleClearPassport = () => {
+    section8.updatePassportFlag('NO');
+    section8.updatePassportNumber('');
+    section8.updatePassportName('lastName', '');
+    section8.updatePassportName('firstName', '');
+    section8.updatePassportDate('issueDate', '');
+    section8.updatePassportDate('expirationDate', '');
+  };
+
+  return (
+    <div className="section-test-panel border rounded-lg p-4 mb-4" data-testid="section8-test-panel">
+      <h3 className="text-lg font-semibold mb-3">Section 8: U.S. Passport Information</h3>
+
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Has U.S. Passport</label>
+          <select
+            value={section8.section8Data.passportInfo.hasPassport.value}
+            onChange={(e) => section8.updatePassportFlag(e.target.value as "YES" | "NO")}
+            className="w-full border rounded px-3 py-2"
+            data-testid="section8-passport-flag"
+          >
+            <option value="NO">NO</option>
+            <option value="YES">YES</option>
+          </select>
         </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Passport Number</label>
+          <input
+            type="text"
+            value={section8.section8Data.passportInfo.passportNumber.value || ''}
+            onChange={(e) => section8.updatePassportNumber(e.target.value)}
+            className="w-full border rounded px-3 py-2"
+            data-testid="section8-passport-number"
+            disabled={section8.section8Data.passportInfo.hasPassport.value === 'NO'}
+          />
+        </div>
+      </div>
 
-        {section29Data.terrorismActivities?.hasActivity.value === "YES" && (
-          <div className="entries" data-testid="terrorism-activities-entries">
-            <button
-              onClick={() => handleAddActivity('terrorismActivities', 'terrorism')}
-              className="mb-4 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-              data-testid="add-terrorism-activity-button"
-            >
-              Add Activity Entry
-            </button>
+      <div className="flex space-x-2 mb-4">
+        <button
+          onClick={handleUpdatePassport}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          data-testid="section8-update-passport-btn"
+        >
+          Fill Test Data
+        </button>
+        <button
+          onClick={handleClearPassport}
+          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+          data-testid="section8-clear-passport-btn"
+        >
+          Clear Data
+        </button>
+      </div>
 
-            {section29Data.terrorismActivities.entries.map((entry, index) => (
-              <div key={entry._id} className="entry mb-6 p-4 border-l-4 border-red-500 bg-gray-50" data-testid={`terrorism-activity-entry-${index}`}>
-                <h4 className="font-semibold mb-3">Activity Entry #{index + 1}</h4>
+      <div className="text-sm text-gray-600">
+        <p><strong>Validation:</strong> {section8.validateSection().isValid ? '✅ Valid' : '❌ Invalid'}</p>
+        <p><strong>Has Changes:</strong> {section8.isDirty ? '🔄 Yes' : '✅ No'}</p>
+        <p><strong>Passport Validation:</strong> {section8.validatePassport().isValid ? '✅ Valid' : '❌ Invalid'}</p>
+      </div>
+    </div>
+  );
+}
 
-                <div className="field mb-3">
-                  <label className="block text-sm font-medium mb-1">{entry.activityDescription.label}</label>
-                  <textarea
-                    value={entry.activityDescription.value}
-                    onChange={(e) => handleFieldChange('terrorismActivities', index, 'activityDescription.value', e.target.value)}
-                    className="w-full p-2 border rounded"
-                    rows={3}
-                    data-testid={`terrorism-activity-description-${index}`}
-                    data-field-id={entry.activityDescription.id}
-                  />
-                </div>
+/**
+ * Section 9 Test Component - Citizenship Status
+ */
+function Section9TestComponent() {
+  const section9 = useSection9();
 
-                <button
-                  onClick={() => handleRemoveEntry('terrorismActivities', index)}
-                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                  data-testid={`remove-terrorism-activity-${index}`}
-                >
-                  Remove Entry
-                </button>
-              </div>
-            ))}
+  const handleUpdateCitizenship = () => {
+    section9.updateCitizenshipStatus("I am a naturalized U.S. citizen. (Complete 9.2) ");
+    section9.updateBornToUSParentsInfo('documentNumber', 'TEST123456');
+  };
 
-            <p className="text-sm text-gray-600" data-testid="terrorism-activities-count">
-              Total entries: {getEntryCount('terrorismActivities')}
-            </p>
+  const handleClearCitizenship = () => {
+    section9.updateCitizenshipStatus("I am a U.S. citizen or national by birth in the U.S. or U.S. territory/commonwealth. (Proceed to Section 10)   ");
+    section9.updateBornToUSParentsInfo('documentNumber', '');
+  };
+
+  return (
+    <div className="section-test-panel border rounded-lg p-4 mb-4" data-testid="section9-test-panel">
+      <h3 className="text-lg font-semibold mb-3">Section 9: Citizenship Status</h3>
+
+      <div className="grid grid-cols-1 gap-4 mb-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Citizenship Status</label>
+          <select
+            value={section9.section9Data.citizenshipStatus.status.value}
+            onChange={(e) => section9.updateCitizenshipStatus(e.target.value as any)}
+            className="w-full border rounded px-3 py-2"
+            data-testid="section9-citizenship-status"
+          >
+            <option value="I am a U.S. citizen or national by birth in the U.S. or U.S. territory/commonwealth. (Proceed to Section 10)   ">Born in U.S.</option>
+            <option value="I am a U.S. citizen or national by birth, born to U.S. parent(s), in a foreign country. (Complete 9.1) ">Born to U.S. parents abroad</option>
+            <option value="I am a naturalized U.S. citizen. (Complete 9.2) ">Naturalized citizen</option>
+            <option value="I am a derived U.S. citizen. (Complete 9.3) ">Derived citizen</option>
+            <option value="I am not a U.S. citizen. (Complete 9.4) ">Not a U.S. citizen</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Document Number (if applicable)</label>
+          <input
+            type="text"
+            value={section9.section9Data.citizenshipStatus.bornToUSParents?.documentNumber?.value || ''}
+            onChange={(e) => section9.updateBornToUSParentsInfo('documentNumber', e.target.value)}
+            className="w-full border rounded px-3 py-2"
+            data-testid="section9-document-number"
+          />
+        </div>
+      </div>
+
+      <div className="flex space-x-2 mb-4">
+        <button
+          onClick={handleUpdateCitizenship}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          data-testid="section9-update-citizenship-btn"
+        >
+          Fill Test Data
+        </button>
+        <button
+          onClick={handleClearCitizenship}
+          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+          data-testid="section9-clear-citizenship-btn"
+        >
+          Clear Data
+        </button>
+      </div>
+
+      <div className="text-sm text-gray-600">
+        <p><strong>Validation:</strong> {section9.validateSection().isValid ? '✅ Valid' : '❌ Invalid'}</p>
+        <p><strong>Has Changes:</strong> {section9.isDirty ? '🔄 Yes' : '✅ No'}</p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Section 27 Test Component - Use of Information Technology Systems
+ */
+function Section27TestComponent() {
+  const section27 = useSection27();
+
+  const handleUpdateIT = () => {
+    section27.updateSubsectionFlag('illegalAccess', 'YES');
+    section27.addEntry('illegalAccess');
+    section27.updateFieldValue('illegalAccess', 0, 'description', 'Test illegal access description');
+  };
+
+  const handleClearIT = () => {
+    section27.updateSubsectionFlag('illegalAccess', 'NO');
+    section27.resetSection();
+  };
+
+  return (
+    <div className="section-test-panel border rounded-lg p-4 mb-4" data-testid="section27-test-panel">
+      <h3 className="text-lg font-semibold mb-3">Section 27: Use of Information Technology Systems</h3>
+
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Illegal Access to IT Systems?</label>
+          <select
+            value={section27.section27Data.illegalAccess.hasViolation.value}
+            onChange={(e) => section27.updateSubsectionFlag('illegalAccess', e.target.value as "YES" | "NO")}
+            className="w-full border rounded px-3 py-2"
+            data-testid="section27-illegal-access-flag"
+          >
+            <option value="NO">NO</option>
+            <option value="YES">YES</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Number of Entries</label>
+          <input
+            type="text"
+            value={section27.getEntryCount('illegalAccess')}
+            readOnly
+            className="w-full border rounded px-3 py-2 bg-gray-100"
+            data-testid="section27-entries-count"
+          />
+        </div>
+      </div>
+
+      <div className="flex space-x-2 mb-4">
+        <button
+          onClick={handleUpdateIT}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          data-testid="section27-update-it-btn"
+        >
+          Fill Test Data
+        </button>
+        <button
+          onClick={handleClearIT}
+          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+          data-testid="section27-clear-it-btn"
+        >
+          Clear Data
+        </button>
+        <button
+          onClick={() => section27.addEntry('illegalAccess')}
+          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+          data-testid="section27-add-entry-btn"
+          disabled={section27.section27Data.illegalAccess.hasViolation.value === 'NO'}
+        >
+          Add Entry
+        </button>
+      </div>
+
+      <div className="text-sm text-gray-600">
+        <p><strong>Validation:</strong> {section27.validateSection().isValid ? '✅ Valid' : '❌ Invalid'}</p>
+        <p><strong>Has Changes:</strong> {section27.isDirty ? '🔄 Yes' : '✅ No'}</p>
+        <p><strong>Entries:</strong> {section27.getEntryCount('illegalAccess')}</p>
+        <p><strong>Technology Validation:</strong> {section27.validateTechnology().isValid ? '✅ Valid' : '❌ Invalid'}</p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Section 29 Test Component - Association Record
+ */
+function Section29TestComponent() {
+  const section29 = useSection29();
+
+  const handleUpdateTerrorism = () => {
+    // Update terrorism organizations flag
+    section29.updateSubsectionFlag('terrorismOrganizations', 'YES');
+    // Add an entry
+    section29.addOrganizationEntry('terrorismOrganizations');
+    // Update the entry fields
+    section29.updateFieldValue('terrorismOrganizations', 0, 'organizationName', 'Test Terrorism Organization');
+    section29.updateFieldValue('terrorismOrganizations', 0, 'address.street', '123 Test Street');
+    section29.updateFieldValue('terrorismOrganizations', 0, 'address.city', 'Test City');
+    section29.updateFieldValue('terrorismOrganizations', 0, 'address.state', 'TS');
+    section29.updateFieldValue('terrorismOrganizations', 0, 'address.zipCode', '12345');
+  };
+
+  const handleClearTerrorism = () => {
+    section29.updateSubsectionFlag('terrorismOrganizations', 'NO');
+    section29.resetSection();
+  };
+
+  const handleTestFieldIds = () => {
+    console.log('\n🔍 ===== SECTION 29 FIELD ID TEST =====');
+    console.log('📊 Section 29 Data:', section29.section29Data);
+
+    // Test radio button field IDs
+    const terrorismOrgRadio = section29.section29Data.terrorismOrganizations?.hasAssociation;
+    if (terrorismOrgRadio) {
+      console.log('📻 Terrorism Organizations Radio Button:');
+      console.log('   ID:', terrorismOrgRadio.id);
+      console.log('   Name:', terrorismOrgRadio.name);
+      console.log('   Value:', terrorismOrgRadio.value);
+    }
+
+    // Test entry field IDs if entries exist
+    const entries = section29.section29Data.terrorismOrganizations?.entries;
+    const entriesCount = entries ? entries.length : 0;
+
+    if (entriesCount > 0 && entries) {
+      const firstEntry = entries[0];
+      if (firstEntry) {
+        console.log('📝 First Entry Field IDs:');
+        console.log('   Organization Name ID:', firstEntry.organizationName.id);
+        console.log('   Organization Name Name:', firstEntry.organizationName.name);
+        console.log('   Street Address ID:', firstEntry.address.street.id);
+        console.log('   Street Address Name:', firstEntry.address.street.name);
+      }
+    }
+
+    console.log('🔍 ===== FIELD ID TEST COMPLETE =====\n');
+  };
+
+  return (
+    <div className="section-test-panel border rounded-lg p-4 mb-4" data-testid="section29-test-panel">
+      <h3 className="text-lg font-semibold mb-3">Section 29: Association Record</h3>
+
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Terrorism Organizations?</label>
+          <select
+            value={section29.section29Data.terrorismOrganizations?.hasAssociation.value || 'NO'}
+            onChange={(e) => section29.updateSubsectionFlag('terrorismOrganizations', e.target.value as "YES" | "NO")}
+            className="w-full border rounded px-3 py-2"
+            data-testid="section29-terrorism-flag"
+          >
+            <option value="NO">NO</option>
+            <option value="YES">YES</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Number of Entries</label>
+          <input
+            type="text"
+            value={section29.getEntryCount('terrorismOrganizations')}
+            readOnly
+            className="w-full border rounded px-3 py-2 bg-gray-100"
+            data-testid="section29-entries-count"
+          />
+        </div>
+      </div>
+
+      {/* Show first entry fields if they exist */}
+      {section29.getEntryCount('terrorismOrganizations') > 0 && (
+        <div className="border rounded p-3 mb-4 bg-gray-50">
+          <h4 className="font-medium mb-2">First Entry Fields</h4>
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            <div>
+              <label className="block text-xs font-medium mb-1">Organization Name</label>
+              <input
+                type="text"
+                value={section29.getEntry('terrorismOrganizations', 0)?.organizationName.value || ''}
+                onChange={(e) => section29.updateFieldValue('terrorismOrganizations', 0, 'organizationName', e.target.value)}
+                className="w-full border rounded px-2 py-1 text-sm"
+                data-testid="section29-org-name"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1">Street Address</label>
+              <input
+                type="text"
+                value={section29.getEntry('terrorismOrganizations', 0)?.address.street.value || ''}
+                onChange={(e) => section29.updateFieldValue('terrorismOrganizations', 0, 'address.street', e.target.value)}
+                className="w-full border rounded px-2 py-1 text-sm"
+                data-testid="section29-street"
+              />
+            </div>
           </div>
-        )}
+        </div>
+      )}
+
+      <div className="flex space-x-2 mb-4">
+        <button
+          onClick={handleUpdateTerrorism}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          data-testid="section29-update-terrorism-btn"
+        >
+          Fill Test Data
+        </button>
+        <button
+          onClick={handleClearTerrorism}
+          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+          data-testid="section29-clear-terrorism-btn"
+        >
+          Clear Data
+        </button>
+        <button
+          onClick={() => section29.addOrganizationEntry('terrorismOrganizations')}
+          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+          data-testid="section29-add-entry-btn"
+          disabled={section29.section29Data.terrorismOrganizations?.hasAssociation.value.startsWith('NO')}
+        >
+          Add Entry
+        </button>
+        <button
+          onClick={handleTestFieldIds}
+          className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600"
+          data-testid="section29-test-field-ids-btn"
+        >
+          Test Field IDs
+        </button>
+        <button
+          onClick={() => window.open('/startForm', '_blank')}
+          className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
+          data-testid="section29-open-form-btn"
+        >
+          Open Form
+        </button>
+      </div>
+
+      <div className="text-sm text-gray-600">
+        <p><strong>Validation:</strong> {section29.validateSection() ? '✅ Valid' : '❌ Invalid'}</p>
+        <p><strong>Has Changes:</strong> {section29.isDirty ? '🔄 Yes' : '✅ No'}</p>
+        <p><strong>Entries:</strong> {section29.getEntryCount('terrorismOrganizations')}</p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Cross-Section Integration Test Component
+ */
+function CrossSectionIntegrationTest() {
+  const sf86Form = useSF86Form();
+
+  const handleExportData = () => {
+    console.log('\n🔍 ===== CROSS-SECTION EXPORT TEST =====');
+    const exportedData = sf86Form.exportForm();
+    console.log('📊 Exported Form Data:', exportedData);
+    console.log('📋 Exported sections:', Object.keys(exportedData));
+    console.log('📈 Total sections exported:', Object.keys(exportedData).length);
+
+    // Detailed analysis of each section
+    Object.entries(exportedData).forEach(([sectionId, sectionData]) => {
+      console.log(`\n📁 Section ${sectionId}:`, sectionData);
+      if (sectionData && typeof sectionData === 'object') {
+        console.log(`   📊 Section ${sectionId} keys:`, Object.keys(sectionData));
+      }
+    });
+    console.log('🔍 ===== EXPORT TEST COMPLETE =====\n');
+  };
+
+  const handleSaveForm = async () => {
+    try {
+      console.log('\n💾 ===== CROSS-SECTION SAVE TEST =====');
+      await sf86Form.saveForm();
+      console.log('✅ Form saved successfully');
+      console.log('💾 ===== SAVE TEST COMPLETE =====\n');
+    } catch (error) {
+      console.error('❌ Form save failed:', error);
+    }
+  };
+
+  const handleGeneratePDF = async () => {
+    try {
+      console.log('\n📄 ===== CROSS-SECTION PDF TEST =====');
+      const result = await sf86Form.generatePdf();
+      console.log('📄 PDF Generation Result:', result);
+      console.log('📊 Fields mapped:', result.fieldsMapped);
+      console.log('📊 Fields applied:', result.fieldsApplied);
+      console.log('📄 ===== PDF TEST COMPLETE =====\n');
+    } catch (error) {
+      console.error('❌ PDF generation failed:', error);
+    }
+  };
+
+  const handlePopulateAllSections = () => {
+    console.log('\n🔄 ===== POPULATING ALL SECTIONS =====');
+
+    // Populate Section 1 data (using generic updateFieldValue)
+    const section1 = sf86Form.registeredSections.find(s => s.sectionId === 'section1');
+    if (section1?.context?.updateFieldValue) {
+      console.log('📝 Populating Section 1...');
+      section1.context.updateFieldValue('section1.lastName', 'TestLastName');
+      section1.context.updateFieldValue('section1.firstName', 'TestFirstName');
+      section1.context.updateFieldValue('section1.middleName', 'TestMiddleName');
+      section1.context.updateFieldValue('section1.suffix', 'Jr');
+    }
+
+    // Populate Section 2 data
+    const section2 = sf86Form.registeredSections.find(s => s.sectionId === 'section2');
+    if (section2?.context?.updateFieldValue) {
+      console.log('📝 Populating Section 2...');
+      section2.context.updateFieldValue('dateOfBirth.date', '01/15/1990');
+      section2.context.updateFieldValue('dateOfBirth.isEstimated', false);
+    }
+
+    // Populate Section 8 data (using generic updateFieldValue)
+    const section8 = sf86Form.registeredSections.find(s => s.sectionId === 'section8');
+    if (section8?.context?.updateFieldValue) {
+      console.log('📝 Populating Section 8...');
+      section8.context.updateFieldValue('passportInfo.hasPassport', 'YES');
+      section8.context.updateFieldValue('passportInfo.passportNumber', 'A12345678');
+    }
+
+    // Populate Section 9 data (using generic updateFieldValue)
+    const section9 = sf86Form.registeredSections.find(s => s.sectionId === 'section9');
+    if (section9?.context?.updateFieldValue) {
+      console.log('📝 Populating Section 9...');
+      section9.context.updateFieldValue('citizenshipStatus.status', 'I am a naturalized U.S. citizen');
+    }
+
+    // Populate Section 27 data (using generic updateFieldValue)
+    const section27 = sf86Form.registeredSections.find(s => s.sectionId === 'section27');
+    if (section27?.context?.updateFieldValue) {
+      console.log('📝 Populating Section 27...');
+      section27.context.updateFieldValue('illegalAccess.hasViolation', 'YES');
+    }
+
+    // Populate Section 29 data
+    const section29 = sf86Form.registeredSections.find(s => s.sectionId === 'section29');
+    if (section29?.context?.updateFieldValue) {
+      console.log('📝 Populating Section 29...');
+      section29.context.updateFieldValue('terrorismOrganizations.hasAssociation', 'YES');
+      // We can't easily add entries via the generic context interface
+      console.log('Note: To add entries to Section 29, use the dedicated component interface');
+    }
+
+    console.log('✅ All sections populated');
+    console.log('🔄 ===== POPULATION COMPLETE =====\n');
+  };
+
+  const handleClearAllSections = () => {
+    console.log('\n🧹 ===== CLEARING ALL SECTIONS =====');
+
+    // Clear Section 1 data
+    const section1 = sf86Form.registeredSections.find(s => s.sectionId === 'section1');
+    if (section1?.context?.resetSection) {
+      console.log('🧹 Clearing Section 1...');
+      section1.context.resetSection();
+    }
+
+    // Clear Section 2 data
+    const section2 = sf86Form.registeredSections.find(s => s.sectionId === 'section2');
+    if (section2?.context?.resetSection) {
+      console.log('🧹 Clearing Section 2...');
+      section2.context.resetSection();
+    }
+
+    // Clear Section 8 data
+    const section8 = sf86Form.registeredSections.find(s => s.sectionId === 'section8');
+    if (section8?.context?.resetSection) {
+      console.log('🧹 Clearing Section 8...');
+      section8.context.resetSection();
+    }
+
+    // Clear Section 9 data
+    const section9 = sf86Form.registeredSections.find(s => s.sectionId === 'section9');
+    if (section9?.context?.resetSection) {
+      console.log('🧹 Clearing Section 9...');
+      section9.context.resetSection();
+    }
+
+    // Clear Section 27 data
+    const section27 = sf86Form.registeredSections.find(s => s.sectionId === 'section27');
+    if (section27?.context?.resetSection) {
+      console.log('🧹 Clearing Section 27...');
+      section27.context.resetSection();
+    }
+
+    // Clear Section 29 data
+    const section29 = sf86Form.registeredSections.find(s => s.sectionId === 'section29');
+    if (section29?.context?.resetSection) {
+      console.log('🧹 Clearing Section 29...');
+      section29.context.resetSection();
+    }
+
+    console.log('✅ All sections cleared');
+    console.log('🧹 ===== CLEARING COMPLETE =====\n');
+  };
+
+  return (
+    <div className="integration-test-panel border rounded-lg p-4 mb-4" data-testid="integration-test-panel">
+      <h3 className="text-lg font-semibold mb-3">Cross-Section Integration Tests</h3>
+
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <h4 className="font-medium mb-2">Registered Sections</h4>
+          <ul className="text-sm">
+            {sf86Form.registeredSections.map((section) => (
+              <li key={section.sectionId} className="flex justify-between">
+                <span>{section.sectionName}</span>
+                <span className={section.isActive ? 'text-green-600' : 'text-gray-400'}>
+                  {section.isActive ? '✅' : '⏸️'}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h4 className="font-medium mb-2">Form Status</h4>
+          <div className="text-sm space-y-1">
+            <p><strong>Is Dirty:</strong> {sf86Form.isDirty ? '🔄 Yes' : '✅ No'}</p>
+            <p><strong>Is Valid:</strong> {sf86Form.isValid ? '✅ Yes' : '❌ No'}</p>
+            <p><strong>Active Sections:</strong> {sf86Form.activeSections.length}</p>
+            <p><strong>Completed Sections:</strong> {sf86Form.completedSections.length}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 mb-4">
+        <button
+          onClick={handlePopulateAllSections}
+          className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
+          data-testid="populate-all-btn"
+        >
+          Populate All Sections
+        </button>
+        <button
+          onClick={handleClearAllSections}
+          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+          data-testid="clear-all-btn"
+        >
+          Clear All Sections
+        </button>
+        <button
+          onClick={handleExportData}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          data-testid="export-data-btn"
+        >
+          Export Data
+        </button>
+        <button
+          onClick={handleSaveForm}
+          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+          data-testid="save-form-btn"
+        >
+          Save Form
+        </button>
+        <button
+          onClick={handleGeneratePDF}
+          className="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 col-span-2"
+          data-testid="generate-pdf-btn"
+        >
+          Generate PDF
+        </button>
+      </div>
+
+      <div className="text-sm text-gray-600">
+        <p><strong>Last Saved:</strong> {sf86Form.lastSaved ? sf86Form.lastSaved.toLocaleString() : 'Never'}</p>
+        <p><strong>Auto Save:</strong> {sf86Form.autoSave ? '✅ Enabled' : '❌ Disabled'}</p>
       </div>
     </div>
   );
@@ -338,50 +915,90 @@ function Section29BasicFormTest() {
 // MAIN TEST PAGE COMPONENT
 // ============================================================================
 
-export default function Section29TestPage({}: Route.ComponentProps) {
-  const [activeTest, setActiveTest] = useState<'basic' | 'advanced' | 'integration'>('basic');
+export default function MultiSectionTestPage({}: Route.ComponentProps) {
+  const [activeTab, setActiveTab] = useState<'section1' | 'section2' | 'section7' | 'section8' | 'section9' | 'section27' | 'section29' | 'integration'>('section1');
 
   return (
-    <Section29Provider>
-      <div className="section29-test-page min-h-screen bg-gray-50 p-6" data-testid="section29-test-page">
+    <CompleteSF86FormProvider>
+      <div className="multi-section-test-page min-h-screen bg-gray-50 p-6" data-testid="multi-section-test-page">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-3xl font-bold text-center mb-8">Section 29 Context Integration Tests</h1>
+          <h1 className="text-3xl font-bold text-center mb-8">Multi-Section SF-86 Form Tests</h1>
 
           {/* Test Navigation */}
           <nav className="test-nav mb-8" data-testid="test-navigation">
-            <div className="flex justify-center space-x-4">
+            <div className="flex justify-center space-x-2 flex-wrap">
               <button
-                className={`px-6 py-3 rounded-lg font-semibold ${activeTest === 'basic' ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 border border-blue-500'}`}
-                onClick={() => setActiveTest('basic')}
-                data-testid="basic-test-tab"
+                className={`px-4 py-2 rounded-lg font-semibold ${activeTab === 'section1' ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 border border-blue-500'}`}
+                onClick={() => setActiveTab('section1')}
+                data-testid="section1-tab"
               >
-                Basic Form Tests
+                Section 1
               </button>
               <button
-                className={`px-6 py-3 rounded-lg font-semibold ${activeTest === 'advanced' ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 border border-blue-500'}`}
-                onClick={() => setActiveTest('advanced')}
-                data-testid="advanced-test-tab"
+                className={`px-4 py-2 rounded-lg font-semibold ${activeTab === 'section2' ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 border border-blue-500'}`}
+                onClick={() => setActiveTab('section2')}
+                data-testid="section2-tab"
               >
-                Advanced Features
+                Section 2
               </button>
               <button
-                className={`px-6 py-3 rounded-lg font-semibold ${activeTest === 'integration' ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 border border-blue-500'}`}
-                onClick={() => setActiveTest('integration')}
-                data-testid="integration-test-tab"
+                className={`px-4 py-2 rounded-lg font-semibold ${activeTab === 'section7' ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 border border-blue-500'}`}
+                onClick={() => setActiveTab('section7')}
+                data-testid="section7-tab"
               >
-                Integration Tests
+                Section 7
+              </button>
+              <button
+                className={`px-4 py-2 rounded-lg font-semibold ${activeTab === 'section8' ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 border border-blue-500'}`}
+                onClick={() => setActiveTab('section8')}
+                data-testid="section8-tab"
+              >
+                Section 8
+              </button>
+              <button
+                className={`px-4 py-2 rounded-lg font-semibold ${activeTab === 'section9' ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 border border-blue-500'}`}
+                onClick={() => setActiveTab('section9')}
+                data-testid="section9-tab"
+              >
+                Section 9
+              </button>
+              <button
+                className={`px-4 py-2 rounded-lg font-semibold ${activeTab === 'section27' ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 border border-blue-500'}`}
+                onClick={() => setActiveTab('section27')}
+                data-testid="section27-tab"
+              >
+                Section 27
+              </button>
+              <button
+                className={`px-4 py-2 rounded-lg font-semibold ${activeTab === 'section29' ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 border border-blue-500'}`}
+                onClick={() => setActiveTab('section29')}
+                data-testid="section29-tab"
+              >
+                Section 29
+              </button>
+              <button
+                className={`px-4 py-2 rounded-lg font-semibold ${activeTab === 'integration' ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 border border-blue-500'}`}
+                onClick={() => setActiveTab('integration')}
+                data-testid="integration-tab"
+              >
+                Integration
               </button>
             </div>
           </nav>
 
           {/* Test Content */}
           <main className="test-content bg-white rounded-lg shadow-lg p-6">
-            {activeTest === 'basic' && <Section29BasicFormTest />}
-            {activeTest === 'advanced' && <div data-testid="advanced-placeholder">Advanced tests will be implemented in test.tsx</div>}
-            {activeTest === 'integration' && <div data-testid="integration-placeholder">Integration tests will be implemented in test.tsx</div>}
+            {activeTab === 'section1' && <Section1TestComponent />}
+            {activeTab === 'section2' && <Section2TestComponent />}
+            {activeTab === 'section7' && <div data-testid="section7-placeholder">Section 7 test component (API methods need verification)</div>}
+            {activeTab === 'section8' && <Section8TestComponent />}
+            {activeTab === 'section9' && <Section9TestComponent />}
+            {activeTab === 'section27' && <Section27TestComponent />}
+            {activeTab === 'section29' && <Section29TestComponent />}
+            {activeTab === 'integration' && <CrossSectionIntegrationTest />}
           </main>
         </div>
       </div>
-    </Section29Provider>
+    </CompleteSF86FormProvider>
   );
 }

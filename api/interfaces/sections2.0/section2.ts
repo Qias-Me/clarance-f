@@ -1,22 +1,23 @@
 /**
  * Section 2: Date of Birth
  *
- * TypeScript interface definitions for SF-86 Section 2 date of birth data structure.
- * Based on the established Field<T> interface patterns and PDF field ID mappings.
+ * TypeScript interface definitions for SF-86 Section 2 (Date of Birth) data structure.
+ * Based on the established Field<T> interface patterns and PDF field ID mappings from section-2.json.
  */
 
 import type { Field } from '../formDefinition2.0';
+import { createFieldFromReference } from '../../utils/sections-references-loader';
 
 // ============================================================================
 // CORE INTERFACES
 // ============================================================================
 
 /**
- * Date of birth with estimation support
+ * Date of Birth information structure for Section 2
  */
 export interface DateOfBirth {
   date: Field<string>;
-  estimated: Field<boolean>;
+  isEstimated: Field<boolean>;
 }
 
 /**
@@ -24,7 +25,7 @@ export interface DateOfBirth {
  */
 export interface Section2 {
   _id: number;
-  dateOfBirth: DateOfBirth;
+  section2: DateOfBirth;
 }
 
 // ============================================================================
@@ -64,13 +65,23 @@ export interface Section2ValidationContext {
 // ============================================================================
 
 /**
- * PDF field ID patterns for Section 2
- * Based on the Sections1-6 pattern from the JSON reference
+ * PDF field ID mappings for Section 2 (Date of Birth)
+ * Based on the actual field IDs from section-2.json (4-digit format)
  */
 export const SECTION2_FIELD_IDS = {
   // Date of birth fields
-  DATE_OF_BIRTH: "form1[0].Sections1-6[0].From_Datefield_Name_2[0]",
-  ESTIMATED: "form1[0].Sections1-6[0].#field[18]"
+  DATE: "9432", // form1[0].Sections1-6[0].From_Datefield_Name_2[0]
+  IS_ESTIMATED: "9431" // form1[0].Sections1-6[0].#field[18]
+} as const;
+
+/**
+ * Field name mappings for Section 2 (Date of Birth)
+ * Full field paths from section-2.json
+ */
+export const SECTION2_FIELD_NAMES = {
+  // Date of birth fields
+  DATE: "form1[0].Sections1-6[0].From_Datefield_Name_2[0]",
+  IS_ESTIMATED: "form1[0].Sections1-6[0].#field[18]"
 } as const;
 
 // ============================================================================
@@ -102,18 +113,11 @@ export const DATE_VALIDATION = {
 // ============================================================================
 
 /**
- * Type for creating new Section 2 data
- */
-export type CreateSection2Params = {
-  defaultEstimated?: boolean;
-};
-
-/**
- * Type for Section 2 field updates
+ * Type for date of birth field updates
  */
 export type Section2FieldUpdate = {
-  fieldPath: 'date' | 'estimated';
-  newValue: string | boolean;
+  fieldPath: string;
+  newValue: any;
 };
 
 /**
@@ -127,21 +131,66 @@ export type DateValidationResult = {
 };
 
 // ============================================================================
-// FACTORY FUNCTIONS
+// HELPER FUNCTIONS
 // ============================================================================
 
 /**
- * Creates a default Section 2 data structure
+ * Creates a default Section 2 data structure using DRY approach with sections-references
+ * This eliminates hardcoded values and uses the single source of truth
  */
-export function createDefaultSection2(): Section2 {
-  return {
-    _id: 2,
-    dateOfBirth: {
-      date: { value: '', id: SECTION2_FIELD_IDS.DATE_OF_BIRTH },
-      estimated: { value: false, id: SECTION2_FIELD_IDS.ESTIMATED }
-    }
-  };
-}
+export const createDefaultSection2 = (): Section2 => ({
+  _id: 2,
+  section2: {
+    date: createFieldFromReference(
+      2,
+      'form1[0].Sections1-6[0].From_Datefield_Name_2[0]',
+      ''
+    ),
+    isEstimated: createFieldFromReference(
+      2,
+      'form1[0].Sections1-6[0].#field[18]',
+      false
+    )
+  }
+});
+
+/**
+ * Updates a specific field in the Section 2 data structure
+ */
+export const updateSection2Field = (
+  section2Data: Section2,
+  update: Section2FieldUpdate
+): Section2 => {
+  const { fieldPath, newValue } = update;
+  const newData = { ...section2Data };
+
+  // Update the specified field
+  if (fieldPath === 'section2.date') {
+    newData.section2.date.value = newValue;
+  } else if (fieldPath === 'section2.isEstimated') {
+    newData.section2.isEstimated.value = newValue;
+  }
+
+  return newData;
+};
+
+/**
+ * Format a date string to MM/DD/YYYY format
+ */
+export const formatDateString = (date: string): string => {
+  if (!date) return '';
+
+  try {
+    const dateObj = new Date(date);
+    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    const day = String(dateObj.getDate()).padStart(2, '0');
+    const year = dateObj.getFullYear();
+
+    return `${month}/${day}/${year}`;
+  } catch (error) {
+    return date; // Return original if parsing fails
+  }
+};
 
 /**
  * Validates a date of birth entry
@@ -167,7 +216,7 @@ export function validateDateOfBirth(dateOfBirth: DateOfBirth, context: Section2V
     // Parse and validate date
     try {
       parsedDate = new Date(dateOfBirth.date.value);
-      
+
       if (isNaN(parsedDate.getTime())) {
         errors.push('Invalid date provided');
         return { isValid: false, errors, warnings };
@@ -175,11 +224,11 @@ export function validateDateOfBirth(dateOfBirth: DateOfBirth, context: Section2V
 
       // Age validation
       const age = calculateAge(parsedDate, context.currentDate);
-      
+
       if (age < context.rules.minimumAge) {
         errors.push(`Age must be at least ${context.rules.minimumAge} years`);
       }
-      
+
       if (age > context.rules.maximumAge) {
         errors.push(`Age cannot exceed ${context.rules.maximumAge} years`);
       }
@@ -201,11 +250,11 @@ export function validateDateOfBirth(dateOfBirth: DateOfBirth, context: Section2V
   }
 
   // Estimation validation
-  if (dateOfBirth.estimated.value && !context.rules.allowsEstimatedDate) {
+  if (dateOfBirth.isEstimated.value && !context.rules.allowsEstimatedDate) {
     errors.push('Estimated dates are not allowed for date of birth');
   }
 
-  if (dateOfBirth.estimated.value) {
+  if (dateOfBirth.isEstimated.value) {
     warnings.push('Date of birth is marked as estimated');
   }
 
@@ -223,33 +272,12 @@ export function validateDateOfBirth(dateOfBirth: DateOfBirth, context: Section2V
 export function calculateAge(birthDate: Date, currentDate: Date): number {
   const age = currentDate.getFullYear() - birthDate.getFullYear();
   const monthDiff = currentDate.getMonth() - birthDate.getMonth();
-  
+
   if (monthDiff < 0 || (monthDiff === 0 && currentDate.getDate() < birthDate.getDate())) {
     return age - 1;
   }
-  
-  return age;
-}
 
-/**
- * Updates a specific field in Section 2
- */
-export function updateSection2Field(
-  section2: Section2, 
-  update: Section2FieldUpdate
-): Section2 {
-  const updated = { ...section2 };
-  
-  switch (update.fieldPath) {
-    case 'date':
-      updated.dateOfBirth.date.value = update.newValue as string;
-      break;
-    case 'estimated':
-      updated.dateOfBirth.estimated.value = update.newValue as boolean;
-      break;
-  }
-  
-  return updated;
+  return age;
 }
 
 /**
@@ -257,11 +285,11 @@ export function updateSection2Field(
  */
 export function formatDateForDisplay(date: string, format: string = DATE_FORMATS.MM_DD_YYYY): string {
   if (!date) return '';
-  
+
   try {
     const parsedDate = new Date(date);
     if (isNaN(parsedDate.getTime())) return date;
-    
+
     switch (format) {
       case DATE_FORMATS.MM_DD_YYYY:
         return parsedDate.toLocaleDateString('en-US');

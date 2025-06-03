@@ -6,11 +6,10 @@
  * The client handles all form data application locally.
  */
 
-import type { LoaderFunctionArgs } from "react-router";
 
 const SF86_PDF_URL = 'https://www.opm.gov/forms/pdf_fill/sf86.pdf';
 
-export async function loader({ request }: LoaderFunctionArgs) {
+export async function loader() {
   try {
     console.log("Fetching base SF-86 PDF template...");
 

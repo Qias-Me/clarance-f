@@ -127,7 +127,7 @@ const FIELD_PATTERN_MAP: Record<FieldType, (entryIndex: number) => string> = {
   involvementDescription: (entryIndex) => `TextField11[${entryIndex === 0 ? 3 : 10}]`,
   activityDescription: (entryIndex) => `TextField11[${entryIndex === 0 ? 0 : 3}]`,
   advocacyReason: (entryIndex) => `TextField11[${entryIndex === 0 ? 1 : 4}]`,
-  explanation: (entryIndex) => `TextField11[${entryIndex === 0 ? 1 : 2}]`
+  explanation: (entryIndex) => `TextField11[${entryIndex + 1}]` // Entry 0 → TextField11[1], Entry 1 → TextField11[2]
 };
 
 // ============================================================================
@@ -336,6 +336,96 @@ export const generateFieldId = (
   }
 
   return fallbackFieldName;
+};
+
+/**
+ * Generates a PDF field name for a field
+ *
+ * @param subsectionKey - The subsection this field belongs to
+ * @param entryIndex - The entry index within the subsection (0-based)
+ * @param fieldType - The type of field being generated
+ * @returns A PDF field name string
+ */
+export const generateFieldName = (
+  subsectionKey: SubsectionKey,
+  entryIndex: number,
+  fieldType: FieldType
+): string => {
+  // For radio button fields, use the exact field names
+  if (fieldType === 'hasAssociation' || fieldType === 'hasActivity') {
+    switch (subsectionKey) {
+      case 'terrorismOrganizations':
+        return SECTION29_RADIO_FIELD_NAMES.TERRORISM_ORGANIZATIONS;
+      case 'terrorismActivities':
+        return SECTION29_RADIO_FIELD_NAMES.TERRORISM_ACTIVITIES;
+      case 'terrorismAdvocacy':
+        return SECTION29_RADIO_FIELD_NAMES.TERRORISM_ADVOCACY;
+      case 'violentOverthrowOrganizations':
+        return SECTION29_RADIO_FIELD_NAMES.VIOLENT_OVERTHROW_ORGANIZATIONS;
+      case 'violenceForceOrganizations':
+        return SECTION29_RADIO_FIELD_NAMES.VIOLENCE_FORCE_ORGANIZATIONS;
+      case 'overthrowActivities':
+        return SECTION29_RADIO_FIELD_NAMES.OVERTHROW_ACTIVITIES;
+      case 'terrorismAssociations':
+        return SECTION29_RADIO_FIELD_NAMES.TERRORISM_ASSOCIATIONS;
+      default:
+        return `form1[0].${SUBSECTION_PDF_MAP[subsectionKey]}.RadioButtonList[0]`;
+    }
+  }
+
+  // For other fields, generate based on pattern
+  const subsectionPrefix = SUBSECTION_PDF_MAP[subsectionKey];
+  const fieldPattern = FIELD_PATTERN_MAP[fieldType];
+
+  if (!fieldPattern) {
+    throw new Error(`Unknown field type: ${fieldType}`);
+  }
+
+  const fieldSuffix = fieldPattern(entryIndex);
+  return `form1[0].${subsectionPrefix}.${fieldSuffix}`;
+};
+
+/**
+ * Generates rect coordinates for a field in the PDF
+ * 
+ * @param subsectionKey - The subsection this field belongs to
+ * @param entryIndex - The entry index within the subsection (0-based)
+ * @param fieldType - The type of field being generated
+ * @returns An object with rect coordinates (x, y, width, height)
+ */
+export const generateFieldRect = (
+  subsectionKey: SubsectionKey,
+  entryIndex: number,
+  fieldType: FieldType
+): { x: number, y: number, width: number, height: number } => {
+  // Get the correct subsection pattern for the field
+  const subsectionPattern = getSubsectionPattern(subsectionKey, entryIndex);
+  console.log(`📋 Subsection pattern for rect: "${subsectionPattern}"`);
+
+  // Try to get the actual field data from the PDF mapping
+  const field = getFieldBySubsectionAndType(subsectionPattern, fieldType, entryIndex, subsectionKey);
+
+  // If field data with rect is available, use it
+  if (field && field.rect) {
+    console.log(`📐 Using actual PDF rect for ${subsectionKey}.${fieldType}[${entryIndex}]:`, field.rect);
+    return field.rect;
+  }
+
+  // Return default rectangle if no field data is available
+  console.warn(`⚠️ No rect data found for ${subsectionKey}.${fieldType}[${entryIndex}], using default`);
+  return { x: 0, y: 0, width: 0, height: 0 };
+};
+
+/**
+ * Alias for generateFieldRect for backward compatibility
+ * This function is needed by createTerrorismAssociationEntryTemplate
+ */
+export const generateRectField = (
+  subsectionKey: SubsectionKey,
+  entryIndex: number,
+  fieldType: FieldType
+): { x: number, y: number, width: number, height: number } => {
+  return generateFieldRect(subsectionKey, entryIndex, fieldType);
 };
 
 /**

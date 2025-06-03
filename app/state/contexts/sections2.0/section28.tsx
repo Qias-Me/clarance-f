@@ -1,0 +1,500 @@
+/**
+ * Section28 Context Provider - Involvement in Non-Criminal Court Actions
+ *
+ * React Context provider for SF-86 Section 28 (Involvement in Non-Criminal Court Actions) with
+ * SF86FormContext integration and optimized defensive check logic.
+ */
+
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+} from 'react';
+import { cloneDeep } from 'lodash';
+import type {
+  Section28,
+  Section28SubsectionKey,
+  CourtActionEntry,
+  Section28ValidationResult,
+  CourtActionValidationResult
+} from '../../../../api/interfaces/sections2.0/section28';
+import {
+  createDefaultSection28,
+  createDefaultCourtActionEntry
+} from '../../../../api/interfaces/sections2.0/section28';
+import type {
+  ValidationResult,
+  ValidationError,
+  ChangeSet,
+  BaseSectionContext
+} from '../shared/base-interfaces';
+import { useSection86FormIntegration } from '../shared/section-context-integration';
+
+// ============================================================================
+// CONTEXT TYPE DEFINITION
+// ============================================================================
+
+export interface Section28ContextType {
+  // State - Updated to match component expectations
+  sectionData: Section28;
+  isLoading: boolean;
+  errors: Record<string, string>;
+  isDirty: boolean;
+
+  // Basic Actions - Updated to match component expectations
+  updateHasCourtActions: (value: "YES" | "NO (If NO, proceed to Section 29)") => void;
+  addCourtAction: () => void;
+  removeCourtAction: (entryId: string) => void;
+  updateCourtAction: (entryId: string, updatedEntry: CourtActionEntry) => void;
+
+  // Field update function for integration compatibility
+  updateFieldValue: (path: string, value: any) => void;
+
+  // Utility Functions
+  getCourtActionEntryCount: () => number;
+  getCourtActionEntry: (entryIndex: number) => CourtActionEntry | undefined;
+
+  // Validation
+  validateSection: () => ValidationResult;
+  validateCourtAction: (entryIndex: number) => CourtActionValidationResult;
+  validateAllCourtActions: () => Section28ValidationResult;
+
+  // Utility
+  resetSection: () => void;
+  loadSection: (data: Section28) => void;
+  getChanges: () => ChangeSet;
+}
+
+// ============================================================================
+// DEFAULT DATA
+// ============================================================================
+
+const createInitialSection28State = (): Section28 => {
+  return createDefaultSection28();
+};
+
+// ============================================================================
+// CONTEXT CREATION
+// ============================================================================
+
+const Section28Context = createContext<Section28ContextType | undefined>(undefined);
+
+// ============================================================================
+// PROVIDER COMPONENT
+// ============================================================================
+
+export interface Section28ProviderProps {
+  children: React.ReactNode;
+}
+
+export const Section28Provider: React.FC<Section28ProviderProps> = ({ children }) => {
+  // ============================================================================
+  // CORE STATE MANAGEMENT
+  // ============================================================================
+
+  const [section28Data, setSection28Data] = useState<Section28>(createInitialSection28State());
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [initialData] = useState<Section28>(createInitialSection28State());
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // ============================================================================
+  // COMPUTED VALUES
+  // ============================================================================
+
+  const isDirty = useMemo(() => {
+    return JSON.stringify(section28Data) !== JSON.stringify(initialData);
+  }, [section28Data, initialData]);
+
+  // Set initialized flag after component mounts
+  useEffect(() => {
+    setIsInitialized(true);
+  }, []);
+
+  // ============================================================================
+  // VALIDATION FUNCTIONS
+  // ============================================================================
+
+  const validateCourtAction = useCallback((entryIndex: number): CourtActionValidationResult => {
+    const entry = section28Data.section28.courtActionEntries[entryIndex];
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    if (!entry) {
+      errors.push('Court action entry not found');
+      return { isValid: false, errors, warnings };
+    }
+
+    // Validate required fields
+    if (!entry.dateOfAction.date.value.trim()) {
+      errors.push('Date of action is required');
+    }
+
+    if (!entry.courtName.value.trim()) {
+      errors.push('Court name is required');
+    }
+
+    if (!entry.natureOfAction.value.trim()) {
+      errors.push('Nature of action is required');
+    }
+
+    if (!entry.resultsDescription.value.trim()) {
+      errors.push('Results description is required');
+    }
+
+    if (!entry.principalParties.value.trim()) {
+      errors.push('Principal parties are required');
+    }
+
+    // Validate address
+    if (!entry.courtAddress.street.value.trim()) {
+      errors.push('Court address street is required');
+    }
+
+    if (!entry.courtAddress.city.value.trim()) {
+      errors.push('Court address city is required');
+    }
+
+    if (!entry.courtAddress.country.value.trim()) {
+      errors.push('Court address country is required');
+    }
+
+    // US-specific validation
+    if (entry.courtAddress.country.value === 'United States' || entry.courtAddress.country.value === 'US') {
+      if (!entry.courtAddress.state?.value?.trim()) {
+        errors.push('State is required for US addresses');
+      }
+      if (!entry.courtAddress.zipCode?.value?.trim()) {
+        warnings.push('Zip code is recommended for US addresses');
+      }
+    }
+
+    // Date format validation
+    const datePattern = /^\d{1,2}\/\d{4}$/;
+    if (entry.dateOfAction.date.value && !datePattern.test(entry.dateOfAction.date.value)) {
+      warnings.push('Date should be in MM/YYYY format');
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings
+    };
+  }, [section28Data]);
+
+  const validateAllCourtActions = useCallback((): Section28ValidationResult => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    const courtActionResults: CourtActionValidationResult[] = [];
+
+    // Validate main question
+    if (!section28Data.section28.hasCourtActions.value) {
+      errors.push('Court actions question must be answered');
+    }
+
+    // If YES was selected, validate entries
+    if (section28Data.section28.hasCourtActions.value === "YES") {
+      if (section28Data.section28.courtActionEntries.length === 0) {
+        errors.push('At least one court action entry is required when "YES" is selected');
+      } else {
+        // Validate each entry
+        section28Data.section28.courtActionEntries.forEach((_, index) => {
+          const result = validateCourtAction(index);
+          courtActionResults.push(result);
+
+          if (!result.isValid) {
+            errors.push(...result.errors.map(error => `Entry ${index + 1}: ${error}`));
+          }
+
+          warnings.push(...result.warnings.map(warning => `Entry ${index + 1}: ${warning}`));
+        });
+      }
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings,
+      courtActionResults
+    };
+  }, [section28Data, validateCourtAction]);
+
+  const validateSection = useCallback((): ValidationResult => {
+    // Skip validation on initial render to avoid infinite loops
+    if (!isInitialized) {
+      return {
+        isValid: true,
+        errors: [],
+        warnings: []
+      };
+    }
+
+    const validationResult = validateAllCourtActions();
+    const validationErrors: ValidationError[] = [];
+    const validationWarnings: ValidationError[] = [];
+
+    // Convert string errors to ValidationError objects
+    validationResult.errors.forEach(error => {
+      validationErrors.push({
+        field: 'general',
+        message: error,
+        code: 'VALIDATION_ERROR',
+        severity: 'error'
+      });
+    });
+
+    validationResult.warnings.forEach(warning => {
+      validationWarnings.push({
+        field: 'general',
+        message: warning,
+        code: 'VALIDATION_WARNING',
+        severity: 'warning'
+      });
+    });
+
+    // Update local errors
+    const newErrors: Record<string, string> = {};
+    validationErrors.forEach(error => {
+      newErrors[error.field] = error.message;
+    });
+
+    // Only update errors if they actually changed and component is initialized
+    const currentErrorKeys = Object.keys(errors);
+    const newErrorKeys = Object.keys(newErrors);
+    const errorsChanged =
+      currentErrorKeys.length !== newErrorKeys.length ||
+      currentErrorKeys.some(key => errors[key] !== newErrors[key]);
+
+    if (errorsChanged) {
+      setErrors(newErrors);
+    }
+
+    return {
+      isValid: validationErrors.length === 0,
+      errors: validationErrors,
+      warnings: validationWarnings
+    };
+  }, [validateAllCourtActions, isInitialized, errors]);
+
+  // ============================================================================
+  // CRUD OPERATIONS
+  // ============================================================================
+
+  const updateHasCourtActions = useCallback((value: "YES" | "NO (If NO, proceed to Section 29)") => {
+    setSection28Data(prevData => {
+      const newData = cloneDeep(prevData);
+      newData.section28.hasCourtActions.value = value;
+
+      // Clear entries if NO is selected
+      if (value === "NO (If NO, proceed to Section 29)") {
+        newData.section28.courtActionEntries = [];
+      }
+
+      return newData;
+    });
+  }, []);
+
+  const addCourtAction = useCallback(() => {
+    setSection28Data(prevData => {
+      const newData = cloneDeep(prevData);
+      const entryIndex = newData.section28.courtActionEntries.length; // Use current length as index
+      const newEntry = createDefaultCourtActionEntry(entryIndex);
+      // Set a unique ID for the entry
+      newEntry._id = Date.now() + Math.random();
+      newData.section28.courtActionEntries.push(newEntry);
+      return newData;
+    });
+  }, []);
+
+  const removeCourtAction = useCallback((entryId: string) => {
+    setSection28Data(prevData => {
+      const newData = cloneDeep(prevData);
+      const numericId = parseFloat(entryId);
+      newData.section28.courtActionEntries = newData.section28.courtActionEntries.filter(
+        entry => entry._id !== numericId
+      );
+      return newData;
+    });
+  }, []);
+
+  const updateCourtAction = useCallback((entryId: string, updatedEntry: CourtActionEntry) => {
+    setSection28Data(prevData => {
+      const newData = cloneDeep(prevData);
+      const numericId = parseFloat(entryId);
+      const entryIndex = newData.section28.courtActionEntries.findIndex(
+        entry => entry._id === numericId
+      );
+
+      if (entryIndex !== -1) {
+        newData.section28.courtActionEntries[entryIndex] = cloneDeep(updatedEntry);
+      }
+
+      return newData;
+    });
+  }, []);
+
+  // Updated field update method for compatibility
+  const updateCourtActionField = useCallback((entryIndex: number, fieldPath: string, newValue: any) => {
+    setSection28Data(prevData => {
+      const newData = cloneDeep(prevData);
+      const entry = newData.section28.courtActionEntries[entryIndex];
+
+      if (!entry) {
+        console.error(`Court action entry ${entryIndex} not found`);
+        return prevData;
+      }
+
+      // Navigate to the field using dot notation
+      const pathParts = fieldPath.split('.');
+      let current: any = entry;
+
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        if (current[pathParts[i]] === undefined) {
+          console.error(`Field path ${fieldPath} not found in court action entry`);
+          return prevData;
+        }
+        current = current[pathParts[i]];
+      }
+
+      const finalField = pathParts[pathParts.length - 1];
+      if (current[finalField] && typeof current[finalField] === 'object' && 'value' in current[finalField]) {
+        current[finalField].value = newValue;
+      } else {
+        current[finalField] = newValue;
+      }
+
+      return newData;
+    });
+  }, []);
+
+  /**
+   * Generic field update function for integration compatibility
+   * Maps generic field paths to Section 28 specific update functions
+   */
+  const updateFieldValue = useCallback((path: string, value: any) => {
+    // Parse path to update the correct field
+    if (path === 'section28.hasCourtActions') {
+      updateHasCourtActions(value);
+    } else if (path.startsWith('section28.courtActionEntries.')) {
+      // Handle court action entry field updates
+      const pathParts = path.split('.');
+      if (pathParts.length >= 4) {
+        const entryIndex = parseInt(pathParts[2]);
+        const fieldPath = pathParts.slice(3).join('.');
+        updateCourtActionField(entryIndex, fieldPath, value);
+      }
+    }
+  }, [updateHasCourtActions, updateCourtActionField]);
+
+  // ============================================================================
+  // UTILITY FUNCTIONS
+  // ============================================================================
+
+  const getCourtActionEntryCount = useCallback(() => {
+    return section28Data.section28.courtActionEntries.length;
+  }, [section28Data]);
+
+  const getCourtActionEntry = useCallback((entryIndex: number): CourtActionEntry | undefined => {
+    return section28Data.section28.courtActionEntries[entryIndex];
+  }, [section28Data]);
+
+  const resetSection = useCallback(() => {
+    const freshData = createInitialSection28State();
+    setSection28Data(freshData);
+    setErrors({});
+  }, []);
+
+  const loadSection = useCallback((data: Section28) => {
+    setSection28Data(cloneDeep(data));
+    setErrors({});
+  }, []);
+
+  const getChanges = useCallback((): ChangeSet => {
+    const changes: ChangeSet = {};
+
+    if (isDirty) {
+      changes.section28 = {
+        oldValue: initialData,
+        newValue: section28Data,
+        timestamp: new Date()
+      };
+    }
+
+    return changes;
+  }, [isDirty, initialData, section28Data]);
+
+  // ============================================================================
+  // SF86FORM INTEGRATION - Updated to match Section1 pattern
+  // ============================================================================
+
+  // Integration with main form context using Section 1 gold standard pattern
+  const integration = useSection86FormIntegration(
+    'section28',
+    'Section 28: Involvement in Non-Criminal Court Actions',
+    section28Data,
+    setSection28Data,
+    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
+    getChanges,
+    updateFieldValue
+  );
+
+  // ============================================================================
+  // CONTEXT VALUE
+  // ============================================================================
+
+  const contextValue: Section28ContextType = {
+    // State - Updated property names to match component expectations
+    sectionData: section28Data,
+    isLoading,
+    errors,
+    isDirty,
+
+    // Basic Actions - Updated function names to match component expectations
+    updateHasCourtActions,
+    addCourtAction,
+    removeCourtAction,
+    updateCourtAction,
+    updateFieldValue,
+
+    // Utility Functions
+    getCourtActionEntryCount,
+    getCourtActionEntry,
+
+    // Validation
+    validateSection,
+    validateCourtAction,
+    validateAllCourtActions,
+
+    // Utility
+    resetSection,
+    loadSection,
+    getChanges
+  };
+
+  return (
+    <Section28Context.Provider value={contextValue}>
+      {children}
+    </Section28Context.Provider>
+  );
+};
+
+// ============================================================================
+// HOOK
+// ============================================================================
+
+export const useSection28 = (): Section28ContextType => {
+  const context = useContext(Section28Context);
+  if (context === undefined) {
+    throw new Error('useSection28 must be used within a Section28Provider');
+  }
+  return context;
+};
+
+// ============================================================================
+// EXPORT
+// ============================================================================
+
+export default Section28Provider;

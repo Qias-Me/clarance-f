@@ -5,7 +5,12 @@
  * Based on the established Field<T> interface patterns and PDF field ID mappings.
  */
 
-import type { Field } from '../formDefinition2.0';
+import type { Field } from "../formDefinition2.0";
+import {
+  createFieldFromReference,
+  validateSectionFieldCount,
+} from "../../utils/sections-references-loader";
+import type { Country, USState } from "./base";
 
 // ============================================================================
 // CORE INTERFACES
@@ -15,14 +20,16 @@ import type { Field } from '../formDefinition2.0';
  * Born in US or territory (Section 9.1) information
  */
 export interface BornInUSInfo {
-  documentType: Field<"FS240" | "DS1350" | "FS545" | "Other (Provide explanation)">;
+  documentType: Field<
+    "FS240" | "DS1350" | "FS545" | "Other (Provide explanation)"
+  >;
   otherExplanation?: Field<string>;
   documentNumber: Field<string>;
   documentIssueDate: Field<string>;
   isIssueDateEstimated: Field<boolean>;
   issueCity: Field<string>;
-  issueState?: Field<string>;
-  issueCountry?: Field<string>;
+  issueState?: Field<USState>;
+  issueCountry?: Field<Country>;
   nameOnDocument: {
     lastName: Field<string>;
     firstName: Field<string>;
@@ -95,7 +102,7 @@ export interface NonUSCitizenInfo {
     country1: Field<string>;
     country2?: Field<string>;
   };
-  hasAlienRegistration: Field<"YES" | "NO">;
+  hasAlienRegistration: Field<"1" | "2" | "3" | "4" | "5">; // Must be numeric string for PDF radio button
   alienRegistrationNumber?: Field<string>;
   alienRegistrationExpiration?: Field<string>;
   isAlienExpDateEstimated?: Field<boolean>;
@@ -112,13 +119,13 @@ export interface NonUSCitizenInfo {
  */
 export interface Section9 {
   _id: number;
-  citizenshipStatus: {
+  section9: {
     status: Field<
-      | "I am a U.S. citizen or national by birth in the U.S. or U.S. territory/commonwealth"
-      | "I am a U.S. citizen or national by birth, born to U.S. parent(s), in a foreign country"
-      | "I am a naturalized U.S. citizen"
-      | "I am a derived U.S. citizen"
-      | "I am not a U.S. citizen"
+      | "I am a U.S. citizen or national by birth in the U.S. or U.S. territory/commonwealth. (Proceed to Section 10)   "
+      | "I am a U.S. citizen or national by birth, born to U.S. parent(s), in a foreign country. (Complete 9.1) "
+      | "I am a naturalized U.S. citizen. (Complete 9.2) "
+      | "I am a derived U.S. citizen. (Complete 9.3) "
+      | "I am not a U.S. citizen. (Complete 9.4) "
     >;
     bornToUSParents?: BornInUSInfo;
     naturalizedCitizen?: NaturalizedCitizenInfo;
@@ -134,79 +141,129 @@ export interface Section9 {
 /**
  * Section 9 subsection keys for type safety
  */
-export type Section9SubsectionKey = 'citizenshipStatus';
+export type Section9SubsectionKey = "section9";
 
 // ============================================================================
 // FIELD ID MAPPINGS
 // ============================================================================
 
 /**
- * PDF field ID patterns for Section 9
- * Based on the Sections7-9 pattern from the JSON reference
+ * PDF field ID mappings for Section 9 - Corrected with 4-digit numeric IDs
+ * Based on section-9.json reference file with proper field ID extraction
  */
 export const SECTION9_FIELD_IDS = {
-  // Main citizenship status options
-  CITIZENSHIP_STATUS: "form1[0].Sections7-9[0].RadioButtonList[1]",
-  
-  // Section 9.1 - Born to US Parents
-  DOCUMENT_TYPE: "form1[0].Sections7-9[0].RadioButtonList[3]",
-  OTHER_EXPLANATION: "form1[0].Sections7-9[0].TextField11[3]",
-  DOCUMENT_NUMBER: "form1[0].Sections7-9[0].TextField11[4]",
-  DOCUMENT_ISSUE_DATE: "form1[0].Sections7-9[0].From_Datefield_Name_2[1]",
-  IS_ISSUE_DATE_ESTIMATED: "form1[0].Sections7-9[0].#field[25]",
-  ISSUE_CITY: "form1[0].Sections7-9[0].TextField11[5]",
-  ISSUE_STATE: "form1[0].Sections7-9[0].School6_State[0]",
-  ISSUE_COUNTRY: "form1[0].Sections7-9[0].DropDownList12[0]",
-  NAME_LAST: "form1[0].Sections7-9[0].TextField11[7]",
-  NAME_FIRST: "form1[0].Sections7-9[0].TextField11[8]",
-  NAME_MIDDLE: "form1[0].Sections7-9[0].TextField11[6]",
-  NAME_SUFFIX: "form1[0].Sections7-9[0].suffix[1]",
-  CERTIFICATE_NUMBER: "form1[0].Sections7-9[0].TextField11[12]",
-  CERTIFICATE_ISSUE_DATE: "form1[0].Sections7-9[0].From_Datefield_Name_2[2]",
-  IS_CERTIFICATE_DATE_ESTIMATED: "form1[0].Sections7-9[0].#field[28]",
-  CERTIFICATE_NAME_LAST: "form1[0].Sections7-9[0].TextField11[10]",
-  CERTIFICATE_NAME_FIRST: "form1[0].Sections7-9[0].TextField11[11]",
-  CERTIFICATE_NAME_MIDDLE: "form1[0].Sections7-9[0].TextField11[9]",
-  CERTIFICATE_NAME_SUFFIX: "form1[0].Sections7-9[0].suffix[2]",
-  BORN_ON_MILITARY_INSTALLATION: "form1[0].Sections7-9[0].RadioButtonList[2]",
-  MILITARY_BASE_NAME: "form1[0].Sections7-9[0].TextField11[18]",
-  
-  // Section 9.2 - Naturalized Citizen
-  NATURALIZED_CERTIFICATE_NUMBER: "form1[0].Section9\\.1-9\\.4[0].TextField11[6]",
-  NATURALIZED_NAME_LAST: "form1[0].Section9\\.1-9\\.4[0].TextField11[2]",
-  NATURALIZED_NAME_FIRST: "form1[0].Section9\\.1-9\\.4[0].TextField11[3]",
-  NATURALIZED_NAME_MIDDLE: "form1[0].Section9\\.1-9\\.4[0].TextField11[1]",
-  NATURALIZED_NAME_SUFFIX: "form1[0].Section9\\.1-9\\.4[0].suffix[0]",
-  COURT_STREET: "form1[0].Section9\\.1-9\\.4[0].TextField11[4]",
-  COURT_CITY: "form1[0].Section9\\.1-9\\.4[0].TextField11[0]",
-  COURT_STATE: "form1[0].Section9\\.1-9\\.4[0].School6_State[0]",
-  COURT_ZIP: "form1[0].Section9\\.1-9\\.4[0].TextField11[5]",
-  NATURALIZED_CERTIFICATE_DATE: "form1[0].Section9\\.1-9\\.4[0].From_Datefield_Name_2[0]",
-  IS_NATURALIZED_DATE_ESTIMATED: "form1[0].Section9\\.1-9\\.4[0].#field[10]",
-  NATURALIZED_OTHER_EXPLANATION: "form1[0].Section9\\.1-9\\.4[0].TextField11[7]",
-  
-  // Section 9.3 - Derived Citizen
-  DERIVED_ALIEN_NUMBER: "form1[0].Section9\\.1-9\\.4[0].TextField11[19]",
-  DERIVED_RESIDENT_CARD: "form1[0].Section9\\.1-9\\.4[0].TextField11[20]",
-  DERIVED_CERTIFICATE_NUMBER: "form1[0].Section9\\.1-9\\.4[0].TextField11[21]",
-  DERIVED_NAME_LAST: "form1[0].Section9\\.1-9\\.4[0].TextField11[23]",
-  DERIVED_NAME_FIRST: "form1[0].Section9\\.1-9\\.4[0].TextField11[24]",
-  DERIVED_NAME_MIDDLE: "form1[0].Section9\\.1-9\\.4[0].TextField11[22]",
-  DERIVED_NAME_SUFFIX: "form1[0].Section9\\.1-9\\.4[0].suffix[2]",
-  DERIVED_BASIS_OTHER: "form1[0].Section9\\.1-9\\.4[0].#field[50]",
-  DERIVED_OTHER_EXPLANATION: "form1[0].Section9\\.1-9\\.4[0].TextField11[25]",
-  
+  // Main citizenship status radio button (ID: 17233)
+  CITIZENSHIP_STATUS: {
+    id: "17233",
+    name: "form1[0].Sections7-9[0].RadioButtonList[1]",
+    type: "PDFRadioGroup",
+  },
+
+  // Section 9.1 - Born to US Parents (Sections7-9 pattern)
+  OTHER_EXPLANATION: {
+    id: "9539",
+    name: "form1[0].Sections7-9[0].TextField11[3]",
+    type: "PDFTextField",
+  },
+  DOCUMENT_NUMBER: {
+    id: "9538",
+    name: "form1[0].Sections7-9[0].TextField11[4]",
+    type: "PDFTextField",
+  },
+  ISSUE_COUNTRY: {
+    id: "9537",
+    name: "form1[0].Sections7-9[0].DropDownList12[0]",
+    type: "PDFDropdown",
+  },
+  ISSUE_STATE: {
+    id: "9536",
+    name: "form1[0].Sections7-9[0].School6_State[0]",
+    type: "PDFDropdown",
+  },
+  ISSUE_CITY: {
+    id: "9535",
+    name: "form1[0].Sections7-9[0].TextField11[5]",
+    type: "PDFTextField",
+  },
+  NAME_MIDDLE: {
+    id: "9534",
+    name: "form1[0].Sections7-9[0].TextField11[6]",
+    type: "PDFTextField",
+  },
+  NAME_LAST: {
+    id: "9533",
+    name: "form1[0].Sections7-9[0].TextField11[7]",
+    type: "PDFTextField",
+  },
+  NAME_FIRST: {
+    id: "9532",
+    name: "form1[0].Sections7-9[0].TextField11[8]",
+    type: "PDFTextField",
+  },
+
+  // Section 9.2 - Naturalized Citizen (Section9.1-9.4 pattern)
+  NATURALIZED_COURT_CITY: {
+    id: "9631",
+    name: "form1[0].Section9\\.1-9\\.4[0].TextField11[0]",
+    type: "PDFTextField",
+  },
+  NATURALIZED_NAME_MIDDLE: {
+    id: "9630",
+    name: "form1[0].Section9\\.1-9\\.4[0].TextField11[1]",
+    type: "PDFTextField",
+  },
+  NATURALIZED_NAME_LAST: {
+    id: "9629",
+    name: "form1[0].Section9\\.1-9\\.4[0].TextField11[2]",
+    type: "PDFTextField",
+  },
+  NATURALIZED_NAME_FIRST: {
+    id: "9628",
+    name: "form1[0].Section9\\.1-9\\.4[0].TextField11[3]",
+    type: "PDFTextField",
+  },
+  NATURALIZED_COURT_STREET: {
+    id: "9627",
+    name: "form1[0].Section9\\.1-9\\.4[0].TextField11[4]",
+    type: "PDFTextField",
+  },
+  NATURALIZED_COURT_ZIP: {
+    id: "9626",
+    name: "form1[0].Section9\\.1-9\\.4[0].TextField11[5]",
+    type: "PDFTextField",
+  },
+  NATURALIZED_CERTIFICATE_NUMBER: {
+    id: "9625",
+    name: "form1[0].Section9\\.1-9\\.4[0].TextField11[6]",
+    type: "PDFTextField",
+  },
+
   // Section 9.4 - Non-US Citizen
-  ENTRY_DATE: "form1[0].Section9\\.1-9\\.4[0].From_Datefield_Name_2[1]",
-  IS_ENTRY_DATE_ESTIMATED: "form1[0].Section9\\.1-9\\.4[0].#field[21]",
-  ENTRY_CITY: "form1[0].Section9\\.1-9\\.4[0].TextField11[18]",
-  ENTRY_STATE: "form1[0].Section9\\.1-9\\.4[0].School6_State[1]",
-  CITIZENSHIP_COUNTRY_1: "form1[0].Section9\\.1-9\\.4[0].DropDownList15[2]",
-  CITIZENSHIP_COUNTRY_2: "form1[0].Section9\\.1-9\\.4[0].DropDownList15[3]",
-  HAS_ALIEN_REGISTRATION: "form1[0].Section9\\.1-9\\.4[0].RadioButtonList[0]",
-  ALIEN_REGISTRATION_NUMBER: "form1[0].Section9\\.1-9\\.4[0].TextField11[14]",
-  ALIEN_REGISTRATION_EXPIRATION: "form1[0].Section9\\.1-9\\.4[0].From_Datefield_Name_2[2]",
-  IS_ALIEN_EXP_DATE_ESTIMATED: "form1[0].Section9\\.1-9\\.4[0].#field[25]"
+  ALIEN_REGISTRATION_NUMBER: {
+    id: "9611",
+    name: "form1[0].Section9\\.1-9\\.4[0].TextField11[14]",
+    type: "PDFTextField",
+  },
+  ENTRY_CITY: {
+    id: "9599",
+    name: "form1[0].Section9\\.1-9\\.4[0].TextField11[18]",
+    type: "PDFTextField",
+  },
+  CITIZENSHIP_COUNTRY_1: {
+    id: "9597",
+    name: "form1[0].Section9\\.1-9\\.4[0].DropDownList15[2]",
+    type: "PDFDropdown",
+  },
+  CITIZENSHIP_COUNTRY_2: {
+    id: "9596",
+    name: "form1[0].Section9\\.1-9\\.4[0].DropDownList15[3]",
+    type: "PDFDropdown",
+  },
+  HAS_ALIEN_REGISTRATION: {
+    id: "17229",
+    name: "form1[0].Section9\\.1-9\\.4[0].RadioButtonList[0]",
+    type: "PDFRadioGroup",
+  },
 } as const;
 
 // ============================================================================
@@ -233,8 +290,201 @@ export type CitizenshipEntryUpdate = {
  * Type for bulk citizenship entry operations
  */
 export type BulkCitizenshipOperation = {
-  operation: 'add' | 'remove' | 'update' | 'move';
+  operation: "add" | "remove" | "update" | "move";
   entryIndex?: number;
   targetIndex?: number;
-  data?: Partial<BornInUSInfo | NaturalizedCitizenInfo | DerivedCitizenInfo | NonUSCitizenInfo>;
-}; 
+  data?: Partial<
+    | BornInUSInfo
+    | NaturalizedCitizenInfo
+    | DerivedCitizenInfo
+    | NonUSCitizenInfo
+  >;
+};
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Creates a default Section 9 data structure using DRY approach with sections-references
+ * This eliminates hardcoded values and uses the single source of truth
+ */
+export const createDefaultSection9 = (): Section9 => {
+  // Validate field count against sections-references (expected: 78 fields)
+  validateSectionFieldCount(9, 78);
+
+  return {
+    _id: 9,
+    section9: {
+      status: createFieldFromReference(
+        9,
+        SECTION9_FIELD_IDS.CITIZENSHIP_STATUS.name,
+        "I am a U.S. citizen or national by birth in the U.S. or U.S. territory/commonwealth. (Proceed to Section 10)   "
+      ),
+      // Born to US Parents subsection (9.1) - matching interface structure
+      bornToUSParents: {
+        documentType: createFieldFromReference(
+          9,
+          SECTION9_FIELD_IDS.OTHER_EXPLANATION.name,
+          "FS240"
+        ),
+        otherExplanation: createFieldFromReference(
+          9,
+          SECTION9_FIELD_IDS.OTHER_EXPLANATION.name,
+          ""
+        ),
+        documentNumber: createFieldFromReference(
+          9,
+          SECTION9_FIELD_IDS.DOCUMENT_NUMBER.name,
+          ""
+        ),
+        documentIssueDate: createFieldFromReference(
+          9,
+          SECTION9_FIELD_IDS.ISSUE_CITY.name,
+          ""
+        ),
+        isIssueDateEstimated: createFieldFromReference(
+          9,
+          SECTION9_FIELD_IDS.ISSUE_STATE.name,
+          false
+        ),
+        issueCity: createFieldFromReference(
+          9,
+          SECTION9_FIELD_IDS.ISSUE_CITY.name,
+          ""
+        ),
+        issueState: createFieldFromReference(
+          9,
+          SECTION9_FIELD_IDS.ISSUE_STATE.name,
+          ""
+        ),
+        issueCountry: createFieldFromReference(
+          9,
+          SECTION9_FIELD_IDS.ISSUE_COUNTRY.name,
+          ""
+        ),
+        nameOnDocument: {
+          firstName: createFieldFromReference(
+            9,
+            SECTION9_FIELD_IDS.NAME_FIRST.name,
+            ""
+          ),
+          middleName: createFieldFromReference(
+            9,
+            SECTION9_FIELD_IDS.NAME_MIDDLE.name,
+            ""
+          ),
+          lastName: createFieldFromReference(
+            9,
+            SECTION9_FIELD_IDS.NAME_LAST.name,
+            ""
+          ),
+          suffix: createFieldFromReference(
+            9,
+            SECTION9_FIELD_IDS.OTHER_EXPLANATION.name,
+            ""
+          ),
+        },
+        wasBornOnMilitaryInstallation: createFieldFromReference(
+          9,
+          SECTION9_FIELD_IDS.OTHER_EXPLANATION.name,
+          "NO"
+        ),
+      },
+      // Naturalized Citizen subsection (9.2) - matching interface structure
+      naturalizedCitizen: {
+        naturalizedCertificateNumber: createFieldFromReference(
+          9,
+          SECTION9_FIELD_IDS.NATURALIZED_CERTIFICATE_NUMBER.name,
+          ""
+        ),
+        nameOnCertificate: {
+          firstName: createFieldFromReference(
+            9,
+            SECTION9_FIELD_IDS.NATURALIZED_NAME_FIRST.name,
+            ""
+          ),
+          middleName: createFieldFromReference(
+            9,
+            SECTION9_FIELD_IDS.NATURALIZED_NAME_MIDDLE.name,
+            ""
+          ),
+          lastName: createFieldFromReference(
+            9,
+            SECTION9_FIELD_IDS.NATURALIZED_NAME_LAST.name,
+            ""
+          ),
+        },
+        courtAddress: {
+          street: createFieldFromReference(
+            9,
+            SECTION9_FIELD_IDS.NATURALIZED_COURT_STREET.name,
+            ""
+          ),
+          city: createFieldFromReference(
+            9,
+            SECTION9_FIELD_IDS.NATURALIZED_COURT_CITY.name,
+            ""
+          ),
+          zipCode: createFieldFromReference(
+            9,
+            SECTION9_FIELD_IDS.NATURALIZED_COURT_ZIP.name,
+            ""
+          ),
+        },
+        certificateIssueDate: createFieldFromReference(
+          9,
+          SECTION9_FIELD_IDS.NATURALIZED_CERTIFICATE_NUMBER.name,
+          ""
+        ),
+        isCertificateDateEstimated: createFieldFromReference(
+          9,
+          SECTION9_FIELD_IDS.NATURALIZED_CERTIFICATE_NUMBER.name,
+          false
+        ),
+      },
+      // Non-US Citizen subsection (9.4) - matching interface structure
+      nonUSCitizen: {
+        entryDate: createFieldFromReference(
+          9,
+          SECTION9_FIELD_IDS.ENTRY_CITY.name,
+          ""
+        ),
+        isEntryDateEstimated: createFieldFromReference(
+          9,
+          SECTION9_FIELD_IDS.ENTRY_CITY.name,
+          false
+        ),
+        entryLocation: {
+          city: createFieldFromReference(
+            9,
+            SECTION9_FIELD_IDS.ENTRY_CITY.name,
+            ""
+          ),
+        },
+        countryOfCitizenship: {
+          country1: createFieldFromReference(
+            9,
+            SECTION9_FIELD_IDS.CITIZENSHIP_COUNTRY_1.name,
+            ""
+          ),
+          country2: createFieldFromReference(
+            9,
+            SECTION9_FIELD_IDS.CITIZENSHIP_COUNTRY_2.name,
+            ""
+          ),
+        },
+        hasAlienRegistration: createFieldFromReference(
+          9,
+          SECTION9_FIELD_IDS.HAS_ALIEN_REGISTRATION.name,
+          "1"
+        ),
+        alienRegistrationNumber: createFieldFromReference(
+          9,
+          SECTION9_FIELD_IDS.ALIEN_REGISTRATION_NUMBER.name,
+          ""
+        ),
+      },
+    },
+  };
+};

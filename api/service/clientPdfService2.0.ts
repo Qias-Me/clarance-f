@@ -35,7 +35,36 @@ interface FieldMetadata {
   };
 }
 
-// PDF generation result interface
+// Interface for detailed field error information (for client-side generation)
+export interface FieldError {
+  fieldId: string;
+  fieldName: string;
+  fieldValue: any;
+  fieldType: string;
+  errorMessage: string;
+  errorType: 'lookup_failed' | 'value_application_failed' | 'unknown_field_type';
+}
+
+// Interface for PDF generation result (client-side)
+export interface ClientPdfResult {
+  success: boolean;
+  pdfBytes?: Uint8Array;
+  fieldsMapped: number;
+  fieldsApplied: number;
+  errors: string[];
+  warnings: string[];
+  fieldsWithErrors?: FieldError[];
+  stats: {
+    totalPdfFields: number;
+    totalFormFields: number;
+    mappingSuccessRate: number;
+    applicationSuccessRate: number;
+    lookupMethodStats: Record<string, number>;
+    fieldTypeStats: Record<string, { attempts: number; success: number }>;
+  };
+}
+
+// PDF generation result interface (keeping original for backward compatibility)
 interface PdfGenerationResult {
   success: boolean;
   pdfBytes?: Uint8Array;
@@ -59,6 +88,604 @@ export class ClientPdfService2 {
   private pdfDoc: PDFDocument | null = null;
   private fieldMapping: FieldMetadata[] = [];
   private isLoaded = false;
+
+  /**
+   * Enhanced Client-side PDF Generation Action - Matches Server-side Logic
+   *
+   * This method provides the same comprehensive field mapping, error handling,
+   * and statistics tracking as the server-side generatePdfServerAction method.
+   */
+  async generatePdfClientAction(formData: ApplicantFormValues): Promise<ClientPdfResult> {
+    const result: ClientPdfResult = {
+      success: false,
+      fieldsMapped: 0,
+      fieldsApplied: 0,
+      errors: [],
+      warnings: [],
+      fieldsWithErrors: [],
+      stats: {
+        totalPdfFields: 0,
+        totalFormFields: 0,
+        mappingSuccessRate: 0,
+        applicationSuccessRate: 0,
+        lookupMethodStats: {},
+        fieldTypeStats: {}
+      }
+    };
+
+    try {
+      this.clientLog('INFO', "🚀 CLIENT-SIDE PDF GENERATION STARTED");
+      this.clientLog('INFO', `⏰ Timestamp: ${new Date().toISOString()}`);
+      this.clientLog('INFO', `📊 Form data sections: ${Object.keys(formData).length}`);
+      this.clientLog('INFO', `📋 Available sections: ${Object.keys(formData).join(', ')}`);
+
+      // STEP 1: ANALYZE FORM DATA
+      this.clientLog('INFO', "📊 STEP 1: ANALYZING FORM DATA");
+      const formAnalysis = this.analyzeFormData(formData);
+      result.stats.totalFormFields = formAnalysis.totalFields;
+
+      this.clientLog('INFO', `📈 Form analysis complete:`);
+      this.clientLog('INFO', `   📋 Sections found: ${formAnalysis.sections.length}`);
+      this.clientLog('INFO', `   🎯 Total fields: ${formAnalysis.totalFields}`);
+      this.clientLog('INFO', `   ✅ Valid fields: ${formAnalysis.validFields}`);
+
+      // STEP 2: LOAD PDF TEMPLATE
+      this.clientLog('INFO', "📄 STEP 2: LOADING PDF TEMPLATE");
+      await this.loadPdfTemplate();
+
+      const form = this.pdfDoc!.getForm();
+      const allPdfFields = form.getFields();
+      result.stats.totalPdfFields = allPdfFields.length;
+
+      this.clientLog('INFO', `📄 PDF template loaded successfully`);
+      this.clientLog('INFO', `   📊 Total PDF fields: ${allPdfFields.length}`);
+
+      // STEP 3: CREATE FIELD MAPPINGS
+      this.clientLog('INFO', "🗂️ STEP 3: CREATING ENHANCED FIELD MAPPINGS");
+      const fieldMappings = this.createFieldMappings(allPdfFields);
+
+      this.clientLog('INFO', `🗂️ Field mappings created:`);
+      this.clientLog('INFO', `   🆔 ID-based mappings: ${fieldMappings.idMap.size}`);
+      this.clientLog('INFO', `   📛 Name-based mappings: ${fieldMappings.nameMap.size}`);
+
+      // STEP 4: EXTRACT FORM VALUES
+      this.clientLog('INFO', "💾 STEP 4: EXTRACTING FORM VALUES");
+      const formValues = this.extractFormValues(formData);
+
+      this.clientLog('INFO', `💾 Form values extracted:`);
+      this.clientLog('INFO', `   🎯 Values to map: ${formValues.size}`);
+
+      result.stats.mappingSuccessRate = formValues.size > 0 ?
+        (formValues.size / result.stats.totalFormFields) * 100 : 0;
+
+      // STEP 5: APPLY VALUES TO PDF
+      this.clientLog('INFO', "🔧 STEP 5: APPLYING VALUES TO PDF");
+      const applicationResult = await this.applyValuesToPdf(allPdfFields, fieldMappings, formValues);
+
+      result.fieldsMapped = formValues.size;
+      result.fieldsApplied = applicationResult.appliedCount;
+      result.errors.push(...applicationResult.errors);
+      result.warnings.push(...applicationResult.warnings);
+      result.fieldsWithErrors = applicationResult.fieldsWithErrors;
+      result.stats.lookupMethodStats = applicationResult.lookupMethodStats;
+      result.stats.fieldTypeStats = applicationResult.fieldTypeStats;
+
+      result.stats.applicationSuccessRate = result.fieldsMapped > 0 ?
+        (result.fieldsApplied / result.fieldsMapped) * 100 : 0;
+
+      this.clientLog('INFO', `🔧 Values application complete:`);
+      this.clientLog('INFO', `   📊 Fields mapped: ${result.fieldsMapped}`);
+      this.clientLog('INFO', `   ✅ Fields applied: ${result.fieldsApplied}`);
+      this.clientLog('INFO', `   📈 Success rate: ${result.stats.applicationSuccessRate.toFixed(2)}%`);
+
+      // STEP 6: GENERATE FINAL PDF
+      this.clientLog('INFO', "📄 STEP 6: GENERATING FINAL PDF");
+      const pdfBytes = await this.pdfDoc!.save();
+      result.pdfBytes = new Uint8Array(pdfBytes);
+
+      result.success = true;
+
+      this.clientLog('INFO', "✅ PDF GENERATION COMPLETED SUCCESSFULLY");
+      this.clientLog('INFO', `📊 Final PDF size: ${result.pdfBytes.length} bytes (${(result.pdfBytes.length / 1024 / 1024).toFixed(2)} MB)`);
+      this.clientLog('INFO', `📈 FINAL SUMMARY:`);
+      this.clientLog('INFO', `   📊 Form fields processed: ${result.stats.totalFormFields}`);
+      this.clientLog('INFO', `   🗂️ Fields mapped: ${result.fieldsMapped}`);
+      this.clientLog('INFO', `   ✅ Fields applied: ${result.fieldsApplied}`);
+      this.clientLog('INFO', `   📊 Application success rate: ${result.stats.applicationSuccessRate.toFixed(2)}%`);
+      this.clientLog('INFO', `   ❌ Errors: ${result.errors.length}`);
+      this.clientLog('INFO', `   ⚠️ Warnings: ${result.warnings.length}`);
+
+      return result;
+
+    } catch (error) {
+      this.clientLog('ERROR', "💥 FATAL ERROR IN CLIENT PDF GENERATION");
+      this.clientLog('ERROR', `❌ Error: ${error instanceof Error ? error.message : String(error)}`);
+      this.clientLog('ERROR', `📍 Stack trace: ${error instanceof Error ? error.stack : 'No stack trace available'}`);
+
+      result.errors.push(`Client PDF generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      return result;
+    }
+  }
+
+  /**
+   * Client-side logging utility
+   */
+  private clientLog(level: 'INFO' | 'WARN' | 'ERROR', message: string, data?: any) {
+    const timestamp = new Date().toISOString();
+    const prefix = `[${timestamp}] [CLIENT-PDF-ACTION] [${level}]`;
+
+    if (level === 'ERROR') {
+      console.error(`${prefix} ${message}`, data || '');
+    } else if (level === 'WARN') {
+      console.warn(`${prefix} ${message}`, data || '');
+    } else {
+      console.log(`${prefix} ${message}`, data || '');
+    }
+  }
+
+  /**
+   * Analyze form data structure (matches server-side logic)
+   */
+  private analyzeFormData(formData: ApplicantFormValues) {
+    this.clientLog('INFO', "🔍 Analyzing form data structure...");
+
+    const analysis = {
+      sections: Object.keys(formData),
+      totalFields: 0,
+      validFields: 0,
+      section29Fields: 0
+    };
+
+    const countFields = (obj: any, path = ''): void => {
+      if (!obj || typeof obj !== 'object') return;
+
+      Object.entries(obj).forEach(([key, value]) => {
+        const currentPath = path ? `${path}.${key}` : key;
+
+        if (value && typeof value === 'object') {
+          if ('id' in value && 'value' in value) {
+            analysis.totalFields++;
+
+            // Count valid fields (have both ID and non-empty value)
+            if (value.id && value.value !== undefined && value.value !== '') {
+              analysis.validFields++;
+            }
+
+            // Count Section 29 fields specifically
+            if (currentPath.includes('section29')) {
+              analysis.section29Fields++;
+            }
+          } else {
+            // Recurse into nested objects
+            countFields(value, currentPath);
+          }
+        }
+      });
+    };
+
+    countFields(formData);
+
+    this.clientLog('INFO', `📊 Form structure analysis:`);
+    this.clientLog('INFO', `   📁 Sections: ${analysis.sections.join(', ')}`);
+    this.clientLog('INFO', `   🎯 Total fields: ${analysis.totalFields}`);
+    this.clientLog('INFO', `   ✅ Valid fields: ${analysis.validFields}`);
+    this.clientLog('INFO', `   🎯 Section 29 fields: ${analysis.section29Fields}`);
+
+    return analysis;
+  }
+
+  /**
+   * Load PDF template (enhanced for client-side)
+   */
+  private async loadPdfTemplate(): Promise<PDFDocument> {
+    if (this.pdfDoc && this.isLoaded) return this.pdfDoc;
+
+    try {
+      this.clientLog('INFO', "📄 Fetching SF-86 PDF template...");
+      const response = await fetch(SF86_PDF_TEMPLATE_URL);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch PDF template: ${response.status} ${response.statusText}`);
+      }
+
+      const pdfBytes = await response.arrayBuffer();
+      this.pdfDoc = await PDFDocument.load(pdfBytes);
+      await this.mapFormFields();
+      this.isLoaded = true;
+
+      this.clientLog('INFO', `✅ PDF template loaded successfully. Size: ${pdfBytes.byteLength} bytes`);
+      return this.pdfDoc;
+    } catch (error) {
+      this.clientLog('ERROR', "💥 Error loading PDF template:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Create enhanced field mappings (matches server-side logic)
+   */
+  private createFieldMappings(pdfFields: any[]) {
+    this.clientLog('INFO', "🗂️ Creating enhanced field mappings...");
+
+    const idMap = new Map<string, any>();
+    const nameMap = new Map<string, string>();
+
+    pdfFields.forEach(field => {
+      const id = field.ref.tag.toString();
+      const name = field.getName();
+
+      // Store field by numeric ID for direct access
+      idMap.set(id, field);
+
+      // Store name-to-ID mapping for conversion
+      nameMap.set(name, id);
+    });
+
+    this.clientLog('INFO', `🗂️ Field mappings created:`);
+    this.clientLog('INFO', `   🆔 ID mappings: ${idMap.size}`);
+    this.clientLog('INFO', `   📛 Name mappings: ${nameMap.size}`);
+
+    // Show sample Section 29 mappings for debugging
+    const section29Samples = Array.from(nameMap.entries())
+      .filter(([name]) => name.includes('Section29'))
+      .slice(0, 5);
+
+    if (section29Samples.length > 0) {
+      this.clientLog('INFO', `🎯 Sample Section 29 mappings:`, section29Samples);
+    }
+
+    return { idMap, nameMap };
+  }
+
+  /**
+   * Extract form values from the nested applicant data structure
+   *
+   * IMPORTANT: Modified filtering logic to prevent PDF field application errors:
+   * 1. Excludes empty strings from mapping (prevents dropdown/radio errors)
+   * 2. Includes null values in mapping (converted to empty strings)
+   * 3. Includes "NO" values (they are valid PDF values)
+   * 4. Filters out fields without IDs, undefined values, or empty strings
+   */
+  private extractFormValues(formData: ApplicantFormValues): Map<string, any> {
+    this.clientLog('INFO', "💾 Extracting form values...");
+
+    const formValues = new Map<string, any>();
+
+    const traverse = (obj: any, path = '', depth = 0): void => {
+      if (!obj || typeof obj !== 'object') return;
+
+      Object.entries(obj).forEach(([key, value]) => {
+        const currentPath = path ? `${path}.${key}` : key;
+
+        if (value && typeof value === 'object') {
+          if ('id' in value && 'value' in value) {
+            // This is a Field<T> object
+            // MODIFIED: Filter out empty strings to prevent PDF field application errors
+            if (value.id && value.value !== undefined && value.value !== '') {
+              // Accept values that have an ID, are not undefined, and are not empty strings
+              const cleanId = String(value.id).replace(/ 0 R$/, '').trim();
+              formValues.set(cleanId, value.value);
+            }
+          } else {
+            // Recurse into nested objects
+            traverse(value, currentPath, depth + 1);
+          }
+        }
+      });
+    };
+
+    traverse(formData);
+
+    this.clientLog('INFO', `💾 Form values extracted: ${formValues.size} values`);
+    return formValues;
+  }
+
+  /**
+   * Apply values to PDF (matches server-side logic with enhanced error tracking)
+   */
+  private async applyValuesToPdf(
+    pdfFields: any[],
+    fieldMappings: { idMap: Map<string, any>; nameMap: Map<string, string> },
+    formValues: Map<string, any>
+  ) {
+    this.clientLog('INFO', "🔧 Applying values to PDF fields...");
+
+    const result = {
+      appliedCount: 0,
+      errors: [] as string[],
+      warnings: [] as string[],
+      fieldsWithErrors: [] as FieldError[],
+      lookupMethodStats: {} as Record<string, number>,
+      fieldTypeStats: {} as Record<string, { attempts: number; success: number }>
+    };
+
+    // Initialize field type stats
+    const fieldTypes = ['PDFTextField', 'PDFDropdown', 'PDFCheckBox', 'PDFRadioGroup'];
+    fieldTypes.forEach(type => {
+      result.fieldTypeStats[type] = { attempts: 0, success: 0 };
+    });
+
+    // Process each form value
+    let processedCount = 0;
+    formValues.forEach((value, fieldId) => {
+      processedCount++;
+      const verbose = processedCount <= 20; // Log details for first 20 fields
+
+      if (verbose) {
+        this.clientLog('INFO', `--- Processing Field [${processedCount}/${formValues.size}] ---`);
+        this.clientLog('INFO', `🆔 Field ID: "${fieldId}"`);
+        this.clientLog('INFO', `💾 Field Value: "${value}"`);
+      }
+
+      // Enhanced field lookup with multiple strategies (using class properties like server-side)
+      let pdfField: any = null;
+      let lookupMethod = '';
+
+      // Strategy 1: Direct numeric ID lookup using class property
+      if (this.isNumericId(fieldId) && this.fieldIdMap.has(fieldId)) {
+        pdfField = this.fieldIdMap.get(fieldId);
+        lookupMethod = 'direct-numeric-id';
+        if (verbose) this.clientLog('INFO', `✅ Scalable service lookup successful: "${fieldId}"`);
+      }
+      // Strategy 2: Convert field name to numeric ID using class properties
+      else if (this.fieldNameToIdMap.has(fieldId)) {
+        const numericId = this.fieldNameToIdMap.get(fieldId);
+        if (numericId && this.fieldIdMap.has(numericId)) {
+          pdfField = this.fieldIdMap.get(numericId);
+          lookupMethod = 'name-to-numeric-id';
+          if (verbose) this.clientLog('INFO', `✅ Name conversion lookup: "${fieldId}" → "${numericId}"`);
+        }
+      }
+
+      // Track lookup method statistics
+      if (lookupMethod) {
+        result.lookupMethodStats[lookupMethod] = (result.lookupMethodStats[lookupMethod] || 0) + 1;
+      }
+
+      // If no field found, add enhanced debugging
+      if (!pdfField && verbose) {
+        this.clientLog('WARN', `❌ PDF field not found for ID: "${fieldId}"`);
+        this.clientLog('INFO', `   🔍 isNumericId("${fieldId}"): ${this.isNumericId(fieldId)}`);
+        this.clientLog('INFO', `   🗂️ fieldIdMap.has("${fieldId}"): ${this.fieldIdMap.has(fieldId)}`);
+        this.clientLog('INFO', `   📛 fieldNameToIdMap.has("${fieldId}"): ${this.fieldNameToIdMap.has(fieldId)}`);
+        this.clientLog('INFO', `   🆔 Total fieldIdMap size: ${this.fieldIdMap.size}`);
+        this.clientLog('INFO', `   📝 Total fieldNameToIdMap size: ${this.fieldNameToIdMap.size}`);
+
+        // Show some sample IDs for debugging
+        const sampleIds = Array.from(this.fieldIdMap.keys()).slice(0, 10);
+        this.clientLog('INFO', `   📋 Sample PDF field IDs: ${sampleIds.join(', ')}`);
+
+        // Show some sample names for debugging
+        const sampleNames = Array.from(this.fieldNameToIdMap.keys()).slice(0, 10);
+        this.clientLog('INFO', `   📋 Sample PDF field names: ${sampleNames.slice(0, 3).join(', ')}`);
+      }
+
+      if (pdfField) {
+        if (verbose) {
+          this.clientLog('INFO', `✅ PDF field found! Method: ${lookupMethod}`);
+          this.clientLog('INFO', `🏷️ PDF Field Type: ${pdfField.constructor.name}`);
+          this.clientLog('INFO', `📛 PDF Field Name: "${pdfField.getName()}"`);
+        }
+
+        // CRITICAL FIX: Add field value validation for Section 30 field 16262
+        const fieldName = pdfField.getName();
+        const valueStr = String(value || '');
+        const isDateValue = /^\d{4}-\d{2}-\d{2}$/.test(valueStr);
+        const isZipField = fieldId === '16262' || fieldName.includes('p17-t10[0]'); // ZIP code field in Section 30
+        
+        if (isZipField && isDateValue) {
+          this.clientLog('ERROR', `🚨 CRITICAL FIELD MAPPING ERROR DETECTED IN PDF SERVICE`);
+          this.clientLog('ERROR', `   Field ID: "${fieldId}"`);
+          this.clientLog('ERROR', `   Field Name: "${fieldName}"`);
+          this.clientLog('ERROR', `   Value: "${valueStr}"`);
+          this.clientLog('ERROR', `   Issue: Date value "${valueStr}" being assigned to ZIP code field 16262`);
+          this.clientLog('ERROR', `   This would cause truncation from "${valueStr}" to "${valueStr.substring(0, 5)}" due to maxLength constraint`);
+          
+          result.errors.push(`CRITICAL: Date value "${valueStr}" incorrectly assigned to ZIP code field ${fieldId}`);
+          result.fieldsWithErrors.push({
+            fieldId,
+            fieldName,
+            fieldValue: value,
+            fieldType: pdfField.constructor.name,
+            errorMessage: `Date value incorrectly assigned to ZIP code field`,
+            errorType: 'value_application_failed'
+          });
+          
+          // Skip this field to prevent the invalid assignment
+          this.clientLog('ERROR', `   Skipping field assignment to prevent data corruption`);
+          return;
+        }
+
+        const fieldType = pdfField.constructor.name;
+        if (result.fieldTypeStats[fieldType]) {
+          result.fieldTypeStats[fieldType].attempts++;
+        } else {
+          result.fieldTypeStats[fieldType] = { attempts: 1, success: 0 };
+        }
+
+        try {
+          // Apply value based on field type
+          if (pdfField instanceof PDFTextField) {
+            // MODIFIED: Handle null values by converting to empty strings
+            let textValue = value === null ? '' : String(value);
+
+            // ADDED: Field length validation to prevent maxLength errors
+            try {
+              // Get the field's maxLength constraint if available
+              const maxLength = pdfField.getMaxLength();
+              if (maxLength && maxLength > 0 && textValue.length > maxLength) {
+                const originalValue = textValue;
+                textValue = textValue.substring(0, maxLength);
+                if (verbose) {
+                  this.clientLog('WARN', `⚠️ Text truncated for field "${fieldId}": "${originalValue}" → "${textValue}" (maxLength: ${maxLength})`);
+                }
+                result.warnings.push(`Text truncated for field ${fieldId}: value exceeded maxLength of ${maxLength} characters`);
+              }
+            } catch (maxLengthError) {
+              // If we can't get maxLength, continue with original value
+              if (verbose) this.clientLog('INFO', `ℹ️ Could not check maxLength for field "${fieldId}"`);
+            }
+
+            if (verbose) this.clientLog('INFO', `📝 Setting text field to: "${textValue}"`);
+            pdfField.setText(textValue);
+            result.fieldTypeStats[fieldType].success++;
+            result.appliedCount++;
+          }
+          else if (pdfField instanceof PDFDropdown) {
+            const selectValue = String(value);
+            if (verbose) this.clientLog('INFO', `📋 Setting dropdown to: "${selectValue}"`);
+
+            const options = pdfField.getOptions();
+            if (verbose) this.clientLog('INFO', `   📋 Available options:`, options);
+
+            // Enhanced option matching
+            let matchedValue = this.findBestOptionMatch(selectValue, options);
+            if (verbose && matchedValue !== selectValue) {
+              this.clientLog('INFO', `   🔄 Using matched option: "${selectValue}" → "${matchedValue}"`);
+            }
+
+            pdfField.select(matchedValue);
+            result.fieldTypeStats[fieldType].success++;
+            result.appliedCount++;
+          }
+          else if (pdfField instanceof PDFRadioGroup) {
+            const selectValue = String(value);
+            if (verbose) this.clientLog('INFO', `📻 Setting radio group to: "${selectValue}"`);
+
+            try {
+              const options = pdfField.getOptions();
+              if (verbose) this.clientLog('INFO', `   📋 Radio options:`, options);
+
+              // Enhanced radio group value matching
+              let matchedValue = this.findBestOptionMatch(selectValue, options);
+              if (verbose && matchedValue !== selectValue) {
+                this.clientLog('INFO', `   🔄 Using matched radio option: "${selectValue}" → "${matchedValue}"`);
+              }
+
+              pdfField.select(matchedValue);
+              result.fieldTypeStats[fieldType].success++;
+              result.appliedCount++;
+            } catch (radioError) {
+              if (verbose) this.clientLog('WARN', `   ⚠️ Radio group selection failed, trying alternative approach...`);
+              // Alternative approach for radio groups
+              try {
+                (pdfField as any).setValue?.(selectValue);
+                result.fieldTypeStats[fieldType].success++;
+                result.appliedCount++;
+              } catch (altError) {
+                throw radioError; // Re-throw original error
+              }
+            }
+          }
+          else if (pdfField instanceof PDFCheckBox) {
+            const checkValue = this.parseCheckboxValue(value);
+            if (verbose) this.clientLog('INFO', `☑️ Setting checkbox to: ${checkValue ? 'checked' : 'unchecked'}`);
+
+            if (checkValue) {
+              pdfField.check();
+            } else {
+              pdfField.uncheck();
+            }
+            result.fieldTypeStats[fieldType].success++;
+            result.appliedCount++;
+          }
+          else {
+            if (verbose) this.clientLog('WARN', `⚠️ Unknown field type: ${fieldType}`);
+            result.warnings.push(`Unknown field type: ${fieldType} for field ${fieldId}`);
+          }
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          if (verbose) this.clientLog('ERROR', `💥 Error setting field "${fieldId}":`, errorMessage);
+
+          result.errors.push(`Error setting field ${fieldId}: ${errorMessage}`);
+          result.fieldsWithErrors.push({
+            fieldId,
+            fieldName: pdfField.getName(),
+            fieldValue: value,
+            fieldType: pdfField.constructor.name,
+            errorMessage,
+            errorType: 'value_application_failed'
+          });
+        }
+      } else {
+        if (verbose) this.clientLog('WARN', `❌ PDF field not found for ID: "${fieldId}"`);
+        result.warnings.push(`PDF field not found: ${fieldId}`);
+        result.fieldsWithErrors.push({
+          fieldId,
+          fieldName: fieldId,
+          fieldValue: value,
+          fieldType: 'unknown',
+          errorMessage: 'PDF field not found',
+          errorType: 'lookup_failed'
+        });
+      }
+    });
+
+    this.clientLog('INFO', `🔧 Field application complete:`);
+    this.clientLog('INFO', `   ✅ Applied: ${result.appliedCount}/${formValues.size}`);
+    this.clientLog('INFO', `   ❌ Errors: ${result.errors.length}`);
+    this.clientLog('INFO', `   ⚠️ Warnings: ${result.warnings.length}`);
+
+    return result;
+  }
+
+  /**
+   * Find best option match for dropdown/radio values
+   */
+  private findBestOptionMatch(value: string, options: string[]): string {
+    if (!options || options.length === 0) return value;
+
+    // Exact match
+    if (options.includes(value)) return value;
+
+    // Case-insensitive match
+    const caseMatch = options.find(opt => opt.toLowerCase() === value.toLowerCase());
+    if (caseMatch) return caseMatch;
+
+    // For common boolean-like values
+    const lowerValue = value.toLowerCase();
+    if (lowerValue === 'yes' || lowerValue === 'true' || lowerValue === '1') {
+      const yesOption = options.find(opt =>
+        opt.toLowerCase() === 'yes' ||
+        opt === '1' ||
+        opt.toLowerCase() === 'true'
+      );
+      if (yesOption) return yesOption;
+    }
+
+    if (lowerValue === 'no' || lowerValue === 'false' || lowerValue === '0') {
+      const noOption = options.find(opt =>
+        opt.toLowerCase() === 'no' ||
+        opt === '0' ||
+        opt.toLowerCase() === 'false'
+      );
+      if (noOption) return noOption;
+    }
+
+    // Partial match (contains)
+    const partialMatch = options.find(opt =>
+      opt.toLowerCase().includes(lowerValue) ||
+      lowerValue.includes(opt.toLowerCase())
+    );
+    if (partialMatch) return partialMatch;
+
+    // Return original value if no match found
+    return value;
+  }
+
+  /**
+   * Parse checkbox value from various formats
+   */
+  private parseCheckboxValue(value: any): boolean {
+    if (typeof value === 'boolean') return value;
+
+    const strValue = String(value).toLowerCase();
+    return strValue === 'yes' ||
+           strValue === 'true' ||
+           strValue === '1' ||
+           strValue === 'checked' ||
+           strValue === 'on';
+  }
 
   /**
    * Fetch and load the SF86 PDF document
@@ -183,8 +810,8 @@ export class ClientPdfService2 {
    * Utility method to detect if an ID is a numeric PDF field ID vs a field name path
    */
   private isNumericId(id: string): boolean {
-    // Numeric IDs are pure numbers without form1[0] prefix
-    return /^\d+$/.test(id) && !id.includes('form1[0]') && !id.includes('Section');
+    // Numeric IDs are pure numbers without form1[0] prefix - be less restrictive like server-side
+    return /^\d+$/.test(id);
   }
 
   /**
@@ -209,13 +836,15 @@ export class ClientPdfService2 {
 
     fields.forEach(field => {
       const name = field.getName();
-      const numericId = field.ref.tag.toString();
+      const rawId = field.ref.tag.toString();
+      // FIXED: Clean the ID string to remove " 0 R" suffix for consistency with form data
+      const cleanId = rawId.replace(/ 0 R$/, '').trim();
 
-      // Map numeric ID to PDF field object for direct access
-      this.fieldIdMap.set(numericId, field);
+      // Map clean numeric ID to PDF field object for direct access
+      this.fieldIdMap.set(cleanId, field);
 
-      // Map field name to numeric ID for backward compatibility
-      this.fieldNameToIdMap.set(name, numericId);
+      // Map field name to clean numeric ID for backward compatibility
+      this.fieldNameToIdMap.set(name, cleanId);
     });
 
     console.log(`🗂️ Created ID-based mappings: ${this.fieldIdMap.size} field IDs, ${this.fieldNameToIdMap.size} name mappings`);
@@ -226,6 +855,13 @@ export class ClientPdfService2 {
       .slice(0, 5);
 
     console.log(`🎯 Sample Section 29 ID mappings:`, section29Mappings);
+
+    // Enhanced debugging for client-side
+    const sampleFieldMappings = Array.from(this.fieldIdMap.entries()).slice(0, 10);
+    console.log(`🆔 Sample field ID mappings (clean IDs):`, sampleFieldMappings.map(([id, field]) => `${id} -> ${field.getName()}`));
+
+    const sampleNameMappings = Array.from(this.fieldNameToIdMap.entries()).slice(0, 10);
+    console.log(`📝 Sample name-to-ID mappings:`, sampleNameMappings);
   }
 
   /**
@@ -284,33 +920,37 @@ export class ClientPdfService2 {
 
                 let numericId: string | null = null;
 
+                // FIXED: Clean the ID string to remove " 0 R" suffix if present
+                const cleanIdStr = idStr.replace(/ 0 R$/, '').trim();
+                console.log(`${indent}🧹 Cleaned ID: "${idStr}" → "${cleanIdStr}"`);
+
                 // Handle both numeric IDs and field name paths
-                if (idStr.includes('form1[0]')) {
+                if (cleanIdStr.includes('form1[0]')) {
                   console.log(`${indent}🔍 Field ID appears to be a field name path, converting to numeric ID...`);
 
                   // This is a field name, convert to numeric ID using our mapping
-                  numericId = this.fieldNameToIdMap.get(idStr) || null;
+                  numericId = this.fieldNameToIdMap.get(cleanIdStr) || null;
 
                   if (numericId) {
-                    console.log(`${indent}✅ CONVERTED: Field name "${idStr}" → Numeric ID: "${numericId}"`);
+                    console.log(`${indent}✅ CONVERTED: Field name "${cleanIdStr}" → Numeric ID: "${numericId}"`);
                     idValueMap.set(numericId, valueStr);
-                    console.log(`${indent}🗂️ MAPPED: "${idStr}" → ID:"${numericId}" → Value:"${valueStr}"`);
+                    console.log(`${indent}🗂️ MAPPED: "${cleanIdStr}" → ID:"${numericId}" → Value:"${valueStr}"`);
                   } else {
-                    console.log(`${indent}❌ NO CONVERSION: No numeric ID found for field name: "${idStr}"`);
+                    console.log(`${indent}❌ NO CONVERSION: No numeric ID found for field name: "${cleanIdStr}"`);
 
                     // Show similar field names for debugging
                     const similarFieldNames = Array.from(this.fieldNameToIdMap.keys()).filter(name =>
                       name.includes('Section29') ||
-                      name.includes(idStr.split('.').pop() || '') ||
-                      idStr.includes(name.split('.').pop() || '')
+                      name.includes(cleanIdStr.split('.').pop() || '') ||
+                      cleanIdStr.includes(name.split('.').pop() || '')
                     ).slice(0, 5);
 
                     console.log(`${indent}   🔍 Similar PDF field names:`, similarFieldNames);
-                    errors.push(`No numeric ID found for field name: ${idStr}`);
+                    errors.push(`No numeric ID found for field name: ${cleanIdStr}`);
                   }
                 } else {
-                  console.log(`${indent}🔢 Field ID appears to be numeric, using directly: "${idStr}"`);
-                  numericId = idStr;
+                  console.log(`${indent}🔢 Field ID appears to be numeric, using directly: "${cleanIdStr}"`);
+                  numericId = cleanIdStr;
 
                   // Verify the numeric ID exists in our PDF
                   if (this.fieldIdMap.has(numericId)) {
@@ -345,7 +985,48 @@ export class ClientPdfService2 {
     console.log(`📊 Form Data Structure Overview:`);
     console.log(`   📋 Available sections:`, Object.keys(formData));
     console.log(`   📈 Total sections: ${Object.keys(formData).length}`);
-    console.log(`   🔍 Full form data:`, JSON.stringify(formData, null, 2));
+
+    // Enhanced form data inspection
+    console.log(`\n🔍 ===== SECTION-BY-SECTION ANALYSIS =====`);
+    Object.entries(formData).forEach(([sectionKey, sectionValue]) => {
+      console.log(`\n📁 Section "${sectionKey}":`);
+      console.log(`   📊 Type: ${typeof sectionValue}`);
+      console.log(`   📊 Is null: ${sectionValue === null}`);
+      console.log(`   📊 Is undefined: ${sectionValue === undefined}`);
+
+      if (sectionValue && typeof sectionValue === 'object') {
+        console.log(`   📊 Object keys: [${Object.keys(sectionValue).join(', ')}]`);
+        console.log(`   📊 Object keys count: ${Object.keys(sectionValue).length}`);
+
+        // Check for Field objects in this section
+        let fieldCount = 0;
+        const sampleFields: any[] = [];
+
+        const countFields = (obj: any, path = '') => {
+          if (obj && typeof obj === 'object') {
+            if ('id' in obj && 'value' in obj) {
+              fieldCount++;
+              if (sampleFields.length < 3) {
+                sampleFields.push({ path, id: obj.id, value: obj.value, type: typeof obj.value });
+              }
+            } else {
+              Object.entries(obj).forEach(([key, val]) => {
+                countFields(val, path ? `${path}.${key}` : key);
+              });
+            }
+          }
+        };
+
+        countFields(sectionValue);
+        console.log(`   🎯 Field objects found: ${fieldCount}`);
+        if (sampleFields.length > 0) {
+          console.log(`   📋 Sample fields:`);
+          sampleFields.forEach((field, i) => {
+            console.log(`     [${i+1}] Path: "${field.path}" ID: "${field.id}" Value: "${field.value}" (${field.type})`);
+          });
+        }
+      }
+    });
 
     console.log(`\n🔍 Starting form value flattening process...`);
     flattenFormValues(formData);
@@ -420,449 +1101,6 @@ export class ClientPdfService2 {
         errors
       }
     };
-  }
-
-  /**
-   * Generate a filled PDF from form values with comprehensive error handling
-   */
-  async generateFilledPdf(formData: ApplicantFormValues): Promise<PdfGenerationResult> {
-    const result: PdfGenerationResult = {
-      success: false,
-      fieldsMapped: 0,
-      fieldsApplied: 0,
-      errors: [],
-      warnings: []
-    };
-
-    try {
-      console.log("Starting enhanced client-side PDF generation");
-
-      // Make sure PDF is loaded
-      if (!this.pdfDoc || !this.isLoaded) {
-        await this.loadPdf();
-      }
-
-      if (!this.pdfDoc) {
-        result.errors.push("Failed to load PDF document");
-        return result;
-      }
-
-      // Map form values to PDF fields
-      const mappingResult = await this.mapFormValuesToJsonData(this.fieldMapping, formData);
-      result.fieldsMapped = mappingResult.stats.mapped;
-      result.errors.push(...mappingResult.stats.errors);
-
-      console.log(`\n🔍 ===== FIELD FILTERING FOR APPLICATION =====`);
-      console.log(`📊 Total mapped fields before filtering: ${mappingResult.mappedFields.length}`);
-
-      // ENHANCED: More selective filtering to exclude default/template values
-      const appliedFields = mappingResult.mappedFields.filter((field, index) => {
-        // Verbose logging for first 10 fields to better understand filtering
-        const verbose = index < 10;
-        if (verbose) {
-          console.log(`\n🔍 [${index}] Evaluating field for application:`);
-          console.log(`   🆔 Field ID: "${field.id}"`);
-          console.log(`   📛 Field Name: "${field.name}"`);
-          console.log(`   💾 Field Value: "${field.value}"`);
-          console.log(`   📊 Value Type: ${typeof field.value}`);
-          console.log(`   🏷️ Field Type: ${field.type || 'unknown'}`);
-        }
-
-        // Skip fields with null/undefined values
-        if (field.value === null || field.value === undefined) {
-          if (verbose) console.log(`   ❌ FILTERED OUT: Null/undefined value`);
-          return false;
-        }
-
-        // Skip empty arrays
-        if (Array.isArray(field.value) && field.value.length === 0) {
-          if (verbose) console.log(`   ❌ FILTERED OUT: Empty array`);
-          return false;
-        }
-
-        // Skip empty strings
-        if (field.value === "") {
-          if (verbose) console.log(`   ❌ FILTERED OUT: Empty string value`);
-          return false;
-        }
-
-        // SIMPLIFIED: Since we fixed the root cause (template defaults),
-        // we can now use simpler filtering logic
-        // Only filter out clearly invalid values, let form data through
-
-        // Include all other values (text fields, dropdowns, explicit selections)
-        if (verbose) console.log(`   ✅ INCLUDED: Valid value ("${field.value}")`);
-        return true;
-      });
-
-      console.log(`\n📊 ===== FILTERING RESULTS =====`);
-      console.log(`📈 Fields before filtering: ${mappingResult.mappedFields.length}`);
-      console.log(`📈 Fields after filtering: ${appliedFields.length}`);
-
-      // Show sample of fields to apply
-      console.log(`📋 Sample fields to apply (first 10):`,
-        appliedFields.slice(0, 10).map(f => ({ id: f.id, name: f.name, value: f.value })));
-
-      console.log(`\n🔧 ===== PDF FIELD APPLICATION PROCESS =====`);
-      console.log(`🎯 Applying ${appliedFields.length} fields to PDF`);
-
-      // Get the form and use our ID-based mapping for faster lookups
-      const form = this.pdfDoc.getForm();
-      const allPdfFields = form.getFields();
-
-      console.log(`\n📄 ===== PDF FORM ANALYSIS =====`);
-      console.log(`📊 Total PDF form fields available: ${allPdfFields.length}`);
-
-      // Show Section 29 specific PDF fields (if any)
-      const section29PdfFields = allPdfFields.filter(f => f.getName().includes('Section29'));
-      if (section29PdfFields.length > 0) {
-        console.log(`🎯 Section 29 PDF fields found: ${section29PdfFields.length}`);
-        section29PdfFields.slice(0, 5).forEach((field, index) => {
-          console.log(`   [${index}] "${field.getName()}" (ID: ${field.ref.tag.toString()})`);
-        });
-      }
-
-      // ADDED: Enhanced field ID lookup with multiple strategies
-      console.log(`\n🔧 ===== ENHANCED FIELD MAPPING =====`);
-      console.log(`🗂️ Building comprehensive field lookup map`);
-
-      // Create a more comprehensive lookup map
-      const enhancedFieldMap = new Map();
-
-      // Map by both ID and name for faster lookups
-      allPdfFields.forEach(field => {
-        const id = field.ref.tag.toString();
-        const name = field.getName();
-
-        // Store field by numeric ID
-        enhancedFieldMap.set(id, field);
-
-        // Store field by full name
-        enhancedFieldMap.set(name, field);
-
-        // Store by name parts (useful for partial matches)
-        const nameParts = name.split(/[.\[\]]/);
-        nameParts.forEach(part => {
-          if (part && part.length > 3) { // Only meaningful parts
-            if (!enhancedFieldMap.has(part)) {
-              enhancedFieldMap.set(part, field);
-            }
-          }
-        });
-      });
-
-      console.log(`🗂️ Enhanced field map created with ${enhancedFieldMap.size} entries`);
-
-      // Apply values to fields with enhanced lookup strategy
-      let appliedCount = 0;
-      let skippedCount = 0;
-
-      console.log(`\n🔧 ===== FIELD APPLICATION LOOP =====`);
-
-      // Track success metrics for field types
-      const successMetrics = {
-        textField: { attempts: 0, success: 0 },
-        dropdown: { attempts: 0, success: 0 },
-        checkbox: { attempts: 0, success: 0 },
-        radioGroup: { attempts: 0, success: 0 },
-        unknown: { attempts: 0, success: 0 }
-      };
-
-      appliedFields.forEach((field, index) => {
-        // Only log detailed info for first 20 fields to reduce verbosity
-        const verbose = index < 20;
-
-        if (verbose) {
-          console.log(`\n--- 🔧 Processing Field [${index + 1}/${appliedFields.length}] ---`);
-          console.log(`🆔 Field ID: "${field.id}"`);
-          console.log(`📛 Field Name: "${field.name}"`);
-          console.log(`💾 Field Value: "${field.value}"`);
-        }
-
-        // ENHANCED: Optimized field lookup strategy prioritizing ID-based mapping
-        let pdfField: any = null;
-        let lookupMethod = '';
-
-        // Step 1: Check if field.id is already a numeric ID
-        if (this.isNumericId(field.id)) {
-          if (verbose) console.log(`🔢 Field ID is numeric: "${field.id}"`);
-
-          if (this.fieldIdMap.has(field.id)) {
-            pdfField = this.fieldIdMap.get(field.id);
-            lookupMethod = 'direct-numeric-id';
-            if (verbose) console.log(`✅ Direct numeric ID lookup successful`);
-          } else {
-            if (verbose) console.log(`❌ Numeric ID "${field.id}" not found in PDF`);
-          }
-        }
-        // Step 2: Try primary ID lookup (for field name paths)
-        else if (this.fieldIdMap.has(field.id)) {
-          pdfField = this.fieldIdMap.get(field.id);
-          lookupMethod = 'primary-id';
-          if (verbose) console.log(`✅ Primary ID lookup successful`);
-        }
-        // Step 3: Convert field name to numeric ID
-        else {
-          const numericId = this.extractNumericId(field.id);
-          if (numericId && this.fieldIdMap.has(numericId)) {
-            pdfField = this.fieldIdMap.get(numericId);
-            lookupMethod = 'converted-to-numeric-id';
-            if (verbose) console.log(`✅ Field name converted to numeric ID: "${field.id}" → "${numericId}"`);
-          } else if (verbose) {
-            console.log(`❌ No numeric ID conversion available for: "${field.id}"`);
-          }
-        }
-
-        // Step 4: Try additional fallback methods if no PDF field found yet
-        if (!pdfField) {
-          // Try fallback name lookup
-          if (this.fieldNameToIdMap.has(field.name)) {
-            const fallbackId = this.fieldNameToIdMap.get(field.name);
-            if (fallbackId && this.fieldIdMap.has(fallbackId)) {
-              pdfField = this.fieldIdMap.get(fallbackId);
-              lookupMethod = 'name-to-id';
-              if (verbose) console.log(`✅ Fallback name lookup successful: "${field.name}" → "${fallbackId}"`);
-            }
-          }
-          // Try enhanced lookup map
-          else if (enhancedFieldMap.has(field.id)) {
-            pdfField = enhancedFieldMap.get(field.id);
-            lookupMethod = 'enhanced-id';
-            if (verbose) console.log(`✅ Enhanced ID lookup successful`);
-          }
-          else if (enhancedFieldMap.has(field.name)) {
-            pdfField = enhancedFieldMap.get(field.name);
-            lookupMethod = 'enhanced-name';
-            if (verbose) console.log(`✅ Enhanced name lookup successful`);
-          }
-          // Try lookup by last part of name/id as final fallback
-          else {
-            const idPart = String(field.id).split(/[.\[\]]/).pop() || '';
-            const namePart = String(field.name).split(/[.\[\]]/).pop() || '';
-
-            if (idPart && enhancedFieldMap.has(idPart)) {
-              pdfField = enhancedFieldMap.get(idPart);
-              lookupMethod = 'id-part';
-              if (verbose) console.log(`✅ ID part lookup successful: "${idPart}"`);
-            }
-            else if (namePart && enhancedFieldMap.has(namePart)) {
-              pdfField = enhancedFieldMap.get(namePart);
-              lookupMethod = 'name-part';
-              if (verbose) console.log(`✅ Name part lookup successful: "${namePart}"`);
-            }
-          }
-        }
-
-        if (pdfField) {
-          if (verbose) {
-            console.log(`✅ PDF field found! Method: ${lookupMethod}`);
-            console.log(`📊 PDF Field Type: ${pdfField.constructor.name}`);
-            console.log(`📛 PDF Field Name: "${pdfField.getName()}"`);
-          }
-
-          try {
-            if (pdfField instanceof PDFTextField) {
-              successMetrics.textField.attempts++;
-              const textValue = String(field.value);
-              if (verbose) console.log(`📝 Setting text field to: "${textValue}"`);
-              pdfField.setText(textValue);
-              successMetrics.textField.success++;
-              appliedCount++;
-            }
-            else if (pdfField instanceof PDFDropdown || pdfField instanceof PDFRadioGroup) {
-              const isDropdown = pdfField instanceof PDFDropdown;
-              successMetrics[isDropdown ? 'dropdown' : 'radioGroup'].attempts++;
-
-              const selectValue = String(field.value);
-              if (verbose) console.log(`📋 Setting ${isDropdown ? 'dropdown' : 'radio'} to: "${selectValue}"`);
-
-              // ENHANCED: Get available options for both dropdowns and radio groups
-              let options: string[] = [];
-              if (isDropdown) {
-                options = pdfField.getOptions();
-                if (verbose) console.log(`   📋 Dropdown available options:`, options);
-              } else {
-                // For radio groups, get options differently
-                try {
-                  options = pdfField.getOptions();
-                  if (verbose) console.log(`   📋 Radio group available options:`, options);
-                } catch (error) {
-                  if (verbose) console.log(`   ⚠️ Could not get radio group options:`, error);
-                  // For radio groups without explicit options, try common values
-                  options = ['YES', 'NO', 'Yes', 'No', 'true', 'false', '1', '0'];
-                  if (verbose) console.log(`   🔄 Using fallback radio options:`, options);
-                }
-              }
-
-              // Enhanced option matching for both field types
-              let matchedValue = selectValue;
-              let optionMatched = false;
-
-              if (options.length > 0) {
-                // First try exact match
-                if (options.includes(selectValue)) {
-                  matchedValue = selectValue;
-                  optionMatched = true;
-                  if (verbose) console.log(`   ✅ Exact match found: "${selectValue}"`);
-                } else {
-                  // Try case-insensitive match
-                  const caseInsensitiveMatch = options.find(
-                    opt => opt.toLowerCase() === selectValue.toLowerCase()
-                  );
-
-                  if (caseInsensitiveMatch) {
-                    matchedValue = caseInsensitiveMatch;
-                    optionMatched = true;
-                    if (verbose) console.log(`   🔄 Case-insensitive match: "${selectValue}" → "${caseInsensitiveMatch}"`);
-                  } else {
-                    // For radio groups, try common value mappings
-                    if (!isDropdown) {
-                      const lowerValue = selectValue.toLowerCase();
-                      if (lowerValue === 'no' || lowerValue === 'false' || lowerValue === '0') {
-                        const noOption = options.find(opt => opt.toLowerCase() === 'no' || opt === '0' || opt.toLowerCase() === 'false');
-                        if (noOption) {
-                          matchedValue = noOption;
-                          optionMatched = true;
-                          if (verbose) console.log(`   🔄 Mapped "${selectValue}" to NO option: "${noOption}"`);
-                        }
-                      } else if (lowerValue === 'yes' || lowerValue === 'true' || lowerValue === '1') {
-                        const yesOption = options.find(opt => opt.toLowerCase() === 'yes' || opt === '1' || opt.toLowerCase() === 'true');
-                        if (yesOption) {
-                          matchedValue = yesOption;
-                          optionMatched = true;
-                          if (verbose) console.log(`   🔄 Mapped "${selectValue}" to YES option: "${yesOption}"`);
-                        }
-                      }
-                    }
-
-                    if (!optionMatched) {
-                      if (verbose) console.log(`   ⚠️ No matching option found for "${selectValue}" in:`, options);
-                      if (verbose) console.log(`   🔄 Attempting to set value anyway...`);
-                    }
-                  }
-                }
-              } else {
-                if (verbose) console.log(`   ⚠️ No options available, setting value directly`);
-              }
-
-              // Apply the value
-              try {
-                pdfField.select(matchedValue);
-                if (verbose) console.log(`   ✅ Successfully set ${isDropdown ? 'dropdown' : 'radio'} to: "${matchedValue}"`);
-                successMetrics[isDropdown ? 'dropdown' : 'radioGroup'].success++;
-                appliedCount++;
-              } catch (selectError) {
-                if (verbose) console.log(`   ❌ Failed to select "${matchedValue}":`, selectError);
-                // For radio groups, try alternative approach
-                if (!isDropdown) {
-                  try {
-                    // Try to set the value directly on the radio group
-                    if (verbose) console.log(`   🔄 Trying alternative radio group approach...`);
-                    (pdfField as any).setValue?.(matchedValue);
-                    successMetrics.radioGroup.success++;
-                    appliedCount++;
-                    if (verbose) console.log(`   ✅ Alternative approach succeeded`);
-                  } catch (altError) {
-                    if (verbose) console.log(`   ❌ Alternative approach also failed:`, altError);
-                    throw selectError; // Re-throw original error
-                  }
-                } else {
-                  throw selectError; // Re-throw for dropdowns
-                }
-              }
-            }
-            else if (pdfField instanceof PDFCheckBox) {
-              successMetrics.checkbox.attempts++;
-              const strValue = String(field.value).toLowerCase();
-              if (verbose) console.log(`☑️ Setting checkbox, value: "${strValue}"`);
-
-              // More flexible checkbox value handling
-              if (strValue === "yes" || strValue === "true" || strValue === "1" || strValue === "checked") {
-                pdfField.check();
-              } else {
-                pdfField.uncheck();
-              }
-
-              successMetrics.checkbox.success++;
-              appliedCount++;
-            }
-            else {
-              successMetrics.unknown.attempts++;
-              if (verbose) {
-                console.log(`⚠️ UNKNOWN FIELD TYPE: ${pdfField.constructor.name}`);
-                console.log(`   🔍 Available methods:`, Object.getOwnPropertyNames(Object.getPrototypeOf(pdfField)));
-              }
-              result.warnings.push(`Unknown field type: ${pdfField.constructor.name} for field ${field.name}`);
-            }
-          } catch (error) {
-            if (verbose) {
-              console.error(`💥 ERROR setting field "${field.name}":`, error);
-              console.error(`   🔍 Error details:`, {
-                message: error instanceof Error ? error.message : String(error),
-                fieldName: field.name,
-                fieldValue: field.value,
-                pdfFieldType: pdfField.constructor.name
-              });
-            }
-            result.errors.push(`Error setting field ${field.name}: ${error}`);
-          }
-        } else {
-          if (verbose) {
-            console.log(`❌ PDF FIELD NOT FOUND: "${field.id}" / "${field.name}"`);
-          }
-          skippedCount++;
-          result.warnings.push(`PDF field not found: ${field.id} / ${field.name}`);
-        }
-      });
-
-      console.log(`\n📊 ===== FIELD APPLICATION METRICS =====`);
-      console.log(`✅ Total fields applied: ${appliedCount}/${appliedFields.length} (${((appliedCount/appliedFields.length)*100).toFixed(1)}%)`);
-      console.log(`❌ Fields skipped (not found): ${skippedCount}`);
-
-      // Track lookup method effectiveness
-      const lookupMethodStats = new Map<string, number>();
-      appliedFields.forEach((field) => {
-        // Re-run lookup logic to track method used (simplified version)
-        let method = 'unknown';
-        if (this.isNumericId(field.id) && this.fieldIdMap.has(field.id)) {
-          method = 'direct-numeric-id';
-        } else if (this.fieldIdMap.has(field.id)) {
-          method = 'primary-id';
-        } else if (this.extractNumericId(field.id)) {
-          method = 'converted-to-numeric-id';
-        } else {
-          method = 'fallback-methods';
-        }
-        lookupMethodStats.set(method, (lookupMethodStats.get(method) || 0) + 1);
-      });
-
-      console.log(`📊 Lookup method effectiveness:`);
-      lookupMethodStats.forEach((count, method) => {
-        const percentage = ((count / appliedFields.length) * 100).toFixed(1);
-        console.log(`   ${method}: ${count}/${appliedFields.length} (${percentage}%)`);
-      });
-
-      console.log(`📊 Success by field type:`);
-      Object.entries(successMetrics).forEach(([type, {attempts, success}]) => {
-        if (attempts > 0) {
-          const rate = ((success/attempts)*100).toFixed(1);
-          console.log(`   ${type}: ${success}/${attempts} (${rate}%)`);
-        }
-      });
-
-      result.fieldsApplied = appliedCount;
-
-      // Save the PDF
-      const modifiedPdfBytes = await this.pdfDoc.save();
-      result.pdfBytes = new Uint8Array(modifiedPdfBytes);
-      result.success = true;
-
-      return result;
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      result.errors.push(`PDF generation failed: ${error}`);
-      return result;
-    }
   }
 
   /**
@@ -1037,61 +1275,539 @@ export class ClientPdfService2 {
   }
 
   /**
-   * Download the generated PDF - enhanced version with better browser compatibility
+   * Download the generated PDF - Enhanced mobile compatibility (Fixed)
    */
   downloadPdf(pdfBytes: Uint8Array, filename = 'SF86-filled.pdf'): void {
     try {
-      console.log(`Starting PDF download: ${filename}, size: ${pdfBytes.length} bytes`);
+      console.log(`📱 Starting PDF download: ${filename}, size: ${pdfBytes.length} bytes`);
 
       // Create blob with PDF data
       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-      const link = document.createElement('a');
-      link.href = URL.createObjectURL(blob);
-      link.download = filename;
-      link.click();
-      URL.revokeObjectURL(link.href);
-      // Trigger download
-      link.click();
-      console.log('Download link clicked');
+      const url = URL.createObjectURL(blob);
 
-      // Clean up after a short delay to ensure download starts
-      setTimeout(() => {
+      // Enhanced mobile detection
+      const userAgent = navigator.userAgent.toLowerCase();
+      const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile/i.test(userAgent);
+      const isIOS = /ipad|iphone|ipod/.test(userAgent);
+      const isAndroid = /android/.test(userAgent);
+      const isSafari = /safari/.test(userAgent) && !/chrome/.test(userAgent);
+      const isChrome = /chrome/.test(userAgent);
+      const isFirefox = /firefox/.test(userAgent);
+
+      console.log(`📱 Device detection:`, {
+        isMobile,
+        isIOS,
+        isAndroid,
+        isSafari,
+        isChrome,
+        isFirefox,
+        userAgent: userAgent.substring(0, 100) + '...'
+      });
+
+      // Track if any method succeeds
+      let downloadAttempted = false;
+
+      // Method 1: For Desktop browsers - use standard approach
+      if (!isMobile) {
         try {
+          console.log('💻 Using desktop download method...');
+          const link = document.createElement('a');
+          link.href = url;
+          link.download = filename;
+          link.style.display = 'none';
+          
+          document.body.appendChild(link);
+          link.click();
           document.body.removeChild(link);
-          URL.revokeObjectURL(link.href);
-          console.log('Download cleanup completed');
-        } catch (cleanupError) {
-          console.warn('Error during download cleanup:', cleanupError);
+          
+          console.log('✅ Desktop download initiated');
+          downloadAttempted = true;
+          
+          // Cleanup after successful desktop download
+          setTimeout(() => {
+            URL.revokeObjectURL(url);
+            console.log('🧹 Desktop URL cleanup completed');
+          }, 5000);
+          
+          return; // Exit early for desktop
+        } catch (desktopError) {
+          console.warn('⚠️ Desktop download failed, trying fallback:', desktopError);
         }
-      }, 100);
+      }
 
-      console.log(`PDF download initiated successfully: ${filename}`);
-    } catch (error) {
-      console.error('Error during PDF download:', error);
-
-      // Fallback method using window.open
-      try {
-        console.log('Attempting fallback download method...');
-        const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-        const url = URL.createObjectURL(blob);
-        const newWindow = window.open(url, '_blank');
-
-        if (newWindow) {
-          // Set a title for the new window
-          newWindow.document.title = filename;
-          console.log('PDF opened in new window as fallback');
-        } else {
-          throw new Error('Failed to open PDF in new window - popup blocked?');
+      // Method 2: iOS-specific approach
+      if (isIOS) {
+        try {
+          console.log('🍎 Using iOS-specific download method...');
+          
+          // For iOS, create a new tab with PDF and instructions
+          const newWindow = window.open('about:blank', '_blank');
+          if (newWindow) {
+            newWindow.document.write(`
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <title>${filename}</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <meta charset="UTF-8">
+                <style>
+                  body { 
+                    margin: 0; 
+                    padding: 20px; 
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    background: #f5f5f7;
+                  }
+                  .container { 
+                    max-width: 100%; 
+                    text-align: center; 
+                    background: white;
+                    border-radius: 12px;
+                    padding: 20px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                  }
+                  .download-btn { 
+                    display: inline-block; 
+                    padding: 16px 32px; 
+                    background: #007AFF; 
+                    color: white; 
+                    text-decoration: none; 
+                    border-radius: 12px; 
+                    margin: 15px;
+                    font-size: 18px;
+                    font-weight: 600;
+                    border: none;
+                    cursor: pointer;
+                    transition: background 0.2s;
+                  }
+                  .download-btn:hover {
+                    background: #0056CC;
+                  }
+                  .instructions { 
+                    margin: 20px 0; 
+                    padding: 20px; 
+                    background: #f0f8ff; 
+                    border-radius: 12px; 
+                    text-align: left;
+                    border: 1px solid #e1e8ed;
+                  }
+                  .step {
+                    margin: 10px 0;
+                    padding: 8px 0;
+                    border-bottom: 1px solid #eee;
+                  }
+                  .step:last-child {
+                    border-bottom: none;
+                  }
+                  iframe { 
+                    width: 100%; 
+                    height: 60vh; 
+                    border: 1px solid #ddd; 
+                    border-radius: 8px; 
+                    margin-top: 20px;
+                  }
+                  .icon { font-size: 20px; margin-right: 8px; }
+                </style>
+              </head>
+              <body>
+                <div class="container">
+                  <h1>📄 ${filename}</h1>
+                  <div style="margin: 20px 0;">
+                    <a href="${url}" download="${filename}" class="download-btn">
+                      📥 Download PDF
+                    </a>
+                  </div>
+                  
+                  <div class="instructions">
+                    <h3>📱 iOS Download Instructions:</h3>
+                    <div class="step">
+                      <span class="icon">1️⃣</span> Tap the "Download PDF" button above
+                    </div>
+                    <div class="step">
+                      <span class="icon">2️⃣</span> Look for the Share button (⬆️) in Safari's toolbar
+                    </div>
+                    <div class="step">
+                      <span class="icon">3️⃣</span> Select "Save to Files" or "Save to Photos"
+                    </div>
+                    <div class="step">
+                      <span class="icon">4️⃣</span> Choose your preferred location to save
+                    </div>
+                    <div class="step">
+                      <span class="icon">📝</span> Or long-press the PDF below and select "Save"
+                    </div>
+                  </div>
+                  
+                  <iframe src="${url}" title="PDF Preview"></iframe>
+                </div>
+                
+                <script>
+                  // Auto-trigger download after a short delay
+                  setTimeout(() => {
+                    const downloadLink = document.querySelector('.download-btn');
+                    if (downloadLink) {
+                      downloadLink.click();
+                    }
+                  }, 1000);
+                </script>
+              </body>
+              </html>
+            `);
+            newWindow.document.close();
+            
+            console.log('✅ iOS PDF interface opened successfully');
+            downloadAttempted = true;
+            
+            // Extended cleanup for iOS
+            setTimeout(() => {
+              URL.revokeObjectURL(url);
+              console.log('🧹 iOS URL cleanup completed');
+            }, 60000); // 1 minute for iOS
+            
+            return;
+          } else {
+            console.warn('⚠️ Failed to open new window for iOS - popup blocked');
+          }
+        } catch (iosError) {
+          console.warn('⚠️ iOS download method failed:', iosError);
         }
+      }
 
-        // Clean up URL after delay
+      // Method 3: Android-specific approach
+      if (isAndroid) {
+        try {
+          console.log('🤖 Using Android-specific download method...');
+          
+          // Try multiple Android approaches
+          const androidMethods = [
+            // Method 3a: Standard download with enhanced attributes
+            () => {
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = filename;
+              link.style.display = 'none';
+              link.target = '_blank';
+              link.rel = 'noopener noreferrer';
+              
+              // Android-specific enhancements
+              link.type = 'application/pdf';
+              
+              document.body.appendChild(link);
+              
+              // Use both click methods for better compatibility
+              const clickEvent = new MouseEvent('click', {
+                view: window,
+                bubbles: true,
+                cancelable: true,
+                composed: true
+              });
+              
+              link.dispatchEvent(clickEvent);
+              link.click(); // Fallback
+              
+              // Cleanup with delay
+              setTimeout(() => {
+                if (document.body.contains(link)) {
+                  document.body.removeChild(link);
+                }
+              }, 1000);
+              
+              console.log('✅ Android standard download attempted');
+              return true;
+            },
+            
+            // Method 3b: Direct navigation for Android browsers
+            () => {
+              window.location.href = url;
+              console.log('✅ Android direct navigation attempted');
+              return true;
+            },
+            
+            // Method 3c: Window.open with Android-friendly parameters
+            () => {
+              const androidWindow = window.open(url, '_blank', 'noopener,noreferrer,toolbar=yes,scrollbars=yes,resizable=yes');
+              if (androidWindow) {
+                console.log('✅ Android window.open attempted');
+                return true;
+              }
+              return false;
+            }
+          ];
+          
+          // Try each Android method
+          for (let i = 0; i < androidMethods.length; i++) {
+            try {
+              if (androidMethods[i]()) {
+                downloadAttempted = true;
+                console.log(`✅ Android method ${i + 1} succeeded`);
+                
+                // Cleanup after successful Android download
+                setTimeout(() => {
+                  URL.revokeObjectURL(url);
+                  console.log('🧹 Android URL cleanup completed');
+                }, 10000); // 10 seconds for Android
+                
+                return;
+              }
+            } catch (methodError) {
+              console.warn(`⚠️ Android method ${i + 1} failed:`, methodError);
+            }
+          }
+          
+        } catch (androidError) {
+          console.warn('⚠️ Android download methods failed:', androidError);
+        }
+      }
+
+      // Method 4: Generic mobile fallback
+      if (isMobile && !downloadAttempted) {
+        try {
+          console.log('📱 Using generic mobile fallback...');
+          
+          // Create a user-friendly download page for unhandled mobile browsers
+          const fallbackWindow = window.open('about:blank', '_blank');
+          if (fallbackWindow) {
+            fallbackWindow.document.write(`
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <title>Download ${filename}</title>
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <style>
+                  body { 
+                    font-family: system-ui, -apple-system, sans-serif; 
+                    margin: 20px; 
+                    text-align: center;
+                    background: #f9f9f9;
+                  }
+                  .container {
+                    background: white;
+                    padding: 30px;
+                    border-radius: 12px;
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                    max-width: 400px;
+                    margin: 20px auto;
+                  }
+                  .download-btn { 
+                    display: inline-block;
+                    padding: 16px 24px; 
+                    background: #4CAF50; 
+                    color: white; 
+                    text-decoration: none; 
+                    border-radius: 8px; 
+                    font-size: 16px;
+                    font-weight: 500;
+                    margin: 15px 0;
+                  }
+                  .instructions {
+                    text-align: left;
+                    background: #fff3cd;
+                    padding: 15px;
+                    border-radius: 8px;
+                    margin: 20px 0;
+                    border: 1px solid #ffeaa7;
+                  }
+                </style>
+              </head>
+              <body>
+                <div class="container">
+                  <h2>📄 Download Your PDF</h2>
+                  <p><strong>${filename}</strong></p>
+                  
+                  <a href="${url}" download="${filename}" class="download-btn">
+                    📥 Download PDF
+                  </a>
+                  
+                  <div class="instructions">
+                    <h4>📱 Mobile Download Tips:</h4>
+                    <ul>
+                      <li>Tap the download button above</li>
+                      <li>If nothing happens, try long-pressing the link</li>
+                      <li>Select "Download" or "Save" from the menu</li>
+                      <li>Check your Downloads folder</li>
+                      <li>Some browsers may open the PDF instead - look for a save option</li>
+                    </ul>
+                  </div>
+                  
+                  <div style="margin-top: 20px;">
+                    <a href="${url}" target="_blank" style="color: #007bff; text-decoration: underline;">
+                      Or open PDF in new tab
+                    </a>
+                  </div>
+                </div>
+              </body>
+              </html>
+            `);
+            fallbackWindow.document.close();
+            
+            console.log('✅ Generic mobile fallback interface created');
+            downloadAttempted = true;
+            
+            // Extended cleanup for generic mobile
+            setTimeout(() => {
+              URL.revokeObjectURL(url);
+              console.log('🧹 Generic mobile URL cleanup completed');
+            }, 45000); // 45 seconds
+            
+            return;
+          }
+        } catch (fallbackError) {
+          console.warn('⚠️ Generic mobile fallback failed:', fallbackError);
+        }
+      }
+
+      // Method 5: Final universal fallback
+      if (!downloadAttempted) {
+        console.log('🆘 Using final universal fallback...');
+        try {
+          const universalWindow = window.open(url, '_blank', 'noopener,noreferrer');
+          if (universalWindow) {
+            console.log('✅ Universal fallback window opened');
+          } else {
+            console.error('❌ All download methods failed - showing instructions');
+            this.showDownloadInstructions(url, filename);
+          }
+        } catch (universalError) {
+          console.error('❌ Universal fallback failed:', universalError);
+          this.showDownloadInstructions(url, filename);
+        }
+        
+        // Final cleanup
         setTimeout(() => {
           URL.revokeObjectURL(url);
-        }, 1000);
-      } catch (fallbackError) {
-        console.error('Fallback download method also failed:', fallbackError);
-        alert(`PDF download failed. Error: ${error}\nFallback error: ${fallbackError}\n\nPlease check your browser's download settings and popup blocker.`);
+          console.log('🧹 Final cleanup completed');
+        }, 30000);
       }
+
+    } catch (error) {
+      console.error('💥 Critical error in PDF download process:', error);
+      alert(`PDF download failed: ${error instanceof Error ? error.message : String(error)}\n\nPlease try refreshing the page and generating the PDF again.`);
+    }
+  }
+
+  /**
+   * Show download instructions when automatic download fails - Enhanced mobile support
+   */
+  private showDownloadInstructions(url: string, filename: string): void {
+    // Enhanced mobile detection for better instructions
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isIOS = /ipad|iphone|ipod/.test(userAgent);
+    const isAndroid = /android/.test(userAgent);
+    const isMobile = isIOS || isAndroid || /mobile/.test(userAgent);
+    
+    let instructions = `📄 PDF Download Failed - Manual Instructions\n\n`;
+    
+    if (isIOS) {
+      instructions += `🍎 iOS Instructions:\n`;
+      instructions += `1. If a new tab opened, look for the Share button (⬆️) in Safari\n`;
+      instructions += `2. Tap Share → Save to Files (or Save to Photos)\n`;
+      instructions += `3. Choose where to save your PDF\n`;
+      instructions += `4. Or long-press the PDF and select "Save"\n\n`;
+      instructions += `If no tab opened, copy this link:\n${url}\n`;
+      instructions += `Paste it in Safari and follow steps above.`;
+    } else if (isAndroid) {
+      instructions += `🤖 Android Instructions:\n`;
+      instructions += `1. Check if a download started (look for notification)\n`;
+      instructions += `2. Check your Downloads folder in file manager\n`;
+      instructions += `3. If nothing downloaded, copy this link:\n${url}\n`;
+      instructions += `4. Paste in Chrome/Firefox and tap to download\n`;
+      instructions += `5. Long-press the PDF and select "Download"\n`;
+      instructions += `6. Some browsers save to Downloads automatically`;
+    } else if (isMobile) {
+      instructions += `📱 Mobile Browser Instructions:\n`;
+      instructions += `1. Copy this link: ${url}\n`;
+      instructions += `2. Paste it in your browser's address bar\n`;
+      instructions += `3. The PDF should open - look for save options\n`;
+      instructions += `4. Try long-pressing and selecting "Save" or "Download"\n`;
+      instructions += `5. Check your device's Downloads folder`;
+    } else {
+      instructions += `💻 Desktop Instructions:\n`;
+      instructions += `1. Copy this link: ${url}\n`;
+      instructions += `2. Paste it in a new browser tab\n`;
+      instructions += `3. Right-click the PDF and select "Save as..."\n`;
+      instructions += `4. Or use Ctrl+S to save the PDF`;
+    }
+    
+    instructions += `\n\n⏰ This PDF link will expire in a few minutes.`;
+    
+    const shouldCopyLink = confirm(`${instructions}\n\n📋 Would you like to copy the PDF link to your clipboard?`);
+    
+    if (shouldCopyLink) {
+      this.copyLinkToClipboard(url, filename);
+    } else {
+      // Show additional fallback options
+      setTimeout(() => {
+        const tryAgain = confirm(`💡 Alternative option:\n\nWould you like to open the PDF in a new tab?\n\n(You can then use your browser's save options)`);
+        if (tryAgain) {
+          try {
+            window.open(url, '_blank', 'noopener,noreferrer');
+          } catch (error) {
+            console.error('Failed to open fallback window:', error);
+            this.showUrlPrompt(url);
+          }
+        }
+      }, 1000);
+    }
+  }
+
+  /**
+   * Enhanced clipboard copy with better error handling
+   */
+  private copyLinkToClipboard(url: string, filename: string): void {
+    // Try modern clipboard API first
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(() => {
+        alert(`✅ PDF link copied to clipboard!\n\n📋 Link for: ${filename}\n\n📱 Now paste it in your browser to download.`);
+      }).catch((clipboardError) => {
+        console.warn('Modern clipboard API failed:', clipboardError);
+        this.fallbackCopyMethod(url, filename);
+      });
+    } else {
+      // Fallback for older browsers
+      this.fallbackCopyMethod(url, filename);
+    }
+  }
+
+  /**
+   * Fallback copy method for browsers without clipboard API
+   */
+  private fallbackCopyMethod(url: string, filename: string): void {
+    // Try to create a temporary text area for copying
+    try {
+      const textArea = document.createElement('textarea');
+      textArea.value = url;
+      textArea.style.position = 'fixed';
+      textArea.style.opacity = '0';
+      textArea.style.left = '-9999px';
+      
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      
+      // Try to copy using execCommand (legacy method)
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textArea);
+      
+      if (successful) {
+        alert(`✅ PDF link copied to clipboard!\n\n📋 Link for: ${filename}\n\n📱 Now paste it in your browser to download.`);
+      } else {
+        this.showUrlPrompt(url);
+      }
+    } catch (error) {
+      console.warn('Fallback copy method failed:', error);
+      this.showUrlPrompt(url);
+    }
+  }
+
+  /**
+   * Show URL in a prompt for manual copying
+   */
+  private showUrlPrompt(url: string): void {
+    const message = `Please copy this URL to download your PDF:\n\n${url}`;
+    
+    // For mobile browsers that support prompt
+    if (typeof prompt !== 'undefined') {
+      prompt('Copy this URL to download your PDF:', url);
+    } else {
+      alert(message);
     }
   }
 
@@ -1157,10 +1873,10 @@ export class ClientPdfService2 {
       enhancedFieldMap.set(id, field);
       enhancedFieldMap.set(name, field);
 
-      // Store by name parts for partial matches
+      // Store by name parts (useful for partial matches)
       const nameParts = name.split(/[.\[\]]/);
       nameParts.forEach(part => {
-        if (part && part.length > 3) {
+        if (part && part.length > 3) { // Only meaningful parts
           if (!enhancedFieldMap.has(part)) {
             enhancedFieldMap.set(part, field);
           }
@@ -1174,9 +1890,13 @@ export class ClientPdfService2 {
     for (const field of sectionFields) {
       if (!field.id || field.value === undefined) continue;
 
+      // Clean the field ID for consistent lookup
+      const cleanFieldId = String(field.id).replace(/ 0 R$/, '').trim();
+
       // Try all lookup methods
       const lookupResults: Record<string, any> = {
         fieldId: field.id,
+        cleanFieldId: cleanFieldId,
         fieldValue: field.value,
         directMatch: null,
         nameMatch: null,
@@ -1184,9 +1904,9 @@ export class ClientPdfService2 {
         partMatch: null
       };
 
-      // Direct ID match
-      if (this.fieldIdMap.has(field.id)) {
-        const pdfField = this.fieldIdMap.get(field.id);
+      // Direct ID match with cleaned ID
+      if (this.fieldIdMap.has(cleanFieldId)) {
+        const pdfField = this.fieldIdMap.get(cleanFieldId);
         lookupResults.directMatch = {
           found: true,
           fieldName: pdfField.getName(),
@@ -1194,9 +1914,9 @@ export class ClientPdfService2 {
         };
       }
 
-      // Name match
-      if (this.fieldNameToIdMap.has(field.id)) {
-        const numericId = this.fieldNameToIdMap.get(field.id);
+      // Name match with cleaned ID
+      if (this.fieldNameToIdMap.has(cleanFieldId)) {
+        const numericId = this.fieldNameToIdMap.get(cleanFieldId);
         if (numericId && this.fieldIdMap.has(numericId)) {
           const pdfField = this.fieldIdMap.get(numericId);
           lookupResults.nameMatch = {
@@ -1207,9 +1927,9 @@ export class ClientPdfService2 {
         }
       }
 
-      // Enhanced map match
-      if (enhancedFieldMap.has(field.id)) {
-        const pdfField = enhancedFieldMap.get(field.id);
+      // Enhanced map match with cleaned ID
+      if (enhancedFieldMap.has(cleanFieldId)) {
+        const pdfField = enhancedFieldMap.get(cleanFieldId);
         lookupResults.enhancedMatch = {
           found: true,
           fieldName: pdfField.getName(),
@@ -1217,8 +1937,8 @@ export class ClientPdfService2 {
         };
       }
 
-      // Part match
-      const idPart = String(field.id).split(/[.\[\]]/).pop() || '';
+      // Part match with cleaned ID
+      const idPart = String(cleanFieldId).split(/[.\[\]]/).pop() || '';
       if (idPart && enhancedFieldMap.has(idPart)) {
         const pdfField = enhancedFieldMap.get(idPart);
         lookupResults.partMatch = {
@@ -1269,6 +1989,30 @@ export class ClientPdfService2 {
     });
 
     return fields;
+  }
+
+  /**
+   * Generate a filled PDF from form values (backward compatibility wrapper)
+   *
+   * This method wraps the new generatePdfClientAction for backward compatibility.
+   * New code should use generatePdfClientAction directly for enhanced features.
+   */
+  async generateFilledPdf(formData: ApplicantFormValues): Promise<PdfGenerationResult> {
+    this.clientLog('INFO', "🔄 generateFilledPdf called - using enhanced client action...");
+
+    const enhancedResult = await this.generatePdfClientAction(formData);
+
+    // Convert enhanced result to legacy format
+    const legacyResult: PdfGenerationResult = {
+      success: enhancedResult.success,
+      pdfBytes: enhancedResult.pdfBytes,
+      fieldsMapped: enhancedResult.fieldsMapped,
+      fieldsApplied: enhancedResult.fieldsApplied,
+      errors: enhancedResult.errors,
+      warnings: enhancedResult.warnings
+    };
+
+    return legacyResult;
   }
 }
 

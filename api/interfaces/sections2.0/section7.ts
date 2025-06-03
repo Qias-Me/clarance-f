@@ -1,62 +1,35 @@
 /**
- * Section 7: Where You Have Lived (Residence History)
+ * Section 7: Your Contact Information
  *
- * TypeScript interface definitions for SF-86 Section 7 residence history data structure.
- * Based on the established Field<T> interface patterns and PDF field ID mappings.
+ * TypeScript interface definitions for SF-86 Section 7 contact information data structure.
+ * Based on the established Field<T> interface patterns and PDF field ID mappings from section-7.json.
  */
 
 import type { Field } from '../formDefinition2.0';
+import { createFieldFromReference, validateSectionFieldCount } from '../../utils/sections-references-loader';
 
 // ============================================================================
 // CORE INTERFACES
 // ============================================================================
 
 /**
- * Address interface for residence entries
+ * Phone number interface with extension and time preferences
  */
-export interface Address {
-  street: Field<string>;
-  city: Field<string>;
-  state: Field<string>;
-  zipCode: Field<string>;
-  country: Field<string>;
+export interface PhoneNumber {
+  number: Field<string>;
+  extension: Field<string>;
+  isInternational: Field<boolean>;
+  dayTime: Field<boolean>;
+  nightTime: Field<boolean>;
 }
 
 /**
- * Date range interface with estimation support
+ * Contact information structure for Section 7
  */
-export interface DateRange {
-  from: {
-    date: Field<string>;
-    estimated: Field<boolean>;
-  };
-  to: {
-    date: Field<string>;
-    estimated: Field<boolean>;
-  };
-  present: Field<boolean>;
-}
-
-/**
- * Verification contact information
- */
-export interface VerificationContact {
-  name: Field<string>;
-  phone: Field<string>;
-  email: Field<string>;
-  relationship: Field<string>;
-}
-
-/**
- * Individual residence entry
- */
-export interface ResidenceEntry {
-  _id: number | string;
-  address: Address;
-  dateRange: DateRange;
-  residenceType: Field<'OWN' | 'RENT' | 'MILITARY' | 'OTHER'>;
-  verificationSource: VerificationContact;
-  additionalInfo: Field<string>;
+export interface ContactInformation {
+  homeEmail: Field<string>;
+  workEmail: Field<string>;
+  entries: PhoneNumber[];
 }
 
 /**
@@ -64,10 +37,7 @@ export interface ResidenceEntry {
  */
 export interface Section7 {
   _id: number;
-  residenceHistory: {
-    hasLivedAtCurrentAddressFor3Years: Field<"YES" | "NO">;
-    entries: ResidenceEntry[];
-  };
+  section7: ContactInformation;
 }
 
 // ============================================================================
@@ -77,7 +47,7 @@ export interface Section7 {
 /**
  * Section 7 subsection keys for type safety
  */
-export type Section7SubsectionKey = 'residenceHistory';
+export type Section7SubsectionKey = 'section7';
 
 // ============================================================================
 // VALIDATION INTERFACES
@@ -87,11 +57,7 @@ export type Section7SubsectionKey = 'residenceHistory';
  * Validation rules specific to Section 7
  */
 export interface Section7ValidationRules {
-  requiresResidenceHistory: boolean;
-  minimumResidenceEntries: number;
-  maximumResidenceEntries: number;
-  requiresVerificationContact: boolean;
-  allowsEstimatedDates: boolean;
+
 }
 
 /**
@@ -99,7 +65,6 @@ export interface Section7ValidationRules {
  */
 export interface Section7ValidationContext {
   currentDate: Date;
-  minimumCoverageYears: number;
   rules: Section7ValidationRules;
 }
 
@@ -108,63 +73,65 @@ export interface Section7ValidationContext {
 // ============================================================================
 
 /**
- * PDF field ID patterns for Section 7
- * Based on the Sections7-9 pattern from the JSON reference
+ * PDF field ID mappings for Section 7 Contact Information
+ * Based on the actual field IDs from section-7.json (4-digit format)
  */
 export const SECTION7_FIELD_IDS = {
-  // Main question
-  HAS_LIVED_AT_CURRENT_ADDRESS: "form1[0].Sections7-9[0].RadioButtonList[0]",
+  // Email fields
+  HOME_EMAIL: "9513", // form1[0].Sections7-9[0].TextField11[13]
+  WORK_EMAIL: "9512", // form1[0].Sections7-9[0].TextField11[14]
 
-  // Entry field patterns (indexed by entry number)
-  ENTRY_PATTERNS: {
-    STREET: (entryIndex: number) => `form1[0].Sections7-9[0].TextField[${entryIndex * 10}]`,
-    CITY: (entryIndex: number) => `form1[0].Sections7-9[0].TextField[${entryIndex * 10 + 1}]`,
-    STATE: (entryIndex: number) => `form1[0].Sections7-9[0].DropDownList[${entryIndex}]`,
-    ZIP_CODE: (entryIndex: number) => `form1[0].Sections7-9[0].TextField[${entryIndex * 10 + 2}]`,
-    COUNTRY: (entryIndex: number) => `form1[0].Sections7-9[0].TextField[${entryIndex * 10 + 3}]`,
+  // Home phone fields
+  HOME_PHONE_NUMBER: "9511", // form1[0].Sections7-9[0].p3-t68[1]
+  HOME_PHONE_EXTENSION: "9510", // form1[0].Sections7-9[0].TextField11[15]
+  HOME_PHONE_INTERNATIONAL: "9509", // form1[0].Sections7-9[0].#field[33]
+  HOME_PHONE_NIGHT: "9508", // form1[0].Sections7-9[0].#field[34]
+  HOME_PHONE_DAY: "9507", // form1[0].Sections7-9[0].#field[35]
 
-    FROM_DATE: (entryIndex: number) => `form1[0].Sections7-9[0].DateField[${entryIndex * 2}]`,
-    FROM_ESTIMATED: (entryIndex: number) => `form1[0].Sections7-9[0].CheckBox[${entryIndex * 6}]`,
-    TO_DATE: (entryIndex: number) => `form1[0].Sections7-9[0].DateField[${entryIndex * 2 + 1}]`,
-    TO_ESTIMATED: (entryIndex: number) => `form1[0].Sections7-9[0].CheckBox[${entryIndex * 6 + 1}]`,
-    PRESENT: (entryIndex: number) => `form1[0].Sections7-9[0].CheckBox[${entryIndex * 6 + 2}]`,
+  // Work phone fields
+  WORK_PHONE_NUMBER: "9506", // form1[0].Sections7-9[0].p3-t68[2]
+  WORK_PHONE_EXTENSION: "9505", // form1[0].Sections7-9[0].TextField11[16]
+  WORK_PHONE_INTERNATIONAL: "9504", // form1[0].Sections7-9[0].#field[38]
+  WORK_PHONE_NIGHT: "9503", // form1[0].Sections7-9[0].#field[39]
+  WORK_PHONE_DAY: "9562", // form1[0].Sections7-9[0].#field[40]
 
-    RESIDENCE_TYPE: (entryIndex: number) => `form1[0].Sections7-9[0].DropDownList[${entryIndex + 100}]`,
-
-    VERIFICATION_NAME: (entryIndex: number) => `form1[0].Sections7-9[0].TextField[${entryIndex * 10 + 4}]`,
-    VERIFICATION_PHONE: (entryIndex: number) => `form1[0].Sections7-9[0].TextField[${entryIndex * 10 + 5}]`,
-    VERIFICATION_EMAIL: (entryIndex: number) => `form1[0].Sections7-9[0].TextField[${entryIndex * 10 + 6}]`,
-    VERIFICATION_RELATIONSHIP: (entryIndex: number) => `form1[0].Sections7-9[0].TextField[${entryIndex * 10 + 7}]`,
-
-    ADDITIONAL_INFO: (entryIndex: number) => `form1[0].Sections7-9[0].TextArea[${entryIndex}]`
-  }
-} as const;
-
-// ============================================================================
-// HELPER TYPES
-// ============================================================================
-
-/**
- * Residence type options
- */
-export const RESIDENCE_TYPES = {
-  OWN: 'Own',
-  RENT: 'Rent',
-  MILITARY: 'Military Housing',
-  OTHER: 'Other'
+  // Mobile phone fields
+  MOBILE_PHONE_NUMBER: "9561", // form1[0].Sections7-9[0].p3-t68[3]
+  MOBILE_PHONE_EXTENSION: "9560", // form1[0].Sections7-9[0].TextField11[17]
+  MOBILE_PHONE_INTERNATIONAL: "9559", // form1[0].Sections7-9[0].#field[43]
+  MOBILE_PHONE_NIGHT: "9558", // form1[0].Sections7-9[0].#field[44]
+  MOBILE_PHONE_DAY: "9557", // form1[0].Sections7-9[0].#field[45]
 } as const;
 
 /**
- * Common relationship types for verification contacts
+ * Field name mappings for Section 7 Contact Information
+ * Full field paths from section-7.json
  */
-export const VERIFICATION_RELATIONSHIPS = {
-  LANDLORD: 'Landlord',
-  PROPERTY_MANAGER: 'Property Manager',
-  NEIGHBOR: 'Neighbor',
-  FRIEND: 'Friend',
-  FAMILY_MEMBER: 'Family Member',
-  EMPLOYER: 'Employer',
-  OTHER: 'Other'
+export const SECTION7_FIELD_NAMES = {
+  // Email fields
+  HOME_EMAIL: "form1[0].Sections7-9[0].TextField11[13]",
+  WORK_EMAIL: "form1[0].Sections7-9[0].TextField11[14]",
+
+  // Home phone fields
+  HOME_PHONE_NUMBER: "form1[0].Sections7-9[0].p3-t68[1]",
+  HOME_PHONE_EXTENSION: "form1[0].Sections7-9[0].TextField11[15]",
+  HOME_PHONE_INTERNATIONAL: "form1[0].Sections7-9[0].#field[33]",
+  HOME_PHONE_NIGHT: "form1[0].Sections7-9[0].#field[34]",
+  HOME_PHONE_DAY: "form1[0].Sections7-9[0].#field[35]",
+
+  // Work phone fields
+  WORK_PHONE_NUMBER: "form1[0].Sections7-9[0].p3-t68[2]",
+  WORK_PHONE_EXTENSION: "form1[0].Sections7-9[0].TextField11[16]",
+  WORK_PHONE_INTERNATIONAL: "form1[0].Sections7-9[0].#field[38]",
+  WORK_PHONE_NIGHT: "form1[0].Sections7-9[0].#field[39]",
+  WORK_PHONE_DAY: "form1[0].Sections7-9[0].#field[40]",
+
+  // Mobile phone fields
+  MOBILE_PHONE_NUMBER: "form1[0].Sections7-9[0].p3-t68[3]",
+  MOBILE_PHONE_EXTENSION: "form1[0].Sections7-9[0].TextField11[17]",
+  MOBILE_PHONE_INTERNATIONAL: "form1[0].Sections7-9[0].#field[43]",
+  MOBILE_PHONE_NIGHT: "form1[0].Sections7-9[0].#field[44]",
+  MOBILE_PHONE_DAY: "form1[0].Sections7-9[0].#field[45]",
 } as const;
 
 // ============================================================================
@@ -172,28 +139,139 @@ export const VERIFICATION_RELATIONSHIPS = {
 // ============================================================================
 
 /**
- * Type for creating new residence entries
+ * Type for contact field updates
  */
-export type CreateResidenceEntryParams = {
-  entryIndex: number;
-  defaultCountry?: string;
-};
-
-/**
- * Type for residence entry updates
- */
-export type ResidenceEntryUpdate = {
-  entryIndex: number;
+export type Section7FieldUpdate = {
   fieldPath: string;
   newValue: any;
 };
 
 /**
- * Type for bulk residence entry operations
+ * Type for phone number updates
  */
-export type BulkResidenceOperation = {
-  operation: 'add' | 'remove' | 'update' | 'move';
-  entryIndex?: number;
-  targetIndex?: number;
-  data?: Partial<ResidenceEntry>;
+export type PhoneNumberUpdate = {
+  phoneType: 'home' | 'work' | 'mobile';
+  fieldType: 'number' | 'extension' | 'isInternational' | 'dayTime' | 'nightTime';
+  newValue: any;
+};
+
+/**
+ * Type for email updates
+ */
+export type EmailUpdate = {
+  emailType: 'home' | 'work';
+  newValue: string;
+};
+
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
+
+/**
+ * Creates a default phone number field structure using DRY approach
+ */
+export const createDefaultPhoneNumber = (
+  numberFieldName: string,
+  extensionFieldName: string,
+  internationalFieldName: string,
+  dayTimeFieldName: string,
+  nightTimeFieldName: string,
+  label: string
+): PhoneNumber => ({
+  number: createFieldFromReference(7, numberFieldName, ''),
+  extension: createFieldFromReference(7, extensionFieldName, ''),
+  isInternational: createFieldFromReference(7, internationalFieldName, false),
+  dayTime: createFieldFromReference(7, dayTimeFieldName, false),
+  nightTime: createFieldFromReference(7, nightTimeFieldName, false)
+});
+
+/**
+ * Creates a default Section 7 data structure using DRY approach with sections-references
+ * This eliminates hardcoded values and uses the single source of truth
+ */
+export const createDefaultSection7 = (): Section7 => {
+  // Validate field count against sections-references (expected: 17 fields)
+  validateSectionFieldCount(7, 17);
+
+  return {
+    _id: 7,
+    section7: {
+      homeEmail: createFieldFromReference(
+        7,
+        'form1[0].Sections7-9[0].TextField11[13]',
+        ''
+      ),
+      workEmail: createFieldFromReference(
+        7,
+        'form1[0].Sections7-9[0].TextField11[14]',
+        ''
+      ),
+      entries: [
+        // Home phone
+        createDefaultPhoneNumber(
+          'form1[0].Sections7-9[0].p3-t68[1]',
+          'form1[0].Sections7-9[0].TextField11[15]',
+          'form1[0].Sections7-9[0].#field[33]',
+          'form1[0].Sections7-9[0].#field[35]',
+          'form1[0].Sections7-9[0].#field[34]',
+          'Home telephone'
+        ),
+        // Work phone
+        createDefaultPhoneNumber(
+          'form1[0].Sections7-9[0].p3-t68[2]',
+          'form1[0].Sections7-9[0].TextField11[16]',
+          'form1[0].Sections7-9[0].#field[38]',
+          'form1[0].Sections7-9[0].#field[40]',
+          'form1[0].Sections7-9[0].#field[39]',
+          'Work telephone'
+        ),
+        // Mobile phone
+        createDefaultPhoneNumber(
+          'form1[0].Sections7-9[0].p3-t68[3]',
+          'form1[0].Sections7-9[0].TextField11[17]',
+          'form1[0].Sections7-9[0].#field[43]',
+          'form1[0].Sections7-9[0].#field[45]',
+          'form1[0].Sections7-9[0].#field[44]',
+          'Mobile/Cell telephone'
+        )
+      ]
+    }
+  };
+};
+
+/**
+ * Updates a field in Section 7 data structure
+ */
+export const updateSection7Field = (
+  section7Data: Section7,
+  update: Section7FieldUpdate
+): Section7 => {
+  const newData = { ...section7Data };
+
+  // Use lodash set to update nested field paths
+  const fieldPath = update.fieldPath.replace(/^section7\./, '');
+
+  if (fieldPath.includes('.')) {
+    // Handle nested phone number fields
+    const [phoneType, fieldType] = fieldPath.split('.');
+    
+    // Check if phoneType is 'home', 'work', or 'mobile' to access entries correctly
+    if (phoneType === 'home' || phoneType === 'work' || phoneType === 'mobile') {
+      // Get the index in the entries array based on phone type
+      const entryIndex = phoneType === 'home' ? 0 : phoneType === 'work' ? 1 : 2;
+      
+      // Access the correct entry in the entries array
+      const phoneEntry = newData.section7.entries[entryIndex];
+      if (phoneEntry && phoneEntry[fieldType as keyof PhoneNumber]) {
+        (phoneEntry[fieldType as keyof PhoneNumber] as Field<any>).value = update.newValue;
+      }
+    }
+  } else {
+    // Handle direct email fields
+    if (newData.section7[fieldPath as keyof ContactInformation]) {
+      (newData.section7[fieldPath as keyof ContactInformation] as Field<any>).value = update.newValue;
+    }
+  }
+
+  return newData;
 };

@@ -15,8 +15,9 @@
  * 29.7: Terrorism Associations (Section29_5[0] RadioButtonList[1]) - 3 fields
  */
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useSection29 } from '~/state/contexts/sections2.0/section29';
+import { useSF86Form } from '~/state/contexts/SF86FormContext';
 import type {
   SubsectionKey,
   OrganizationSubsectionKey,
@@ -27,11 +28,50 @@ import type {
 interface Section29ComponentProps {
   className?: string;
   onValidationChange?: (isValid: boolean) => void;
+  onNext?: () => void;
 }
 
- const Section29Component: React.FC<Section29ComponentProps> = ({
+// Maximum number of entries allowed per subsection
+const MAX_ENTRIES_PER_SUBSECTION = 2;
+
+// US States for dropdown
+const US_STATES = [
+  { value: "", label: "Select state..." },
+  { value: "AL", label: "Alabama" }, { value: "AK", label: "Alaska" }, { value: "AZ", label: "Arizona" },
+  { value: "AR", label: "Arkansas" }, { value: "CA", label: "California" }, { value: "CO", label: "Colorado" },
+  { value: "CT", label: "Connecticut" }, { value: "DE", label: "Delaware" }, { value: "DC", label: "District of Columbia" },
+  { value: "FL", label: "Florida" }, { value: "GA", label: "Georgia" }, { value: "HI", label: "Hawaii" },
+  { value: "ID", label: "Idaho" }, { value: "IL", label: "Illinois" }, { value: "IN", label: "Indiana" },
+  { value: "IA", label: "Iowa" }, { value: "KS", label: "Kansas" }, { value: "KY", label: "Kentucky" },
+  { value: "LA", label: "Louisiana" }, { value: "ME", label: "Maine" }, { value: "MD", label: "Maryland" },
+  { value: "MA", label: "Massachusetts" }, { value: "MI", label: "Michigan" }, { value: "MN", label: "Minnesota" },
+  { value: "MS", label: "Mississippi" }, { value: "MO", label: "Missouri" }, { value: "MT", label: "Montana" },
+  { value: "NE", label: "Nebraska" }, { value: "NV", label: "Nevada" }, { value: "NH", label: "New Hampshire" },
+  { value: "NJ", label: "New Jersey" }, { value: "NM", label: "New Mexico" }, { value: "NY", label: "New York" },
+  { value: "NC", label: "North Carolina" }, { value: "ND", label: "North Dakota" }, { value: "OH", label: "Ohio" },
+  { value: "OK", label: "Oklahoma" }, { value: "OR", label: "Oregon" }, { value: "PA", label: "Pennsylvania" },
+  { value: "RI", label: "Rhode Island" }, { value: "SC", label: "South Carolina" }, { value: "SD", label: "South Dakota" },
+  { value: "TN", label: "Tennessee" }, { value: "TX", label: "Texas" }, { value: "UT", label: "Utah" },
+  { value: "VT", label: "Vermont" }, { value: "VA", label: "Virginia" }, { value: "WA", label: "Washington" },
+  { value: "WV", label: "West Virginia" }, { value: "WI", label: "Wisconsin" }, { value: "WY", label: "Wyoming" }
+];
+
+// Common countries for dropdown
+const COUNTRIES = [
+  { value: "", label: "Select country..." },
+  { value: "United States", label: "United States" },
+  { value: "Canada", label: "Canada" },
+  { value: "Mexico", label: "Mexico" },
+  { value: "United Kingdom", label: "United Kingdom" },
+  { value: "Germany", label: "Germany" },
+  { value: "France", label: "France" },
+  { value: "Other", label: "Other" }
+];
+
+export const Section29Component: React.FC<Section29ComponentProps> = ({
   className = '',
-  onValidationChange
+  onValidationChange,
+  onNext
 }) => {
   const {
     section29Data,
@@ -43,12 +83,66 @@ interface Section29ComponentProps {
     validateSection
   } = useSection29();
 
+  // SF86 Form Context for data persistence (like Section 1)
+  const sf86Form = useSF86Form();
+
   // Ensure section29Data is available
   if (!section29Data) {
     return <div>Loading Section 29...</div>;
   }
 
   const [activeSubsection, setActiveSubsection] = useState<SubsectionKey>('terrorismOrganizations');
+  const [expandedEntries, setExpandedEntries] = useState<Set<number>>(new Set([0]));
+  const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
+
+  // Track validation state internally (like Section 1)
+  const [isValid, setIsValid] = useState(false);
+
+  // Handle validation on component mount and when data changes (like Section 1)
+  useEffect(() => {
+    const validationResult = validateSection();
+    setIsValid(validationResult);
+    onValidationChange?.(validationResult);
+  }, [section29Data, onValidationChange]); // FIXED: Removed validateSection to prevent infinite loops
+
+  // Removed auto-sync to prevent infinite loops
+  // Section 29 data is only submitted to main context on explicit submit (like Section 1)
+
+  // Toggle entry expansion
+  const toggleEntryExpansion = useCallback((index: number) => {
+    setExpandedEntries(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(index)) {
+        newSet.delete(index);
+      } else {
+        newSet.add(index);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // Date validation helper
+  const validateDate = (dateString: string, fieldName: string): string | null => {
+    if (!dateString) return null;
+
+    const datePattern = /^\d{4}-\d{2}$/;
+    if (!datePattern.test(dateString)) {
+      return `${fieldName} must be in YYYY-MM format`;
+    }
+
+    const [year, month] = dateString.split('-').map(Number);
+    const currentYear = new Date().getFullYear();
+
+    if (year < 1900 || year > currentYear + 1) {
+      return `${fieldName} year must be between 1900 and ${currentYear + 1}`;
+    }
+
+    if (month < 1 || month > 12) {
+      return `${fieldName} month must be between 01 and 12`;
+    }
+
+    return null;
+  };
 
   // Complete 7 subsections configuration (141 total fields)
   const subsections = [
@@ -108,9 +202,16 @@ interface Section29ComponentProps {
     updateSubsectionFlag(subsectionKey, value);
   };
 
-  // Handle adding entries
+  // Handle adding entries with limit check
   const handleAddEntry = (subsectionKey: SubsectionKey) => {
     const subsection = subsections.find(s => s.key === subsectionKey);
+    const currentEntries = section29Data.section29[subsectionKey]?.entries || [];
+
+    // Check if we've reached the maximum entries limit
+    if (currentEntries.length >= MAX_ENTRIES_PER_SUBSECTION) {
+      alert(`Maximum of ${MAX_ENTRIES_PER_SUBSECTION} entries allowed per subsection.`);
+      return;
+    }
 
     if (subsection?.type === 'organization') {
       addOrganizationEntry(subsectionKey as OrganizationSubsectionKey);
@@ -126,26 +227,65 @@ interface Section29ComponentProps {
     }
   };
 
-  // Handle field value changes
-  const handleFieldChange = (
+  // Enhanced field update with validation
+  const handleFieldChange = useCallback((
     subsectionKey: SubsectionKey,
     entryIndex: number,
     fieldPath: string,
     value: any
   ) => {
     updateFieldValue(subsectionKey, entryIndex, fieldPath, value);
-  };
 
-  // Handle validation
-  const handleValidation = () => {
+    // Real-time validation for date fields
+    if (fieldPath.includes('date') && typeof value === 'string') {
+      const error = validateDate(value, fieldPath);
+      const errorKey = `${subsectionKey}-${entryIndex}-${fieldPath}`;
+      if (error) {
+        setValidationErrors(prev => ({
+          ...prev,
+          [errorKey]: [error]
+        }));
+      } else {
+        setValidationErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[errorKey];
+          return newErrors;
+        });
+      }
+    }
+  }, [updateFieldValue, validateDate]);
+
+  // Handle submission with data persistence (like Section 1)
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     const result = validateSection();
+    setIsValid(result);
     onValidationChange?.(result);
-    return result;
+
+    if (result) {
+      try {
+        // Update the central form context with Section 29 data
+        sf86Form.updateSectionData('section29', section29Data);
+
+        // Save the form data to persistence layer
+        await sf86Form.saveForm();
+
+        console.log('✅ Section 29 data saved successfully:', section29Data);
+
+        // Proceed to next section if callback provided
+        if (onNext) {
+          onNext();
+        }
+      } catch (error) {
+        console.error('❌ Failed to save Section 29 data:', error);
+        // Could show an error message to user here
+      }
+    }
   };
 
   // Get current subsection data
   const getCurrentSubsectionData = () => {
-    const data = section29Data[activeSubsection];
+    const data = section29Data.section29[activeSubsection];
     return data;
   };
 
@@ -165,8 +305,6 @@ interface Section29ComponentProps {
   const flagField = getFlagField();
   const entries = getCurrentSubsectionData()?.entries || [];
 
-
-
   return (
     <div className={`bg-white rounded-lg shadow-lg p-6 ${className}`} data-testid="section29-form">
       {/* Section Header */}
@@ -176,8 +314,11 @@ interface Section29ComponentProps {
         </h2>
         <p className="text-gray-600">
           This section covers various types of associations and activities related to terrorism,
-          violent overthrow, and related organizations.
+          violent overthrow, and related organizations. Complete all 7 subsections that apply to you.
         </p>
+        <div className="mt-4 text-sm text-gray-500">
+          Fields marked with <span className="text-red-500">*</span> are required when applicable.
+        </div>
       </div>
 
       {/* Subsection Navigation */}
@@ -221,7 +362,7 @@ interface Section29ComponentProps {
                     type="radio"
                     name={`${activeSubsection}-flag`}
                     value="YES"
-                    checked={flagField.value === "YES"}
+                    checked={flagField.value === "YES" || flagField.value?.startsWith?.("YES")}
                     onChange={() => handleSubsectionFlagChange(activeSubsection, "YES")}
                     className="mr-2"
                   />
@@ -232,7 +373,7 @@ interface Section29ComponentProps {
                     type="radio"
                     name={`${activeSubsection}-flag`}
                     value="NO"
-                    checked={flagField.value === "NO"}
+                    checked={flagField.value?.startsWith?.("NO") || flagField.value === "NO"}
                     onChange={() => handleSubsectionFlagChange(activeSubsection, "NO")}
                     className="mr-2"
                   />
@@ -247,24 +388,35 @@ interface Section29ComponentProps {
           </div>
 
           {/* Entries Section */}
-          {flagField?.value === "YES" && (
+          {(flagField?.value === "YES" || flagField?.value?.startsWith?.("YES")) && (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h4 className="text-lg font-medium text-gray-900">
-                  {currentSubsection.type === 'organization' ? 'Organizations' :
-                   currentSubsection.type === 'activity' ? 'Activities' :
-                   currentSubsection.type === 'advocacy' ? 'Advocacy Instances' :
-                   currentSubsection.type === 'association' ? 'Associations' : 'Entries'}
-                </h4>
+                <div>
+                  <h4 className="text-lg font-medium text-gray-900">
+                    {currentSubsection.type === 'organization' ? 'Organizations' :
+                     currentSubsection.type === 'activity' ? 'Activities' :
+                     currentSubsection.type === 'advocacy' ? 'Advocacy Instances' :
+                     currentSubsection.type === 'association' ? 'Associations' : 'Entries'}
+                  </h4>
+                  <p className="text-sm text-gray-500">
+                    Maximum {MAX_ENTRIES_PER_SUBSECTION} entries allowed
+                  </p>
+                </div>
                 <button
                   onClick={() => handleAddEntry(activeSubsection)}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                  className={`px-4 py-2 text-white rounded-md transition-colors ${
+                    entries.length >= MAX_ENTRIES_PER_SUBSECTION
+                      ? 'bg-gray-400 cursor-not-allowed'
+                      : 'bg-blue-500 hover:bg-blue-600'
+                  }`}
+                  disabled={entries.length >= MAX_ENTRIES_PER_SUBSECTION}
                   data-testid={`add-${activeSubsection}-entry`}
                 >
                   Add {currentSubsection.type === 'organization' ? 'Organization' :
                        currentSubsection.type === 'activity' ? 'Activity' :
                        currentSubsection.type === 'advocacy' ? 'Advocacy Instance' :
                        currentSubsection.type === 'association' ? 'Association' : 'Entry'}
+                  {entries.length >= MAX_ENTRIES_PER_SUBSECTION ? ' (Max Reached)' : ''}
                 </button>
               </div>
 
@@ -282,6 +434,7 @@ interface Section29ComponentProps {
                                currentSubsection.type === 'activity' ? 'Activity' :
                                currentSubsection.type === 'advocacy' ? 'Advocacy Instance' :
                                currentSubsection.type === 'association' ? 'Association' : 'Entry'}" to get started.
+                    Maximum {MAX_ENTRIES_PER_SUBSECTION} entries allowed.
                   </p>
                 </div>
               ) : (
@@ -300,7 +453,7 @@ interface Section29ComponentProps {
                               : currentSubsection.type === 'association'
                               ? `Association ${index + 1}`
                               : `Entry ${index + 1}`
-                            }
+                            } of {MAX_ENTRIES_PER_SUBSECTION}
                           </h5>
                           {entry.address?.street?.value && (
                             <p className="text-sm text-gray-600">
@@ -308,16 +461,26 @@ interface Section29ComponentProps {
                             </p>
                           )}
                         </div>
-                        <button
-                          onClick={() => removeEntry(activeSubsection, index)}
-                          className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
-                          data-testid={`remove-${activeSubsection}-entry-${index}`}
-                        >
-                          Remove
-                        </button>
+                        <div className="flex space-x-2">
+                          <button
+                            type="button"
+                            onClick={() => toggleEntryExpansion(index)}
+                            className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+                          >
+                            {expandedEntries.has(index) ? "Collapse" : "Expand"}
+                          </button>
+                          <button
+                            onClick={() => removeEntry(activeSubsection, index)}
+                            className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600 transition-colors"
+                            data-testid={`remove-${activeSubsection}-entry-${index}`}
+                          >
+                            Remove
+                          </button>
+                        </div>
                       </div>
 
                       {/* Entry Form Fields */}
+                      {expandedEntries.has(index) && (
                       <div className="space-y-4">
                         {/* Organization-specific fields */}
                         {currentSubsection.type === 'organization' && (
@@ -325,7 +488,7 @@ interface Section29ComponentProps {
                             {/* Organization Name */}
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Organization Name
+                                Organization Name <span className="text-red-500">*</span>
                               </label>
                               <input
                                 type="text"
@@ -364,15 +527,19 @@ interface Section29ComponentProps {
                               </div>
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                                  State
+                                  State <span className="text-red-500">*</span>
                                 </label>
-                                <input
-                                  type="text"
+                                <select
                                   value={entry.address?.state?.value || ''}
                                   onChange={(e) => handleFieldChange(activeSubsection, index, 'address.state', e.target.value)}
                                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                  placeholder="State"
-                                />
+                                >
+                                  {US_STATES.map((state) => (
+                                    <option key={state.value} value={state.value}>
+                                      {state.label}
+                                    </option>
+                                  ))}
+                                </select>
                               </div>
                               <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -391,15 +558,19 @@ interface Section29ComponentProps {
                             {/* Country */}
                             <div>
                               <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Country
+                                Country <span className="text-red-500">*</span>
                               </label>
-                              <input
-                                type="text"
+                              <select
                                 value={entry.address?.country?.value || ''}
                                 onChange={(e) => handleFieldChange(activeSubsection, index, 'address.country', e.target.value)}
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="Country"
-                              />
+                              >
+                                {COUNTRIES.map((country) => (
+                                  <option key={country.value} value={country.value}>
+                                    {country.label}
+                                  </option>
+                                ))}
+                              </select>
                             </div>
 
                             {/* Date Range */}
@@ -626,6 +797,7 @@ interface Section29ComponentProps {
                           </>
                         )}
                       </div>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -633,28 +805,92 @@ interface Section29ComponentProps {
             </div>
           )}
 
-          {/* Field Mapping Summary */}
-          <div className="mt-8 p-4 bg-gray-50 rounded-lg">
-            <h4 className="text-sm font-medium text-gray-900 mb-2">PDF Field Mapping Summary</h4>
-            <div className="text-xs text-gray-600 space-y-1">
-              <p><strong>Current Subsection:</strong> {currentSubsection?.title}</p>
-              <p><strong>Expected Fields:</strong> {currentSubsection?.fieldCount || 0}</p>
-              <p><strong>Flag Field:</strong> {flagField?.id || 'N/A'}</p>
-              <p><strong>Entries:</strong> {entries.length}</p>
-              <p><strong>Total Fields Mapped:</strong> {
-                (flagField ? 1 : 0) +
-                entries.reduce((total: number, entry: any) => {
-                  return total + Object.keys(entry).filter(key =>
-                    key !== '_id' && typeof entry[key] === 'object' && entry[key]?.id
-                  ).length;
-                }, 0)
-              }</p>
-              <div className="mt-2 pt-2 border-t border-gray-300">
-                <p><strong>Section 29 Total:</strong> 141 fields across 7 subsections</p>
-                <div className="text-xs text-gray-500 mt-1">
-                  29.1: 33 • 29.2: 13 • 29.3: 13 • 29.4: 33 • 29.5: 33 • 29.6: 13 • 29.7: 3
+          {/* Validation Errors Display */}
+          {Object.keys(validationErrors).length > 0 && (
+            <div className="mt-6 bg-red-50 border border-red-200 rounded-md p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">Validation Errors</h3>
+                  <div className="mt-2 text-sm text-red-700">
+                    <ul className="list-disc list-inside space-y-1">
+                      {Object.entries(validationErrors).map(([key, errors]) =>
+                        errors.map((error, index) => (
+                          <li key={`${key}-${index}`}>{error}</li>
+                        ))
+                      )}
+                    </ul>
+                  </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Comprehensive Section Summary */}
+          <div className="mt-8 p-4 bg-blue-50 rounded-lg">
+            <h4 className="text-sm font-medium text-gray-900 mb-2">Section 29 Interaction Summary</h4>
+            <div className="text-xs text-gray-600 space-y-1">
+              <p><strong>Current Subsection:</strong> {currentSubsection?.title}</p>
+              <p><strong>Expected Fields per Entry:</strong> {currentSubsection?.fieldCount || 0}</p>
+              <p><strong>Active Entries:</strong> {entries.length} of {MAX_ENTRIES_PER_SUBSECTION} maximum</p>
+              <p><strong>Flag Response:</strong> {flagField?.value || 'Not answered'}</p>
+              <div className="mt-2 pt-2 border-t border-blue-200">
+                <p><strong>📋 All Section 29 Subsections (141 total fields):</strong></p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 text-xs">
+                  {subsections.map((subsection) => {
+                    const subsectionData = section29Data.section29[subsection.key];
+                    const entriesCount = subsectionData?.entries?.length || 0;
+                    const flagValue = subsectionData && 'hasAssociation' in subsectionData
+                      ? subsectionData.hasAssociation?.value
+                      : subsectionData && 'hasActivity' in subsectionData
+                      ? subsectionData.hasActivity?.value
+                      : 'N/A';
+
+                    return (
+                      <div key={subsection.key} className={`p-2 rounded border ${
+                        activeSubsection === subsection.key ? 'bg-blue-100 border-blue-300' : 'bg-white border-gray-200'
+                      }`}>
+                        <div className="font-medium">{subsection.title}</div>
+                        <div className="text-xs text-gray-500">
+                          Fields: {subsection.fieldCount} • Flag: {flagValue?.substring(0,3) || 'N/A'} • Entries: {entriesCount}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="mt-2 pt-2 border-t border-blue-200 text-xs text-gray-500">
+                  💡 <strong>Tip:</strong> Navigate between subsections using the tabs above. Each subsection can have up to {MAX_ENTRIES_PER_SUBSECTION} entries.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Submit Button and Status */}
+          <div className="mt-8 flex justify-between items-center">
+            <div className="text-sm text-gray-600">
+              {isValid ? (
+                <span className="text-green-600">✅ Section 29 is valid and ready to save</span>
+              ) : (
+                <span className="text-red-600">❌ Please complete all required fields</span>
+              )}
+            </div>
+            <div className="flex space-x-4">
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={!isValid}
+                className={`px-6 py-2 rounded-md font-medium transition-colors ${
+                  isValid
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                Save & Continue
+              </button>
             </div>
           </div>
         </div>
@@ -662,6 +898,5 @@ interface Section29ComponentProps {
     </div>
   );
 };
-
 
 export default Section29Component;

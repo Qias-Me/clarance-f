@@ -7,7 +7,7 @@
 
 import type { ActionFunctionArgs } from "react-router";
 import type { ApplicantFormValues } from "../../../api/interfaces/formDefinition2.0";
-import { clientPdfService2 } from "../../../api/service/clientPdfService";
+import { clientPdfService2 } from "api/service/clientPdfService2.0";
 
 export async function action({ request }: ActionFunctionArgs) {
   if (request.method !== "POST") {

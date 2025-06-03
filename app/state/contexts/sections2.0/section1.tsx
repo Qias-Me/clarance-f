@@ -11,11 +11,10 @@ import React, {
   useContext,
   useState,
   useCallback,
-  useEffect,
-  useRef
+  useEffect
 } from 'react';
-import cloneDeep from 'lodash.clonedeep';
-import set from 'lodash.set';
+import cloneDeep from 'lodash/cloneDeep';
+import set from 'lodash/set';
 import type {
   Section1,
   Section1SubsectionKey,
@@ -31,7 +30,7 @@ import {
 } from '../../../../api/interfaces/sections2.0/section1';
 
 import { useSection86FormIntegration } from '../shared/section-context-integration';
-import type { ValidationResult, ValidationError } from '../shared/base-interfaces';
+import type { ValidationResult, ValidationError, ChangeSet } from '../shared/base-interfaces';
 
 // ============================================================================
 // CONTEXT INTERFACE
@@ -47,6 +46,7 @@ export interface Section1ContextType {
   // Basic Actions
   updatePersonalInfo: (fieldPath: string, value: string) => void;
   updateFullName: (update: Section1FieldUpdate) => void;
+  updateFieldValue: (path: string, value: any) => void;
 
   // Validation
   validateSection: () => ValidationResult;
@@ -62,41 +62,10 @@ export interface Section1ContextType {
 // INITIAL STATE CREATION
 // ============================================================================
 
-const createInitialSection1State = (): Section1 => ({
-  _id: 1,
-  personalInfo: {
-    fullName: {
-      lastName: {
-        value: '',
-        id: "form1[0].Sections1-6[0].TextField11[0]",
-        type: 'text',
-        label: 'Last Name',
-        rect: { x: 0, y: 0, width: 0, height: 0 }
-      },
-      firstName: {
-        value: '',
-        id: "form1[0].Sections1-6[0].TextField11[1]",
-        type: 'text',
-        label: 'First Name',
-        rect: { x: 0, y: 0, width: 0, height: 0 }
-      },
-      middleName: {
-        value: '',
-        id: "form1[0].Sections1-6[0].TextField11[2]",
-        type: 'text',
-        label: 'Middle Name',
-        rect: { x: 0, y: 0, width: 0, height: 0 }
-      },
-      suffix: {
-        value: '',
-        id: "form1[0].Sections1-6[0].suffix[0]",
-        type: 'text',
-        label: 'Suffix',
-        rect: { x: 0, y: 0, width: 0, height: 0 }
-      }
-    }
-  }
-});
+// Use the DRY approach with sections-references instead of hardcoded values
+const createInitialSection1State = (): Section1 => {
+  return createDefaultSection1();
+};
 
 // ============================================================================
 // VALIDATION RULES
@@ -133,12 +102,18 @@ export const Section1Provider: React.FC<Section1ProviderProps> = ({ children }) 
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [initialData] = useState<Section1>(createInitialSection1State());
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // ============================================================================
   // COMPUTED VALUES
   // ============================================================================
 
   const isDirty = JSON.stringify(section1Data) !== JSON.stringify(initialData);
+
+  // Set initialized flag after component mounts
+  useEffect(() => {
+    setIsInitialized(true);
+  }, []);
 
   // ============================================================================
   // VALIDATION FUNCTIONS
@@ -154,7 +129,7 @@ export const Section1Provider: React.FC<Section1ProviderProps> = ({ children }) 
       allowInitialsOnly: false
     };
 
-    const nameValidation = validateFullName(section1Data.personalInfo.fullName, validationContext);
+    const nameValidation = validateFullName(section1Data.section1, validationContext);
 
     if (!nameValidation.isValid) {
       nameValidation.errors.forEach(error => {
@@ -176,12 +151,8 @@ export const Section1Provider: React.FC<Section1ProviderProps> = ({ children }) 
       });
     });
 
-    // Update local errors
-    const newErrors: Record<string, string> = {};
-    validationErrors.forEach(error => {
-      newErrors[error.field] = error.message;
-    });
-    setErrors(newErrors);
+    // Don't call setErrors here - it causes infinite loops when called during render
+    // Errors will be updated separately when needed
 
     return {
       isValid: validationErrors.length === 0,
@@ -196,8 +167,32 @@ export const Section1Provider: React.FC<Section1ProviderProps> = ({ children }) 
       allowInitialsOnly: false
     };
 
-    return validateFullName(section1Data.personalInfo.fullName, validationContext);
+    return validateFullName(section1Data.section1, validationContext);
   }, [section1Data]);
+
+  // Update errors when section data changes (but not during initial render)
+  useEffect(() => {
+    // Skip validation on initial render to avoid infinite loops
+    if (!isInitialized) return;
+
+    const validationResult = validateSection();
+    const newErrors: Record<string, string> = {};
+
+    validationResult.errors.forEach(error => {
+      newErrors[error.field] = error.message;
+    });
+
+    // Only update errors if they actually changed
+    const currentErrorKeys = Object.keys(errors);
+    const newErrorKeys = Object.keys(newErrors);
+    const errorsChanged =
+      currentErrorKeys.length !== newErrorKeys.length ||
+      currentErrorKeys.some(key => errors[key] !== newErrors[key]);
+
+    if (errorsChanged) {
+      setErrors(newErrors);
+    }
+  }, [section1Data, isInitialized, errors]); // Removed validateSection to prevent infinite loops
 
   // ============================================================================
   // CRUD OPERATIONS
@@ -206,7 +201,7 @@ export const Section1Provider: React.FC<Section1ProviderProps> = ({ children }) 
   const updatePersonalInfo = useCallback((fieldPath: string, value: string) => {
     setSection1Data(prevData => {
       const newData = cloneDeep(prevData);
-      set(newData, `personalInfo.fullName.${fieldPath}.value`, value);
+      set(newData, `section1.${fieldPath}.value`, value);
       return newData;
     });
   }, []);
@@ -216,6 +211,23 @@ export const Section1Provider: React.FC<Section1ProviderProps> = ({ children }) 
       return updateSection1Field(prevData, update);
     });
   }, []);
+
+  /**
+   * Generic field update function for integration compatibility
+   * Maps generic field paths to Section 1 specific update functions
+   */
+  const updateFieldValue = useCallback((path: string, value: any) => {
+    // Parse path to update the correct field
+    if (path === 'section1.lastName') {
+      updateFullNameField({ fieldPath: 'section1.lastName', newValue: value });
+    } else if (path === 'section1.firstName') {
+      updateFullNameField({ fieldPath: 'section1.firstName', newValue: value });
+    } else if (path === 'section1.middleName') {
+      updateFullNameField({ fieldPath: 'section1.middleName', newValue: value });
+    } else if (path === 'section1.suffix') {
+      updateFullNameField({ fieldPath: 'section1.suffix', newValue: value });
+    }
+  }, [updateFullNameField]);
 
   // ============================================================================
   // UTILITY FUNCTIONS
@@ -232,23 +244,74 @@ export const Section1Provider: React.FC<Section1ProviderProps> = ({ children }) 
     setErrors({});
   }, []);
 
-  const getChanges = useCallback(() => {
-    return isDirty ? { section1: section1Data } : {};
-  }, [section1Data, isDirty]);
+  const getChanges = useCallback((): ChangeSet => {
+    const changes: ChangeSet = {};
+
+    // Simple change detection - compare with initial data
+    if (JSON.stringify(section1Data) !== JSON.stringify(initialData)) {
+      changes['section1'] = {
+        oldValue: initialData,
+        newValue: section1Data,
+        timestamp: new Date()
+      };
+    }
+
+    return changes;
+  }, [section1Data, initialData]);
+
+  // ============================================================================
+  // FIELD FLATTENING FOR PDF GENERATION
+  // ============================================================================
+
+  /**
+   * Flatten Section1 data structure into Field objects for PDF generation
+   * This converts the nested Section1 structure into a flat object with Field<T> objects
+   * Following the Section 29 pattern for consistency
+   */
+  const flattenSection1Fields = useCallback((): Record<string, any> => {
+    const flatFields: Record<string, any> = {};
+
+    const addField = (field: any, _path: string) => {
+      if (
+        field &&
+        typeof field === "object" &&
+        "id" in field &&
+        "value" in field
+      ) {
+        flatFields[field.id] = field;
+      }
+    };
+
+    // Flatten section1 personal information fields
+    if (section1Data.section1) {
+      addField(section1Data.section1.lastName, 'section1.lastName');
+      addField(section1Data.section1.firstName, 'section1.firstName');
+      addField(section1Data.section1.middleName, 'section1.middleName');
+      addField(section1Data.section1.suffix, 'section1.suffix');
+    }
+
+    return flatFields;
+  }, [section1Data]);
 
   // ============================================================================
   // SF86FORM INTEGRATION
   // ============================================================================
 
-  // Integration with main form context (optional)
-  // const integration = useSection86FormIntegration(
-  //   'section1',
-  //   'Section 1: Information About You',
-  //   section1Data,
-  //   setSection1Data,
-  //   validateSection,
-  //   getChanges
-  // );
+  // Integration with main form context using standard pattern
+  // Note: integration variable is used internally by the hook for registration
+  const integration = useSection86FormIntegration(
+    'section1',
+    'Section 1: Information About You',
+    section1Data,
+    setSection1Data,
+    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
+    getChanges,
+    updateFieldValue // Pass Section 1's updateFieldValue function to integration
+  );
+
+
+
+
 
   // ============================================================================
   // CONTEXT VALUE
@@ -264,6 +327,7 @@ export const Section1Provider: React.FC<Section1ProviderProps> = ({ children }) 
     // Basic Actions
     updatePersonalInfo,
     updateFullName: updateFullNameField,
+    updateFieldValue,
 
     // Validation
     validateSection,

@@ -1,8 +1,8 @@
 /**
  * Section 3: Place of Birth
  *
- * TypeScript interface definitions for SF-86 Section 3 place of birth data structure.
- * Based on the established Field<T> interface patterns and PDF field ID mappings.
+ * TypeScript interface definitions for SF-86 Section 3 (Place of Birth) data structure.
+ * Based on the established Field<T> interface patterns and PDF field ID mappings from section-3.json.
  */
 
 import type { Field } from '../formDefinition2.0';
@@ -12,13 +12,13 @@ import type { Field } from '../formDefinition2.0';
 // ============================================================================
 
 /**
- * Place of birth location information
+ * Place of Birth information structure for Section 3
  */
 export interface PlaceOfBirth {
   city: Field<string>;
   county: Field<string>;
-  state: Field<string>;
   country: Field<string>;
+  state?: Field<string>; // Only present for US births
 }
 
 /**
@@ -26,7 +26,7 @@ export interface PlaceOfBirth {
  */
 export interface Section3 {
   _id: number;
-  placeOfBirth: PlaceOfBirth;
+  section3: PlaceOfBirth;
 }
 
 // ============================================================================
@@ -36,7 +36,35 @@ export interface Section3 {
 /**
  * Section 3 subsection keys for type safety
  */
-export type Section3SubsectionKey = 'placeOfBirth';
+export type Section3SubsectionKey = 'section3';
+
+// ============================================================================
+// FIELD ID MAPPINGS
+// ============================================================================
+
+/**
+ * PDF field ID mappings for Section 3 (Place of Birth)
+ * Based on the actual field IDs from section-3.json (4-digit format)
+ */
+export const SECTION3_FIELD_IDS = {
+  // Place of birth fields
+  CITY: "9446", // form1[0].Sections1-6[0].TextField11[3]
+  COUNTY: "9445", // form1[0].Sections1-6[0].TextField11[4] 
+  COUNTRY: "9444", // form1[0].Sections1-6[0].DropDownList1[0]
+  STATE: "9443" // form1[0].Sections1-6[0].School6_State[1]
+} as const;
+
+/**
+ * Field name mappings for Section 3 (Place of Birth)
+ * Full field paths from section-3.json
+ */
+export const SECTION3_FIELD_NAMES = {
+  // Place of birth fields
+  CITY: "form1[0].Sections1-6[0].TextField11[3]",
+  COUNTY: "form1[0].Sections1-6[0].TextField11[4]",
+  COUNTRY: "form1[0].Sections1-6[0].DropDownList1[0]",
+  STATE: "form1[0].Sections1-6[0].School6_State[1]"
+} as const;
 
 // ============================================================================
 // VALIDATION INTERFACES
@@ -61,22 +89,6 @@ export interface Section3ValidationContext {
   rules: Section3ValidationRules;
   defaultCountry: string;
 }
-
-// ============================================================================
-// FIELD ID MAPPINGS
-// ============================================================================
-
-/**
- * PDF field ID patterns for Section 3
- * Based on the Sections1-6 pattern from the JSON reference
- */
-export const SECTION3_FIELD_IDS = {
-  // Place of birth fields
-  CITY: "form1[0].Sections1-6[0].TextField11[3]",
-  COUNTY: "form1[0].Sections1-6[0].TextField11[4]",
-  STATE: "form1[0].Sections1-6[0].School6_State[0]",
-  COUNTRY: "form1[0].Sections1-6[0].DropDownList1[0]"
-} as const;
 
 // ============================================================================
 // HELPER TYPES
@@ -133,19 +145,11 @@ export const LOCATION_VALIDATION = {
 // ============================================================================
 
 /**
- * Type for creating new Section 3 data
- */
-export type CreateSection3Params = {
-  defaultCountry?: string;
-  defaultState?: string;
-};
-
-/**
- * Type for Section 3 field updates
+ * Type for place of birth field updates
  */
 export type Section3FieldUpdate = {
-  fieldPath: 'city' | 'county' | 'state' | 'country';
-  newValue: string;
+  fieldPath: string;
+  newValue: any;
 };
 
 /**
@@ -158,72 +162,150 @@ export type LocationValidationResult = {
 };
 
 // ============================================================================
-// FACTORY FUNCTIONS
+// HELPER FUNCTIONS
 // ============================================================================
 
 /**
- * Creates a default Section 3 data structure
+ * Get list of countries for dropdown
  */
-export function createDefaultSection3(params?: CreateSection3Params): Section3 {
-  return {
-    _id: 3,
-    placeOfBirth: {
-      city: { value: '', id: SECTION3_FIELD_IDS.CITY },
-      county: { value: '', id: SECTION3_FIELD_IDS.COUNTY },
-      state: { value: params?.defaultState || '', id: SECTION3_FIELD_IDS.STATE },
-      country: { value: params?.defaultCountry || BIRTH_COUNTRIES.US, id: SECTION3_FIELD_IDS.COUNTRY }
+export const getCountryList = (): string[] => [
+  "United States",
+  "Afghanistan",
+  "Albania",
+  "Algeria",
+  // This would typically include all countries from the dropdown
+  // Abbreviated for brevity
+];
+
+/**
+ * Get list of US states for dropdown
+ */
+export const getStateList = (): string[] => [
+  "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "DC", "FL",
+  "GA", "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME",
+  "MD", "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH",
+  "NJ", "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI",
+  "SC", "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY"
+];
+
+/**
+ * Creates a default Section 3 data structure with correct field IDs
+ */
+export const createDefaultSection3 = (): Section3 => ({
+  _id: 3,
+  section3: {
+    city: {
+      id: SECTION3_FIELD_IDS.CITY,
+      name: SECTION3_FIELD_NAMES.CITY,
+      type: 'PDFTextField',
+      label: 'City',
+      value: '',
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    county: {
+      id: SECTION3_FIELD_IDS.COUNTY,
+      name: SECTION3_FIELD_NAMES.COUNTY,
+      type: 'PDFTextField',
+      label: 'County',
+      value: '',
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    country: {
+      id: SECTION3_FIELD_IDS.COUNTRY,
+      name: SECTION3_FIELD_NAMES.COUNTRY,
+      type: 'PDFDropdown',
+      label: 'Country',
+      value: 'United States',
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    state: {
+      id: SECTION3_FIELD_IDS.STATE,
+      name: SECTION3_FIELD_NAMES.STATE,
+      type: 'PDFDropdown',
+      label: 'State',
+      value: '',
+      rect: { x: 0, y: 0, width: 0, height: 0 }
     }
-  };
-}
+  }
+});
+
+/**
+ * Updates a specific field in the Section 3 data structure
+ */
+export const updateSection3Field = (
+  section3Data: Section3,
+  update: Section3FieldUpdate
+): Section3 => {
+  const { fieldPath, newValue } = update;
+  const newData = { ...section3Data };
+  
+  // Update the specified field
+  if (fieldPath === 'section3.city') {
+    newData.section3.city.value = newValue;
+  } else if (fieldPath === 'section3.county') {
+    newData.section3.county.value = newValue;
+  } else if (fieldPath === 'section3.country') {
+    newData.section3.country.value = newValue;
+    
+    // Handle state field visibility based on country selection
+    if (newValue !== 'United States' && newData.section3.state) {
+      newData.section3.state.value = '';
+    }
+  } else if (fieldPath === 'section3.state' && newData.section3.state) {
+    newData.section3.state.value = newValue;
+  }
+  
+  return newData;
+};
 
 /**
  * Validates place of birth information
  */
-export function validatePlaceOfBirth(placeOfBirth: PlaceOfBirth, context: Section3ValidationContext): LocationValidationResult {
+export function validatePlaceOfBirth(section3: PlaceOfBirth, context: Section3ValidationContext): LocationValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
   // Required field validation
-  if (context.rules.requiresCity && !placeOfBirth.city.value.trim()) {
+  if (context.rules.requiresCity && !section3.city.value.trim()) {
     errors.push('City is required');
   }
 
-  if (context.rules.requiresCountry && !placeOfBirth.country.value.trim()) {
+  if (context.rules.requiresCountry && !section3.country.value.trim()) {
     errors.push('Country is required');
   }
 
   // US-specific validation
-  if (placeOfBirth.country.value === BIRTH_COUNTRIES.US) {
-    if (context.rules.requiresStateForUS && !placeOfBirth.state.value.trim()) {
+  if (section3.country.value === BIRTH_COUNTRIES.US) {
+    if (context.rules.requiresStateForUS && !section3.state?.value.trim()) {
       errors.push('State is required for US birth locations');
     }
     
-    if (placeOfBirth.state.value && !Object.values(US_STATES).includes(placeOfBirth.state.value)) {
+    if (section3.state?.value && !Object.keys(US_STATES).some(key => US_STATES[key as keyof typeof US_STATES] === section3.state!.value)) {
       warnings.push('State may not be a valid US state or territory');
     }
   }
 
   // Length validation
-  if (placeOfBirth.city.value.length > LOCATION_VALIDATION.MAX_CITY_LENGTH) {
+  if (section3.city.value.length > LOCATION_VALIDATION.MAX_CITY_LENGTH) {
     errors.push(`City name exceeds maximum length of ${LOCATION_VALIDATION.MAX_CITY_LENGTH} characters`);
   }
 
-  if (placeOfBirth.county.value.length > LOCATION_VALIDATION.MAX_COUNTY_LENGTH) {
+  if (section3.county.value.length > LOCATION_VALIDATION.MAX_COUNTY_LENGTH) {
     errors.push(`County name exceeds maximum length of ${LOCATION_VALIDATION.MAX_COUNTY_LENGTH} characters`);
   }
 
   // Character validation
-  if (placeOfBirth.city.value && !LOCATION_VALIDATION.CITY_PATTERN.test(placeOfBirth.city.value)) {
+  if (section3.city.value && !LOCATION_VALIDATION.CITY_PATTERN.test(section3.city.value)) {
     errors.push('City name contains invalid characters');
   }
 
-  if (placeOfBirth.county.value && !LOCATION_VALIDATION.COUNTY_PATTERN.test(placeOfBirth.county.value)) {
+  if (section3.county.value && !LOCATION_VALIDATION.COUNTY_PATTERN.test(section3.county.value)) {
     errors.push('County name contains invalid characters');
   }
 
   // Country validation
   if (context.rules.validCountries.length > 0 && 
-      !context.rules.validCountries.includes(placeOfBirth.country.value)) {
+      !context.rules.validCountries.includes(section3.country.value)) {
     warnings.push('Country may not be in the approved list');
   }
 
@@ -235,53 +317,22 @@ export function validatePlaceOfBirth(placeOfBirth: PlaceOfBirth, context: Sectio
 }
 
 /**
- * Updates a specific field in Section 3
- */
-export function updateSection3Field(
-  section3: Section3, 
-  update: Section3FieldUpdate
-): Section3 {
-  const updated = { ...section3 };
-  
-  switch (update.fieldPath) {
-    case 'city':
-      updated.placeOfBirth.city.value = update.newValue;
-      break;
-    case 'county':
-      updated.placeOfBirth.county.value = update.newValue;
-      break;
-    case 'state':
-      updated.placeOfBirth.state.value = update.newValue;
-      break;
-    case 'country':
-      updated.placeOfBirth.country.value = update.newValue;
-      // Clear state if country is not US
-      if (update.newValue !== BIRTH_COUNTRIES.US) {
-        updated.placeOfBirth.state.value = '';
-      }
-      break;
-  }
-  
-  return updated;
-}
-
-/**
  * Checks if a location is within the United States
  */
-export function isUSLocation(placeOfBirth: PlaceOfBirth): boolean {
-  return placeOfBirth.country.value === BIRTH_COUNTRIES.US;
+export function isUSLocation(section3: PlaceOfBirth): boolean {
+  return section3.country.value === BIRTH_COUNTRIES.US;
 }
 
 /**
  * Gets formatted location string for display
  */
-export function formatLocationForDisplay(placeOfBirth: PlaceOfBirth): string {
+export function formatLocationForDisplay(section3: PlaceOfBirth): string {
   const parts: string[] = [];
   
-  if (placeOfBirth.city.value) parts.push(placeOfBirth.city.value);
-  if (placeOfBirth.county.value) parts.push(`${placeOfBirth.county.value} County`);
-  if (placeOfBirth.state.value) parts.push(placeOfBirth.state.value);
-  if (placeOfBirth.country.value) parts.push(placeOfBirth.country.value);
+  if (section3.city.value) parts.push(section3.city.value);
+  if (section3.county.value) parts.push(`${section3.county.value} County`);
+  if (section3.state?.value) parts.push(section3.state.value);
+  if (section3.country.value) parts.push(section3.country.value);
   
   return parts.join(', ');
 }

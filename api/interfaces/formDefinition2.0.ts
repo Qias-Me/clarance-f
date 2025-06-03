@@ -7,9 +7,19 @@ import type { Signature } from "./sections/signature";
 import type { Section1 } from "./sections2.0/section1";
 import type { Section2 } from "./sections2.0/section2";
 import type { Section3 } from "./sections2.0/section3";
+import type { Section4 } from "./sections2.0/section4";
+import type { Section5 } from "./sections2.0/section5";
+import type { Section6 } from "./sections2.0/section6";
 import type { Section7 } from "./sections2.0/section7";
 import type { Section8 } from "./sections2.0/section8";
+import type { Section9 } from "./sections2.0/section9";
+import type { Section10 } from "./sections2.0/section10";
+import type { Section14 } from "./sections2.0/section14";
+import type { Section15 } from "./sections2.0/section15";
 import type { Section29 } from "./sections2.0/section29";
+import type { Section19 } from "./sections2.0/section19";
+import type { Section18 } from "./sections2.0/section18";
+import type { Section26 } from "./sections2.0/section26";
 
 // Legacy imports (commented out for now)
 // import type { AlcoholUse } from "./sections/alcoholUse";
@@ -42,10 +52,12 @@ import type { Section29 } from "./sections2.0/section29";
 /**
  * Field interface for PDF form field mapping
  * Complete interface with all PDF field properties for validation and mapping
+ * Includes standardized field ID format with 4-digit numeric IDs and full field paths
  */
 interface Field<T> {
   value: T;
-  id: string;
+  id: string; // 4-digit numeric field ID (e.g., "9513")
+  name: string; // Full field path (e.g., "form1[0].Sections7-9[0].TextField11[13]")
   type: string;
   label: string;
   rect: {
@@ -54,6 +66,13 @@ interface Field<T> {
     width: number;
     height: number;
   };
+}
+
+/**
+ * Extended Field interface that includes options for dropdown fields
+ */
+interface FieldWithOptions<T> extends Field<T> {
+  options: readonly string[];
 }
 
 
@@ -65,29 +84,29 @@ interface ApplicantFormValues {
   section1?: Section1;
   section2?: Section2;
   section3?: Section3;
-  section4?: any; // TODO: Create Section4 interface
-  section5?: any; // TODO: Create Section5 interface
-  section6?: any; // TODO: Create Section6 interface
+  section4?: Section4;
+  section5?: Section5;
+  section6?: Section6;
   section7?: Section7;
   section8?: Section8;
-  section9?: any; // TODO: Create Section9 interface
-  section10?: any; // TODO: Create Section10 interface
+  section9?: Section9;
+  section10?: Section10;
   section11?: any; // TODO: Create Section11 interface
   section12?: any; // TODO: Create Section12 interface
   section13?: any; // TODO: Create Section13 interface
-  section14?: any; // TODO: Create Section14 interface
-  section15?: any; // TODO: Create Section15 interface
+  section14?: Section14;
+  section15?: Section15;
   section16?: any; // TODO: Create Section16 interface
   section17?: any; // TODO: Create Section17 interface
-  section18?: any; // TODO: Create Section18 interface
-  section19?: any; // TODO: Create Section19 interface
+  section18?: Section18;
+  section19?: Section19;
   section20?: any; // TODO: Create Section20 interface
   section21?: any; // TODO: Create Section21 interface
   section22?: any; // TODO: Create Section22 interface
   section23?: any; // TODO: Create Section23 interface
   section24?: any; // TODO: Create Section24 interface
   section25?: any; // TODO: Create Section25 interface
-  section26?: any; // TODO: Create Section26 interface
+  section26?: Section26;
   section27?: any; // TODO: Create Section27 interface
   section28?: any; // TODO: Create Section28 interface
   section29?: Section29;
@@ -99,4 +118,4 @@ interface ApplicantFormValues {
   print?: Print;
 }
 
-export type { Field, ApplicantFormValues };
+export type { Field, FieldWithOptions, ApplicantFormValues };

@@ -1,16 +1,16 @@
 /**
  * Field ID Generation Utilities for SF-86 Form Architecture
- * 
+ *
  * This module provides centralized field ID generation utilities that ensure
  * PDF compliance across all 30 sections. Based on the successful Section29
  * implementation and sectionizer JSON analysis.
  */
 
-import type { 
-  SectionFieldConfig, 
-  SubsectionConfig, 
+import type {
+  SectionFieldConfig,
+  SubsectionConfig,
   EntryFieldPattern,
-  SectionId 
+  SectionId
 } from './base-interfaces';
 
 // ============================================================================
@@ -24,31 +24,31 @@ import type {
 export const SECTION_FIELD_CONFIGS: Record<SectionId, SectionFieldConfig> = {
   section1: {
     sectionId: 'section1',
-    prefix: 'Section1[0]',
+    prefix: 'Sections1-6[0]',
     subsections: {
       personalInfo: {
-        prefix: 'Section1[0]',
+        prefix: 'Sections1-6[0]',
         simpleFields: {
           lastName: 'TextField11[0]',
           firstName: 'TextField11[1]',
           middleName: 'TextField11[2]',
-          suffix: 'TextField11[3]'
+          suffix: 'suffix[0]'
         }
       }
     }
   },
-  
+
   section7: {
     sectionId: 'section7',
-    prefix: 'Section7[0]',
+    prefix: 'Sections7-9[0]',
     subsections: {
       currentAddress: {
-        prefix: 'Section7[0]',
+        prefix: 'Sections7-9[0]',
         simpleFields: {
-          street: 'TextField11[0]',
-          city: 'TextField11[1]',
+          street: 'TextField11[13]',
+          city: 'TextField11[14]',
           state: 'School6_State[0]',
-          zipCode: 'TextField11[2]',
+          zipCode: 'TextField11[15]',
           country: 'DropDownList[0]'
         }
       },
@@ -74,7 +74,7 @@ export const SECTION_FIELD_CONFIGS: Record<SectionId, SectionFieldConfig> = {
       }
     }
   },
-  
+
   section29: {
     sectionId: 'section29',
     prefix: 'Section29[0]',
@@ -157,7 +157,7 @@ export const SECTION_FIELD_CONFIGS: Record<SectionId, SectionFieldConfig> = {
       }
     }
   },
-  
+
   // Placeholder configurations for other sections (to be implemented)
   section2: { sectionId: 'section2', prefix: 'Section2[0]', subsections: {} },
   section3: { sectionId: 'section3', prefix: 'Section3[0]', subsections: {} },
@@ -194,7 +194,7 @@ export const SECTION_FIELD_CONFIGS: Record<SectionId, SectionFieldConfig> = {
 
 /**
  * Generate a complete field ID for any section field
- * 
+ *
  * @param sectionId - The section identifier (e.g., 'section29')
  * @param subsectionKey - The subsection key (e.g., 'terrorismOrganizations')
  * @param fieldType - The field type (e.g., 'organizationName', 'address.street')
@@ -211,35 +211,35 @@ export function generateFieldId(
   if (!sectionConfig) {
     throw new Error(`Section configuration not found for: ${sectionId}`);
   }
-  
+
   const subsectionConfig = sectionConfig.subsections[subsectionKey];
   if (!subsectionConfig) {
     throw new Error(`Subsection configuration not found for: ${sectionId}.${subsectionKey}`);
   }
-  
+
   // Handle simple fields (no entry index)
   if (subsectionConfig.simpleFields && subsectionConfig.simpleFields[fieldType]) {
     const fieldPattern = subsectionConfig.simpleFields[fieldType];
     return `form1[0].${subsectionConfig.prefix}.${fieldPattern}`;
   }
-  
+
   // Handle entry fields (with entry index)
   if (subsectionConfig.entryPatterns && subsectionConfig.entryPatterns[fieldType]) {
     if (entryIndex === undefined) {
       throw new Error(`Entry index required for field type: ${fieldType}`);
     }
-    
+
     const entryPattern = subsectionConfig.entryPatterns[fieldType];
     const fieldPattern = entryPattern.pattern(entryIndex);
     return `form1[0].${subsectionConfig.prefix}.${fieldPattern}`;
   }
-  
+
   throw new Error(`Field pattern not found for: ${sectionId}.${subsectionKey}.${fieldType}`);
 }
 
 /**
  * Validate a field ID against the expected pattern
- * 
+ *
  * @param fieldId - The field ID to validate
  * @returns True if the field ID is valid
  */
@@ -251,7 +251,7 @@ export function validateFieldId(fieldId: string): boolean {
 
 /**
  * Extract section information from a field ID
- * 
+ *
  * @param fieldId - The field ID to parse
  * @returns Section information or null if invalid
  */
@@ -262,14 +262,14 @@ export function parseFieldId(fieldId: string): {
 } | null {
   const match = fieldId.match(/^form1\[0\]\.(Section\d+(?:_\d+)?)\[0\]\.(.+)$/);
   if (!match) return null;
-  
+
   const [, subsectionPrefix, fieldPattern] = match;
   const sectionMatch = subsectionPrefix.match(/^Section(\d+)/);
   if (!sectionMatch) return null;
-  
+
   const sectionNumber = parseInt(sectionMatch[1], 10);
   const sectionId = `section${sectionNumber}` as SectionId;
-  
+
   return {
     sectionId,
     subsectionPrefix,
@@ -279,7 +279,7 @@ export function parseFieldId(fieldId: string): {
 
 /**
  * Get field pattern for a specific field type
- * 
+ *
  * @param sectionId - The section identifier
  * @param subsectionKey - The subsection key
  * @param fieldType - The field type
@@ -292,26 +292,26 @@ export function getFieldPattern(
 ): ((entryIndex: number) => string) | string | null {
   const sectionConfig = SECTION_FIELD_CONFIGS[sectionId];
   if (!sectionConfig) return null;
-  
+
   const subsectionConfig = sectionConfig.subsections[subsectionKey];
   if (!subsectionConfig) return null;
-  
+
   // Check simple fields first
   if (subsectionConfig.simpleFields && subsectionConfig.simpleFields[fieldType]) {
     return subsectionConfig.simpleFields[fieldType];
   }
-  
+
   // Check entry patterns
   if (subsectionConfig.entryPatterns && subsectionConfig.entryPatterns[fieldType]) {
     return subsectionConfig.entryPatterns[fieldType].pattern;
   }
-  
+
   return null;
 }
 
 /**
  * Get all field types for a subsection
- * 
+ *
  * @param sectionId - The section identifier
  * @param subsectionKey - The subsection key
  * @returns Array of field types available in the subsection
@@ -322,19 +322,19 @@ export function getSubsectionFieldTypes(
 ): string[] {
   const sectionConfig = SECTION_FIELD_CONFIGS[sectionId];
   if (!sectionConfig) return [];
-  
+
   const subsectionConfig = sectionConfig.subsections[subsectionKey];
   if (!subsectionConfig) return [];
-  
+
   const simpleFields = Object.keys(subsectionConfig.simpleFields || {});
   const entryFields = Object.keys(subsectionConfig.entryPatterns || {});
-  
+
   return [...simpleFields, ...entryFields];
 }
 
 /**
  * Check if a field type requires an entry index
- * 
+ *
  * @param sectionId - The section identifier
  * @param subsectionKey - The subsection key
  * @param fieldType - The field type
@@ -347,10 +347,10 @@ export function requiresEntryIndex(
 ): boolean {
   const sectionConfig = SECTION_FIELD_CONFIGS[sectionId];
   if (!sectionConfig) return false;
-  
+
   const subsectionConfig = sectionConfig.subsections[subsectionKey];
   if (!subsectionConfig) return false;
-  
+
   // If it's in entryPatterns, it requires an entry index
   return !!(subsectionConfig.entryPatterns && subsectionConfig.entryPatterns[fieldType]);
 }
@@ -361,7 +361,7 @@ export function requiresEntryIndex(
 
 /**
  * Generate field IDs for all fields in an entry
- * 
+ *
  * @param sectionId - The section identifier
  * @param subsectionKey - The subsection key
  * @param entryIndex - The entry index
@@ -374,19 +374,19 @@ export function generateEntryFieldIds(
 ): Record<string, string> {
   const fieldTypes = getSubsectionFieldTypes(sectionId, subsectionKey);
   const fieldIds: Record<string, string> = {};
-  
+
   for (const fieldType of fieldTypes) {
     if (requiresEntryIndex(sectionId, subsectionKey, fieldType)) {
       fieldIds[fieldType] = generateFieldId(sectionId, subsectionKey, fieldType, entryIndex);
     }
   }
-  
+
   return fieldIds;
 }
 
 /**
  * Generate field IDs for all simple fields in a subsection
- * 
+ *
  * @param sectionId - The section identifier
  * @param subsectionKey - The subsection key
  * @returns Object with field types as keys and field IDs as values
@@ -397,12 +397,12 @@ export function generateSubsectionFieldIds(
 ): Record<string, string> {
   const fieldTypes = getSubsectionFieldTypes(sectionId, subsectionKey);
   const fieldIds: Record<string, string> = {};
-  
+
   for (const fieldType of fieldTypes) {
     if (!requiresEntryIndex(sectionId, subsectionKey, fieldType)) {
       fieldIds[fieldType] = generateFieldId(sectionId, subsectionKey, fieldType);
     }
   }
-  
+
   return fieldIds;
 }

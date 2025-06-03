@@ -6,29 +6,30 @@ import { type Field } from "../formDefinition2.0";
 
 /**
  * PDF Field IDs for Section 29 Radio Buttons
- * These IDs correspond to the exact field references in the SF-86 PDF
+ * These IDs use 4-digit numeric format internally (consistent with other sections)
+ * The ' 0 R' suffix is added only during PDF validation/application
  */
 export const SECTION29_RADIO_FIELD_IDS = {
   /** 29.1 Terrorism Organizations: form1[0].Section29[0].RadioButtonList[0] */
-  TERRORISM_ORGANIZATIONS: "16435 0 R",
+  TERRORISM_ORGANIZATIONS: "16435",
 
   /** 29.2 Terrorism Activities: form1[0].Section29_2[0].RadioButtonList[0] */
-  TERRORISM_ACTIVITIES: "16433 0 R",
+  TERRORISM_ACTIVITIES: "16433",
 
   /** 29.3 Terrorism Advocacy: form1[0].Section29_2[0].RadioButtonList[1] */
-  TERRORISM_ADVOCACY: "16434 0 R",
+  TERRORISM_ADVOCACY: "16434",
 
   /** 29.4 Violent Overthrow Organizations: form1[0].Section29_3[0].RadioButtonList[0] */
-  VIOLENT_OVERTHROW_ORGANIZATIONS: "16430 0 R",
+  VIOLENT_OVERTHROW_ORGANIZATIONS: "16430",
 
   /** 29.5 Violence/Force Organizations: form1[0].Section29_4[0].RadioButtonList[0] */
-  VIOLENCE_FORCE_ORGANIZATIONS: "16428 0 R",
+  VIOLENCE_FORCE_ORGANIZATIONS: "16428",
 
   /** 29.6 Overthrow Activities: form1[0].Section29_5[0].RadioButtonList[0] */
-  OVERTHROW_ACTIVITIES: "16425 0 R",
+  OVERTHROW_ACTIVITIES: "16425",
 
   /** 29.7 Terrorism Associations: form1[0].Section29_5[0].RadioButtonList[1] */
-  TERRORISM_ASSOCIATIONS: "16426 0 R"
+  TERRORISM_ASSOCIATIONS: "16426"
 } as const;
 
 /**
@@ -85,51 +86,54 @@ export const SECTION29_RADIO_FIELD_NAMES = {
 /**
  * Section 29: Associations - Radio Button Field ID Mapping
  *
- * PDF Field IDs for Radio Buttons (from section-29.json):
- * - 29.1 Terrorism Organizations: form1[0].Section29[0].RadioButtonList[0] → ID: "16435 0 R"
- * - 29.2 Terrorism Activities: form1[0].Section29_2[0].RadioButtonList[0] → ID: "16433 0 R"
- * - 29.3 Terrorism Advocacy: form1[0].Section29_2[0].RadioButtonList[1] → ID: "16434 0 R"
- * - 29.4 Violent Overthrow Organizations: form1[0].Section29_3[0].RadioButtonList[0] → ID: "16430 0 R"
- * - 29.5 Violence/Force Organizations: form1[0].Section29_4[0].RadioButtonList[0] → ID: "16428 0 R"
- * - 29.6 Overthrow Activities: form1[0].Section29_5[0].RadioButtonList[0] → ID: "16425 0 R"
- * - 29.7 Terrorism Associations: form1[0].Section29_5[0].RadioButtonList[1] → ID: "16426 0 R"
+ * PDF Field IDs for Radio Buttons (4-digit format, consistent with other sections):
+ * - 29.1 Terrorism Organizations: form1[0].Section29[0].RadioButtonList[0] → ID: "16435"
+ * - 29.2 Terrorism Activities: form1[0].Section29_2[0].RadioButtonList[0] → ID: "16433"
+ * - 29.3 Terrorism Advocacy: form1[0].Section29_2[0].RadioButtonList[1] → ID: "16434"
+ * - 29.4 Violent Overthrow Organizations: form1[0].Section29_3[0].RadioButtonList[0] → ID: "16430"
+ * - 29.5 Violence/Force Organizations: form1[0].Section29_4[0].RadioButtonList[0] → ID: "16428"
+ * - 29.6 Overthrow Activities: form1[0].Section29_5[0].RadioButtonList[0] → ID: "16425"
+ * - 29.7 Terrorism Associations: form1[0].Section29_5[0].RadioButtonList[1] → ID: "16426"
  *
  * All radio buttons use "YES" | "NO" values for proper PDF field mapping.
+ * The ' 0 R' suffix is added only during PDF validation/application.
  */
 export interface Section29 {
   /** Section identifier */
   _id: number;
+  section29: {
 
   /** 29.1: Terrorism Organization Membership (Section29[0]) - 33 fields
-   *  Radio Button: form1[0].Section29[0].RadioButtonList[0] (ID: 16435 0 R) */
+   *  Radio Button: form1[0].Section29[0].RadioButtonList[0] (ID: 16435) */
   terrorismOrganizations?: SubsectionA;
 
   /** 29.2: Terrorism Activities (Section29_2[0]) - 13 fields
-   *  Radio Button: form1[0].Section29_2[0].RadioButtonList[0] (ID: 16433 0 R) */
+   *  Radio Button: form1[0].Section29_2[0].RadioButtonList[0] (ID: 16433) */
   terrorismActivities?: SubsectionB;
 
   /** 29.3: Terrorism Advocacy (Section29_2[0]) - 13 fields (shares PDF section with 29.2)
-   *  Radio Button: form1[0].Section29_2[0].RadioButtonList[1] (ID: 16434 0 R) */
+   *  Radio Button: form1[0].Section29_2[0].RadioButtonList[1] (ID: 16434) */
   terrorismAdvocacy?: SubsectionC;
 
   /** 29.4: Violent Overthrow Organizations (Section29_3[0]) - 33 fields
-   *  Radio Button: form1[0].Section29_3[0].RadioButtonList[0] (ID: 16430 0 R) */
+   *  Radio Button: form1[0].Section29_3[0].RadioButtonList[0] (ID: 16430) */
   violentOverthrowOrganizations?: SubsectionD;
 
   /** 29.5: Violence/Force Organizations (Section29_4[0]) - 33 fields
-   *  Radio Button: form1[0].Section29_4[0].RadioButtonList[0] (ID: 16428 0 R) */
+   *  Radio Button: form1[0].Section29_4[0].RadioButtonList[0] (ID: 16428) */
   violenceForceOrganizations?: SubsectionE;
 
   /** 29.6: Overthrow Activities (Section29_5[0] RadioButtonList[0]) - 13 fields
-   *  Radio Button: form1[0].Section29_5[0].RadioButtonList[0] (ID: 16425 0 R) */
+   *  Radio Button: form1[0].Section29_5[0].RadioButtonList[0] (ID: 16425) */
   overthrowActivities?: SubsectionF;
 
   /** 29.7: Terrorism Associations (Section29_5[0] RadioButtonList[1]) - 3 fields
-   *  Radio Button: form1[0].Section29_5[0].RadioButtonList[1] (ID: 16426 0 R) */
+   *  Radio Button: form1[0].Section29_5[0].RadioButtonList[1] (ID: 16426) */
   terrorismAssociations?: SubsectionG;
 
   /** Legacy combined subsection for 29.6 & 29.7 (backward compatibility) */
-  overthrowActivitiesAndAssociations?: SubsectionFG;
+    overthrowActivitiesAndAssociations?: SubsectionFG;
+  };
 }
 
 // ============================================================================
@@ -142,7 +146,7 @@ export interface Section29 {
  */
 interface SubsectionA {
   /** Yes/No question for this subsection */
-  hasAssociation: Field<"YES" | "(If NO, proceed to 29.2)">;
+  hasAssociation: Field<"YES" | "NO (If NO, proceed to 29.2)">;
 
   /** Array of organization entries */
   entries: OrganizationEntry[];
@@ -154,7 +158,7 @@ interface SubsectionA {
  */
 interface SubsectionB {
   /** Yes/No question for this subsection */
-  hasActivity: Field<"YES" | "(If NO, proceed to 29.3)">
+  hasActivity: Field<"YES" | "NO (If NO, proceed to 29.3)">
 
   /** Array of terrorism activity entries */
   entries: TerrorismActivityEntry[];
@@ -166,7 +170,7 @@ interface SubsectionB {
  */
 interface SubsectionC {
   /** Yes/No question for this subsection */
-  hasActivity: Field<"YES" | "(If NO, proceed to 29.4)">
+  hasActivity: Field<"YES" | "NO (Proceed to 29.4)">
 
   /** Array of terrorism advocacy entries */
   entries: TerrorismAdvocacyEntry[];
@@ -178,7 +182,7 @@ interface SubsectionC {
  */
 interface SubsectionD {
   /** Yes/No question for this subsection */
-  hasAssociation: Field<"YES" | "(If NO, proceed to 29.5)">;
+  hasAssociation: Field<"YES" | "NO (If NO, proceed to 29.5)">;
 
   /** Array of organization entries */
   entries: OrganizationEntry[];
@@ -190,7 +194,7 @@ interface SubsectionD {
  */
 interface SubsectionE {
   /** Yes/No question for this subsection */
-  hasAssociation: Field<"YES" | "(If NO, proceed to 29.6)">;
+  hasAssociation: Field<"YES" | "NO (If NO, proceed to 29.6)">;
 
   /** Array of organization entries */
   entries: OrganizationEntry[];
@@ -202,7 +206,7 @@ interface SubsectionE {
  */
 interface SubsectionF {
   /** Yes/No question for overthrow activities */
-  hasActivity: Field<"YES" | "(If NO, proceed to 29.7)">;
+  hasActivity: Field<"YES" | "NO (If NO, proceed to 29.7)">;
 
   /** Array of overthrow activity entries */
   entries: OverthrowActivityEntry[];
@@ -214,7 +218,7 @@ interface SubsectionF {
  */
 interface SubsectionG {
   /** Yes/No question for terrorism associations */
-  hasAssociation: Field<"YES" | "NO">;
+  hasAssociation: Field<"YES" | "NO ">;
 
   /** Array of terrorism association entries */
   entries: TerrorismAssociationEntry[];

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Section 29 Multiple Entries Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { padding: 10px 15px; margin: 5px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .log { background: #f8f9fa; padding: 10px; border-radius: 3px; font-family: monospace; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Section 29 Multiple Entries Defensive Check Test</h1>
+    
+    <div class="test-section info">
+        <h2>Test Objective</h2>
+        <p>Verify that the defensive check fix allows field value updates for multiple entries in Section 29.7 terrorismAssociations subsection.</p>
+        <p><strong>Expected Result:</strong> Both entries' explanation field values should persist to the server payload.</p>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Controls</h2>
+        <button onclick="runMultipleEntriesTest()">🚀 Run Multiple Entries Test</button>
+        <button onclick="clearLog()">🧹 Clear Log</button>
+        <button onclick="checkServerLogs()">📋 Check Server Logs</button>
+    </div>
+
+    <div class="test-section">
+        <h2>Test Results</h2>
+        <div id="testResults" class="log">Click "Run Multiple Entries Test" to start...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>Expected vs Actual</h2>
+        <div id="comparison" class="log">Test not run yet...</div>
+    </div>
+
+    <script>
+        let testLog = [];
+
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            const logMessage = `[${timestamp}] ${message}`;
+            testLog.push(logMessage);
+            document.getElementById('testResults').textContent = testLog.join('\n');
+            console.log(logMessage);
+        }
+
+        function clearLog() {
+            testLog = [];
+            document.getElementById('testResults').textContent = 'Log cleared...';
+            document.getElementById('comparison').textContent = 'Comparison cleared...';
+        }
+
+        async function runMultipleEntriesTest() {
+            log('🧪 Starting Section 29 Multiple Entries Test...');
+            log('');
+            
+            try {
+                // Navigate to test page
+                log('📍 Navigating to test page...');
+                window.location.href = 'http://localhost:5174/test';
+                
+                // Note: This is a simple test page that will redirect to the actual test
+                // The real testing will happen in the browser console and server logs
+                
+            } catch (error) {
+                log(`❌ Test failed: ${error.message}`);
+            }
+        }
+
+        function checkServerLogs() {
+            log('📋 Check the terminal/console for server logs showing:');
+            log('   🔍 Section29: Field value change detected in entry X');
+            log('   ✅ Section29: Update triggered by field value changes');
+            log('   📋 Verified entry X explanation: [field value]');
+            log('');
+            log('🎯 Key indicators of successful fix:');
+            log('   1. No early break in defensive check loop');
+            log('   2. All entries checked for field value changes');
+            log('   3. Registration updates triggered for any entry changes');
+            log('   4. Server payload contains all entry field values');
+        }
+
+        // Auto-run test instructions
+        window.onload = function() {
+            log('🔧 Section 29 Multiple Entries Test Ready');
+            log('');
+            log('📋 Test Steps:');
+            log('1. Click "Run Multiple Entries Test" to navigate to test page');
+            log('2. Go to Section 29 → Input Persistence tab');
+            log('3. Click "1. Setup Test Data" (creates 2 entries)');
+            log('4. Click "4. Check Server Payload" (verify both entries)');
+            log('5. Check server logs for defensive check activity');
+            log('');
+            log('✅ Success Criteria:');
+            log('- Entry 1 explanation: "First entry explanation - should persist to server"');
+            log('- Entry 2 explanation: "Second entry explanation - should also persist to server"');
+            log('- Server payload shows both entries with correct values');
+            log('- No field values lost during context-to-server transfer');
+        };
+    </script>
+</body>
+</html>

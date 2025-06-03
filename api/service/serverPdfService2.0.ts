@@ -19,9 +19,13 @@ import {
   PDFTextField
 } from 'pdf-lib';
 import type { ApplicantFormValues, Field } from '../interfaces/formDefinition2.0';
+// @ts-ignore - Importing scalable services for server-side field mapping
+import { scalableFieldMappingService } from '../../app/services/scalableFieldMappingService';
+import { fieldValidationService } from '../../app/services/fieldValidationService';
 
 // URLs for fetching the SF86 PDF template
 const SF86_PDF_TEMPLATE_URL = '/api/generate-pdf'; // Our API route that serves the base PDF template
+const SF86_PDF_URL = 'https://www.opm.gov/forms/pdf_fill/sf86.pdf'; // Direct OPM URL for server-side generation
 
 // Interface for field metadata
 interface FieldMetadata {
@@ -58,6 +62,35 @@ interface FieldValidationResult {
   error?: string;
 }
 
+// Interface for detailed field error information (for server-side generation)
+export interface FieldError {
+  fieldId: string;
+  fieldName: string;
+  fieldValue: any;
+  fieldType: string;
+  errorMessage: string;
+  errorType: 'lookup_failed' | 'value_application_failed' | 'unknown_field_type';
+}
+
+// Interface for PDF generation result (server-side)
+export interface ServerPdfResult {
+  success: boolean;
+  pdfBytes?: Uint8Array;
+  fieldsMapped: number;
+  fieldsApplied: number;
+  errors: string[];
+  warnings: string[];
+  fieldsWithErrors?: FieldError[];
+  stats: {
+    totalPdfFields: number;
+    totalFormFields: number;
+    mappingSuccessRate: number;
+    applicationSuccessRate: number;
+    lookupMethodStats: Record<string, number>;
+    fieldTypeStats: Record<string, { attempts: number; success: number }>;
+  };
+}
+
 export class ServerPdfService2 {
   private pdfDoc: PDFDocument | null = null;
   private fieldMapping: FieldMetadata[] = [];
@@ -81,6 +114,747 @@ export class ServerPdfService2 {
         console.error(`${prefix} ${message}`, ...args);
         break;
     }
+  }
+
+  /**
+   * Server-side logging utility for enhanced debugging
+   */
+  private serverLog(level: 'INFO' | 'WARN' | 'ERROR', message: string, data?: any) {
+    const timestamp = new Date().toISOString();
+    const prefix = `[${timestamp}] [SERVER-PDF-ACTION] [${level}]`;
+
+    switch (level) {
+      case 'INFO':
+        console.log(`${prefix} ${message}`, data ? JSON.stringify(data, null, 2) : '');
+        break;
+      case 'WARN':
+        console.warn(`${prefix} ${message}`, data ? JSON.stringify(data, null, 2) : '');
+        break;
+      case 'ERROR':
+        console.error(`${prefix} ${message}`, data ? JSON.stringify(data, null, 2) : '');
+        break;
+    }
+  }
+
+  /**
+   * Main server action for PDF generation with comprehensive terminal logging
+   */
+  async generatePdfServerAction(formData: ApplicantFormValues): Promise<ServerPdfResult> {
+    this.serverLog('INFO', "\n" + "=".repeat(80));
+    this.serverLog('INFO', "🚀 SERVER ACTION: PDF GENERATION STARTED");
+    this.serverLog('INFO', "-".repeat(80));
+
+    const result: ServerPdfResult = {
+      success: false,
+      fieldsMapped: 0,
+      fieldsApplied: 0,
+      errors: [],
+      warnings: [],
+      stats: {
+        totalPdfFields: 0,
+        totalFormFields: 0,
+        mappingSuccessRate: 0,
+        applicationSuccessRate: 0,
+        lookupMethodStats: {},
+        fieldTypeStats: {}
+      }
+    };
+
+    try {
+      // Step 1: Analyze incoming form data
+      this.serverLog('INFO', "\n📥 STEP 1: ANALYZING FORM DATA STRUCTURE");
+      this.serverLog('INFO', "-".repeat(50));
+
+      const formAnalysis = this.analyzeFormData(formData);
+      result.stats.totalFormFields = formAnalysis.totalFields;
+
+      this.serverLog('INFO', `📊 Form analysis complete:`, {
+        sections: formAnalysis.sections,
+        totalFields: formAnalysis.totalFields,
+        validFields: formAnalysis.validFields,
+        section29Fields: formAnalysis.section29Fields
+      });
+
+      // Step 2: Fetch and load PDF template
+      this.serverLog('INFO', "\n📄 STEP 2: FETCHING PDF TEMPLATE");
+      this.serverLog('INFO', "-".repeat(50));
+
+      const pdfDoc = await this.loadPdfTemplate();
+      const form = pdfDoc.getForm();
+      const allPdfFields = form.getFields();
+      result.stats.totalPdfFields = allPdfFields.length;
+
+      this.serverLog('INFO', `✅ PDF template loaded successfully`);
+      this.serverLog('INFO', `📊 Total PDF fields: ${allPdfFields.length}`);
+
+      // Step 3: Create field mappings (SCALABLE APPROACH)
+      this.serverLog('INFO', "\n🗂️ STEP 3: CREATING FIELD MAPPINGS");
+      this.serverLog('INFO', "-".repeat(50));
+
+      // Initialize scalable field mapping service
+      await scalableFieldMappingService.initializeFieldMappings(allPdfFields);
+      const healthReport = scalableFieldMappingService.getHealthReport();
+
+      this.serverLog('INFO', `✅ Scalable field mapping service initialized`);
+      this.serverLog('INFO', `📊 Health report:`, healthReport);
+
+      // Legacy field mappings for backward compatibility
+      const fieldMappings = this.createFieldMappings(allPdfFields);
+      this.serverLog('INFO', `✅ Legacy field mappings created: ${fieldMappings.idMap.size} ID mappings, ${fieldMappings.nameMap.size} name mappings`);
+
+      // Step 4: Extract and map form values
+      this.serverLog('INFO', "\n🔍 STEP 4: EXTRACTING FORM VALUES");
+      this.serverLog('INFO', "-".repeat(50));
+
+      const formValues = this.extractFormValues(formData);
+      result.fieldsMapped = formValues.size;
+
+      this.serverLog('INFO', `✅ Form values extracted: ${formValues.size} valid fields`);
+      this.serverLog('INFO', `📋 Sample field IDs:`, Array.from(formValues.keys()).slice(0, 10));
+
+      // Step 5: Apply values to PDF fields
+      this.serverLog('INFO', "\n🔧 STEP 5: APPLYING VALUES TO PDF FIELDS");
+      this.serverLog('INFO', "-".repeat(50));
+
+      const applicationResult = await this.applyValuesToPdf(allPdfFields, fieldMappings, formValues);
+      result.fieldsApplied = applicationResult.applied;
+      result.errors = applicationResult.errors;
+      result.warnings = applicationResult.warnings;
+      result.fieldsWithErrors = applicationResult.fieldsWithErrors;
+      result.stats.lookupMethodStats = applicationResult.lookupMethodStats;
+      result.stats.fieldTypeStats = applicationResult.fieldTypeStats;
+
+      // Step 6: Generate final PDF
+      this.serverLog('INFO', "\n💾 STEP 6: GENERATING FINAL PDF");
+      this.serverLog('INFO', "-".repeat(50));
+
+      const pdfBytes = await pdfDoc.save();
+      result.pdfBytes = new Uint8Array(pdfBytes);
+
+      this.serverLog('INFO', `✅ PDF generated successfully`);
+      this.serverLog('INFO', `📊 Final PDF size: ${pdfBytes.byteLength} bytes (${(pdfBytes.byteLength / 1024 / 1024).toFixed(2)} MB)`);
+
+      // Calculate final statistics
+      result.stats.mappingSuccessRate = (result.fieldsMapped / result.stats.totalFormFields) * 100;
+      result.stats.applicationSuccessRate = (result.fieldsApplied / result.fieldsMapped) * 100;
+      result.success = true;
+
+      // Final summary
+      this.serverLog('INFO', "\n🎉 PDF GENERATION COMPLETED SUCCESSFULLY");
+      this.serverLog('INFO', "=".repeat(80));
+      this.serverLog('INFO', `📊 FINAL SUMMARY:`);
+      this.serverLog('INFO', `   📈 Form fields processed: ${result.stats.totalFormFields}`);
+      this.serverLog('INFO', `   🗂️ Fields mapped: ${result.fieldsMapped}`);
+      this.serverLog('INFO', `   ✅ Fields applied: ${result.fieldsApplied}`);
+      this.serverLog('INFO', `   📊 Application success rate: ${result.stats.applicationSuccessRate.toFixed(2)}%`);
+      this.serverLog('INFO', `   ❌ Errors: ${result.errors.length}`);
+      this.serverLog('INFO', `   ⚠️ Warnings: ${result.warnings.length}`);
+      this.serverLog('INFO', "=".repeat(80) + "\n");
+
+      return result;
+
+    } catch (error) {
+      this.serverLog('ERROR', "\n💥 FATAL ERROR DURING PDF GENERATION");
+      this.serverLog('ERROR', "-".repeat(50));
+      this.serverLog('ERROR', `❌ Error: ${error instanceof Error ? error.message : String(error)}`);
+      this.serverLog('ERROR', `📍 Stack trace:`, error instanceof Error ? error.stack : 'No stack trace');
+
+      result.errors.push(`Server PDF generation failed: ${error}`);
+      return result;
+    }
+  }
+
+  /**
+   * Analyze form data structure
+   */
+  private analyzeFormData(formData: ApplicantFormValues) {
+    this.serverLog('INFO', "🔍 Analyzing form data structure...");
+
+    const analysis = {
+      sections: Object.keys(formData),
+      totalFields: 0,
+      validFields: 0,
+      section29Fields: 0
+    };
+
+    const countFields = (obj: any, path = ''): void => {
+      if (!obj || typeof obj !== 'object') return;
+
+      Object.entries(obj).forEach(([key, value]) => {
+        const currentPath = path ? `${path}.${key}` : key;
+
+        if (value && typeof value === 'object') {
+          if ('id' in value && 'value' in value) {
+            analysis.totalFields++;
+            if (value.id && value.value !== undefined && value.value !== '') {
+              analysis.validFields++;
+              if (currentPath.includes('section29')) {
+                analysis.section29Fields++;
+              }
+            }
+          } else {
+            countFields(value, currentPath);
+          }
+        }
+      });
+    };
+
+    countFields(formData);
+
+    this.serverLog('INFO', `📊 Form structure:`, {
+      sections: analysis.sections.length,
+      totalFields: analysis.totalFields,
+      validFields: analysis.validFields,
+      section29Fields: analysis.section29Fields
+    });
+
+    return analysis;
+  }
+
+  /**
+   * Load PDF template from URL (server-side)
+   */
+  private async loadPdfTemplate(): Promise<PDFDocument> {
+    this.serverLog('INFO', `🌐 Fetching PDF template from: ${SF86_PDF_URL}`);
+
+    const response = await fetch(SF86_PDF_URL);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch PDF: ${response.status} ${response.statusText}`);
+    }
+
+    const pdfBytes = await response.arrayBuffer();
+    this.serverLog('INFO', `📄 PDF template fetched: ${pdfBytes.byteLength} bytes`);
+
+    const pdfDoc = await PDFDocument.load(pdfBytes);
+    this.serverLog('INFO', `✅ PDF document loaded successfully`);
+
+    return pdfDoc;
+  }
+
+  /**
+   * Create field mapping structures (enhanced version)
+   */
+  private createFieldMappings(pdfFields: any[]) {
+    this.serverLog('INFO', "🗂️ Creating field mapping structures...");
+
+    const idMap = new Map<string, any>();
+    const nameMap = new Map<string, string>();
+
+    // CRITICAL FIX: Enhanced field ID normalization with comprehensive debugging
+    let section29DebugCount = 0;
+
+    pdfFields.forEach((field) => {
+      const name = field.getName();
+      const rawId = field.ref.tag.toString();
+
+      // ENHANCED DEBUGGING: Show raw ID format for Section 29 fields
+      if (name.includes('Section29') && section29DebugCount < 5) {
+        this.serverLog('INFO', `🔍 CRITICAL DEBUG [${section29DebugCount + 1}] - Field: "${name}"`);
+        this.serverLog('INFO', `   📄 Raw ID: "${rawId}" (length: ${rawId.length})`);
+        this.serverLog('INFO', `   🔤 Raw ID chars: [${rawId.split('').map((c: string) => `'${c}'`).join(', ')}]`);
+        section29DebugCount++;
+      }
+
+      // ENHANCED NORMALIZATION: Multiple strategies to handle different ID formats
+      let numericId = rawId;
+
+      // Strategy 1: Remove " 0 R" suffix (most common)
+      if (rawId.includes(' 0 R')) {
+        numericId = rawId.replace(' 0 R', '').trim();
+      }
+      // Strategy 2: Remove "0 R" suffix (no space)
+      else if (rawId.includes('0 R')) {
+        numericId = rawId.replace('0 R', '').trim();
+      }
+      // Strategy 3: Extract numeric part using regex
+      else {
+        const match = rawId.match(/^(\d+)/);
+        if (match) {
+          numericId = match[1];
+        }
+      }
+
+      // CRITICAL DEBUG: Show normalization result for Section 29 fields
+      if (name.includes('Section29') && section29DebugCount <= 5) {
+        this.serverLog('INFO', `   🔧 Normalized: "${rawId}" → "${numericId}"`);
+        this.serverLog('INFO', `   ✅ Will store in idMap with key: "${numericId}"`);
+      }
+
+      // FIXED STORAGE: Store with normalized ID as key
+      idMap.set(numericId, field);
+      nameMap.set(name, numericId);
+    });
+
+    // Enhanced debugging for Section 29 mappings
+    const section29Mappings = Array.from(nameMap.entries())
+      .filter(([name]) => name.includes('Section29'))
+      .slice(0, 10);
+
+    this.serverLog('INFO', `🎯 Sample Section 29 mappings:`, section29Mappings);
+
+    // Debug: Show what numeric IDs are actually stored (SCALABLE DEBUGGING)
+    const section29NumericIds = Array.from(idMap.keys())
+      .filter(id => {
+        const field = idMap.get(id);
+        return field && field.getName().includes('Section29');
+      })
+      .slice(0, 10);
+
+    this.serverLog('INFO', `🔢 Section 29 numeric IDs in map (normalized):`, section29NumericIds);
+
+    // CRITICAL DEBUG: Show the actual mapping structure
+    const section29FieldDetails = Array.from(idMap.entries())
+      .filter(([, field]) => field.getName().includes('Section29'))
+      .slice(0, 5)
+      .map(([id, field]) => ({
+        storedId: id,
+        fieldName: field.getName(),
+        originalRef: field.ref.tag.toString()
+      }));
+
+    this.serverLog('INFO', `🔍 Section 29 field mapping details:`, section29FieldDetails);
+
+    // SCALABLE DEBUG: Show field mapping statistics for all sections
+    const sectionStats = new Map<string, number>();
+    Array.from(nameMap.keys()).forEach(fieldName => {
+      const sectionMatch = fieldName.match(/Section(\d+)/);
+      if (sectionMatch) {
+        const sectionNum = sectionMatch[1];
+        sectionStats.set(sectionNum, (sectionStats.get(sectionNum) || 0) + 1);
+      }
+    });
+
+    this.serverLog('INFO', `📊 Field mapping by section:`, Object.fromEntries(sectionStats));
+
+    return { idMap, nameMap };
+  }
+
+  /**
+   * Extract form values from the nested applicant data structure
+   * 
+   * IMPORTANT: Modified to use less restrictive filtering logic:
+   * 1. Includes empty strings in mapping (valid PDF values)
+   * 2. Includes null values in mapping (converted to empty strings)
+   * 3. Includes "NO" values (they are valid PDF values)
+   * 4. Only filters out fields without IDs or undefined values
+   */
+  private extractFormValues(formData: ApplicantFormValues): Map<string, any> {
+    this.serverLog('INFO', "🔍 Extracting form values from nested structure...");
+
+    const formValues = new Map<string, any>();
+    let processedCount = 0;
+    let mappedCount = 0;
+    let filteredCount = 0;
+    const filteredFields: Array<{path: string, id: string, value: any, reason: string}> = [];
+
+    const traverse = (obj: any, path = '', depth = 0): void => {
+      if (!obj || typeof obj !== 'object') return;
+
+      Object.entries(obj).forEach(([key, value]) => {
+        const currentPath = path ? `${path}.${key}` : key;
+
+        if (value && typeof value === 'object') {
+          if ('id' in value && 'value' in value) {
+            processedCount++;
+            const isVerbose = processedCount <= 20; // Detailed logging for first 20 fields
+
+            if (isVerbose) {
+              this.serverLog('INFO', `🎯 Field found at ${currentPath}:`, {
+                id: value.id,
+                value: value.value,
+                type: typeof value.value
+              });
+            }
+
+            // MODIFIED: Filter out empty strings to prevent PDF field application errors
+            if (value.id && value.value !== undefined && value.value !== '') {
+              // Accept values that have an ID, are not undefined, and are not empty strings
+              formValues.set(String(value.id), value.value);
+              mappedCount++;
+
+              if (isVerbose) {
+                this.serverLog('INFO', `✅ Mapped: "${value.id}" → "${value.value}"`);
+              }
+            } else {
+              // Track filtered fields
+              filteredCount++;
+              let reason = 'unknown';
+              if (!value.id) reason = 'no_id';
+              else if (value.value === undefined) reason = 'undefined_value';
+              else if (value.value === '') reason = 'empty_string';
+
+              filteredFields.push({
+                path: currentPath,
+                id: String(value.id || 'no_id'),
+                value: value.value,
+                reason
+              });
+
+              if (isVerbose) {
+                this.serverLog('INFO', `❌ Filtered: "${value.id}" → "${value.value}" (${reason})`);
+              }
+            }
+          } else {
+            traverse(value, currentPath, depth + 1);
+          }
+        }
+      });
+    };
+
+    traverse(formData);
+
+    this.serverLog('INFO', `✅ Form value extraction complete:`);
+    this.serverLog('INFO', `   📊 Total fields processed: ${processedCount}`);
+    this.serverLog('INFO', `   ✅ Fields mapped: ${mappedCount}`);
+    this.serverLog('INFO', `   ❌ Fields filtered: ${filteredCount}`);
+
+    // Log filtered field breakdown
+    const filteredByReason = filteredFields.reduce((acc, field) => {
+      acc[field.reason] = (acc[field.reason] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    this.serverLog('INFO', `   📋 Filtered breakdown:`, filteredByReason);
+
+    // Log first 10 filtered fields for debugging
+    if (filteredFields.length > 0) {
+      this.serverLog('INFO', `   🔍 Sample filtered fields (first 10):`);
+      filteredFields.slice(0, 10).forEach((field, index) => {
+        this.serverLog('INFO', `      [${index + 1}] ${field.path} (ID: ${field.id}, Value: "${field.value}", Reason: ${field.reason})`);
+      });
+    }
+
+    return formValues;
+  }
+
+  /**
+   * Apply form values to PDF fields with comprehensive logging
+   */
+  private async applyValuesToPdf(
+    pdfFields: any[],
+    fieldMappings: { idMap: Map<string, any>; nameMap: Map<string, string> },
+    formValues: Map<string, any>
+  ) {
+    this.serverLog('INFO', `🔧 Starting field application process...`);
+    this.serverLog('INFO', `📊 PDF fields available: ${pdfFields.length}`);
+    this.serverLog('INFO', `📊 Form values to apply: ${formValues.size}`);
+
+    const stats = {
+      applied: 0,
+      skipped: 0,
+      errors: 0,
+      lookupMethodStats: {} as Record<string, number>,
+      fieldTypeStats: {
+        textField: { attempts: 0, success: 0 },
+        dropdown: { attempts: 0, success: 0 },
+        checkbox: { attempts: 0, success: 0 },
+        radioGroup: { attempts: 0, success: 0 },
+        unknown: { attempts: 0, success: 0 }
+      }
+    };
+
+    const errors: string[] = [];
+    const warnings: string[] = [];
+    const fieldsWithErrors: FieldError[] = [];
+
+    let processedCount = 0;
+    for (const [fieldId, fieldValue] of formValues.entries()) {
+      processedCount++;
+      const isVerbose = processedCount <= 20; // Detailed logging for first 20 fields
+
+      if (isVerbose) {
+        this.serverLog('INFO', `\n--- Processing Field [${processedCount}/${formValues.size}] ---`);
+        this.serverLog('INFO', `🆔 Field ID: "${fieldId}"`);
+        this.serverLog('INFO', `💾 Field Value: "${fieldValue}"`);
+      }
+
+      // SCALABLE FIELD LOOKUP: Use the new scalable field mapping service
+      let pdfField: any = null;
+      let lookupMethod = '';
+
+      // Extract section ID for validation
+      const sectionMatch = fieldId.match(/Section(\d+)/);
+      const sectionId = sectionMatch ? parseInt(sectionMatch[1]) : undefined;
+
+      // Use scalable field mapping service for lookup
+      const mappingResult = scalableFieldMappingService.findPdfField(fieldId, sectionId);
+
+      if (mappingResult.success) {
+        pdfField = mappingResult.pdfField;
+        lookupMethod = mappingResult.lookupMethod || 'scalable-service';
+        if (isVerbose) {
+          this.serverLog('INFO', `✅ Scalable service lookup successful: "${fieldId}"`);
+          this.serverLog('INFO', `   🔧 Method: ${lookupMethod}`);
+        }
+      } else {
+        // Fallback to legacy lookup strategies for backward compatibility
+        if (isVerbose) {
+          this.serverLog('INFO', `⚠️ Scalable service lookup failed: ${mappingResult.error}`);
+          if (mappingResult.suggestions && mappingResult.suggestions.length > 0) {
+            this.serverLog('INFO', `   💡 Suggestions: ${mappingResult.suggestions.join(', ')}`);
+          }
+          this.serverLog('INFO', `   🔄 Trying legacy lookup strategies...`);
+        }
+
+        // Legacy Strategy 1: Enhanced numeric ID lookup
+        let numericId = '';
+        if (fieldId.includes(' 0 R')) {
+          numericId = fieldId.replace(' 0 R', '').trim();
+        } else if (/^\d+$/.test(fieldId)) {
+          numericId = fieldId;
+        }
+
+        if (numericId && fieldMappings.idMap.has(numericId)) {
+          pdfField = fieldMappings.idMap.get(numericId);
+          lookupMethod = 'legacy-numeric-id';
+          if (isVerbose) this.serverLog('INFO', `✅ Legacy numeric ID lookup: "${fieldId}" → "${numericId}"`);
+        }
+        // Legacy Strategy 2: Field name to numeric ID conversion
+        else if (fieldMappings.nameMap.has(fieldId)) {
+          const mappedId = fieldMappings.nameMap.get(fieldId);
+          if (mappedId && fieldMappings.idMap.has(mappedId)) {
+            pdfField = fieldMappings.idMap.get(mappedId);
+            lookupMethod = 'legacy-name-to-id';
+            if (isVerbose) this.serverLog('INFO', `✅ Legacy name-to-ID conversion: "${fieldId}" → "${mappedId}"`);
+          }
+        }
+      }
+
+      // Track lookup method effectiveness
+      stats.lookupMethodStats[lookupMethod] = (stats.lookupMethodStats[lookupMethod] || 0) + 1;
+
+      if (pdfField) {
+        if (isVerbose) {
+          this.serverLog('INFO', `✅ PDF field found! Method: ${lookupMethod}`);
+          this.serverLog('INFO', `📊 PDF Field Type: ${pdfField.constructor.name}`);
+          this.serverLog('INFO', `📛 PDF Field Name: "${pdfField.getName()}"`);
+        }
+
+        try {
+          // Apply value based on field type
+          if (pdfField instanceof PDFTextField) {
+            stats.fieldTypeStats.textField.attempts++;
+            // MODIFIED: Handle null values by converting to empty strings
+            const textValue = fieldValue === null ? '' : String(fieldValue);
+            if (isVerbose) this.serverLog('INFO', `📝 Setting text field to: "${textValue}"`);
+            pdfField.setText(textValue);
+            stats.fieldTypeStats.textField.success++;
+            stats.applied++;
+          }
+          else if (pdfField instanceof PDFDropdown || pdfField instanceof PDFRadioGroup) {
+            const isDropdown = pdfField instanceof PDFDropdown;
+            stats.fieldTypeStats[isDropdown ? 'dropdown' : 'radioGroup'].attempts++;
+
+            const selectValue = String(fieldValue);
+            if (isVerbose) this.serverLog('INFO', `📋 Setting ${isDropdown ? 'dropdown' : 'radio'} to: "${selectValue}"`);
+
+            // Get available options
+            let options: string[] = [];
+            try {
+              options = pdfField.getOptions();
+              if (isVerbose) this.serverLog('INFO', `   📋 Available options:`, options);
+            } catch (error) {
+              if (isVerbose) this.serverLog('WARN', `   ⚠️ Could not get options:`, error);
+              options = ['YES', 'NO', 'Yes', 'No ', 'true', 'false', '1', '0'];
+            }
+
+            // SIMPLIFIED SF-86 RADIO BUTTON MATCHING
+            let matchedValue = selectValue;
+            if (isVerbose) this.serverLog('INFO', `   🔍 MATCHING: "${selectValue}" against options: ${JSON.stringify(options)}`);
+
+            if (options.length > 0) {
+              // Strategy 1: Exact match
+              if (options.includes(selectValue)) {
+                matchedValue = selectValue;
+                if (isVerbose) this.serverLog('INFO', `   ✅ Exact match found: "${matchedValue}"`);
+              }
+              // Strategy 2: SF-86 specific matching for "NO" responses
+              else if (selectValue.toLowerCase() === 'no') {
+                // Find any option that starts with "NO" (case-insensitive)
+                const noOption = options.find(opt => opt.toLowerCase().startsWith('no'));
+                if (noOption) {
+                  matchedValue = noOption;
+                  if (isVerbose) this.serverLog('INFO', `   🔄 NO mapping: "${selectValue}" → "${noOption}"`);
+                } else {
+                  if (isVerbose) this.serverLog('WARN', `   ❌ No NO option found in: ${JSON.stringify(options)}`);
+                }
+              }
+              // Strategy 3: SF-86 specific matching for "YES" responses
+              else if (selectValue.toLowerCase() === 'yes') {
+                // Find any option that starts with "YES" (case-insensitive)
+                const yesOption = options.find(opt => opt.toLowerCase().startsWith('yes'));
+                if (yesOption) {
+                  matchedValue = yesOption;
+                  if (isVerbose) this.serverLog('INFO', `   🔄 YES mapping: "${selectValue}" → "${yesOption}"`);
+                } else {
+                  if (isVerbose) this.serverLog('WARN', `   ❌ No YES option found in: ${JSON.stringify(options)}`);
+                }
+              }
+              // Strategy 4: Case-insensitive match
+              else {
+                const caseMatch = options.find(opt => opt.toLowerCase() === selectValue.toLowerCase());
+                if (caseMatch) {
+                  matchedValue = caseMatch;
+                  if (isVerbose) this.serverLog('INFO', `   🔄 Case match: "${selectValue}" → "${caseMatch}"`);
+                } else {
+                  if (isVerbose) this.serverLog('WARN', `   ❌ No match found for: "${selectValue}"`);
+                }
+              }
+            }
+
+            // Apply the value
+            try {
+              pdfField.select(matchedValue);
+              if (isVerbose) this.serverLog('INFO', `   ✅ Successfully set to: "${matchedValue}"`);
+              stats.fieldTypeStats[isDropdown ? 'dropdown' : 'radioGroup'].success++;
+              stats.applied++;
+            } catch (selectError) {
+              if (isVerbose) this.serverLog('ERROR', `   ❌ Failed to select "${matchedValue}":`, selectError);
+              stats.errors++;
+              const errorMessage = `Failed to set ${isDropdown ? 'dropdown' : 'radio'} field ${pdfField.getName()}: ${selectError}`;
+              errors.push(errorMessage);
+
+              // Add detailed field error information
+              fieldsWithErrors.push({
+                fieldId,
+                fieldName: pdfField.getName(),
+                fieldValue,
+                fieldType: pdfField.constructor.name,
+                errorMessage,
+                errorType: 'value_application_failed'
+              });
+            }
+          }
+          else if (pdfField instanceof PDFCheckBox) {
+            stats.fieldTypeStats.checkbox.attempts++;
+            const strValue = String(fieldValue).toLowerCase();
+            if (isVerbose) this.serverLog('INFO', `☑️ Setting checkbox, value: "${strValue}"`);
+
+            if (strValue === "yes" || strValue === "true" || strValue === "1" || strValue === "checked") {
+              pdfField.check();
+            } else {
+              pdfField.uncheck();
+            }
+
+            stats.fieldTypeStats.checkbox.success++;
+            stats.applied++;
+          }
+          else {
+            stats.fieldTypeStats.unknown.attempts++;
+            const errorMessage = `Unknown field type: ${pdfField.constructor.name}`;
+            if (isVerbose) this.serverLog('WARN', `⚠️ UNKNOWN FIELD TYPE: ${pdfField.constructor.name}`);
+            warnings.push(`${errorMessage} for field ${pdfField.getName()}`);
+
+            // Add detailed field error information
+            fieldsWithErrors.push({
+              fieldId,
+              fieldName: pdfField.getName(),
+              fieldValue,
+              fieldType: pdfField.constructor.name,
+              errorMessage,
+              errorType: 'unknown_field_type'
+            });
+          }
+        } catch (error) {
+          if (isVerbose) this.serverLog('ERROR', `💥 ERROR setting field:`, error);
+          stats.errors++;
+          const errorMessage = `Error setting field ${pdfField.getName()}: ${error}`;
+          errors.push(errorMessage);
+
+          // Add detailed field error information
+          fieldsWithErrors.push({
+            fieldId,
+            fieldName: pdfField.getName(),
+            fieldValue,
+            fieldType: pdfField.constructor.name,
+            errorMessage,
+            errorType: 'value_application_failed'
+          });
+        }
+      } else {
+        if (isVerbose) this.serverLog('WARN', `❌ PDF field not found for ID: "${fieldId}"`);
+        stats.skipped++;
+        const errorMessage = `PDF field not found: ${fieldId}`;
+        warnings.push(errorMessage);
+
+        // Add detailed field error information
+        fieldsWithErrors.push({
+          fieldId,
+          fieldName: fieldId, // Use fieldId as name since we don't have the actual field name
+          fieldValue,
+          fieldType: 'unknown',
+          errorMessage,
+          errorType: 'lookup_failed'
+        });
+      }
+    }
+
+    // Log final statistics
+    this.serverLog('INFO', "\n📊 FIELD APPLICATION STATISTICS");
+    this.serverLog('INFO', "-".repeat(40));
+    this.serverLog('INFO', `✅ Fields successfully applied: ${stats.applied}`);
+    this.serverLog('INFO', `❌ Fields skipped (not found): ${stats.skipped}`);
+    this.serverLog('INFO', `💥 Errors encountered: ${stats.errors}`);
+    this.serverLog('INFO', `📈 Application success rate: ${((stats.applied / formValues.size) * 100).toFixed(2)}%`);
+
+    this.serverLog('INFO', `\n📊 Lookup method effectiveness:`);
+    Object.entries(stats.lookupMethodStats).forEach(([method, count]) => {
+      const percentage = ((count / formValues.size) * 100).toFixed(1);
+      this.serverLog('INFO', `   ${method}: ${count}/${formValues.size} (${percentage}%)`);
+    });
+
+    this.serverLog('INFO', `\n📊 Success by field type:`);
+    Object.entries(stats.fieldTypeStats).forEach(([type, {attempts, success}]) => {
+      if (attempts > 0) {
+        const rate = ((success/attempts)*100).toFixed(1);
+        this.serverLog('INFO', `   ${type}: ${success}/${attempts} (${rate}%)`);
+      }
+    });
+
+    // ENHANCED: Detailed error reporting for fields that failed
+    if (fieldsWithErrors.length > 0) {
+      this.serverLog('INFO', `\n💥 ===== DETAILED ERROR REPORT =====`);
+      this.serverLog('INFO', `🚨 Total fields with errors: ${fieldsWithErrors.length}`);
+
+      // Group errors by type
+      const errorsByType = fieldsWithErrors.reduce((acc, error) => {
+        if (!acc[error.errorType]) {
+          acc[error.errorType] = [];
+        }
+        acc[error.errorType].push(error);
+        return acc;
+      }, {} as Record<string, FieldError[]>);
+
+      Object.entries(errorsByType).forEach(([errorType, errors]) => {
+        this.serverLog('INFO', `\n🔍 ${errorType.toUpperCase().replace(/_/g, ' ')} (${errors.length} fields):`);
+        errors.forEach((error, index) => {
+          this.serverLog('INFO', `   [${index + 1}] Field ID: "${error.fieldId}"`);
+          this.serverLog('INFO', `       Field Name: "${error.fieldName}"`);
+          this.serverLog('INFO', `       Field Value: "${error.fieldValue}"`);
+          this.serverLog('INFO', `       Field Type: "${error.fieldType}"`);
+          this.serverLog('INFO', `       Error: ${error.errorMessage}`);
+          this.serverLog('INFO', `       ---`);
+        });
+      });
+
+      this.serverLog('INFO', `\n📋 ===== QUICK ERROR SUMMARY =====`);
+      fieldsWithErrors.forEach((error, index) => {
+        this.serverLog('INFO', `💥 [${index + 1}] ${error.errorType}: Field "${error.fieldId}" (${error.fieldName}) - ${error.errorMessage}`);
+      });
+      this.serverLog('INFO', `💥 ===== END ERROR REPORT =====\n`);
+    } else {
+      this.serverLog('INFO', `\n✅ ===== NO ERRORS DETECTED =====`);
+      this.serverLog('INFO', `🎉 All fields processed successfully!`);
+    }
+
+    return {
+      applied: stats.applied,
+      errors,
+      warnings,
+      fieldsWithErrors,
+      lookupMethodStats: stats.lookupMethodStats,
+      fieldTypeStats: stats.fieldTypeStats
+    };
   }
 
   /**
@@ -307,33 +1081,37 @@ export class ServerPdfService2 {
 
                 let numericId: string | null = null;
 
+                // FIXED: Clean the ID string to remove " 0 R" suffix if present
+                const cleanIdStr = idStr.replace(/ 0 R$/, '').trim();
+                console.log(`${indent}🧹 Cleaned ID: "${idStr}" → "${cleanIdStr}"`);
+
                 // Handle both numeric IDs and field name paths
-                if (idStr.includes('form1[0]')) {
+                if (cleanIdStr.includes('form1[0]')) {
                   console.log(`${indent}🔍 Field ID appears to be a field name path, converting to numeric ID...`);
 
                   // This is a field name, convert to numeric ID using our mapping
-                  numericId = this.fieldNameToIdMap.get(idStr) || null;
+                  numericId = this.fieldNameToIdMap.get(cleanIdStr) || null;
 
                   if (numericId) {
-                    console.log(`${indent}✅ CONVERTED: Field name "${idStr}" → Numeric ID: "${numericId}"`);
+                    console.log(`${indent}✅ CONVERTED: Field name "${cleanIdStr}" → Numeric ID: "${numericId}"`);
                     idValueMap.set(numericId, valueStr);
-                    console.log(`${indent}🗂️ MAPPED: "${idStr}" → ID:"${numericId}" → Value:"${valueStr}"`);
+                    console.log(`${indent}🗂️ MAPPED: "${cleanIdStr}" → ID:"${numericId}" → Value:"${valueStr}"`);
                   } else {
-                    console.log(`${indent}❌ NO CONVERSION: No numeric ID found for field name: "${idStr}"`);
+                    console.log(`${indent}❌ NO CONVERSION: No numeric ID found for field name: "${cleanIdStr}"`);
 
                     // Show similar field names for debugging
                     const similarFieldNames = Array.from(this.fieldNameToIdMap.keys()).filter(name =>
                       name.includes('Section29') ||
-                      name.includes(idStr.split('.').pop() || '') ||
-                      idStr.includes(name.split('.').pop() || '')
+                      name.includes(cleanIdStr.split('.').pop() || '') ||
+                      cleanIdStr.includes(name.split('.').pop() || '')
                     ).slice(0, 5);
 
                     console.log(`${indent}   🔍 Similar PDF field names:`, similarFieldNames);
-                    errors.push(`No numeric ID found for field name: ${idStr}`);
+                    errors.push(`No numeric ID found for field name: ${cleanIdStr}`);
                   }
                 } else {
-                  console.log(`${indent}🔢 Field ID appears to be numeric, using directly: "${idStr}"`);
-                  numericId = idStr;
+                  console.log(`${indent}🔢 Field ID appears to be numeric, using directly: "${cleanIdStr}"`);
+                  numericId = cleanIdStr;
 
                   // Verify the numeric ID exists in our PDF
                   if (this.fieldIdMap.has(numericId)) {
@@ -594,6 +1372,16 @@ export class ServerPdfService2 {
         unknown: { attempts: 0, success: 0 }
       };
 
+      // Track fields with errors for detailed reporting
+      const fieldsWithErrors: Array<{
+        fieldId: string;
+        fieldName: string;
+        fieldValue: any;
+        fieldType: string;
+        errorMessage: string;
+        errorType: 'lookup_failed' | 'value_application_failed' | 'unknown_field_type';
+      }> = [];
+
       appliedFields.forEach((field, index) => {
         // Only log detailed info for first 20 fields to reduce verbosity
         const verbose = index < 20;
@@ -609,33 +1397,36 @@ export class ServerPdfService2 {
         let pdfField: any = null;
         let lookupMethod = '';
 
-        // Step 1: Check if field.id is already a numeric ID
-        if (this.isNumericId(field.id)) {
-          if (verbose) console.log(`🔢 Field ID is numeric: "${field.id}"`);
+        // Step 1: Clean and check if field.id is already a numeric ID
+        const cleanFieldId = String(field.id).replace(/ 0 R$/, '').trim();
+        if (verbose) console.log(`🧹 Cleaned field ID: "${field.id}" → "${cleanFieldId}"`);
 
-          if (this.fieldIdMap.has(field.id)) {
-            pdfField = this.fieldIdMap.get(field.id);
+        if (this.isNumericId(cleanFieldId)) {
+          if (verbose) console.log(`🔢 Field ID is numeric: "${cleanFieldId}"`);
+
+          if (this.fieldIdMap.has(cleanFieldId)) {
+            pdfField = this.fieldIdMap.get(cleanFieldId);
             lookupMethod = 'direct-numeric-id';
             if (verbose) console.log(`✅ Direct numeric ID lookup successful`);
           } else {
-            if (verbose) console.log(`❌ Numeric ID "${field.id}" not found in PDF`);
+            if (verbose) console.log(`❌ Numeric ID "${cleanFieldId}" not found in PDF`);
           }
         }
         // Step 2: Try primary ID lookup (for field name paths)
-        else if (this.fieldIdMap.has(field.id)) {
-          pdfField = this.fieldIdMap.get(field.id);
+        else if (this.fieldIdMap.has(cleanFieldId)) {
+          pdfField = this.fieldIdMap.get(cleanFieldId);
           lookupMethod = 'primary-id';
           if (verbose) console.log(`✅ Primary ID lookup successful`);
         }
         // Step 3: Convert field name to numeric ID
         else {
-          const numericId = this.extractNumericId(field.id);
+          const numericId = this.extractNumericId(cleanFieldId);
           if (numericId && this.fieldIdMap.has(numericId)) {
             pdfField = this.fieldIdMap.get(numericId);
             lookupMethod = 'converted-to-numeric-id';
-            if (verbose) console.log(`✅ Field name converted to numeric ID: "${field.id}" → "${numericId}"`);
+            if (verbose) console.log(`✅ Field name converted to numeric ID: "${cleanFieldId}" → "${numericId}"`);
           } else if (verbose) {
-            console.log(`❌ No numeric ID conversion available for: "${field.id}"`);
+            console.log(`❌ No numeric ID conversion available for: "${cleanFieldId}"`);
           }
         }
 
@@ -651,8 +1442,8 @@ export class ServerPdfService2 {
             }
           }
           // Try enhanced lookup map
-          else if (enhancedFieldMap.has(field.id)) {
-            pdfField = enhancedFieldMap.get(field.id);
+          else if (enhancedFieldMap.has(cleanFieldId)) {
+            pdfField = enhancedFieldMap.get(cleanFieldId);
             lookupMethod = 'enhanced-id';
             if (verbose) console.log(`✅ Enhanced ID lookup successful`);
           }
@@ -663,7 +1454,7 @@ export class ServerPdfService2 {
           }
           // Try lookup by last part of name/id as final fallback
           else {
-            const idPart = String(field.id).split(/[.\[\]]/).pop() || '';
+            const idPart = String(cleanFieldId).split(/[.\[\]]/).pop() || '';
             const namePart = String(field.name).split(/[.\[\]]/).pop() || '';
 
             if (idPart && enhancedFieldMap.has(idPart)) {
@@ -814,30 +1605,63 @@ export class ServerPdfService2 {
             }
             else {
               successMetrics.unknown.attempts++;
+              const errorMessage = `Unknown field type: ${pdfField.constructor.name}`;
               if (verbose) {
                 console.log(`⚠️ UNKNOWN FIELD TYPE: ${pdfField.constructor.name}`);
                 console.log(`   🔍 Available methods:`, Object.getOwnPropertyNames(Object.getPrototypeOf(pdfField)));
               }
-              result.warnings.push(`Unknown field type: ${pdfField.constructor.name} for field ${field.name}`);
+
+              fieldsWithErrors.push({
+                fieldId: field.id,
+                fieldName: field.name,
+                fieldValue: field.value,
+                fieldType: pdfField.constructor.name,
+                errorMessage,
+                errorType: 'unknown_field_type'
+              });
+
+              result.warnings.push(errorMessage);
             }
           } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : String(error);
             if (verbose) {
               console.error(`💥 ERROR setting field "${field.name}":`, error);
               console.error(`   🔍 Error details:`, {
-                message: error instanceof Error ? error.message : String(error),
+                message: errorMessage,
                 fieldName: field.name,
                 fieldValue: field.value,
                 pdfFieldType: pdfField.constructor.name
               });
             }
-            result.errors.push(`Error setting field ${field.name}: ${error}`);
+
+            fieldsWithErrors.push({
+              fieldId: field.id,
+              fieldName: field.name,
+              fieldValue: field.value,
+              fieldType: pdfField.constructor.name,
+              errorMessage,
+              errorType: 'value_application_failed'
+            });
+
+            result.errors.push(`Error setting field ${field.name}: ${errorMessage}`);
           }
         } else {
+          const errorMessage = `PDF field not found: ${field.id} / ${field.name}`;
           if (verbose) {
             console.log(`❌ PDF FIELD NOT FOUND: "${field.id}" / "${field.name}"`);
           }
+
+          fieldsWithErrors.push({
+            fieldId: field.id,
+            fieldName: field.name,
+            fieldValue: field.value,
+            fieldType: 'unknown',
+            errorMessage,
+            errorType: 'lookup_failed'
+          });
+
           skippedCount++;
-          result.warnings.push(`PDF field not found: ${field.id} / ${field.name}`);
+          result.warnings.push(errorMessage);
         }
       });
 
@@ -849,12 +1673,13 @@ export class ServerPdfService2 {
       const lookupMethodStats = new Map<string, number>();
       appliedFields.forEach((field) => {
         // Re-run lookup logic to track method used (simplified version)
+        const cleanFieldId = String(field.id).replace(/ 0 R$/, '').trim();
         let method = 'unknown';
-        if (this.isNumericId(field.id) && this.fieldIdMap.has(field.id)) {
+        if (this.isNumericId(cleanFieldId) && this.fieldIdMap.has(cleanFieldId)) {
           method = 'direct-numeric-id';
-        } else if (this.fieldIdMap.has(field.id)) {
+        } else if (this.fieldIdMap.has(cleanFieldId)) {
           method = 'primary-id';
-        } else if (this.extractNumericId(field.id)) {
+        } else if (this.extractNumericId(cleanFieldId)) {
           method = 'converted-to-numeric-id';
         } else {
           method = 'fallback-methods';
@@ -875,6 +1700,42 @@ export class ServerPdfService2 {
           console.log(`   ${type}: ${success}/${attempts} (${rate}%)`);
         }
       });
+
+      // ENHANCED: Detailed error reporting for fields that failed
+      if (fieldsWithErrors.length > 0) {
+        console.log(`\n💥 ===== DETAILED ERROR REPORT =====`);
+        console.log(`🚨 Total fields with errors: ${fieldsWithErrors.length}`);
+
+        // Group errors by type
+        const errorsByType = fieldsWithErrors.reduce((acc, error) => {
+          if (!acc[error.errorType]) {
+            acc[error.errorType] = [];
+          }
+          acc[error.errorType].push(error);
+          return acc;
+        }, {} as Record<string, FieldError[]>);
+
+        Object.entries(errorsByType).forEach(([errorType, errors]) => {
+          console.log(`\n🔍 ${errorType.toUpperCase().replace(/_/g, ' ')} (${errors.length} fields):`);
+          errors.forEach((error, index) => {
+            console.log(`   [${index + 1}] Field ID: "${error.fieldId}"`);
+            console.log(`       Field Name: "${error.fieldName}"`);
+            console.log(`       Field Value: "${error.fieldValue}"`);
+            console.log(`       Field Type: "${error.fieldType}"`);
+            console.log(`       Error: ${error.errorMessage}`);
+            console.log(`       ---`);
+          });
+        });
+
+        console.log(`\n📋 ===== QUICK ERROR SUMMARY =====`);
+        fieldsWithErrors.forEach((error, index) => {
+          console.log(`💥 [${index + 1}] ${error.errorType}: Field "${error.fieldId}" (${error.fieldName}) - ${error.errorMessage}`);
+        });
+        console.log(`💥 ===== END ERROR REPORT =====\n`);
+      } else {
+        console.log(`\n✅ ===== NO ERRORS DETECTED =====`);
+        console.log(`🎉 All fields processed successfully!`);
+      }
 
       result.fieldsApplied = appliedCount;
 

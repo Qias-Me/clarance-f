@@ -6,84 +6,188 @@
  * and estimation checkbox functionality.
  */
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSection2 } from '~/state/contexts/sections2.0/section2';
-import type { Section2 } from '../../../api/interfaces/sections2.0/section2';
+import { useSF86Form } from '~/state/contexts/SF86FormContext';
 
 interface Section2ComponentProps {
   className?: string;
   onValidationChange?: (isValid: boolean) => void;
+  onNext?: () => void;
 }
 
-export const Section2Component: React.FC<Section2ComponentProps> = ({
+const Section2Component: React.FC<Section2ComponentProps> = ({
   className = '',
-  onValidationChange
+  onValidationChange,
+  onNext
 }) => {
   const {
     section2Data,
     updateDateOfBirth,
     updateEstimated,
     validateSection,
+    validateDateOfBirth,
     resetSection,
     getAge,
-    errors
+    isDirty,
+    errors,
+    isLoading
   } = useSection2();
 
-  // Handle field updates
-  const handleFieldChange = (fieldPath: string, value: string | boolean) => {
-    if (fieldPath === 'dateOfBirth.date') {
-      updateDateOfBirth(value as string);
-    } else if (fieldPath === 'dateOfBirth.estimated') {
-      updateEstimated(value as boolean);
+  // Early return if data is not yet loaded or section2 is not available
+  if (isLoading || !section2Data?.section2?.date || !section2Data?.section2?.isEstimated) {
+    return (
+      <div className={`bg-white rounded-lg shadow-lg p-6 ${className}`} data-testid="section2-loading">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading Section 2...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // SF86 Form Context for data persistence
+  const sf86Form = useSF86Form();
+
+  // Track validation state internally
+  const [isValid, setIsValid] = useState(false);
+
+  // Handle validation on component mount and when data changes
+  useEffect(() => {
+    const validationResult = validateSection();
+    setIsValid(validationResult.isValid);
+    onValidationChange?.(validationResult.isValid);
+  }, [section2Data, validateSection, onValidationChange]);
+
+  // Generate options for dropdowns
+  const monthOptions = Array.from({ length: 12 }, (_, i) => {
+    const month = i + 1;
+    return {
+      value: String(month).padStart(2, '0'),
+      label: String(month).padStart(2, '0')
+    };
+  });
+
+  const dayOptions = Array.from({ length: 31 }, (_, i) => {
+    const day = i + 1;
+    return {
+      value: String(day).padStart(2, '0'),
+      label: String(day).padStart(2, '0')
+    };
+  });
+
+  const systemCurrentYear = new Date().getFullYear();
+  const yearOptions = Array.from({ length: 100 }, (_, i) => {
+    const year = systemCurrentYear - 99 + i;
+    return {
+      value: String(year),
+      label: String(year)
+    };
+  });
+
+  // Getter functions for cleaner code - moved up to be available early
+  const getDateValue = (): string => {
+    return section2Data?.section2?.date?.value || '';
+  };
+
+  const getEstimatedValue = (): boolean => {
+    return section2Data?.section2?.isEstimated?.value || false;
+  };
+
+  // Get date parts for display in dropdowns
+  const getDateParts = (): { month: string, day: string, year: string } => {
+    const dateValue = getDateValue();
+    if (!dateValue) return { month: '', day: '', year: '' };
+
+    try {
+      // Handle MM/DD/YYYY format
+      if (dateValue.includes('/')) {
+        const [month, day, year] = dateValue.split('/');
+        return { month, day, year };
+      }
+
+      // Handle YYYY-MM-DD format
+      if (dateValue.includes('-')) {
+        const [year, month, day] = dateValue.split('-');
+        return { month, day, year };
+      }
+
+      // Fallback to date object
+      const date = new Date(dateValue);
+      if (isNaN(date.getTime())) return { month: '', day: '', year: '' };
+
+      return {
+        month: String(date.getMonth() + 1).padStart(2, '0'),
+        day: String(date.getDate()).padStart(2, '0'),
+        year: String(date.getFullYear())
+      };
+    } catch {
+      return { month: '', day: '', year: '' };
     }
   };
 
-  // Calculate age from date of birth
-  const calculateAge = (dateOfBirth: string): number => {
-    if (!dateOfBirth) return 0;
+  // Handle field changes - direct update pattern similar to Section1
+  const handleDateFieldChange = (type: 'month' | 'day' | 'year', value: string) => {
+    const { month, day, year } = getDateParts();
 
-    const birthDate = new Date(dateOfBirth);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
+    // Create new date string with updated part
+    let newMonth = month;
+    let newDay = day;
+    let newYear = year;
 
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
+    if (type === 'month') newMonth = value;
+    if (type === 'day') newDay = value;
+    if (type === 'year') newYear = value;
+
+    // Only update if we have all three values
+    if (newMonth && newDay && newYear) {
+      const newDate = `${newMonth}/${newDay}/${newYear}`;
+      console.log('🔧 Section2Component: Updating date:', { newDate });
+
+      // Update section data directly
+      updateDateOfBirth(newDate);
     }
-
-    return age;
   };
 
-  // Get field value safely
-  const getFieldValue = (fieldPath: string): any => {
-    const keys = fieldPath.split('.');
-    let current: any = section2Data;
+  // Handle estimated checkbox change
+  const handleEstimatedChange = (isEstimated: boolean) => {
+    console.log('🔧 Section2Component: Updating estimated flag:', { isEstimated });
+    updateEstimated(isEstimated);
+  };
 
-    for (const key of keys) {
-      if (current && typeof current === 'object' && key in current) {
-        current = current[key];
-      } else {
-        return fieldPath.includes('estimated') ? false : '';
+  // Handle form submission with data persistence
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const result = validateSection();
+    setIsValid(result.isValid);
+    onValidationChange?.(result.isValid);
+
+    console.log('🔍 Section 2 validation result:', result);
+    console.log('📊 Section 2 data before submission:', section2Data);
+
+    if (result.isValid) {
+      try {
+        // Update the central form context with Section 2 data
+        sf86Form.updateSectionData('section2', section2Data);
+
+        // Save the form data to persistence layer
+        await sf86Form.saveForm();
+
+        console.log('✅ Section 2 data saved successfully');
+
+        // Proceed to next section if callback provided
+        if (onNext) {
+          onNext();
+        }
+      } catch (error) {
+        console.error('❌ Failed to save Section 2 data:', error);
+        // Show an error message to user
+        alert('There was an error saving your date of birth information. Please try again.');
       }
     }
-
-    return current?.value ?? (fieldPath.includes('estimated') ? false : '');
-  };
-
-  // Auto-calculate age when date changes
-  useEffect(() => {
-    const dateValue = getFieldValue('dateOfBirth.date');
-    if (dateValue) {
-      const age = calculateAge(dateValue);
-      handleFieldChange('dateOfBirth.age', age.toString());
-    }
-  }, [getFieldValue('dateOfBirth.date')]);
-
-  // Handle validation
-  const handleValidation = () => {
-    const result = validateSection();
-    onValidationChange?.(result.isValid);
-    return result;
   };
 
   // Validate date format and constraints
@@ -92,30 +196,28 @@ export const Section2Component: React.FC<Section2ComponentProps> = ({
       return { isValid: false, error: 'Date of birth is required' };
     }
 
-    const date = new Date(dateString);
-    const today = new Date();
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return { isValid: false, error: 'Invalid date format' };
+      }
 
-    if (isNaN(date.getTime())) {
+      const dateValidation = validateDateOfBirth();
+      if (!dateValidation.isValid && dateValidation.errors.length > 0) {
+        return { isValid: false, error: dateValidation.errors[0] };
+      }
+
+      return { isValid: true };
+    } catch {
       return { isValid: false, error: 'Invalid date format' };
     }
-
-    if (date > today) {
-      return { isValid: false, error: 'Date cannot be in the future' };
-    }
-
-    const age = calculateAge(dateString);
-    if (age < 16) {
-      return { isValid: false, error: 'Applicant must be at least 16 years old' };
-    }
-
-    if (age > 120) {
-      return { isValid: false, error: 'Please verify the date of birth' };
-    }
-
-    return { isValid: true };
   };
 
-  const dateValidation = validateDate(getFieldValue('dateOfBirth.date'));
+  // Extract parts from current date
+  const { month: currentMonth, day: currentDay, year: currentYear } = getDateParts();
+
+  // Validate the current date
+  const dateValidation = validateDate(getDateValue());
 
   return (
     <div className={`bg-white rounded-lg shadow-lg p-6 ${className}`} data-testid="section2-form">
@@ -130,7 +232,7 @@ export const Section2Component: React.FC<Section2ComponentProps> = ({
       </div>
 
       {/* Date of Birth Form */}
-      <div className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* Date of Birth */}
         <div>
           <label
@@ -139,27 +241,88 @@ export const Section2Component: React.FC<Section2ComponentProps> = ({
           >
             Date of Birth <span className="text-red-500">*</span>
           </label>
+
+          {/* Date dropdowns */}
+          <div className="grid grid-cols-3 gap-4">
+            {/* Month dropdown */}
+            <div>
+              <label htmlFor="monthSelect" className="block text-sm font-medium text-gray-700 mb-1">
+                Month
+              </label>
+              <select
+                id="monthSelect"
+                value={currentMonth}
+                onChange={(e) => handleDateFieldChange('month', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              >
+                <option value="">Select Month</option>
+                {monthOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Day dropdown */}
+            <div>
+              <label htmlFor="daySelect" className="block text-sm font-medium text-gray-700 mb-1">
+                Day
+              </label>
+              <select
+                id="daySelect"
+                value={currentDay}
+                onChange={(e) => handleDateFieldChange('day', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              >
+                <option value="">Select Day</option>
+                {dayOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Year dropdown */}
+            <div>
+              <label htmlFor="yearSelect" className="block text-sm font-medium text-gray-700 mb-1">
+                Year
+              </label>
+              <select
+                id="yearSelect"
+                value={currentYear}
+                onChange={(e) => handleDateFieldChange('year', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              >
+                <option value="">Select Year</option>
+                {yearOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Hidden original date input for compatibility */}
           <input
-            type="date"
+            type="hidden"
             id="dateOfBirth"
             data-testid="date-of-birth-field"
-            value={getFieldValue('dateOfBirth.date')}
-            onChange={(e) => handleFieldChange('dateOfBirth.date', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              !dateValidation.isValid && getFieldValue('dateOfBirth.date')
-                ? 'border-red-300 bg-red-50'
-                : 'border-gray-300'
-            }`}
-            required
-            max={new Date().toISOString().split('T')[0]} // Prevent future dates
+            value={getDateValue()}
           />
-          {!dateValidation.isValid && getFieldValue('dateOfBirth.date') && (
+
+          {!dateValidation.isValid && getDateValue() && (
             <p className="mt-1 text-sm text-red-600" data-testid="date-format-error">
               {dateValidation.error}
             </p>
           )}
-          <p className="mt-1 text-xs text-gray-500">
-            Enter your date of birth in MM/DD/YYYY format.
+          <p className="mt-2 text-xs text-gray-500">
+            Select your date of birth using the dropdowns above.
           </p>
         </div>
 
@@ -170,8 +333,8 @@ export const Section2Component: React.FC<Section2ComponentProps> = ({
               id="estimated"
               type="checkbox"
               data-testid="estimated-checkbox"
-              checked={getFieldValue('dateOfBirth.estimated')}
-              onChange={(e) => handleFieldChange('dateOfBirth.estimated', e.target.checked)}
+              checked={getEstimatedValue()}
+              onChange={(e) => handleEstimatedChange(e.target.checked)}
               className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
             />
           </div>
@@ -197,7 +360,7 @@ export const Section2Component: React.FC<Section2ComponentProps> = ({
             type="text"
             id="age"
             data-testid="age-field"
-            value={getFieldValue('dateOfBirth.age')}
+            value={getAge() || ''}
             readOnly
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-600"
             placeholder="Age will be calculated automatically"
@@ -208,7 +371,7 @@ export const Section2Component: React.FC<Section2ComponentProps> = ({
         </div>
 
         {/* Age Display */}
-        {getFieldValue('dateOfBirth.date') && (
+        {getDateValue() && (
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -221,8 +384,8 @@ export const Section2Component: React.FC<Section2ComponentProps> = ({
                   Age Calculation
                 </h3>
                 <div className="mt-1 text-sm text-blue-700">
-                  Based on your date of birth, you are currently {getAge() || 0} years old.
-                  {getFieldValue('dateOfBirth.estimated') && (
+                  Based on your date of birth ({getDateValue()}), you are currently {getAge() || 0} years old.
+                  {getEstimatedValue() && (
                     <span className="font-medium"> (Estimated)</span>
                   )}
                 </div>
@@ -230,54 +393,62 @@ export const Section2Component: React.FC<Section2ComponentProps> = ({
             </div>
           </div>
         )}
-      </div>
 
-      {/* Form Actions */}
-      <div className="mt-8 flex justify-between items-center pt-6 border-t border-gray-200">
-        <div className="text-sm text-gray-500">
-          <span className="text-red-500">*</span> Required fields
+        {/* Form Actions */}
+        <div className="mt-8 flex justify-between items-center pt-6 border-t border-gray-200">
+          <div className="text-sm text-gray-500">
+            <span className="text-red-500">*</span> Required fields
+          </div>
+
+          <div className="flex space-x-4">
+            <button
+              type="submit"
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              data-testid="submit-section-button"
+            >
+              Submit & Continue
+            </button>
+
+            <button
+              type="button"
+              className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+              data-testid="clear-section-button"
+              onClick={resetSection}
+            >
+              Clear Section
+            </button>
+          </div>
         </div>
 
-        <div className="flex space-x-4">
-          <button
-            type="button"
-            onClick={handleValidation}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-            data-testid="validate-section-button"
-          >
-            Validate Section
-          </button>
-
-          <button
-            type="button"
-            className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
-            data-testid="clear-section-button"
-            onClick={resetSection}
-          >
-            Clear Section
-          </button>
+        {/* Validation Status */}
+        <div className="mt-4" data-testid="validation-status">
+          <div className="text-sm text-gray-600">
+            Section Status: <span className={`font-medium ${isDirty ? 'text-orange-500' : 'text-green-500'}`}>
+              {isDirty ? 'Modified, needs validation' : 'Ready for input'}
+            </span>
+          </div>
+          <div className="text-sm text-gray-600">
+            Validation: <span className={`font-medium ${isValid ? 'text-green-500' : 'text-red-500'}`}>
+              {isValid ? 'Valid' : 'Has errors'}
+            </span>
+          </div>
         </div>
-      </div>
-
-      {/* Validation Status */}
-      <div className="mt-4" data-testid="validation-status">
-        <div className="text-sm text-gray-600">
-          Section Status: <span className="font-medium">
-            {dateValidation.isValid ? 'Valid' : 'Needs attention'}
-          </span>
-        </div>
-      </div>
+      </form>
 
       {/* Debug Information (Development Only) */}
-      {process.env.NODE_ENV === 'development' && (
+      {typeof window !== 'undefined' && window.location.search.includes('debug=true') && (
         <details className="mt-6 p-4 bg-gray-50 rounded-lg">
           <summary className="cursor-pointer text-sm font-medium text-gray-700">
-            Debug Information (Development Only)
+            Debug Information
           </summary>
           <div className="mt-2">
             <h4 className="text-xs font-medium text-gray-600 mb-2">Section 2 Data:</h4>
             <pre className="text-xs bg-white p-2 rounded border overflow-auto max-h-40">
               {JSON.stringify(section2Data, null, 2)}
+            </pre>
+            <h4 className="text-xs font-medium text-gray-600 mt-4 mb-2">Validation Errors:</h4>
+            <pre className="text-xs bg-white p-2 rounded border overflow-auto max-h-40">
+              {JSON.stringify(errors, null, 2)}
             </pre>
           </div>
         </details>
