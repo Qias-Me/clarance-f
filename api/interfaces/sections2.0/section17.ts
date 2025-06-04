@@ -268,11 +268,12 @@ export const YES_NO_OPTIONS = ['YES', 'NO'] as const;
 /**
  * Field patterns for each subsection type - CRITICAL for correct PDF mapping
  * Based on comprehensive analysis of sections-reference/section-17.json
+ * NOTE: Former spouses do NOT have SSN fields in the PDF
  */
 const FIELD_PATTERNS = {
   currentSpouse: { middle: 6, last: 7, first: 8, ssn: 9 },
-  formerSpouse: { middle: 0, last: 1, first: 2, ssn: 3 },
-  cohabitant: { middle: 6, last: 7, first: 8, ssn: 9 }
+  formerSpouse: { middle: 0, last: 1, first: 2 }, // NO SSN field for former spouses
+  cohabitant: { middle: 6, last: 7, first: 8, ssn: 16 } // SSN is TextField11[16]
 } as const;
 
 /**
@@ -293,13 +294,19 @@ function createSubsectionFieldReference(
 
 /**
  * Creates field reference for name fields with correct patterns
+ * NOTE: Former spouses do NOT have SSN fields in the PDF
  */
 function createNameFieldReference(
   subsectionType: 'currentSpouse' | 'formerSpouse' | 'cohabitant',
   entryIndex: 0 | 1,
   fieldType: 'middle' | 'last' | 'first' | 'ssn'
 ): string {
-  const fieldIndex = FIELD_PATTERNS[subsectionType][fieldType];
+  // Handle special case: former spouses don't have SSN fields
+  if (subsectionType === 'formerSpouse' && fieldType === 'ssn') {
+    throw new Error('Former spouses do not have SSN fields in the PDF');
+  }
+
+  const fieldIndex = FIELD_PATTERNS[subsectionType][fieldType as keyof typeof FIELD_PATTERNS[typeof subsectionType]];
   return createSubsectionFieldReference(subsectionType, entryIndex, `TextField11[${fieldIndex}]`);
 }
 
@@ -422,13 +429,13 @@ export const createDefaultOtherNameEntry = (
 
 /**
  * Creates a default former spouse entry with correct field mapping
- * Uses Section17_2[0] pattern with field indices 0,1,2,3
+ * Uses Section17_2[0] pattern with proper #area nested structures
  */
 export const createDefaultFormerSpouseEntry = (entryIndex: 0 | 1 = 0): FormerSpouseEntry => {
   return {
     hasFormerSpouse: {
-      // Using correct former spouse checkbox field
-      ...createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#area[2].#field[23]'), ''),
+      // Using correct former spouse checkbox field - #field[23] exists without #area[2] prefix
+      ...createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#field[23]'), ''),
       options: YES_NO_OPTIONS
     },
     fullName: {
@@ -442,17 +449,17 @@ export const createDefaultFormerSpouseEntry = (entryIndex: 0 | 1 = 0): FormerSpo
       }
     },
     dateOfBirth: {
-      // Using correct date field for former spouse
-      month: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#area[1].From_Datefield_Name_2[2]'), ''),
-      year: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#area[1].From_Datefield_Name_2[2]'), ''),
-      estimated: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#field[19]'), false)
+      // Using correct date field for former spouse - root level, not nested in #area
+      month: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, 'From_Datefield_Name_2[2]'), ''),
+      year: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, 'From_Datefield_Name_2[2]'), ''),
+      estimated: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#field[2]'), false)
     },
     placeOfBirth: {
-      // Using correct place of birth fields for former spouse
-      city: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, 'TextField11[3]'), ''),
-      county: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, 'TextField11[4]'), ''),
+      // Using correct place of birth fields for former spouse - nested in #area[4]
+      city: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#area[4].TextField11[3]'), ''),
+      county: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#area[4].TextField11[4]'), ''),
       state: {
-        ...createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, 'TextField11[5]'), ''),
+        ...createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#area[5].TextField11[5]'), ''),
         options: []
       },
       country: {
@@ -460,7 +467,8 @@ export const createDefaultFormerSpouseEntry = (entryIndex: 0 | 1 = 0): FormerSpo
         options: []
       }
     },
-    ssn: createFieldFromReference(17, createNameFieldReference('formerSpouse', entryIndex, 'ssn'), ''),
+    // NOTE: Former spouses do NOT have SSN fields in the PDF - using placeholder field
+    ssn: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, 'suffix[0]'), ''),
     citizenship: {
       ...createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, 'DropDownList12[0]'), ''),
       options: []
@@ -470,19 +478,19 @@ export const createDefaultFormerSpouseEntry = (entryIndex: 0 | 1 = 0): FormerSpo
       options: YES_NO_OPTIONS
     },
     documentType: {
-      ...createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#field[10]'), ''),
+      ...createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#field[9]'), ''),
       options: DOCUMENT_TYPE_OPTIONS
     },
-    documentNumber: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, 'TextField11[6]'), ''),
-    notApplicable: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#field[11]'), false),
-    marriageDate: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, 'From_Datefield_Name_2[0]'), ''),
-    marriageEstimated: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#field[20]'), false),
+    documentNumber: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#area[7].TextField11[6]'), ''),
+    notApplicable: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#field[9]'), false),
+    marriageDate: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, 'From_Datefield_Name_2[2]'), ''),
+    marriageEstimated: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#field[26]'), false),
     marriageLocation: {
-      // Using correct marriage location fields for former spouse
-      city: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, 'TextField11[7]'), ''),
-      county: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, 'TextField11[8]'), ''),
+      // Using correct marriage location fields for former spouse - only city field exists in #area[5]
+      city: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#area[5].TextField11[5]'), ''),
+      county: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#area[7].TextField11[6]'), ''),
       state: {
-        ...createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, 'TextField11[9]'), ''),
+        ...createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#area[7].TextField11[7]'), ''),
         options: []
       },
       country: {
@@ -490,24 +498,24 @@ export const createDefaultFormerSpouseEntry = (entryIndex: 0 | 1 = 0): FormerSpo
         options: []
       }
     },
-    endDate: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#area[1].To_Datefield_Name_2[1]'), ''),
-    endEstimated: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#field[21]'), false),
+    endDate: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, 'From_Datefield_Name_2[1]'), ''),
+    endEstimated: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#field[27]'), false),
     endLocation: {
-      // Using correct end location fields for former spouse
-      city: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, 'TextField11[10]'), ''),
-      county: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, 'TextField11[11]'), ''),
+      // Using correct end location fields for former spouse - complex nested structure in #area[6]
+      city: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#area[6].Address_Full_short_line[0].#area[0].TextField11[0]'), ''),
+      county: createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#area[6].Address_Full_short_line[0].TextField11[1]'), ''),
       state: {
-        ...createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, 'TextField11[12]'), ''),
+        ...createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#area[6].Address_Full_short_line[0].#area[0].School6_State[0]'), ''),
         options: []
       },
       country: {
-        ...createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, 'DropDownList12[2]'), ''),
+        ...createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#area[6].Address_Full_short_line[0].#area[0].DropDownList17[0]'), ''),
         options: []
       }
     },
     reasonForEnd: {
-      // Using correct reason for end field for former spouse
-      ...createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#area[2].#field[23]'), ''),
+      // Using correct reason for end field for former spouse - #field[23] exists without #area[2] prefix
+      ...createFieldFromReference(17, createSubsectionFieldReference('formerSpouse', entryIndex, '#field[23]'), ''),
       options: ['Divorced/Dissolved', 'Annulled', 'Widowed', 'Separated']
     },
     hasOtherNames: {
@@ -520,7 +528,7 @@ export const createDefaultFormerSpouseEntry = (entryIndex: 0 | 1 = 0): FormerSpo
 
 /**
  * Creates a default cohabitant entry with correct field mapping
- * Uses Section17_3[0] pattern with field indices 6,7,8,9 (same as current spouse)
+ * Uses Section17_3[0] pattern with proper #area nested structures
  */
 export const createDefaultCohabitantEntry = (entryIndex: 0 | 1 = 0): CohabitantEntry => {
   return {
@@ -530,7 +538,7 @@ export const createDefaultCohabitantEntry = (entryIndex: 0 | 1 = 0): CohabitantE
       options: YES_NO_OPTIONS
     },
     fullName: {
-      // Using correct cohabitant name field pattern (6,7,8) - same as current spouse
+      // Using correct cohabitant name field pattern (6,7,8) - middle, last, first
       lastName: createFieldFromReference(17, createNameFieldReference('cohabitant', entryIndex, 'last'), ''),
       firstName: createFieldFromReference(17, createNameFieldReference('cohabitant', entryIndex, 'first'), ''),
       middleName: createFieldFromReference(17, createNameFieldReference('cohabitant', entryIndex, 'middle'), ''),
@@ -540,17 +548,17 @@ export const createDefaultCohabitantEntry = (entryIndex: 0 | 1 = 0): CohabitantE
       }
     },
     dateOfBirth: {
-      // Using correct date field for cohabitant
-      month: createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, 'From_Datefield_Name_2[0]'), ''),
-      year: createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, 'From_Datefield_Name_2[0]'), ''),
+      // Using correct date field for cohabitant - nested in #area[0]
+      month: createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, '#area[0].From_Datefield_Name_2[0]'), ''),
+      year: createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, '#area[0].From_Datefield_Name_2[0]'), ''),
       estimated: createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, '#field[10]'), false)
     },
     placeOfBirth: {
-      // Using correct place of birth fields for cohabitant
-      city: createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, 'TextField11[0]'), ''),
-      county: createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, 'TextField11[1]'), ''),
+      // Using correct place of birth fields for cohabitant - city nested in #area[2]
+      city: createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, '#area[2].TextField11[9]'), ''),
+      county: createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, 'TextField11[10]'), ''),
       state: {
-        ...createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, 'TextField11[2]'), ''),
+        ...createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, 'TextField11[11]'), ''),
         options: []
       },
       country: {
@@ -558,7 +566,7 @@ export const createDefaultCohabitantEntry = (entryIndex: 0 | 1 = 0): CohabitantE
         options: []
       }
     },
-    ssn: createFieldFromReference(17, createNameFieldReference('cohabitant', entryIndex, 'ssn'), ''),
+    ssn: createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, 'TextField11[16]'), ''),
     citizenship: {
       ...createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, 'DropDownList12[0]'), ''),
       options: []
@@ -568,16 +576,16 @@ export const createDefaultCohabitantEntry = (entryIndex: 0 | 1 = 0): CohabitantE
       options: YES_NO_OPTIONS
     },
     documentType: {
-      ...createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, '#field[11]'), ''),
+      ...createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, '#field[17]'), ''),
       options: DOCUMENT_TYPE_OPTIONS
     },
-    documentNumber: createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, 'TextField11[3]'), ''),
-    notApplicable: createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, '#field[12]'), false),
-    startDate: createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, 'From_Datefield_Name_2[0]'), ''),
-    startEstimated: createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, '#field[10]'), false),
+    documentNumber: createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, 'TextField11[17]'), ''),
+    notApplicable: createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, '#field[18]'), false),
+    startDate: createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, '#area[0].From_Datefield_Name_2[0]'), ''),
+    startEstimated: createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, '#field[19]'), false),
     endDate: createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, '#area[0].To_Datefield_Name_2[0]'), ''),
-    endEstimated: createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, '#field[11]'), false),
-    isCurrentlyCohabitating: createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, '#field[12]'), false),
+    endEstimated: createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, '#field[27]'), false),
+    isCurrentlyCohabitating: createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, '#field[32]'), false),
     hasOtherNames: {
       ...createFieldFromReference(17, createSubsectionFieldReference('cohabitant', entryIndex, 'RadioButtonList[0]'), ''),
       options: YES_NO_OPTIONS

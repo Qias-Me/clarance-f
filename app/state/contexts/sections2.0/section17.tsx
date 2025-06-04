@@ -34,8 +34,8 @@ import {
   isSection17Complete
 } from '../../../../api/interfaces/sections2.0/section17';
 
-// Temporarily disable the problematic integration to fix the infinite loop issue
-// import { useSection86FormIntegration } from '../shared/section-context-integration';
+// Custom integration approach - avoiding the problematic useSection86FormIntegration
+import { useSF86Form } from '../SF86FormContext';
 import type { ValidationResult, ValidationError, ChangeSet } from '../shared/base-interfaces';
 
 // ============================================================================
@@ -229,7 +229,23 @@ export const Section17Provider: React.FC<Section17ProviderProps> = ({ children }
       const newData = cloneDeep(prevData);
       const newEntry = createDefaultCurrentSpouseEntry();
       newData.section17.currentSpouse.push(newEntry);
-      console.log('✅ Section17Context: Current spouse entry added', newEntry);
+
+      // Debug logging to see the actual field structure
+      console.log('✅ Section17Context: Current spouse entry added');
+      console.log('🔍 Section17Context: lastName field details:', {
+        id: newEntry.fullName?.lastName?.id,
+        name: newEntry.fullName?.lastName?.name,
+        type: newEntry.fullName?.lastName?.type,
+        label: newEntry.fullName?.lastName?.label,
+        value: newEntry.fullName?.lastName?.value
+      });
+      console.log('🔍 Section17Context: firstName field details:', {
+        id: newEntry.fullName?.firstName?.id,
+        name: newEntry.fullName?.firstName?.name,
+        type: newEntry.fullName?.firstName?.type,
+        label: newEntry.fullName?.firstName?.label,
+        value: newEntry.fullName?.firstName?.value
+      });
       console.log('📊 Section17Context: Updated data', newData);
 
       // Set dirty flag like Section 29
@@ -596,19 +612,23 @@ export const Section17Provider: React.FC<Section17ProviderProps> = ({ children }
     });
   }, [updateFieldValue]);
 
-  // TEMPORARILY DISABLED: Integration with main form context to fix infinite loop issue
-  // Integration with main form context using Section 29 gold standard pattern
-  // Note: integration variable is used internally by the hook for registration
-  // Restored updateFieldValue parameter to match Section 29 pattern exactly
-  // const integration = useSection86FormIntegration(
-  //   'section17',
-  //   'Section 17: Marital Status',
-  //   section17Data,
-  //   setSection17Data,
-  //   () => ({ isValid: validateSection().isValid, errors: [], warnings: [] }), // Anonymous function like Section 29
-  //   () => getChanges(), // Anonymous function like Section 29
-  //   updateFieldValueWrapper // Pass wrapper function that matches expected signature
-  // );
+  // ============================================================================
+  // CUSTOM SF86FORM INTEGRATION - Simplified to avoid infinite loops
+  // ============================================================================
+
+  // Custom minimal integration that avoids the circular dependency issues
+  // in the standard useSection86FormIntegration hook
+  const { updateSectionData } = useSF86Form();
+
+  // Simple integration: just sync data to global context when it changes
+  useEffect(() => {
+    // Debounce the update to avoid excessive calls
+    const timeoutId = setTimeout(() => {
+      updateSectionData('section17', section17Data);
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [section17Data, updateSectionData]);
 
   // ============================================================================
   // CONTEXT VALUE
