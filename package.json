@@ -37,7 +37,7 @@
 	},
 	"devDependencies": {
 		"@cloudflare/vite-plugin": "^1.0.12",
-		"@playwright/test": "^1.49.1",
+		"@playwright/test": "^1.52.0",
 		"@react-router/dev": "^7.5.3",
 		"@tailwindcss/vite": "^4.1.4",
 		"@types/lodash": "^4.17.16",

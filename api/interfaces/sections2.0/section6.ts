@@ -6,6 +6,7 @@
  */
 
 import type { Field } from '../formDefinition2.0';
+import { createFieldFromReference, validateSectionFieldCount } from '../../utils/sections-references-loader';
 
 // ============================================================================
 // CORE INTERFACES
@@ -195,61 +196,49 @@ export type HeightInches = typeof HEIGHT_INCHES_OPTIONS[number];
 // ============================================================================
 
 /**
- * Creates a default Section 6 data structure with correct field IDs
+ * Creates a default Section 6 data structure using DRY approach with sections-references
+ * This eliminates hardcoded values and uses the single source of truth
  */
-export const createDefaultSection6 = (): Section6 => ({
-  _id: 6,
-  section6: {
-    heightFeet: {
-      id: SECTION6_FIELD_IDS.HEIGHT_FEET,
-      name: SECTION6_FIELD_NAMES.HEIGHT_FEET,
-      type: 'PDFDropdown',
-      label: 'Height (feet)',
-      value: '5',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    heightInches: {
-      id: SECTION6_FIELD_IDS.HEIGHT_INCHES,
-      name: SECTION6_FIELD_NAMES.HEIGHT_INCHES,
-      type: 'PDFDropdown',
-      label: 'Height (inches)',
-      value: '0',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    weight: {
-      id: SECTION6_FIELD_IDS.WEIGHT,
-      name: SECTION6_FIELD_NAMES.WEIGHT,
-      type: 'PDFTextField',
-      label: 'Weight (in pounds)',
-      value: '0',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    hairColor: {
-      id: SECTION6_FIELD_IDS.HAIR_COLOR,
-      name: SECTION6_FIELD_NAMES.HAIR_COLOR,
-      type: 'PDFDropdown',
-      label: 'Hair color',
-      value: 'Brown',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    eyeColor: {
-      id: SECTION6_FIELD_IDS.EYE_COLOR,
-      name: SECTION6_FIELD_NAMES.EYE_COLOR,
-      type: 'PDFDropdown',
-      label: 'Eye color',
-      value: 'Brown',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    sex: {
-      id: SECTION6_FIELD_IDS.SEX,
-      name: SECTION6_FIELD_NAMES.SEX,
-      type: 'PDFRadioGroup',
-      label: 'Sex',
-      value: 'Male',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
+export const createDefaultSection6 = (): Section6 => {
+  // Validate field count against sections-references
+  validateSectionFieldCount(6);
+
+  return {
+    _id: 6,
+    section6: {
+      heightFeet: createFieldFromReference(
+        6,
+        'form1[0].Sections1-6[0].DropDownList8[0]',
+        '5'
+      ),
+      heightInches: createFieldFromReference(
+        6,
+        'form1[0].Sections1-6[0].DropDownList7[0]',
+        '0'
+      ),
+      weight: createFieldFromReference(
+        6,
+        'form1[0].Sections1-6[0].TextField11[5]',
+        ''
+      ),
+      hairColor: createFieldFromReference(
+        6,
+        'form1[0].Sections1-6[0].DropDownList10[0]',
+        'Brown'
+      ),
+      eyeColor: createFieldFromReference(
+        6,
+        'form1[0].Sections1-6[0].DropDownList9[0]',
+        'Brown'
+      ),
+      sex: createFieldFromReference(
+        6,
+        'form1[0].Sections1-6[0].p3-rb3b[0]',
+        'Male'
+      )
     }
-  }
-});
+  };
+};
 
 /**
  * Updates a specific field in the Section 6 data structure

@@ -1,8 +1,8 @@
 /**
- * Section 16: Foreign Activities - Context Provider
+ * Section 16: People Who Know You Well - Context Provider
  *
  * React context provider for SF-86 Section 16 using the new Form Architecture 2.0.
- * This provider manages foreign activities data with full CRUD operations,
+ * This provider manages "People Who Know You Well" data with full CRUD operations,
  * validation, and integration with the central SF86FormContext.
  */
 
@@ -16,37 +16,26 @@ import React, {
 } from 'react';
 import cloneDeep from 'lodash/cloneDeep';
 import set from 'lodash/set';
+import isEqual from 'lodash/isEqual';
 import type {
   Section16,
   Section16SubsectionKey,
-  Section16FieldUpdate,
   Section16ValidationRules,
   Section16ValidationContext,
-  ForeignActivitiesValidationResult,
-  ForeignGovernmentActivityEntry,
-  ForeignBusinessActivityEntry,
-  ForeignOrganizationEntry,
-  ForeignPropertyEntry,
-  ForeignBusinessTravelEntry,
-  ForeignConferenceEntry,
-  ForeignGovernmentContactEntry
+  Section16ValidationResult,
+  ForeignOrganizationContactEntry,
+  PersonWhoKnowsYouEntry
 } from '../../../../api/interfaces/sections2.0/section16';
 import {
   createDefaultSection16,
-  createDefaultForeignGovernmentActivityEntry,
-  createDefaultForeignBusinessActivityEntry,
-  createDefaultForeignOrganizationEntry,
-  createDefaultForeignPropertyEntry,
-  createDefaultForeignBusinessTravelEntry,
-  createDefaultForeignConferenceEntry,
-  createDefaultForeignGovernmentContactEntry,
-  updateSection16Field,
-  validateForeignActivities,
-  isSection16Complete
+  createDefaultForeignOrganizationContactEntry,
+  createDefaultPersonWhoKnowsYouEntry,
+  validateSection16
 } from '../../../../api/interfaces/sections2.0/section16';
 
 import { useSection86FormIntegration } from '../shared/section-context-integration';
-import type { ValidationResult, ValidationError } from '../shared/base-interfaces';
+import type { ValidationResult, ValidationError, ChangeSet } from '../shared/base-interfaces';
+import { SectionLogger, PerformanceMonitor } from '../shared/section-optimization-utils';
 
 // ============================================================================
 // CONTEXT INTERFACE
@@ -59,48 +48,15 @@ export interface Section16ContextType {
   errors: Record<string, string>;
   isDirty: boolean;
 
-  // Foreign Government Activities (16.1)
-  addForeignGovernmentActivity: () => void;
-  removeForeignGovernmentActivity: (index: number) => void;
-  updateForeignGovernmentActivity: (index: number, activity: Partial<ForeignGovernmentActivityEntry>) => void;
-
-  // Foreign Business Activities (16.2) 
-  addForeignBusinessActivity: () => void;
-  removeForeignBusinessActivity: (index: number) => void;
-  updateForeignBusinessActivity: (index: number, activity: Partial<ForeignBusinessActivityEntry>) => void;
-
-  // Foreign Organizations (16.3)
-  addForeignOrganization: () => void;
-  removeForeignOrganization: (index: number) => void;
-  updateForeignOrganization: (index: number, organization: Partial<ForeignOrganizationEntry>) => void;
-
-  // Foreign Property (16.4)
-  addForeignProperty: () => void;
-  removeForeignProperty: (index: number) => void;
-  updateForeignProperty: (index: number, property: Partial<ForeignPropertyEntry>) => void;
-
-  // Foreign Business Travel (16.5)
-  addForeignBusinessTravel: () => void;
-  removeForeignBusinessTravel: (index: number) => void;
-  updateForeignBusinessTravel: (index: number, travel: Partial<ForeignBusinessTravelEntry>) => void;
-
-  // Foreign Conferences (16.6)
-  addForeignConference: () => void;
-  removeForeignConference: (index: number) => void;
-  updateForeignConference: (index: number, conference: Partial<ForeignConferenceEntry>) => void;
-
-  // Foreign Government Contacts (16.7)
-  addForeignGovernmentContact: () => void;
-  removeForeignGovernmentContact: (index: number) => void;
-  updateForeignGovernmentContact: (index: number, contact: Partial<ForeignGovernmentContactEntry>) => void;
+  // Entries 1-3: People Who Know You Well (Section16_3) - 36 fields each
+  // Note: Section16_1 fields actually map to Section 15 Entry 2 (handled in Section15Context)
+  updatePersonWhoKnowsYou: (index: number, person: Partial<PersonWhoKnowsYouEntry>) => void;
 
   // General Field Updates
   updateFieldValue: (path: string, value: any) => void;
-  updateField: (update: Section16FieldUpdate) => void;
 
   // Validation
   validateSection: () => ValidationResult;
-  validateForeignActivities: () => ForeignActivitiesValidationResult;
 
   // Utility
   resetSection: () => void;
@@ -114,12 +70,12 @@ export interface Section16ContextType {
 // ============================================================================
 
 const defaultValidationRules: Section16ValidationRules = {
-  requiresActivityDetailsIfYes: true,
-  requiresContactInfoForActivities: true,
-  requiresFinancialDisclosure: true,
+  requiresForeignOrgContact: true,
+  requiresAllThreePeople: true,
+  requiresContactInfo: true,
   requiresDateRanges: true,
-  maxDescriptionLength: 1000,
-  maxNameLength: 100
+  maxNameLength: 100,
+  minNameLength: 1
 };
 
 // ============================================================================
@@ -155,11 +111,25 @@ export const Section16Provider: React.FC<Section16ProviderProps> = ({ children }
   const [initialData] = useState<Section16>(createInitialSection16State());
   const [isInitialized, setIsInitialized] = useState(false);
 
+  // Generate unique context ID for logging
+  const contextId = useMemo(() => `section16-${Date.now()}`, []);
+
+  // Initialize logging
+  useEffect(() => {
+    SectionLogger.info('section16', contextId, 'Section 16 context initialized', {
+      totalPeople: section16Data.section16.peopleWhoKnowYou.length,
+      expectedFields: 108
+    });
+  }, [contextId]);
+
   // ============================================================================
   // COMPUTED VALUES
   // ============================================================================
 
-  const isDirty = JSON.stringify(section16Data) !== JSON.stringify(initialData);
+  // Compute isDirty following Section 1 pattern
+  const isDirty = useMemo(() => {
+    return JSON.stringify(section16Data) !== JSON.stringify(initialData);
+  }, [section16Data, initialData]);
 
   // Set initialized flag after component mounts
   useEffect(() => {
@@ -179,12 +149,12 @@ export const Section16Provider: React.FC<Section16ProviderProps> = ({ children }
       allowPartialCompletion: false
     };
 
-    const foreignActivitiesValidation = validateForeignActivities(section16Data.section16, validationContext);
+    const section16Validation = validateSection16(section16Data.section16, validationContext);
 
-    if (!foreignActivitiesValidation.isValid) {
-      foreignActivitiesValidation.errors.forEach(error => {
+    if (!section16Validation.isValid) {
+      section16Validation.errors.forEach(error => {
         validationErrors.push({
-          field: 'foreignActivities',
+          field: 'section16',
           message: error,
           code: 'VALIDATION_ERROR',
           severity: 'error'
@@ -192,9 +162,9 @@ export const Section16Provider: React.FC<Section16ProviderProps> = ({ children }
       });
     }
 
-    foreignActivitiesValidation.warnings.forEach(warning => {
+    section16Validation.warnings.forEach(warning => {
       validationWarnings.push({
-        field: 'foreignActivities',
+        field: 'section16',
         message: warning,
         code: 'VALIDATION_WARNING',
         severity: 'warning'
@@ -208,235 +178,61 @@ export const Section16Provider: React.FC<Section16ProviderProps> = ({ children }
     };
   }, [section16Data]);
 
-  const validateForeignActivitiesOnly = useCallback((): ForeignActivitiesValidationResult => {
-    const validationContext: Section16ValidationContext = {
-      rules: defaultValidationRules,
-      allowPartialCompletion: false
-    };
-
-    return validateForeignActivities(section16Data.section16, validationContext);
-  }, [section16Data]);
-
   // ============================================================================
-  // CRUD OPERATIONS - FOREIGN GOVERNMENT ACTIVITIES
+  // NOTE: Section16_1 fields actually map to Section 15 Entry 2
+  // The updateForeignOrganizationContact function is now in Section15Context
   // ============================================================================
 
-  const addForeignGovernmentActivity = useCallback(() => {
-    setSection16Data(prevData => {
-      const newData = cloneDeep(prevData);
-      const newActivity = createDefaultForeignGovernmentActivityEntry();
-      newData.section16.foreignGovernmentActivities.push(newActivity);
-      return newData;
-    });
-  }, []);
-
-  const removeForeignGovernmentActivity = useCallback((index: number) => {
-    setSection16Data(prevData => {
-      const newData = cloneDeep(prevData);
-      if (index >= 0 && index < newData.section16.foreignGovernmentActivities.length) {
-        newData.section16.foreignGovernmentActivities.splice(index, 1);
-      }
-      return newData;
-    });
-  }, []);
-
-  const updateForeignGovernmentActivity = useCallback((index: number, activity: Partial<ForeignGovernmentActivityEntry>) => {
-    setSection16Data(prevData => {
-      const newData = cloneDeep(prevData);
-      if (index >= 0 && index < newData.section16.foreignGovernmentActivities.length) {
-        Object.assign(newData.section16.foreignGovernmentActivities[index], activity);
-      }
-      return newData;
-    });
-  }, []);
-
   // ============================================================================
-  // CRUD OPERATIONS - FOREIGN BUSINESS ACTIVITIES
+  // CRUD OPERATIONS - ENTRIES 2-4: PEOPLE WHO KNOW YOU WELL
   // ============================================================================
 
-  const addForeignBusinessActivity = useCallback(() => {
+  const updatePersonWhoKnowsYou = useCallback((index: number, person: Partial<PersonWhoKnowsYouEntry>) => {
     setSection16Data(prevData => {
       const newData = cloneDeep(prevData);
-      newData.section16.foreignBusinessActivities.push(createDefaultForeignBusinessActivityEntry());
-      return newData;
-    });
-  }, []);
+      if (index >= 0 && index < newData.section16.peopleWhoKnowYou.length) {
+        // FIXED: Properly handle Field<T> structure updates
+        const currentPerson = newData.section16.peopleWhoKnowYou[index];
 
-  const removeForeignBusinessActivity = useCallback((index: number) => {
-    setSection16Data(prevData => {
-      const newData = cloneDeep(prevData);
-      if (index >= 0 && index < newData.section16.foreignBusinessActivities.length) {
-        newData.section16.foreignBusinessActivities.splice(index, 1);
-      }
-      return newData;
-    });
-  }, []);
+        // Update each field while preserving Field<T> structure
+        Object.keys(person).forEach(key => {
+          const fieldKey = key as keyof PersonWhoKnowsYouEntry;
+          const newValue = person[fieldKey];
 
-  const updateForeignBusinessActivity = useCallback((index: number, activity: Partial<ForeignBusinessActivityEntry>) => {
-    setSection16Data(prevData => {
-      const newData = cloneDeep(prevData);
-      if (index >= 0 && index < newData.section16.foreignBusinessActivities.length) {
-        Object.assign(newData.section16.foreignBusinessActivities[index], activity);
-      }
-      return newData;
-    });
-  }, []);
+          if (newValue !== undefined) {
+            if (fieldKey === 'address' && typeof newValue === 'object') {
+              // Handle nested address object - newValue is the entire address object
+              Object.keys(newValue).forEach(addressKey => {
+                const addressField = addressKey as keyof typeof newValue;
+                const newAddressFieldValue = (newValue as any)[addressField];
 
-  // ============================================================================
-  // CRUD OPERATIONS - FOREIGN ORGANIZATIONS
-  // ============================================================================
-
-  const addForeignOrganization = useCallback(() => {
-    setSection16Data(prevData => {
-      const newData = cloneDeep(prevData);
-      newData.section16.foreignOrganizations.push(createDefaultForeignOrganizationEntry());
-      return newData;
-    });
-  }, []);
-
-  const removeForeignOrganization = useCallback((index: number) => {
-    setSection16Data(prevData => {
-      const newData = cloneDeep(prevData);
-      if (index >= 0 && index < newData.section16.foreignOrganizations.length) {
-        newData.section16.foreignOrganizations.splice(index, 1);
-      }
-      return newData;
-    });
-  }, []);
-
-  const updateForeignOrganization = useCallback((index: number, organization: Partial<ForeignOrganizationEntry>) => {
-    setSection16Data(prevData => {
-      const newData = cloneDeep(prevData);
-      if (index >= 0 && index < newData.section16.foreignOrganizations.length) {
-        Object.assign(newData.section16.foreignOrganizations[index], organization);
-      }
-      return newData;
-    });
-  }, []);
-
-  // ============================================================================
-  // CRUD OPERATIONS - FOREIGN PROPERTY
-  // ============================================================================
-
-  const addForeignProperty = useCallback(() => {
-    setSection16Data(prevData => {
-      const newData = cloneDeep(prevData);
-      newData.section16.foreignProperty.push(createDefaultForeignPropertyEntry());
-      return newData;
-    });
-  }, []);
-
-  const removeForeignProperty = useCallback((index: number) => {
-    setSection16Data(prevData => {
-      const newData = cloneDeep(prevData);
-      if (index >= 0 && index < newData.section16.foreignProperty.length) {
-        newData.section16.foreignProperty.splice(index, 1);
-      }
-      return newData;
-    });
-  }, []);
-
-  const updateForeignProperty = useCallback((index: number, property: Partial<ForeignPropertyEntry>) => {
-    setSection16Data(prevData => {
-      const newData = cloneDeep(prevData);
-      if (index >= 0 && index < newData.section16.foreignProperty.length) {
-        Object.assign(newData.section16.foreignProperty[index], property);
-      }
-      return newData;
-    });
-  }, []);
-
-  // ============================================================================
-  // CRUD OPERATIONS - FOREIGN BUSINESS TRAVEL
-  // ============================================================================
-
-  const addForeignBusinessTravel = useCallback(() => {
-    setSection16Data(prevData => {
-      const newData = cloneDeep(prevData);
-      newData.section16.foreignBusinessTravel.push(createDefaultForeignBusinessTravelEntry());
-      return newData;
-    });
-  }, []);
-
-  const removeForeignBusinessTravel = useCallback((index: number) => {
-    setSection16Data(prevData => {
-      const newData = cloneDeep(prevData);
-      if (index >= 0 && index < newData.section16.foreignBusinessTravel.length) {
-        newData.section16.foreignBusinessTravel.splice(index, 1);
-      }
-      return newData;
-    });
-  }, []);
-
-  const updateForeignBusinessTravel = useCallback((index: number, travel: Partial<ForeignBusinessTravelEntry>) => {
-    setSection16Data(prevData => {
-      const newData = cloneDeep(prevData);
-      if (index >= 0 && index < newData.section16.foreignBusinessTravel.length) {
-        Object.assign(newData.section16.foreignBusinessTravel[index], travel);
-      }
-      return newData;
-    });
-  }, []);
-
-  // ============================================================================
-  // CRUD OPERATIONS - FOREIGN CONFERENCES
-  // ============================================================================
-
-  const addForeignConference = useCallback(() => {
-    setSection16Data(prevData => {
-      const newData = cloneDeep(prevData);
-      newData.section16.foreignConferences.push(createDefaultForeignConferenceEntry());
-      return newData;
-    });
-  }, []);
-
-  const removeForeignConference = useCallback((index: number) => {
-    setSection16Data(prevData => {
-      const newData = cloneDeep(prevData);
-      if (index >= 0 && index < newData.section16.foreignConferences.length) {
-        newData.section16.foreignConferences.splice(index, 1);
-      }
-      return newData;
-    });
-  }, []);
-
-  const updateForeignConference = useCallback((index: number, conference: Partial<ForeignConferenceEntry>) => {
-    setSection16Data(prevData => {
-      const newData = cloneDeep(prevData);
-      if (index >= 0 && index < newData.section16.foreignConferences.length) {
-        Object.assign(newData.section16.foreignConferences[index], conference);
-      }
-      return newData;
-    });
-  }, []);
-
-  // ============================================================================
-  // CRUD OPERATIONS - FOREIGN GOVERNMENT CONTACTS
-  // ============================================================================
-
-  const addForeignGovernmentContact = useCallback(() => {
-    setSection16Data(prevData => {
-      const newData = cloneDeep(prevData);
-      newData.section16.foreignGovernmentContacts.push(createDefaultForeignGovernmentContactEntry());
-      return newData;
-    });
-  }, []);
-
-  const removeForeignGovernmentContact = useCallback((index: number) => {
-    setSection16Data(prevData => {
-      const newData = cloneDeep(prevData);
-      if (index >= 0 && index < newData.section16.foreignGovernmentContacts.length) {
-        newData.section16.foreignGovernmentContacts.splice(index, 1);
-      }
-      return newData;
-    });
-  }, []);
-
-  const updateForeignGovernmentContact = useCallback((index: number, contact: Partial<ForeignGovernmentContactEntry>) => {
-    setSection16Data(prevData => {
-      const newData = cloneDeep(prevData);
-      if (index >= 0 && index < newData.section16.foreignGovernmentContacts.length) {
-        Object.assign(newData.section16.foreignGovernmentContacts[index], contact);
+                if (currentPerson.address[addressField] && typeof currentPerson.address[addressField] === 'object') {
+                  // If newAddressFieldValue is a Field<T> object, replace the entire field
+                  // If it's a primitive value, update just the .value property
+                  if (newAddressFieldValue && typeof newAddressFieldValue === 'object' && 'value' in newAddressFieldValue) {
+                    // Replace entire Field<T> object
+                    (currentPerson.address as any)[addressField] = newAddressFieldValue;
+                  } else {
+                    // Update just the .value property
+                    (currentPerson.address[addressField] as any).value = newAddressFieldValue;
+                  }
+                }
+              });
+            } else if (currentPerson[fieldKey] && typeof currentPerson[fieldKey] === 'object') {
+              // Handle direct fields - check if newValue is a Field<T> object or primitive value
+              if (newValue && typeof newValue === 'object' && 'value' in newValue) {
+                // Replace entire Field<T> object
+                (currentPerson as any)[fieldKey] = newValue;
+              } else {
+                // Update just the .value property
+                (currentPerson[fieldKey] as any).value = newValue;
+              }
+            } else {
+              // Direct assignment for non-Field types
+              (currentPerson as any)[fieldKey] = newValue;
+            }
+          }
+        });
       }
       return newData;
     });
@@ -446,19 +242,37 @@ export const Section16Provider: React.FC<Section16ProviderProps> = ({ children }
   // GENERAL FIELD OPERATIONS
   // ============================================================================
 
+  /**
+   * Generic field update function for integration compatibility
+   * Simplified approach following Section 1 pattern
+   */
   const updateFieldValue = useCallback((path: string, value: any) => {
+    PerformanceMonitor.startTiming(`updateField-${path}`);
+
     setSection16Data(prevData => {
       const newData = cloneDeep(prevData);
-      set(newData, path, value);
-      return newData;
-    });
-  }, []);
 
-  const updateField = useCallback((update: Section16FieldUpdate) => {
-    setSection16Data(prevData => {
-      return updateSection16Field(prevData, update);
+      try {
+        // Use lodash set for all field updates - simpler and more reliable
+        set(newData, path, value);
+
+        SectionLogger.info('section16', contextId, `Field updated: ${path}`, {
+          newValue: value
+        });
+
+        PerformanceMonitor.endTiming('section16', contextId, `updateField-${path}`);
+        return newData;
+      } catch (error) {
+        SectionLogger.error('section16', contextId, `Failed to update field: ${path}`, {
+          path,
+          value,
+          error: error instanceof Error ? error.message : String(error)
+        });
+        PerformanceMonitor.endTiming('section16', contextId, `updateField-${path}`);
+        return prevData;
+      }
     });
-  }, []);
+  }, [contextId]);
 
   // ============================================================================
   // UTILITY OPERATIONS
@@ -474,20 +288,39 @@ export const Section16Provider: React.FC<Section16ProviderProps> = ({ children }
     setErrors({});
   }, []);
 
-  const getChanges = useCallback(() => {
-    const changes: Record<string, any> = {};
+  const getChanges = useCallback((): ChangeSet => {
+    const changes: ChangeSet = {};
+
+    // Simple change detection following Section 1 pattern
     if (JSON.stringify(section16Data) !== JSON.stringify(initialData)) {
-      changes.section16 = {
+      changes['section16'] = {
         oldValue: initialData,
         newValue: section16Data,
         timestamp: new Date()
       };
     }
+
     return changes;
   }, [section16Data, initialData]);
 
   const isComplete = useCallback(() => {
-    return isSection16Complete(section16Data);
+    // NOTE: Section16_1 fields (Foreign Organization Contact) are handled in Section 15 Entry 2
+    // Section 16 only handles "People Who Know You Well" (Section16_3)
+
+    // Check if we have all 3 people who know you well
+    const hasRequiredPeople = section16Data.section16.peopleWhoKnowYou.length >= 3;
+
+    // Check if at least some basic information is filled for each person
+    const hasPeopleInfo = section16Data.section16.peopleWhoKnowYou.every(person =>
+      person.firstName?.value && person.lastName?.value
+    );
+
+    // Check if at least one person has contact information
+    const hasContactInfo = section16Data.section16.peopleWhoKnowYou.some(person =>
+      person.emailAddress?.value || person.phoneNumber?.value || person.mobileNumber?.value
+    );
+
+    return hasRequiredPeople && hasPeopleInfo && hasContactInfo;
   }, [section16Data]);
 
   // ============================================================================
@@ -497,7 +330,7 @@ export const Section16Provider: React.FC<Section16ProviderProps> = ({ children }
   // Integration with main form context using standard pattern
   const integration = useSection86FormIntegration(
     'section16',
-    'Section 16: Foreign Activities',
+    'Section 16: People Who Know You Well',
     section16Data,
     setSection16Data,
     validateSection,
@@ -516,48 +349,15 @@ export const Section16Provider: React.FC<Section16ProviderProps> = ({ children }
     errors,
     isDirty,
 
-    // Foreign Government Activities (16.1)
-    addForeignGovernmentActivity,
-    removeForeignGovernmentActivity,
-    updateForeignGovernmentActivity,
-
-    // Foreign Business Activities (16.2)
-    addForeignBusinessActivity,
-    removeForeignBusinessActivity,
-    updateForeignBusinessActivity,
-
-    // Foreign Organizations (16.3)
-    addForeignOrganization,
-    removeForeignOrganization,
-    updateForeignOrganization,
-
-    // Foreign Property (16.4)
-    addForeignProperty,
-    removeForeignProperty,
-    updateForeignProperty,
-
-    // Foreign Business Travel (16.5)
-    addForeignBusinessTravel,
-    removeForeignBusinessTravel,
-    updateForeignBusinessTravel,
-
-    // Foreign Conferences (16.6)
-    addForeignConference,
-    removeForeignConference,
-    updateForeignConference,
-
-    // Foreign Government Contacts (16.7)
-    addForeignGovernmentContact,
-    removeForeignGovernmentContact,
-    updateForeignGovernmentContact,
+    // Entries 1-3: People Who Know You Well (Section16_3)
+    // Note: Section16_1 fields map to Section 15 Entry 2
+    updatePersonWhoKnowsYou,
 
     // General Field Updates
     updateFieldValue,
-    updateField,
 
     // Validation
     validateSection,
-    validateForeignActivities: validateForeignActivitiesOnly,
 
     // Utility
     resetSection,
@@ -566,14 +366,7 @@ export const Section16Provider: React.FC<Section16ProviderProps> = ({ children }
     isComplete
   }), [
     section16Data, isLoading, errors, isDirty,
-    addForeignGovernmentActivity, removeForeignGovernmentActivity, updateForeignGovernmentActivity,
-    addForeignBusinessActivity, removeForeignBusinessActivity, updateForeignBusinessActivity,
-    addForeignOrganization, removeForeignOrganization, updateForeignOrganization,
-    addForeignProperty, removeForeignProperty, updateForeignProperty,
-    addForeignBusinessTravel, removeForeignBusinessTravel, updateForeignBusinessTravel,
-    addForeignConference, removeForeignConference, updateForeignConference,
-    addForeignGovernmentContact, removeForeignGovernmentContact, updateForeignGovernmentContact,
-    updateFieldValue, updateField, validateSection, validateForeignActivitiesOnly,
+    updatePersonWhoKnowsYou, updateFieldValue, validateSection,
     resetSection, loadSection, getChanges, isComplete
   ]);
 

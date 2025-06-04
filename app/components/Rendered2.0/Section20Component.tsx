@@ -296,34 +296,28 @@ export const Section20Component: React.FC = () => {
   const sf86Form = useSF86Form();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Validation and submission
-  const handleValidateAndContinue = useCallback(async () => {
-    setIsLoading(true);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setShowValidationErrors(true);
 
-    try {
-      // Validate section
-      const validationResult = section20.validateSection();
+    const result = validateSection();
+    setIsValid(result.isValid);
+    onValidationChange?.(result.isValid);
 
-      if (validationResult.isValid) {
-        // Update global form data
-        sf86Form.updateSectionData('section20', section20.sectionData);
-
-        // Save form
+    if (result.isValid) {
+      try {
+        sf86Form.updateSectionData('section17', section20Data);
         await sf86Form.saveForm();
+        console.log('✅ Section 20 data saved successfully:', section20Data);
 
-        // Mark section as complete
-        sf86Form.markSectionComplete('section20');
-
-        console.log('✅ Section 20 validated and saved successfully');
-      } else {
-        console.warn('⚠️ Section 20 validation failed:', validationResult.errors);
+        if (onNext) {
+          onNext();
+        }
+      } catch (error) {
+        console.error('❌ Failed to save Section 20 data:', error);
       }
-    } catch (error) {
-      console.error('❌ Error validating Section 20:', error);
-    } finally {
-      setIsLoading(false);
     }
-  }, [section20, sf86Form]);
+  };
 
   return (
     <div className="section20-component max-w-4xl mx-auto p-6">

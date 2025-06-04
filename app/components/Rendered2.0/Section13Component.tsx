@@ -99,6 +99,9 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
     calculateEmploymentDuration,
   } = useSection13();
 
+        // SF86 Form Context for data persistence
+        const sf86Form = useSF86Form();
+
   // Get direct access to SF86Form context for debugging
   const { updateSectionData } = useSF86Form();
 

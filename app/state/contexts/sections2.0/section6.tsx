@@ -59,6 +59,9 @@ export interface Section6ContextType {
   updateEyeColor: (color: EyeColor) => void;
   updateSex: (sex: Sex) => void;
 
+  // Generic Field Update (for integration)
+  updateFieldValue: (path: string, value: any) => void;
+
   // Validation
   validateSection: () => ValidationResult;
   validatePhysicalInfo: () => boolean;
@@ -306,6 +309,27 @@ export const Section6Provider: React.FC<Section6ProviderProps> = ({ children }) 
     });
   }, []);
 
+  /**
+   * Generic field update function for integration compatibility
+   * Maps generic field paths to Section 6 specific update functions
+   */
+  const updateFieldValue = useCallback((path: string, value: any) => {
+    // Parse path to update the correct field
+    if (path === 'section6.heightFeet') {
+      updateIdentifyingInfo({ fieldPath: 'section6.heightFeet', newValue: value });
+    } else if (path === 'section6.heightInches') {
+      updateIdentifyingInfo({ fieldPath: 'section6.heightInches', newValue: value });
+    } else if (path === 'section6.weight') {
+      updateIdentifyingInfo({ fieldPath: 'section6.weight', newValue: value });
+    } else if (path === 'section6.hairColor') {
+      updateIdentifyingInfo({ fieldPath: 'section6.hairColor', newValue: value });
+    } else if (path === 'section6.eyeColor') {
+      updateIdentifyingInfo({ fieldPath: 'section6.eyeColor', newValue: value });
+    } else if (path === 'section6.sex') {
+      updateIdentifyingInfo({ fieldPath: 'section6.sex', newValue: value });
+    }
+  }, [updateIdentifyingInfo]);
+
   // ============================================================================
   // UTILITY FUNCTIONS
   // ============================================================================
@@ -339,17 +363,19 @@ export const Section6Provider: React.FC<Section6ProviderProps> = ({ children }) 
   }, [section6Data]);
 
   // ============================================================================
-  // SF86FORM INTEGRATION WITH FIELD FLATTENING
+  // SF86FORM INTEGRATION
   // ============================================================================
 
-  const integration = useSection86FormIntegration<Section6>(
+  // Integration with main form context using Section 1 gold standard pattern
+  // Note: integration variable is used internally by the hook for registration
+  const integration = useSection86FormIntegration(
     'section6',
     'Section 6: Your Identifying Information',
     section6Data,
     setSection6Data,
-    validateSection,
-    getChanges
-    // Removed flattenFields parameter to use structured format (preferred)
+    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
+    getChanges,
+    updateFieldValue // Pass Section 6's updateFieldValue function to integration
   );
 
   // ============================================================================
@@ -374,6 +400,9 @@ export const Section6Provider: React.FC<Section6ProviderProps> = ({ children }) 
     updateEyeColor,
     updateSex,
 
+    // Generic Field Update (for integration)
+    updateFieldValue,
+
     // Validation
     validateSection,
     validatePhysicalInfo,
@@ -396,6 +425,7 @@ export const Section6Provider: React.FC<Section6ProviderProps> = ({ children }) 
     updateHairColor,
     updateEyeColor,
     updateSex,
+    updateFieldValue,
     validateSection,
     validatePhysicalInfo,
     resetSection,

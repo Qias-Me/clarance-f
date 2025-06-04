@@ -8,6 +8,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSection8 } from '~/state/contexts/sections2.0/section8';
+import { useSF86Form } from '~/state/contexts/SF86FormContext';
 
 interface Section8ComponentProps {
   className?: string;
@@ -33,6 +34,10 @@ export const Section8Component: React.FC<Section8ComponentProps> = ({
     errors
   } = useSection8();
 
+  // SF86 Form Context for data persistence
+  const sf86Form = useSF86Form();
+
+
   // Track validation state internally
   const [isValid, setIsValid] = useState(false);
 
@@ -43,15 +48,31 @@ export const Section8Component: React.FC<Section8ComponentProps> = ({
     onValidationChange?.(validationResult.isValid);
   }, [section8Data]); // Removed validateSection and onValidationChange to prevent infinite loops
 
-  // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  // Handle form submission with data persistence
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = validateSection();
     setIsValid(result.isValid);
     onValidationChange?.(result.isValid);
 
-    if (result.isValid && onNext) {
-      onNext();
+    if (result.isValid) {
+      try {
+        // Update the central form context with Section 6 data
+        sf86Form.updateSectionData('section8', section8Data);
+
+        // Save the form data to persistence layer
+        await sf86Form.saveForm();
+
+        console.log('✅ Section 8 data saved successfully:', section8Data);
+
+        // Proceed to next section if callback provided
+        if (onNext) {
+          onNext();
+        }
+      } catch (error) {
+        console.error('❌ Failed to save Section 8 data:', error);
+        // Could show an error message to user here
+      }
     }
   };
 

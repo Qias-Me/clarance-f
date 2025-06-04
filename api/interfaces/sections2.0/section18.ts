@@ -560,7 +560,7 @@ export const createDefaultSection18 = (): Section18 => {
   return {
     _id: 18,
     section18: {
-      immediateFamily: [],
+      immediateFamily: [createDefaultImmediateFamilyEntry()],
       extendedFamily: [],
       associates: []
     }

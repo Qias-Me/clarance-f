@@ -34,6 +34,8 @@ export const Section23Component: React.FC<Section23ComponentProps> = ({
     getEntryCount,
   } = useSection23();
 
+  const sf86Form = useSF86Form();
+
   const [activeSubsection, setActiveSubsection] = useState<Section23SubsectionKey>("drugUse");
 
   // Handle validation changes
@@ -65,6 +67,35 @@ export const Section23Component: React.FC<Section23ComponentProps> = ({
 
   // Get drug status for monitoring
   const drugStatus = getCurrentDrugStatus();
+
+    // Handle submission with data persistence
+    const handleSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      const result = validateSection();
+      setIsValid(result.isValid);
+      onValidationChange?.(result.isValid);
+  
+      if (result.isValid) {
+        try {
+          // Update the central form context with Section 1 data
+          sf86Form.updateSectionData('section23', section23Data);
+  
+          // Save the form data to persistence layer
+          await sf86Form.saveForm();
+  
+          console.log('✅ Section 23 data saved successfully:', section23Data);
+  
+          // Proceed to next section if callback provided
+          if (onNext) {
+            onNext();
+          }
+        } catch (error) {
+          console.error('❌ Failed to save Section 23 data:', error);
+          // Could show an error message to user here
+        }
+      }
+    };
+  
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6" data-testid="section23-container">

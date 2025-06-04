@@ -44,6 +44,7 @@ export interface Section7ContextType {
   updateWorkEmail: (email: string) => void;
   updatePhoneNumber: (index: number, fieldType: string, value: any) => void;
   updateContactField: (update: Section7FieldUpdate) => void;
+  updateFieldValue: (path: string, value: any) => void;
 
   // Phone Number CRUD (for compatibility with component)
   addPhoneNumber: () => void;
@@ -401,18 +402,47 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
   }, [section7Data]);
 
   // ============================================================================
+  // FIELD UPDATE INTEGRATION
+  // ============================================================================
+
+  /**
+   * Generic field update function for integration compatibility
+   * Maps generic field paths to Section 7 specific update functions
+   */
+  const updateFieldValue = useCallback((path: string, value: any) => {
+    // Parse path to update the correct field
+    if (path === 'section7.homeEmail') {
+      updateHomeEmail(value);
+    } else if (path === 'section7.workEmail') {
+      updateWorkEmail(value);
+    } else if (path.includes('section7.entries[')) {
+      // Handle phone number field updates
+      const match = path.match(/section7\.entries\[(\d+)\]\.(\w+)/);
+      if (match) {
+        const entryIndex = parseInt(match[1], 10);
+        const fieldType = match[2];
+        updatePhoneNumber(entryIndex, fieldType, value);
+      }
+    } else {
+      // Fallback to generic field update
+      updateContactField({ fieldPath: path, newValue: value });
+    }
+  }, [updateHomeEmail, updateWorkEmail, updatePhoneNumber, updateContactField]);
+
+  // ============================================================================
   // SF86FORM INTEGRATION
   // ============================================================================
 
-  // Integration with main form context with enhanced defensive check logic
+  // Integration with main form context using Section 1 gold standard pattern
+  // Note: integration variable is used internally by the hook for registration
   const integration = useSection86FormIntegration(
     'section7',
     'Section 7: Your Contact Information',
     section7Data,
     setSection7Data,
-    validateSection,
-    getChanges
-    // Removed flattenFields parameter to use structured format (preferred)
+    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
+    getChanges,
+    updateFieldValue // Pass Section 7's updateFieldValue function to integration
   );
 
   // ============================================================================
@@ -431,6 +461,7 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
     updateWorkEmail,
     updatePhoneNumber,
     updateContactField,
+    updateFieldValue,
 
     // Phone Number CRUD
     addPhoneNumber,

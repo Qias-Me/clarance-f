@@ -10,11 +10,10 @@ import React, {
   useContext,
   useState,
   useCallback,
-  useEffect,
-  useMemo,
-  type ReactNode
+  useMemo
 } from 'react';
 import { cloneDeep } from 'lodash';
+import set from 'lodash/set';
 import type {
   Section9,
   BornInUSInfo,
@@ -26,10 +25,10 @@ import { createDefaultSection9 } from '../../../../api/interfaces/sections2.0/se
 import type {
   ValidationResult,
   ValidationError,
-  ChangeSet,
-  BaseSectionContext
+  ChangeSet
 } from '../shared/base-interfaces';
 import { useSection86FormIntegration } from '../shared/section-context-integration';
+import { useSectionIntegration } from '../shared/section-integration';
 
 // ============================================================================
 // CONTEXT TYPE DEFINITION
@@ -85,10 +84,19 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
   // CORE STATE MANAGEMENT
   // ============================================================================
 
-  const [section9Data, setSection9Data] = useState<Section9>(createDefaultSection9());
+  const [section9Data, setSection9Data] = useState<Section9>(() => {
+    const defaultData = createDefaultSection9();
+    // console.log('🏗️ Section9: Initializing with default data:', defaultData);
+    // console.log('🔍 Section9: Status field:', defaultData.section9.status);
+    // console.log('🔍 Section9: BornToUSParents field:', defaultData.section9.bornToUSParents);
+    return defaultData;
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [initialData] = useState<Section9>(createDefaultSection9());
+
+  // Get integration access for data syncing
+  const sectionIntegration = useSectionIntegration();
 
   // ============================================================================
   // COMPUTED VALUES
@@ -155,70 +163,161 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
     setSection9Data(prevData => {
       const newData = cloneDeep(prevData);
       newData.section9.status.value = status;
+
+      // Sync data to SF86FormContext cache
+      sectionIntegration.syncSectionData('section9', newData);
+      console.log(`🔄 Section9: updateCitizenshipStatus - synced data to SF86FormContext`);
+
       return newData;
     });
-  }, []);
+  }, [sectionIntegration]);
 
   const updateBornToUSParentsInfo = useCallback((field: keyof BornInUSInfo, value: any) => {
+    console.log(`🔄 Section9: updateBornToUSParentsInfo called with field=${field}, value=`, value);
+
     setSection9Data(prevData => {
       const newData = cloneDeep(prevData);
-      if (newData.section9.bornToUSParents) {
-        (newData.section9.bornToUSParents[field] as any).value = value;
+
+      // Ensure bornToUSParents exists - initialize if needed
+      if (!newData.section9.bornToUSParents) {
+        console.log('🔧 Section9: Creating bornToUSParents structure');
+        // Get the default structure from createDefaultSection9
+        const defaultData = createDefaultSection9();
+        newData.section9.bornToUSParents = defaultData.section9.bornToUSParents;
       }
+
+      if (newData.section9.bornToUSParents) {
+        const fieldObject = newData.section9.bornToUSParents[field];
+        if (fieldObject && typeof fieldObject === 'object' && 'value' in fieldObject) {
+          (fieldObject as any).value = value;
+          console.log(`✅ Section9: Updated bornToUSParents.${field}.value = ${value}`);
+        } else {
+          console.warn(`🚨 Section9: Field ${field} not found in bornToUSParents or is not a valid field object:`, fieldObject);
+        }
+      }
+
+      // Sync data to SF86FormContext cache
+      sectionIntegration.syncSectionData('section9', newData);
+      console.log(`🔄 Section9: updateBornToUSParentsInfo - synced data to SF86FormContext`);
+
       return newData;
     });
-  }, []);
+  }, [sectionIntegration]);
 
   const updateNaturalizedInfo = useCallback((field: keyof NaturalizedCitizenInfo, value: any) => {
+    console.log(`🔄 Section9: updateNaturalizedInfo called with field=${field}, value=`, value);
+
     setSection9Data(prevData => {
       const newData = cloneDeep(prevData);
-      if (newData.section9.naturalizedCitizen) {
-        (newData.section9.naturalizedCitizen[field] as any).value = value;
+
+      // Ensure naturalizedCitizen exists - initialize if needed
+      if (!newData.section9.naturalizedCitizen) {
+        console.log('🔧 Section9: Creating naturalizedCitizen structure');
+        // Get the default structure from createDefaultSection9
+        const defaultData = createDefaultSection9();
+        newData.section9.naturalizedCitizen = defaultData.section9.naturalizedCitizen;
       }
+
+      if (newData.section9.naturalizedCitizen) {
+        const fieldObject = newData.section9.naturalizedCitizen[field];
+        if (fieldObject && typeof fieldObject === 'object' && 'value' in fieldObject) {
+          (fieldObject as any).value = value;
+          console.log(`✅ Section9: Updated naturalizedCitizen.${field}.value = ${value}`);
+        } else {
+          console.warn(`🚨 Section9: Field ${field} not found in naturalizedCitizen or is not a valid field object:`, fieldObject);
+        }
+      }
+
+      // Sync data to SF86FormContext cache
+      sectionIntegration.syncSectionData('section9', newData);
+      console.log(`🔄 Section9: updateNaturalizedInfo - synced data to SF86FormContext`);
+
       return newData;
     });
-  }, []);
+  }, [sectionIntegration]);
 
   const updateDerivedInfo = useCallback((field: keyof DerivedCitizenInfo, value: any) => {
+    console.log(`🔄 Section9: updateDerivedInfo called with field=${field}, value=`, value);
+
     setSection9Data(prevData => {
       const newData = cloneDeep(prevData);
-      if (newData.section9.derivedCitizen) {
-        (newData.section9.derivedCitizen[field] as any).value = value;
+
+      // Ensure derivedCitizen exists - initialize if needed
+      if (!newData.section9.derivedCitizen) {
+        console.log('🔧 Section9: Creating derivedCitizen structure');
+        // Get the default structure from createDefaultSection9
+        const defaultData = createDefaultSection9();
+        newData.section9.derivedCitizen = defaultData.section9.derivedCitizen;
       }
+
+      if (newData.section9.derivedCitizen) {
+        const fieldObject = newData.section9.derivedCitizen[field];
+        if (fieldObject && typeof fieldObject === 'object' && 'value' in fieldObject) {
+          (fieldObject as any).value = value;
+          console.log(`✅ Section9: Updated derivedCitizen.${field}.value = ${value}`);
+        } else {
+          console.warn(`🚨 Section9: Field ${field} not found in derivedCitizen or is not a valid field object:`, fieldObject);
+        }
+      }
+
+      // Sync data to SF86FormContext cache
+      sectionIntegration.syncSectionData('section9', newData);
+      console.log(`🔄 Section9: updateDerivedInfo - synced data to SF86FormContext`);
+
       return newData;
     });
-  }, []);
+  }, [sectionIntegration]);
 
   const updateNonUSCitizenInfo = useCallback((field: keyof NonUSCitizenInfo, value: any) => {
+    console.log(`🔄 Section9: updateNonUSCitizenInfo called with field=${field}, value=`, value);
+
     setSection9Data(prevData => {
       const newData = cloneDeep(prevData);
-      if (newData.section9.nonUSCitizen) {
-        (newData.section9.nonUSCitizen[field] as any).value = value;
+
+      // Ensure nonUSCitizen exists - initialize if needed
+      if (!newData.section9.nonUSCitizen) {
+        console.log('🔧 Section9: Creating nonUSCitizen structure');
+        // Get the default structure from createDefaultSection9
+        const defaultData = createDefaultSection9();
+        newData.section9.nonUSCitizen = defaultData.section9.nonUSCitizen;
       }
+
+      if (newData.section9.nonUSCitizen) {
+        const fieldObject = newData.section9.nonUSCitizen[field];
+        if (fieldObject && typeof fieldObject === 'object' && 'value' in fieldObject) {
+          (fieldObject as any).value = value;
+          console.log(`✅ Section9: Updated nonUSCitizen.${field}.value = ${value}`);
+        } else {
+          console.warn(`🚨 Section9: Field ${field} not found in nonUSCitizen or is not a valid field object:`, fieldObject);
+        }
+      }
+
+      // Sync data to SF86FormContext cache
+      sectionIntegration.syncSectionData('section9', newData);
+      console.log(`🔄 Section9: updateNonUSCitizenInfo - synced data to SF86FormContext`);
+
       return newData;
     });
-  }, []);
+  }, [sectionIntegration]);
 
   const updateFieldValue = useCallback((fieldPath: string, newValue: any) => {
+    console.log(`🔄 Section9: updateFieldValue called with fieldPath=${fieldPath}, newValue=`, newValue);
+
     setSection9Data(prevData => {
       const newData = cloneDeep(prevData);
-      const pathParts = fieldPath.split('.');
-      let current: any = newData;
+      const fullPath = `section9.${fieldPath}.value`;
+      set(newData, fullPath, newValue);
 
-      for (let i = 0; i < pathParts.length - 1; i++) {
-        current = current[pathParts[i]];
-      }
+      console.log(`📊 Section9: updateFieldValue - updated local state for path=${fullPath}`);
+      console.log(`📊 Section9: updateFieldValue - new section9Data:`, newData);
 
-      const lastKey = pathParts[pathParts.length - 1];
-      if (current[lastKey] && typeof current[lastKey] === 'object' && 'value' in current[lastKey]) {
-        current[lastKey].value = newValue;
-      } else {
-        current[lastKey] = newValue;
-      }
+      // Sync data to SF86FormContext cache
+      sectionIntegration.syncSectionData('section9', newData);
+      console.log(`🔄 Section9: updateFieldValue - synced data to SF86FormContext`);
 
       return newData;
     });
-  }, []);
+  }, [sectionIntegration]);
 
   // ============================================================================
   // UTILITY FUNCTIONS
@@ -257,7 +356,7 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
   /**
    * Flatten Section9 data structure into Field objects for PDF generation
    * This converts the nested Section9 structure into a flat object with Field<T> objects
-   * Following the Section 29 pattern for consistency
+   * Using the robust recursive approach from Section 29 for consistency and reliability
    */
   const flattenSection9Fields = useCallback((): Record<string, any> => {
     const flatFields: Record<string, any> = {};
@@ -273,109 +372,32 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
       }
     };
 
-    // Flatten section9 citizenship information fields
+    // Recursive function to flatten any nested object structure
+    // This approach automatically handles any field structure without hardcoding field names
+    const flattenEntry = (obj: any, prefix: string) => {
+      Object.entries(obj).forEach(([key, value]) => {
+        if (key === "_id") return;
+
+        const currentPath = `${prefix}.${key}`;
+
+        if (
+          value &&
+          typeof value === "object" &&
+          "id" in value &&
+          "value" in value
+        ) {
+          // This is a Field object - add it to flatFields
+          addField(value, currentPath);
+        } else if (value && typeof value === "object") {
+          // This is a nested object, recurse into it
+          flattenEntry(value, currentPath);
+        }
+      });
+    };
+
+    // Flatten the entire section9 data structure recursively
     if (section9Data.section9) {
-      // Main citizenship status
-      addField(section9Data.section9.status, 'section9.status');
-
-      // Born to US Parents subsection (9.1)
-      if (section9Data.section9.bornToUSParents) {
-        const bornInfo = section9Data.section9.bornToUSParents;
-        addField(bornInfo.documentType, 'section9.bornToUSParents.documentType');
-        if (bornInfo.otherExplanation) addField(bornInfo.otherExplanation, 'section9.bornToUSParents.otherExplanation');
-        addField(bornInfo.documentNumber, 'section9.bornToUSParents.documentNumber');
-        addField(bornInfo.documentIssueDate, 'section9.bornToUSParents.documentIssueDate');
-        addField(bornInfo.isIssueDateEstimated, 'section9.bornToUSParents.isIssueDateEstimated');
-        addField(bornInfo.issueCity, 'section9.bornToUSParents.issueCity');
-        if (bornInfo.issueState) addField(bornInfo.issueState, 'section9.bornToUSParents.issueState');
-        if (bornInfo.issueCountry) addField(bornInfo.issueCountry, 'section9.bornToUSParents.issueCountry');
-
-        // Name on document
-        if (bornInfo.nameOnDocument) {
-          addField(bornInfo.nameOnDocument.lastName, 'section9.bornToUSParents.nameOnDocument.lastName');
-          addField(bornInfo.nameOnDocument.firstName, 'section9.bornToUSParents.nameOnDocument.firstName');
-          if (bornInfo.nameOnDocument.middleName) addField(bornInfo.nameOnDocument.middleName, 'section9.bornToUSParents.nameOnDocument.middleName');
-          if (bornInfo.nameOnDocument.suffix) addField(bornInfo.nameOnDocument.suffix, 'section9.bornToUSParents.nameOnDocument.suffix');
-        }
-
-        addField(bornInfo.wasBornOnMilitaryInstallation, 'section9.bornToUSParents.wasBornOnMilitaryInstallation');
-        if (bornInfo.militaryBaseName) addField(bornInfo.militaryBaseName, 'section9.bornToUSParents.militaryBaseName');
-      }
-
-      // Naturalized Citizen subsection (9.2)
-      if (section9Data.section9.naturalizedCitizen) {
-        const natInfo = section9Data.section9.naturalizedCitizen;
-        addField(natInfo.naturalizedCertificateNumber, 'section9.naturalizedCitizen.naturalizedCertificateNumber');
-
-        // Name on certificate
-        if (natInfo.nameOnCertificate) {
-          addField(natInfo.nameOnCertificate.lastName, 'section9.naturalizedCitizen.nameOnCertificate.lastName');
-          addField(natInfo.nameOnCertificate.firstName, 'section9.naturalizedCitizen.nameOnCertificate.firstName');
-          if (natInfo.nameOnCertificate.middleName) addField(natInfo.nameOnCertificate.middleName, 'section9.naturalizedCitizen.nameOnCertificate.middleName');
-          if (natInfo.nameOnCertificate.suffix) addField(natInfo.nameOnCertificate.suffix, 'section9.naturalizedCitizen.nameOnCertificate.suffix');
-        }
-
-        // Court address
-        if (natInfo.courtAddress) {
-          addField(natInfo.courtAddress.street, 'section9.naturalizedCitizen.courtAddress.street');
-          addField(natInfo.courtAddress.city, 'section9.naturalizedCitizen.courtAddress.city');
-          if (natInfo.courtAddress.state) addField(natInfo.courtAddress.state, 'section9.naturalizedCitizen.courtAddress.state');
-          if (natInfo.courtAddress.zipCode) addField(natInfo.courtAddress.zipCode, 'section9.naturalizedCitizen.courtAddress.zipCode');
-        }
-
-        addField(natInfo.certificateIssueDate, 'section9.naturalizedCitizen.certificateIssueDate');
-        addField(natInfo.isCertificateDateEstimated, 'section9.naturalizedCitizen.isCertificateDateEstimated');
-        if (natInfo.otherExplanation) addField(natInfo.otherExplanation, 'section9.naturalizedCitizen.otherExplanation');
-      }
-
-      // Derived Citizen subsection (9.3)
-      if (section9Data.section9.derivedCitizen) {
-        const derivedInfo = section9Data.section9.derivedCitizen;
-        if (derivedInfo.alienRegistrationNumber) addField(derivedInfo.alienRegistrationNumber, 'section9.derivedCitizen.alienRegistrationNumber');
-        if (derivedInfo.permanentResidentCardNumber) addField(derivedInfo.permanentResidentCardNumber, 'section9.derivedCitizen.permanentResidentCardNumber');
-        if (derivedInfo.certificateOfCitizenshipNumber) addField(derivedInfo.certificateOfCitizenshipNumber, 'section9.derivedCitizen.certificateOfCitizenshipNumber');
-
-        // Name on document
-        if (derivedInfo.nameOnDocument) {
-          addField(derivedInfo.nameOnDocument.lastName, 'section9.derivedCitizen.nameOnDocument.lastName');
-          addField(derivedInfo.nameOnDocument.firstName, 'section9.derivedCitizen.nameOnDocument.firstName');
-          if (derivedInfo.nameOnDocument.middleName) addField(derivedInfo.nameOnDocument.middleName, 'section9.derivedCitizen.nameOnDocument.middleName');
-          if (derivedInfo.nameOnDocument.suffix) addField(derivedInfo.nameOnDocument.suffix, 'section9.derivedCitizen.nameOnDocument.suffix');
-        }
-
-        addField(derivedInfo.basis, 'section9.derivedCitizen.basis');
-        if (derivedInfo.otherExplanation) addField(derivedInfo.otherExplanation, 'section9.derivedCitizen.otherExplanation');
-      }
-
-      // Non-US Citizen subsection (9.4)
-      if (section9Data.section9.nonUSCitizen) {
-        const nonUSInfo = section9Data.section9.nonUSCitizen;
-        addField(nonUSInfo.entryDate, 'section9.nonUSCitizen.entryDate');
-        addField(nonUSInfo.isEntryDateEstimated, 'section9.nonUSCitizen.isEntryDateEstimated');
-
-        // Entry location
-        if (nonUSInfo.entryLocation) {
-          addField(nonUSInfo.entryLocation.city, 'section9.nonUSCitizen.entryLocation.city');
-          if (nonUSInfo.entryLocation.state) addField(nonUSInfo.entryLocation.state, 'section9.nonUSCitizen.entryLocation.state');
-        }
-
-        // Country of citizenship
-        if (nonUSInfo.countryOfCitizenship) {
-          addField(nonUSInfo.countryOfCitizenship.country1, 'section9.nonUSCitizen.countryOfCitizenship.country1');
-          if (nonUSInfo.countryOfCitizenship.country2) addField(nonUSInfo.countryOfCitizenship.country2, 'section9.nonUSCitizen.countryOfCitizenship.country2');
-        }
-
-        addField(nonUSInfo.hasAlienRegistration, 'section9.nonUSCitizen.hasAlienRegistration');
-        if (nonUSInfo.alienRegistrationNumber) addField(nonUSInfo.alienRegistrationNumber, 'section9.nonUSCitizen.alienRegistrationNumber');
-        if (nonUSInfo.alienRegistrationExpiration) addField(nonUSInfo.alienRegistrationExpiration, 'section9.nonUSCitizen.alienRegistrationExpiration');
-        if (nonUSInfo.isAlienExpDateEstimated) addField(nonUSInfo.isAlienExpDateEstimated, 'section9.nonUSCitizen.isAlienExpDateEstimated');
-        if (nonUSInfo.visaType) addField(nonUSInfo.visaType, 'section9.nonUSCitizen.visaType');
-        if (nonUSInfo.visaNumber) addField(nonUSInfo.visaNumber, 'section9.nonUSCitizen.visaNumber');
-        if (nonUSInfo.visaIssueDate) addField(nonUSInfo.visaIssueDate, 'section9.nonUSCitizen.visaIssueDate');
-        if (nonUSInfo.isVisaIssueDateEstimated) addField(nonUSInfo.isVisaIssueDateEstimated, 'section9.nonUSCitizen.isVisaIssueDateEstimated');
-        if (nonUSInfo.location) addField(nonUSInfo.location, 'section9.nonUSCitizen.location');
-        if (nonUSInfo.i94Number) addField(nonUSInfo.i94Number, 'section9.nonUSCitizen.i94Number');
-      }
+      flattenEntry(section9Data.section9, 'section9');
     }
 
     return flatFields;
@@ -385,32 +407,139 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
   // SF86FORM INTEGRATION
   // ============================================================================
 
-  // Create BaseSectionContext for integration
-  const contextId = useMemo(() => Math.random().toString(36).substring(2, 9), []);
-  const baseSectionContext: BaseSectionContext = useMemo(() => ({
-    sectionId: 'section9',
-    sectionName: 'Section 9: Citizenship of Your Parents',
-    sectionData: section9Data, // Use structured data format (preferred)
-    isLoading,
-    errors: Object.values(errors).map(msg => ({ field: 'general', message: msg, code: 'ERROR', severity: 'error' as const })),
-    isDirty,
-    lastUpdated: new Date(),
-    updateFieldValue,
-    validateSection,
-    resetSection,
-    loadSection,
-    getChanges
-  }), [section9Data, isLoading, errors, isDirty, updateFieldValue, validateSection, resetSection, loadSection, getChanges]);
+  /**
+   * Integration field update wrapper function for SF86FormContext compatibility
+   * Following Section 29 pattern to bridge signature mismatch between integration and section-specific functions
+   * Integration expects: (path: string, value: any) => void
+   * Section 9 has: various subsection-specific update functions
+   */
+  const updateFieldValueWrapper = useCallback((path: string, value: any) => {
+    console.log(`🔄 Section9: updateFieldValueWrapper called with path=${path}, value=`, value);
 
-  // Integration with main form context
+    // Parse path to update the correct field using existing subsection functions
+    if (path === 'section9.status' || path === 'status') {
+      console.log(`📊 Section9: Updating citizenship status`);
+      updateCitizenshipStatus(value);
+    } else if (path.startsWith('section9.bornToUSParents.') || path.startsWith('bornToUSParents.')) {
+      const fieldName = path.replace(/^(section9\.)?bornToUSParents\./, '');
+      console.log(`📊 Section9: Updating bornToUSParents field: ${fieldName}`);
+
+      // Handle nested paths like 'nameOnDocument.firstName' using lodash set
+      if (fieldName.includes('.')) {
+        console.log(`📊 Section9: Handling nested field path: ${fieldName}`);
+        setSection9Data(prev => {
+          const updated = cloneDeep(prev);
+          const fullPath = `section9.bornToUSParents.${fieldName}.value`;
+          set(updated, fullPath, value);
+          console.log(`✅ Section9: Updated nested field at path: ${fullPath}`);
+
+          // Sync data to SF86FormContext cache
+          sectionIntegration.syncSectionData('section9', updated);
+          console.log(`🔄 Section9: updateFieldValueWrapper - synced data to SF86FormContext`);
+
+          return updated;
+        });
+      } else {
+        // Handle direct fields using existing function
+        updateBornToUSParentsInfo(fieldName as keyof BornInUSInfo, value);
+      }
+    } else if (path.startsWith('section9.naturalizedCitizen.') || path.startsWith('naturalizedCitizen.')) {
+      const fieldName = path.replace(/^(section9\.)?naturalizedCitizen\./, '');
+      console.log(`📊 Section9: Updating naturalizedCitizen field: ${fieldName}`);
+
+      // Handle nested paths using lodash set
+      if (fieldName.includes('.')) {
+        console.log(`📊 Section9: Handling nested field path: ${fieldName}`);
+        setSection9Data(prev => {
+          const updated = cloneDeep(prev);
+          const fullPath = `section9.naturalizedCitizen.${fieldName}.value`;
+          set(updated, fullPath, value);
+          console.log(`✅ Section9: Updated nested field at path: ${fullPath}`);
+
+          // Sync data to SF86FormContext cache
+          sectionIntegration.syncSectionData('section9', updated);
+          console.log(`🔄 Section9: updateFieldValueWrapper - synced data to SF86FormContext`);
+
+          return updated;
+        });
+      } else {
+        // Handle direct fields using existing function
+        updateNaturalizedInfo(fieldName as keyof NaturalizedCitizenInfo, value);
+      }
+    } else if (path.startsWith('section9.derivedCitizen.') || path.startsWith('derivedCitizen.')) {
+      const fieldName = path.replace(/^(section9\.)?derivedCitizen\./, '');
+      console.log(`📊 Section9: Updating derivedCitizen field: ${fieldName}`);
+
+      // Handle nested paths using lodash set
+      if (fieldName.includes('.')) {
+        console.log(`📊 Section9: Handling nested field path: ${fieldName}`);
+        setSection9Data(prev => {
+          const updated = cloneDeep(prev);
+          const fullPath = `section9.derivedCitizen.${fieldName}.value`;
+          set(updated, fullPath, value);
+          console.log(`✅ Section9: Updated nested field at path: ${fullPath}`);
+
+          // Sync data to SF86FormContext cache
+          sectionIntegration.syncSectionData('section9', updated);
+          console.log(`🔄 Section9: updateFieldValueWrapper - synced data to SF86FormContext`);
+
+          return updated;
+        });
+      } else {
+        // Handle direct fields using existing function
+        updateDerivedInfo(fieldName as keyof DerivedCitizenInfo, value);
+      }
+    } else if (path.startsWith('section9.nonUSCitizen.') || path.startsWith('nonUSCitizen.')) {
+      const fieldName = path.replace(/^(section9\.)?nonUSCitizen\./, '');
+      console.log(`📊 Section9: Updating nonUSCitizen field: ${fieldName}`);
+
+      // Handle nested paths using lodash set
+      if (fieldName.includes('.')) {
+        console.log(`📊 Section9: Handling nested field path: ${fieldName}`);
+        setSection9Data(prev => {
+          const updated = cloneDeep(prev);
+          const fullPath = `section9.nonUSCitizen.${fieldName}.value`;
+          set(updated, fullPath, value);
+          console.log(`✅ Section9: Updated nested field at path: ${fullPath}`);
+
+          // Sync data to SF86FormContext cache
+          sectionIntegration.syncSectionData('section9', updated);
+          console.log(`🔄 Section9: updateFieldValueWrapper - synced data to SF86FormContext`);
+
+          return updated;
+        });
+      } else {
+        // Handle direct fields using existing function
+        updateNonUSCitizenInfo(fieldName as keyof NonUSCitizenInfo, value);
+      }
+    } else {
+      // Fallback: use lodash set for direct path updates
+      console.log(`📊 Section9: Using fallback lodash set for path: ${path}`);
+      setSection9Data(prev => {
+        const updated = cloneDeep(prev);
+        set(updated, path, value);
+
+        // Sync data to SF86FormContext cache
+        sectionIntegration.syncSectionData('section9', updated);
+        console.log(`🔄 Section9: updateFieldValueWrapper - synced data to SF86FormContext`);
+
+        return updated;
+      });
+    }
+
+    console.log(`✅ Section9: updateFieldValueWrapper completed for path=${path}`);
+  }, [updateCitizenshipStatus, updateBornToUSParentsInfo, updateNaturalizedInfo, updateDerivedInfo, updateNonUSCitizenInfo, sectionIntegration]);
+
+  // Integration with main form context using Section 1 gold standard pattern
+  // Note: integration variable is used internally by the hook for registration
   const integration = useSection86FormIntegration(
     'section9',
     'Section 9: Citizenship of Your Parents',
     section9Data,
     setSection9Data,
-    validateSection,
-    getChanges
-    // Removed flattenFields parameter to use structured format (preferred)
+    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
+    getChanges,
+    updateFieldValueWrapper // Pass wrapper function that matches expected signature
   );
 
 

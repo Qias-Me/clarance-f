@@ -10,6 +10,7 @@
 import type { Section24SubsectionKey } from "api/interfaces/sections2.0/section24";
 import React, { useState, useCallback } from "react";
 import { useSection24 } from "~/state/contexts/sections2.0/section24";
+import { useSF86Form } from "~/state/contexts/SF86FormContext";
 
 interface Section24ComponentProps {
   onValidationChange?: (isValid: boolean) => void;
@@ -33,6 +34,8 @@ export const Section24Component: React.FC<Section24ComponentProps> = ({
     getCurrentAlcoholStatus,
     getEntryCount,
   } = useSection24();
+
+  const sf86Form = useSF86Form();
 
   const [activeSubsection, setActiveSubsection] = useState<Section24SubsectionKey>("alcoholImpacts");
 
@@ -65,6 +68,35 @@ export const Section24Component: React.FC<Section24ComponentProps> = ({
 
   // Get alcohol status for monitoring
   const alcoholStatus = getCurrentAlcoholStatus();
+
+  // Handle submission with data persistence
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const result = validateSection();
+    setIsValid(result.isValid);
+    onValidationChange?.(result.isValid);
+
+    if (result.isValid) {
+      try {
+        // Update the central form context with Section 1 data
+        sf86Form.updateSectionData('section24', section24Data);
+
+        // Save the form data to persistence layer
+        await sf86Form.saveForm();
+
+        console.log('✅ Section 27 data saved successfully:', section24Data);
+
+        // Proceed to next section if callback provided
+        if (onNext) {
+          onNext();
+        }
+      } catch (error) {
+        console.error('❌ Failed to save Section 27 data:', error);
+        // Could show an error message to user here
+      }
+    }
+  };
+
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6" data-testid="section24-container">
@@ -115,11 +147,10 @@ export const Section24Component: React.FC<Section24ComponentProps> = ({
             <button
               key={subsection.key}
               onClick={() => setActiveSubsection(subsection.key)}
-              className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                activeSubsection === subsection.key
+              className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${activeSubsection === subsection.key
                   ? "bg-blue-500 text-white"
                   : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
-              }`}
+                }`}
               data-testid={`${subsection.key}-tab`}
             >
               {subsection.name}

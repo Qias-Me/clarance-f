@@ -45,7 +45,7 @@ export interface BornInUSInfo {
     middleName?: Field<string>;
     suffix?: Field<string>;
   };
-  wasBornOnMilitaryInstallation: Field<"YES" | "NO">;
+  wasBornOnMilitaryInstallation: Field<"YES" | "NO (If NO, proceed to Section 10)" | "">;
   militaryBaseName?: Field<string>;
 }
 
@@ -66,9 +66,15 @@ export interface NaturalizedCitizenInfo {
     state?: Field<string>;
     zipCode?: Field<string>;
   };
+  courtName?: Field<string>;
   certificateIssueDate: Field<string>;
   isCertificateDateEstimated: Field<boolean>;
   otherExplanation?: Field<string>;
+  entryDate?: Field<string>;
+  isEntryDateEstimated?: Field<boolean>;
+  entryCity?: Field<string>;
+  entryState?: Field<string>;
+  priorCitizenship?: Field<string>;
 }
 
 /**
@@ -92,26 +98,23 @@ export interface DerivedCitizenInfo {
  * Non-US Citizen (Section 9.4) information
  */
 export interface NonUSCitizenInfo {
+  residenceStatus?: Field<string>;
   entryDate: Field<string>;
   isEntryDateEstimated: Field<boolean>;
-  entryLocation: {
-    city: Field<string>;
-    state?: Field<string>;
-  };
-  countryOfCitizenship: {
-    country1: Field<string>;
-    country2?: Field<string>;
-  };
-  hasAlienRegistration: Field<"1" | "2" | "3" | "4" | "5">; // Must be numeric string for PDF radio button
   alienRegistrationNumber?: Field<string>;
-  alienRegistrationExpiration?: Field<string>;
-  isAlienExpDateEstimated?: Field<boolean>;
-  visaType?: Field<string>;
-  visaNumber?: Field<string>;
-  visaIssueDate?: Field<string>;
-  isVisaIssueDateEstimated?: Field<boolean>;
-  location?: Field<string>;
-  i94Number?: Field<string>;
+  documentIssueDate?: Field<string>;
+  isDocumentIssueDateEstimated?: Field<boolean>;
+  documentExpirationDate?: Field<string>;
+  isDocumentExpirationEstimated?: Field<boolean>;
+  nameOnDocument?: {
+    firstName: Field<string>;
+    middleName?: Field<string>;
+    lastName: Field<string>;
+    suffix?: Field<string>;
+  };
+  documentNumber?: Field<string>;
+  hasAlienRegistration: Field<"1" | "2" | "3" | "4" | "5">; // Must be numeric string for PDF radio button
+  explanation?: Field<string>;
 }
 
 /**
@@ -152,115 +155,115 @@ export type Section9SubsectionKey = "section9";
  * Based on section-9.json reference file with proper field ID extraction
  */
 export const SECTION9_FIELD_IDS = {
-  // Main citizenship status radio button (ID: 17233)
+  // Main citizenship status radio button (ID: 17233 0 R)
   CITIZENSHIP_STATUS: {
-    id: "17233",
+    id: "17233 0 R",
     name: "form1[0].Sections7-9[0].RadioButtonList[1]",
     type: "PDFRadioGroup",
   },
 
   // Section 9.1 - Born to US Parents (Sections7-9 pattern)
   OTHER_EXPLANATION: {
-    id: "9539",
+    id: "9539 0 R",
     name: "form1[0].Sections7-9[0].TextField11[3]",
     type: "PDFTextField",
   },
   DOCUMENT_NUMBER: {
-    id: "9538",
+    id: "9538 0 R",
     name: "form1[0].Sections7-9[0].TextField11[4]",
     type: "PDFTextField",
   },
   ISSUE_COUNTRY: {
-    id: "9537",
+    id: "9537 0 R",
     name: "form1[0].Sections7-9[0].DropDownList12[0]",
     type: "PDFDropdown",
   },
   ISSUE_STATE: {
-    id: "9536",
+    id: "9536 0 R",
     name: "form1[0].Sections7-9[0].School6_State[0]",
     type: "PDFDropdown",
   },
   ISSUE_CITY: {
-    id: "9535",
+    id: "9535 0 R",
     name: "form1[0].Sections7-9[0].TextField11[5]",
     type: "PDFTextField",
   },
   NAME_MIDDLE: {
-    id: "9534",
+    id: "9534 0 R",
     name: "form1[0].Sections7-9[0].TextField11[6]",
     type: "PDFTextField",
   },
   NAME_LAST: {
-    id: "9533",
+    id: "9533 0 R",
     name: "form1[0].Sections7-9[0].TextField11[7]",
     type: "PDFTextField",
   },
   NAME_FIRST: {
-    id: "9532",
+    id: "9532 0 R",
     name: "form1[0].Sections7-9[0].TextField11[8]",
     type: "PDFTextField",
   },
 
   // Section 9.2 - Naturalized Citizen (Section9.1-9.4 pattern)
   NATURALIZED_COURT_CITY: {
-    id: "9631",
+    id: "9625 0 R",
     name: "form1[0].Section9\\.1-9\\.4[0].TextField11[0]",
     type: "PDFTextField",
   },
   NATURALIZED_NAME_MIDDLE: {
-    id: "9630",
+    id: "9624 0 R",
     name: "form1[0].Section9\\.1-9\\.4[0].TextField11[1]",
     type: "PDFTextField",
   },
   NATURALIZED_NAME_LAST: {
-    id: "9629",
+    id: "9623 0 R",
     name: "form1[0].Section9\\.1-9\\.4[0].TextField11[2]",
     type: "PDFTextField",
   },
   NATURALIZED_NAME_FIRST: {
-    id: "9628",
+    id: "9622 0 R",
     name: "form1[0].Section9\\.1-9\\.4[0].TextField11[3]",
     type: "PDFTextField",
   },
   NATURALIZED_COURT_STREET: {
-    id: "9627",
+    id: "9620 0 R",
     name: "form1[0].Section9\\.1-9\\.4[0].TextField11[4]",
     type: "PDFTextField",
   },
   NATURALIZED_COURT_ZIP: {
-    id: "9626",
+    id: "9619 0 R",
     name: "form1[0].Section9\\.1-9\\.4[0].TextField11[5]",
     type: "PDFTextField",
   },
   NATURALIZED_CERTIFICATE_NUMBER: {
-    id: "9625",
+    id: "9616 0 R",
     name: "form1[0].Section9\\.1-9\\.4[0].TextField11[6]",
     type: "PDFTextField",
   },
 
   // Section 9.4 - Non-US Citizen
   ALIEN_REGISTRATION_NUMBER: {
-    id: "9611",
-    name: "form1[0].Section9\\.1-9\\.4[0].TextField11[14]",
+    id: "9608 0 R",
+    name: "form1[0].Section9\\.1-9\\.4[0].TextField11[9]",
     type: "PDFTextField",
   },
   ENTRY_CITY: {
-    id: "9599",
-    name: "form1[0].Section9\\.1-9\\.4[0].TextField11[18]",
+    id: "9588 0 R",
+    name: "form1[0].Section9\\.1-9\\.4[0].TextField11[16]",
     type: "PDFTextField",
   },
   CITIZENSHIP_COUNTRY_1: {
-    id: "9597",
-    name: "form1[0].Section9\\.1-9\\.4[0].DropDownList15[2]",
+    id: "9587 0 R",
+    name: "form1[0].Section9\\.1-9\\.4[0].DropDownList15[0]",
     type: "PDFDropdown",
   },
   CITIZENSHIP_COUNTRY_2: {
-    id: "9596",
-    name: "form1[0].Section9\\.1-9\\.4[0].DropDownList15[3]",
+    id: "9586 0 R",
+    name: "form1[0].Section9\\.1-9\\.4[0].DropDownList15[1]",
     type: "PDFDropdown",
   },
   HAS_ALIEN_REGISTRATION: {
-    id: "17229",
+    id: "17229 0 R",
     name: "form1[0].Section9\\.1-9\\.4[0].RadioButtonList[0]",
     type: "PDFRadioGroup",
   },
@@ -318,170 +321,345 @@ export const createDefaultSection9 = (): Section9 => {
     section9: {
       status: createFieldFromReference(
         9,
-        SECTION9_FIELD_IDS.CITIZENSHIP_STATUS.name,
+        'form1[0].Sections7-9[0].RadioButtonList[1]',
         "I am a U.S. citizen or national by birth in the U.S. or U.S. territory/commonwealth. (Proceed to Section 10)   "
       ),
-      // Born to US Parents subsection (9.1) - matching interface structure
+      // Born to US Parents subsection (9.1) - using actual field names from sections-reference
       bornToUSParents: {
         documentType: createFieldFromReference(
           9,
-          SECTION9_FIELD_IDS.OTHER_EXPLANATION.name,
+          'form1[0].Sections7-9[0].RadioButtonList[3]',
           "FS240"
         ),
         otherExplanation: createFieldFromReference(
           9,
-          SECTION9_FIELD_IDS.OTHER_EXPLANATION.name,
+          'form1[0].Sections7-9[0].TextField11[3]',
           ""
         ),
         documentNumber: createFieldFromReference(
           9,
-          SECTION9_FIELD_IDS.DOCUMENT_NUMBER.name,
+          'form1[0].Sections7-9[0].TextField11[4]',
           ""
         ),
         documentIssueDate: createFieldFromReference(
           9,
-          SECTION9_FIELD_IDS.ISSUE_CITY.name,
+          'form1[0].Sections7-9[0].From_Datefield_Name_2[1]',
           ""
         ),
         isIssueDateEstimated: createFieldFromReference(
           9,
-          SECTION9_FIELD_IDS.ISSUE_STATE.name,
+          'form1[0].Sections7-9[0].#field[25]',
           false
         ),
         issueCity: createFieldFromReference(
           9,
-          SECTION9_FIELD_IDS.ISSUE_CITY.name,
+          'form1[0].Sections7-9[0].TextField11[5]',
           ""
         ),
         issueState: createFieldFromReference(
           9,
-          SECTION9_FIELD_IDS.ISSUE_STATE.name,
+          'form1[0].Sections7-9[0].School6_State[0]',
           ""
         ),
         issueCountry: createFieldFromReference(
           9,
-          SECTION9_FIELD_IDS.ISSUE_COUNTRY.name,
+          'form1[0].Sections7-9[0].DropDownList12[0]',
           ""
         ),
         nameOnDocument: {
           firstName: createFieldFromReference(
             9,
-            SECTION9_FIELD_IDS.NAME_FIRST.name,
+            'form1[0].Sections7-9[0].TextField11[8]',
             ""
           ),
           middleName: createFieldFromReference(
             9,
-            SECTION9_FIELD_IDS.NAME_MIDDLE.name,
+            'form1[0].Sections7-9[0].TextField11[6]',
             ""
           ),
           lastName: createFieldFromReference(
             9,
-            SECTION9_FIELD_IDS.NAME_LAST.name,
+            'form1[0].Sections7-9[0].TextField11[7]',
             ""
           ),
           suffix: createFieldFromReference(
             9,
-            SECTION9_FIELD_IDS.OTHER_EXPLANATION.name,
+            'form1[0].Sections7-9[0].suffix[1]',
             ""
           ),
         },
         wasBornOnMilitaryInstallation: createFieldFromReference(
           9,
-          SECTION9_FIELD_IDS.OTHER_EXPLANATION.name,
-          "NO"
+          'form1[0].Sections7-9[0].RadioButtonList[2]',
+          ""
         ),
+        militaryBaseName: createFieldFromReference(
+          9,
+          'form1[0].Sections7-9[0].TextField11[18]',
+          ""
+        ),
+        certificateNumber: createFieldFromReference(
+          9,
+          'form1[0].Sections7-9[0].TextField11[12]',
+          ""
+        ),
+        certificateIssueDate: createFieldFromReference(
+          9,
+          'form1[0].Sections7-9[0].From_Datefield_Name_2[2]',
+          ""
+        ),
+        isCertificateDateEstimated: createFieldFromReference(
+          9,
+          'form1[0].Sections7-9[0].#field[28]',
+          false
+        ),
+        nameOnCertificate: {
+          firstName: createFieldFromReference(
+            9,
+            'form1[0].Sections7-9[0].TextField11[11]',
+            ""
+          ),
+          middleName: createFieldFromReference(
+            9,
+            'form1[0].Sections7-9[0].TextField11[9]',
+            ""
+          ),
+          lastName: createFieldFromReference(
+            9,
+            'form1[0].Sections7-9[0].TextField11[10]',
+            ""
+          ),
+          suffix: createFieldFromReference(
+            9,
+            'form1[0].Sections7-9[0].suffix[2]',
+            ""
+          ),
+        },
       },
-      // Naturalized Citizen subsection (9.2) - matching interface structure
+      // Naturalized Citizen subsection (9.2) - using actual field names from sections-reference
       naturalizedCitizen: {
         naturalizedCertificateNumber: createFieldFromReference(
           9,
-          SECTION9_FIELD_IDS.NATURALIZED_CERTIFICATE_NUMBER.name,
+          'form1[0].Section9\\.1-9\\.4[0].TextField11[6]',
           ""
         ),
         nameOnCertificate: {
           firstName: createFieldFromReference(
             9,
-            SECTION9_FIELD_IDS.NATURALIZED_NAME_FIRST.name,
+            'form1[0].Section9\\.1-9\\.4[0].TextField11[3]',
             ""
           ),
           middleName: createFieldFromReference(
             9,
-            SECTION9_FIELD_IDS.NATURALIZED_NAME_MIDDLE.name,
+            'form1[0].Section9\\.1-9\\.4[0].TextField11[1]',
             ""
           ),
           lastName: createFieldFromReference(
             9,
-            SECTION9_FIELD_IDS.NATURALIZED_NAME_LAST.name,
+            'form1[0].Section9\\.1-9\\.4[0].TextField11[2]',
+            ""
+          ),
+          suffix: createFieldFromReference(
+            9,
+            'form1[0].Section9\\.1-9\\.4[0].suffix[0]',
             ""
           ),
         },
         courtAddress: {
           street: createFieldFromReference(
             9,
-            SECTION9_FIELD_IDS.NATURALIZED_COURT_STREET.name,
+            'form1[0].Section9\\.1-9\\.4[0].TextField11[4]',
             ""
           ),
           city: createFieldFromReference(
             9,
-            SECTION9_FIELD_IDS.NATURALIZED_COURT_CITY.name,
+            'form1[0].Section9\\.1-9\\.4[0].TextField11[0]',
+            ""
+          ),
+          state: createFieldFromReference(
+            9,
+            'form1[0].Section9\\.1-9\\.4[0].School6_State[0]',
             ""
           ),
           zipCode: createFieldFromReference(
             9,
-            SECTION9_FIELD_IDS.NATURALIZED_COURT_ZIP.name,
+            'form1[0].Section9\\.1-9\\.4[0].TextField11[5]',
             ""
           ),
         },
+        courtName: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].TextField11[15]',
+          ""
+        ),
         certificateIssueDate: createFieldFromReference(
           9,
-          SECTION9_FIELD_IDS.NATURALIZED_CERTIFICATE_NUMBER.name,
+          'form1[0].Section9\\.1-9\\.4[0].From_Datefield_Name_2[0]',
           ""
         ),
         isCertificateDateEstimated: createFieldFromReference(
           9,
-          SECTION9_FIELD_IDS.NATURALIZED_CERTIFICATE_NUMBER.name,
+          'form1[0].Section9\\.1-9\\.4[0].#field[10]',
           false
         ),
-      },
-      // Non-US Citizen subsection (9.4) - matching interface structure
-      nonUSCitizen: {
+        otherExplanation: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].TextField11[7]',
+          ""
+        ),
         entryDate: createFieldFromReference(
           9,
-          SECTION9_FIELD_IDS.ENTRY_CITY.name,
+          'form1[0].Section9\\.1-9\\.4[0].From_Datefield_Name_2[4]',
           ""
         ),
         isEntryDateEstimated: createFieldFromReference(
           9,
-          SECTION9_FIELD_IDS.ENTRY_CITY.name,
+          'form1[0].Section9\\.1-9\\.4[0].#field[32]',
           false
         ),
-        entryLocation: {
-          city: createFieldFromReference(
-            9,
-            SECTION9_FIELD_IDS.ENTRY_CITY.name,
-            ""
-          ),
-        },
-        countryOfCitizenship: {
-          country1: createFieldFromReference(
-            9,
-            SECTION9_FIELD_IDS.CITIZENSHIP_COUNTRY_1.name,
-            ""
-          ),
-          country2: createFieldFromReference(
-            9,
-            SECTION9_FIELD_IDS.CITIZENSHIP_COUNTRY_2.name,
-            ""
-          ),
-        },
-        hasAlienRegistration: createFieldFromReference(
+        entryCity: createFieldFromReference(
           9,
-          SECTION9_FIELD_IDS.HAS_ALIEN_REGISTRATION.name,
-          "1"
+          'form1[0].Section9\\.1-9\\.4[0].TextField11[16]',
+          ""
+        ),
+        entryState: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].School6_State[1]',
+          ""
+        ),
+        priorCitizenship: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].DropDownList15[0]',
+          ""
+        ),
+      },
+      // Derived Citizen subsection (9.3) - using actual field names from sections-reference
+      derivedCitizen: {
+        alienRegistrationNumber: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].TextField11[17]',
+          ""
+        ),
+        permanentResidentCardNumber: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].TextField11[18]',
+          ""
+        ),
+        certificateOfCitizenshipNumber: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].TextField11[19]',
+          ""
+        ),
+        nameOnDocument: {
+          firstName: createFieldFromReference(
+            9,
+            'form1[0].Section9\\.1-9\\.4[0].TextField11[20]',
+            ""
+          ),
+          middleName: createFieldFromReference(
+            9,
+            'form1[0].Section9\\.1-9\\.4[0].TextField11[21]',
+            ""
+          ),
+          lastName: createFieldFromReference(
+            9,
+            'form1[0].Section9\\.1-9\\.4[0].TextField11[22]',
+            ""
+          ),
+          suffix: createFieldFromReference(
+            9,
+            'form1[0].Section9\\.1-9\\.4[0].suffix[2]',
+            ""
+          ),
+        },
+        basis: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].RadioButtonList[1]',
+          "By operation of law through my U.S. citizen parent"
+        ),
+        otherExplanation: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].TextField11[23]',
+          ""
+        ),
+      },
+      // Non-US Citizen subsection (9.4) - using actual field names from sections-reference
+      nonUSCitizen: {
+        residenceStatus: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].TextField11[8]',
+          ""
+        ),
+        entryDate: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].From_Datefield_Name_2[1]',
+          ""
+        ),
+        isEntryDateEstimated: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].#field[15]',
+          false
         ),
         alienRegistrationNumber: createFieldFromReference(
           9,
-          SECTION9_FIELD_IDS.ALIEN_REGISTRATION_NUMBER.name,
+          'form1[0].Section9\\.1-9\\.4[0].TextField11[9]',
+          ""
+        ),
+        documentIssueDate: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].From_Datefield_Name_2[2]',
+          ""
+        ),
+        isDocumentIssueDateEstimated: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].#field[18]',
+          false
+        ),
+        documentExpirationDate: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].From_Datefield_Name_2[3]',
+          ""
+        ),
+        isDocumentExpirationEstimated: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].#field[26]',
+          false
+        ),
+        nameOnDocument: {
+          firstName: createFieldFromReference(
+            9,
+            'form1[0].Section9\\.1-9\\.4[0].TextField11[12]',
+            ""
+          ),
+          middleName: createFieldFromReference(
+            9,
+            'form1[0].Section9\\.1-9\\.4[0].TextField11[10]',
+            ""
+          ),
+          lastName: createFieldFromReference(
+            9,
+            'form1[0].Section9\\.1-9\\.4[0].TextField11[11]',
+            ""
+          ),
+          suffix: createFieldFromReference(
+            9,
+            'form1[0].Section9\\.1-9\\.4[0].suffix[1]',
+            ""
+          ),
+        },
+        documentNumber: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].TextField11[13]',
+          ""
+        ),
+        hasAlienRegistration: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].RadioButtonList[0]',
+          "1"
+        ),
+        explanation: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].TextField11[14]',
           ""
         ),
       },

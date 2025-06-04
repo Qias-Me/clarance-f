@@ -3,6 +3,8 @@
  *
  * Manages state and operations for SF-86 Section 18 (Relatives and Associates).
  * Provides CRUD operations, validation, and integration with the global SF86 form context.
+ *
+ * FIXED: Now uses proper SF86FormContext integration pattern like Section 1 and Section 29
  */
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
@@ -26,7 +28,8 @@ import {
   validateRelativesAndAssociates,
   isSection18Complete
 } from '../../../../api/interfaces/sections2.0/section18';
-import { useSectionIntegration } from '../shared/section-integration';
+import { useSection86FormIntegration } from '../shared/section-context-integration';
+import type { ChangeSet } from '../shared/base-interfaces';
 
 // ============================================================================
 // SECTION 18 CONTEXT INTERFACE
@@ -35,30 +38,31 @@ import { useSectionIntegration } from '../shared/section-integration';
 export interface Section18ContextType {
   // Section 18 specific data
   section18Data: Section18;
-  
+
   // Immediate Family Operations
   immediateFamily: ImmediateFamilyEntry[];
   addImmediateFamilyMember: () => void;
   updateImmediateFamilyMember: (index: number, updates: Partial<ImmediateFamilyEntry>) => void;
   removeImmediateFamilyMember: (index: number) => void;
   duplicateImmediateFamilyMember: (index: number) => void;
-  
+
   // Extended Family Operations
   extendedFamily: ExtendedFamilyEntry[];
   addExtendedFamilyMember: () => void;
   updateExtendedFamilyMember: (index: number, updates: Partial<ExtendedFamilyEntry>) => void;
   removeExtendedFamilyMember: (index: number) => void;
   duplicateExtendedFamilyMember: (index: number) => void;
-  
+
   // Associate Operations
   associates: AssociateEntry[];
   addAssociate: () => void;
   updateAssociate: (index: number, updates: Partial<AssociateEntry>) => void;
   removeAssociate: (index: number) => void;
   duplicateAssociate: (index: number) => void;
-  
+
   // Field Operations
   updateField: (fieldPath: string, value: any, entryIndex?: number, subsection?: Section18SubsectionKey) => void;
+  updateFieldValue: (path: string, value: any) => void; // ADDED: For SF86FormContext integration
   getFieldValue: (fieldPath: string, entryIndex?: number, subsection?: Section18SubsectionKey) => any;
   
   // Validation
@@ -97,26 +101,6 @@ export const Section18Provider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
   const [isDirty, setIsDirty] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
-  // Integration hooks
-  const sectionIntegration = useSectionIntegration();
-
-  // Register section with integration system
-  useEffect(() => {
-    sectionIntegration.registerSection({
-      sectionId: 18,
-      sectionName: 'Relatives and Associates',
-      data: section18Data,
-      validate: () => validate(),
-      reset: () => resetSection(),
-      isDirty,
-      isComplete: isComplete
-    });
-
-    return () => {
-      sectionIntegration.unregisterSection(18);
-    };
-  }, [section18Data, isDirty]);
 
   // ============================================================================
   // COMPUTED VALUES
@@ -312,8 +296,8 @@ export const Section18Provider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, []);
 
   const getFieldValue = useCallback((
-    fieldPath: string, 
-    entryIndex?: number, 
+    fieldPath: string,
+    entryIndex?: number,
     subsection?: Section18SubsectionKey
   ) => {
     if (subsection && entryIndex !== undefined) {
@@ -321,6 +305,49 @@ export const Section18Provider: React.FC<{ children: React.ReactNode }> = ({ chi
       return get(section18Data, fullPath);
     }
     return get(section18Data, `section18.${fieldPath}`);
+  }, [section18Data]);
+
+  // ============================================================================
+  // SF86FORM INTEGRATION FUNCTIONS
+  // ============================================================================
+
+  /**
+   * Generic field update function for SF86FormContext integration
+   * Maps generic field paths to Section 18 specific update functions
+   */
+  const updateFieldValue = useCallback((path: string, value: any) => {
+    console.log(`🔍 Section18: updateFieldValue called with path=${path}, value=`, value);
+
+    // Handle both direct field paths and mapped paths
+    let targetPath = path;
+
+    // If the path doesn't start with 'section18.', prepend it
+    if (!path.startsWith('section18.')) {
+      targetPath = `section18.${path}`;
+    }
+
+    setSection18Data(prev => {
+      const newData = cloneDeep(prev);
+      set(newData, targetPath, value);
+      console.log(`✅ Section18: updateFieldValue - field updated at path: ${targetPath}`);
+      return newData;
+    });
+    setIsDirty(true);
+  }, []);
+
+  /**
+   * Change tracking function for integration
+   */
+  const getChanges = useCallback((): ChangeSet => {
+    // Simple change tracking implementation
+    // In a real implementation, you'd compare with initial data
+    return {
+      section18: {
+        oldValue: createDefaultSection18(),
+        newValue: section18Data,
+        timestamp: new Date()
+      }
+    };
   }, [section18Data]);
 
   // ============================================================================
@@ -377,6 +404,22 @@ export const Section18Provider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     return validateRelativesAndAssociates(tempSection, context);
   }, [section18Data]);
+
+  // ============================================================================
+  // SF86FORM INTEGRATION
+  // ============================================================================
+
+  // Integration with main form context using Section 1 gold standard pattern
+  // Note: integration variable is used internally by the hook for registration
+  const integration = useSection86FormIntegration(
+    'section18',
+    'Section 18: Relatives and Associates',
+    section18Data,
+    setSection18Data,
+    () => ({ isValid: validate().isValid, errors: validate().errors, warnings: validate().warnings }),
+    getChanges,
+    updateFieldValue // Pass Section 18's updateFieldValue function to integration
+  );
 
   // ============================================================================
   // UTILITY FUNCTIONS
@@ -445,21 +488,26 @@ export const Section18Provider: React.FC<{ children: React.ReactNode }> = ({ chi
     
     // Field Operations
     updateField,
+    updateFieldValue, // ADDED: For SF86FormContext integration
     getFieldValue,
-    
+
     // Validation
     validate,
     validateEntry,
     validationErrors,
     validationWarnings,
-    
+
     // Utility
     isComplete,
     getTotalEntries,
     getEntriesBySubsection,
     exportData,
     importData,
-    resetSection
+    resetSection,
+
+    // Integration
+    sectionId: 18,
+    sectionName: 'Relatives and Associates'
   };
 
   return (

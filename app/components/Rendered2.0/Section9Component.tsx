@@ -8,6 +8,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSection9 } from '~/state/contexts/sections2.0/section9';
+import { useSF86Form } from '~/state/contexts/SF86FormContext';
 
 interface Section9ComponentProps {
   className?: string;
@@ -24,57 +25,156 @@ const Section9Component: React.FC<Section9ComponentProps> = ({
     section9Data,
     updateCitizenshipStatus,
     updateBornToUSParentsInfo,
-    updateNaturalizationInfo,
-    updateDerivedCitizenshipInfo,
+    updateNaturalizedInfo,
+    updateDerivedInfo,
     updateNonUSCitizenInfo,
+    updateFieldValue,
     validateSection,
     resetSection,
     isDirty,
     errors
   } = useSection9();
 
+  // Helper function to safely get field values with enhanced type guards
+  const getFieldValue = (obj: any, fieldName: string, defaultValue: any = '') => {
+    try {
+      if (!obj || typeof obj !== 'object') return defaultValue;
+      const field = obj[fieldName];
+      if (!field || typeof field !== 'object' || !('value' in field)) return defaultValue;
+      return field.value ?? defaultValue;
+    } catch (error) {
+      console.warn(`🚨 Section9Component: Error accessing field ${fieldName}:`, error);
+      return defaultValue;
+    }
+  };
+
+  // Helper function to safely get nested field values (e.g., address.city) with enhanced error handling
+  const getNestedFieldValue = (obj: any, path: string, defaultValue: any = '') => {
+    try {
+      if (!obj || typeof obj !== 'object') return defaultValue;
+      const pathParts = path.split('.');
+      let current = obj;
+
+      for (const part of pathParts) {
+        if (!current || typeof current !== 'object') return defaultValue;
+        current = current[part];
+      }
+
+      if (!current || typeof current !== 'object' || !('value' in current)) return defaultValue;
+      return current.value ?? defaultValue;
+    } catch (error) {
+      console.warn(`🚨 Section9Component: Error accessing nested field ${path}:`, error);
+      return defaultValue;
+    }
+  };
+
+  // Helper function to safely check if a subsection exists and has data
+  const hasSubsectionData = (subsection: any): boolean => {
+    if (!subsection || typeof subsection !== 'object') return false;
+    return Object.keys(subsection).length > 0;
+  };
+
+  // Helper function to safely get subsection with fallback
+  const getSubsection = (subsectionName: keyof typeof section9Data.section9, fallback = {}) => {
+    try {
+      const subsection = section9Data.section9[subsectionName];
+      return subsection && typeof subsection === 'object' ? subsection : fallback;
+    } catch (error) {
+      console.warn(`🚨 Section9Component: Error accessing subsection ${subsectionName}:`, error);
+      return fallback;
+    }
+  };
+
+  // SF86 Form Context for data persistence
+  const sf86Form = useSF86Form();
+
   // Track validation state internally
   const [isValid, setIsValid] = useState(false);
 
   // Handle validation on component mount and when data changes
   useEffect(() => {
+    // Debug logging to verify form functionality
+    // console.log('🔍 Section9Component: Component updated');
+    // console.log('🔍 Section9Component: section9Data:', section9Data);
+    // console.log('🔍 Section9Component: status value:', getFieldValue(section9Data.section9, 'status', 'NOT_SET'));
+    // console.log('🔍 Section9Component: bornToUSParents subsection:', getSubsection('bornToUSParents'));
+
     const validationResult = validateSection();
     setIsValid(validationResult.isValid);
     onValidationChange?.(validationResult.isValid);
   }, [section9Data]); // Removed validateSection and onValidationChange to prevent infinite loops
 
-  // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  // Handle form submission with enhanced error handling and validation
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = validateSection();
-    setIsValid(result.isValid);
-    onValidationChange?.(result.isValid);
 
-    if (result.isValid && onNext) {
-      onNext();
+    try {
+      // Validate section data
+      const result = validateSection();
+      setIsValid(result.isValid);
+      onValidationChange?.(result.isValid);
+
+      if (result.isValid) {
+        // Ensure section9Data is valid before saving
+        if (!section9Data || !section9Data.section9) {
+          throw new Error('Section 9 data is not properly initialized');
+        }
+
+        // Update the central form context with Section 9 data
+        sf86Form.updateSectionData('section9', section9Data);
+
+        // Save the form data to persistence layer
+        await sf86Form.saveForm();
+
+        console.log('✅ Section 9 data saved successfully:', section9Data);
+
+        // Proceed to next section if callback provided
+        if (onNext) {
+          onNext();
+        }
+      } else {
+        console.warn('⚠️ Section 9 validation failed:', result.errors);
+      }
+    } catch (error) {
+      console.error('❌ Failed to save Section 9 data:', error);
+      setIsValid(false);
+      // Could show an error message to user here
+      // For now, we'll just log the error and prevent navigation
     }
   };
 
-  // Determine which form to display based on citizenship status
+  // Determine which form to display based on citizenship status with enhanced error handling
   const renderFormBasedOnStatus = () => {
-    const status = section9Data.section9.status.value;
+    try {
+      const status = getFieldValue(section9Data.section9, 'status', '');
 
-    if (status?.includes('born to U.S. parent(s)')) {
-      return renderBornToUSParentsForm();
-    } else if (status?.includes('naturalized U.S. citizen')) {
-      return renderNaturalizedForm();
-    } else if (status?.includes('derived U.S. citizen')) {
-      return renderDerivedCitizenshipForm();
-    } else if (status?.includes('not a U.S. citizen')) {
-      return renderNonUSCitizenForm();
+      if (status?.includes('born to U.S. parent(s)')) {
+        return renderBornToUSParentsForm();
+      } else if (status?.includes('naturalized U.S. citizen')) {
+        return renderNaturalizedForm();
+      } else if (status?.includes('derived U.S. citizen')) {
+        return renderDerivedCitizenshipForm();
+      } else if (status?.includes('not a U.S. citizen')) {
+        return renderNonUSCitizenForm();
+      }
+
+      return null;
+    } catch (error) {
+      console.error('🚨 Section9Component: Error rendering form based on status:', error);
+      return (
+        <div className="border rounded-lg p-5 bg-red-50 text-red-700">
+          <p>Error loading form. Please refresh the page or contact support.</p>
+        </div>
+      );
     }
-
-    return null;
   };
 
   // Form for "Born to U.S. parents" status
   const renderBornToUSParentsForm = () => {
-    const bornToUSParents = section9Data.section9.bornToUSParents || {};
+    const bornToUSParents = getSubsection('bornToUSParents');
+
+    // Debug logging
+    // console.log('🔍 Section9Component: bornToUSParents data:', bornToUSParents);
 
     return (
       <div className="border rounded-lg p-5 bg-gray-50 space-y-4">
@@ -91,21 +191,49 @@ const Section9Component: React.FC<Section9ComponentProps> = ({
           <select
             id="document-type"
             data-testid="document-type-select"
-            value={bornToUSParents.documentType?.value || ''}
-            onChange={(e) => updateBornToUSParentsInfo('documentType', e.target.value)}
+            value={getFieldValue(bornToUSParents, 'documentType', '')}
+            onChange={(e) => {
+              console.log(`🎯 Section9Component: Document type changed to:`, e.target.value);
+              updateBornToUSParentsInfo('documentType', e.target.value);
+            }}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             required
           >
             <option value="">Select document type</option>
-            <option value="FS-240">FS-240 (Consular Report of Birth Abroad)</option>
-            <option value="DS-1350">DS-1350 (Certification of Birth Abroad)</option>
-            <option value="FS-545">FS-545 (Certification of Birth Abroad)</option>
-            <option value="OTHER">Other (specify)</option>
+            <option value="FS240">FS-240 (Consular Report of Birth Abroad)</option>
+            <option value="DS1350">DS-1350 (Certification of Birth Abroad)</option>
+            <option value="FS545">FS-545 (Certification of Birth Abroad)</option>
+            <option value="Other (Provide explanation)">Other (specify)</option>
           </select>
           {errors['citizenshipStatus.bornToUSParents.documentType'] && (
             <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.bornToUSParents.documentType']}</p>
           )}
         </div>
+
+        {/* Other Document Type (if applicable) */}
+        {getFieldValue(bornToUSParents, 'documentType', '') === 'Other (Provide explanation)' && (
+          <div>
+            <label
+              htmlFor="other-document-type"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Specify Other Document Type <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="other-document-type"
+              data-testid="other-document-type-input"
+              value={getFieldValue(bornToUSParents, 'otherExplanation', '')}
+              onChange={(e) => updateBornToUSParentsInfo('otherExplanation', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Specify document type"
+              required
+            />
+            {errors['citizenshipStatus.bornToUSParents.otherExplanation'] && (
+              <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.bornToUSParents.otherExplanation']}</p>
+            )}
+          </div>
+        )}
 
         {/* Document Number */}
         <div>
@@ -119,7 +247,7 @@ const Section9Component: React.FC<Section9ComponentProps> = ({
             type="text"
             id="document-number"
             data-testid="document-number-input"
-            value={bornToUSParents.documentNumber?.value || ''}
+            value={getFieldValue(bornToUSParents, 'documentNumber', '')}
             onChange={(e) => updateBornToUSParentsInfo('documentNumber', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Enter document number"
@@ -131,59 +259,215 @@ const Section9Component: React.FC<Section9ComponentProps> = ({
         </div>
 
         {/* Issue Date */}
-        <div>
-          <label
-            htmlFor="document-issue-date"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Issue Date <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="document-issue-date"
-            data-testid="document-issue-date-input"
-            value={bornToUSParents.issueDate?.value || ''}
-            onChange={(e) => updateBornToUSParentsInfo('issueDate', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="MM/DD/YYYY"
-            required
-          />
-          {errors['citizenshipStatus.bornToUSParents.issueDate'] && (
-            <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.bornToUSParents.issueDate']}</p>
-          )}
-        </div>
-
-        {/* Other Document Type (if applicable) */}
-        {bornToUSParents.documentType?.value === 'OTHER' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label
-              htmlFor="other-document-type"
+              htmlFor="document-issue-date"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              Specify Other Document Type <span className="text-red-500">*</span>
+              Issue Date <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
-              id="other-document-type"
-              data-testid="other-document-type-input"
-              value={bornToUSParents.otherDocumentType?.value || ''}
-              onChange={(e) => updateBornToUSParentsInfo('otherDocumentType', e.target.value)}
+              id="document-issue-date"
+              data-testid="document-issue-date-input"
+              value={getFieldValue(bornToUSParents, 'documentIssueDate', '')}
+              onChange={(e) => updateBornToUSParentsInfo('documentIssueDate', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Specify document type"
+              placeholder="MM/DD/YYYY"
               required
             />
-            {errors['citizenshipStatus.bornToUSParents.otherDocumentType'] && (
-              <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.bornToUSParents.otherDocumentType']}</p>
+            {errors['citizenshipStatus.bornToUSParents.documentIssueDate'] && (
+              <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.bornToUSParents.documentIssueDate']}</p>
             )}
           </div>
-        )}
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="issue-date-estimated"
+              data-testid="issue-date-estimated-checkbox"
+              checked={getFieldValue(bornToUSParents, 'isIssueDateEstimated', false)}
+              onChange={(e) => updateBornToUSParentsInfo('isIssueDateEstimated', e.target.checked)}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <label htmlFor="issue-date-estimated" className="ml-2 block text-sm text-gray-700">
+              Estimated
+            </label>
+          </div>
+        </div>
+
+        {/* Issue Location */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label
+              htmlFor="issue-city"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Issue City <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="issue-city"
+              data-testid="issue-city-input"
+              value={getFieldValue(bornToUSParents, 'issueCity', '')}
+              onChange={(e) => updateBornToUSParentsInfo('issueCity', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter city"
+              required
+            />
+            {errors['citizenshipStatus.bornToUSParents.issueCity'] && (
+              <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.bornToUSParents.issueCity']}</p>
+            )}
+          </div>
+          <div>
+            <label
+              htmlFor="issue-state"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Issue State/Province
+            </label>
+            <input
+              type="text"
+              id="issue-state"
+              data-testid="issue-state-input"
+              value={getFieldValue(bornToUSParents, 'issueState', '')}
+              onChange={(e) => updateBornToUSParentsInfo('issueState', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter state/province"
+            />
+            {errors['citizenshipStatus.bornToUSParents.issueState'] && (
+              <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.bornToUSParents.issueState']}</p>
+            )}
+          </div>
+          <div>
+            <label
+              htmlFor="issue-country"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Issue Country
+            </label>
+            <input
+              type="text"
+              id="issue-country"
+              data-testid="issue-country-input"
+              value={getFieldValue(bornToUSParents, 'issueCountry', '')}
+              onChange={(e) => updateBornToUSParentsInfo('issueCountry', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter country"
+            />
+            {errors['citizenshipStatus.bornToUSParents.issueCountry'] && (
+              <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.bornToUSParents.issueCountry']}</p>
+            )}
+          </div>
+        </div>
+
+        {/* Name on Document */}
+        <div>
+          <h4 className="text-md font-medium text-gray-900 mb-3">Name on Document</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+              <label
+                htmlFor="name-first"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                First Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="name-first"
+                data-testid="name-first-input"
+                value={getNestedFieldValue(bornToUSParents, 'nameOnDocument.firstName', '')}
+                onChange={(e) => updateFieldValue('bornToUSParents.nameOnDocument.firstName', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter first name"
+                required
+              />
+              {errors['citizenshipStatus.bornToUSParents.nameOnDocument.firstName'] && (
+                <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.bornToUSParents.nameOnDocument.firstName']}</p>
+              )}
+            </div>
+            <div>
+              <label
+                htmlFor="name-middle"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Middle Name
+              </label>
+              <input
+                type="text"
+                id="name-middle"
+                data-testid="name-middle-input"
+                value={getNestedFieldValue(bornToUSParents, 'nameOnDocument.middleName', '')}
+                onChange={(e) => updateFieldValue('bornToUSParents.nameOnDocument.middleName', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter middle name"
+              />
+              {errors['citizenshipStatus.bornToUSParents.nameOnDocument.middleName'] && (
+                <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.bornToUSParents.nameOnDocument.middleName']}</p>
+              )}
+            </div>
+            <div>
+              <label
+                htmlFor="name-last"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Last Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id="name-last"
+                data-testid="name-last-input"
+                value={getNestedFieldValue(bornToUSParents, 'nameOnDocument.lastName', '')}
+                onChange={(e) => updateFieldValue('bornToUSParents.nameOnDocument.lastName', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter last name"
+                required
+              />
+              {errors['citizenshipStatus.bornToUSParents.nameOnDocument.lastName'] && (
+                <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.bornToUSParents.nameOnDocument.lastName']}</p>
+              )}
+            </div>
+            <div>
+              <label
+                htmlFor="name-suffix"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Suffix
+              </label>
+              <select
+                id="name-suffix"
+                data-testid="name-suffix-select"
+                value={getNestedFieldValue(bornToUSParents, 'nameOnDocument.suffix', '')}
+                onChange={(e) => updateFieldValue('bornToUSParents.nameOnDocument.suffix', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="">Select suffix</option>
+                <option value="Jr">Jr</option>
+                <option value="Sr">Sr</option>
+                <option value="II">II</option>
+                <option value="III">III</option>
+                <option value="IV">IV</option>
+                <option value="V">V</option>
+                <option value="VI">VI</option>
+                <option value="VII">VII</option>
+                <option value="VIII">VIII</option>
+                <option value="IX">IX</option>
+                <option value="X">X</option>
+                <option value="Other">Other</option>
+              </select>
+              {errors['citizenshipStatus.bornToUSParents.nameOnDocument.suffix'] && (
+                <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.bornToUSParents.nameOnDocument.suffix']}</p>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     );
   };
 
   // Form for "Naturalized" status
   const renderNaturalizedForm = () => {
-    const naturalized = section9Data.section9.naturalized || {};
+    const naturalized = getSubsection('naturalizedCitizen');
 
     return (
       <div className="border rounded-lg p-5 bg-gray-50 space-y-4">
@@ -201,37 +485,37 @@ const Section9Component: React.FC<Section9ComponentProps> = ({
             type="text"
             id="certificate-number"
             data-testid="certificate-number-input"
-            value={naturalized.certificateNumber?.value || ''}
-            onChange={(e) => updateNaturalizationInfo('certificateNumber', e.target.value)}
+            value={getFieldValue(naturalized, 'naturalizedCertificateNumber', '')}
+            onChange={(e) => updateNaturalizedInfo('naturalizedCertificateNumber', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Enter certificate number"
             required
           />
-          {errors['citizenshipStatus.naturalized.certificateNumber'] && (
-            <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.naturalized.certificateNumber']}</p>
+          {errors['citizenshipStatus.naturalizedCitizen.naturalizedCertificateNumber'] && (
+            <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.naturalizedCitizen.naturalizedCertificateNumber']}</p>
           )}
         </div>
 
-        {/* Naturalization Date */}
+        {/* Certificate Issue Date */}
         <div>
           <label
-            htmlFor="naturalization-date"
+            htmlFor="certificate-issue-date"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            Date of Naturalization <span className="text-red-500">*</span>
+            Certificate Issue Date <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
-            id="naturalization-date"
-            data-testid="naturalization-date-input"
-            value={naturalized.naturalizationDate?.value || ''}
-            onChange={(e) => updateNaturalizationInfo('naturalizationDate', e.target.value)}
+            id="certificate-issue-date"
+            data-testid="certificate-issue-date-input"
+            value={getFieldValue(naturalized, 'certificateIssueDate', '')}
+            onChange={(e) => updateNaturalizedInfo('certificateIssueDate', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="MM/DD/YYYY"
             required
           />
-          {errors['citizenshipStatus.naturalized.naturalizationDate'] && (
-            <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.naturalized.naturalizationDate']}</p>
+          {errors['citizenshipStatus.naturalizedCitizen.certificateIssueDate'] && (
+            <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.naturalizedCitizen.certificateIssueDate']}</p>
           )}
         </div>
 
@@ -247,8 +531,8 @@ const Section9Component: React.FC<Section9ComponentProps> = ({
             type="text"
             id="court-name"
             data-testid="court-name-input"
-            value={naturalized.courtName?.value || ''}
-            onChange={(e) => updateNaturalizationInfo('courtName', e.target.value)}
+            value={getFieldValue(naturalized, 'courtName', '')}
+            onChange={(e) => updateNaturalizedInfo('courtName', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Enter court name"
             required
@@ -271,8 +555,8 @@ const Section9Component: React.FC<Section9ComponentProps> = ({
               type="text"
               id="court-city"
               data-testid="court-city-input"
-              value={naturalized.courtCity?.value || ''}
-              onChange={(e) => updateNaturalizationInfo('courtCity', e.target.value)}
+              value={getNestedFieldValue(naturalized, 'courtAddress.city', '')}
+              onChange={(e) => updateFieldValue('naturalizedCitizen.courtAddress.city', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter city"
               required
@@ -292,8 +576,8 @@ const Section9Component: React.FC<Section9ComponentProps> = ({
               type="text"
               id="court-state"
               data-testid="court-state-input"
-              value={naturalized.courtState?.value || ''}
-              onChange={(e) => updateNaturalizationInfo('courtState', e.target.value)}
+              value={getNestedFieldValue(naturalized, 'courtAddress.state', '')}
+              onChange={(e) => updateFieldValue('naturalizedCitizen.courtAddress.state', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter state"
               required
@@ -309,7 +593,7 @@ const Section9Component: React.FC<Section9ComponentProps> = ({
 
   // Form for "Derived" status
   const renderDerivedCitizenshipForm = () => {
-    const derived = section9Data.section9.derived || {};
+    const derived = getSubsection('derivedCitizen');
 
     return (
       <div className="border rounded-lg p-5 bg-gray-50 space-y-4">
@@ -327,8 +611,8 @@ const Section9Component: React.FC<Section9ComponentProps> = ({
             type="text"
             id="derived-certificate-number"
             data-testid="derived-certificate-number-input"
-            value={derived.certificateNumber?.value || ''}
-            onChange={(e) => updateDerivedCitizenshipInfo('certificateNumber', e.target.value)}
+            value={getFieldValue(derived, 'certificateOfCitizenshipNumber', '')}
+            onChange={(e) => updateDerivedInfo('certificateOfCitizenshipNumber', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Enter certificate number"
             required
@@ -338,50 +622,44 @@ const Section9Component: React.FC<Section9ComponentProps> = ({
           )}
         </div>
 
-        {/* Issue Date */}
-        <div>
-          <label
-            htmlFor="derived-issue-date"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Issue Date <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="derived-issue-date"
-            data-testid="derived-issue-date-input"
-            value={derived.issueDate?.value || ''}
-            onChange={(e) => updateDerivedCitizenshipInfo('issueDate', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="MM/DD/YYYY"
-            required
-          />
-          {errors['citizenshipStatus.derived.issueDate'] && (
-            <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.derived.issueDate']}</p>
-          )}
-        </div>
-
-        {/* Place of Issuance */}
-        <div>
-          <label
-            htmlFor="derived-place"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Place of Issuance <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="derived-place"
-            data-testid="derived-place-input"
-            value={derived.issuanceLocation?.value || ''}
-            onChange={(e) => updateDerivedCitizenshipInfo('issuanceLocation', e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Enter place of issuance"
-            required
-          />
-          {errors['citizenshipStatus.derived.issuanceLocation'] && (
-            <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.derived.issuanceLocation']}</p>
-          )}
+        {/* Name on Document */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label
+              htmlFor="derived-first-name"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              First Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="derived-first-name"
+              data-testid="derived-first-name-input"
+              value={getNestedFieldValue(derived, 'nameOnDocument.firstName', '')}
+              onChange={(e) => updateFieldValue('derivedCitizen.nameOnDocument.firstName', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter first name"
+              required
+            />
+          </div>
+          <div>
+            <label
+              htmlFor="derived-last-name"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Last Name <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id="derived-last-name"
+              data-testid="derived-last-name-input"
+              value={getNestedFieldValue(derived, 'nameOnDocument.lastName', '')}
+              onChange={(e) => updateFieldValue('derivedCitizen.nameOnDocument.lastName', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter last name"
+              required
+            />
+          </div>
         </div>
 
         {/* Basis of Derived Citizenship */}
@@ -395,15 +673,16 @@ const Section9Component: React.FC<Section9ComponentProps> = ({
           <select
             id="derived-basis"
             data-testid="derived-basis-select"
-            value={derived.basis?.value || ''}
-            onChange={(e) => updateDerivedCitizenshipInfo('basis', e.target.value)}
+            value={getFieldValue(derived, 'basis', '')}
+            onChange={(e) => updateDerivedInfo('basis', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             required
           >
             <option value="">Select basis</option>
-            <option value="PARENT">Through parents</option>
-            <option value="MARRIAGE">Through marriage</option>
-            <option value="OTHER">Other (specify)</option>
+            <option value="By operation of law through my U.S. citizen parent">
+              By operation of law through my U.S. citizen parent
+            </option>
+            <option value="Other">Other (Provide explanation)</option>
           </select>
           {errors['citizenshipStatus.derived.basis'] && (
             <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.derived.basis']}</p>
@@ -411,7 +690,7 @@ const Section9Component: React.FC<Section9ComponentProps> = ({
         </div>
 
         {/* Other Basis (if applicable) */}
-        {derived.basis?.value === 'OTHER' && (
+        {getFieldValue(derived, 'basis', '') === 'Other' && (
           <div>
             <label
               htmlFor="derived-other-basis"
@@ -423,14 +702,14 @@ const Section9Component: React.FC<Section9ComponentProps> = ({
               type="text"
               id="derived-other-basis"
               data-testid="derived-other-basis-input"
-              value={derived.otherBasis?.value || ''}
-              onChange={(e) => updateDerivedCitizenshipInfo('otherBasis', e.target.value)}
+              value={getFieldValue(derived, 'otherExplanation', '')}
+              onChange={(e) => updateDerivedInfo('otherExplanation', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Specify basis"
               required
             />
-            {errors['citizenshipStatus.derived.otherBasis'] && (
-              <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.derived.otherBasis']}</p>
+            {errors['citizenshipStatus.derived.otherExplanation'] && (
+              <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.derived.otherExplanation']}</p>
             )}
           </div>
         )}
@@ -440,60 +719,54 @@ const Section9Component: React.FC<Section9ComponentProps> = ({
 
   // Form for "Non-US Citizen" status
   const renderNonUSCitizenForm = () => {
-    const nonUSCitizen = section9Data.section9.nonUSCitizen || {};
+    const nonUSCitizen = getSubsection('nonUSCitizen');
 
     return (
       <div className="border rounded-lg p-5 bg-gray-50 space-y-4">
         <h3 className="text-lg font-semibold mb-4">Non-U.S. Citizen Information</h3>
 
-        {/* Country of Citizenship */}
+        {/* Entry Date */}
         <div>
           <label
-            htmlFor="country-of-citizenship"
+            htmlFor="entry-date"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            Country of Citizenship <span className="text-red-500">*</span>
+            Entry Date <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
-            id="country-of-citizenship"
-            data-testid="country-of-citizenship-input"
-            value={nonUSCitizen.countryOfCitizenship?.value || ''}
-            onChange={(e) => updateNonUSCitizenInfo('countryOfCitizenship', e.target.value)}
+            id="entry-date"
+            data-testid="entry-date-input"
+            value={getFieldValue(nonUSCitizen, 'entryDate', '')}
+            onChange={(e) => updateNonUSCitizenInfo('entryDate', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Enter country name"
+            placeholder="MM/DD/YYYY"
             required
           />
-          {errors['citizenshipStatus.nonUSCitizen.countryOfCitizenship'] && (
-            <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.nonUSCitizen.countryOfCitizenship']}</p>
+          {errors['citizenshipStatus.nonUSCitizen.entryDate'] && (
+            <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.nonUSCitizen.entryDate']}</p>
           )}
         </div>
 
-        {/* Document Type */}
+        {/* Alien Registration Number */}
         <div>
           <label
-            htmlFor="non-us-document-type"
+            htmlFor="alien-registration-number"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            Document Type <span className="text-red-500">*</span>
+            Alien Registration Number
           </label>
-          <select
-            id="non-us-document-type"
-            data-testid="non-us-document-type-select"
-            value={nonUSCitizen.documentType?.value || ''}
-            onChange={(e) => updateNonUSCitizenInfo('documentType', e.target.value)}
+          <input
+            type="text"
+            id="alien-registration-number"
+            data-testid="alien-registration-number-input"
+            value={getFieldValue(nonUSCitizen, 'alienRegistrationNumber', '')}
+            onChange={(e) => updateNonUSCitizenInfo('alienRegistrationNumber', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            required
-          >
-            <option value="">Select document type</option>
-            <option value="I-551">I-551 (Permanent Resident Card)</option>
-            <option value="I-766">I-766 (Employment Authorization Card)</option>
-            <option value="I-94">I-94 (Arrival-Departure Record)</option>
-            <option value="VISA">Visa</option>
-            <option value="OTHER">Other (specify)</option>
-          </select>
-          {errors['citizenshipStatus.nonUSCitizen.documentType'] && (
-            <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.nonUSCitizen.documentType']}</p>
+            placeholder="Enter alien registration number"
+          />
+          {errors['citizenshipStatus.nonUSCitizen.alienRegistrationNumber'] && (
+            <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.nonUSCitizen.alienRegistrationNumber']}</p>
           )}
         </div>
 
@@ -503,70 +776,43 @@ const Section9Component: React.FC<Section9ComponentProps> = ({
             htmlFor="non-us-document-number"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            Document Number <span className="text-red-500">*</span>
+            Document Number
           </label>
           <input
             type="text"
             id="non-us-document-number"
             data-testid="non-us-document-number-input"
-            value={nonUSCitizen.documentNumber?.value || ''}
+            value={getFieldValue(nonUSCitizen, 'documentNumber', '')}
             onChange={(e) => updateNonUSCitizenInfo('documentNumber', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Enter document number"
-            required
           />
           {errors['citizenshipStatus.nonUSCitizen.documentNumber'] && (
             <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.nonUSCitizen.documentNumber']}</p>
           )}
         </div>
 
-        {/* Expiration Date */}
+        {/* Document Expiration Date */}
         <div>
           <label
             htmlFor="non-us-expiration-date"
             className="block text-sm font-medium text-gray-700 mb-2"
           >
-            Expiration Date <span className="text-red-500">*</span>
+            Document Expiration Date
           </label>
           <input
             type="text"
             id="non-us-expiration-date"
             data-testid="non-us-expiration-date-input"
-            value={nonUSCitizen.expirationDate?.value || ''}
-            onChange={(e) => updateNonUSCitizenInfo('expirationDate', e.target.value)}
+            value={getFieldValue(nonUSCitizen, 'documentExpirationDate', '')}
+            onChange={(e) => updateNonUSCitizenInfo('documentExpirationDate', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="MM/DD/YYYY"
-            required
           />
-          {errors['citizenshipStatus.nonUSCitizen.expirationDate'] && (
-            <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.nonUSCitizen.expirationDate']}</p>
+          {errors['citizenshipStatus.nonUSCitizen.documentExpirationDate'] && (
+            <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.nonUSCitizen.documentExpirationDate']}</p>
           )}
         </div>
-
-        {/* Other Document Type (if applicable) */}
-        {nonUSCitizen.documentType?.value === 'OTHER' && (
-          <div>
-            <label
-              htmlFor="non-us-other-document-type"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Specify Other Document Type <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              id="non-us-other-document-type"
-              data-testid="non-us-other-document-type-input"
-              value={nonUSCitizen.otherDocumentType?.value || ''}
-              onChange={(e) => updateNonUSCitizenInfo('otherDocumentType', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Specify document type"
-              required
-            />
-            {errors['citizenshipStatus.nonUSCitizen.otherDocumentType'] && (
-              <p className="mt-1 text-sm text-red-600">{errors['citizenshipStatus.nonUSCitizen.otherDocumentType']}</p>
-            )}
-          </div>
-        )}
       </div>
     );
   };
@@ -597,7 +843,10 @@ const Section9Component: React.FC<Section9ComponentProps> = ({
             id="citizenship-status"
             data-testid="citizenship-status-select"
             value={section9Data.section9.status.value || ''}
-            onChange={(e) => updateCitizenshipStatus(e.target.value)}
+            onChange={(e) => {
+              console.log(`🎯 Section9Component: Citizenship status changed to:`, e.target.value);
+              updateCitizenshipStatus(e.target.value as any);
+            }}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             required
           >
@@ -645,7 +894,11 @@ const Section9Component: React.FC<Section9ComponentProps> = ({
               type="button"
               className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
               data-testid="clear-section-button"
-              onClick={resetSection}
+              onClick={() => {
+                console.log('🧹 Section9Component: Clear section button clicked!');
+                resetSection();
+                console.log('✅ Section9Component: Reset section completed!');
+              }}
             >
               Clear Section
             </button>

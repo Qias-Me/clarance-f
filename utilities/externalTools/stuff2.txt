@@ -1,28 +1,54 @@
-# Augment Guidelines
+**CRITICAL BUG FIX: Section 16 Data Persistence Issue in SF-86 Form**
 
-## Core
-- Use Task Manager, Sequential Thinking, Context7, Vertex ai mcp
-- Write modular code; use 'services' for client-API interactions
+I'm experiencing a critical data persistence bug with Section 16 of the SF-86 form application. When users input values into Section 16 fields, the data does not persist in the form context, is not saved to IndexedDB, and fails to appear in PDF generation. This appears to be a context integration issue where Section 16 is not properly following the established patterns used by working sections.
 
-## RESPONSE
-1. **No Hallucination:** If unknown, say "I don't know"
-2. **Specific:** No vague answers to specific queries
-3. **"Why" on Mistakes:** Analyze actual code/actions, identify errors, give examples
-4. **Code First:** Check code before making claims
-5. **Uncertainty:** State it, verify with tools, explain verification
-6. **No Assumptions:** About project, user preferences, configs
-7. **Analyze Mistakes:** Provide specific feedback on errors
-8. **Verify Assumptions:** Stop and verify when assuming
+**PRIMARY OBJECTIVE:**
+Fix the Section 16 context implementation (`app/state/contexts/sections2.0/section16.tsx`) to match the proven working patterns from Section 1 and Section 29, ensuring complete data flow integration with the main SF86FormContext.
 
-## CODEBASE
-1. **Pre-Change:** Use codebase-retrieval before changes
-2. **Context:** Understand dependencies before modifying
-3. **For Each Change:** Retrieve files, check imports/patterns
-4. **File Edits:** View entire file, ID affected elements
-5. **Verify Imports:** Ensure correctness before submitting
-6. **New Functions:** Check for existing similar ones first
-7. **No Blind Copy:** Understand any copied code
+**REQUIRED ANALYSIS WORKFLOW:**
+1. **Use Task Manager MCP** to break this into sequential debugging tasks
+2. **Use codebase-retrieval** before making any changes to understand current implementation
+3. **Use Playwright MCP (headless mode)** to test form interactions and verify data persistence
+4. **Use Sequential Thinking MCP** for systematic analysis of each component
 
-##Enviroment
-Use powershell for system level debugging approaches
-This is a typescript project with node 22
+**SPECIFIC DEBUGGING TASKS:**
+
+**Phase 1: Reference Analysis**
+- Compare Section 16 implementation against Section 1 (gold standard) and Section 29 (complex example)
+- Analyze `api/sections-references/section16.json` as the source of truth for field definitions
+- Verify field naming consistency between sections-reference JSON and context implementation
+
+**Phase 2: Context Integration Analysis**
+- Examine `app/state/contexts/sections2.0/section16.tsx` for context state management issues
+- Compare with `app/state/contexts/sections2.0/section1.tsx` localFormContext patterns
+- Analyze integration with `app/state/contexts/SF86FormContext.tsx` submission handling
+- Check `app/state/contexts/shared` utilities usage
+
+**Phase 3: Data Flow Verification**
+- Trace data flow from form input → Section 16 context → SF86FormContext → IndexedDB
+- Verify `app/routes/startForm.tsx` form submission handling for Section 16
+- Check `api/service/dynamicService.ts` persistence logic
+- Validate interface definitions in `api/interfaces/sections2.0/section16.ts`
+
+**Phase 4: Browser Testing**
+- Use Playwright to interact with Section 16 form fields
+- Check browser console logs for JavaScript errors
+- Verify form state persistence when navigating between sections
+- Test IndexedDB storage and retrieval
+
+**CRITICAL REQUIREMENTS:**
+- Section 16 must follow the `Field<T>` interface pattern with proper `type`, `label`, `rect`, `value`, and `id` properties
+- Field IDs must match the numeric format expected by PDF generation
+- Context must implement the same localFormContext pattern as Section 1
+- Data must persist through the complete flow: Form Input → Context State → IndexedDB → PDF Generation
+- Use DRY principles with sections-references as the single source of truth
+
+**SUCCESS CRITERIA:**
+- Section 16 form inputs persist when user types
+- Data saves to IndexedDB automatically
+- Values appear correctly in PDF generation
+- No console errors during form interaction
+- Implementation matches Section 1 and 29 patterns exactly
+
+**DEBUGGING APPROACH:**
+Start with codebase-retrieval to understand current Section 16 implementation, then systematically compare against working sections to identify the specific integration failures causing data persistence issues.

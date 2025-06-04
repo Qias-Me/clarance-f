@@ -32,13 +32,25 @@ import DynamicService from "../../../api/service/dynamicService";
 import { Section1Provider } from "./sections2.0/section1";
 import { Section2Provider } from "./sections2.0/section2";
 import { Section3Provider } from "./sections2.0/section3";
+import { Section4Provider } from "./sections2.0/section4";
+import { Section5Provider } from "./sections2.0/section5";
+import { Section6Provider } from "./sections2.0/section6";
+import { Section7Provider } from "./sections2.0/section7";
+import { Section8Provider } from "./sections2.0/section8";
+import { Section9Provider } from "./sections2.0/section9";
+import { Section10Provider } from "./sections2.0/section10";
+import { Section11Provider } from "./sections2.0/section11";
+import { Section12Provider } from "./sections2.0/section12";
+import { Section13Provider } from "./sections2.0/section13";
+import { Section14Provider } from "./sections2.0/section14";
+import { Section15Provider } from "./sections2.0/section15";
+
 import { Section17Provider } from "./sections2.0/section17";
 import { Section28Provider } from "./sections2.0/section28";
 import { Section29Provider } from "./sections2.0/section29";
 import { Section30Provider } from "./sections2.0/section30";
 import { Section16Provider } from "./sections2.0/section16";
 import { Section18Provider } from "./sections2.0/section18";
-import { Section13Provider } from "./sections2.0/section13";
 
 // ============================================================================
 // SF86 FORM CONTEXT INTERFACE
@@ -472,8 +484,7 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
         }
       } else {
         console.warn(
-          `⚠️ SF86FormContext: Section ${
-            registration?.sectionId || "unknown"
+          `⚠️ SF86FormContext: Section ${registration?.sectionId || "unknown"
           } missing validateSection method`
         );
       }
@@ -571,8 +582,7 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
     registeredSections.forEach((registration, index) => {
       if (isDebugMode) {
         console.log(
-          `\n📁 [${index + 1}/${
-            registeredSections.length
+          `\n📁 [${index + 1}/${registeredSections.length
           }] Processing section: ${registration.sectionId}`
         );
         console.log(`   📊 Section name: ${registration.sectionName}`);
@@ -599,10 +609,9 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
         console.log(`     📊 Synced data exists: ${!!syncedData}`);
         console.log(`     📊 Registration data exists: ${!!registrationData}`);
         console.log(
-          `     📊 Using data source: ${
-            manuallyUpdatedData
-              ? "manual"
-              : syncedData
+          `     📊 Using data source: ${manuallyUpdatedData
+            ? "manual"
+            : syncedData
               ? "synced"
               : "registration"
           }`
@@ -659,10 +668,9 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
             sectionData?.section2?.isEstimated?.value
           );
           console.log(
-            `     📊 Data source used: ${
-              manuallyUpdatedData
-                ? "MANUAL UPDATE"
-                : syncedData
+            `     📊 Data source used: ${manuallyUpdatedData
+              ? "MANUAL UPDATE"
+              : syncedData
                 ? "SYNCED"
                 : "REGISTRATION"
             }`
@@ -785,8 +793,7 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
           "✅ SF86FormContext: Form data saved successfully to IndexedDB"
         );
         console.log(
-          `📊 Save stats: ${saveResult.size} bytes, ${
-            Object.keys(completeFormData).length
+          `📊 Save stats: ${saveResult.size} bytes, ${Object.keys(completeFormData).length
           } sections`
         );
       }
@@ -863,8 +870,7 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
                 "✅ SF86FormContext: Form data loaded successfully from IndexedDB"
               );
               console.log(
-                `📊 Load stats: ${loadResult.size} bytes, ${
-                  Object.keys(formDataToLoad).length
+                `📊 Load stats: ${loadResult.size} bytes, ${Object.keys(formDataToLoad).length
                 } sections`
               );
               console.log(
@@ -1633,8 +1639,7 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (isDebugMode) {
         console.log(
-          `PDF mapping validation: ${isValid ? "PASSED" : "FAILED"}. Mapped: ${
-            stats.mappedFields
+          `PDF mapping validation: ${isValid ? "PASSED" : "FAILED"}. Mapped: ${stats.mappedFields
           }/${stats.totalFields}`
         );
       }
@@ -2056,7 +2061,7 @@ export const CompleteSF86FormProvider: React.FC<{
         <Section1Provider>
           <Section2Provider>
             <Section3Provider>
-              {/* <Section4Provider>
+              <Section4Provider>
                 <Section5Provider>
                   <Section6Provider>
                     <Section7Provider>
@@ -2064,44 +2069,44 @@ export const CompleteSF86FormProvider: React.FC<{
                         <Section9Provider>
                           <Section10Provider>
                             <Section11Provider>
-                              <Section12Provider>  */}
-              {/* TEMPORARILY DISABLED: Section13Provider causing performance issues */}
-              {/* <Section13Provider> */}
-                {/*      <Section14Provider>
-                               Section15Provider>  */}
-                <Section16Provider>
-                  <Section17Provider>
-                    <Section18Provider>
-                      {/* <Section19Provider>
-                                              <Section20Provider>
-                                                <Section21Provider>
-                                                  <Section22Provider>
-                                                    <Section23Provider>
-                                                      <Section24Provider>
-                                                        <Section25Provider>
-                                                          <Section26Provider>
-                                                            <Section27Provider>  */}
-                      <Section28Provider>
-                        <Section29Provider>
-                          <Section30Provider>{children}</Section30Provider>
-                        </Section29Provider>
-                      </Section28Provider>
-                      {/*  </Section27Provider>
-                                                          </Section26Provider>
-                                                        </Section25Provider>
-                                                      </Section24Provider>
-                                                    </Section23Provider>
-                                                  </Section22Provider>
-                                                </Section21Provider>
-                                              </Section20Provider>
-                                            </Section19Provider>  */}
-                    </Section18Provider>
-                  </Section17Provider>
-                </Section16Provider>
-                {/*            </Section15Provider>
-                                  </Section14Provider> */}
-              {/* </Section13Provider> */}
-              {/* </Section12Provider>
+                              {/* <Section12Provider> */}
+                              {/* TEMPORARILY DISABLED: Section13Provider causing performance issues */}
+                              {/* <Section13Provider> */}
+                              <Section14Provider>
+                                {/* <Section15Provider> */}
+                                <Section16Provider>
+                                  <Section17Provider>
+                                    {/* <Section18Provider>
+                                      <Section19Provider>
+                                        <Section20Provider>
+                                          <Section21Provider>
+                                            <Section22Provider>
+                                              <Section23Provider>
+                                                <Section24Provider>
+                                                  <Section25Provider>
+                                                    <Section26Provider>
+                                                      <Section27Provider> */}
+                                        <Section28Provider>
+                                          <Section29Provider>
+                                            <Section30Provider>{children}</Section30Provider>
+                                          </Section29Provider>
+                                        </Section28Provider>
+                                      {/* </Section27Provider>
+                                                    </Section26Provider>
+                                                  </Section25Provider>
+                                                </Section24Provider>
+                                              </Section23Provider>
+                                            </Section22Provider>
+                                          </Section21Provider>
+                                        </Section20Provider>
+                                      </Section19Provider>
+                                    </Section18Provider> */}
+                                  </Section17Provider>
+                                </Section16Provider>
+                                {/* </Section15Provider> */}
+                              </Section14Provider>
+                              {/* </Section13Provider> */}
+                              {/* </Section12Provider> */}
                             </Section11Provider>
                           </Section10Provider>
                         </Section9Provider>
@@ -2109,7 +2114,7 @@ export const CompleteSF86FormProvider: React.FC<{
                     </Section7Provider>
                   </Section6Provider>
                 </Section5Provider>
-              </Section4Provider>*/}
+              </Section4Provider>
             </Section3Provider>
           </Section2Provider>
         </Section1Provider>

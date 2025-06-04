@@ -8,6 +8,7 @@
 import React, { useState, useCallback } from 'react';
 import { useSection11 } from '../../state/contexts/sections2.0/section11';
 import type { ResidenceEntry } from '../../../api/interfaces/sections2.0/section11';
+import { useSF86Form } from '~/state/contexts/SF86FormContext';
 
 // ============================================================================
 // TYPES
@@ -43,6 +44,10 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
     isResidenceHistoryComplete,
     getTotalResidenceTimespan
   } = useSection11();
+
+    // SF86 Form Context for data persistence
+    const sf86Form = useSF86Form();
+  
 
   const [activeEntryIndex, setActiveEntryIndex] = useState(0);
   const [showValidation, setShowValidation] = useState(false);

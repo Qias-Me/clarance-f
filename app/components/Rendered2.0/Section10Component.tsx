@@ -8,6 +8,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSection10 } from '~/state/contexts/sections2.0/section10';
+import { useSF86Form } from '~/state/contexts/SF86FormContext';
 
 interface Section10ComponentProps {
   className?: string;
@@ -36,6 +37,9 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
     errors
   } = useSection10();
 
+  // SF86 Form Context for data persistence
+  const sf86Form = useSF86Form();
+
   // Track validation state internally
   const [isValid, setIsValid] = useState(false);
 
@@ -46,15 +50,31 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
     onValidationChange?.(validationResult.isValid);
   }, [section10Data]); // Removed validateSection and onValidationChange to prevent infinite loops
 
-  // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  // Handle form submission with data persistence
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = validateSection();
     setIsValid(result.isValid);
     onValidationChange?.(result.isValid);
 
-    if (result.isValid && onNext) {
-      onNext();
+    if (result.isValid) {
+      try {
+        // Update the central form context with Section 10 data
+        sf86Form.updateSectionData('section10', section10Data);
+
+        // Save the form data to persistence layer
+        await sf86Form.saveForm();
+
+        console.log('✅ Section 10 data saved successfully:', section10Data);
+
+        // Proceed to next section if callback provided
+        if (onNext) {
+          onNext();
+        }
+      } catch (error) {
+        console.error('❌ Failed to save Section 10 data:', error);
+        // Could show an error message to user here
+      }
     }
   };
 

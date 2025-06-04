@@ -3,29 +3,29 @@ Ensure that fields from the sections-reference file properly align with the fiel
 
 You didnt check the consle logs on in the browser, and interact witht he form. clearly you can see you are trying to ideitfy fields that do not exist... Please refer back to your implementation to correct the field name the sections-referecne folder is the source of truth for the field names -> id.
 
-I’m experiencing a data persistence issue with Section 13 of the SF-86 form. When I input values into Section 13 fields, they are not persisting in the form context or being submitted to the PDF. It appears the field paths are not correctly identified from the source-of-truth sections-reference JSON files.
+I’m experiencing a data persistence issue with Section 17 of the SF-86 form. When I input values into Section 17 fields, they are not persisting in the form context or being submitted to the PDF. It appears the field paths are not correctly identified from the source-of-truth sections-reference JSON files.
 
-Please perform a comprehensive data flow analysis to identify the bug preventing Section 13 form values from updating the section context. Follow this data flow path:
+Please perform a comprehensive data flow analysis to identify the bug preventing Section 17 form values from updating the section context. Follow this data flow path:
 
-1. **Entry Point**: `app/routes/startForm.tsx` – Analyze how Section 13 form submissions are handled.
-2. **Main Context**: `app/state/contexts/SF86FormContext.tsx` – Check how Section 13 data is received and managed.
+1. **Entry Point**: `app/routes/startForm.tsx` – Analyze how Section 17 form submissions are handled.
+2. **Main Context**: `app/state/contexts/SF86FormContext.tsx` – Check how Section 17 data is received and managed.
 3. **Shared Context Logic**: `app/state/contexts/shared` – Verify shared context utilities and patterns.
-4. **Section-Specific Context**: `app/state/contexts/sections2.0/section13.tsx` – Examine Section 13 context implementation.
-5. **Interface Definitions**: `api/interfaces/sections2.0/section13.ts` – Validate Section 13 interface structure.
-6. **Reference Data**: `api/sections-references/section13.json` – Check Section 13 field mappings and expected structure.
+4. **Section-Specific Context**: `app/state/contexts/sections2.0/section13.tsx` – Examine Section 17 context implementation.
+5. **Interface Definitions**: `api/interfaces/sections2.0/section13.ts` – Validate Section 17 interface structure.
+6. **Reference Data**: `api/sections-references/section13.json` – Check Section 17 field mappings and expected structure.
 
 **Specific debugging tasks:**
-- Identify why Section 13 form values are not updating the section context.
-- Verify that Section 13 context follows the same patterns as the working Section 1 (gold standard). The enhanced implementation for Section 13 is performing overly strict validation compared to the Section 1 integration approach.
-- Ensure Section 13 values are properly saved to IndexedDB via `api/service/dynamicService.ts`.
-- Confirm Section 13 data is correctly formatted for PDF field mapping (numeric field IDs).
-- Check that Section 13 follows the `Field<T>` interface pattern with proper `type`, `label`, `rect`, `value`, and `id` properties.
+- Identify why Section 17 form values are not updating the section context.
+- Verify that Section 17 context follows the same patterns as the working Section 1 (gold standard). The enhanced implementation for Section 17 is performing overly strict validation compared to the Section 1 integration approach.
+- Ensure Section 17 values are properly saved to IndexedDB via `api/service/dynamicService.ts`.
+- Confirm Section 17 data is correctly formatted for PDF field mapping (numeric field IDs).
+- Check that Section 17 follows the `Field<T>` interface pattern with proper `type`, `label`, `rect`, `value`, and `id` properties.
 
 **Expected outcome:**
-- Section 13 form inputs persist in the context.
-- Section 13 data is saved to IndexedDB for persistence.
-- Section 13 values are formatted correctly for PDF generation.
-- Identify and fix any discrepancies between Section 13 implementation and the working Section 1 pattern.
+- Section 17 form inputs persist in the context.
+- Section 17 data is saved to IndexedDB for persistence.
+- Section 17 values are formatted correctly for PDF generation.
+- Identify and fix any discrepancies between Section 17 implementation and the working Section 1 pattern.
 
 Use codebase-retrieval to analyze each component in the data flow path and provide specific code examples of any bugs or inconsistencies found.
 
@@ -48,7 +48,7 @@ graph TD
     N --> O[PDF Generation]
 ```
 
-Please use Task Manager MCP and Playwright MCP (headless) to test the implementation, as well as Sequential Thinking MCP for a thorough analysis. The issue seems to be that the context is not setting values from the source-of-truth sections-reference Section 13 JSON file.
+Please use Task Manager MCP and Playwright MCP (headless) to test the implementation, as well as Sequential Thinking MCP for a thorough analysis. The issue seems to be that the context is not setting values from the source-of-truth sections-reference Section 17 JSON file.
 
 
 there must be an issue with the @app\state\contexts\sections2.0\section17.tsx  form context as when i try to add an entry it does nt stay.. use th esection1 context as the localFormContext, and use the sumission of the data @app\state\contexts\SF86FormContext.tsx  

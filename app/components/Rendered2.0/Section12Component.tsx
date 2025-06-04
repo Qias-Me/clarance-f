@@ -112,6 +112,11 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
     getDegreeTypeOptions,
   } = useSection12();
 
+
+      // SF86 Form Context for data persistence
+      const sf86Form = useSF86Form();
+    
+
   // Get direct access to SF86Form context for debugging
   const { updateSectionData } = useSF86Form();
 

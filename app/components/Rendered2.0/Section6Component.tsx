@@ -8,6 +8,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSection6 } from '~/state/contexts/sections2.0/section6';
+import { useSF86Form } from '~/state/contexts/SF86FormContext';
 import {
   HAIR_COLOR_OPTIONS,
   EYE_COLOR_OPTIONS,
@@ -39,13 +40,15 @@ export const Section6Component: React.FC<Section6ComponentProps> = ({
     updateEyeColor,
     updateSex,
     validateSection,
-    validatePhysicalInfo,
     resetSection,
     getTotalHeightInches,
     getFormattedHeight,
     isDirty,
     errors
   } = useSection6();
+
+  // SF86Form context for data persistence
+  const sf86Form = useSF86Form();
 
   // Track validation state internally
   const [isValid, setIsValid] = useState(false);
@@ -57,15 +60,31 @@ export const Section6Component: React.FC<Section6ComponentProps> = ({
     onValidationChange?.(validationResult.isValid);
   }, [section6Data]);
 
-  // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  // Handle form submission with data persistence
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = validateSection();
     setIsValid(result.isValid);
     onValidationChange?.(result.isValid);
 
-    if (result.isValid && onNext) {
-      onNext();
+    if (result.isValid) {
+      try {
+        // Update the central form context with Section 6 data
+        sf86Form.updateSectionData('section6', section6Data);
+
+        // Save the form data to persistence layer
+        await sf86Form.saveForm();
+
+        console.log('✅ Section 6 data saved successfully:', section6Data);
+
+        // Proceed to next section if callback provided
+        if (onNext) {
+          onNext();
+        }
+      } catch (error) {
+        console.error('❌ Failed to save Section 6 data:', error);
+        // Could show an error message to user here
+      }
     }
   };
 

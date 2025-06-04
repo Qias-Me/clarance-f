@@ -8,6 +8,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSection7 } from '~/state/contexts/sections2.0/section7';
+import { useSF86Form } from '~/state/contexts/SF86FormContext';
 
 interface Section7ComponentProps {
   className?: string;
@@ -41,6 +42,9 @@ export const Section7Component: React.FC<Section7ComponentProps> = ({
     errors
   } = useSection7();
 
+  // SF86Form context for data persistence
+  const sf86Form = useSF86Form();
+
   // Track validation state internally
   const [isValid, setIsValid] = useState(false);
 
@@ -51,15 +55,31 @@ export const Section7Component: React.FC<Section7ComponentProps> = ({
     onValidationChange?.(validationResult.isValid);
   }, [section7Data, phoneNumbers, emailAddresses, socialMedia]); // Removed validateSection and onValidationChange to prevent infinite loops
 
-  // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  // Handle form submission with data persistence
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = validateSection();
     setIsValid(result.isValid);
     onValidationChange?.(result.isValid);
 
-    if (result.isValid && onNext) {
-      onNext();
+    if (result.isValid) {
+      try {
+        // Update the central form context with Section 7 data
+        sf86Form.updateSectionData('section7', section7Data);
+
+        // Save the form data to persistence layer
+        await sf86Form.saveForm();
+
+        console.log('✅ Section 7 data saved successfully:', section7Data);
+
+        // Proceed to next section if callback provided
+        if (onNext) {
+          onNext();
+        }
+      } catch (error) {
+        console.error('❌ Failed to save Section 7 data:', error);
+        // Could show an error message to user here
+      }
     }
   };
 
@@ -71,17 +91,6 @@ export const Section7Component: React.FC<Section7ComponentProps> = ({
     { value: 'OTHER', label: 'Other' }
   ];
 
-  // Social media platform options
-  const socialMediaPlatforms = [
-    { value: 'FACEBOOK', label: 'Facebook' },
-    { value: 'TWITTER', label: 'Twitter/X' },
-    { value: 'INSTAGRAM', label: 'Instagram' },
-    { value: 'LINKEDIN', label: 'LinkedIn' },
-    { value: 'GITHUB', label: 'GitHub' },
-    { value: 'YOUTUBE', label: 'YouTube' },
-    { value: 'TIKTOK', label: 'TikTok' },
-    { value: 'OTHER', label: 'Other' }
-  ];
 
   // Render a fixed phone number entry (from section7Data.entries)
   const renderFixedPhoneEntry = (phone: any, index: number, phoneType: string) => {
@@ -292,95 +301,6 @@ export const Section7Component: React.FC<Section7ComponentProps> = ({
     );
   };
 
-  // Render a social media entry
-  const renderSocialMediaEntry = (socialMedia: any, index: number) => {
-    return (
-      <div key={`social-media-${index}`} className="border rounded-lg p-4 mb-4 bg-gray-50">
-        <div className="flex justify-between items-center mb-4">
-          <h4 className="text-lg font-medium text-gray-900">Social Media #{index + 1}</h4>
-          <button
-            type="button"
-            onClick={() => removeSocialMedia(index)}
-            className="text-red-500 hover:text-red-700"
-            aria-label={`Remove social media ${index + 1}`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-          </button>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          {/* Platform */}
-          <div>
-            <label
-              htmlFor={`social-media-platform-${index}`}
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Platform <span className="text-red-500">*</span>
-            </label>
-            <select
-              id={`social-media-platform-${index}`}
-              data-testid={`social-media-platform-${index}`}
-              value={socialMedia.platform?.value || ''}
-              onChange={(e) => updateSocialMedia(index, 'platform', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              required
-            >
-              <option value="">Select platform</option>
-              {socialMediaPlatforms.map((platform) => (
-                <option key={platform.value} value={platform.value}>
-                  {platform.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Username */}
-          <div>
-            <label
-              htmlFor={`social-media-username-${index}`}
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Username/Handle <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              id={`social-media-username-${index}`}
-              data-testid={`social-media-username-${index}`}
-              value={socialMedia.username?.value || ''}
-              onChange={(e) => updateSocialMedia(index, 'username', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="@username"
-              required
-            />
-          </div>
-        </div>
-
-        {/* URL (if platform is OTHER) */}
-        {socialMedia.platform?.value === 'OTHER' && (
-          <div className="mt-4">
-            <label
-              htmlFor={`social-media-url-${index}`}
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              URL <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="url"
-              id={`social-media-url-${index}`}
-              data-testid={`social-media-url-${index}`}
-              value={socialMedia.url?.value || ''}
-              onChange={(e) => updateSocialMedia(index, 'url', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="https://example.com/profile"
-              required
-            />
-          </div>
-        )}
-      </div>
-    );
-  };
 
   return (
     <div className={`bg-white rounded-lg shadow-lg p-6 ${className}`} data-testid="section7-form">
@@ -451,83 +371,7 @@ export const Section7Component: React.FC<Section7ComponentProps> = ({
           )}
         </div>
 
-        {/* Dynamic Phone Numbers Section */}
-        <div className="border rounded-lg p-5 bg-gray-50">
-          <h3 className="text-lg font-semibold mb-4">Additional Phone Numbers</h3>
-          <p className="text-sm text-gray-600 mb-4">Add extra phone numbers beyond the standard home/work/mobile</p>
-
-          {phoneNumbers.length > 0 ? (
-            <div className="mb-4">
-              {phoneNumbers.map((phone, index) => renderPhoneEntry(phone, index))}
-            </div>
-          ) : (
-            <p className="italic text-gray-500 mb-4">No additional phone numbers added yet.</p>
-          )}
-
-          <button
-            type="button"
-            onClick={addPhoneNumber}
-            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            data-testid="add-phone-button"
-          >
-            <svg className="-ml-0.5 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-            </svg>
-            Add Additional Phone Number
-          </button>
-        </div>
-
-        {/* Dynamic Email Addresses Section */}
-        <div className="border rounded-lg p-5 bg-gray-50">
-          <h3 className="text-lg font-semibold mb-4">Additional Email Addresses</h3>
-          <p className="text-sm text-gray-600 mb-4">Add extra email addresses beyond home and work</p>
-
-          {emailAddresses.length > 0 ? (
-            <div className="mb-4">
-              {emailAddresses.map((email, index) => renderEmailEntry(email, index))}
-            </div>
-          ) : (
-            <p className="italic text-gray-500 mb-4">No additional email addresses added yet.</p>
-          )}
-
-          <button
-            type="button"
-            onClick={addEmailAddress}
-            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            data-testid="add-email-button"
-          >
-            <svg className="-ml-0.5 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-            </svg>
-            Add Additional Email Address
-          </button>
-        </div>
-
-        {/* Social Media Section */}
-        <div className="border rounded-lg p-5 bg-gray-50">
-          <h3 className="text-lg font-semibold mb-4">Social Media Accounts</h3>
-          <p className="text-sm text-gray-600 mb-4">Add your social media accounts (supplementary information)</p>
-
-          {socialMedia.length > 0 ? (
-            <div className="mb-4">
-              {socialMedia.map((sm, index) => renderSocialMediaEntry(sm, index))}
-            </div>
-          ) : (
-            <p className="italic text-gray-500 mb-4">No social media accounts added yet.</p>
-          )}
-
-          <button
-            type="button"
-            onClick={addSocialMedia}
-            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            data-testid="add-social-media-button"
-          >
-            <svg className="-ml-0.5 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-            </svg>
-            Add Social Media Account
-          </button>
-        </div>
+  
 
         {/* Form Actions */}
         <div className="mt-8 flex justify-between items-center pt-6 border-t border-gray-200">

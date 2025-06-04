@@ -1,155 +1,205 @@
-// /**
-//  * Section 9: Citizenship of Your Parents - Field Mapping
-//  * 
-//  * This file contains the mapping between the form fields and the PDF fields
-//  * for SF-86 Section 9 (Citizenship).
-//  */
+/**
+ * Section 9 Field Mapping - Load actual PDF field names from section-9.json
+ *
+ * This module loads the actual PDF field names and IDs from the section-9.json
+ * reference file and provides mapping functions for Section 9 fields.
+ *
+ * Section 9 Structure:
+ * - Main citizenship status radio button
+ * - 4 subsections: 9.1 (Born to US Parents), 9.2 (Naturalized), 9.3 (Derived), 9.4 (Non-US Citizen)
+ * - Total: 78 fields across all subsections
+ */
 
-// /**
-//  * Field ID mappings for Section 9
-//  */
-// export const SECTION9_FIELD_MAPPINGS: Record<string, string> = {
-//   // Main citizenship status fields
-//   "citizenshipStatus.status": "form1[0].Sections7-9[0].RadioButtonList[1]",
-  
-//   // Section 9.1 - Born to US Parents
-//   "citizenshipStatus.bornToUSParents.documentType": "form1[0].Sections7-9[0].RadioButtonList[3]",
-//   "citizenshipStatus.bornToUSParents.otherExplanation": "form1[0].Sections7-9[0].TextField11[3]",
-//   "citizenshipStatus.bornToUSParents.documentNumber": "form1[0].Sections7-9[0].TextField11[4]",
-//   "citizenshipStatus.bornToUSParents.documentIssueDate": "form1[0].Sections7-9[0].From_Datefield_Name_2[1]",
-//   "citizenshipStatus.bornToUSParents.isIssueDateEstimated": "form1[0].Sections7-9[0].#field[25]",
-//   "citizenshipStatus.bornToUSParents.issueCity": "form1[0].Sections7-9[0].TextField11[5]",
-//   "citizenshipStatus.bornToUSParents.issueState": "form1[0].Sections7-9[0].School6_State[0]",
-//   "citizenshipStatus.bornToUSParents.issueCountry": "form1[0].Sections7-9[0].DropDownList12[0]",
-//   "citizenshipStatus.bornToUSParents.nameOnDocument.lastName": "form1[0].Sections7-9[0].TextField11[7]",
-//   "citizenshipStatus.bornToUSParents.nameOnDocument.firstName": "form1[0].Sections7-9[0].TextField11[8]",
-//   "citizenshipStatus.bornToUSParents.nameOnDocument.middleName": "form1[0].Sections7-9[0].TextField11[6]",
-//   "citizenshipStatus.bornToUSParents.nameOnDocument.suffix": "form1[0].Sections7-9[0].suffix[1]",
-//   "citizenshipStatus.bornToUSParents.certificateNumber": "form1[0].Sections7-9[0].TextField11[12]",
-//   "citizenshipStatus.bornToUSParents.certificateIssueDate": "form1[0].Sections7-9[0].From_Datefield_Name_2[2]",
-//   "citizenshipStatus.bornToUSParents.isCertificateDateEstimated": "form1[0].Sections7-9[0].#field[28]",
-//   "citizenshipStatus.bornToUSParents.nameOnCertificate.lastName": "form1[0].Sections7-9[0].TextField11[10]",
-//   "citizenshipStatus.bornToUSParents.nameOnCertificate.firstName": "form1[0].Sections7-9[0].TextField11[11]",
-//   "citizenshipStatus.bornToUSParents.nameOnCertificate.middleName": "form1[0].Sections7-9[0].TextField11[9]",
-//   "citizenshipStatus.bornToUSParents.nameOnCertificate.suffix": "form1[0].Sections7-9[0].suffix[2]",
-//   "citizenshipStatus.bornToUSParents.wasBornOnMilitaryInstallation": "form1[0].Sections7-9[0].RadioButtonList[2]",
-//   "citizenshipStatus.bornToUSParents.militaryBaseName": "form1[0].Sections7-9[0].TextField11[18]",
-  
-//   // Section 9.2 - Naturalized Citizen
-//   "citizenshipStatus.naturalizedCitizen.naturalizedCertificateNumber": "form1[0].Section9\\.1-9\\.4[0].TextField11[6]",
-//   "citizenshipStatus.naturalizedCitizen.nameOnCertificate.lastName": "form1[0].Section9\\.1-9\\.4[0].TextField11[2]",
-//   "citizenshipStatus.naturalizedCitizen.nameOnCertificate.firstName": "form1[0].Section9\\.1-9\\.4[0].TextField11[3]",
-//   "citizenshipStatus.naturalizedCitizen.nameOnCertificate.middleName": "form1[0].Section9\\.1-9\\.4[0].TextField11[1]",
-//   "citizenshipStatus.naturalizedCitizen.nameOnCertificate.suffix": "form1[0].Section9\\.1-9\\.4[0].suffix[0]",
-//   "citizenshipStatus.naturalizedCitizen.courtAddress.street": "form1[0].Section9\\.1-9\\.4[0].TextField11[4]",
-//   "citizenshipStatus.naturalizedCitizen.courtAddress.city": "form1[0].Section9\\.1-9\\.4[0].TextField11[0]",
-//   "citizenshipStatus.naturalizedCitizen.courtAddress.state": "form1[0].Section9\\.1-9\\.4[0].School6_State[0]",
-//   "citizenshipStatus.naturalizedCitizen.courtAddress.zipCode": "form1[0].Section9\\.1-9\\.4[0].TextField11[5]",
-//   "citizenshipStatus.naturalizedCitizen.certificateIssueDate": "form1[0].Section9\\.1-9\\.4[0].From_Datefield_Name_2[0]",
-//   "citizenshipStatus.naturalizedCitizen.isCertificateDateEstimated": "form1[0].Section9\\.1-9\\.4[0].#field[10]",
-//   "citizenshipStatus.naturalizedCitizen.otherExplanation": "form1[0].Section9\\.1-9\\.4[0].TextField11[7]",
-  
-//   // Section 9.3 - Derived Citizen
-//   "citizenshipStatus.derivedCitizen.alienRegistrationNumber": "form1[0].Section9\\.1-9\\.4[0].TextField11[19]",
-//   "citizenshipStatus.derivedCitizen.permanentResidentCardNumber": "form1[0].Section9\\.1-9\\.4[0].TextField11[20]",
-//   "citizenshipStatus.derivedCitizen.certificateOfCitizenshipNumber": "form1[0].Section9\\.1-9\\.4[0].TextField11[21]",
-//   "citizenshipStatus.derivedCitizen.nameOnDocument.lastName": "form1[0].Section9\\.1-9\\.4[0].TextField11[23]",
-//   "citizenshipStatus.derivedCitizen.nameOnDocument.firstName": "form1[0].Section9\\.1-9\\.4[0].TextField11[24]",
-//   "citizenshipStatus.derivedCitizen.nameOnDocument.middleName": "form1[0].Section9\\.1-9\\.4[0].TextField11[22]",
-//   "citizenshipStatus.derivedCitizen.nameOnDocument.suffix": "form1[0].Section9\\.1-9\\.4[0].suffix[2]",
-//   "citizenshipStatus.derivedCitizen.basis": "form1[0].Section9\\.1-9\\.4[0].#field[50]",
-//   "citizenshipStatus.derivedCitizen.otherExplanation": "form1[0].Section9\\.1-9\\.4[0].TextField11[25]",
-  
-//   // Section 9.4 - Non-US Citizen
-//   "citizenshipStatus.nonUSCitizen.entryDate": "form1[0].Section9\\.1-9\\.4[0].From_Datefield_Name_2[1]",
-//   "citizenshipStatus.nonUSCitizen.isEntryDateEstimated": "form1[0].Section9\\.1-9\\.4[0].#field[21]",
-//   "citizenshipStatus.nonUSCitizen.entryLocation.city": "form1[0].Section9\\.1-9\\.4[0].TextField11[18]",
-//   "citizenshipStatus.nonUSCitizen.entryLocation.state": "form1[0].Section9\\.1-9\\.4[0].School6_State[1]",
-//   "citizenshipStatus.nonUSCitizen.countryOfCitizenship.country1": "form1[0].Section9\\.1-9\\.4[0].DropDownList15[2]",
-//   "citizenshipStatus.nonUSCitizen.countryOfCitizenship.country2": "form1[0].Section9\\.1-9\\.4[0].DropDownList15[3]",
-//   "citizenshipStatus.nonUSCitizen.hasAlienRegistration": "form1[0].Section9\\.1-9\\.4[0].RadioButtonList[0]",
-//   "citizenshipStatus.nonUSCitizen.alienRegistrationNumber": "form1[0].Section9\\.1-9\\.4[0].TextField11[14]",
-//   "citizenshipStatus.nonUSCitizen.alienRegistrationExpiration": "form1[0].Section9\\.1-9\\.4[0].From_Datefield_Name_2[2]",
-//   "citizenshipStatus.nonUSCitizen.isAlienExpDateEstimated": "form1[0].Section9\\.1-9\\.4[0].#field[25]"
-// };
+import section9Data from '../../../../api/sections-references/section-9.json';
 
-// /**
-//  * Field validation mappings for Section 9
-//  */
-// export const SECTION9_VALIDATION_RULES: Record<string, any> = {
-//   "citizenshipStatus.status": {
-//     required: true,
-//     errorMessage: "Citizenship status is required"
-//   },
-//   "citizenshipStatus.bornToUSParents.documentNumber": {
-//     required: true,
-//     minLength: 1,
-//     maxLength: 20,
-//     errorMessage: "Document number is required"
-//   },
-//   "citizenshipStatus.bornToUSParents.documentIssueDate": {
-//     required: true,
-//     isDate: true,
-//     errorMessage: "Valid date is required (MM/DD/YYYY format)"
-//   },
-//   "citizenshipStatus.naturalizedCitizen.naturalizedCertificateNumber": {
-//     required: true,
-//     minLength: 1,
-//     maxLength: 20,
-//     errorMessage: "Certificate number is required"
-//   },
-//   "citizenshipStatus.derivedCitizen.nameOnDocument.lastName": {
-//     required: true,
-//     minLength: 1,
-//     maxLength: 100,
-//     errorMessage: "Last name is required"
-//   }
-// };
+// Types for the JSON structure
+interface Section9Field {
+  id: string;
+  name: string;
+  page: number;
+  label: string;
+  type: string;
+  options?: any[];
+  rect: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+  section: number;
+  confidence: number;
+  wasMovedByHealing: boolean;
+  isExplicitlyDetected?: boolean;
+  uniqueId: string;
+}
+interface Section9JsonData {
+  metadata: {
+    sectionId: number;
+    sectionName: string;
+    totalFields: number;
+    subsectionCount: number;
+    entryCount: number;
+    exportDate: string;
+    averageConfidence: number;
+    pageRange: number[];
+  };
+  fields: Section9Field[];
+}
 
-// /**
-//  * Generate dynamic field mappings based on citizenship type
-//  */
-// export function getCitizenshipFieldMappings(citizenshipType: string): Record<string, string> {
-//   const mappings: Record<string, string> = {};
-  
-//   for (const [key, value] of Object.entries(SECTION9_FIELD_MAPPINGS)) {
-//     if (key.startsWith(`citizenshipStatus.${citizenshipType}`)) {
-//       mappings[key] = value;
-//     }
-//   }
-  
-//   return mappings;
-// }
+// Load the actual field data
+const section9Fields: Section9Field[] = (section9Data as Section9JsonData).fields;
 
-// /**
-//  * Get PDF field ID for a specific form field
-//  */
-// export function getSection9PdfFieldId(formFieldPath: string): string | null {
-//   return SECTION9_FIELD_MAPPINGS[formFieldPath] || null;
-// }
+// Create a mapping from field names to field data
+const fieldNameToDataMap = new Map<string, Section9Field>();
+section9Fields.forEach(field => {
+  fieldNameToDataMap.set(field.name, field);
+});
 
-// /**
-//  * Field transformation helpers for Section 9
-//  */
-// export const SECTION9_FIELD_TRANSFORMERS = {
-//   // Format dates as MM/DD/YYYY
-//   formatDate: (value: string): string => {
-//     if (!value) return '';
-//     try {
-//       const date = new Date(value);
-//       const month = String(date.getMonth() + 1).padStart(2, '0');
-//       const day = String(date.getDate()).padStart(2, '0');
-//       const year = date.getFullYear();
-//       return `${month}/${day}/${year}`;
-//     } catch (e) {
-//       return value;
-//     }
-//   },
-  
-//   // Format document numbers (standardize format)
-//   formatDocumentNumber: (value: string): string => {
-//     if (!value) return '';
-//     // Remove any spaces or hyphens
-//     return value.replace(/[\s-]/g, '').toUpperCase();
-//   }
-// }; 
+// Create a mapping from field IDs to field data
+const fieldIdToDataMap = new Map<string, Section9Field>();
+section9Fields.forEach(field => {
+  // Extract numeric ID from "17233 0 R" format
+  const numericId = field.id.replace(' 0 R', '');
+  fieldIdToDataMap.set(numericId, field);
+});
+
+/**
+ * Get the actual PDF field data for a given field name
+ */
+export function getPdfFieldByName(fieldName: string): Section9Field | undefined {
+  return fieldNameToDataMap.get(fieldName);
+}
+
+/**
+ * Get the actual PDF field data for a given numeric field ID
+ */
+export function getPdfFieldById(fieldId: string): Section9Field | undefined {
+  return fieldIdToDataMap.get(fieldId);
+}
+
+/**
+ * Get the numeric field ID for a given field name
+ */
+export function getNumericFieldId(fieldName: string): string | undefined {
+  const field = fieldNameToDataMap.get(fieldName);
+  if (field) {
+    return field.id.replace(' 0 R', '');
+  }
+  return undefined;
+}
+/**
+ * Get all available field names for Section 9
+ */
+export function getAllSection9FieldNames(): string[] {
+  return Array.from(fieldNameToDataMap.keys());
+}
+
+/**
+ * Get all available numeric field IDs for Section 9
+ */
+export function getAllSection9FieldIds(): string[] {
+  return Array.from(fieldIdToDataMap.keys());
+}
+
+/**
+ * Search for fields by pattern (useful for debugging)
+ */
+export function searchFieldsByPattern(pattern: string): Section9Field[] {
+  const regex = new RegExp(pattern, 'i');
+  return section9Fields.filter(field =>
+    regex.test(field.name) || regex.test(field.label || '')
+  );
+}
+
+/**
+ * Get field mapping statistics
+ */
+export function getFieldMappingStats() {
+  return {
+    totalFields: section9Fields.length,
+    fieldNames: fieldNameToDataMap.size,
+    fieldIds: fieldIdToDataMap.size,
+    sectionName: (section9Data as Section9JsonData).metadata.sectionName,
+    confidence: (section9Data as Section9JsonData).metadata.averageConfidence
+  };
+}
+/**
+ * Field mapping from logical names to PDF field names
+ * Based on analysis of section-9.json structure
+ */
+export const SECTION9_FIELD_MAPPING = {
+  // Main citizenship status
+  'section9.status.value': 'form1[0].Sections7-9[0].RadioButtonList[1]',
+
+  // Section 9.1 - Born to US Parents (Sections7-9 pattern)
+  'section9.bornToUSParents.otherExplanation.value': 'form1[0].Sections7-9[0].TextField11[3]',
+  'section9.bornToUSParents.documentNumber.value': 'form1[0].Sections7-9[0].TextField11[4]',
+  'section9.bornToUSParents.issueCountry.value': 'form1[0].Sections7-9[0].DropDownList12[0]',
+  'section9.bornToUSParents.issueState.value': 'form1[0].Sections7-9[0].School6_State[0]',
+  'section9.bornToUSParents.issueCity.value': 'form1[0].Sections7-9[0].TextField11[5]',
+  'section9.bornToUSParents.nameOnDocument.lastName.value': 'form1[0].Sections7-9[0].TextField11[7]',
+  'section9.bornToUSParents.nameOnDocument.firstName.value': 'form1[0].Sections7-9[0].TextField11[8]',
+  'section9.bornToUSParents.nameOnDocument.middleName.value': 'form1[0].Sections7-9[0].TextField11[6]',
+  'section9.bornToUSParents.nameOnDocument.suffix.value': 'form1[0].Sections7-9[0].suffix[1]',
+  'section9.bornToUSParents.documentIssueDate.value': 'form1[0].Sections7-9[0].From_Datefield_Name_2[1]',
+  'section9.bornToUSParents.isIssueDateEstimated.value': 'form1[0].Sections7-9[0].#field[25]',
+  'section9.bornToUSParents.certificateNumber.value': 'form1[0].Sections7-9[0].TextField11[12]',
+  'section9.bornToUSParents.certificateIssueDate.value': 'form1[0].Sections7-9[0].From_Datefield_Name_2[2]',
+  'section9.bornToUSParents.isCertificateDateEstimated.value': 'form1[0].Sections7-9[0].#field[28]',
+  'section9.bornToUSParents.nameOnCertificate.lastName.value': 'form1[0].Sections7-9[0].TextField11[10]',
+  'section9.bornToUSParents.nameOnCertificate.firstName.value': 'form1[0].Sections7-9[0].TextField11[11]',
+  'section9.bornToUSParents.nameOnCertificate.middleName.value': 'form1[0].Sections7-9[0].TextField11[9]',
+  'section9.bornToUSParents.nameOnCertificate.suffix.value': 'form1[0].Sections7-9[0].suffix[2]',
+  'section9.bornToUSParents.wasBornOnMilitaryInstallation.value': 'form1[0].Sections7-9[0].RadioButtonList[2]',
+  'section9.bornToUSParents.militaryBaseName.value': 'form1[0].Sections7-9[0].TextField11[18]',
+  'section9.bornToUSParents.documentType.value': 'form1[0].Sections7-9[0].RadioButtonList[3]',
+
+  // Section 9.2 - Naturalized Citizen (Section9\.1-9\.4 pattern)
+  'section9.naturalizedCitizen.naturalizedCertificateNumber.value': 'form1[0].Section9\\.1-9\\.4[0].TextField11[6]',
+  'section9.naturalizedCitizen.nameOnCertificate.lastName.value': 'form1[0].Section9\\.1-9\\.4[0].TextField11[2]',
+  'section9.naturalizedCitizen.nameOnCertificate.firstName.value': 'form1[0].Section9\\.1-9\\.4[0].TextField11[3]',
+  'section9.naturalizedCitizen.nameOnCertificate.middleName.value': 'form1[0].Section9\\.1-9\\.4[0].TextField11[1]',
+  'section9.naturalizedCitizen.nameOnCertificate.suffix.value': 'form1[0].Section9\\.1-9\\.4[0].suffix[0]',
+  'section9.naturalizedCitizen.courtAddress.street.value': 'form1[0].Section9\\.1-9\\.4[0].TextField11[4]',
+  'section9.naturalizedCitizen.courtAddress.city.value': 'form1[0].Section9\\.1-9\\.4[0].TextField11[0]',
+  'section9.naturalizedCitizen.courtAddress.state.value': 'form1[0].Section9\\.1-9\\.4[0].School6_State[0]',
+  'section9.naturalizedCitizen.courtAddress.zipCode.value': 'form1[0].Section9\\.1-9\\.4[0].TextField11[5]',
+  'section9.naturalizedCitizen.certificateIssueDate.value': 'form1[0].Section9\\.1-9\\.4[0].From_Datefield_Name_2[0]',
+  'section9.naturalizedCitizen.isCertificateDateEstimated.value': 'form1[0].Section9\\.1-9\\.4[0].#field[10]',
+  'section9.naturalizedCitizen.otherExplanation.value': 'form1[0].Section9\\.1-9\\.4[0].TextField11[7]',
+  'section9.naturalizedCitizen.courtName.value': 'form1[0].Section9\\.1-9\\.4[0].TextField11[15]',
+  'section9.naturalizedCitizen.entryDate.value': 'form1[0].Section9\\.1-9\\.4[0].From_Datefield_Name_2[4]',
+  'section9.naturalizedCitizen.isEntryDateEstimated.value': 'form1[0].Section9\\.1-9\\.4[0].#field[32]',
+  'section9.naturalizedCitizen.entryCity.value': 'form1[0].Section9\\.1-9\\.4[0].TextField11[16]',
+  'section9.naturalizedCitizen.entryState.value': 'form1[0].Section9\\.1-9\\.4[0].School6_State[1]',
+  'section9.naturalizedCitizen.priorCitizenship.value': 'form1[0].Section9\\.1-9\\.4[0].DropDownList15[0]',
+} as const;
+
+/**
+ * Map a logical field path to the actual PDF field name
+ */
+export function mapLogicalFieldToPdfField(logicalPath: string): string {
+  return SECTION9_FIELD_MAPPING[logicalPath as keyof typeof SECTION9_FIELD_MAPPING] || logicalPath;
+}
+
+/**
+ * Get field metadata for a logical field path
+ */
+export function getFieldMetadata(logicalPath: string): Section9Field | undefined {
+  const pdfFieldName = mapLogicalFieldToPdfField(logicalPath);
+  return getPdfFieldByName(pdfFieldName);
+}
+
+/**
+ * Check if a field path is a valid Section 9 field
+ */
+export function isValidSection9Field(fieldPath: string): boolean {
+  return fieldPath in SECTION9_FIELD_MAPPING;
+}
+
+/**
+ * Get all logical field paths for Section 9
+ */
+export function getAllLogicalFieldPaths(): string[] {
+  return Object.keys(SECTION9_FIELD_MAPPING);
+}

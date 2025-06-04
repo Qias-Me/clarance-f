@@ -16,6 +16,7 @@ import type { Section9 } from "./sections2.0/section9";
 import type { Section10 } from "./sections2.0/section10";
 import type { Section14 } from "./sections2.0/section14";
 import type { Section15 } from "./sections2.0/section15";
+import type { Section16 } from "./sections2.0/section16";
 import type { Section29 } from "./sections2.0/section29";
 import type { Section19 } from "./sections2.0/section19";
 import type { Section18 } from "./sections2.0/section18";
@@ -96,7 +97,7 @@ interface ApplicantFormValues {
   section13?: any; // TODO: Create Section13 interface
   section14?: Section14;
   section15?: Section15;
-  section16?: any; // TODO: Create Section16 interface
+  section16?: Section16;
   section17?: any; // TODO: Create Section17 interface
   section18?: Section18;
   section19?: Section19;

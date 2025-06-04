@@ -86,6 +86,9 @@ export interface Section15ContextType {
   updateForeignMilitaryEntry: (index: number, fieldPath: string, value: any) => void;
   updateForeignMilitaryStatus: (index: number, status: string) => void;
 
+  // Cross-Section Support: Handle Section16_1 fields that map to Section 15 Entry 2
+  updateForeignOrganizationContact: (contact: Partial<ForeignMilitaryServiceEntry>) => void;
+
   // General Field Updates
   updateFieldValue: (path: string, value: any) => void;
 
@@ -263,6 +266,37 @@ export const Section15Provider: React.FC<Section15ProviderProps> = ({ children }
   }, [updateForeignMilitaryEntry]);
 
   // ============================================================================
+  // CROSS-SECTION SUPPORT: Section16_1 → Section 15 Entry 2
+  // ============================================================================
+
+  const updateForeignOrganizationContact = useCallback((contact: Partial<ForeignMilitaryServiceEntry>) => {
+    // Ensure we have at least 2 foreign military entries (Entry 1 from Section15_3, Entry 2 from Section16_1)
+    setSection15Data(prev => {
+      const currentEntries = prev.section15.foreignMilitaryService;
+      const updatedEntries = [...currentEntries];
+
+      // Ensure we have at least 2 entries
+      while (updatedEntries.length < 2) {
+        updatedEntries.push(createDefaultForeignMilitaryEntry());
+      }
+
+      // Update Entry 2 (index 1) with the contact information from Section16_1 fields
+      updatedEntries[1] = {
+        ...updatedEntries[1],
+        ...contact
+      };
+
+      return {
+        ...prev,
+        section15: {
+          ...prev.section15,
+          foreignMilitaryService: updatedEntries
+        }
+      };
+    });
+  }, []);
+
+  // ============================================================================
   // GENERAL FIELD UPDATES
   // ============================================================================
 
@@ -406,6 +440,9 @@ export const Section15Provider: React.FC<Section15ProviderProps> = ({ children }
     removeForeignMilitaryEntry,
     updateForeignMilitaryEntry,
     updateForeignMilitaryStatus,
+
+    // Cross-Section Support
+    updateForeignOrganizationContact,
 
     // General Actions
     updateFieldValue,

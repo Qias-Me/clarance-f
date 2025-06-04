@@ -24,8 +24,7 @@ import { createDefaultSection8 } from '../../../../api/interfaces/sections2.0/se
 import type {
   ValidationResult,
   ValidationError,
-  ChangeSet,
-  BaseSectionContext
+  ChangeSet
 } from '../shared/base-interfaces';
 import { useSection86FormIntegration } from '../shared/section-context-integration';
 
@@ -334,35 +333,17 @@ export const Section8Provider: React.FC<Section8ProviderProps> = ({ children }) 
   // SF86FORM INTEGRATION
   // ============================================================================
 
-  // Create BaseSectionContext for integration
-  const contextId = useMemo(() => Math.random().toString(36).substring(2, 9), []);
-  const baseSectionContext: BaseSectionContext = useMemo(() => ({
-    sectionId: 'section8',
-    sectionName: 'Section 8: U.S. Passport Information',
-    sectionData: section8Data, // Use structured data format (preferred)
-    isLoading,
-    errors: Object.values(errors).map(msg => ({ field: 'general', message: msg, code: 'ERROR', severity: 'error' as const })),
-    isDirty,
-    lastUpdated: new Date(),
-    updateFieldValue,
-    validateSection,
-    resetSection,
-    loadSection,
-    getChanges
-  }), [section8Data, isLoading, errors, isDirty, updateFieldValue, validateSection, resetSection, loadSection, getChanges]);
-
-  // Integration with main form context
+  // Integration with main form context using Section 1 gold standard pattern
+  // Note: integration variable is used internally by the hook for registration
   const integration = useSection86FormIntegration(
     'section8',
     'Section 8: U.S. Passport Information',
     section8Data,
     setSection8Data,
-    validateSection,
-    getChanges
-    // Removed flattenFields parameter to use structured format (preferred)
+    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
+    getChanges,
+    updateFieldValue // Pass Section 8's updateFieldValue function to integration
   );
-
-
 
   // ============================================================================
   // CONTEXT VALUE
