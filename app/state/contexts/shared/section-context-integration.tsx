@@ -59,7 +59,7 @@ export function useSection86FormIntegration<T>(
 
       switch (payload.action) {
         case 'loaded':
-          // Only sync on initial load from storage, not on subsequent syncs
+          // FIXED: Only sync on initial load from storage, and never override if section has local changes
           if (payload.formData && payload.formData[sectionId] && !isInitializedRef.current) {
             const newSectionData = payload.formData[sectionId];
             if (isDebugMode) {
@@ -69,6 +69,11 @@ export function useSection86FormIntegration<T>(
             }
             setSectionData(cloneDeep(newSectionData));
             isInitializedRef.current = true; // Mark as initialized to prevent future overwrites
+          } else if (payload.formData && payload.formData[sectionId] && isInitializedRef.current) {
+            // FIXED: Don't override if section is already initialized - this prevents race conditions
+            if (isDebugMode) {
+              console.log(`🛡️ ${sectionId}: Skipping data sync - section already initialized (prevents override of user changes)`);
+            }
           }
           break;
 
@@ -122,11 +127,15 @@ export function useSection86FormIntegration<T>(
 
       switch (payload.action) {
         case 'data_loaded':
-          if (payload.data) {
+          // FIXED: Only load data if section is not initialized to prevent overriding user changes
+          if (payload.data && !isInitializedRef.current) {
             if (isDebugMode) {
-              console.log(`🔄 ${sectionId}: Loading data from section update`);
+              console.log(`🔄 ${sectionId}: Loading data from section update (initial load only)`);
             }
             setSectionData(cloneDeep(payload.data));
+            isInitializedRef.current = true;
+          } else if (isDebugMode) {
+            console.log(`🛡️ ${sectionId}: Skipping data_loaded - section already initialized (prevents override of user changes)`);
           }
           break;
 
@@ -210,16 +219,40 @@ export function useSection86FormIntegration<T>(
   /**
    * Sync section data to integration cache when data changes
    * This ensures SF86FormContext can get current data via syncSectionData
+   * FIXED: Added debounce and deep equality check to prevent infinite loops
    */
+  const lastSyncedDataRef = useRef<any>(null);
+  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     if (isInitializedRef.current) {
-      // Sync current data to integration cache
-      integration.syncSectionData(sectionId, sectionData);
-
-      if (isDebugMode) {
-        console.log(`🔄 ${sectionId}: Synced current data to integration cache`);
+      // Clear any pending sync
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
       }
+
+      // Debounce the sync to prevent rapid-fire updates
+      syncTimeoutRef.current = setTimeout(() => {
+        // Only sync if data has actually changed (deep comparison)
+        if (JSON.stringify(sectionData) !== JSON.stringify(lastSyncedDataRef.current)) {
+          integration.syncSectionData(sectionId, sectionData);
+          lastSyncedDataRef.current = cloneDeep(sectionData);
+
+          if (isDebugMode) {
+            console.log(`🔄 ${sectionId}: Synced current data to integration cache (debounced)`);
+          }
+        } else if (isDebugMode) {
+          console.log(`🔄 ${sectionId}: Skipping sync - data unchanged`);
+        }
+      }, 100); // 100ms debounce
     }
+
+    // Cleanup timeout on unmount
+    return () => {
+      if (syncTimeoutRef.current) {
+        clearTimeout(syncTimeoutRef.current);
+      }
+    };
   }, [sectionData, integration, sectionId, isDebugMode]);
 
   // REMOVED: Problematic second useEffect that caused infinite re-registrations

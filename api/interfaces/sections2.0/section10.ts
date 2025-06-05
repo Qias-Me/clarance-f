@@ -48,7 +48,6 @@ export interface ForeignPassportEntry {
   passportNumber: Field<string>;
   expirationDate: Field<string>;
   usedForUSEntry: Field<boolean>;
-  explanation: Field<string>;
 }
 
 /**
@@ -87,13 +86,13 @@ export interface Section10 {
  * All field names come from sections-reference/section-10.json as single source of truth
  */
 
-// Main dual citizenship question
+// Main dual citizenship question - FIXED: Use correct default value from sections-reference
 export const hasDualCitizenshipField = () =>
-  createFieldFromReference(10, 'form1[0].Section10\\.1-10\\.2[0].RadioButtonList[0]', '');
+  createFieldFromReference(10, 'form1[0].Section10\\.1-10\\.2[0].RadioButtonList[0]', 'NO (If NO, proceed to 10.2)');
 
-// Main foreign passport question
+// Main foreign passport question - FIXED: Use correct default value from sections-reference
 export const hasForeignPassportField = () =>
-  createFieldFromReference(10, 'form1[0].Section10\\.1-10\\.2[0].RadioButtonList[3]', '');
+  createFieldFromReference(10, 'form1[0].Section10\\.1-10\\.2[0].RadioButtonList[5]', 'NO (If NO, proceed to Section 11)');
 
 /**
  * Creates a dual citizenship entry using createFieldFromReference
@@ -102,13 +101,15 @@ export const hasForeignPassportField = () =>
 export const createDualCitizenshipEntry = (index: number = 0): DualCitizenshipEntry => {
   // For first entry, use exact field names from sections-reference
   if (index === 0) {
+    const isToEstimated = createFieldFromReference(10, 'form1[0].Section10\\.1-10\\.2[0].#field[6]', false);
+
     return {
       country: createFieldFromReference(10, 'form1[0].Section10\\.1-10\\.2[0].DropDownList13[0]', ''),
       howAcquired: createFieldFromReference(10, 'form1[0].Section10\\.1-10\\.2[0].TextField11[0]', ''),
       fromDate: createFieldFromReference(10, 'form1[0].Section10\\.1-10\\.2[0].From_Datefield_Name_2[0]', ''),
       toDate: createFieldFromReference(10, 'form1[0].Section10\\.1-10\\.2[0].From_Datefield_Name_2[1]', ''),
       isFromEstimated: createFieldFromReference(10, 'form1[0].Section10\\.1-10\\.2[0].#field[3]', false),
-      isToEstimated: createFieldFromReference(10, 'form1[0].Section10\\.1-10\\.2[0].#field[4]', false),
+      isToEstimated,
       isPresent: createFieldFromReference(10, 'form1[0].Section10\\.1-10\\.2[0].#field[5]', false),
       hasPassport: createFieldFromReference(10, 'form1[0].Section10\\.1-10\\.2[0].RadioButtonList[1]', ''),
       passportNumber: createFieldFromReference(10, 'form1[0].Section10\\.1-10\\.2[0].TextField11[1]', ''),
@@ -126,7 +127,7 @@ export const createDualCitizenshipEntry = (index: number = 0): DualCitizenshipEn
     fromDate: createFieldFromReference(10, `form1[0].Section10\\.1-10\\.2[${index}].From_Datefield_Name_2[0]`, ''),
     toDate: createFieldFromReference(10, `form1[0].Section10\\.1-10\\.2[${index}].From_Datefield_Name_2[1]`, ''),
     isFromEstimated: createFieldFromReference(10, `form1[0].Section10\\.1-10\\.2[${index}].#field[3]`, false),
-    isToEstimated: createFieldFromReference(10, `form1[0].Section10\\.1-10\\.2[${index}].#field[4]`, false),
+    isToEstimated: createFieldFromReference(10, `form1[0].Section10\\.1-10\\.2[${index}].#field[6]`, false),
     isPresent: createFieldFromReference(10, `form1[0].Section10\\.1-10\\.2[${index}].#field[5]`, false),
     hasPassport: createFieldFromReference(10, `form1[0].Section10\\.1-10\\.2[${index}].RadioButtonList[1]`, ''),
     passportNumber: createFieldFromReference(10, `form1[0].Section10\\.1-10\\.2[${index}].TextField11[1]`, ''),
@@ -143,8 +144,10 @@ export const createDualCitizenshipEntry = (index: number = 0): DualCitizenshipEn
 export const createForeignPassportEntry = (index: number = 0): ForeignPassportEntry => {
   // For first entry, use exact field names from sections-reference
   if (index === 0) {
+    const country = createFieldFromReference(10, 'form1[0].Section10\\.1-10\\.2[0].DropDownList14[0]', '');
+
     return {
-      country: createFieldFromReference(10, 'form1[0].Section10\\.1-10\\.2[0].DropDownList14[0]', ''),
+      country,
       issueDate: createFieldFromReference(10, 'form1[0].Section10\\.1-10\\.2[0].From_Datefield_Name_2[4]', ''),
       city: createFieldFromReference(10, 'form1[0].Section10\\.1-10\\.2[0].TextField11[6]', ''),
       country2: createFieldFromReference(10, 'form1[0].Section10\\.1-10\\.2[0].DropDownList11[0]', ''),
@@ -154,7 +157,6 @@ export const createForeignPassportEntry = (index: number = 0): ForeignPassportEn
       passportNumber: createFieldFromReference(10, 'form1[0].Section10\\.1-10\\.2[0].TextField11[10]', ''),
       expirationDate: createFieldFromReference(10, 'form1[0].Section10\\.1-10\\.2[0].From_Datefield_Name_2[5]', ''),
       usedForUSEntry: createFieldFromReference(10, 'form1[0].Section10\\.1-10\\.2[0].RadioButtonList[6]', false),
-      explanation: createFieldFromReference(10, 'form1[0].Section10\\.1-10\\.2[0].TextField11[11]', ''),
     };
   }
 
@@ -170,7 +172,6 @@ export const createForeignPassportEntry = (index: number = 0): ForeignPassportEn
     passportNumber: createFieldFromReference(10, `form1[0].Section10\\.1-10\\.2[${index}].TextField11[10]`, ''),
     expirationDate: createFieldFromReference(10, `form1[0].Section10\\.1-10\\.2[${index}].From_Datefield_Name_2[5]`, ''),
     usedForUSEntry: createFieldFromReference(10, `form1[0].Section10\\.1-10\\.2[${index}].RadioButtonList[6]`, false),
-    explanation: createFieldFromReference(10, `form1[0].Section10\\.1-10\\.2[${index}].TextField11[11]`, ''),
   };
 };
 

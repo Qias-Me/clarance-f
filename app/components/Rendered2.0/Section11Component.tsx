@@ -38,9 +38,7 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
     removeResidenceEntry,
     updateFieldValue,
     getEntryCount,
-    getEntry,
     validateSection,
-    saveSection,
     isResidenceHistoryComplete,
     getTotalResidenceTimespan
   } = useSection11();
@@ -51,6 +49,55 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
 
   const [activeEntryIndex, setActiveEntryIndex] = useState(0);
   const [showValidation, setShowValidation] = useState(false);
+  const [pendingNewEntry, setPendingNewEntry] = useState(false);
+
+  // Use refs to prevent double execution issues
+  const isAddingEntryRef = React.useRef(false);
+  const lastEntryCountRef = React.useRef(0);
+
+  // Maximum entries allowed for Section 11
+  const MAX_ENTRIES = 4;
+
+  // Track add calls to detect multiple invocations
+  const addCallCountRef = React.useRef(0);
+
+  // Debug logging for entry count tracking
+  React.useEffect(() => {
+    const currentCount = getEntryCount();
+    console.log(`📊 Section 11: Current entry count: ${currentCount}/${MAX_ENTRIES}, activeEntryIndex: ${activeEntryIndex}`);
+    console.log(`📊 Section 11: Residence entries:`, section11Data.section11.residences.map((entry, index) => ({
+      index,
+      streetAddress: entry.address.streetAddress.value,
+      fromDate: entry.fromDate.value
+    })));
+
+    // Track entry count changes to detect unexpected jumps
+    if (lastEntryCountRef.current > 0 && currentCount > lastEntryCountRef.current + 1) {
+      console.warn(`⚠️ Section 11: Entry count jumped from ${lastEntryCountRef.current} to ${currentCount} - possible double execution!`);
+    }
+    lastEntryCountRef.current = currentCount;
+
+    if (currentCount > MAX_ENTRIES) {
+      console.warn(`⚠️ Section 11: Entry count (${currentCount}) exceeds maximum (${MAX_ENTRIES})`);
+    }
+  }, [getEntryCount, section11Data.section11.residences.length, activeEntryIndex, section11Data]);
+
+  // Track active entry index changes
+  React.useEffect(() => {
+    console.log(`🎯 Section 11: Active entry index changed to: ${activeEntryIndex}`);
+  }, [activeEntryIndex]);
+
+  // Handle setting active index to new entry after it's been added
+  React.useEffect(() => {
+    if (pendingNewEntry) {
+      const currentCount = getEntryCount();
+      const newEntryIndex = currentCount - 1; // Last entry is the new one
+      console.log(`🎯 Section 11: Setting active index to new entry: ${newEntryIndex} (total entries: ${currentCount})`);
+      setActiveEntryIndex(newEntryIndex);
+      setPendingNewEntry(false);
+      isAddingEntryRef.current = false; // Reset the adding flag
+    }
+  }, [pendingNewEntry, getEntryCount]);
 
   // ============================================================================
   // EVENT HANDLERS
@@ -61,8 +108,31 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
   }, [updateFieldValue]);
 
   const handleAddResidence = useCallback(() => {
+    // Prevent multiple rapid calls
+    if (isAddingEntryRef.current) {
+      console.warn(`🚫 Already adding an entry, ignoring duplicate call`);
+      return;
+    }
+
+    // Enforce maximum entry limit
+    if (getEntryCount() >= MAX_ENTRIES) {
+      console.warn(`Cannot add more than ${MAX_ENTRIES} residence entries`);
+      return;
+    }
+
+    const currentCount = getEntryCount();
+    addCallCountRef.current += 1;
+    console.log(`🏠 Adding residence entry (call #${addCallCountRef.current}). Current count: ${currentCount}, new entry will be at index: ${currentCount}`);
+
+    // Set flags to prevent duplicate calls and track new entry
+    isAddingEntryRef.current = true;
+    setPendingNewEntry(true);
     addResidenceEntry();
-    setActiveEntryIndex(getEntryCount());
+
+    // Fallback timeout to reset adding flag in case something goes wrong
+    setTimeout(() => {
+      isAddingEntryRef.current = false;
+    }, 2000);
   }, [addResidenceEntry, getEntryCount]);
 
   const handleRemoveResidence = useCallback((index: number) => {
@@ -74,49 +144,90 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
     }
   }, [removeResidenceEntry, getEntryCount, activeEntryIndex]);
 
-  const handleValidateAndContinue = useCallback(async () => {
+  const handleValidateAndContinue = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
     setShowValidation(true);
-    const validation = validateSection();
-    
-    if (validation.isValid) {
-      await saveSection();
-      onNext?.();
-    }
-  }, [validateSection, saveSection, onNext]);
 
+    const result = validateSection();
+    console.log(`🔍 Section 11 validation result:`, result);
+
+    if (result.isValid) {
+      try {
+        // Update the central form context with Section 11 data
+        sf86Form.updateSectionData('section11', section11Data);
+
+        // Save the form data to persistence layer
+        await sf86Form.saveForm();
+
+        // Proceed to next section if callback provided
+        if (onNext) {
+          onNext();
+        }
+      } catch (error) {
+        console.error('Failed to save Section 11 data:', error);
+      }
+    } else {
+      console.warn(`⚠️ Section 11 validation failed:`, result.errors);
+    }
+  }, [validateSection, sf86Form, section11Data, onNext]);
+  
   // ============================================================================
   // RENDER FUNCTIONS
   // ============================================================================
 
   const renderResidenceEntry = (entry: ResidenceEntry, index: number) => {
     const isActive = index === activeEntryIndex;
-    
+
+    // Debug logging for entry index validation
+    console.log(`🎯 Rendering residence entry ${index + 1} (index: ${index}), isActive: ${isActive}, activeEntryIndex: ${activeEntryIndex}`);
+
+    if (index >= MAX_ENTRIES) {
+      console.warn(`⚠️ Section 11: Attempting to render entry ${index} which exceeds maximum of ${MAX_ENTRIES}`);
+    }
+
     return (
-      <div key={index} className={`residence-entry ${isActive ? 'active' : ''}`}>
-        <div className="entry-header">
-          <h4>Residence {index + 1}</h4>
-          <div className="entry-actions">
-            <button
-              type="button"
-              onClick={() => setActiveEntryIndex(index)}
-              className={`btn-secondary ${isActive ? 'active' : ''}`}
-            >
-              {isActive ? 'Active' : 'Edit'}
-            </button>
-            {getEntryCount() > 1 && (
+      <div key={index} className={`border border-gray-200 rounded-lg ${isActive ? 'ring-2 ring-blue-500 border-blue-500' : ''}`}>
+        <div className="p-4 bg-gray-50 border-b border-gray-200 rounded-t-lg">
+          <div className="flex justify-between items-center">
+            <div>
+              <h4 className="text-lg font-medium text-gray-900">
+                Residence {index + 1}
+                {index === 0 && <span className="ml-2 text-sm text-blue-600 font-normal">(Current)</span>}
+              </h4>
+              {entry.address.streetAddress.value && (
+                <p className="text-sm text-gray-600 mt-1">
+                  {entry.address.streetAddress.value}, {entry.address.city.value}
+                  {entry.address.state.value && `, ${entry.address.state.value}`}
+                </p>
+              )}
+            </div>
+            <div className="flex space-x-2">
               <button
                 type="button"
-                onClick={() => handleRemoveResidence(index)}
-                className="btn-danger"
+                onClick={() => setActiveEntryIndex(index)}
+                className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                  isActive
+                    ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                    : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                }`}
               >
-                Remove
+                {isActive ? 'Editing' : 'Edit'}
               </button>
-            )}
+              {getEntryCount() > 1 && (
+                <button
+                  type="button"
+                  onClick={() => handleRemoveResidence(index)}
+                  className="px-3 py-1 text-sm bg-red-100 text-red-700 border border-red-300 rounded-md hover:bg-red-200 transition-colors"
+                >
+                  Remove
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
         {isActive && (
-          <div className="entry-form">
+          <div className="p-6 space-y-8">
             {renderAddressSection(entry, index)}
             {renderDateSection(entry, index)}
             {renderResidenceTypeSection(entry, index)}
@@ -128,51 +239,69 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
   };
 
   const renderAddressSection = (entry: ResidenceEntry, index: number) => (
-    <div className="address-section">
-      <h5>Address Information</h5>
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor={`street-${index}`}>Street Address *</label>
-          <input
-            id={`street-${index}`}
-            type="text"
-            value={entry.address.streetAddress.value}
-            onChange={(e) => handleFieldChange('address.streetAddress', e.target.value, index)}
-            className={errors[`section11.residences[${index}].address.streetAddress`] ? 'error' : ''}
-            placeholder="Enter street address"
-          />
-          {errors[`section11.residences[${index}].address.streetAddress`] && (
-            <span className="error-message">
-              {errors[`section11.residences[${index}].address.streetAddress`]}
-            </span>
-          )}
-        </div>
+    <div className="space-y-4">
+      <h5 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">
+        Address Information
+      </h5>
+
+      {/* Street Address */}
+      <div>
+        <label htmlFor={`street-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+          Street Address <span className="text-red-500">*</span>
+        </label>
+        <input
+          id={`street-${index}`}
+          type="text"
+          value={entry.address.streetAddress.value}
+          onChange={(e) => handleFieldChange('address.streetAddress', e.target.value, index)}
+          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+            errors[`section11.residences[${index}].address.streetAddress`]
+              ? 'border-red-300 text-red-900 placeholder-red-300'
+              : 'border-gray-300'
+          }`}
+          placeholder="Enter street address"
+        />
+        {errors[`section11.residences[${index}].address.streetAddress`] && (
+          <p className="mt-1 text-sm text-red-600">
+            {errors[`section11.residences[${index}].address.streetAddress`]}
+          </p>
+        )}
       </div>
 
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor={`city-${index}`}>City *</label>
+      {/* City, State, ZIP Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label htmlFor={`city-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+            City <span className="text-red-500">*</span>
+          </label>
           <input
             id={`city-${index}`}
             type="text"
             value={entry.address.city.value}
             onChange={(e) => handleFieldChange('address.city', e.target.value, index)}
-            className={errors[`section11.residences[${index}].address.city`] ? 'error' : ''}
+            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              errors[`section11.residences[${index}].address.city`]
+                ? 'border-red-300 text-red-900 placeholder-red-300'
+                : 'border-gray-300'
+            }`}
             placeholder="Enter city"
           />
           {errors[`section11.residences[${index}].address.city`] && (
-            <span className="error-message">
+            <p className="mt-1 text-sm text-red-600">
               {errors[`section11.residences[${index}].address.city`]}
-            </span>
+            </p>
           )}
         </div>
 
-        <div className="form-group">
-          <label htmlFor={`state-${index}`}>State</label>
+        <div>
+          <label htmlFor={`state-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+            State
+          </label>
           <select
             id={`state-${index}`}
             value={entry.address.state.value}
             onChange={(e) => handleFieldChange('address.state', e.target.value, index)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             <option value="">Select State</option>
             {entry.address.state.options?.map(state => (
@@ -181,132 +310,179 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
           </select>
         </div>
 
-        <div className="form-group">
-          <label htmlFor={`zip-${index}`}>ZIP Code</label>
+        <div>
+          <label htmlFor={`zip-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+            ZIP Code
+          </label>
           <input
             id={`zip-${index}`}
             type="text"
             value={entry.address.zipCode.value}
             onChange={(e) => handleFieldChange('address.zipCode', e.target.value, index)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Enter ZIP code"
           />
         </div>
       </div>
 
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor={`country-${index}`}>Country</label>
-          <select
-            id={`country-${index}`}
-            value={entry.address.country.value}
-            onChange={(e) => handleFieldChange('address.country', e.target.value, index)}
-          >
-            <option value="">Select Country</option>
-            {entry.address.country.options?.map(country => (
-              <option key={country} value={country}>{country}</option>
-            ))}
-          </select>
-        </div>
+      {/* Country */}
+      <div>
+        <label htmlFor={`country-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+          Country
+        </label>
+        <select
+          id={`country-${index}`}
+          value={entry.address.country.value}
+          onChange={(e) => handleFieldChange('address.country', e.target.value, index)}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="">Select Country</option>
+          {entry.address.country.options?.map(country => (
+            <option key={country} value={country}>{country}</option>
+          ))}
+        </select>
       </div>
     </div>
   );
 
   const renderDateSection = (entry: ResidenceEntry, index: number) => (
-    <div className="date-section">
-      <h5>Residence Period</h5>
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor={`from-date-${index}`}>From Date (MM/YYYY) *</label>
+    <div className="space-y-4">
+      <h5 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">
+        Residence Period
+      </h5>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* From Date */}
+        <div className="space-y-3">
+          <label htmlFor={`from-date-${index}`} className="block text-sm font-medium text-gray-700">
+            From Date (MM/YYYY) <span className="text-red-500">*</span>
+          </label>
           <input
             id={`from-date-${index}`}
             type="text"
             value={entry.fromDate.value}
             onChange={(e) => handleFieldChange('fromDate', e.target.value, index)}
-            className={errors[`section11.residences[${index}].fromDate`] ? 'error' : ''}
+            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              errors[`section11.residences[${index}].fromDate`]
+                ? 'border-red-300 text-red-900 placeholder-red-300'
+                : 'border-gray-300'
+            }`}
             placeholder="MM/YYYY"
           />
-          <label className="checkbox-label">
+          <label className="flex items-center">
             <input
               type="checkbox"
               checked={entry.fromDateEstimate.value}
               onChange={(e) => handleFieldChange('fromDateEstimate', e.target.checked, index)}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
-            Estimate
+            <span className="ml-2 text-sm text-gray-600">Estimate</span>
           </label>
           {errors[`section11.residences[${index}].fromDate`] && (
-            <span className="error-message">
+            <p className="text-sm text-red-600">
               {errors[`section11.residences[${index}].fromDate`]}
-            </span>
+            </p>
           )}
         </div>
 
-        <div className="form-group">
-          <label htmlFor={`to-date-${index}`}>To Date (MM/YYYY)</label>
+        {/* To Date */}
+        <div className="space-y-3">
+          <label htmlFor={`to-date-${index}`} className="block text-sm font-medium text-gray-700">
+            To Date (MM/YYYY)
+          </label>
           <input
             id={`to-date-${index}`}
             type="text"
             value={entry.toDate.value}
             onChange={(e) => handleFieldChange('toDate', e.target.value, index)}
-            className={errors[`section11.residences[${index}].toDate`] ? 'error' : ''}
+            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              entry.present.value ? 'bg-gray-100 text-gray-500' : ''
+            } ${
+              errors[`section11.residences[${index}].toDate`]
+                ? 'border-red-300 text-red-900 placeholder-red-300'
+                : 'border-gray-300'
+            }`}
             placeholder="MM/YYYY"
             disabled={entry.present.value}
           />
-          <label className="checkbox-label">
+          <label className="flex items-center">
             <input
               type="checkbox"
               checked={entry.toDateEstimate.value}
               onChange={(e) => handleFieldChange('toDateEstimate', e.target.checked, index)}
               disabled={entry.present.value}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
             />
-            Estimate
+            <span className={`ml-2 text-sm ${entry.present.value ? 'text-gray-400' : 'text-gray-600'}`}>
+              Estimate
+            </span>
           </label>
           {errors[`section11.residences[${index}].toDate`] && (
-            <span className="error-message">
+            <p className="text-sm text-red-600">
               {errors[`section11.residences[${index}].toDate`]}
-            </span>
+            </p>
           )}
         </div>
+      </div>
 
-        <div className="form-group">
-          <label className="checkbox-label present-checkbox">
-            <input
-              type="checkbox"
-              checked={entry.present.value}
-              onChange={(e) => handleFieldChange('present', e.target.checked, index)}
-            />
-            Present
-          </label>
-        </div>
+      {/* Present Checkbox */}
+      <div className="pt-2">
+        <label className="flex items-center">
+          <input
+            type="checkbox"
+            checked={entry.present.value}
+            onChange={(e) => handleFieldChange('present', e.target.checked, index)}
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+          <span className="ml-2 text-sm font-medium text-gray-700">
+            I currently live at this address
+          </span>
+        </label>
+        <p className="mt-1 text-xs text-gray-500">
+          Check this box if this is your current residence
+        </p>
       </div>
     </div>
   );
 
   const renderResidenceTypeSection = (entry: ResidenceEntry, index: number) => (
-    <div className="residence-type-section">
-      <h5>Residence Type</h5>
-      <div className="radio-group">
-        {entry.residenceType.options?.map(type => (
-          <label key={type} className="radio-label">
-            <input
-              type="radio"
-              name={`residence-type-${index}`}
-              value={type}
-              checked={entry.residenceType.value === type}
-              onChange={(e) => handleFieldChange('residenceType', e.target.value, index)}
-            />
-            {type}
-          </label>
-        ))}
+    <div className="space-y-4">
+      <h5 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">
+        Residence Type
+      </h5>
+
+      <div className="space-y-3">
+        <p className="text-sm text-gray-600">
+          Select the type of residence this was for you:
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {entry.residenceType.options?.map(type => (
+            <label key={type} className="flex items-center p-3 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">
+              <input
+                type="radio"
+                name={`residence-type-${index}`}
+                value={type}
+                checked={entry.residenceType.value === type}
+                onChange={(e) => handleFieldChange('residenceType', e.target.value, index)}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+              />
+              <span className="ml-3 text-sm font-medium text-gray-700">{type}</span>
+            </label>
+          ))}
+        </div>
       </div>
-      
+
       {entry.residenceType.value === 'Other' && (
-        <div className="form-group">
-          <label htmlFor={`residence-other-${index}`}>Specify Other</label>
+        <div className="mt-4">
+          <label htmlFor={`residence-other-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+            Specify Other Residence Type
+          </label>
           <input
             id={`residence-other-${index}`}
             type="text"
             value={entry.residenceTypeOther.value}
             onChange={(e) => handleFieldChange('residenceTypeOther', e.target.value, index)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Specify other residence type"
           />
         </div>
@@ -315,63 +491,89 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
   );
 
   const renderContactPersonSection = (entry: ResidenceEntry, index: number) => (
-    <div className="contact-person-section">
-      <h5>Contact Person Who Knows You at This Address</h5>
-      
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor={`contact-first-${index}`}>First Name *</label>
+    <div className="space-y-6">
+      <h5 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">
+        Contact Person Who Knows You at This Address
+      </h5>
+
+      <p className="text-sm text-gray-600">
+        Provide information for someone who knows you at this address (neighbor, landlord, friend, etc.).
+      </p>
+
+      {/* Name Fields */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label htmlFor={`contact-first-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+            First Name <span className="text-red-500">*</span>
+          </label>
           <input
             id={`contact-first-${index}`}
             type="text"
             value={entry.contactPerson.firstName.value}
             onChange={(e) => handleFieldChange('contactPerson.firstName', e.target.value, index)}
-            className={errors[`section11.residences[${index}].contactPerson.firstName`] ? 'error' : ''}
+            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              errors[`section11.residences[${index}].contactPerson.firstName`]
+                ? 'border-red-300 text-red-900 placeholder-red-300'
+                : 'border-gray-300'
+            }`}
             placeholder="Enter first name"
           />
           {errors[`section11.residences[${index}].contactPerson.firstName`] && (
-            <span className="error-message">
+            <p className="mt-1 text-sm text-red-600">
               {errors[`section11.residences[${index}].contactPerson.firstName`]}
-            </span>
+            </p>
           )}
         </div>
 
-        <div className="form-group">
-          <label htmlFor={`contact-middle-${index}`}>Middle Name</label>
+        <div>
+          <label htmlFor={`contact-middle-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+            Middle Name
+          </label>
           <input
             id={`contact-middle-${index}`}
             type="text"
             value={entry.contactPerson.middleName.value}
             onChange={(e) => handleFieldChange('contactPerson.middleName', e.target.value, index)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Enter middle name"
           />
         </div>
 
-        <div className="form-group">
-          <label htmlFor={`contact-last-${index}`}>Last Name *</label>
+        <div>
+          <label htmlFor={`contact-last-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+            Last Name <span className="text-red-500">*</span>
+          </label>
           <input
             id={`contact-last-${index}`}
             type="text"
             value={entry.contactPerson.lastName.value}
             onChange={(e) => handleFieldChange('contactPerson.lastName', e.target.value, index)}
-            className={errors[`section11.residences[${index}].contactPerson.lastName`] ? 'error' : ''}
+            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+              errors[`section11.residences[${index}].contactPerson.lastName`]
+                ? 'border-red-300 text-red-900 placeholder-red-300'
+                : 'border-gray-300'
+            }`}
             placeholder="Enter last name"
           />
           {errors[`section11.residences[${index}].contactPerson.lastName`] && (
-            <span className="error-message">
+            <p className="mt-1 text-sm text-red-600">
               {errors[`section11.residences[${index}].contactPerson.lastName`]}
-            </span>
+            </p>
           )}
         </div>
       </div>
 
-      <div className="form-row">
-        <div className="form-group">
-          <label htmlFor={`contact-relationship-${index}`}>Relationship</label>
+      {/* Relationship */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label htmlFor={`contact-relationship-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+            Relationship
+          </label>
           <select
             id={`contact-relationship-${index}`}
             value={entry.contactPerson.relationship.value}
             onChange={(e) => handleFieldChange('contactPerson.relationship', e.target.value, index)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
             {entry.contactPerson.relationship.options?.map(rel => (
               <option key={rel} value={rel}>{rel}</option>
@@ -380,78 +582,102 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
         </div>
 
         {entry.contactPerson.relationship.value === 'Other' && (
-          <div className="form-group">
-            <label htmlFor={`contact-relationship-other-${index}`}>Specify Other</label>
+          <div>
+            <label htmlFor={`contact-relationship-other-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+              Specify Other Relationship
+            </label>
             <input
               id={`contact-relationship-other-${index}`}
               type="text"
               value={entry.contactPerson.relationshipOther.value}
               onChange={(e) => handleFieldChange('contactPerson.relationshipOther', e.target.value, index)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Specify other relationship"
             />
           </div>
         )}
       </div>
 
-      <div className="contact-phones">
-        <h6>Contact Information</h6>
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor={`contact-evening-${index}`}>Evening Phone</label>
+      {/* Contact Information */}
+      <div className="space-y-4">
+        <h6 className="text-base font-medium text-gray-900">Contact Information</h6>
+
+        {/* Phone Numbers */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label htmlFor={`contact-evening-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+              Evening Phone
+            </label>
             <input
               id={`contact-evening-${index}`}
               type="tel"
               value={entry.contactPerson.eveningPhone.value}
               onChange={(e) => handleFieldChange('contactPerson.eveningPhone', e.target.value, index)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="(XXX) XXX-XXXX"
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor={`contact-daytime-${index}`}>Daytime Phone</label>
+          <div>
+            <label htmlFor={`contact-daytime-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+              Daytime Phone
+            </label>
             <input
               id={`contact-daytime-${index}`}
               type="tel"
               value={entry.contactPerson.daytimePhone.value}
               onChange={(e) => handleFieldChange('contactPerson.daytimePhone', e.target.value, index)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="(XXX) XXX-XXXX"
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor={`contact-mobile-${index}`}>Mobile Phone</label>
+          <div>
+            <label htmlFor={`contact-mobile-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+              Mobile Phone
+            </label>
             <input
               id={`contact-mobile-${index}`}
               type="tel"
               value={entry.contactPerson.mobilePhone.value}
               onChange={(e) => handleFieldChange('contactPerson.mobilePhone', e.target.value, index)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="(XXX) XXX-XXXX"
             />
           </div>
         </div>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label htmlFor={`contact-email-${index}`}>Email</label>
-            <input
-              id={`contact-email-${index}`}
-              type="email"
-              value={entry.contactPerson.email.value}
-              onChange={(e) => handleFieldChange('contactPerson.email', e.target.value, index)}
-              placeholder="email@example.com"
-            />
-          </div>
+        {/* Email */}
+        <div>
+          <label htmlFor={`contact-email-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+            Email Address
+          </label>
+          <input
+            id={`contact-email-${index}`}
+            type="email"
+            value={entry.contactPerson.email.value}
+            onChange={(e) => handleFieldChange('contactPerson.email', e.target.value, index)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="email@example.com"
+          />
         </div>
 
-        <div className="form-row">
-          <label className="checkbox-label">
+        {/* Don't Know Contact Checkbox */}
+        <div className="pt-2">
+          <label className="flex items-start">
             <input
               type="checkbox"
               checked={entry.contactPerson.dontKnowContact.value}
               onChange={(e) => handleFieldChange('contactPerson.dontKnowContact', e.target.checked, index)}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-0.5"
             />
-            I don't know this person or how to contact them
+            <span className="ml-2 text-sm text-gray-700">
+              I don't know this person or how to contact them
+            </span>
           </label>
+          <p className="mt-1 ml-6 text-xs text-gray-500">
+            Check this box if you cannot provide contact information for someone at this address
+          </p>
         </div>
       </div>
     </div>
@@ -460,30 +686,41 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
   const renderResidenceHistorySummary = () => {
     const timespan = getTotalResidenceTimespan();
     const isComplete = isResidenceHistoryComplete();
-    
+
     return (
-      <div className="residence-history-summary">
-        <h4>Residence History Summary</h4>
-        <div className="summary-stats">
-          <div className="stat">
-            <label>Total Residences:</label>
-            <span>{getEntryCount()}</span>
+      <div className="mb-6 bg-gray-50 border border-gray-200 rounded-lg p-4">
+        <h3 className="text-lg font-medium text-gray-900 mb-4">Residence History Summary</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white rounded-md p-3 border border-gray-200">
+            <div className="text-sm font-medium text-gray-500">Total Residences</div>
+            <div className="text-2xl font-bold text-gray-900">{getEntryCount()}</div>
           </div>
-          <div className="stat">
-            <label>Total Timespan:</label>
-            <span>{timespan.toFixed(1)} years</span>
+          <div className="bg-white rounded-md p-3 border border-gray-200">
+            <div className="text-sm font-medium text-gray-500">Total Timespan</div>
+            <div className="text-2xl font-bold text-gray-900">{timespan.toFixed(1)} years</div>
           </div>
-          <div className="stat">
-            <label>History Complete:</label>
-            <span className={isComplete ? 'complete' : 'incomplete'}>
+          <div className="bg-white rounded-md p-3 border border-gray-200">
+            <div className="text-sm font-medium text-gray-500">History Complete</div>
+            <div className={`text-2xl font-bold ${isComplete ? 'text-green-600' : 'text-red-600'}`}>
               {isComplete ? 'Yes' : 'No'}
-            </span>
+            </div>
           </div>
         </div>
-        
+
         {!isComplete && (
-          <div className="warning">
-            <p>⚠️ Your residence history should cover at least 7 years without gaps.</p>
+          <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-yellow-700">
+                  Your residence history should cover at least 7 years without gaps.
+                </p>
+              </div>
+            </div>
           </div>
         )}
       </div>
@@ -496,78 +733,154 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
 
   if (isLoading) {
     return (
-      <div className="section-loading">
-        <div className="loading-spinner"></div>
-        <p>Loading Section 11: Where You Have Lived...</p>
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <div className="flex items-center justify-center py-12">
+          <div className="flex items-center space-x-3">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <p className="text-gray-600">Loading Section 11: Where You Have Lived...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="section-11-component">
-      <div className="section-header">
-        <h2>Section 11: Where You Have Lived</h2>
-        <p className="section-description">
-          List where you have lived, beginning with your current address first. 
-          Account for all residences for the last 7 years or since your 18th birthday, 
+    <div className="bg-white rounded-lg shadow-lg p-6" data-testid="section11-form">
+      {/* Section Header */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          Section 11: Where You Have Lived
+        </h2>
+        <p className="text-gray-600">
+          List where you have lived, beginning with your current address first.
+          Account for all residences for the last 7 years or since your 18th birthday,
           whichever is shorter.
         </p>
+        <div className="mt-4 text-sm text-gray-500">
+          Fields marked with <span className="text-red-500">*</span> are required.
+        </div>
         {isDirty && (
-          <div className="unsaved-changes">
-            ⚠️ You have unsaved changes
+          <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-md">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-orange-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-orange-700">
+                  You have unsaved changes
+                </p>
+              </div>
+            </div>
           </div>
         )}
       </div>
 
+      {/* Residence History Summary */}
       {renderResidenceHistorySummary()}
 
-      <div className="residences-container">
-        {section11Data.section11.residences.map((entry, index) => 
-          renderResidenceEntry(entry, index)
-        )}
+      {/* Residences Container */}
+      <div className="space-y-6">
+        {(() => {
+          const residences = section11Data.section11.residences.slice(0, MAX_ENTRIES);
+          console.log(`📋 Section 11: Rendering ${residences.length} residences, activeEntryIndex: ${activeEntryIndex}`);
+          return residences.map((entry, index) => renderResidenceEntry(entry, index));
+        })()}
       </div>
 
-      <div className="section-actions">
+      {/* Add Residence Button */}
+      <div className="mt-6 flex justify-center">
         <button
           type="button"
           onClick={handleAddResidence}
-          className="btn-primary"
+          disabled={getEntryCount() >= MAX_ENTRIES}
+          className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm transition-colors ${
+            getEntryCount() >= MAX_ENTRIES
+              ? 'bg-gray-400 text-gray-700 cursor-not-allowed'
+              : 'text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500'
+          }`}
         >
+          <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
           Add Another Residence
+          {getEntryCount() >= MAX_ENTRIES && (
+            <span className="ml-1 text-xs">(Max: {MAX_ENTRIES})</span>
+          )}
         </button>
       </div>
 
-      {showValidation && Object.keys(errors).length > 0 && (
-        <div className="validation-errors">
-          <h4>Please correct the following errors:</h4>
-          <ul>
-            {Object.entries(errors).map(([field, message]) => (
-              <li key={field}>{message}</li>
-            ))}
-          </ul>
+      {/* Entry limit information */}
+      {getEntryCount() >= MAX_ENTRIES && (
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-blue-700">
+                You have reached the maximum of {MAX_ENTRIES} residence entries allowed for Section 11.
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
+      {/* Validation Errors */}
+      {showValidation && Object.keys(errors).length > 0 && (
+        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-md">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">
+                Please correct the following errors:
+              </h3>
+              <div className="mt-2 text-sm text-red-700">
+                <ul className="list-disc pl-5 space-y-1">
+                  {Object.entries(errors).map(([field, message]) => (
+                    <li key={field}>{message}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Navigation */}
       {showNavigation && (
-        <div className="section-navigation">
-          {onPrevious && (
+        <div className="mt-8 flex justify-between items-center pt-6 border-t border-gray-200">
+          <div className="text-sm text-gray-500">
+            <span className="text-red-500">*</span> Required fields
+          </div>
+
+          <div className="flex space-x-4">
+            {onPrevious && (
+              <button
+                type="button"
+                onClick={onPrevious}
+                className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+              >
+                Previous Section
+              </button>
+            )}
+
             <button
               type="button"
-              onClick={onPrevious}
-              className="btn-secondary"
+              onClick={handleValidateAndContinue}
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isLoading}
             >
-              Previous Section
+              {isLoading ? 'Saving...' : 'Save & Continue'}
             </button>
-          )}
-          
-          <button
-            type="button"
-            onClick={handleValidateAndContinue}
-            className="btn-primary"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Saving...' : 'Save & Continue'}
-          </button>
+          </div>
         </div>
       )}
     </div>

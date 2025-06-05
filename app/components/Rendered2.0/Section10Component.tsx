@@ -33,22 +33,39 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
     updateForeignPassport,
     validateSection,
     resetSection,
-    isDirty,
-    errors
+    canAddDualCitizenship,
+    canAddForeignPassport
+    // REMOVED: isDirty - only save button should trigger state updates
+    // FIXED: Removed errors from context to prevent infinite loops
   } = useSection10();
+
+  // Clean implementation - no excessive logging
 
   // SF86 Form Context for data persistence
   const sf86Form = useSF86Form();
 
   // Track validation state internally
   const [isValid, setIsValid] = useState(false);
+  // FIXED: Local errors state to prevent infinite loops
+  const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
 
   // Handle validation on component mount and when data changes
   useEffect(() => {
     const validationResult = validateSection();
     setIsValid(validationResult.isValid);
     onValidationChange?.(validationResult.isValid);
-  }, [section10Data]); // Removed validateSection and onValidationChange to prevent infinite loops
+
+    // FIXED: Handle errors from validation result instead of relying on context errors state
+    // This prevents infinite loops since we're not calling setErrors in validateSection
+    if ((validationResult as any).fieldErrors) {
+      setLocalErrors((validationResult as any).fieldErrors);
+    } else {
+      setLocalErrors({});
+    }
+  }, [section10Data]); // FIXED: Removed validateSection from deps to prevent infinite loop
+
+  // Use local errors instead of context errors to prevent infinite loops
+  const errors = localErrors;
 
   // Handle form submission with data persistence
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,27 +82,17 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
         // Save the form data to persistence layer
         await sf86Form.saveForm();
 
-        console.log('✅ Section 10 data saved successfully:', section10Data);
-
         // Proceed to next section if callback provided
         if (onNext) {
           onNext();
         }
       } catch (error) {
-        console.error('❌ Failed to save Section 10 data:', error);
-        // Could show an error message to user here
+        console.error('Failed to save Section 10 data:', error);
       }
     }
   };
 
-  // Citizenship types options
-  const citizenshipTypes = [
-    { value: 'BIRTH', label: 'By Birth' },
-    { value: 'NATURALIZATION', label: 'By Naturalization' },
-    { value: 'DERIVED', label: 'By Derived' },
-    { value: 'MARRIAGE', label: 'By Marriage' },
-    { value: 'OTHER', label: 'Other (specify)' }
-  ];
+
 
   // Get dual citizenships
   const getDualCitizenships = () => {
@@ -139,126 +146,77 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
             )}
           </div>
 
-          {/* How Obtained */}
+          {/* How Acquired - Fixed field name to match interface */}
           <div>
             <label
-              htmlFor={`citizenship-how-obtained-${index}`}
+              htmlFor={`citizenship-how-acquired-${index}`}
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              How Citizenship Was Obtained <span className="text-red-500">*</span>
-            </label>
-            <select
-              id={`citizenship-how-obtained-${index}`}
-              data-testid={`citizenship-how-obtained-${index}`}
-              value={citizenship.howObtained?.value || ''}
-              onChange={(e) => updateDualCitizenship(index, 'howObtained', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              required
-            >
-              <option value="">Select how obtained</option>
-              {citizenshipTypes.map((type) => (
-                <option key={type.value} value={type.value}>
-                  {type.label}
-                </option>
-              ))}
-            </select>
-            {errors[`dualCitizenship.entries[${index}].howObtained`] && (
-              <p className="mt-1 text-sm text-red-600">{errors[`dualCitizenship.entries[${index}].howObtained`]}</p>
-            )}
-          </div>
-
-          {/* Other Method (if applicable) */}
-          {citizenship.howObtained?.value === 'OTHER' && (
-            <div>
-              <label
-                htmlFor={`citizenship-other-method-${index}`}
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Specify Other Method <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id={`citizenship-other-method-${index}`}
-                data-testid={`citizenship-other-method-${index}`}
-                value={citizenship.otherMethod?.value || ''}
-                onChange={(e) => updateDualCitizenship(index, 'otherMethod', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Specify how citizenship was obtained"
-                required
-              />
-              {errors[`dualCitizenship.entries[${index}].otherMethod`] && (
-                <p className="mt-1 text-sm text-red-600">{errors[`dualCitizenship.entries[${index}].otherMethod`]}</p>
-              )}
-            </div>
-          )}
-
-          {/* Date Obtained */}
-          <div>
-            <label
-              htmlFor={`citizenship-date-obtained-${index}`}
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Date Obtained <span className="text-red-500">*</span>
+              How Citizenship Was Acquired <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
-              id={`citizenship-date-obtained-${index}`}
-              data-testid={`citizenship-date-obtained-${index}`}
-              value={citizenship.dateObtained?.value || ''}
-              onChange={(e) => updateDualCitizenship(index, 'dateObtained', e.target.value)}
+              id={`citizenship-how-acquired-${index}`}
+              data-testid={`citizenship-how-acquired-${index}`}
+              value={citizenship.howAcquired?.value || ''}
+              onChange={(e) => updateDualCitizenship(index, 'howAcquired', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Describe how citizenship was acquired"
+              required
+            />
+            {errors[`dualCitizenship.entries[${index}].howAcquired`] && (
+              <p className="mt-1 text-sm text-red-600">{errors[`dualCitizenship.entries[${index}].howAcquired`]}</p>
+            )}
+          </div>
+
+          {/* From Date - Fixed field name to match interface */}
+          <div>
+            <label
+              htmlFor={`citizenship-from-date-${index}`}
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              From Date <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id={`citizenship-from-date-${index}`}
+              data-testid={`citizenship-from-date-${index}`}
+              value={citizenship.fromDate?.value || ''}
+              onChange={(e) => updateDualCitizenship(index, 'fromDate', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="MM/DD/YYYY"
               required
             />
-            {errors[`dualCitizenship.entries[${index}].dateObtained`] && (
-              <p className="mt-1 text-sm text-red-600">{errors[`dualCitizenship.entries[${index}].dateObtained`]}</p>
+            {errors[`dualCitizenship.entries[${index}].fromDate`] && (
+              <p className="mt-1 text-sm text-red-600">{errors[`dualCitizenship.entries[${index}].fromDate`]}</p>
+            )}
+          </div>
+
+          {/* To Date - Fixed field name to match interface */}
+          <div>
+            <label
+              htmlFor={`citizenship-to-date-${index}`}
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              To Date <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id={`citizenship-to-date-${index}`}
+              data-testid={`citizenship-to-date-${index}`}
+              value={citizenship.toDate?.value || ''}
+              onChange={(e) => updateDualCitizenship(index, 'toDate', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="MM/DD/YYYY or 'Present'"
+              required
+            />
+            {errors[`dualCitizenship.entries[${index}].toDate`] && (
+              <p className="mt-1 text-sm text-red-600">{errors[`dualCitizenship.entries[${index}].toDate`]}</p>
             )}
           </div>
         </div>
 
-        <div className="border-t pt-4 mt-4">
-          <h5 className="text-md font-medium text-gray-800 mb-3">Exercised Rights of This Citizenship</h5>
-          <div className="grid grid-cols-1 gap-4">
-            <div>
-              <label className="flex items-center space-x-3">
-                <input
-                  type="checkbox"
-                  checked={citizenship.hasExercisedRights?.value || false}
-                  onChange={(e) => updateDualCitizenship(index, 'hasExercisedRights', e.target.checked)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  data-testid={`citizenship-has-exercised-rights-${index}`}
-                />
-                <span className="text-sm text-gray-700">
-                  I have exercised rights of this citizenship (voting, military service, etc.)
-                </span>
-              </label>
-            </div>
 
-            {citizenship.hasExercisedRights?.value && (
-              <div>
-                <label
-                  htmlFor={`citizenship-rights-explanation-${index}`}
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Explanation <span className="text-red-500">*</span>
-                </label>
-                <textarea
-                  id={`citizenship-rights-explanation-${index}`}
-                  data-testid={`citizenship-rights-explanation-${index}`}
-                  value={citizenship.rightsExplanation?.value || ''}
-                  onChange={(e) => updateDualCitizenship(index, 'rightsExplanation', e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  rows={3}
-                  placeholder="Describe how you have exercised rights of this citizenship"
-                  required
-                />
-                {errors[`dualCitizenship.entries[${index}].rightsExplanation`] && (
-                  <p className="mt-1 text-sm text-red-600">{errors[`dualCitizenship.entries[${index}].rightsExplanation`]}</p>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
       </div>
     );
   };
@@ -303,6 +261,97 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
             {errors[`foreignPassport.entries[${index}].country`] && (
               <p className="mt-1 text-sm text-red-600">{errors[`foreignPassport.entries[${index}].country`]}</p>
             )}
+          </div>
+
+          {/* City */}
+          <div>
+            <label
+              htmlFor={`passport-city-${index}`}
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              City <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              id={`passport-city-${index}`}
+              data-testid={`passport-city-${index}`}
+              value={passport.city?.value || ''}
+              onChange={(e) => updateForeignPassport(index, 'city', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter city"
+              required
+            />
+            {errors[`foreignPassport.entries[${index}].city`] && (
+              <p className="mt-1 text-sm text-red-600">{errors[`foreignPassport.entries[${index}].city`]}</p>
+            )}
+          </div>
+
+          {/* Name Fields */}
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <label
+                htmlFor={`passport-first-name-${index}`}
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                First Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id={`passport-first-name-${index}`}
+                data-testid={`passport-first-name-${index}`}
+                value={passport.firstName?.value || ''}
+                onChange={(e) => updateForeignPassport(index, 'firstName', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="First name"
+                required
+              />
+              {errors[`foreignPassport.entries[${index}].firstName`] && (
+                <p className="mt-1 text-sm text-red-600">{errors[`foreignPassport.entries[${index}].firstName`]}</p>
+              )}
+            </div>
+
+            <div>
+              <label
+                htmlFor={`passport-middle-name-${index}`}
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Middle Name
+              </label>
+              <input
+                type="text"
+                id={`passport-middle-name-${index}`}
+                data-testid={`passport-middle-name-${index}`}
+                value={passport.middleName?.value || ''}
+                onChange={(e) => updateForeignPassport(index, 'middleName', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Middle name"
+              />
+              {errors[`foreignPassport.entries[${index}].middleName`] && (
+                <p className="mt-1 text-sm text-red-600">{errors[`foreignPassport.entries[${index}].middleName`]}</p>
+              )}
+            </div>
+
+            <div>
+              <label
+                htmlFor={`passport-last-name-${index}`}
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Last Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id={`passport-last-name-${index}`}
+                data-testid={`passport-last-name-${index}`}
+                value={passport.lastName?.value || ''}
+                onChange={(e) => updateForeignPassport(index, 'lastName', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Last name"
+                required
+              />
+              {errors[`foreignPassport.entries[${index}].lastName`] && (
+                <p className="mt-1 text-sm text-red-600">{errors[`foreignPassport.entries[${index}].lastName`]}</p>
+              )}
+            </div>
           </div>
 
           {/* Passport Number */}
@@ -391,31 +440,6 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
               </span>
             </label>
           </div>
-
-          {/* Last Used Date */}
-          {passport.usedForUSEntry?.value && (
-            <div>
-              <label
-                htmlFor={`passport-last-used-date-${index}`}
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Date Last Used for US Entry <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id={`passport-last-used-date-${index}`}
-                data-testid={`passport-last-used-date-${index}`}
-                value={passport.lastUsedDate?.value || ''}
-                onChange={(e) => updateForeignPassport(index, 'lastUsedDate', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="MM/DD/YYYY"
-                required
-              />
-              {errors[`foreignPassport.entries[${index}].lastUsedDate`] && (
-                <p className="mt-1 text-sm text-red-600">{errors[`foreignPassport.entries[${index}].lastUsedDate`]}</p>
-              )}
-            </div>
-          )}
         </div>
       </div>
     );
@@ -444,7 +468,10 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
               <input
                 type="checkbox"
                 checked={section10Data.section10.dualCitizenship?.hasDualCitizenship?.value === 'YES'}
-                onChange={(e) => updateDualCitizenshipFlag(e.target.checked ? 'YES' : 'NO')}
+                onChange={(e) => {
+                  // FIXED: Use correct values from sections-reference
+                  updateDualCitizenshipFlag(e.target.checked ? 'YES' : 'NO (If NO, proceed to 10.2)');
+                }}
                 className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 data-testid="dual-citizenship-flag-checkbox"
               />
@@ -452,6 +479,13 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
                 I have dual or multiple citizenship
               </span>
             </label>
+            {/* DEBUG: Show current state only in debug mode */}
+            {typeof window !== 'undefined' && window.location.search.includes('debug=true') && (
+              <div className="text-xs text-gray-500 mb-2">
+                DEBUG: Current value = "{section10Data.section10.dualCitizenship?.hasDualCitizenship?.value}" |
+                Checked = {section10Data.section10.dualCitizenship?.hasDualCitizenship?.value === 'YES' ? 'true' : 'false'}
+              </div>
+            )}
           </div>
 
           {section10Data.section10.dualCitizenship?.hasDualCitizenship?.value === 'YES' && (
@@ -467,13 +501,18 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
               <button
                 type="button"
                 onClick={addDualCitizenship}
-                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                disabled={!canAddDualCitizenship()}
+                className={`inline-flex items-center px-3 py-2 border shadow-sm text-sm leading-4 font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                  canAddDualCitizenship()
+                    ? 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
+                    : 'border-gray-200 text-gray-400 bg-gray-100 cursor-not-allowed'
+                }`}
                 data-testid="add-dual-citizenship-button"
               >
                 <svg className="-ml-0.5 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
                 </svg>
-                Add Dual Citizenship
+                Add Dual Citizenship {!canAddDualCitizenship() && '(Max 2)'}
               </button>
             </>
           )}
@@ -488,7 +527,7 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
               <input
                 type="checkbox"
                 checked={section10Data.section10.foreignPassport?.hasForeignPassport?.value === 'YES'}
-                onChange={(e) => updateForeignPassportFlag(e.target.checked ? 'YES' : 'NO')}
+                onChange={(e) => updateForeignPassportFlag(e.target.checked ? 'YES' : 'NO (If NO, proceed to Section 11)')}
                 className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 data-testid="foreign-passport-flag-checkbox"
               />
@@ -511,13 +550,18 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
               <button
                 type="button"
                 onClick={addForeignPassport}
-                className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                disabled={!canAddForeignPassport()}
+                className={`inline-flex items-center px-3 py-2 border shadow-sm text-sm leading-4 font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                  canAddForeignPassport()
+                    ? 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
+                    : 'border-gray-200 text-gray-400 bg-gray-100 cursor-not-allowed'
+                }`}
                 data-testid="add-foreign-passport-button"
               >
                 <svg className="-ml-0.5 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
                 </svg>
-                Add Foreign Passport
+                Add Foreign Passport {!canAddForeignPassport() && '(Max 2)'}
               </button>
             </>
           )}
@@ -552,8 +596,8 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
         {/* Validation Status */}
         <div className="mt-4" data-testid="validation-status">
           <div className="text-sm text-gray-600">
-            Section Status: <span className={`font-medium ${isDirty ? 'text-orange-500' : 'text-green-500'}`}>
-              {isDirty ? 'Modified, needs validation' : 'Ready for input'}
+            Section Status: <span className={`font-medium ${isValid ? 'text-green-500' : 'text-red-500'}`}>
+              {isValid ? 'Valid - Ready to submit' : 'Please complete required fields'}
             </span>
           </div>
           <div className="text-sm text-gray-600">

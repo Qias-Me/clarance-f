@@ -16,7 +16,7 @@ import React, {
   useRef,
   type ReactNode
 } from 'react';
-import { cloneDeep, isEqual } from 'lodash';
+import { cloneDeep, isEqual, set } from 'lodash';
 import type {
   Section11,
   ResidenceEntry,
@@ -32,6 +32,7 @@ import {
   removeResidenceEntry as removeResidenceEntryImpl,
   validateResidenceHistory
 } from '../../../../api/interfaces/sections2.0/section11';
+import { debugAllEntries } from './section11-field-mapping';
 import type {
   ValidationResult,
   ValidationError,
@@ -40,6 +41,7 @@ import type {
 } from '../shared/base-interfaces';
 import { useSectionIntegration } from '../shared/section-integration';
 import DynamicService from '../../../../api/service/dynamicService';
+import { useSection86FormIntegration } from '../shared/section-context-integration';
 
 // ============================================================================
 // VALIDATION RULES
@@ -149,6 +151,12 @@ export const Section11Provider: React.FC<Section11ProviderProps> = ({ children }
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const initialData = useRef<Section11>(createDefaultSection11Impl());
+
+  // Debug field mapping on initialization
+  useEffect(() => {
+    console.log('🔍 Section 11 Context: Initializing with field mapping debug');
+    debugAllEntries();
+  }, []);
 
   // ============================================================================
   // COMPUTED VALUES
@@ -314,8 +322,41 @@ export const Section11Provider: React.FC<Section11ProviderProps> = ({ children }
   // CRUD OPERATIONS
   // ============================================================================
 
+  // Use a ref to prevent double execution in React Strict Mode
+  const addingEntryRef = useRef(false);
+
   const addResidenceEntry = useCallback(() => {
-    setSection11Data(prevData => addResidenceEntryImpl(prevData));
+    // Prevent double execution from React Strict Mode
+    if (addingEntryRef.current) {
+      console.warn(`🚫 Context: Already adding entry, preventing duplicate execution`);
+      return;
+    }
+
+    addingEntryRef.current = true;
+
+    setSection11Data(prevData => {
+      // Enforce maximum entry limit (Section 11 supports only 4 entries)
+      const MAX_ENTRIES = 4;
+      if (prevData.section11.residences.length >= MAX_ENTRIES) {
+        console.warn(`Cannot add more than ${MAX_ENTRIES} residence entries to Section 11`);
+        addingEntryRef.current = false; // Reset flag
+        return prevData; // Return unchanged data
+      }
+
+      console.log(`🏠 Context: Adding residence entry. Current count: ${prevData.section11.residences.length}`);
+      console.log(`🏠 Context: Current entries:`, prevData.section11.residences.map((entry, i) => `Entry ${i}: ${entry.address.streetAddress.value || 'empty'}`));
+
+      const newData = addResidenceEntryImpl(prevData);
+      console.log(`🏠 Context: After adding entry. New count: ${newData.section11.residences.length}`);
+      console.log(`🏠 Context: New entries:`, newData.section11.residences.map((entry, i) => `Entry ${i}: ${entry.address.streetAddress.value || 'empty'}`));
+
+      // Reset flag after successful addition
+      setTimeout(() => {
+        addingEntryRef.current = false;
+      }, 100);
+
+      return newData;
+    });
   }, []);
 
   const removeResidenceEntry = useCallback((index: number) => {
@@ -323,13 +364,26 @@ export const Section11Provider: React.FC<Section11ProviderProps> = ({ children }
   }, []);
 
   const updateFieldValue = useCallback((fieldPath: string, value: any, entryIndex?: number) => {
+    console.log(`🔧 Section11: updateFieldValue called:`, {
+      fieldPath,
+      value,
+      entryIndex,
+      currentDataSnapshot: section11Data
+    });
+
     const update: Section11FieldUpdate = {
       fieldPath,
       newValue: value,
       entryIndex
     };
-    setSection11Data(prevData => updateSection11FieldImpl(prevData, update));
-  }, []);
+
+    setSection11Data(prevData => {
+      console.log(`🔍 Section11: updateFieldValue - before update:`, prevData);
+      const updatedData = updateSection11FieldImpl(prevData, update);
+      console.log(`✅ Section11: updateFieldValue - after update:`, updatedData);
+      return updatedData;
+    });
+  }, [section11Data]);
 
   // ============================================================================
   // ENHANCED ENTRY MANAGEMENT
@@ -626,6 +680,71 @@ export const Section11Provider: React.FC<Section11ProviderProps> = ({ children }
     const hasGaps = getResidenceGaps().length > 0;
     return totalTimespan >= defaultValidationRules.minimumResidenceTimeframe && !hasGaps;
   }, [getTotalResidenceTimespan, getResidenceGaps]);
+
+  // ============================================================================
+  // SF86FORM INTEGRATION
+  // ============================================================================
+
+  // Create a wrapper function that matches the integration hook's expected signature
+  // Integration expects: (path: string, value: any) => void
+  // Section 11 has: (fieldPath: string, value: any, entryIndex?: number) => void
+  const updateFieldValueWrapper = useCallback((path: string, value: any) => {
+    console.log(`🔧 Section11: updateFieldValueWrapper called with path=${path}, value=`, value);
+
+    // Parse the path to extract entry index and field path
+    // Expected format: "section11.residences[index].fieldPath" or "section11.fieldPath"
+    const pathParts = path.split('.');
+
+    if (pathParts.length >= 3 && pathParts[0] === 'section11' && pathParts[1] === 'residences') {
+      const residencesMatch = pathParts[1].match(/residences\[(\d+)\]/);
+
+      if (residencesMatch) {
+        const entryIndex = parseInt(residencesMatch[1]);
+        const fieldPath = pathParts.slice(2).join('.');
+
+        console.log(`🔧 Section11: Parsed residence entry - entryIndex=${entryIndex}, fieldPath=${fieldPath}`);
+
+        // Call Section 11's updateFieldValue with the correct signature
+        updateFieldValue(fieldPath, value, entryIndex);
+        return;
+      }
+
+      // Handle direct residence array access like "section11.residences[0].address.streetAddress"
+      const residenceArrayMatch = pathParts[1].match(/residences/);
+      if (residenceArrayMatch && pathParts[2] && pathParts[2].match(/\[(\d+)\]/)) {
+        const indexMatch = pathParts[2].match(/\[(\d+)\]/);
+        if (indexMatch) {
+          const entryIndex = parseInt(indexMatch[1]);
+          const fieldPath = pathParts.slice(3).join('.');
+
+          console.log(`🔧 Section11: Parsed residence array access - entryIndex=${entryIndex}, fieldPath=${fieldPath}`);
+
+          updateFieldValue(fieldPath, value, entryIndex);
+          return;
+        }
+      }
+    }
+
+    // Fallback: use lodash set for direct path updates
+    console.log(`🔧 Section11: Using fallback lodash set for path=${path}`);
+    setSection11Data(prev => {
+      const updated = cloneDeep(prev);
+      set(updated, path, value);
+      return updated;
+    });
+  }, [updateFieldValue]);
+
+  // Integration with main form context using Section 1 gold standard pattern
+  // Note: integration variable is used internally by the hook for registration
+  const integration = useSection86FormIntegration(
+    'section11',
+    'Section 11: Where You Have Lived',
+    section11Data,
+    setSection11Data,
+    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
+    () => getChanges(),
+    updateFieldValueWrapper // Pass wrapper function that matches expected signature
+  );
 
   // ============================================================================
   // CONTEXT VALUE

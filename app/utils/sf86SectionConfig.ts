@@ -93,7 +93,7 @@ export const getImplementedSections = (): SectionDefinition[] => {
  */
 export const getActiveSections = (): SectionDefinition[] => {
   // For now, return the main sections that are being actively used
-  const activeSectionIds = ['section1', 'section2', 'section17', 'section28', 'section29', 'section30'];
+  const activeSectionIds = ['section1', 'section2', 'section10', 'section11', 'section17', 'section28', 'section29', 'section30'];
   return ALL_SF86_SECTIONS.filter(section =>
     activeSectionIds.includes(section.id)
   );
@@ -106,41 +106,6 @@ export const getSectionById = (sectionId: string): SectionDefinition | undefined
   return ALL_SF86_SECTIONS.find(section => section.id === sectionId);
 };
 
-/**
- * Section titles mapping for backwards compatibility
- */
-export const SECTION_TITLES: Record<string, string> = {
-  section1: "Information About You",
-  section2: "Date of Birth",
-  section3: "Place of Birth",
-  section4: "Social Security Number",
-  section5: "Other Names Used",
-  section6: "Identifying Information",
-  section7: "Contact Information",
-  section8: "U.S. Passport Information",
-  section9: "Citizenship",
-  section10: "Dual or Multiple Citizenship",
-  section11: "Where You Went to School",
-  section12: "Your Employment Activities",
-  section13: "People Who Know You Well",
-  section14: "Selective Service Record",
-  section15: "Military History",
-  section16: "Foreign Activities",
-  section17: "Matital / Relationship",
-  section18: "Relatives and Associates",
-  section19: "Mental and Emotional Health",
-  section20: "Police Record",
-  section21: "Mental Health",
-  section22: "Police Record",
-  section23: "Illegal Use of Drugs or Drug Activity",
-  section24: "Use of Alcohol",
-  section25: "Investigations and Clearance Record",
-  section26: "Financial Record",
-  section27: "Use of Information Technology Systems",
-  section28: "Involvement in Non-Criminal Court Actions",
-  section29: "Association Record",
-  section30: "Continuation",
-};
 
 /**
  * Section order for navigation

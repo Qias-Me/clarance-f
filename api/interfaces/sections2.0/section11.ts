@@ -3,11 +3,19 @@
  *
  * TypeScript interface definitions for SF-86 Section 11 (Where You Have Lived) data structure.
  * Based on the established Field<T> interface patterns and PDF field ID mappings from section-11.json.
+ *
+ * Section 11 supports 4 entries with these patterns:
+ * - Entry 1: form1[0].Section11[0].*
+ * - Entry 2: form1[0].Section11-2[0].*
+ * - Entry 3: form1[0].Section11-3[0].*
+ * - Entry 4: form1[0].Section11-4[0].*
  */
 
 import type { Field, FieldWithOptions } from '../formDefinition2.0';
 import type { USState, Country } from './base';
 import { createFieldFromReference, validateSectionFieldCount } from '../../utils/sections-references-loader';
+import { generateFieldName, getFieldByEntryAndType } from '../../../app/state/contexts/sections2.0/section11-field-mapping';
+import { cloneDeep, set } from 'lodash';
 
 // ============================================================================
 // CORE INTERFACES
@@ -198,9 +206,36 @@ export const SECTION11_FIELD_NAMES = {
   
   // Entry 1 - Contact availability
   DONT_KNOW_CONTACT_1: "form1[0].Section11[0].#field[5]",
-  EMAIL_1: "form1[0].Section11[0].p3-t68[4]", // Email field for contact person
+  EMAIL_1: "form1[0].Section11[0].p3-t68[3]", // Email field for contact person
   
 } as const;
+
+// ============================================================================
+// DYNAMIC FIELD MAPPING FUNCTIONS
+// ============================================================================
+
+/**
+ * Generate field name for a specific entry and field type
+ * Uses sections-references as single source of truth
+ */
+export function getSection11FieldName(entryIndex: number, fieldType: string): string {
+  return generateFieldName(fieldType, entryIndex);
+}
+
+/**
+ * Get field data from sections-references for a specific entry and field type
+ */
+export function getSection11FieldData(entryIndex: number, fieldType: string) {
+  return getFieldByEntryAndType(entryIndex, fieldType);
+}
+
+/**
+ * Create a field using sections-references data for Section 11
+ */
+export function createSection11Field<T>(entryIndex: number, fieldType: string, defaultValue: T): Field<T> {
+  const fieldName = getSection11FieldName(entryIndex, fieldType);
+  return createFieldFromReference(11, fieldName, defaultValue);
+}
 
 // ============================================================================
 // DROPDOWN OPTIONS
@@ -300,7 +335,53 @@ export type ResidenceValidationResult = {
 // ============================================================================
 
 /**
- * Creates a default address information structure
+ * Creates a default address information structure with sections-references
+ */
+export const createDefaultAddressInformationWithReferences = (entryIndex: number): AddressInformation => {
+  if (entryIndex === 0) {
+    return {
+      streetAddress: createFieldFromReference(11, SECTION11_FIELD_NAMES.STREET_ADDRESS_1, 'sect11Entry1Street'),
+      city: createFieldFromReference(11, SECTION11_FIELD_NAMES.CITY_1, 'sect11Entry1City'),
+      state: {
+        ...createFieldFromReference(11, SECTION11_FIELD_NAMES.STATE_1, 'sect11Entry1State'),
+        options: [
+          "AK", "AL", "AR", "AS", "AZ", "CA", "CO", "CT", "DC", "DE",
+          "FL", "FM", "GA", "GU", "HI", "IA", "ID", "IL", "IN", "KS",
+          "KY", "LA", "MA", "MD", "ME", "MH", "MI", "MN", "MO", "MP",
+          "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY",
+          "OH", "OK", "OR", "PA", "PR", "PW", "RI", "SC", "SD", "TN",
+          "TX", "UT", "VA", "VI", "VT", "WA", "WI", "WV", "WY", "AA", "AE", "AP", ""
+        ],
+        value: '' as USState
+      },
+      zipCode: createFieldFromReference(11, SECTION11_FIELD_NAMES.ZIP_CODE_1, 'sect11Entry1ZipCode'),
+      country: {
+        ...createFieldFromReference(11, SECTION11_FIELD_NAMES.COUNTRY_1, 'sect11Entry1Country'),
+        options: [
+          "Afghanistan", "Albania", "Algeria", "Argentina", "Armenia", "Australia",
+          "Austria", "Azerbaijan", "Bahrain", "Bangladesh", "Belarus", "Belgium",
+          "Bolivia", "Brazil", "Bulgaria", "Cambodia", "Canada", "Chile", "China",
+          "Colombia", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark",
+          "Ecuador", "Egypt", "Estonia", "Finland", "France", "Germany", "Greece",
+          "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland",
+          "Israel", "Italy", "Japan", "Jordan", "Kazakhstan", "Kuwait", "Latvia",
+          "Lebanon", "Lithuania", "Luxembourg", "Mexico", "Netherlands", "New Zealand",
+          "Norway", "Pakistan", "Poland", "Portugal", "Romania", "Russia", "Saudi Arabia",
+          "Singapore", "Slovakia", "Slovenia", "South Korea", "Spain", "Sweden",
+          "Switzerland", "Syria", "Thailand", "Turkey", "Ukraine", "United Kingdom",
+          "Vietnam", ""
+        ],
+        value: '' as Country
+      }
+    };
+  } else {
+    // Fallback for other entries
+    return createDefaultAddressInformation();
+  }
+};
+
+/**
+ * Creates a default address information structure (fallback)
  */
 export const createDefaultAddressInformation = (): AddressInformation => ({
   streetAddress: {
@@ -368,7 +449,60 @@ export const createDefaultAddressInformation = (): AddressInformation => ({
 });
 
 /**
- * Creates a default contact person structure
+ * Creates a default contact person structure with sections-references
+ */
+export const createDefaultContactPersonWithReferences = (entryIndex: number): ContactPerson => {
+  if (entryIndex === 0) {
+    return {
+      lastName: createFieldFromReference(11, SECTION11_FIELD_NAMES.CONTACT_LAST_NAME_1, 'sect11Entry1_neighborLastName'),
+      firstName: createFieldFromReference(11, SECTION11_FIELD_NAMES.CONTACT_FIRST_NAME_1, 'sect11Entry1_neighborFirstName'),
+      middleName: createFieldFromReference(11, SECTION11_FIELD_NAMES.CONTACT_MIDDLE_NAME_1, 'sect11Entry1_neighborMiddleName'),
+      relationship: {
+        id: '',
+        name: '',
+        type: 'PDFDropdown',
+        label: 'Relationship',
+        value: 'Neighbor' as const,
+        options: RELATIONSHIP_OPTIONS,
+        rect: { x: 0, y: 0, width: 0, height: 0 }
+      },
+      relationshipOther: {
+        id: '',
+        name: '',
+        type: 'PDFTextField',
+        label: 'Other Relationship',
+        value: '',
+        rect: { x: 0, y: 0, width: 0, height: 0 }
+      },
+      eveningPhone: createFieldFromReference(11, SECTION11_FIELD_NAMES.EVENING_PHONE_1, 'sect11Entry1_neighborTeleNumber1'),
+      eveningPhoneExt: createFieldFromReference(11, SECTION11_FIELD_NAMES.EVENING_PHONE_EXT_1, 'sect11Entry1_Extension1'),
+      eveningPhoneIntl: createFieldFromReference(11, SECTION11_FIELD_NAMES.EVENING_PHONE_INTL_1, false),
+      daytimePhone: createFieldFromReference(11, SECTION11_FIELD_NAMES.DAYTIME_PHONE_1, 'sect11Entry1_neighborTeleNumber2'),
+      daytimePhoneExt: createFieldFromReference(11, SECTION11_FIELD_NAMES.DAYTIME_PHONE_EXT_1, 'sect11Entry1_Extension2'),
+      daytimePhoneIntl: createFieldFromReference(11, SECTION11_FIELD_NAMES.DAYTIME_PHONE_INTL_1, false),
+      mobilePhone: createFieldFromReference(11, SECTION11_FIELD_NAMES.MOBILE_PHONE_1, 'sect11Entry1_neighborTeleNumber3'),
+      mobilePhoneExt: createFieldFromReference(11, SECTION11_FIELD_NAMES.MOBILE_PHONE_EXT_1, 'sect11Entry1_Extension3'),
+      mobilePhoneIntl: createFieldFromReference(11, SECTION11_FIELD_NAMES.MOBILE_PHONE_INTL_1, false),
+      email: createFieldFromReference(11, SECTION11_FIELD_NAMES.EMAIL_1, 'sect11Entry1_neighborEmail'),
+      address: createDefaultAddressInformationWithReferences(entryIndex),
+      monthLastContact: {
+        id: '',
+        name: '',
+        type: 'PDFTextField',
+        label: 'Month of Last Contact',
+        value: 'sect11Entry1_b_neighboMonthLasContact',
+        rect: { x: 0, y: 0, width: 0, height: 0 }
+      },
+      dontKnowContact: createFieldFromReference(11, SECTION11_FIELD_NAMES.DONT_KNOW_CONTACT_1, false)
+    };
+  } else {
+    // Fallback for other entries
+    return createDefaultContactPerson();
+  }
+};
+
+/**
+ * Creates a default contact person structure (fallback)
  */
 export const createDefaultContactPerson = (): ContactPerson => ({
   lastName: {
@@ -512,55 +646,154 @@ export const createDefaultContactPerson = (): ContactPerson => ({
 });
 
 /**
- * Creates a default residence entry with the provided index
+ * Creates a default address information structure using dynamic field mapping
  */
-export const createDefaultResidenceEntry = (index: number): ResidenceEntry => {
+export const createDefaultAddressInformationDynamic = (entryIndex: number): AddressInformation => {
+  try {
+    return {
+      streetAddress: createSection11Field(entryIndex, 'TextField11[3]', `sect11Entry${entryIndex + 1}Street`),
+      city: createSection11Field(entryIndex, 'TextField11[4]', `sect11Entry${entryIndex + 1}City`),
+      state: {
+        ...createSection11Field(entryIndex, 'School6_State[0]', `sect11Entry${entryIndex + 1}State`),
+        options: [
+          "AK", "AL", "AR", "AS", "AZ", "CA", "CO", "CT", "DC", "DE",
+          "FL", "FM", "GA", "GU", "HI", "IA", "ID", "IL", "IN", "KS",
+          "KY", "LA", "MA", "MD", "ME", "MH", "MI", "MN", "MO", "MP",
+          "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY",
+          "OH", "OK", "OR", "PA", "PR", "PW", "RI", "SC", "SD", "TN",
+          "TX", "UT", "VA", "VI", "VT", "WA", "WI", "WV", "WY", "AA", "AE", "AP", ""
+        ],
+        value: '' as USState
+      },
+      zipCode: createSection11Field(entryIndex, 'TextField11[5]', `sect11Entry${entryIndex + 1}ZipCode`),
+      country: {
+        ...createSection11Field(entryIndex, 'DropDownList5[0]', `sect11Entry${entryIndex + 1}Country`),
+        options: [
+          "Afghanistan", "Albania", "Algeria", "Argentina", "Armenia", "Australia",
+          "Austria", "Azerbaijan", "Bahrain", "Bangladesh", "Belarus", "Belgium",
+          "Bolivia", "Brazil", "Bulgaria", "Cambodia", "Canada", "Chile", "China",
+          "Colombia", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark",
+          "Ecuador", "Egypt", "Estonia", "Finland", "France", "Germany", "Greece",
+          "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland",
+          "Israel", "Italy", "Japan", "Jordan", "Kazakhstan", "Kuwait", "Latvia",
+          "Lebanon", "Lithuania", "Luxembourg", "Mexico", "Netherlands", "New Zealand",
+          "Norway", "Pakistan", "Poland", "Portugal", "Romania", "Russia", "Saudi Arabia",
+          "Singapore", "Slovakia", "Slovenia", "South Korea", "Spain", "Sweden",
+          "Switzerland", "Syria", "Thailand", "Turkey", "Ukraine", "United Kingdom",
+          "Vietnam", ""
+        ],
+        value: '' as Country
+      }
+    };
+  } catch (error) {
+    console.warn(`⚠️ Failed to create dynamic address for entry ${entryIndex}, using fallback`);
+    return createDefaultAddressInformation();
+  }
+};
+
+/**
+ * Creates a default contact person structure using dynamic field mapping
+ */
+export const createDefaultContactPersonDynamic = (entryIndex: number): ContactPerson => {
+  try {
+    return {
+      lastName: createSection11Field(entryIndex, 'TextField11[6]', `sect11Entry${entryIndex + 1}_neighborLastName`),
+      firstName: createSection11Field(entryIndex, 'TextField11[7]', `sect11Entry${entryIndex + 1}_neighborFirstName`),
+      middleName: createSection11Field(entryIndex, 'TextField11[8]', `sect11Entry${entryIndex + 1}_neighborMiddleName`),
+      relationship: {
+        id: '',
+        name: '',
+        type: 'PDFDropdown',
+        label: 'Relationship',
+        value: 'Neighbor' as const,
+        options: RELATIONSHIP_OPTIONS,
+        rect: { x: 0, y: 0, width: 0, height: 0 }
+      },
+      relationshipOther: {
+        id: '',
+        name: '',
+        type: 'PDFTextField',
+        label: 'Other Relationship',
+        value: '',
+        rect: { x: 0, y: 0, width: 0, height: 0 }
+      },
+      eveningPhone: createSection11Field(entryIndex, 'p3-t68[0]', `sect11Entry${entryIndex + 1}_neighborTeleNumber1`),
+      eveningPhoneExt: createSection11Field(entryIndex, 'TextField11[0]', `sect11Entry${entryIndex + 1}_Extension1`),
+      eveningPhoneIntl: createSection11Field(entryIndex, '#field[4]', false),
+      daytimePhone: createSection11Field(entryIndex, 'p3-t68[1]', `sect11Entry${entryIndex + 1}_neighborTeleNumber2`),
+      daytimePhoneExt: createSection11Field(entryIndex, 'TextField11[1]', `sect11Entry${entryIndex + 1}_Extension2`),
+      daytimePhoneIntl: createSection11Field(entryIndex, '#field[10]', false),
+      mobilePhone: createSection11Field(entryIndex, 'p3-t68[2]', `sect11Entry${entryIndex + 1}_neighborTeleNumber3`),
+      mobilePhoneExt: createSection11Field(entryIndex, 'TextField11[2]', `sect11Entry${entryIndex + 1}_Extension3`),
+      mobilePhoneIntl: createSection11Field(entryIndex, '#field[12]', false),
+      email: createSection11Field(entryIndex, 'p3-t68[3]', `sect11Entry${entryIndex + 1}_neighborEmail`),
+      address: createDefaultAddressInformationDynamic(entryIndex),
+      monthLastContact: {
+        id: '',
+        name: '',
+        type: 'PDFTextField',
+        label: 'Month of Last Contact',
+        value: `sect11Entry${entryIndex + 1}_b_neighboMonthLasContact`,
+        rect: { x: 0, y: 0, width: 0, height: 0 }
+      },
+      dontKnowContact: createSection11Field(entryIndex, '#field[5]', false)
+    };
+  } catch (error) {
+    console.warn(`⚠️ Failed to create dynamic contact person for entry ${entryIndex}, using fallback`);
+    return createDefaultContactPerson();
+  }
+};
+
+/**
+ * Creates a fallback residence entry when sections-references fails
+ */
+export const createFallbackResidenceEntry = (index: number): ResidenceEntry => {
   const indexStr = index === 0 ? '1' : `${index + 1}`;
 
   return {
     fromDate: {
-      id: index === 0 ? SECTION11_FIELD_IDS.FROM_DATE_1 : `residence_from_date_${indexStr}`,
-      name: index === 0 ? SECTION11_FIELD_NAMES.FROM_DATE_1 : `residence_from_date_${indexStr}`,
+      id: `residence_from_date_${indexStr}`,
+      name: `residence_from_date_${indexStr}`,
       type: 'PDFTextField',
       label: 'From Date (Month/Year)',
-      value: '',
+      value: `sect11Entry${indexStr}FromDate`,
       rect: { x: 0, y: 0, width: 0, height: 0 }
     },
     fromDateEstimate: {
-      id: index === 0 ? SECTION11_FIELD_IDS.FROM_DATE_ESTIMATE_1 : `residence_from_estimate_${indexStr}`,
-      name: index === 0 ? SECTION11_FIELD_NAMES.FROM_DATE_ESTIMATE_1 : `residence_from_estimate_${indexStr}`,
+      id: `residence_from_estimate_${indexStr}`,
+      name: `residence_from_estimate_${indexStr}`,
       type: 'PDFCheckBox',
       label: 'From Date Estimate',
       value: false,
       rect: { x: 0, y: 0, width: 0, height: 0 }
     },
     toDate: {
-      id: index === 0 ? SECTION11_FIELD_IDS.TO_DATE_1 : `residence_to_date_${indexStr}`,
-      name: index === 0 ? SECTION11_FIELD_NAMES.TO_DATE_1 : `residence_to_date_${indexStr}`,
+      id: `residence_to_date_${indexStr}`,
+      name: `residence_to_date_${indexStr}`,
       type: 'PDFTextField',
       label: 'To Date (Month/Year)',
-      value: '',
+      value: `sect11Entry${indexStr}ToDate`,
       rect: { x: 0, y: 0, width: 0, height: 0 }
     },
     toDateEstimate: {
-      id: index === 0 ? SECTION11_FIELD_IDS.TO_DATE_ESTIMATE_1 : `residence_to_estimate_${indexStr}`,
-      name: index === 0 ? SECTION11_FIELD_NAMES.TO_DATE_ESTIMATE_1 : `residence_to_estimate_${indexStr}`,
+      id: `residence_to_estimate_${indexStr}`,
+      name: `residence_to_estimate_${indexStr}`,
       type: 'PDFCheckBox',
       label: 'To Date Estimate',
       value: false,
       rect: { x: 0, y: 0, width: 0, height: 0 }
     },
     present: {
-      id: index === 0 ? SECTION11_FIELD_IDS.PRESENT_1 : `residence_present_${indexStr}`,
-      name: index === 0 ? SECTION11_FIELD_NAMES.PRESENT_1 : `residence_present_${indexStr}`,
+      id: `residence_present_${indexStr}`,
+      name: `residence_present_${indexStr}`,
       type: 'PDFCheckBox',
       label: 'Present',
       value: false,
       rect: { x: 0, y: 0, width: 0, height: 0 }
     },
     residenceType: {
-      id: index === 0 ? SECTION11_FIELD_IDS.RESIDENCE_TYPE_1 : `residence_type_${indexStr}`,
-      name: index === 0 ? SECTION11_FIELD_NAMES.RESIDENCE_TYPE_1 : `residence_type_${indexStr}`,
+      id: `residence_type_${indexStr}`,
+      name: `residence_type_${indexStr}`,
       type: 'PDFRadioGroup',
       label: 'Residence Type',
       value: 'Own' as const,
@@ -568,16 +801,58 @@ export const createDefaultResidenceEntry = (index: number): ResidenceEntry => {
       rect: { x: 0, y: 0, width: 0, height: 0 }
     },
     residenceTypeOther: {
-      id: index === 0 ? SECTION11_FIELD_IDS.RESIDENCE_TYPE_OTHER_1 : `residence_type_other_${indexStr}`,
-      name: index === 0 ? SECTION11_FIELD_NAMES.RESIDENCE_TYPE_OTHER_1 : `residence_type_other_${indexStr}`,
+      id: `residence_type_other_${indexStr}`,
+      name: `residence_type_other_${indexStr}`,
       type: 'PDFTextField',
       label: 'Other Residence Type',
-      value: '',
+      value: `sect11Entry${indexStr}OtherField`,
       rect: { x: 0, y: 0, width: 0, height: 0 }
     },
     address: createDefaultAddressInformation(),
     contactPerson: createDefaultContactPerson()
   };
+};
+
+/**
+ * Creates a default residence entry with the provided index using sections-references
+ */
+export const createDefaultResidenceEntry = (index: number): ResidenceEntry => {
+  // Validate entry index
+  if (index < 0 || index > 3) {
+    console.warn(`Invalid entry index: ${index}, defaulting to 0`);
+    index = 0;
+  }
+
+  console.log(`🏠 Creating Section 11 residence entry ${index + 1} using sections-references`);
+
+  try {
+    return {
+      // Date fields using dynamic field mapping
+      fromDate: createSection11Field(index, 'From_Datefield_Name_2[0]', `sect11Entry${index + 1}FromDate`),
+      fromDateEstimate: createSection11Field(index, '#field[15]', false),
+      toDate: createSection11Field(index, 'From_Datefield_Name_2[1]', `sect11Entry${index + 1}ToDate`),
+      toDateEstimate: createSection11Field(index, '#field[18]', false),
+      present: createSection11Field(index, '#field[17]', false),
+
+      // Residence type fields
+      residenceType: {
+        ...createSection11Field(index, 'RadioButtonList[0]', '4'),
+        options: RESIDENCE_TYPE_OPTIONS,
+        value: 'Own' as const
+      },
+      residenceTypeOther: createSection11Field(index, 'TextField12[0]', `sect11Entry${index + 1}OtherField`),
+
+      // Address and contact using dynamic creation
+      address: createDefaultAddressInformationDynamic(index),
+      contactPerson: createDefaultContactPersonDynamic(index)
+    };
+  } catch (error) {
+    console.error(`❌ Failed to create residence entry ${index + 1} using sections-references:`, error);
+    console.log(`🔄 Falling back to generic field creation for entry ${index + 1}`);
+
+    // Fallback to generic field creation
+    return createFallbackResidenceEntry(index);
+  }
 };
 
 /**
@@ -598,24 +873,45 @@ export const createDefaultSection11 = (): Section11 => {
 
 /**
  * Updates a specific field in the Section 11 data structure
+ * Uses lodash set() for flexible field path handling (following Section 29 pattern)
  */
 export const updateSection11Field = (
   section11Data: Section11,
   update: Section11FieldUpdate
 ): Section11 => {
   const { fieldPath, newValue, entryIndex = 0 } = update;
-  const newData = { ...section11Data };
+  const newData = cloneDeep(section11Data);
 
-  // Update the specified field
-  if (fieldPath.includes('residences')) {
-    const residences = [...newData.section11.residences];
-    if (residences[entryIndex]) {
-      // Update specific residence entry field
-      const residence = { ...residences[entryIndex] };
-      // Field path parsing logic would go here
-      residences[entryIndex] = residence;
-      newData.section11.residences = residences;
+  console.log(`🔧 Section11: updateSection11Field called:`, {
+    fieldPath,
+    newValue,
+    entryIndex,
+  });
+
+  // Ensure we have a valid entry index
+  if (!newData.section11.residences[entryIndex]) {
+    console.warn(`Section 11: Invalid entry index ${entryIndex}`);
+    return newData;
+  }
+
+  const residence = newData.section11.residences[entryIndex];
+
+  try {
+    // Use lodash set() to handle any field path automatically (like Section 29)
+    // This handles both simple paths like 'fromDate' and complex paths like 'contactPerson.firstName'
+    set(residence, `${fieldPath}.value`, newValue);
+
+    console.log(`✅ Section11: Field updated successfully - ${fieldPath} = ${newValue}`);
+
+    // Special handling for 'present' field - if true, set toDate to 'Present'
+    if (fieldPath === 'present' && newValue === true) {
+      residence.toDate.value = 'Present';
+      console.log(`✅ Section11: Auto-set toDate to 'Present' because present=true`);
     }
+
+  } catch (error) {
+    console.error(`❌ Section11: Failed to update field ${fieldPath}:`, error);
+    console.warn(`Section 11: Unknown or invalid field path: ${fieldPath}`);
   }
 
   return newData;
@@ -627,9 +923,17 @@ export const updateSection11Field = (
 export const addResidenceEntry = (section11Data: Section11): Section11 => {
   const newData = { ...section11Data };
   const currentLength = newData.section11.residences.length;
+
+  console.log(`🏠 addResidenceEntryImpl: Current length: ${currentLength}, creating entry at index: ${currentLength}`);
+
   const newEntry = createDefaultResidenceEntry(currentLength);
-  
+
+  console.log(`🏠 addResidenceEntryImpl: Created entry for index ${currentLength}, adding to array`);
+
   newData.section11.residences = [...newData.section11.residences, newEntry];
+
+  console.log(`🏠 addResidenceEntryImpl: Final array length: ${newData.section11.residences.length}`);
+
   return newData;
 };
 

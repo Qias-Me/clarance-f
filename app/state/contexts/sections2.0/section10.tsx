@@ -8,6 +8,7 @@
  */
 
 import React, { createContext, useContext, useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { cloneDeep, set } from 'lodash';
 import type {
   Section10,
   DualCitizenshipEntry,
@@ -24,9 +25,6 @@ import {
 } from '../../../../api/interfaces/sections2.0/section10';
 import { useSection86FormIntegration } from '../shared/section-context-integration';
 
-// Debug mode flag
-const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('debug=true');
-
 // ============================================================================
 // CONTEXT INTERFACE FOLLOWING SECTION 1 GOLD STANDARD
 // ============================================================================
@@ -38,20 +36,21 @@ interface Section10ContextType {
   // State
   section10Data: Section10;
   isLoading: boolean;
-  errors: Record<string, string>;
-  isDirty: boolean;
+  // REMOVED: isDirty - only save button should trigger state updates
 
   // Dual Citizenship Actions
   updateDualCitizenshipFlag: (value: string) => void;
   addDualCitizenship: () => void;
   removeDualCitizenship: (index: number) => void;
   updateDualCitizenship: (index: number, field: string, value: any) => void;
+  canAddDualCitizenship: () => boolean;
 
   // Foreign Passport Actions
   updateForeignPassportFlag: (value: string) => void;
   addForeignPassport: () => void;
   removeForeignPassport: (index: number) => void;
   updateForeignPassport: (index: number, field: string, value: any) => void;
+  canAddForeignPassport: () => boolean;
 
   // Utility Functions
   resetSection: () => void;
@@ -71,20 +70,19 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
   // STATE MANAGEMENT
   // ============================================================================
 
-  const [section10Data, setSection10Data] = useState<Section10>(() => createDefaultSection10());
+  const [section10Data, setSection10Data] = useState<Section10>(() => {
+    return createDefaultSection10();
+  });
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isDirty, setIsDirty] = useState(false);
+  // REMOVED: isDirty state - only save button should trigger state updates
   const currentDataRef = useRef(section10Data);
+
+  // REMOVED: State change tracking - only save button should trigger updates
 
   // Update ref when data changes
   useEffect(() => {
     currentDataRef.current = section10Data;
   }, [section10Data]);
-
-  if (isDebugMode) {
-    console.log('🔄 Section10: Current data state:', section10Data);
-  }
 
   // ============================================================================
   // UTILITY FUNCTIONS (DECLARED EARLY FOR INTEGRATION)
@@ -193,165 +191,162 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
       });
     }
 
-    setErrors(newErrors);
+    // FIXED: Removed setErrors(newErrors) call that was causing infinite loop
+    // Return validation result with errors included - let the component handle error state
     return {
       isValid: Object.keys(newErrors).length === 0,
       errors: validationErrors,
-      warnings
+      warnings,
+      fieldErrors: newErrors // Include field errors for component to use
     };
   }, [section10Data]);
 
   const getChanges = useCallback(() => {
-    // Return changes for tracking purposes following Section 1 pattern
-    return isDirty ? section10Data : null;
-  }, [section10Data, isDirty]);
+    // REMOVED: isDirty tracking - only save button should trigger state updates
+    return section10Data; // Always return current data since we're not tracking dirty state
+  }, [section10Data]);
 
   // ============================================================================
-  // SF86FORM INTEGRATION FOLLOWING SECTION 1 GOLD STANDARD
+  // FIELD UPDATE FUNCTIONS (FOLLOWING SECTION 29 PATTERN)
   // ============================================================================
 
-  // Integration with main form context using Section 1 gold standard pattern
+  /**
+   * Main field update function following Section 29's exact pattern
+   * Handles updates for dual citizenship and foreign passport entries
+   * Signature: (subsectionType, entryIndex, fieldPath, newValue)
+   */
+  const updateFieldValue = useCallback((
+    subsectionType: 'dualCitizenship' | 'foreignPassport',
+    entryIndex: number,
+    fieldPath: string,
+    newValue: any
+  ) => {
+    try {
+      setSection10Data((prev) => {
+        const updated = cloneDeep(prev);
+        const subsection = updated.section10[subsectionType];
+
+        if (
+          subsection?.entries &&
+          entryIndex >= 0 &&
+          entryIndex < subsection?.entries.length
+        ) {
+          const entry = subsection?.entries[entryIndex];
+          const fullFieldPath = `${fieldPath}.value`;
+          set(entry, fullFieldPath, newValue);
+        }
+
+        return updated;
+      });
+    } catch (error) {
+      console.error('Section10: updateFieldValue error:', error);
+    }
+  }, []);
+
+  /**
+   * Flag update functions for main section flags
+   */
+  const updateDualCitizenshipFlag = useCallback((value: string) => {
+    setSection10Data(prevData => {
+      const newData = cloneDeep(prevData);
+      newData.section10.dualCitizenship.hasDualCitizenship.value = value;
+      return newData;
+    });
+  }, []);
+
+  const updateForeignPassportFlag = useCallback((value: string) => {
+    setSection10Data(prevData => {
+      const newData = cloneDeep(prevData);
+      newData.section10.foreignPassport.hasForeignPassport.value = value;
+      return newData;
+    });
+  }, []);
+
+  // ============================================================================
+  // SF86FORM INTEGRATION (FOLLOWING SECTION 29 PATTERN)
+  // ============================================================================
+
+  // REMOVED: updateFieldValueWrapper - Section 10 context is now source of truth
+  // SF86FormContext only updated on explicit save via handleSubmit in component
+
+  // FIXED: Integration with main form context using Section 1/29 pattern
+  // Section context is source of truth - SF86FormContext only updated on explicit save
   // Note: integration variable is used internally by the hook for registration
   const integration = useSection86FormIntegration(
     'section10',
     'Section 10: Dual/Multiple Citizenship & Foreign Passport',
     section10Data,
     setSection10Data,
-    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
+    () => {
+      // FIXED: Call validateSection only once to prevent multiple calls
+      const result = validateSection();
+      return { isValid: result.isValid, errors: result.errors, warnings: result.warnings };
+    },
     getChanges,
-    undefined // updateFieldValue will be defined after integration
+    undefined // FIXED: Don't pass updateFieldValueWrapper to prevent automatic sync
   );
 
   // ============================================================================
-  // FIELD UPDATE FUNCTION FOLLOWING SECTION 1 PATTERN
+  // DUAL CITIZENSHIP ACTIONS FOLLOWING SECTION 29 PATTERN
   // ============================================================================
-
-  /**
-   * Updates a field value in the section data following Section 1 pattern
-   * This function maps generic field paths to section-specific updates
-   */
-  const updateFieldValue = useCallback((path: string, value: any) => {
-    if (isDebugMode) {
-      console.log(`🔄 Section10: updateFieldValue called with path: ${path}, value:`, value);
-    }
-
-    setSection10Data(prev => {
-      const newData = { ...prev };
-
-      // Handle main flag fields
-      if (path === 'section10.dualCitizenship.hasDualCitizenship') {
-        newData.section10.dualCitizenship.hasDualCitizenship.value = value;
-      } else if (path === 'section10.foreignPassport.hasForeignPassport') {
-        newData.section10.foreignPassport.hasForeignPassport.value = value;
-      }
-      // Handle entry fields
-      else if (path.includes('dualCitizenship.entries')) {
-        // Parse path like: section10.dualCitizenship.entries[0].country
-        const match = path.match(/entries\[(\d+)\]\.(\w+)/);
-        if (match) {
-          const index = parseInt(match[1]);
-          const field = match[2];
-
-          // Ensure entry exists
-          while (newData.section10.dualCitizenship.entries.length <= index) {
-            newData.section10.dualCitizenship.entries.push(createDualCitizenshipEntry(newData.section10.dualCitizenship.entries.length));
-          }
-
-          if (newData.section10.dualCitizenship.entries[index] && newData.section10.dualCitizenship.entries[index][field as keyof DualCitizenshipEntry]) {
-            (newData.section10.dualCitizenship.entries[index][field as keyof DualCitizenshipEntry] as any).value = value;
-          }
-        }
-      } else if (path.includes('foreignPassport.entries')) {
-        // Parse path like: section10.foreignPassport.entries[0].country
-        const match = path.match(/entries\[(\d+)\]\.(\w+)/);
-        if (match) {
-          const index = parseInt(match[1]);
-          const field = match[2];
-
-          // Ensure entry exists
-          while (newData.section10.foreignPassport.entries.length <= index) {
-            newData.section10.foreignPassport.entries.push(createForeignPassportEntry(newData.section10.foreignPassport.entries.length));
-          }
-
-          if (newData.section10.foreignPassport.entries[index] && newData.section10.foreignPassport.entries[index][field as keyof ForeignPassportEntry]) {
-            (newData.section10.foreignPassport.entries[index][field as keyof ForeignPassportEntry] as any).value = value;
-          }
-        }
-      }
-
-      setIsDirty(true);
-
-      // Sync data to SF86FormContext cache - CRITICAL for data persistence
-      integration.emitDataSync('data_updated', newData);
-      console.log(`🔄 Section10: updateFieldValue - synced data to SF86FormContext`);
-
-      return newData;
-    });
-  }, [integration]);
-
-  // ============================================================================
-  // DUAL CITIZENSHIP ACTIONS FOLLOWING SECTION 1 PATTERN
-  // ============================================================================
-
-  const updateDualCitizenshipFlag = useCallback((value: string) => {
-    updateFieldValue('section10.dualCitizenship.hasDualCitizenship', value);
-  }, [updateFieldValue]);
 
   const addDualCitizenship = useCallback(() => {
     setSection10Data(prev => {
-      const newData = addDualCitizenshipEntry(prev);
-      // Sync data to SF86FormContext cache
-      integration.emitDataSync('data_updated', newData);
-      return newData;
+      if (prev.section10.dualCitizenship.entries.length >= 2) {
+        return prev; // Don't add if already at limit
+      }
+      return addDualCitizenshipEntry(prev);
     });
-    setIsDirty(true);
-  }, [integration]);
+  }, []);
 
   const removeDualCitizenship = useCallback((index: number) => {
     setSection10Data(prev => {
       const newData = removeDualCitizenshipEntry(prev, index);
-      // Sync data to SF86FormContext cache
-      integration.emitDataSync('data_updated', newData);
+      // REMOVED: setIsDirty(true) - only save button should trigger state updates
       return newData;
     });
-    setIsDirty(true);
-  }, [integration]);
+  }, []);
 
   const updateDualCitizenship = useCallback((index: number, field: string, value: any) => {
-    updateFieldValue(`section10.dualCitizenship.entries[${index}].${field}`, value);
+    updateFieldValue('dualCitizenship', index, field, value);
   }, [updateFieldValue]);
 
   // ============================================================================
-  // FOREIGN PASSPORT ACTIONS FOLLOWING SECTION 1 PATTERN
+  // FOREIGN PASSPORT ACTIONS FOLLOWING SECTION 29 PATTERN
   // ============================================================================
-
-  const updateForeignPassportFlag = useCallback((value: string) => {
-    updateFieldValue('section10.foreignPassport.hasForeignPassport', value);
-  }, [updateFieldValue]);
 
   const addForeignPassport = useCallback(() => {
     setSection10Data(prev => {
-      const newData = addForeignPassportEntry(prev);
-      // Sync data to SF86FormContext cache
-      integration.emitDataSync('data_updated', newData);
-      return newData;
+      if (prev.section10.foreignPassport.entries.length >= 2) {
+        return prev; // Don't add if already at limit
+      }
+      return addForeignPassportEntry(prev);
     });
-    setIsDirty(true);
-  }, [integration]);
+  }, []);
 
   const removeForeignPassport = useCallback((index: number) => {
     setSection10Data(prev => {
       const newData = removeForeignPassportEntry(prev, index);
-      // Sync data to SF86FormContext cache
-      integration.emitDataSync('data_updated', newData);
+      // REMOVED: setIsDirty(true) - only save button should trigger state updates
       return newData;
     });
-    setIsDirty(true);
-  }, [integration]);
+  }, []);
 
   const updateForeignPassport = useCallback((index: number, field: string, value: any) => {
-    updateFieldValue(`section10.foreignPassport.entries[${index}].${field}`, value);
+    updateFieldValue('foreignPassport', index, field, value);
   }, [updateFieldValue]);
+
+  // ============================================================================
+  // ENTRY LIMIT HELPER FUNCTIONS
+  // ============================================================================
+
+  const canAddDualCitizenship = useCallback(() => {
+    return section10Data.section10.dualCitizenship.entries.length < 2;
+  }, [section10Data.section10.dualCitizenship.entries.length]);
+
+  const canAddForeignPassport = useCallback(() => {
+    return section10Data.section10.foreignPassport.entries.length < 2;
+  }, [section10Data.section10.foreignPassport.entries.length]);
 
   // ============================================================================
   // UTILITY FUNCTIONS
@@ -359,12 +354,11 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const resetSection = useCallback(() => {
     setSection10Data(createDefaultSection10());
-    setErrors({});
-    setIsDirty(false);
+    // FIXED: Removed setErrors({}) call to prevent infinite loops
+    // REMOVED: setIsDirty(false) - only save button should trigger state updates
   }, []);
 
   const loadSection = useCallback((data: Section10) => {
-    // Safeguard: Only load if the incoming data is different and not empty
     const currentData = currentDataRef.current;
     const hasCurrentEntries =
       (currentData.section10.dualCitizenship.entries.length > 0 ||
@@ -376,13 +370,10 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     // If we have current data with entries and incoming data is empty/default, preserve current data
     if (hasCurrentEntries && !hasIncomingEntries) {
-      console.log(`🛡️ Section10: Preserving current data - incoming data appears to be default/empty`);
       return;
     }
 
-    // If incoming data has entries or current data is empty, load the new data
     setSection10Data(data);
-    setIsDirty(false);
   }, []);
 
 
@@ -459,31 +450,52 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
   // CONTEXT VALUE
   // ============================================================================
 
-  const contextValue: Section10ContextType = {
+  // FIXED: Memoize context value to prevent infinite re-renders
+  const contextValue: Section10ContextType = useMemo(() => ({
     // State
     section10Data,
     isLoading,
-    errors,
-    isDirty,
+    // REMOVED: isDirty - only save button should trigger state updates
 
     // Dual Citizenship Actions
     updateDualCitizenshipFlag,
     addDualCitizenship,
     removeDualCitizenship,
     updateDualCitizenship,
+    canAddDualCitizenship,
 
     // Foreign Passport Actions
     updateForeignPassportFlag,
     addForeignPassport,
     removeForeignPassport,
     updateForeignPassport,
+    canAddForeignPassport,
 
     // Utility Functions
     resetSection,
     loadSection,
     validateSection,
     getChanges
-  };
+  }), [
+    // Dependencies for memoization
+    section10Data,
+    isLoading,
+    // REMOVED: isDirty - only save button should trigger state updates
+    updateDualCitizenshipFlag,
+    addDualCitizenship,
+    removeDualCitizenship,
+    updateDualCitizenship,
+    canAddDualCitizenship,
+    updateForeignPassportFlag,
+    addForeignPassport,
+    removeForeignPassport,
+    updateForeignPassport,
+    canAddForeignPassport,
+    resetSection,
+    loadSection,
+    validateSection,
+    getChanges
+  ]);
 
   return (
     <Section10Context.Provider value={contextValue}>
