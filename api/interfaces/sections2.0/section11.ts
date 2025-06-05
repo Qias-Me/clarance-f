@@ -920,21 +920,45 @@ export const updateSection11Field = (
 /**
  * Adds a new residence entry to Section 11
  */
+// Global flag to prevent double execution at the interface level
+let isAddingResidenceEntry = false;
+
 export const addResidenceEntry = (section11Data: Section11): Section11 => {
-  const newData = { ...section11Data };
-  const currentLength = newData.section11.residences.length;
+  // Prevent double execution at the lowest level
+  if (isAddingResidenceEntry) {
+    console.warn(`🚫 addResidenceEntryImpl: Already adding entry, returning unchanged data`);
+    return section11Data;
+  }
 
-  console.log(`🏠 addResidenceEntryImpl: Current length: ${currentLength}, creating entry at index: ${currentLength}`);
+  isAddingResidenceEntry = true;
 
-  const newEntry = createDefaultResidenceEntry(currentLength);
+  try {
+    const newData = { ...section11Data };
+    const currentLength = newData.section11.residences.length;
 
-  console.log(`🏠 addResidenceEntryImpl: Created entry for index ${currentLength}, adding to array`);
+    console.log(`🏠 addResidenceEntryImpl: Current length: ${currentLength}, creating entry at index: ${currentLength}`);
 
-  newData.section11.residences = [...newData.section11.residences, newEntry];
+    // Additional safety check - prevent creating more than 4 entries
+    if (currentLength >= 4) {
+      console.warn(`🚫 addResidenceEntryImpl: Cannot add more than 4 entries (current: ${currentLength})`);
+      return section11Data;
+    }
 
-  console.log(`🏠 addResidenceEntryImpl: Final array length: ${newData.section11.residences.length}`);
+    const newEntry = createDefaultResidenceEntry(currentLength);
 
-  return newData;
+    console.log(`🏠 addResidenceEntryImpl: Created entry for index ${currentLength}, adding to array`);
+
+    newData.section11.residences = [...newData.section11.residences, newEntry];
+
+    console.log(`🏠 addResidenceEntryImpl: Final array length: ${newData.section11.residences.length}`);
+
+    return newData;
+  } finally {
+    // Reset flag after a short delay to allow for React's double execution
+    setTimeout(() => {
+      isAddingResidenceEntry = false;
+    }, 200);
+  }
 };
 
 /**

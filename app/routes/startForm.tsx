@@ -25,7 +25,7 @@ import { ServerPdfService2 } from "api/service/serverPdfService2.0";
 
 // Section component imports from Rendered2.0
 // Import shared SF-86 section configuration instead of individual components
-import { ALL_SF86_SECTIONS, SECTION_ORDER } from "~/utils/sf86SectionConfig";
+import { ALL_SF86_SECTIONS, SECTION_ORDER, createSectionTitleMapping } from "~/utils/sf86SectionConfig";
 import { populateTestData } from "~/utils/testDataPopulator";
 
 // ============================================================================
@@ -519,7 +519,7 @@ export async function loader({}: Route.LoaderArgs) {
       "resetForm",
     ],
     sectionOrder: SECTION_ORDER,
-    sectionTitles: ALL_SF86_SECTIONS,
+    sectionTitles: createSectionTitleMapping(), // Use proper mapping function
     lastUpdated: new Date().toISOString(),
   };
 

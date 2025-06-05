@@ -106,6 +106,24 @@ export const getSectionById = (sectionId: string): SectionDefinition | undefined
   return ALL_SF86_SECTIONS.find(section => section.id === sectionId);
 };
 
+/**
+ * Get section name by ID
+ */
+export const getSectionNameById = (sectionId: string): string => {
+  const section = getSectionById(sectionId);
+  return section?.name || sectionId;
+};
+
+/**
+ * Create a mapping of section IDs to section names
+ */
+export const createSectionTitleMapping = (): Record<string, string> => {
+  return ALL_SF86_SECTIONS.reduce((mapping, section) => {
+    mapping[section.id] = section.name;
+    return mapping;
+  }, {} as Record<string, string>);
+};
+
 
 /**
  * Section order for navigation

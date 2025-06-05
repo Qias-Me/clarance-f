@@ -144,14 +144,14 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
     }
   }, [removeResidenceEntry, getEntryCount, activeEntryIndex]);
 
-  const handleValidateAndContinue = useCallback(async (e: React.FormEvent) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     setShowValidation(true);
 
     const result = validateSection();
     console.log(`🔍 Section 11 validation result:`, result);
 
-    if (result.isValid) {
+    // if (result.isValid) {
       try {
         // Update the central form context with Section 11 data
         sf86Form.updateSectionData('section11', section11Data);
@@ -166,9 +166,9 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
       } catch (error) {
         console.error('Failed to save Section 11 data:', error);
       }
-    } else {
-      console.warn(`⚠️ Section 11 validation failed:`, result.errors);
-    }
+    // } else {
+    //   console.warn(`⚠️ Section 11 validation failed:`, result.errors);
+    // }
   }, [validateSection, sf86Form, section11Data, onNext]);
   
   // ============================================================================
@@ -874,7 +874,7 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
 
             <button
               type="button"
-              onClick={handleValidateAndContinue}
+              onClick={handleSubmit}
               className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isLoading}
             >

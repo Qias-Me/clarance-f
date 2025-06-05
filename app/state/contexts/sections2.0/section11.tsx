@@ -347,13 +347,19 @@ export const Section11Provider: React.FC<Section11ProviderProps> = ({ children }
       console.log(`🏠 Context: Current entries:`, prevData.section11.residences.map((entry, i) => `Entry ${i}: ${entry.address.streetAddress.value || 'empty'}`));
 
       const newData = addResidenceEntryImpl(prevData);
+
+      // Double-check that we didn't exceed the limit after adding
+      if (newData.section11.residences.length > MAX_ENTRIES) {
+        console.error(`🚫 Context: Entry count exceeded maximum after adding! Reverting to previous state.`);
+        addingEntryRef.current = false;
+        return prevData; // Return unchanged data
+      }
+
       console.log(`🏠 Context: After adding entry. New count: ${newData.section11.residences.length}`);
       console.log(`🏠 Context: New entries:`, newData.section11.residences.map((entry, i) => `Entry ${i}: ${entry.address.streetAddress.value || 'empty'}`));
 
-      // Reset flag after successful addition
-      setTimeout(() => {
-        addingEntryRef.current = false;
-      }, 100);
+      // Reset flag immediately after successful addition
+      addingEntryRef.current = false;
 
       return newData;
     });
