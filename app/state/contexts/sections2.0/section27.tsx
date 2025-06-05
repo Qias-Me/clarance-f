@@ -11,7 +11,6 @@ import React, {
   useState,
   useCallback,
   useEffect,
-  useMemo,
 } from 'react';
 import { cloneDeep } from 'lodash';
 import type {
@@ -32,8 +31,7 @@ import {
 import type {
   ValidationResult,
   ValidationError,
-  ChangeSet,
-  BaseSectionContext
+  ChangeSet
 } from '../shared/base-interfaces';
 import { useSection86FormIntegration } from '../shared/section-context-integration';
 
@@ -74,7 +72,10 @@ export interface Section27ContextType {
 // ============================================================================
 
 const createInitialSection27State = (): Section27 => {
-  return createDefaultSection27();
+  console.log('🔍 Creating initial Section 27 state...');
+  const initialState = createDefaultSection27();
+  console.log('✅ Initial Section 27 state created:', initialState);
+  return initialState;
 };
 
 // ============================================================================
@@ -92,6 +93,8 @@ export interface Section27ProviderProps {
 }
 
 export const Section27Provider: React.FC<Section27ProviderProps> = ({ children }) => {
+  console.log('🔍 Section27Provider rendering...');
+  
   // ============================================================================
   // CORE STATE MANAGEMENT
   // ============================================================================
@@ -101,13 +104,18 @@ export const Section27Provider: React.FC<Section27ProviderProps> = ({ children }
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [initialData] = useState<Section27>(createInitialSection27State());
 
+  console.log('📊 Current Section 27 state:', {
+    section27Data,
+    isLoading,
+    errors,
+    isDirty: JSON.stringify(section27Data) !== JSON.stringify(initialData)
+  });
+
   // ============================================================================
   // COMPUTED VALUES
   // ============================================================================
 
-  const isDirty = useMemo(() => {
-    return JSON.stringify(section27Data) !== JSON.stringify(initialData);
-  }, [section27Data, initialData]);
+  const isDirty = JSON.stringify(section27Data) !== JSON.stringify(initialData);
 
   // ============================================================================
   // VALIDATION FUNCTIONS
@@ -201,7 +209,6 @@ export const Section27Provider: React.FC<Section27ProviderProps> = ({ children }
       // If setting to NO, clear entries
       if (value === "NO") {
         newData.section27[subsectionKey].entries = [];
-        newData.section27[subsectionKey].entriesCount = 0;
       }
 
       return newData;
@@ -209,38 +216,60 @@ export const Section27Provider: React.FC<Section27ProviderProps> = ({ children }
   }, []);
 
   const addEntry = useCallback((subsectionKey: Section27SubsectionKey) => {
+    console.log('🔍 Adding entry to subsection:', subsectionKey);
+    
     setSection27Data(prevData => {
+      console.log('📊 Previous section27 data:', prevData);
+      
       const newData = cloneDeep(prevData);
-
       let newEntry: Section27Entry;
+
       switch (subsectionKey) {
         case 'illegalAccess':
+          console.log('🔍 Creating illegal access entry...');
           newEntry = createDefaultSection27_1Entry();
+          console.log('✅ Illegal access entry created:', newEntry);
           break;
         case 'illegalModification':
+          console.log('🔍 Creating illegal modification entry...');
           newEntry = createDefaultSection27_2Entry();
+          console.log('✅ Illegal modification entry created:', newEntry);
           break;
         case 'unauthorizedUse':
+          console.log('🔍 Creating unauthorized use entry...');
           newEntry = createDefaultSection27_3Entry();
+          console.log('✅ Unauthorized use entry created:', newEntry);
           break;
         default:
           throw new Error(`Unknown subsection: ${subsectionKey}`);
       }
 
+      console.log('🔍 Adding entry to subsection array...');
       newData.section27[subsectionKey].entries.push(newEntry);
-      newData.section27[subsectionKey].entriesCount = newData.section27[subsectionKey].entries.length;
+      
+      console.log('✅ Updated section27 data:', {
+        subsectionKey,
+        entriesCount: newData.section27[subsectionKey].entries.length,
+        entries: newData.section27[subsectionKey].entries,
+        newEntry
+      });
 
       return newData;
     });
   }, []);
 
   const removeEntry = useCallback((subsectionKey: Section27SubsectionKey, entryIndex: number) => {
+    console.log('🗑️ Removing entry:', { subsectionKey, entryIndex });
+    
     setSection27Data(prevData => {
       const newData = cloneDeep(prevData);
 
       if (entryIndex >= 0 && entryIndex < newData.section27[subsectionKey].entries.length) {
+        console.log('✅ Removing entry at index:', entryIndex);
         newData.section27[subsectionKey].entries.splice(entryIndex, 1);
-        newData.section27[subsectionKey].entriesCount = newData.section27[subsectionKey].entries.length;
+        console.log('✅ Updated entries count:', newData.section27[subsectionKey].entries.length);
+      } else {
+        console.warn('⚠️ Invalid entry index for removal:', entryIndex);
       }
 
       return newData;
@@ -248,24 +277,41 @@ export const Section27Provider: React.FC<Section27ProviderProps> = ({ children }
   }, []);
 
   const updateFieldValue = useCallback((subsectionKey: Section27SubsectionKey, entryIndex: number, fieldPath: string, newValue: any) => {
+    console.log('📝 Updating field value:', { subsectionKey, entryIndex, fieldPath, newValue });
+    
     setSection27Data(prevData => {
       const newData = cloneDeep(prevData);
 
       if (entryIndex >= 0 && entryIndex < newData.section27[subsectionKey].entries.length) {
+        console.log('✅ Valid entry index, updating field...');
         const entry = newData.section27[subsectionKey].entries[entryIndex];
+        console.log('📊 Current entry:', entry);
+        
         const pathParts = fieldPath.split('.');
         let current: any = entry;
 
+        console.log('🔍 Navigating field path:', pathParts);
         for (let i = 0; i < pathParts.length - 1; i++) {
+          console.log(`🔍 Navigating to: ${pathParts[i]}`);
           current = current[pathParts[i]];
+          console.log('📊 Current object:', current);
         }
 
         const lastKey = pathParts[pathParts.length - 1];
+        console.log('🔍 Final field key:', lastKey);
+        console.log('📊 Target field object:', current[lastKey]);
+        
         if (current[lastKey] && typeof current[lastKey] === 'object' && 'value' in current[lastKey]) {
+          console.log('✅ Updating field.value property');
           current[lastKey].value = newValue;
         } else {
+          console.log('✅ Updating field directly');
           current[lastKey] = newValue;
         }
+        
+        console.log('✅ Updated entry:', newData.section27[subsectionKey].entries[entryIndex]);
+      } else {
+        console.warn('⚠️ Invalid entry index for field update:', entryIndex);
       }
 
       return newData;
@@ -281,6 +327,7 @@ export const Section27Provider: React.FC<Section27ProviderProps> = ({ children }
   // ============================================================================
 
   const getEntryCount = useCallback((subsectionKey: Section27SubsectionKey): number => {
+    console.log('📊 Getting entry count for:', subsectionKey, 'Count:', section27Data.section27[subsectionKey].entries.length);
     return section27Data.section27[subsectionKey].entries.length;
   }, [section27Data]);
 
@@ -316,46 +363,52 @@ export const Section27Provider: React.FC<Section27ProviderProps> = ({ children }
   }, [section27Data, initialData]);
 
   // ============================================================================
-  // SF86FORM INTEGRATION
+  // SIMPLIFIED UPDATE FIELD VALUE FOR INTEGRATION (Following Section 1 Pattern)
   // ============================================================================
 
-  // Create BaseSectionContext for integration
-  const contextId = useMemo(() => Math.random().toString(36).substring(2, 9), []);
-  const baseSectionContext: BaseSectionContext = useMemo(() => ({
-    sectionId: 'section27',
-    sectionName: 'Section 27: Use of Information Technology Systems',
-    sectionData: section27Data,
-    isLoading,
-    errors: Object.values(errors).map(msg => ({ field: 'general', message: msg, code: 'ERROR', severity: 'error' as const })),
-    isDirty,
-    lastUpdated: new Date(),
-    updateFieldValue: (fieldPath: string, newValue: any) => {
-      // Parse fieldPath to extract subsection and entry info
-      const pathParts = fieldPath.split('.');
+  /**
+   * Generic field update function for integration compatibility
+   * Maps generic field paths to Section 27 specific update functions
+   * Following Section 1's simple pattern instead of complex field path parsing
+   */
+  const updateFieldValueForIntegration = useCallback((path: string, value: any) => {
+    // Parse path to update the correct field
+    const pathParts = path.split('.');
+    
       if (pathParts.length >= 3) {
-        const subsectionKey = pathParts[0] as Section27SubsectionKey;
-        const entryIndex = parseInt(pathParts[1]);
-        const remainingPath = pathParts.slice(2).join('.');
-        updateFieldValue(subsectionKey, entryIndex, remainingPath, newValue);
+      const subsectionKey = pathParts[1] as Section27SubsectionKey;
+      const fieldName = pathParts[2];
+      
+      // Handle subsection flags (YES/NO values)
+      if (fieldName === 'hasViolation') {
+        updateSubsectionFlag(subsectionKey, value);
+        return;
       }
-    },
-    validateSection,
-    resetSection,
-    loadSection,
-    getChanges
-  }), [section27Data, isLoading, errors, isDirty, updateFieldValue, validateSection, resetSection, loadSection, getChanges]);
+      
+      // Handle entry field updates
+      if (pathParts.length >= 4 && pathParts[2] === 'entries') {
+        const entryIndex = parseInt(pathParts[3]);
+        const fieldPath = pathParts.slice(4).join('.');
+        updateFieldValue(subsectionKey, entryIndex, fieldPath, value);
+      }
+    }
+  }, [updateSubsectionFlag, updateFieldValue]);
 
-  // Integration with main form context
+  // ============================================================================
+  // SF86FORM INTEGRATION (Simplified following Section 1 pattern)
+  // ============================================================================
+
+  // Integration with main form context using standard pattern
+  // Note: integration variable is used internally by the hook for registration
   const integration = useSection86FormIntegration(
     'section27',
     'Section 27: Use of Information Technology Systems',
     section27Data,
     setSection27Data,
-    validateSection,
-    getChanges
+    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
+    getChanges,
+    updateFieldValueForIntegration // Pass Section 27's simplified updateFieldValue function to integration
   );
-
-
 
   // ============================================================================
   // CONTEXT VALUE

@@ -9,6 +9,7 @@
 import type { Section27SubsectionKey } from 'api/interfaces/sections2.0/section27';
 import React, { useEffect, useState } from 'react';
 import { useSection27 } from '~/state/contexts/sections2.0/section27';
+import { useSF86Form } from '~/state/contexts/SF86FormContext';
 
 interface Section27ComponentProps {
   className?: string;
@@ -33,46 +34,120 @@ export const Section27Component: React.FC<Section27ComponentProps> = ({
     errors
   } = useSection27();
 
+  // SF86 Form Context for data persistence
+  const sf86Form = useSF86Form();
+
   // Track validation state internally
   const [isValid, setIsValid] = useState(false);
+
+  // Add debugging to track data changes
+  // useEffect(() => {
+  //   console.log('🔄 UI: section27Data changed:', {
+  //     illegalAccess: {
+  //       hasViolation: section27Data.section27.illegalAccess.hasViolation.value,
+  //       entriesCount: section27Data.section27.illegalAccess.entries.length
+  //     },
+  //     illegalModification: {
+  //       hasViolation: section27Data.section27.illegalModification.hasViolation.value,
+  //       entriesCount: section27Data.section27.illegalModification.entries.length
+  //     },
+  //     unauthorizedUse: {
+  //       hasViolation: section27Data.section27.unauthorizedUse.hasViolation.value,
+  //       entriesCount: section27Data.section27.unauthorizedUse.entries.length
+  //     }
+  //   });
+  // }, [section27Data]);
 
   // Handle validation on component mount and when data changes
   useEffect(() => {
     const validationResult = validateSection();
     setIsValid(validationResult.isValid);
     onValidationChange?.(validationResult.isValid);
-  }, [section27Data]);
+  }, [section27Data, validateSection, onValidationChange]);
 
-  // Handle form submission
-  const handleSubmit = (e: React.FormEvent) => {
+  // Auto-save functionality with debounce
+  useEffect(() => {
+    // Only auto-save if there are actual changes and auto-save is enabled
+    if (isDirty && sf86Form.autoSave) {
+      const timeoutId = setTimeout(async () => {
+        try {
+          sf86Form.updateSectionData('section27', section27Data);
+          await sf86Form.saveForm();
+          console.log('🔄 Section 27 auto-saved successfully');
+        } catch (error) {
+          console.error('❌ Auto-save failed for Section 27:', error);
+        }
+      }, 2000); // 2 second debounce
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [section27Data, isDirty, sf86Form]);
+
+  // Handle form submission with data persistence
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = validateSection();
     setIsValid(result.isValid);
     onValidationChange?.(result.isValid);
 
-    if (result.isValid && onNext) {
-      onNext();
+    if (result.isValid) {
+      try {
+        console.log('💾 Submitting Section 27 data:', section27Data);
+        sf86Form.updateSectionData('section27', section27Data);
+        await sf86Form.saveForm();
+        console.log('✅ Section 27 data saved successfully:', section27Data);
+        if (onNext) {
+          onNext();
+        }
+      } catch (error) {
+        console.error('❌ Failed to save Section 27 data during submit:', error);
+      }
+    }
+  };
+
+  // Handle save without validation requirement
+  const handleSave = async () => {
+    try {
+      console.log('💾 Manually saving Section 27 data:', section27Data);
+      sf86Form.updateSectionData('section27', section27Data);
+      await sf86Form.saveForm();
+      console.log('✅ Section 27 data saved successfully (manual save):', section27Data);
+    } catch (error) {
+      console.error('❌ Failed to save Section 27 data (manual save):', error);
     }
   };
 
   // Handle subsection flag changes
   const handleSubsectionFlagChange = (subsectionKey: Section27SubsectionKey, value: 'YES' | 'NO') => {
+    // console.log('🚩 UI: Subsection flag change:', { subsectionKey, value });
     updateSubsectionFlag(subsectionKey, value);
   };
 
   // Handle adding entries
   const handleAddEntry = (subsectionKey: Section27SubsectionKey) => {
+    console.log('🚀 UI: Adding entry for subsection:', subsectionKey);
+    // console.log('📊 UI: Current entries before add:', section27Data.section27[subsectionKey].entries);
     addEntry(subsectionKey);
+    // setTimeout(() => {
+    //   console.log('📊 UI: Entries after add (delayed check):', section27Data.section27[subsectionKey].entries);
+    // }, 100);
   };
 
   // Handle removing entries
   const handleRemoveEntry = (subsectionKey: Section27SubsectionKey, entryIndex: number) => {
+    console.log('🗑️ UI: Removing entry:', { subsectionKey, entryIndex });
+    // console.log('📊 UI: Current entries before remove:', section27Data.section27[subsectionKey].entries);
     removeEntry(subsectionKey, entryIndex);
   };
 
   // Handle field value updates
   const handleFieldUpdate = (subsectionKey: Section27SubsectionKey, entryIndex: number, fieldPath: string, value: any) => {
+    // console.log('✏️ UI: Field update requested:', { subsectionKey, entryIndex, fieldPath, value });
+    // console.log('📊 UI: Current entry before update:', section27Data.section27[subsectionKey].entries[entryIndex]);
     updateFieldValue(subsectionKey, entryIndex, fieldPath, value);
+    // setTimeout(() => {
+    //   console.log('📊 UI: Entry after update (delayed check):', section27Data.section27[subsectionKey].entries[entryIndex]);
+    // }, 100);
   };
 
   return (
@@ -141,8 +216,8 @@ export const Section27Component: React.FC<Section27ComponentProps> = ({
               </div>
 
               {section27Data.section27.illegalAccess.entries.map((entry, index) => (
-                <div key={index} className="border rounded p-3 mb-3 bg-gray-50">
-                  <div className="flex justify-between items-center mb-2">
+                <div key={index} className="border rounded p-4 mb-4 bg-gray-50">
+                  <div className="flex justify-between items-center mb-4">
                     <h5 className="font-medium">Incident {index + 1}</h5>
                     <button
                       type="button"
@@ -153,14 +228,155 @@ export const Section27Component: React.FC<Section27ComponentProps> = ({
                       Remove
                     </button>
                   </div>
-                  <textarea
-                    placeholder="Describe the illegal access incident..."
-                    value={entry.description?.value || ''}
-                    onChange={(e) => handleFieldUpdate('illegalAccess', index, 'description', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                    rows={3}
-                    data-testid={`illegal-access-description-${index}`}
-                  />
+                  
+                  {/* Incident Date */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Incident Date
+                      </label>
+                      <input
+                        type="date"
+                        value={entry.incidentDate?.date?.value || ''}
+                        onChange={(e) => handleFieldUpdate('illegalAccess', index, 'incidentDate.date', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-red-500 focus:border-red-500"
+                        data-testid={`illegal-access-date-${index}`}
+                      />
+                    </div>
+                    <div className="flex items-center">
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={entry.incidentDate?.estimated?.value || false}
+                          onChange={(e) => handleFieldUpdate('illegalAccess', index, 'incidentDate.estimated', e.target.checked)}
+                          className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                          data-testid={`illegal-access-estimated-${index}`}
+                        />
+                        <span className="text-sm text-gray-700">Date is estimated</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Description
+                    </label>
+                    <textarea
+                      placeholder="Describe the illegal access incident..."
+                      value={entry.description?.value || ''}
+                      onChange={(e) => handleFieldUpdate('illegalAccess', index, 'description', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-red-500 focus:border-red-500"
+                      rows={3}
+                      data-testid={`illegal-access-description-${index}`}
+                    />
+                  </div>
+
+                  {/* Location */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Location
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="Street Address"
+                          value={entry.location?.street?.value || ''}
+                          onChange={(e) => handleFieldUpdate('illegalAccess', index, 'location.street', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-red-500 focus:border-red-500"
+                          data-testid={`illegal-access-street-${index}`}
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="City"
+                          value={entry.location?.city?.value || ''}
+                          onChange={(e) => handleFieldUpdate('illegalAccess', index, 'location.city', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-red-500 focus:border-red-500"
+                          data-testid={`illegal-access-city-${index}`}
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="State"
+                          value={entry.location?.state?.value || ''}
+                          onChange={(e) => handleFieldUpdate('illegalAccess', index, 'location.state', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-red-500 focus:border-red-500"
+                          data-testid={`illegal-access-state-${index}`}
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="ZIP Code"
+                          value={entry.location?.zipCode?.value || ''}
+                          onChange={(e) => handleFieldUpdate('illegalAccess', index, 'location.zipCode', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-red-500 focus:border-red-500"
+                          data-testid={`illegal-access-zipcode-${index}`}
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-2">
+                      <input
+                        type="text"
+                        placeholder="Country"
+                        value={entry.location?.country?.value || ''}
+                        onChange={(e) => handleFieldUpdate('illegalAccess', index, 'location.country', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-red-500 focus:border-red-500"
+                        data-testid={`illegal-access-country-${index}`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Action Taken */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Action Taken
+                    </label>
+                    <textarea
+                      placeholder="Describe what action was taken regarding this incident..."
+                      value={entry.actionTaken?.value || ''}
+                      onChange={(e) => handleFieldUpdate('illegalAccess', index, 'actionTaken', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-red-500 focus:border-red-500"
+                      rows={2}
+                      data-testid={`illegal-access-action-${index}`}
+                    />
+                  </div>
+
+                  {/* Section 27.1 Specific Fields */}
+                  {('systemAccessed' in entry) && (
+                    <>
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          System Accessed
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Name or description of the system accessed"
+                          value={(entry as any).systemAccessed?.value || ''}
+                          onChange={(e) => handleFieldUpdate('illegalAccess', index, 'systemAccessed', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-red-500 focus:border-red-500"
+                          data-testid={`illegal-access-system-${index}`}
+                        />
+                      </div>
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Access Method
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="How was the system accessed"
+                          value={(entry as any).accessMethod?.value || ''}
+                          onChange={(e) => handleFieldUpdate('illegalAccess', index, 'accessMethod', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-red-500 focus:border-red-500"
+                          data-testid={`illegal-access-method-${index}`}
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
@@ -218,8 +434,8 @@ export const Section27Component: React.FC<Section27ComponentProps> = ({
               </div>
 
               {section27Data.section27.illegalModification.entries.map((entry, index) => (
-                <div key={index} className="border rounded p-3 mb-3 bg-gray-50">
-                  <div className="flex justify-between items-center mb-2">
+                <div key={index} className="border rounded p-4 mb-4 bg-gray-50">
+                  <div className="flex justify-between items-center mb-4">
                     <h5 className="font-medium">Incident {index + 1}</h5>
                     <button
                       type="button"
@@ -230,14 +446,373 @@ export const Section27Component: React.FC<Section27ComponentProps> = ({
                       Remove
                     </button>
                   </div>
-                  <textarea
-                    placeholder="Describe the illegal modification incident..."
-                    value={entry.description?.value || ''}
-                    onChange={(e) => handleFieldUpdate('illegalModification', index, 'description', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
-                    rows={3}
-                    data-testid={`illegal-modification-description-${index}`}
-                  />
+                  
+                  {/* Incident Date */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Incident Date
+                      </label>
+                      <input
+                        type="date"
+                        value={entry.incidentDate?.date?.value || ''}
+                        onChange={(e) => handleFieldUpdate('illegalModification', index, 'incidentDate.date', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500"
+                        data-testid={`illegal-modification-date-${index}`}
+                      />
+                    </div>
+                    <div className="flex items-center">
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={entry.incidentDate?.estimated?.value || false}
+                          onChange={(e) => handleFieldUpdate('illegalModification', index, 'incidentDate.estimated', e.target.checked)}
+                          className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+                          data-testid={`illegal-modification-estimated-${index}`}
+                        />
+                        <span className="text-sm text-gray-700">Date is estimated</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Description
+                    </label>
+                    <textarea
+                      placeholder="Describe the illegal modification incident..."
+                      value={entry.description?.value || ''}
+                      onChange={(e) => handleFieldUpdate('illegalModification', index, 'description', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500"
+                      rows={3}
+                      data-testid={`illegal-modification-description-${index}`}
+                    />
+                  </div>
+
+                  {/* Location */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Location
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="Street Address"
+                          value={entry.location?.street?.value || ''}
+                          onChange={(e) => handleFieldUpdate('illegalModification', index, 'location.street', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500"
+                          data-testid={`illegal-modification-street-${index}`}
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="City"
+                          value={entry.location?.city?.value || ''}
+                          onChange={(e) => handleFieldUpdate('illegalModification', index, 'location.city', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500"
+                          data-testid={`illegal-modification-city-${index}`}
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="State"
+                          value={entry.location?.state?.value || ''}
+                          onChange={(e) => handleFieldUpdate('illegalModification', index, 'location.state', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500"
+                          data-testid={`illegal-modification-state-${index}`}
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="ZIP Code"
+                          value={entry.location?.zipCode?.value || ''}
+                          onChange={(e) => handleFieldUpdate('illegalModification', index, 'location.zipCode', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500"
+                          data-testid={`illegal-modification-zipcode-${index}`}
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-2">
+                      <input
+                        type="text"
+                        placeholder="Country"
+                        value={entry.location?.country?.value || ''}
+                        onChange={(e) => handleFieldUpdate('illegalModification', index, 'location.country', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500"
+                        data-testid={`illegal-modification-country-${index}`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Action Taken */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Action Taken
+                    </label>
+                    <textarea
+                      placeholder="Describe what action was taken regarding this incident..."
+                      value={entry.actionTaken?.value || ''}
+                      onChange={(e) => handleFieldUpdate('illegalModification', index, 'actionTaken', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500"
+                      rows={2}
+                      data-testid={`illegal-modification-action-${index}`}
+                    />
+                  </div>
+
+                  {/* Section 27.2 Specific Fields */}
+                  {('systemModified' in entry) && (
+                    <>
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          System Modified
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Name or description of the system modified"
+                          value={(entry as any).systemModified?.value || ''}
+                          onChange={(e) => handleFieldUpdate('illegalModification', index, 'systemModified', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500"
+                          data-testid={`illegal-modification-system-${index}`}
+                        />
+                      </div>
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Modification Type
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Type of modification performed"
+                          value={(entry as any).modificationType?.value || ''}
+                          onChange={(e) => handleFieldUpdate('illegalModification', index, 'modificationType', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-orange-500 focus:border-orange-500"
+                          data-testid={`illegal-modification-type-${index}`}
+                        />
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* 27.3: Unauthorized Use */}
+        <div className="border rounded-lg p-6 bg-blue-50">
+          <h3 className="text-lg font-semibold mb-4 text-blue-800">
+            27.3 Unauthorized Use of Information Technology Systems
+          </h3>
+          <p className="text-sm text-gray-700 mb-4">
+            Have you EVER introduced, removed, or used hardware, software, or media in connection with any information technology system without authorization, when specifically prohibited by rules, procedures, guidelines, or regulations?
+          </p>
+
+          <div className="space-y-2 mb-4">
+            <label className="flex items-center space-x-3">
+              <input
+                type="radio"
+                name="unauthorizedUse"
+                value="YES"
+                checked={section27Data.section27.unauthorizedUse.hasViolation.value === 'YES'}
+                onChange={() => handleSubsectionFlagChange('unauthorizedUse', 'YES')}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                data-testid="unauthorized-use-yes"
+              />
+              <span className="text-sm text-gray-700">Yes</span>
+            </label>
+            <label className="flex items-center space-x-3">
+              <input
+                type="radio"
+                name="unauthorizedUse"
+                value="NO"
+                checked={section27Data.section27.unauthorizedUse.hasViolation.value === 'NO'}
+                onChange={() => handleSubsectionFlagChange('unauthorizedUse', 'NO')}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                data-testid="unauthorized-use-no"
+              />
+              <span className="text-sm text-gray-700">No</span>
+            </label>
+          </div>
+
+          {section27Data.section27.unauthorizedUse.hasViolation.value === 'YES' && (
+            <div className="mt-4 p-4 bg-white rounded border">
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="font-medium">Unauthorized Use Incidents ({getEntryCount('unauthorizedUse')})</h4>
+                <button
+                  type="button"
+                  onClick={() => handleAddEntry('unauthorizedUse')}
+                  className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+                  data-testid="add-unauthorized-use-entry"
+                >
+                  Add Incident
+                </button>
+              </div>
+
+              {section27Data.section27.unauthorizedUse.entries.map((entry, index) => (
+                <div key={index} className="border rounded p-4 mb-4 bg-gray-50">
+                  <div className="flex justify-between items-center mb-4">
+                    <h5 className="font-medium">Incident {index + 1}</h5>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveEntry('unauthorizedUse', index)}
+                      className="text-blue-600 hover:text-blue-800 text-sm"
+                      data-testid={`remove-unauthorized-use-${index}`}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                  
+                  {/* Incident Date */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Incident Date
+                      </label>
+                      <input
+                        type="date"
+                        value={entry.incidentDate?.date?.value || ''}
+                        onChange={(e) => handleFieldUpdate('unauthorizedUse', index, 'incidentDate.date', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                        data-testid={`unauthorized-use-date-${index}`}
+                      />
+                    </div>
+                    <div className="flex items-center">
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={entry.incidentDate?.estimated?.value || false}
+                          onChange={(e) => handleFieldUpdate('unauthorizedUse', index, 'incidentDate.estimated', e.target.checked)}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          data-testid={`unauthorized-use-estimated-${index}`}
+                        />
+                        <span className="text-sm text-gray-700">Date is estimated</span>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Description
+                    </label>
+                    <textarea
+                      placeholder="Describe the unauthorized use incident..."
+                      value={entry.description?.value || ''}
+                      onChange={(e) => handleFieldUpdate('unauthorizedUse', index, 'description', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                      rows={3}
+                      data-testid={`unauthorized-use-description-${index}`}
+                    />
+                  </div>
+
+                  {/* Location */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Location
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="Street Address"
+                          value={entry.location?.street?.value || ''}
+                          onChange={(e) => handleFieldUpdate('unauthorizedUse', index, 'location.street', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                          data-testid={`unauthorized-use-street-${index}`}
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="City"
+                          value={entry.location?.city?.value || ''}
+                          onChange={(e) => handleFieldUpdate('unauthorizedUse', index, 'location.city', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                          data-testid={`unauthorized-use-city-${index}`}
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="State"
+                          value={entry.location?.state?.value || ''}
+                          onChange={(e) => handleFieldUpdate('unauthorizedUse', index, 'location.state', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                          data-testid={`unauthorized-use-state-${index}`}
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          placeholder="ZIP Code"
+                          value={entry.location?.zipCode?.value || ''}
+                          onChange={(e) => handleFieldUpdate('unauthorizedUse', index, 'location.zipCode', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                          data-testid={`unauthorized-use-zipcode-${index}`}
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-2">
+                      <input
+                        type="text"
+                        placeholder="Country"
+                        value={entry.location?.country?.value || ''}
+                        onChange={(e) => handleFieldUpdate('unauthorizedUse', index, 'location.country', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                        data-testid={`unauthorized-use-country-${index}`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Action Taken */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Action Taken
+                    </label>
+                    <textarea
+                      placeholder="Describe what action was taken regarding this incident..."
+                      value={entry.actionTaken?.value || ''}
+                      onChange={(e) => handleFieldUpdate('unauthorizedUse', index, 'actionTaken', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                      rows={2}
+                      data-testid={`unauthorized-use-action-${index}`}
+                    />
+                  </div>
+
+                  {/* Section 27.3 Specific Fields */}
+                  {('systemUsed' in entry) && (
+                    <>
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          System Used
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Name or description of the system used"
+                          value={(entry as any).systemUsed?.value || ''}
+                          onChange={(e) => handleFieldUpdate('unauthorizedUse', index, 'systemUsed', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                          data-testid={`unauthorized-use-system-${index}`}
+                        />
+                      </div>
+                      <div className="mb-4">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Use Type
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Type of unauthorized use"
+                          value={(entry as any).useType?.value || ''}
+                          onChange={(e) => handleFieldUpdate('unauthorizedUse', index, 'useType', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                          data-testid={`unauthorized-use-type-${index}`}
+                        />
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
@@ -261,6 +836,15 @@ export const Section27Component: React.FC<Section27ComponentProps> = ({
 
             <button
               type="button"
+              className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
+              data-testid="save-section-button"
+              onClick={handleSave}
+            >
+              Save Section
+            </button>
+
+            <button
+              type="button"
               className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
               data-testid="clear-section-button"
               onClick={resetSection}
@@ -274,7 +858,7 @@ export const Section27Component: React.FC<Section27ComponentProps> = ({
         <div className="mt-4" data-testid="validation-status">
           <div className="text-sm text-gray-600">
             Section Status: <span className={`font-medium ${isDirty ? 'text-orange-500' : 'text-green-500'}`}>
-              {isDirty ? 'Modified, needs validation' : 'Ready for input'}
+              {isDirty ? 'Modified, needs save' : 'Up to date'}
             </span>
           </div>
           <div className="text-sm text-gray-600">
@@ -282,6 +866,18 @@ export const Section27Component: React.FC<Section27ComponentProps> = ({
               {isValid ? 'Valid' : 'Has errors'}
             </span>
           </div>
+          <div className="text-sm text-gray-600">
+            Auto-save: <span className={`font-medium ${sf86Form.autoSave ? 'text-green-500' : 'text-gray-500'}`}>
+              {sf86Form.autoSave ? 'Enabled' : 'Disabled'}
+            </span>
+          </div>
+          {sf86Form.lastSaved && (
+            <div className="text-sm text-gray-600">
+              Last saved: <span className="font-medium text-blue-500">
+                {sf86Form.lastSaved.toLocaleTimeString()}
+              </span>
+            </div>
+          )}
         </div>
       </form>
 

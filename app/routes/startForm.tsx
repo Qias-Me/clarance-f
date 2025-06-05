@@ -506,7 +506,7 @@ export async function loader({}: Route.LoaderArgs) {
   const sf86Config = {
     formVersion: "2024.1",
     totalSections: 30,
-    implementedSections: ["section1", "section2", "section3","section13","section16","section17","section18","section28","section29", "section30"],
+    implementedSections: ["section1", "section2", "section3","section13","section16","section17","section18","section28","section27","section29", "section30"],
     availableActions: [
       "generatePDF",
       "generatePDFServer",

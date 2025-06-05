@@ -39,6 +39,10 @@ import { Section30Provider } from "./sections2.0/section30";
 import { Section16Provider } from "./sections2.0/section16";
 import { Section18Provider } from "./sections2.0/section18";
 import { Section13Provider } from "./sections2.0/section13";
+import Section27Provider from "./sections2.0/section27";
+import { Section20Provider } from "./sections2.0/section20";
+import { Section21Provider } from "./sections2.0/section21";
+import { Section22Provider } from "./sections2.0/section22";
 
 // ============================================================================
 // SF86 FORM CONTEXT INTERFACE
@@ -2056,60 +2060,40 @@ export const CompleteSF86FormProvider: React.FC<{
         <Section1Provider>
           <Section2Provider>
             <Section3Provider>
-              {/* <Section4Provider>
-                <Section5Provider>
-                  <Section6Provider>
-                    <Section7Provider>
-                      <Section8Provider>
-                        <Section9Provider>
-                          <Section10Provider>
-                            <Section11Provider>
-                              <Section12Provider>  */}
-              {/* TEMPORARILY DISABLED: Section13Provider causing performance issues */}
+              {/* Sections 4-12 remain commented as per original large block comment */}
+              {/* <Section4Provider> ... <Section12Provider> ... </Section4Provider> */}
+              {/* Section 13 TEMPORARILY DISABLED */}
               {/* <Section13Provider> */}
-                {/*      <Section14Provider>
-                               Section15Provider>  */}
-                <Section16Provider>
-                  <Section17Provider>
-                    <Section18Provider>
-                      {/* <Section19Provider>
-                                              <Section20Provider>
-                                                <Section21Provider>
-                                                  <Section22Provider>
-                                                    <Section23Provider>
-                                                      <Section24Provider>
-                                                        <Section25Provider>
-                                                          <Section26Provider>
-                                                            <Section27Provider>  */}
-                      <Section28Provider>
-                        <Section29Provider>
-                          <Section30Provider>{children}</Section30Provider>
-                        </Section29Provider>
-                      </Section28Provider>
-                      {/*  </Section27Provider>
-                                                          </Section26Provider>
-                                                        </Section25Provider>
-                                                      </Section24Provider>
-                                                    </Section23Provider>
-                                                  </Section22Provider>
-                                                </Section21Provider>
-                                              </Section20Provider>
-                                            </Section19Provider>  */}
-                    </Section18Provider>
-                  </Section17Provider>
-                </Section16Provider>
-                {/*            </Section15Provider>
-                                  </Section14Provider> */}
+              {/* Sections 14-15 remain commented as per original large block comment */}
+              {/* <Section14Provider> <Section15Provider> ... </Section14Provider> */}
+              <Section16Provider>
+                <Section17Provider>
+                  <Section18Provider>
+                    {/* <Section19Provider> (explicitly commented out) */}
+                    <Section20Provider>
+                      <Section21Provider>
+                        <Section22Provider>
+                          {/* <Section23Provider> (part of a commented block) */}
+                          {/* <Section24Provider> (part of a commented block) */}
+                          {/* <Section25Provider> (part of a commented block) */}
+                          {/* <Section26Provider> (part of a commented block) */}
+                          <Section27Provider>
+                            <Section28Provider>
+                              <Section29Provider>
+                                <Section30Provider>{children}</Section30Provider>
+                              </Section29Provider>
+                            </Section28Provider>
+                          </Section27Provider>
+                          {/* Closing tags for 23-26 would be here if they were active */}
+                        </Section22Provider>
+                      </Section21Provider>
+                    </Section20Provider>
+                    {/* </Section19Provider> */}
+                  </Section18Provider>
+                </Section17Provider>
+              </Section16Provider>
               {/* </Section13Provider> */}
-              {/* </Section12Provider>
-                            </Section11Provider>
-                          </Section10Provider>
-                        </Section9Provider>
-                      </Section8Provider>
-                    </Section7Provider>
-                  </Section6Provider>
-                </Section5Provider>
-              </Section4Provider>*/}
+              {/* Closing tags for 4-12, 14-15 would be here */}
             </Section3Provider>
           </Section2Provider>
         </Section1Provider>

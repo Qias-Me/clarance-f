@@ -30,6 +30,32 @@ const END_OF_MARRIAGE_OPTIONS = [
   'Separated'
 ];
 
+// Styling constants
+const sectionStyles = {
+  container: 'bg-white p-6 rounded-lg shadow-md mb-6',
+  header: 'text-2xl font-semibold mb-4',
+  subHeader: 'text-xl font-medium mb-3 border-b pb-2',
+  formGroup: 'mb-4',
+  label: 'block text-gray-700 mb-2',
+  input: 'w-full p-2 border rounded',
+  button: {
+    primary: 'bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700',
+    secondary: 'bg-gray-300 text-gray-800 py-2 px-4 rounded hover:bg-gray-400 mr-2',
+    danger: 'bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600'
+  },
+  tabContainer: 'mb-4 border-b',
+  tab: 'inline-block px-4 py-2 font-medium',
+  tabActive: 'inline-block px-4 py-2 font-medium border-b-2 border-blue-500 text-blue-600',
+  entryContainer: 'border rounded-lg p-4 mb-4',
+  entryHeader: 'flex justify-between items-center mb-2',
+  validationError: 'text-red-500 text-sm mt-1',
+  row: 'flex flex-wrap -mx-2',
+  col: 'px-2',
+  grid2: 'w-1/2',
+  grid3: 'w-1/3',
+  grid4: 'w-1/4'
+};
+
 interface Section17ComponentProps {
   className?: string;
   onValidationChange?: (isValid: boolean) => void;
@@ -53,10 +79,10 @@ export const Section17Component: React.FC<Section17ComponentProps> = ({
     updateCohabitant,
     addCohabitant,
     removeCohabitant,
+    updateFieldValue,
     validateSection,
     resetSection,
-    isDirty,
-    errors
+    isDirty
   } = useSection17();
 
   // SF86 Form Context for data persistence
@@ -72,7 +98,7 @@ export const Section17Component: React.FC<Section17ComponentProps> = ({
     const validationResult = validateSection();
     setIsValid(validationResult.isValid);
     onValidationChange?.(validationResult.isValid);
-  }, [section17Data]);
+  }, [section17Data, validateSection, onValidationChange]);
 
   // Handle submission with data persistence
   const handleSubmit = async (e: React.FormEvent) => {
@@ -98,509 +124,421 @@ export const Section17Component: React.FC<Section17ComponentProps> = ({
     }
   };
 
-  // Helper function to safely get field value
-  const getFieldValue = (obj: any, path: string): string => {
-    return path.split('.').reduce((current, key) => current?.[key]?.value || '', obj);
+  // Helper to update a nested field with type safety
+  const handleFieldChange = (
+    subsection: 'currentSpouse' | 'formerSpouses' | 'cohabitants',
+    entryIndex: number,
+    fieldPath: string,
+    value: any
+  ) => {
+    // Form the full path including the correct subsection and entry index
+    const fullPath = `section17.${subsection}[${entryIndex}].${fieldPath}`;
+    updateFieldValue(fullPath, value);
+    
+    // Debug logging to help with troubleshooting
+    console.log(`Updating field at path: ${fullPath}`, { 
+      value, 
+      updatedSection: subsection,
+      entryIndex,
+      fieldPath
+    });
   };
 
-  // Helper function to check if field has error
-  const hasFieldError = (fieldPath: string): boolean => {
-    return showValidationErrors && !!errors[fieldPath];
-  };
-
-  const getFieldError = (fieldPath: string): string => {
-    return errors[fieldPath] || '';
-  };
-
-  // Current Spouse Form Component
-  const CurrentSpouseForm: React.FC<{ entry: CurrentSpouseEntry; index: number }> = ({ entry, index }) => (
-    <div className="bg-gray-50 p-6 rounded-lg mb-6">
-      <h4 className="font-semibold text-lg mb-4">Current Spouse/Partner Information</h4>
-
-      {/* Marital Status */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Current Marital Status <span className="text-red-500">*</span>
-        </label>
-        <select
-          value={getFieldValue(entry, 'maritalStatus')}
-          onChange={(e) => updateCurrentSpouse(`maritalStatus.value`, e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-          required
-        >
-          <option value="">Select marital status</option>
-          {MARITAL_STATUS_OPTIONS.map(option => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
-        {hasFieldError('maritalStatus') && (
-          <p className="mt-1 text-sm text-red-600">{getFieldError('maritalStatus')}</p>
-        )}
+  // Current Spouse Tab Content
+  const renderCurrentSpouseTab = () => {
+    const currentSpouseEntries = section17Data.section17.currentSpouse;
+    
+    return (
+      <div>
+        <div className={sectionStyles.subHeader}>Current Spouse/Partner Information</div>
+        
+        {currentSpouseEntries.length === 0 ? (
+          <p className="mb-4">No current spouse/partner added. Click below to add one.</p>
+        ) : (
+          currentSpouseEntries.map((spouse, index) => (
+            <div key={spouse._id} className={sectionStyles.entryContainer}>
+              <div className={sectionStyles.entryHeader}>
+                <h3 className="font-semibold">
+                  {spouse.name.first.value || spouse.name.last.value 
+                    ? `${spouse.name.first.value} ${spouse.name.last.value}` 
+                    : `Spouse #${index + 1}`}
+                </h3>
+                <button
+                  type="button"
+                  className={sectionStyles.button.danger}
+                  onClick={() => removeCurrentSpouse(index)}
+                >
+                  Remove
+                </button>
       </div>
 
-      {/* Show spouse fields only if married, separated, etc. */}
-      {entry.maritalStatus.value && entry.maritalStatus.value !== 'Never married' && (
-        <>
-          {/* Has Spouse/Partner */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Do you have a spouse or legally recognized civil union/domestic partner?
-            </label>
-            <div className="flex space-x-4">
-              {YES_NO_OPTIONS.map(option => (
-                <label key={option} className="flex items-center">
-                  <input
-                    type="radio"
-                    name={`hasSpousePartner_${index}`}
-                    value={option}
-                    checked={getFieldValue(entry, 'hasSpousePartner') === option}
-                    onChange={(e) => updateCurrentSpouse(`hasSpousePartner.value`, e.target.value)}
-                    className="mr-2"
-                  />
-                  {option}
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Show detailed spouse information if YES */}
-          {getFieldValue(entry, 'hasSpousePartner') === 'YES' && (
-            <>
-              {/* Full Name */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Last Name <span className="text-red-500">*</span>
-                  </label>
+              {/* Name Fields */}
+              <div className={sectionStyles.formGroup}>
+                <div className={sectionStyles.row}>
+                  <div className={`${sectionStyles.col} ${sectionStyles.grid4}`}>
+                    <label className={sectionStyles.label}>First Name</label>
                   <input
                     type="text"
-                    value={getFieldValue(entry, 'fullName.lastName')}
-                    onChange={(e) => updateCurrentSpouse(`fullName.lastName.value`, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                    required
+                      className={sectionStyles.input}
+                      value={spouse.name.first.value}
+                      onChange={(e) => handleFieldChange('currentSpouse', index, 'name.first', e.target.value)}
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    First Name <span className="text-red-500">*</span>
-                  </label>
+                  <div className={`${sectionStyles.col} ${sectionStyles.grid4}`}>
+                    <label className={sectionStyles.label}>Middle Name</label>
                   <input
                     type="text"
-                    value={getFieldValue(entry, 'fullName.firstName')}
-                    onChange={(e) => updateCurrentSpouse(`fullName.firstName.value`, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                    required
+                      className={sectionStyles.input}
+                      value={spouse.name.middle.value}
+                      onChange={(e) => handleFieldChange('currentSpouse', index, 'name.middle', e.target.value)}
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Middle Name
-                  </label>
+                  <div className={`${sectionStyles.col} ${sectionStyles.grid4}`}>
+                    <label className={sectionStyles.label}>Last Name</label>
                   <input
                     type="text"
-                    value={getFieldValue(entry, 'fullName.middleName')}
-                    onChange={(e) => updateCurrentSpouse(`fullName.middleName.value`, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      className={sectionStyles.input}
+                      value={spouse.name.last.value}
+                      onChange={(e) => handleFieldChange('currentSpouse', index, 'name.last', e.target.value)}
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Suffix
-                  </label>
+                  <div className={`${sectionStyles.col} ${sectionStyles.grid4}`}>
+                    <label className={sectionStyles.label}>Suffix</label>
                   <input
                     type="text"
-                    value={getFieldValue(entry, 'fullName.suffix')}
-                    onChange={(e) => updateCurrentSpouse(`fullName.suffix.value`, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                    placeholder="Jr., Sr., III, etc."
-                  />
+                      className={sectionStyles.input}
+                      value={spouse.name.suffix.value}
+                      onChange={(e) => handleFieldChange('currentSpouse', index, 'name.suffix', e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
 
               {/* Date of Birth */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Birth Month <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={getFieldValue(entry, 'dateOfBirth.month')}
-                    onChange={(e) => updateCurrentSpouse(`dateOfBirth.month.value`, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                    required
-                  >
-                    <option value="">Month</option>
-                    {Array.from({length: 12}, (_, i) => (
-                      <option key={i+1} value={i+1}>{new Date(0, i).toLocaleString('default', { month: 'long' })}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Birth Year <span className="text-red-500">*</span>
-                  </label>
+              <div className={sectionStyles.formGroup}>
+                <label className={sectionStyles.label}>Date of Birth</label>
                   <input
-                    type="number"
-                    min="1900"
-                    max={new Date().getFullYear()}
-                    value={getFieldValue(entry, 'dateOfBirth.year')}
-                    onChange={(e) => updateCurrentSpouse(`dateOfBirth.year.value`, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                    placeholder="YYYY"
-                    required
-                  />
-                </div>
-                <div className="flex items-center">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={getFieldValue(entry, 'dateOfBirth.estimated') === 'true'}
-                      onChange={(e) => updateCurrentSpouse(`dateOfBirth.estimated.value`, e.target.checked)}
-                      className="mr-2"
-                    />
-                    Estimated
-                  </label>
-                </div>
+                  type="date"
+                  className={sectionStyles.input}
+                  value={spouse.dateOfBirth.value}
+                  onChange={(e) => handleFieldChange('currentSpouse', index, 'dateOfBirth', e.target.value)}
+                />
               </div>
 
-              {/* Citizenship */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Citizenship <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={getFieldValue(entry, 'citizenship')}
-                  onChange={(e) => updateCurrentSpouse(`citizenship.value`, e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                  required
-                >
-                  <option value="">Select citizenship</option>
-                  {CITIZENSHIP_OPTIONS.map(option => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* SSN */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Social Security Number
-                </label>
+              {/* Social Security Number */}
+              <div className={sectionStyles.formGroup}>
+                <label className={sectionStyles.label}>Social Security Number</label>
                 <input
                   type="text"
-                  value={getFieldValue(entry, 'ssn')}
-                  onChange={(e) => updateCurrentSpouse(`ssn.value`, e.target.value.replace(/\D/g, ''))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                  placeholder="123-45-6789"
-                  maxLength={9}
+                  className={sectionStyles.input}
+                  value={spouse.socialSecurityNumber.value}
+                  onChange={(e) => handleFieldChange('currentSpouse', index, 'socialSecurityNumber', e.target.value)}
+                  placeholder="e.g., 123-45-6789"
                 />
-                <p className="mt-1 text-xs text-gray-500">
-                  Enter 9 digits only (no dashes or spaces)
-                </p>
               </div>
 
-              {/* Marriage Date (if married) */}
-              {entry.maritalStatus.value === 'Married' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Marriage Date <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={getFieldValue(entry, 'marriageDate')}
-                      onChange={(e) => updateCurrentSpouse(`marriageDate.value`, e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                      placeholder="MM/DD/YYYY"
-                      required
-                    />
-                  </div>
-                  <div className="flex items-center">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={getFieldValue(entry, 'marriageEstimated') === 'true'}
-                        onChange={(e) => updateCurrentSpouse(`marriageEstimated.value`, e.target.checked)}
-                        className="mr-2"
-                      />
-                      Estimated
-                    </label>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </>
-      )}
-    </div>
-  );
-
-  // Former Spouse Form Component (simplified for brevity)
-  const FormerSpouseForm: React.FC<{ entry: FormerSpouseEntry; index: number }> = ({ entry, index }) => (
-    <div className="bg-gray-50 p-6 rounded-lg mb-6">
-      <div className="flex justify-between items-center mb-4">
-        <h4 className="font-semibold text-lg">Former Spouse #{index + 1}</h4>
+              {/* Additional fields would be added here */}
+            </div>
+          ))
+        )}
+        
         <button
           type="button"
-          onClick={() => removeFormerSpouse(index)}
-          className="text-red-600 hover:text-red-800 font-medium"
+          className={`${sectionStyles.button.primary} mt-4`}
+          onClick={addCurrentSpouse}
         >
-          Remove
+          Add Current Spouse/Partner
+        </button>
+      </div>
+    );
+  };
+
+  // Former Spouses Tab Content
+  const renderFormerSpousesTab = () => {
+    const formerSpouses = section17Data.section17.formerSpouses;
+    
+    return (
+                  <div>
+        <div className={sectionStyles.subHeader}>Former Spouses/Partners</div>
+        
+        {formerSpouses.length === 0 ? (
+          <p className="mb-4">No former spouses/partners added. Click below to add one.</p>
+        ) : (
+          formerSpouses.map((spouse, index) => (
+            <div key={spouse._id} className={sectionStyles.entryContainer}>
+              <div className={sectionStyles.entryHeader}>
+                <h3 className="font-semibold">
+                  {spouse.name.first.value || spouse.name.last.value 
+                    ? `${spouse.name.first.value} ${spouse.name.last.value}` 
+                    : `Former Spouse #${index + 1}`}
+                </h3>
+                <button
+                  type="button"
+                  className={sectionStyles.button.danger}
+                  onClick={() => removeFormerSpouse(index)}
+                >
+                  Remove
+                </button>
+              </div>
+              
+              {/* Name Fields */}
+              <div className={sectionStyles.formGroup}>
+                <div className={sectionStyles.row}>
+                  <div className={`${sectionStyles.col} ${sectionStyles.grid4}`}>
+                    <label className={sectionStyles.label}>First Name</label>
+                    <input
+                      type="text"
+                      className={sectionStyles.input}
+                      value={spouse.name.first.value}
+                      onChange={(e) => handleFieldChange('formerSpouses', index, 'name.first', e.target.value)}
+                    />
+                  </div>
+                  <div className={`${sectionStyles.col} ${sectionStyles.grid4}`}>
+                    <label className={sectionStyles.label}>Middle Name</label>
+                    <input
+                      type="text"
+                      className={sectionStyles.input}
+                      value={spouse.name.middle.value}
+                      onChange={(e) => handleFieldChange('formerSpouses', index, 'name.middle', e.target.value)}
+                    />
+                  </div>
+                  <div className={`${sectionStyles.col} ${sectionStyles.grid4}`}>
+                    <label className={sectionStyles.label}>Last Name</label>
+                    <input
+                      type="text"
+                      className={sectionStyles.input}
+                      value={spouse.name.last.value}
+                      onChange={(e) => handleFieldChange('formerSpouses', index, 'name.last', e.target.value)}
+                    />
+                  </div>
+                  <div className={`${sectionStyles.col} ${sectionStyles.grid4}`}>
+                    <label className={sectionStyles.label}>Suffix</label>
+                    <input
+                      type="text"
+                      className={sectionStyles.input}
+                      value={spouse.name.suffix.value}
+                      onChange={(e) => handleFieldChange('formerSpouses', index, 'name.suffix', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Marriage Dates */}
+              <div className={sectionStyles.row}>
+                <div className={`${sectionStyles.col} ${sectionStyles.grid2}`}>
+                  <div className={sectionStyles.formGroup}>
+                    <label className={sectionStyles.label}>Date Married</label>
+                    <input
+                      type="date"
+                      className={sectionStyles.input}
+                      value={spouse.dateMarried.value}
+                      onChange={(e) => handleFieldChange('formerSpouses', index, 'dateMarried', e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className={`${sectionStyles.col} ${sectionStyles.grid2}`}>
+                  <div className={sectionStyles.formGroup}>
+                    <label className={sectionStyles.label}>Date Separated</label>
+                      <input
+                      type="date"
+                      className={sectionStyles.input}
+                      value={spouse.dateSeparated.value}
+                      onChange={(e) => handleFieldChange('formerSpouses', index, 'dateSeparated', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Additional fields would be added here */}
+            </div>
+          ))
+        )}
+        
+        <button
+          type="button"
+          className={`${sectionStyles.button.primary} mt-4`}
+          onClick={addFormerSpouse}
+        >
+          Add Former Spouse/Partner
+        </button>
+      </div>
+    );
+  };
+
+  // Cohabitants Tab Content
+  const renderCohabitantsTab = () => {
+    const cohabitants = section17Data.section17.cohabitants;
+    
+    return (
+      <div>
+        <div className={sectionStyles.subHeader}>Cohabitants</div>
+        
+        {cohabitants.length === 0 ? (
+          <p className="mb-4">No cohabitants added. Click below to add one.</p>
+        ) : (
+          cohabitants.map((cohabitant, index) => (
+            <div key={cohabitant._id} className={sectionStyles.entryContainer}>
+              <div className={sectionStyles.entryHeader}>
+                <h3 className="font-semibold">
+                  {cohabitant.name.first.value || cohabitant.name.last.value 
+                    ? `${cohabitant.name.first.value} ${cohabitant.name.last.value}` 
+                    : `Cohabitant #${index + 1}`}
+                </h3>
+                <button
+                  type="button"
+                  className={sectionStyles.button.danger}
+                  onClick={() => removeCohabitant(index)}
+                >
+                  Remove
         </button>
       </div>
 
-      {/* Has Former Spouse */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Have you been married before?
-        </label>
-        <div className="flex space-x-4">
-          {YES_NO_OPTIONS.map(option => (
-            <label key={option} className="flex items-center">
+              {/* Name Fields */}
+              <div className={sectionStyles.formGroup}>
+                <div className={sectionStyles.row}>
+                  <div className={`${sectionStyles.col} ${sectionStyles.grid4}`}>
+                    <label className={sectionStyles.label}>First Name</label>
               <input
-                type="radio"
-                name={`hasFormerSpouse_${index}`}
-                value={option}
-                checked={getFieldValue(entry, 'hasFormerSpouse') === option}
-                onChange={(e) => updateFormerSpouse(index, `hasFormerSpouse.value`, e.target.value)}
-                className="mr-2"
-              />
-              {option}
-            </label>
-          ))}
+                      type="text"
+                      className={sectionStyles.input}
+                      value={cohabitant.name.first.value}
+                      onChange={(e) => handleFieldChange('cohabitants', index, 'name.first', e.target.value)}
+                    />
         </div>
+                  <div className={`${sectionStyles.col} ${sectionStyles.grid4}`}>
+                    <label className={sectionStyles.label}>Middle Name</label>
+                    <input
+                      type="text"
+                      className={sectionStyles.input}
+                      value={cohabitant.name.middle.value}
+                      onChange={(e) => handleFieldChange('cohabitants', index, 'name.middle', e.target.value)}
+                    />
       </div>
-
-      {/* Show former spouse details if YES */}
-      {getFieldValue(entry, 'hasFormerSpouse') === 'YES' && (
-        <>
-          {/* Full Name */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Last Name <span className="text-red-500">*</span>
-              </label>
+                  <div className={`${sectionStyles.col} ${sectionStyles.grid4}`}>
+                    <label className={sectionStyles.label}>Last Name</label>
               <input
                 type="text"
-                value={getFieldValue(entry, 'fullName.lastName')}
-                onChange={(e) => updateFormerSpouse(index, `fullName.lastName.value`, e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                required
+                      className={sectionStyles.input}
+                      value={cohabitant.name.last.value}
+                      onChange={(e) => handleFieldChange('cohabitants', index, 'name.last', e.target.value)}
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                First Name <span className="text-red-500">*</span>
-              </label>
+                  <div className={`${sectionStyles.col} ${sectionStyles.grid4}`}>
+                    <label className={sectionStyles.label}>Suffix</label>
               <input
                 type="text"
-                value={getFieldValue(entry, 'fullName.firstName')}
-                onChange={(e) => updateFormerSpouse(index, `fullName.firstName.value`, e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                required
-              />
+                      className={sectionStyles.input}
+                      value={cohabitant.name.suffix.value}
+                      onChange={(e) => handleFieldChange('cohabitants', index, 'name.suffix', e.target.value)}
+                    />
+                  </div>
             </div>
           </div>
 
-          {/* End of Marriage */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Reason for end of marriage <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={getFieldValue(entry, 'reasonForEnd')}
-              onChange={(e) => updateFormerSpouse(index, `reasonForEnd.value`, e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-              required
-            >
-              <option value="">Select reason</option>
-              {END_OF_MARRIAGE_OPTIONS.map(option => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
+              {/* Cohabitation Dates */}
+              <div className={sectionStyles.row}>
+                <div className={`${sectionStyles.col} ${sectionStyles.grid2}`}>
+                  <div className={sectionStyles.formGroup}>
+                    <label className={sectionStyles.label}>Start Date</label>
+                    <input
+                      type="date"
+                      className={sectionStyles.input}
+                      value={cohabitant.cohabitationStartDate.value}
+                      onChange={(e) => handleFieldChange('cohabitants', index, 'cohabitationStartDate', e.target.value)}
+                    />
+                  </div>
           </div>
-        </>
-      )}
+                <div className={`${sectionStyles.col} ${sectionStyles.grid2}`}>
+                  <div className={sectionStyles.formGroup}>
+                    <label className={sectionStyles.label}>End Date</label>
+                    <input
+                      type="date"
+                      className={sectionStyles.input}
+                      value={cohabitant.cohabitationEndDate.value}
+                      onChange={(e) => handleFieldChange('cohabitants', index, 'cohabitationEndDate', e.target.value)}
+                    />
     </div>
-  );
-
-  return (
-    <div className={`bg-white rounded-lg shadow-lg p-6 ${className}`} data-testid="section17-form">
-      {/* Section Header */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Section 17: Marital Status
-        </h2>
-        <p className="text-gray-600">
-          Provide information about your current marital status, any former spouses, and cohabitation history.
-        </p>
+      </div>
       </div>
 
-      {/* Tab Navigation */}
-      <div className="border-b border-gray-200 mb-6">
-        <nav className="flex space-x-8">
-          {[
-            { id: 'current', label: 'Current Status', count: section17Data.section17.currentSpouse.length },
-            { id: 'former', label: 'Former Spouses', count: section17Data.section17.formerSpouses.length },
-            { id: 'cohabitant', label: 'Cohabitants', count: section17Data.section17.cohabitants.length }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`pb-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === tab.id
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              {tab.label} {tab.count > 0 && `(${tab.count})`}
-            </button>
-          ))}
-        </nav>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Current Spouse Tab */}
-        {activeTab === 'current' && (
-          <div>
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-2">Current Marital Status</h3>
-              <p className="text-sm text-gray-600">
-                Provide information about your current marital status and spouse/partner if applicable.
-              </p>
+              {/* Additional fields would be added here */}
             </div>
-
-            {section17Data.section17.currentSpouse.map((entry, index) => (
-              <CurrentSpouseForm key={index} entry={entry} index={index} />
-            ))}
-
-            {section17Data.section17.currentSpouse.length === 0 && (
-              <button
-                type="button"
-                onClick={addCurrentSpouse}
-                className="w-full py-3 px-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-700"
-              >
-                + Add Current Marital Status Information
-              </button>
-            )}
-          </div>
+          ))
         )}
-
-        {/* Former Spouses Tab */}
-        {activeTab === 'former' && (
-          <div>
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-2">Former Spouses</h3>
-              <p className="text-sm text-gray-600">
-                List all former spouses, including information about marriages that ended in divorce, annulment, or death.
-              </p>
-            </div>
-
-            {section17Data.section17.formerSpouses.map((entry, index: number) => (
-              <FormerSpouseForm key={index} entry={entry} index={index} />
-            ))}
 
             <button
               type="button"
-              onClick={addFormerSpouse}
-              className="w-full py-3 px-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-700"
+          className={`${sectionStyles.button.primary} mt-4`}
+          onClick={addCohabitant}
             >
-              + Add Former Spouse
+          Add Cohabitant
             </button>
           </div>
-        )}
+    );
+  };
 
-        {/* Cohabitants Tab */}
-        {activeTab === 'cohabitant' && (
-          <div>
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-2">Cohabitants</h3>
-              <p className="text-sm text-gray-600">
-                List any persons with whom you have cohabited in a relationship similar to marriage.
-              </p>
-            </div>
-
-            {section17Data.section17.cohabitants.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500 mb-4">No cohabitants added yet.</p>
+  return (
+    <div className={`${sectionStyles.container} ${className}`}>
+      <h2 className={sectionStyles.header}>Section 17: Marital Status and Relationships</h2>
+      
+      {/* Tab Navigation */}
+      <div className={sectionStyles.tabContainer}>
                 <button
                   type="button"
-                  onClick={addCohabitant}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+          className={activeTab === 'current' ? sectionStyles.tabActive : sectionStyles.tab}
+          onClick={() => setActiveTab('current')}
                 >
-                  + Add Cohabitant
+          Current Spouse
                 </button>
-              </div>
-            ) : (
-              <>
-                {section17Data.section17.cohabitants.map((entry, index: number) => (
-                  <div key={index} className="bg-gray-50 p-6 rounded-lg mb-6">
-                    <div className="flex justify-between items-center mb-4">
-                      <h4 className="font-semibold text-lg">Cohabitant #{index + 1}</h4>
                       <button
                         type="button"
-                        onClick={() => removeCohabitant(index)}
-                        className="text-red-600 hover:text-red-800 font-medium"
+          className={activeTab === 'former' ? sectionStyles.tabActive : sectionStyles.tab}
+          onClick={() => setActiveTab('former')}
                       >
-                        Remove
+          Former Spouses
                       </button>
-                    </div>
-                    {/* Simplified cohabitant form for brevity */}
-                    <p className="text-sm text-gray-600">Cohabitant form fields would go here...</p>
-                  </div>
-                ))}
                 <button
                   type="button"
-                  onClick={addCohabitant}
-                  className="w-full py-3 px-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-700"
+          className={activeTab === 'cohabitant' ? sectionStyles.tabActive : sectionStyles.tab}
+          onClick={() => setActiveTab('cohabitant')}
                 >
-                  + Add Another Cohabitant
+          Cohabitants
                 </button>
-              </>
-            )}
           </div>
-        )}
-
-        {/* Validation Errors Summary */}
-        {showValidationErrors && !isValid && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-4">
-            <h4 className="text-sm font-medium text-red-800 mb-2">Please correct the following errors:</h4>
-            <ul className="text-sm text-red-700 list-disc list-inside">
-              {Object.values(errors).map((error, index) => (
-                <li key={index}>{error}</li>
-              ))}
-            </ul>
-          </div>
-        )}
+      
+      {/* Tab Content */}
+      <form onSubmit={handleSubmit}>
+        {activeTab === 'current' && renderCurrentSpouseTab()}
+        {activeTab === 'former' && renderFormerSpousesTab()}
+        {activeTab === 'cohabitant' && renderCohabitantsTab()}
 
         {/* Form Actions */}
-        <div className="flex justify-between items-center pt-6 border-t border-gray-200">
+        <div className="mt-6 flex justify-between">
           <button
             type="button"
+            className={sectionStyles.button.secondary}
             onClick={resetSection}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
           >
             Reset Section
           </button>
-
-          <div className="flex space-x-4">
-            <span className={`text-sm ${isDirty ? 'text-orange-600' : 'text-green-600'}`}>
-              {isDirty ? 'Unsaved changes' : 'All changes saved'}
-            </span>
-
             <button
               type="submit"
-              className={`px-6 py-2 rounded-md font-medium ${
-                isValid
-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
-              disabled={!isValid}
-            >
-              Save & Continue
+            className={sectionStyles.button.primary}
+            disabled={!isDirty}
+          >
+            {isDirty ? 'Save and Continue' : 'No Changes to Save'}
             </button>
-          </div>
         </div>
+        
+        {/* Validation Errors */}
+        {showValidationErrors && !isValid && (
+          <div className="mt-4 p-3 bg-red-100 border border-red-300 rounded">
+            <p className="text-red-700 font-semibold">Please fix the following errors:</p>
+            <ul className="list-disc ml-5">
+              <li className="text-red-600">Section 17 is missing required information.</li>
+            </ul>
+          </div>
+        )}
       </form>
     </div>
   );
