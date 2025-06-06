@@ -402,6 +402,29 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
           );
         }
 
+        // Special debugging for Section 14
+        if (sectionId === "section14") {
+          console.log(
+            "🔍 SF86FormContext: updateSectionData called for Section 14:",
+            {
+              sectionId,
+              data,
+              section14Property: data?.section14,
+              registrationStatus: data?.section14?.registrationStatus?.value,
+              registrationNumber: data?.section14?.registrationNumber?.value,
+              militaryServiceStatus: data?.section14?.militaryServiceStatus?.value,
+            }
+          );
+          console.log(
+            "🔍 SF86FormContext: After setting Section 14 data in formData:",
+            {
+              newFormData: newData,
+              section14InFormData: newData.section14,
+              section14Property: (newData.section14 as any)?.section14,
+            }
+          );
+        }
+
         // Special debugging for Section 29
         if (sectionId === "section29") {
           console.log(
@@ -2069,15 +2092,15 @@ export const CompleteSF86FormProvider: React.FC<{
                         <Section9Provider>
                           <Section10Provider>
                             <Section11Provider>
-                              {/* <Section12Provider> */}
-                              {/* TEMPORARILY DISABLED: Section13Provider causing performance issues */}
-                              {/* <Section13Provider> */}
-                              <Section14Provider>
-                                {/* <Section15Provider> */}
-                                <Section16Provider>
-                                  <Section17Provider>
-                                    {/* <Section18Provider>
-                                      <Section19Provider>
+                              <Section12Provider>
+                                {/* TEMPORARILY DISABLED: Section13Provider causing performance issues */}
+                                <Section13Provider>
+                                  <Section14Provider>
+                                    <Section15Provider>
+                                      <Section16Provider>
+                                        <Section17Provider>
+                                          <Section18Provider>
+                                    {/*   <Section19Provider>
                                         <Section20Provider>
                                           <Section21Provider>
                                             <Section22Provider>
@@ -2086,12 +2109,12 @@ export const CompleteSF86FormProvider: React.FC<{
                                                   <Section25Provider>
                                                     <Section26Provider>
                                                       <Section27Provider> */}
-                                        <Section28Provider>
-                                          <Section29Provider>
-                                            <Section30Provider>{children}</Section30Provider>
-                                          </Section29Provider>
-                                        </Section28Provider>
-                                      {/* </Section27Provider>
+                                          <Section28Provider>
+                                            <Section29Provider>
+                                              <Section30Provider>{children}</Section30Provider>
+                                            </Section29Provider>
+                                          </Section28Provider>
+                                          {/* </Section27Provider>
                                                     </Section26Provider>
                                                   </Section25Provider>
                                                 </Section24Provider>
@@ -2099,14 +2122,14 @@ export const CompleteSF86FormProvider: React.FC<{
                                             </Section22Provider>
                                           </Section21Provider>
                                         </Section20Provider>
-                                      </Section19Provider>
-                                    </Section18Provider> */}
-                                  </Section17Provider>
-                                </Section16Provider>
-                                {/* </Section15Provider> */}
-                              </Section14Provider>
-                              {/* </Section13Provider> */}
-                              {/* </Section12Provider> */}
+                                      </Section19Provider>*/}
+                                    </Section18Provider> 
+                                        </Section17Provider>
+                                      </Section16Provider>
+                                    </Section15Provider>
+                                  </Section14Provider>
+                                </Section13Provider>
+                              </Section12Provider>
                             </Section11Provider>
                           </Section10Provider>
                         </Section9Provider>

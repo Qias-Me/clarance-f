@@ -385,158 +385,158 @@ export const createDefaultSection15 = (): Section15 => {
 };
 
 /**
- * Creates a default military service entry
+ * Creates a default military service entry using actual field names from sections-references
  */
 export const createDefaultMilitaryServiceEntry = (): MilitaryServiceEntry => {
   return {
     hasServed: {
-      ...createFieldFromReference(15, 'form1[0].Section14_1[0].#area[4].RadioButtonList[1]', ''),
+      ...createFieldFromReference(15, 'form1[0].Section14_1[0].#area[4].RadioButtonList[1]', 'NO (If NO, proceed to Section 15.2) '),
       options: YES_NO_OPTIONS
     },
     branch: {
-      ...createFieldFromReference(15, 'form1[0].Section14_1[0].#area[5].#area[6].RadioButtonList[2]', ''),
+      ...createFieldFromReference(15, 'form1[0].Section14_1[0].#area[5].#area[6].RadioButtonList[2]', '5'),
       options: MILITARY_BRANCH_OPTIONS
     },
-    serviceState: createFieldFromReference(15, 'form1[0].Section14_1[0].School6_State[0]', ''),
+    serviceState: createFieldFromReference(15, 'form1[0].Section14_1[0].School6_State[0]', 'TX'),
     serviceStatus: {
-      ...createFieldFromReference(15, 'form1[0].Section14_1[0].#area[7].RadioButtonList[3]', ''),
+      ...createFieldFromReference(15, 'form1[0].Section14_1[0].#area[7].RadioButtonList[3]', '3'),
       options: SERVICE_STATUS_OPTIONS
     },
     fromDate: {
-      month: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[8].From_Datefield_Name_2[0]', ''),
-      year: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[8].From_Datefield_Name_2[0]', '')
+      month: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[8].From_Datefield_Name_2[0]', 'fromDate'),
+      year: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[8].From_Datefield_Name_2[0]', 'fromDate')
     },
-    fromDateEstimated: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[8].Estimated[0]', false),
+    fromDateEstimated: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[8].#field[7]', true),
     toDate: {
-      month: createFieldFromReference(15, 'form1[0].Section14_1[0].To_Datefield_Name_2[0]', ''),
-      year: createFieldFromReference(15, 'form1[0].Section14_1[0].To_Datefield_Name_2[0]', '')
+      month: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[8].From_Datefield_Name_2[1]', 'toDate'),
+      year: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[8].From_Datefield_Name_2[1]', 'toDate')
     },
-    toDateEstimated: createFieldFromReference(15, 'form1[0].Section14_1[0].Estimated[1]', false),
-    isPresent: createFieldFromReference(15, 'form1[0].Section14_1[0].Present[0]', false),
-    serviceNumber: createFieldFromReference(15, 'form1[0].Section14_1[0].TextField11[3]', ''),
+    toDateEstimated: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[8].#field[10]', true),
+    isPresent: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[8].#field[9]', true),
+    serviceNumber: createFieldFromReference(15, 'form1[0].Section14_1[0].TextField11[3]', 'serviceNumber'),
     dischargeType: {
-      ...createFieldFromReference(15, 'form1[0].Section14_1[0].#area[9].RadioButtonList[4]', ''),
+      ...createFieldFromReference(15, 'form1[0].Section14_1[0].#area[9].RadioButtonList[4]', 'YES'),
       options: DISCHARGE_TYPE_OPTIONS
     },
     typeOfDischarge: {
-      ...createFieldFromReference(15, 'form1[0].Section14_1[0].#area[10].RadioButtonList[5]', ''),
+      ...createFieldFromReference(15, 'form1[0].Section14_1[0].#area[10].RadioButtonList[5]', '4'),
       options: DISCHARGE_TYPE_OPTIONS
     },
     dischargeDate: {
-      month: createFieldFromReference(15, 'form1[0].Section14_1[0].Date_of_Discharge[0]', ''),
-      year: createFieldFromReference(15, 'form1[0].Section14_1[0].Date_of_Discharge[0]', '')
+      month: createFieldFromReference(15, 'form1[0].Section14_1[0].From_Datefield_Name_2[2]', 'date'),
+      year: createFieldFromReference(15, 'form1[0].Section14_1[0].From_Datefield_Name_2[2]', 'date')
     },
-    dischargeDateEstimated: createFieldFromReference(15, 'form1[0].Section14_1[0].Estimated[2]', false),
-    otherDischargeType: createFieldFromReference(15, 'form1[0].Section14_1[0].TextField11[4]', ''),
-    dischargeReason: createFieldFromReference(15, 'form1[0].Section14_1[0].TextField11[5]', ''),
+    dischargeDateEstimated: createFieldFromReference(15, 'form1[0].Section14_1[0].#field[13]', true),
+    otherDischargeType: createFieldFromReference(15, 'form1[0].Section14_1[0].TextField11[4]', 'Other'),
+    dischargeReason: createFieldFromReference(15, 'form1[0].Section14_1[0].TextField11[5]', 'dischargeReadon'),
     currentStatus: {
-      activeDuty: createFieldFromReference(15, 'form1[0].Section14_1[0].Active_Duty[0]', false),
-      activeReserve: createFieldFromReference(15, 'form1[0].Section14_1[0].Active_Reserve[0]', false),
-      inactiveReserve: createFieldFromReference(15, 'form1[0].Section14_1[0].Inactive_Reserve[0]', false)
+      activeDuty: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[19].#field[27]', false),
+      activeReserve: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[19].#field[28]', false),
+      inactiveReserve: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[19].#field[29]', false)
     }
   };
 };
 
 /**
- * Creates a default disciplinary entry
+ * Creates a default disciplinary entry using actual field names from sections-references
  */
 export const createDefaultDisciplinaryEntry = (): MilitaryDisciplinaryEntry => {
   return {
     hasBeenSubjectToDisciplinary: {
-      ...createFieldFromReference(15, 'form1[0].Section14_1[0].#area[11].RadioButtonList[6]', ''),
+      ...createFieldFromReference(15, 'form1[0].Section15_2[0].#area[0].RadioButtonList[0]', 'NO (If NO, proceed to Section 15.3) '),
       options: YES_NO_OPTIONS
     },
     procedureDate: {
-      month: createFieldFromReference(15, 'form1[0].Section14_1[0].Date_of_Court_Martial[0]', ''),
-      year: createFieldFromReference(15, 'form1[0].Section14_1[0].Date_of_Court_Martial[0]', '')
+      month: createFieldFromReference(15, 'form1[0].Section15_2[0].From_Datefield_Name_2[0]', 'DateOfCourt1'),
+      year: createFieldFromReference(15, 'form1[0].Section15_2[0].From_Datefield_Name_2[0]', 'DateOfCourt1')
     },
-    procedureDateEstimated: createFieldFromReference(15, 'form1[0].Section14_1[0].Estimated[3]', false),
-    ucmjOffenseDescription: createFieldFromReference(15, 'form1[0].Section14_1[0].TextField11[6]', ''),
-    disciplinaryProcedureName: createFieldFromReference(15, 'form1[0].Section14_1[0].TextField11[7]', ''),
-    militaryCourtDescription: createFieldFromReference(15, 'form1[0].Section14_1[0].TextField11[8]', ''),
-    finalOutcome: createFieldFromReference(15, 'form1[0].Section14_1[0].TextField11[9]', '')
+    procedureDateEstimated: createFieldFromReference(15, 'form1[0].Section15_2[0].#field[2]', true),
+    ucmjOffenseDescription: createFieldFromReference(15, 'form1[0].Section15_2[0].From_Datefield_Name_2[1]', 'OffencesCharged1'),
+    disciplinaryProcedureName: createFieldFromReference(15, 'form1[0].Section15_2[0].From_Datefield_Name_2[2]', 'DisplinaryProcedure1'),
+    militaryCourtDescription: createFieldFromReference(15, 'form1[0].Section15_2[0].From_Datefield_Name_2[3]', 'CourtCharged1'),
+    finalOutcome: createFieldFromReference(15, 'form1[0].Section15_2[0].From_Datefield_Name_2[4]', 'FinalOutcome1')
   };
 };
 
 /**
- * Creates a default foreign military service entry
+ * Creates a default foreign military service entry using actual field names from sections-references
  */
 export const createDefaultForeignMilitaryEntry = (): ForeignMilitaryServiceEntry => {
   return {
     hasServedInForeignMilitary: {
-      ...createFieldFromReference(15, 'form1[0].Section14_1[0].#area[12].RadioButtonList[7]', ''),
+      ...createFieldFromReference(15, 'form1[0].Section15_3[0].RadioButtonList[0]', 'NO (If NO, proceed to Section 16)'),
       options: YES_NO_OPTIONS
     },
     fromDate: {
-      month: createFieldFromReference(15, 'form1[0].Section14_1[0].From_Datefield_Name_3[0]', ''),
-      year: createFieldFromReference(15, 'form1[0].Section14_1[0].From_Datefield_Name_3[0]', '')
+      month: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[0]', '2020-01-01'),
+      year: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[0]', '2020-01-01')
     },
-    fromDateEstimated: createFieldFromReference(15, 'form1[0].Section14_1[0].Estimated[4]', false),
+    fromDateEstimated: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].#field[3]', true),
     toDate: {
-      month: createFieldFromReference(15, 'form1[0].Section14_1[0].To_Datefield_Name_3[0]', ''),
-      year: createFieldFromReference(15, 'form1[0].Section14_1[0].To_Datefield_Name_3[0]', '')
+      month: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[1]', '2023-01-01'),
+      year: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[1]', '2023-01-01')
     },
-    toDateEstimated: createFieldFromReference(15, 'form1[0].Section14_1[0].Estimated[5]', false),
-    isPresent: createFieldFromReference(15, 'form1[0].Section14_1[0].Present[1]', false),
-    organizationName: createFieldFromReference(15, 'form1[0].Section14_1[0].TextField11[10]', ''),
-    country: createFieldFromReference(15, 'form1[0].Section14_1[0].TextField11[11]', ''),
-    highestRank: createFieldFromReference(15, 'form1[0].Section14_1[0].TextField11[12]', ''),
-    divisionDepartment: createFieldFromReference(15, 'form1[0].Section14_1[0].TextField11[13]', ''),
-    reasonForLeaving: createFieldFromReference(15, 'form1[0].Section14_1[0].TextField11[14]', ''),
-    circumstancesDescription: createFieldFromReference(15, 'form1[0].Section14_1[0].TextField11[15]', ''),
+    toDateEstimated: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].#field[5]', true),
+    isPresent: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].#field[6]', true),
+    organizationName: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField11[0]', 'NameOfORg'),
+    country: createFieldFromReference(15, 'form1[0].Section15_3[0].DropDownList29[0]', 'United States'),
+    highestRank: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField11[1]', 'Manager'),
+    divisionDepartment: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField11[2]', 'Human Resources'),
+    reasonForLeaving: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField12[0]', 'Personal Reasons'),
+    circumstancesDescription: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField13[0]', 'Team Collaboration'),
     contact1: {
       fullName: {
-        firstName: createFieldFromReference(15, 'form1[0].Section14_1[0].ContactFirstName[0]', ''),
-        middleName: createFieldFromReference(15, 'form1[0].Section14_1[0].ContactMiddleName[0]', ''),
-        lastName: createFieldFromReference(15, 'form1[0].Section14_1[0].ContactLastName[0]', ''),
-        suffix: createFieldFromReference(15, 'form1[0].Section14_1[0].ContactSuffix[0]', '')
+        firstName: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].TextField11[3]', '123 Main St'),
+        middleName: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].TextField11[4]', 'Anytown'),
+        lastName: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].School6_State[0]', 'CA'),
+        suffix: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].DropDownList6[0]', 'USA')
       },
       associationPeriod: {
         fromDate: {
-          month: createFieldFromReference(15, 'form1[0].Section14_1[0].AssociationFromDate[0]', ''),
-          year: createFieldFromReference(15, 'form1[0].Section14_1[0].AssociationFromDate[0]', '')
+          month: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[0]', '2020-01-01'),
+          year: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[0]', '2020-01-01')
         },
-        fromDateEstimated: createFieldFromReference(15, 'form1[0].Section14_1[0].Estimated[6]', false),
+        fromDateEstimated: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].#field[3]', true),
         toDate: {
-          month: createFieldFromReference(15, 'form1[0].Section14_1[0].AssociationToDate[0]', ''),
-          year: createFieldFromReference(15, 'form1[0].Section14_1[0].AssociationToDate[0]', '')
+          month: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[1]', '2023-01-01'),
+          year: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[1]', '2023-01-01')
         },
-        toDateEstimated: createFieldFromReference(15, 'form1[0].Section14_1[0].Estimated[7]', false),
-        isPresent: createFieldFromReference(15, 'form1[0].Section14_1[0].Present[2]', false)
+        toDateEstimated: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].#field[5]', true),
+        isPresent: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].#field[6]', true)
       },
-      frequencyOfContact: createFieldFromReference(15, 'form1[0].Section14_1[0].FrequencyOfContact[0]', ''),
-      officialTitle: createFieldFromReference(15, 'form1[0].Section14_1[0].OfficialTitle[0]', ''),
+      frequencyOfContact: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField11[1]', 'Manager'),
+      officialTitle: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField11[2]', 'Human Resources'),
       address: {
-        street: createFieldFromReference(15, 'form1[0].Section14_1[0].ContactStreet[0]', ''),
-        city: createFieldFromReference(15, 'form1[0].Section14_1[0].ContactCity[0]', ''),
-        state: createFieldFromReference(15, 'form1[0].Section14_1[0].ContactState[0]', ''),
-        country: createFieldFromReference(15, 'form1[0].Section14_1[0].ContactCountry[0]', ''),
-        zipCode: createFieldFromReference(15, 'form1[0].Section14_1[0].ContactZip[0]', '')
+        street: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].TextField11[3]', '123 Main St'),
+        city: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].TextField11[4]', 'Anytown'),
+        state: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].School6_State[0]', 'CA'),
+        country: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].DropDownList6[0]', 'USA'),
+        zipCode: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].TextField11[3]', '123 Main St')
       }
     },
     contact2: {
       fullName: {
-        firstName: createFieldFromReference(15, 'form1[0].Section14_1[0].Contact2FirstName[0]', ''),
-        middleName: createFieldFromReference(15, 'form1[0].Section14_1[0].Contact2MiddleName[0]', ''),
-        lastName: createFieldFromReference(15, 'form1[0].Section14_1[0].Contact2LastName[0]', ''),
-        suffix: createFieldFromReference(15, 'form1[0].Section14_1[0].Contact2Suffix[0]', '')
+        firstName: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].TextField11[3]', '123 Main St'),
+        middleName: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].TextField11[4]', 'Anytown'),
+        lastName: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].School6_State[0]', 'CA'),
+        suffix: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].DropDownList6[0]', 'USA')
       },
       associationPeriod: {
         fromDate: {
-          month: createFieldFromReference(15, 'form1[0].Section14_1[0].Contact2AssociationFromDate[0]', ''),
-          year: createFieldFromReference(15, 'form1[0].Section14_1[0].Contact2AssociationFromDate[0]', '')
+          month: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[0]', '2020-01-01'),
+          year: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[0]', '2020-01-01')
         },
-        fromDateEstimated: createFieldFromReference(15, 'form1[0].Section14_1[0].Estimated[8]', false),
+        fromDateEstimated: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].#field[3]', true),
         toDate: {
-          month: createFieldFromReference(15, 'form1[0].Section14_1[0].Contact2AssociationToDate[0]', ''),
-          year: createFieldFromReference(15, 'form1[0].Section14_1[0].Contact2AssociationToDate[0]', '')
+          month: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[1]', '2023-01-01'),
+          year: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[1]', '2023-01-01')
         },
-        toDateEstimated: createFieldFromReference(15, 'form1[0].Section14_1[0].Estimated[9]', false),
-        isPresent: createFieldFromReference(15, 'form1[0].Section14_1[0].Present[3]', false)
+        toDateEstimated: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].#field[5]', true),
+        isPresent: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].#field[6]', true)
       },
-      frequencyOfContact: createFieldFromReference(15, 'form1[0].Section14_1[0].Contact2FrequencyOfContact[0]', ''),
-      officialTitle: createFieldFromReference(15, 'form1[0].Section14_1[0].Contact2OfficialTitle[0]', ''),
-      specify: createFieldFromReference(15, 'form1[0].Section14_1[0].Specify[0]', '')
+      frequencyOfContact: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField11[1]', 'Manager'),
+      officialTitle: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField11[2]', 'Human Resources'),
+      specify: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField12[0]', 'Personal Reasons')
     }
   };
 };

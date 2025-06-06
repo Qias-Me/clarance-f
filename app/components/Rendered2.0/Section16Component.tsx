@@ -25,6 +25,8 @@ export const Section16Component: React.FC<Section16ComponentProps> = ({
   onValidationChange,
   onNext
 }) => {
+  console.log('🔄 Section16Component: Component initializing...');
+
   // ============================================================================
   // CONTEXT HOOKS
   // ============================================================================
@@ -40,6 +42,14 @@ export const Section16Component: React.FC<Section16ComponentProps> = ({
     resetSection,
     isComplete
   } = useSection16();
+
+  console.log('🔍 Section16Component: Context data loaded', {
+    section16Data,
+    isLoading,
+    errors,
+    isDirty,
+    totalPeople: section16Data?.section16?.peopleWhoKnowYou?.length || 0
+  });
 
         // SF86 Form Context for data persistence
         const sf86Form = useSF86Form();
@@ -97,8 +107,20 @@ export const Section16Component: React.FC<Section16ComponentProps> = ({
   };
 
   const handlePersonFieldChange = (personIndex: number, fieldPath: string, value: any) => {
+    console.log('🔄 Section16Component: handlePersonFieldChange called', {
+      personIndex,
+      fieldPath,
+      value,
+      timestamp: new Date().toISOString()
+    });
+
     const person = section16Data.section16.peopleWhoKnowYou[personIndex];
-    if (!person) return;
+    if (!person) {
+      console.warn('⚠️ Section16Component: Person not found', { personIndex, totalPeople: section16Data.section16.peopleWhoKnowYou.length });
+      return;
+    }
+
+    console.log('🔍 Section16Component: Current person data', { personIndex, person });
 
     // FIXED: Properly update Field<T> structure without corrupting it
     // Instead of spreading the entire person object, just pass the field update
@@ -130,7 +152,16 @@ export const Section16Component: React.FC<Section16ComponentProps> = ({
       }
     }
 
+    console.log('🔍 Section16Component: About to call updatePersonWhoKnowsYou', {
+      personIndex,
+      fieldUpdate,
+      fieldPath,
+      value
+    });
+
     updatePersonWhoKnowsYou(personIndex, fieldUpdate);
+
+    console.log('✅ Section16Component: updatePersonWhoKnowsYou called successfully');
   };
 
   const handleReset = () => {

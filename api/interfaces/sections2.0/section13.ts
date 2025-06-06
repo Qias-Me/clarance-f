@@ -12,6 +12,7 @@ import type { Field, FieldWithOptions } from '../formDefinition2.0';
 import type { USState, Country } from './base';
 import { cloneDeep } from 'lodash';
 import { set } from 'lodash';
+import { createFieldFromReference, validateSectionFieldCount } from '../../utils/sections-references-loader';
 
 // ============================================================================
 // CORE INTERFACES
@@ -163,7 +164,6 @@ export interface EmploymentHistory {
   hasGaps: Field<"YES" | "NO">;
   gapExplanation: Field<string>;
   entries: EmploymentEntry[];
-  entriesCount: number;
   federalInfo: FederalEmploymentInfo;
 }
 
@@ -357,370 +357,269 @@ export type EmploymentEntryOperation =
 // ============================================================================
 
 /**
- * Creates a default employment entry
+ * Creates a default employment entry using actual field names from sections-references
+ * Maps to the correct PDF field names that exist in section-13.json
  */
-export const createDefaultEmploymentEntry = (entryId: string | number, index: number = 0): EmploymentEntry => ({
-  _id: entryId,
-  employmentDates: {
-    fromDate: {
-      id: `section_13_field_form1_0__section_13_1_2_${index}__From_Datefield_Name_2_0_`,
-      name: `form1[0].section_13_1-2[${index}].From_Datefield_Name_2[0]`,
-      type: 'PDFTextField',
-      label: 'Employment Start Date',
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
+export const createDefaultEmploymentEntry = (entryId: string | number): EmploymentEntry => {
+  // Find fields by their value (the actual field identifier) rather than generic names
+  // This uses the DRY approach with sections-references as single source of truth
+
+  return {
+    _id: entryId,
+    employmentDates: {
+      fromDate: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].From_Datefield_Name_2[0]', // Maps to sect13A.1Entry1FromDate
+        ''
+      ),
+      fromEstimated: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].#field[32]', // Maps to sect13A.1Entry1FromEstimated - CORRECTED
+        false
+      ),
+      toDate: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].From_Datefield_Name_2[1]', // Maps to sect13A.1Entry1ToDate
+        ''
+      ),
+      toEstimated: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].#field[36]', // Maps to sect13A.1Entry1ToEstimated - CORRECTED
+        false
+      ),
+      present: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].#field[37]', // Maps to sect13A.1Entry1Present - CORRECTED
+        false
+      )
     },
-    fromEstimated: {
-      id: `section_13_field_form1_0__section_13_1_2_${index}__CheckBox7_0_`,
-      name: `form1[0].section_13_1-2[${index}].CheckBox7[0]`,
-      type: 'PDFCheckBox',
-      label: 'Start Date Estimated',
-      value: false,
-      rect: { x: 0, y: 0, width: 0, height: 0 }
+    employmentType: {
+      ...createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].RadioButtonList[0]', // Maps to sect13A.1Entry1EmploymentType
+        'Private Company' as EmploymentType
+      ),
+      options: EMPLOYMENT_TYPE_OPTIONS
     },
-    toDate: {
-      id: `section_13_field_form1_0__section_13_1_2_${index}__From_Datefield_Name_2_1_`,
-      name: `form1[0].section_13_1-2[${index}].From_Datefield_Name_2[1]`,
-      type: 'PDFTextField',
-      label: 'Employment End Date',
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
+    employmentStatus: {
+      ...createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].RadioButtonList[1]', // Maps to sect13A.1Entry1EmploymentStatus
+        'Full-time' as EmploymentStatus
+      ),
+      options: EMPLOYMENT_STATUS_OPTIONS
     },
-    toEstimated: {
-      id: `section_13_field_form1_0__section_13_1_2_${index}__CheckBox7_1_`,
-      name: `form1[0].section_13_1-2[${index}].CheckBox7[1]`,
-      type: 'PDFCheckBox',
-      label: 'End Date Estimated',
-      value: false,
-      rect: { x: 0, y: 0, width: 0, height: 0 }
+    employerName: createFieldFromReference(
+      13,
+      'form1[0].section_13_1-2[0].TextField11[2]', // Maps to sect13A.1Entry1EmployerName
+      ''
+    ),
+    employerAddress: {
+      street: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].TextField11[3]', // Maps to sect13A.1Entry1EmployerStreet
+        ''
+      ),
+      city: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].TextField11[4]', // Maps to sect13A.1Entry1EmployerCity
+        ''
+      ),
+      state: {
+        ...createFieldFromReference(
+          13,
+          'form1[0].section_13_1-2[0].School6_State[0]', // Maps to sect13A.1Entry1EmployerState
+          ''
+        ),
+        options: []
+      },
+      zipCode: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].TextField11[5]', // Maps to sect13A.1Entry1EmployerZip
+        ''
+      ),
+      country: {
+        ...createFieldFromReference(
+          13,
+          'form1[0].section_13_1-2[0].DropDownList18[0]', // Maps to sect13A.1Entry1EmployerCountry
+          ''
+        ),
+        options: []
+      }
     },
-    present: {
-      id: `section_13_field_form1_0__section_13_1_2_${index}__CheckBox22_0_`,
-      name: `form1[0].section_13_1-2[${index}].CheckBox22[0]`,
-      type: 'PDFCheckBox',
-      label: 'Present',
-      value: false,
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    }
-  },
-  employmentType: {
-    id: `section_13_field_form1_0__section_13_1_2_${index}__RadioButtonList_0_`,
-    name: `form1[0].section_13_1-2[${index}].RadioButtonList[0]`,
-    type: 'PDFRadioGroup',
-    label: 'Employment Type',
-    value: 'Private Company' as EmploymentType,
-    options: EMPLOYMENT_TYPE_OPTIONS,
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  employmentStatus: {
-    id: `section_13_field_form1_0__section_13_1_2_${index}__RadioButtonList_1_`,
-    name: `form1[0].section_13_1-2[${index}].RadioButtonList[1]`,
-    type: 'PDFRadioGroup',
-    label: 'Employment Status',
-    value: 'Full-time' as EmploymentStatus,
-    options: EMPLOYMENT_STATUS_OPTIONS,
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  employerName: {
-    id: `section_13_field_form1_0__section_13_1_2_${index}__TextField11_2_`,
-    name: `form1[0].section_13_1-2[${index}].TextField11[2]`,
-    type: 'PDFTextField',
-    label: 'Employer Name',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  employerAddress: {
-    street: {
-      id: `section_13_field_form1_0__section_13_1_2_${index}__TextField11_3_`,
-      name: `form1[0].section_13_1-2[${index}].TextField11[3]`,
-      type: 'PDFTextField',
-      label: 'Street Address',
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
+    businessType: createFieldFromReference(
+      13,
+      'form1[0].section_13_1-2[0].TextField11[6]', // Maps to sect13A.1Entry1BusinessType
+      ''
+    ),
+    positionTitle: createFieldFromReference(
+      13,
+      'form1[0].section_13_1-2[0].p3-t68[3]', // Maps to sect13A.1Entry1RankTitle
+      ''
+    ),
+    positionDescription: createFieldFromReference(
+      13,
+      'form1[0].section_13_1-2[0].TextField11[7]', // Maps to sect13A.1Entry1PositionDescription - CORRECTED
+      ''
+    ),
+    salary: createFieldFromReference(
+      13,
+      'form1[0].section_13_1-2[0].TextField11[8]', // Maps to sect13A.1Entry1Salary
+      ''
+    ),
+    supervisor: {
+      name: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].TextField11[0]', // Maps to sect13A.1Entry1SupervisorName
+        ''
+      ),
+      title: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].TextField11[1]', // Maps to sect13A.1Entry1SupervisorRank
+        ''
+      ),
+      email: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].TextField11[9]', // Maps to sect13A.1Entry1SupervisorEmail
+        ''
+      ),
+      phone: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].p3-t68[0]', // Maps to sect13A.1Entry1SupervisorPhone
+        ''
+      ),
+      canContact: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].#field[30]', // Maps to sect13A.1Entry1CanContact - CORRECTED
+        "YES" as "YES" | "NO"
+      ),
+      contactRestrictions: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].TextField11[10]', // Maps to sect13A.1Entry1ContactRestrictions - CORRECTED
+        ''
+      )
     },
-    city: {
-      id: `section_13_field_form1_0__section_13_1_2_${index}__TextField11_4_`,
-      name: `form1[0].section_13_1-2[${index}].TextField11[4]`,
-      type: 'PDFTextField',
-      label: 'City',
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
+    reasonForLeaving: {
+      ...createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].#field[28]', // Maps to sect13A.1Entry1ReasonForLeaving - CORRECTED
+        'Still Employed' as ReasonForLeaving
+      ),
+      options: REASON_FOR_LEAVING_OPTIONS
     },
-    state: {
-      id: `section_13_field_form1_0__section_13_1_2_${index}__School6_State_1_`,
-      name: `form1[0].section_13_1-2[${index}].School6_State[1]`,
-      type: 'PDFDropdown',
-      label: 'State',
-      value: '',
-      options: [],
-      rect: { x: 0, y: 0, width: 0, height: 0 }
+    additionalComments: createFieldFromReference(
+      13,
+      'form1[0].section_13_1-2[0].TextField11[12]', // Maps to sect13A.1Entry1AdditionalComments - CORRECTED
+      ''
+    ),
+    verification: {
+      verified: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].#field[37]', // Maps to sect13A.1Entry1Verified - CORRECTED
+        false
+      ),
+      verificationDate: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].TextField11[14]', // Maps to sect13A.1Entry1VerificationDate - CORRECTED
+        ''
+      ),
+      verificationMethod: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].TextField11[11]', // Maps to sect13A.1Entry1VerificationMethod
+        ''
+      ),
+      notes: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].TextField11[13]', // Maps to sect13A.1Entry1VerificationNotes - CORRECTED
+        ''
+      )
     },
-    zipCode: {
-      id: `section_13_field_form1_0__section_13_1_2_${index}__TextField11_5_`,
-      name: `form1[0].section_13_1-2[${index}].TextField11[5]`,
-      type: 'PDFTextField',
-      label: 'Zip Code',
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    country: {
-      id: `section_13_field_form1_0__section_13_1_2_${index}__DropDownList13_0_`,
-      name: `form1[0].section_13_1-2[${index}].DropDownList13[0]`,
-      type: 'PDFDropdown',
-      label: 'Country',
-      value: '',
-      options: [],
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    }
-  },
-  businessType: {
-    id: `section_13_field_form1_0__section_13_1_2_${index}__TextField11_6_`,
-    name: `form1[0].section_13_1-2[${index}].TextField11[6]`,
-    type: 'PDFTextField',
-    label: 'Business Type',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  positionTitle: {
-    id: `section_13_field_form1_0__section_13_1_2_${index}__TextField11_7_`,
-    name: `form1[0].section_13_1-2[${index}].TextField11[7]`,
-    type: 'PDFTextField',
-    label: 'Position Title',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  positionDescription: {
-    id: `section_13_field_form1_0__section_13_1_2_${index}__TextField13_0_`,
-    name: `form1[0].section_13_1-2[${index}].TextField13[0]`,
-    type: 'PDFTextField',
-    label: 'Position Description',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  salary: {
-    id: `section_13_field_form1_0__section_13_1_2_${index}__TextField11_8_`,
-    name: `form1[0].section_13_1-2[${index}].TextField11[8]`,
-    type: 'PDFTextField',
-    label: 'Salary',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  supervisor: {
-    name: {
-      id: `section_13_field_form1_0__section_13_1_2_${index}__TextField11_0_`,
-      name: `form1[0].section_13_1-2[${index}].TextField11[0]`,
-      type: 'PDFTextField',
-      label: 'Supervisor Name',
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    title: {
-      id: `section_13_field_form1_0__section_13_1_2_${index}__TextField11_1_`,
-      name: `form1[0].section_13_1-2[${index}].TextField11[1]`,
-      type: 'PDFTextField',
-      label: 'Supervisor Title',
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    email: {
-      id: `section_13_field_form1_0__section_13_1_2_${index}__TextField11_9_`,
-      name: `form1[0].section_13_1-2[${index}].TextField11[9]`,
-      type: 'PDFTextField',
-      label: 'Supervisor Email',
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    phone: {
-      id: `section_13_field_form1_0__section_13_1_2_${index}__TextField11_10_`,
-      name: `form1[0].section_13_1-2[${index}].TextField11[10]`,
-      type: 'PDFTextField',
-      label: 'Supervisor Phone',
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    canContact: {
-      id: `section_13_field_form1_0__section_13_1_2_${index}__RadioButtonList_2_`,
-      name: `form1[0].section_13_1-2[${index}].RadioButtonList[2]`,
-      type: 'PDFRadioGroup',
-      label: 'Can Contact',
-      value: "YES",
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    contactRestrictions: {
-      id: `section_13_field_form1_0__section_13_1_2_${index}__TextField13_1_`,
-      name: `form1[0].section_13_1-2[${index}].TextField13[1]`,
-      type: 'PDFTextField',
-      label: 'Contact Restrictions',
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    }
-  },
-  reasonForLeaving: {
-    id: `section_13_field_form1_0__section_13_1_2_${index}__field_29_`,
-    name: `form1[0].section_13_1-2[${index}].field[29]`,
-    type: 'PDFDropdown',
-    label: 'Reason for Leaving',
-    value: 'Still Employed' as ReasonForLeaving,
-    options: REASON_FOR_LEAVING_OPTIONS,
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  additionalComments: {
-    id: `section_13_field_form1_0__section_13_1_2_${index}__TextField13_2_`,
-    name: `form1[0].section_13_1-2[${index}].TextField13[2]`,
-    type: 'PDFTextField',
-    label: 'Additional Comments',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  verification: {
-    verified: {
-      id: `section_13_field_form1_0__section_13_1_2_${index}__CheckBox7_2_`,
-      name: `form1[0].section_13_1-2[${index}].CheckBox7[2]`,
-      type: 'PDFCheckBox',
-      label: 'Verified',
-      value: false,
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    verificationDate: {
-      id: `section_13_field_form1_0__section_13_1_2_${index}__From_Datefield_Name_2_2_`,
-      name: `form1[0].section_13_1-2[${index}].From_Datefield_Name_2[2]`,
-      type: 'PDFTextField',
-      label: 'Verification Date',
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    verificationMethod: {
-      id: `section_13_field_form1_0__section_13_1_2_${index}__TextField11_11_`,
-      name: `form1[0].section_13_1-2[${index}].TextField11[11]`,
-      type: 'PDFTextField',
-      label: 'Verification Method',
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    notes: {
-      id: `section_13_field_form1_0__section_13_1_2_${index}__TextField13_3_`,
-      name: `form1[0].section_13_1-2[${index}].TextField13[3]`,
-      type: 'PDFTextField',
-      label: 'Verification Notes',
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    }
-  },
-  createdAt: new Date(),
-  updatedAt: new Date()
-});
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+};
 
 /**
- * Creates default federal employment information
+ * Creates default federal employment information using actual field names from sections-references
+ * Maps to the correct PDF field names that exist in section-13.json
  */
 export const createDefaultFederalEmploymentInfo = (): FederalEmploymentInfo => ({
-  hasFederalEmployment: {
-    id: SECTION13_FIELD_IDS.FEDERAL_EMPLOYMENT_MAIN,
-    name: SECTION13_FIELD_NAMES.FEDERAL_EMPLOYMENT_MAIN,
-    type: 'PDFRadioGroup',
-    label: 'Federal Employment',
-    value: "NO",
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  securityClearance: {
-    id: SECTION13_FIELD_IDS.FEDERAL_EMPLOYMENT_RESPONSE,
-    name: SECTION13_FIELD_NAMES.FEDERAL_EMPLOYMENT_RESPONSE,
-    type: 'PDFRadioGroup',
-    label: 'Security Clearance',
-    value: "NO",
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  clearanceLevel: {
-    id: "section_13_field_form1_0__section13_5_0__TextField_0_",
-    name: "form1[0].section13_5[0].TextField[0]",
-    type: 'PDFTextField',
-    label: 'Clearance Level',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  clearanceDate: {
-    id: "section_13_field_form1_0__section13_5_0__DateField_0_",
-    name: "form1[0].section13_5[0].DateField[0]",
-    type: 'PDFTextField',
-    label: 'Clearance Date',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  investigationDate: {
-    id: "section_13_field_form1_0__section13_5_0__DateField_1_",
-    name: "form1[0].section13_5[0].DateField[1]",
-    type: 'PDFTextField',
-    label: 'Investigation Date',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  polygraphDate: {
-    id: "section_13_field_form1_0__section13_5_0__DateField_2_",
-    name: "form1[0].section13_5[0].DateField[2]",
-    type: 'PDFTextField',
-    label: 'Polygraph Date',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  accessToClassified: {
-    id: "section_13_field_form1_0__section13_5_0__RadioButtonList_2_",
-    name: "form1[0].section13_5[0].RadioButtonList[2]",
-    type: 'PDFRadioGroup',
-    label: 'Access to Classified',
-    value: "NO",
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  classificationLevel: {
-    id: "section_13_field_form1_0__section13_5_0__TextField_1_",
-    name: "form1[0].section13_5[0].TextField[1]",
-    type: 'PDFTextField',
-    label: 'Classification Level',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  }
+  hasFederalEmployment: createFieldFromReference(
+    13,
+    'form1[0].section13_5[0].RadioButtonList[0]', // Maps to sect13A.5Entry1HasFederalEmployment
+    "NO" as "YES" | "NO"
+  ),
+  securityClearance: createFieldFromReference(
+    13,
+    'form1[0].section13_5[0].RadioButtonList[1]', // Maps to sect13A.5Entry1SecurityClearance
+    "NO" as "YES" | "NO"
+  ),
+  clearanceLevel: createFieldFromReference(
+    13,
+    'form1[0].section13_5[0].TextField11[3]', // Maps to sect13A.5Entry1ClearanceLevel - CORRECTED
+    ''
+  ),
+  clearanceDate: createFieldFromReference(
+    13,
+    'form1[0].section13_5[0].From_Datefield_Name_2[2]', // Maps to sect13A.5Entry1ClearanceDate - CORRECTED
+    ''
+  ),
+  investigationDate: createFieldFromReference(
+    13,
+    'form1[0].section13_5[0].From_Datefield_Name_2[3]', // Maps to sect13A.5Entry1InvestigationDate - CORRECTED
+    ''
+  ),
+  polygraphDate: createFieldFromReference(
+    13,
+    'form1[0].section13_5[0].From_Datefield_Name_2[4]', // Maps to sect13A.5Entry1PolygraphDate - CORRECTED
+    ''
+  ),
+  accessToClassified: createFieldFromReference(
+    13,
+    'form1[0].section13_5[0].#field[22]', // Maps to sect13A.5Entry1AccessToClassified - CORRECTED
+    "NO" as "YES" | "NO"
+  ),
+  classificationLevel: createFieldFromReference(
+    13,
+    'form1[0].section13_5[0].TextField11[4]', // Maps to sect13A.5Entry1ClassificationLevel - CORRECTED
+    ''
+  )
 });
 
 /**
- * Creates a default Section 13 data structure
+ * Creates a default Section 13 data structure using DRY approach with sections-references
+ * This eliminates hardcoded values and uses the single source of truth
  */
 export const createDefaultSection13 = (includeInitialEntry: boolean = false): Section13 => {
+  // Validate field count against sections-references
+  validateSectionFieldCount(13);
+
   const defaultSection: Section13 = {
     _id: 13,
     section13: {
-      hasEmployment: {
-        id: SECTION13_FIELD_IDS.EMPLOYMENT_TYPE_RADIO_1,
-        name: SECTION13_FIELD_NAMES.EMPLOYMENT_TYPE_RADIO_1,
-        type: 'PDFRadioGroup',
-        label: 'Employment Type Selection',
-        value: "NO" as "YES" | "NO",
-        rect: { x: 0, y: 0, width: 0, height: 0 }
-      },
-      hasGaps: {
-        id: SECTION13_FIELD_IDS.EMPLOYMENT_STATUS_RADIO_1,
-        name: SECTION13_FIELD_NAMES.EMPLOYMENT_STATUS_RADIO_1,
-        type: 'PDFRadioGroup',
-        label: 'Employment Status Selection',
-        value: "NO" as "YES" | "NO",
-        rect: { x: 0, y: 0, width: 0, height: 0 }
-      },
-      gapExplanation: {
-        id: SECTION13_FIELD_IDS.ENTRY1_SUPERVISOR_NAME,
-        name: SECTION13_FIELD_NAMES.ENTRY1_SUPERVISOR_NAME,
-        type: 'PDFTextField',
-        label: 'Supervisor Name',
-        value: '',
-        rect: { x: 0, y: 0, width: 0, height: 0 }
-      },
+      hasEmployment: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].RadioButtonList[0]', // Maps to sect13A.1Entry1HasEmployment
+        "NO" as "YES" | "NO"
+      ),
+      hasGaps: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].RadioButtonList[1]', // Maps to sect13A.1Entry1HasGaps
+        "NO" as "YES" | "NO"
+      ),
+      gapExplanation: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].TextField11[0]', // Maps to sect13A.1Entry1GapExplanation
+        ''
+      ),
       entries: [] as EmploymentEntry[],
-      entriesCount: 0,
       federalInfo: createDefaultFederalEmploymentInfo()
     }
   };
   
   // Add initial entry if requested
   if (includeInitialEntry) {
-    defaultSection.section13.entries.push(createDefaultEmploymentEntry(Date.now(), 0));
-    defaultSection.section13.entriesCount = 1;
+    defaultSection.section13.entries.push(createDefaultEmploymentEntry(Date.now()));
   }
   
   return defaultSection;

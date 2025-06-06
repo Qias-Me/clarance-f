@@ -216,7 +216,7 @@ export function createEnhancedSectionContext<T>(config: EnhancedSectionConfig<T>
         });
       }
 
-      console.log(`🔧 Enhanced Template: Created custom actions for ${config.sectionId}:`, Object.keys(actions));
+      // console.log(`🔧 Enhanced Template: Created custom actions for ${config.sectionId}:`, Object.keys(actions));
       return actions;
     }, [config, contextId]);
 
@@ -246,9 +246,9 @@ export function createEnhancedSectionContext<T>(config: EnhancedSectionConfig<T>
 
     // Ensure section is properly registered with SF86FormContext
     // This is critical for collectAllSectionData() to find this section
-    console.log(`🔧 Enhanced Template: Section ${config.sectionId} integration initialized`);
-    console.log(`📊 Enhanced Template: Section data available:`, !!sectionData);
-    console.log(`📊 Enhanced Template: Integration object:`, !!integration);
+    // console.log(`🔧 Enhanced Template: Section ${config.sectionId} integration initialized`);
+    // console.log(`📊 Enhanced Template: Section data available:`, !!sectionData);
+    // console.log(`📊 Enhanced Template: Integration object:`, !!integration);
 
     // ============================================================================
     // CONTEXT VALUE (createDefaultSection Compatible)

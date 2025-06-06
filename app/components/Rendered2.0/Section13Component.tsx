@@ -8,7 +8,7 @@
 
 import React, { useState, useCallback, useEffect } from "react";
 import { useSection13 } from "~/state/contexts/sections2.0/section13";
-import { useSF86Form } from "~/state/contexts/SF86FormContext";
+
 import type { EmploymentEntry } from "../../../api/interfaces/sections2.0/section13";
 
 interface Section13ComponentProps {
@@ -87,6 +87,7 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
     addEmploymentEntry,
     removeEmploymentEntry,
     updateEmploymentEntry,
+    saveToMainContext,
     validateSection,
     validateEmploymentEntry,
     getEmploymentEntryCount,
@@ -99,23 +100,123 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
     calculateEmploymentDuration,
   } = useSection13();
 
-        // SF86 Form Context for data persistence
-        const sf86Form = useSF86Form();
+  // Note: SF86 Form Context updates now handled by Section 13 context's saveToMainContext function
 
-  // Get direct access to SF86Form context for debugging
-  const { updateSectionData } = useSF86Form();
-
+  // Component state
   const [expandedEntries, setExpandedEntries] = useState<Set<number>>(new Set([0]));
   const [validationErrors, setValidationErrors] = useState<Record<number, any[]>>({});
   const [globalErrors, setGlobalErrors] = useState<any[]>([]);
   const [isDebugMode, setIsDebugMode] = useState(true); // Default to true for debugging
+  const [isLoading, setIsLoading] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
+
+  // Local state for form values (performance optimization)
+  const [localFormData, setLocalFormData] = useState<any>({});
+
+  // Initialize local form data from section data
+  useEffect(() => {
+    if (sectionData?.section13?.entries) {
+      const initialData: any = {};
+      sectionData.section13.entries.forEach((entry: any, index: number) => {
+        initialData[index] = {
+          // Employment dates
+          'employmentDates.fromDate': entry.employmentDates?.fromDate?.value || '',
+          'employmentDates.toDate': entry.employmentDates?.toDate?.value || '',
+          'employmentDates.fromEstimated': entry.employmentDates?.fromEstimated?.value || false,
+          'employmentDates.toEstimated': entry.employmentDates?.toEstimated?.value || false,
+          'employmentDates.present': entry.employmentDates?.present?.value || false,
+
+          // Employer information
+          'employerName': entry.employerName?.value || '',
+          'employmentType': entry.employmentType?.value || '',
+          'positionTitle': entry.positionTitle?.value || '',
+          'employmentStatus': entry.employmentStatus?.value || '',
+          'positionDescription': entry.positionDescription?.value || '',
+          'reasonForLeaving': entry.reasonForLeaving?.value || '',
+          'additionalComments': entry.additionalComments?.value || '',
+
+          // Employer address
+          'employerAddress.street': entry.employerAddress?.street?.value || '',
+          'employerAddress.city': entry.employerAddress?.city?.value || '',
+          'employerAddress.state': entry.employerAddress?.state?.value || '',
+          'employerAddress.zipCode': entry.employerAddress?.zipCode?.value || '',
+          'employerAddress.country': entry.employerAddress?.country?.value || '',
+
+          // Supervisor information
+          'supervisor.name': entry.supervisor?.name?.value || '',
+          'supervisor.title': entry.supervisor?.title?.value || '',
+          'supervisor.email': entry.supervisor?.email?.value || '',
+          'supervisor.phone': entry.supervisor?.phone?.value || '',
+          'supervisor.canContact': entry.supervisor?.canContact?.value || '',
+          'supervisor.contactRestrictions': entry.supervisor?.contactRestrictions?.value || '',
+        };
+      });
+      setLocalFormData(initialData);
+    }
+  }, [sectionData?.section13?.entries?.length]); // Only re-initialize when entry count changes
+
+  // Function to commit local form data to context (called on save)
+  const commitLocalDataToContext = useCallback(() => {
+    console.log('💾 Section13Component - Committing local data to context');
+    console.log('💾 Local form data to commit:', localFormData);
+
+    if (!localFormData || Object.keys(localFormData).length === 0) {
+      console.log('⚠️ No local form data to commit');
+      return;
+    }
+
+    Object.entries(localFormData).forEach(([indexStr, entryData]: [string, any]) => {
+      const index = parseInt(indexStr);
+      console.log(`💾 Committing entry ${index} data:`, entryData);
+
+      Object.entries(entryData).forEach(([fieldPath, value]) => {
+        console.log(`💾 Updating field ${fieldPath} = ${value} for entry ${index}`);
+        updateEmploymentEntry(index, fieldPath, value);
+      });
+    });
+
+    console.log('✅ Local data commit completed');
+  }, [localFormData, updateEmploymentEntry]);
+
+  // Save handler - Performance optimized approach
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setShowValidation(true);
+
+    console.log('🔄 Section13Component - Save button clicked (Performance Optimized)');
+
+    try {
+      // First, commit local form data to Section 13 context
+      console.log('💾 Section13Component - Committing local data to Section 13 context');
+      commitLocalDataToContext();
+
+      // Wait a moment for the Section 13 context to update
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      // Validate the section data
+      const result = validateSection();
+      console.log(`🔍 Section 13 validation result:`, result);
+
+      // Use the performance-optimized save function from Section 13 context
+      // This will update SF86FormContext only when explicitly called
+      console.log('💾 Section13Component - Calling saveToMainContext for performance optimization');
+      saveToMainContext();
+
+      console.log('✅ Section 13 data saved successfully using performance-optimized approach');
+    } catch (error) {
+      console.error('❌ Failed to save Section 13 data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [validateSection, saveToMainContext, commitLocalDataToContext, setIsLoading, setShowValidation]);
 
   // Enhanced debug logging
   useEffect(() => {
     console.log('🔍 Section13Component - Component mounted or updated');
     console.log('🔍 Section13Component - sectionData available:', !!sectionData);
-    console.log('🔍 Section13Component - SF86Form updateSectionData available:', !!updateSectionData);
-    
+    console.log('🔍 Section13Component - saveToMainContext available:', !!saveToMainContext);
+
     if (isDebugMode) {
       console.log('🔍 Section13 Debug State:', {
         sectionData,
@@ -127,7 +228,7 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
         validationErrors
       });
     }
-  }, [sectionData, expandedEntries, validationErrors, isDebugMode]);
+  }, [sectionData, expandedEntries, validationErrors, isDebugMode, saveToMainContext]);
 
   // Initialize with default entry if none exist and employment flag is YES
   useEffect(() => {
@@ -163,7 +264,7 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
     const newErrors: Record<number, string[]> = {};
 
     // Validate each entry individually
-    sectionData?.section13?.entries?.forEach((entry, index) => {
+    sectionData?.section13?.entries?.forEach((_, index) => {
       const entryValidation = validateEmploymentEntry(index);
       if (!entryValidation.isValid) {
         newErrors[index] = entryValidation.errors;
@@ -180,88 +281,25 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
     onValidationChange?.(validation.isValid);
   }, [sectionData, validateSection, validateEmploymentEntry, onValidationChange]);
 
-  // Date validation helper
-  const validateDate = (dateString: string, fieldName: string): string | null => {
-    if (!dateString) return null;
-
-    const datePattern = /^(0[1-9]|1[0-2])\/(\d{4})$/;
-    if (!datePattern.test(dateString)) {
-      return `${fieldName} must be in MM/YYYY format`;
-    }
-
-    const [month, year] = dateString.split('/').map(Number);
-    const currentYear = new Date().getFullYear();
-
-    if (year < 1900 || year > currentYear + 10) {
-      return `${fieldName} year must be between 1900 and ${currentYear + 10}`;
-    }
-
-    return null;
-  };
-
-  // Enhanced field update with validation
+  // Optimized field update - only updates local state
   const handleFieldUpdate = useCallback((index: number, fieldPath: string, value: any) => {
-    // Add debugging to help diagnose field update issues
-    console.log('🔍 Section13Component - handleFieldUpdate:', { 
-      index, 
-      fieldPath, 
-      value, 
-      valueType: typeof value,
-      currentSection: sectionData 
-    });
-    
-    // Check if fieldPath is properly formatted - fix it if necessary
-    let fixedFieldPath = fieldPath;
-    if (!fieldPath.startsWith('section13')) {
-      fixedFieldPath = index !== undefined 
-        ? `section13.entries[${index}].${fieldPath}`
-        : `section13.${fieldPath}`;
-      
-      console.log(`🔧 Section13Component - Fixed field path from ${fieldPath} to ${fixedFieldPath}`);
-    }
-    
-    // Debug field IDs - this helps ensure we're using the right IDs from sections-reference
-    if (index !== undefined && sectionData?.section13?.entries?.[index]) {
-      const entry = sectionData.section13.entries[index];
-      const property = fieldPath.split('.').pop();
-      if (property) {
-        try {
-          // Try to access the nested property to get its ID
-          const fieldObj = property.includes('.') 
-            ? property.split('.').reduce((obj, key) => obj && obj[key], entry as any)
-            : (entry as any)[property];
-            
-          if (fieldObj && fieldObj.id) {
-            console.log(`🔑 Field ID for ${fieldPath}: ${fieldObj.id}`);
-          }
-        } catch (err) {
-          console.error(`Error accessing field ID for ${fieldPath}:`, err);
-        }
-      }
-    }
-    
-    // Call the updateEmploymentEntry function with the fixed path
-    updateEmploymentEntry(index, fixedFieldPath, value);
-    
-    // Debug: After update, check if the data has been correctly updated
-    setTimeout(() => {
-      console.log('✅ Section13Component - After update:', {
-        updated: sectionData,
-        valueNow: index !== undefined ? 
-          getNestedValueFromPath(sectionData, `section13.entries.${index}.${fieldPath.split('.').pop()}`) :
-          getNestedValueFromPath(sectionData, fieldPath)
-      });
-    }, 0);
-  }, [updateEmploymentEntry, sectionData, isDebugMode]);
+    console.log('🔍 Section13Component - Local field update:', { index, fieldPath, value });
 
-  // Helper function to get nested object value from path
-  const getNestedValueFromPath = (obj: any, path: string) => {
-    try {
-      return path.split('.').reduce((o, p) => (o ? o[p] : undefined), obj);
-    } catch (err) {
-      return undefined;
-    }
+    setLocalFormData((prev: any) => ({
+      ...prev,
+      [index]: {
+        ...prev[index],
+        [fieldPath]: value
+      }
+    }));
+  }, []);
+
+  // Helper function to get local form value
+  const getLocalValue = (index: number, fieldPath: string) => {
+    return localFormData[index]?.[fieldPath] || '';
   };
+
+
 
   // Employment flag handlers
   const handleEmploymentFlagChange = useCallback((value: "YES" | "NO") => {
@@ -429,14 +467,14 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
                 <input
                   type="text"
                   placeholder="MM/YYYY"
-                  value={entry.employmentDates.fromDate.value || ""}
+                  value={getLocalValue(index, "employmentDates.fromDate")}
                   onChange={(e) => handleFieldUpdate(index, "employmentDates.fromDate", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <label className="flex items-center mt-2">
                   <input
                     type="checkbox"
-                    checked={entry.employmentDates.fromEstimated.value || false}
+                    checked={getLocalValue(index, "employmentDates.fromEstimated") || false}
                     onChange={(e) => handleFieldUpdate(index, "employmentDates.fromEstimated", e.target.checked)}
                     className="mr-2"
                   />
@@ -451,25 +489,25 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
                 <input
                   type="text"
                   placeholder="MM/YYYY"
-                  value={entry.employmentDates.toDate.value || ""}
+                  value={getLocalValue(index, "employmentDates.toDate")}
                   onChange={(e) => handleFieldUpdate(index, "employmentDates.toDate", e.target.value)}
-                  disabled={entry.employmentDates.present.value}
+                  disabled={getLocalValue(index, "employmentDates.present")}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
                 />
                 <label className="flex items-center mt-2">
                   <input
                     type="checkbox"
-                    checked={entry.employmentDates.present.value || false}
+                    checked={getLocalValue(index, "employmentDates.present") || false}
                     onChange={(e) => handleFieldUpdate(index, "employmentDates.present", e.target.checked)}
                     className="mr-2"
                   />
                   <span className="text-sm text-gray-600">Present</span>
                 </label>
-                {!entry.employmentDates.present.value && (
+                {!getLocalValue(index, "employmentDates.present") && (
                   <label className="flex items-center mt-1">
                     <input
                       type="checkbox"
-                      checked={entry.employmentDates.toEstimated.value || false}
+                      checked={getLocalValue(index, "employmentDates.toEstimated") || false}
                       onChange={(e) => handleFieldUpdate(index, "employmentDates.toEstimated", e.target.checked)}
                       className="mr-2"
                     />
@@ -490,7 +528,7 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
                   </label>
                   <input
                     type="text"
-                    value={entry.employerName.value || ""}
+                    value={getLocalValue(index, "employerName")}
                     onChange={(e) => handleFieldUpdate(index, "employerName", e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -501,7 +539,7 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
                     Employment Type <span className="text-red-500">*</span>
                   </label>
                   <select
-                    value={entry.employmentType.value || ""}
+                    value={getLocalValue(index, "employmentType")}
                     onChange={(e) => handleFieldUpdate(index, "employmentType", e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
@@ -520,7 +558,7 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
                   </label>
                   <input
                     type="text"
-                    value={entry.positionTitle.value || ""}
+                    value={getLocalValue(index, "positionTitle")}
                     onChange={(e) => handleFieldUpdate(index, "positionTitle", e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -531,7 +569,7 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
                     Employment Status
                   </label>
                   <select
-                    value={entry.employmentStatus.value || ""}
+                    value={getLocalValue(index, "employmentStatus")}
                     onChange={(e) => handleFieldUpdate(index, "employmentStatus", e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
@@ -548,7 +586,7 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
                   Position Description
                 </label>
                 <textarea
-                  value={entry.positionDescription.value || ""}
+                  value={getLocalValue(index, "positionDescription")}
                   onChange={(e) => handleFieldUpdate(index, "positionDescription", e.target.value)}
                   rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -567,7 +605,7 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
                 </label>
                 <input
                   type="text"
-                  value={entry.employerAddress.street.value || ""}
+                  value={getLocalValue(index, "employerAddress.street")}
                   onChange={(e) => handleFieldUpdate(index, "employerAddress.street", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -580,7 +618,7 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
                   </label>
                   <input
                     type="text"
-                    value={entry.employerAddress.city.value || ""}
+                    value={getLocalValue(index, "employerAddress.city")}
                     onChange={(e) => handleFieldUpdate(index, "employerAddress.city", e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -591,7 +629,7 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
                     State
                   </label>
                   <select
-                    value={entry.employerAddress.state.value || ""}
+                    value={getLocalValue(index, "employerAddress.state")}
                     onChange={(e) => handleFieldUpdate(index, "employerAddress.state", e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
@@ -609,7 +647,7 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
                   </label>
                   <input
                     type="text"
-                    value={entry.employerAddress.zipCode.value || ""}
+                    value={getLocalValue(index, "employerAddress.zipCode")}
                     onChange={(e) => handleFieldUpdate(index, "employerAddress.zipCode", e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -628,7 +666,7 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
                   </label>
                   <input
                     type="text"
-                    value={entry.supervisor.name.value || ""}
+                    value={getLocalValue(index, "supervisor.name")}
                     onChange={(e) => handleFieldUpdate(index, "supervisor.name", e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -640,7 +678,7 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
                   </label>
                   <input
                     type="text"
-                    value={entry.supervisor.title.value || ""}
+                    value={getLocalValue(index, "supervisor.title")}
                     onChange={(e) => handleFieldUpdate(index, "supervisor.title", e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -654,7 +692,7 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
                   </label>
                   <input
                     type="tel"
-                    value={entry.supervisor.phone.value || ""}
+                    value={getLocalValue(index, "supervisor.phone")}
                     onChange={(e) => handleFieldUpdate(index, "supervisor.phone", e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -666,7 +704,7 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
                   </label>
                   <input
                     type="email"
-                    value={entry.supervisor.email.value || ""}
+                    value={getLocalValue(index, "supervisor.email")}
                     onChange={(e) => handleFieldUpdate(index, "supervisor.email", e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -682,7 +720,7 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
                     <input
                       type="radio"
                       name={`supervisor-contact-${index}`}
-                      checked={entry.supervisor.canContact.value === "YES"}
+                      checked={getLocalValue(index, "supervisor.canContact") === "YES"}
                       onChange={() => handleFieldUpdate(index, "supervisor.canContact", "YES")}
                       className="mr-2"
                     />
@@ -692,7 +730,7 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
                     <input
                       type="radio"
                       name={`supervisor-contact-${index}`}
-                      checked={entry.supervisor.canContact.value === "NO"}
+                      checked={getLocalValue(index, "supervisor.canContact") === "NO"}
                       onChange={() => handleFieldUpdate(index, "supervisor.canContact", "NO")}
                       className="mr-2"
                     />
@@ -701,13 +739,13 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
                 </div>
               </div>
 
-              {entry.supervisor.canContact.value === "NO" && (
+              {getLocalValue(index, "supervisor.canContact") === "NO" && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Contact Restrictions (Explain why supervisor cannot be contacted)
                   </label>
                   <textarea
-                    value={entry.supervisor.contactRestrictions.value || ""}
+                    value={getLocalValue(index, "supervisor.contactRestrictions")}
                     onChange={(e) => handleFieldUpdate(index, "supervisor.contactRestrictions", e.target.value)}
                     rows={2}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -717,13 +755,13 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
             </div>
 
             {/* Reason for Leaving */}
-            {!entry.employmentDates.present.value && (
+            {!getLocalValue(index, "employmentDates.present") && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Reason for Leaving
                 </label>
                 <select
-                  value={entry.reasonForLeaving.value || ""}
+                  value={getLocalValue(index, "reasonForLeaving")}
                   onChange={(e) => handleFieldUpdate(index, "reasonForLeaving", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
@@ -741,7 +779,7 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
                 Additional Comments
               </label>
               <textarea
-                value={entry.additionalComments.value || ""}
+                value={getLocalValue(index, "additionalComments")}
                 onChange={(e) => handleFieldUpdate(index, "additionalComments", e.target.value)}
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -953,6 +991,23 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
           </p>
         </div>
       )}
+
+      {/* Save Button - Always visible at bottom */}
+      <div className="mt-8 pt-6 border-t border-gray-200">
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={handleSubmit}
+            className="px-6 py-3 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Saving...' : 'Save Section 13'}
+          </button>
+        </div>
+        <p className="mt-2 text-sm text-gray-500 text-right">
+          This will save your Section 13 data to the form and continue to the next section.
+        </p>
+      </div>
     </div>
   );
 };

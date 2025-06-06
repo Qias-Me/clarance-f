@@ -257,140 +257,202 @@ export type EducationEntryOperation =
 // ============================================================================
 
 /**
- * Creates a default education entry
+ * Field mapping for Section 12 entries based on ACTUAL sections-references analysis
+ * Maps entry fields to actual PDF field names from section-12.json
+ *
+ * CORRECTED MAPPING based on real field analysis:
  */
-export const createDefaultEducationEntry = (entryId: string | number): EducationEntry => ({
-  _id: entryId,
-  attendanceDates: {
-    fromDate: {
-      id: "",
-      name: "",
-      type: 'PDFTextField',
-      label: 'From Date (Month/Year)',
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    fromEstimated: {
-      id: "",
-      name: "",
-      type: 'PDFCheckBox',
-      label: 'Estimate',
-      value: false,
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    toDate: {
-      id: "",
-      name: "",
-      type: 'PDFTextField',
-      label: 'To Date (Month/Year)',
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    toEstimated: {
-      id: "",
-      name: "",
-      type: 'PDFCheckBox',
-      label: 'Estimate',
-      value: false,
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    present: {
-      id: "",
-      name: "",
-      type: 'PDFCheckBox',
-      label: 'Present',
-      value: false,
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    }
+const SECTION12_FIELD_MAPPING = {
+  // Entry 1 fields (index 0) - section_12[0]
+  entry1: {
+    fromDate: "form1[0].section_12[0].From_Datefield_Name_2[0]",
+    toDate: "form1[0].section_12[0].To_Datefield_Name_2[0]", // Need to find actual to date field
+    schoolName: "form1[0].section_12[0].TextField11[3]", // sect12Entry1NameOfSchool
+    schoolStreet: "form1[0].section_12[0].TextField11[0]", // sect12Entry1SchoolAddress
+    schoolCity: "form1[0].section_12[0].TextField11[1]", // sect12Entry1schoolCity
+    schoolState: "form1[0].section_12[0].School6_State[0]", // sect12Entry1State
+    schoolZip: "form1[0].section_12[0].TextField11[2]", // sect12Entry1schoolZip
+    schoolCountry: "form1[0].section_12[0].DropDownList28[0]", // Country dropdown
+    knownPersonLast: "form1[0].section_12[0].TextField11[4]", // sect12Entry1knownPersonLastName
+    knownPersonFirst: "form1[0].section_12[0].TextField11[5]", // sect12Entry1knownPersonFirstName
+    knownPersonStreet: "form1[0].section_12[0].TextField11[6]", // sect12Entry1knownPersonStreet
+    knownPersonCity: "form1[0].section_12[0].TextField11[7]", // sect12Entry1knownPersonCity
+    knownPersonZip: "form1[0].section_12[0].TextField11[8]", // sect12Entry1knownPersonZ
+    extension: "form1[0].section_12[0].TextField11[9]" // sect12Entry1Extension1
   },
+  // Entry 2 fields (index 1) - section_12[0]
+  entry2: {
+    fromDate: "form1[0].section_12[0].From_Datefield_Name_2[2]", // Need to find actual field
+    toDate: "form1[0].section_12[0].To_Datefield_Name_2[2]", // Need to find actual field
+    schoolName: "form1[0].section_12[0].TextField11[13]", // sect12Entry2SchoolName
+    schoolStreet: "form1[0].section_12[0].TextField11[10]", // sect12Entry2Street
+    schoolCity: "form1[0].section_12[0].TextField11[11]", // sect12Entry2City
+    schoolState: "", // Need to find state field for entry 2
+    schoolZip: "form1[0].section_12[0].TextField11[12]", // sect12Entry2Zip
+    schoolCountry: "", // Need to find country field for entry 2
+    knownPersonLast: "form1[0].section_12[0].TextField11[14]", // sect12Entry2KnownPersonLName
+    knownPersonFirst: "form1[0].section_12[0].TextField11[15]", // sect12Entry2KnownPersonFName
+    knownPersonStreet: "", // Need to find in section_12_2
+    knownPersonCity: "form1[0].section_12_2[0].TextField11[0]", // sect12Entry2KnownPersonCity
+    knownPersonZip: "form1[0].section_12_2[0].TextField11[2]", // sect12Entry2KnownPerso
+    extension: "" // Need to find extension field
+  }
+};
+
+/**
+ * Helper function to generate field ID based on entry index and field name
+ */
+const generateEducationFieldId = (entryIndex: number, fieldName: string): string => {
+  const entryKey = entryIndex === 0 ? 'entry1' : 'entry2';
+  const mapping = SECTION12_FIELD_MAPPING[entryKey];
+  return mapping?.[fieldName as keyof typeof mapping] || "";
+};
+
+/**
+ * Helper function to generate field name (same as ID for Section 12)
+ */
+const generateEducationFieldName = (entryIndex: number, fieldName: string): string => {
+  return generateEducationFieldId(entryIndex, fieldName);
+};
+
+/**
+ * Creates a default education entry with proper field mapping from sections-references
+ */
+export const createDefaultEducationEntry = (entryId: string | number, entryIndex: number = 0): EducationEntry => {
+  // Removed console.log to prevent spam - function being called in render loop
+
+  return {
+    _id: entryId,
+    attendanceDates: {
+      fromDate: {
+        id: generateEducationFieldId(entryIndex, "fromDate"),
+        name: generateEducationFieldName(entryIndex, "fromDate"),
+        type: 'PDFTextField',
+        label: `From Date (Month/Year) - Entry ${entryIndex + 1}`,
+        value: '',
+        rect: { x: 0, y: 0, width: 0, height: 0 }
+      },
+      fromEstimated: {
+        id: "", // No specific mapping for estimated checkboxes in sections-references
+        name: "",
+        type: 'PDFCheckBox',
+        label: 'Estimate',
+        value: false,
+        rect: { x: 0, y: 0, width: 0, height: 0 }
+      },
+      toDate: {
+        id: generateEducationFieldId(entryIndex, "toDate"),
+        name: generateEducationFieldName(entryIndex, "toDate"),
+        type: 'PDFTextField',
+        label: `To Date (Month/Year) - Entry ${entryIndex + 1}`,
+        value: '',
+        rect: { x: 0, y: 0, width: 0, height: 0 }
+      },
+      toEstimated: {
+        id: "", // No specific mapping for estimated checkboxes in sections-references
+        name: "",
+        type: 'PDFCheckBox',
+        label: 'Estimate',
+        value: false,
+        rect: { x: 0, y: 0, width: 0, height: 0 }
+      },
+      present: {
+        id: "", // No specific mapping for present checkbox in sections-references
+        name: "",
+        type: 'PDFCheckBox',
+        label: 'Present',
+        value: false,
+        rect: { x: 0, y: 0, width: 0, height: 0 }
+      }
+    },
   schoolType: {
-    id: "",
+    id: "", // No specific mapping for school type radio in sections-references
     name: "",
     type: 'PDFRadioGroup',
-    label: 'School Type',
+    label: `School Type - Entry ${entryIndex + 1}`,
     value: 'High School' as SchoolType,
     options: SCHOOL_TYPE_OPTIONS,
     rect: { x: 0, y: 0, width: 0, height: 0 }
   },
   schoolName: {
-    id: "",
-    name: "",
+    id: generateEducationFieldId(entryIndex, "schoolName"),
+    name: generateEducationFieldName(entryIndex, "schoolName"),
     type: 'PDFTextField',
-    label: 'School Name',
+    label: `School Name - Entry ${entryIndex + 1}`,
     value: '',
     rect: { x: 0, y: 0, width: 0, height: 0 }
   },
   schoolAddress: {
     street: {
-      id: "",
-      name: "",
+      id: generateEducationFieldId(entryIndex, "schoolStreet"),
+      name: generateEducationFieldName(entryIndex, "schoolStreet"),
       type: 'PDFTextField',
-      label: 'Street Address',
+      label: `Street Address - Entry ${entryIndex + 1}`,
       value: '',
       rect: { x: 0, y: 0, width: 0, height: 0 }
     },
     city: {
-      id: "",
-      name: "",
+      id: generateEducationFieldId(entryIndex, "schoolCity"),
+      name: generateEducationFieldName(entryIndex, "schoolCity"),
       type: 'PDFTextField',
-      label: 'City',
+      label: `City - Entry ${entryIndex + 1}`,
       value: '',
       rect: { x: 0, y: 0, width: 0, height: 0 }
     },
     state: {
-      id: "",
-      name: "",
+      id: generateEducationFieldId(entryIndex, "schoolState"),
+      name: generateEducationFieldName(entryIndex, "schoolState"),
       type: 'PDFDropdown',
-      label: 'State',
+      label: `State - Entry ${entryIndex + 1}`,
       value: '',
       options: [], // Will be populated with USState options
       rect: { x: 0, y: 0, width: 0, height: 0 }
     },
     zipCode: {
-      id: "",
-      name: "",
+      id: generateEducationFieldId(entryIndex, "schoolZip"),
+      name: generateEducationFieldName(entryIndex, "schoolZip"),
       type: 'PDFTextField',
-      label: 'Zip Code',
+      label: `Zip Code - Entry ${entryIndex + 1}`,
       value: '',
       rect: { x: 0, y: 0, width: 0, height: 0 }
     },
     country: {
-      id: "",
-      name: "",
+      id: generateEducationFieldId(entryIndex, "schoolCountry"),
+      name: generateEducationFieldName(entryIndex, "schoolCountry"),
       type: 'PDFDropdown',
-      label: 'Country',
+      label: `Country - Entry ${entryIndex + 1}`,
       value: '',
       options: [], // Will be populated with Country options
       rect: { x: 0, y: 0, width: 0, height: 0 }
     }
   },
   degreeReceived: {
-    id: "",
+    id: "", // No specific mapping for degree received radio in sections-references
     name: "",
     type: 'PDFRadioGroup',
-    label: 'Did you receive a degree?',
+    label: `Did you receive a degree? - Entry ${entryIndex + 1}`,
     value: false,
     rect: { x: 0, y: 0, width: 0, height: 0 }
   },
   degreeType: {
-    id: "",
-    name: "",
+    id: generateEducationFieldId(entryIndex, "degreeType"),
+    name: generateEducationFieldName(entryIndex, "degreeType"),
     type: 'PDFDropdown',
-    label: 'Degree Type',
+    label: `Degree Type - Entry ${entryIndex + 1}`,
     value: 'High School Diploma' as DegreeType,
     options: DEGREE_TYPE_OPTIONS,
     rect: { x: 0, y: 0, width: 0, height: 0 }
   },
   degreeDate: {
-    id: "",
-    name: "",
+    id: generateEducationFieldId(entryIndex, "degreeDate"),
+    name: generateEducationFieldName(entryIndex, "degreeDate"),
     type: 'PDFTextField',
-    label: 'Degree Date',
+    label: `Degree Date - Entry ${entryIndex + 1}`,
     value: '',
     rect: { x: 0, y: 0, width: 0, height: 0 }
   },
   degreeEstimated: {
-    id: "",
+    id: "", // No specific mapping for degree estimated checkbox in sections-references
     name: "",
     type: 'PDFCheckBox',
     label: 'Estimate',
@@ -399,7 +461,8 @@ export const createDefaultEducationEntry = (entryId: string | number): Education
   },
   createdAt: new Date(),
   updatedAt: new Date()
-});
+  };
+};
 
 /**
  * Creates a default Section 12 data structure using DRY approach with sections-references
@@ -412,7 +475,7 @@ export const createDefaultSection12 = (): Section12 => {
   validateSectionFieldCount(12);
 
   // Create default entry for better UX - user can remove it if not needed
-  const defaultEntry = createDefaultEducationEntry(Date.now());
+  const defaultEntry = createDefaultEducationEntry(Date.now(), 0); // Pass entry index 0
 
   return {
     _id: 12,
@@ -453,25 +516,31 @@ export const updateSection12Field = (
   else if (fieldPath.startsWith('section12.entries') && entryIndex !== undefined) {
     if (newData.section12.entries[entryIndex]) {
       const entry = { ...newData.section12.entries[entryIndex] };
-      
+
       // Parse the field path to update the correct nested field
+      // Expected format: "section12.entries.fieldName" or "section12.entries.parentField.childField"
       const pathParts = fieldPath.split('.');
       if (pathParts.length >= 3) {
-        const fieldName = pathParts[2];
-        
-        // Handle nested field updates
-        if (fieldName.includes('.')) {
-          const [parentField, childField] = fieldName.split('.');
+        // Remove "section12.entries" prefix to get the actual field path
+        const actualFieldPath = pathParts.slice(2).join('.');
+
+        // Handle nested field updates (e.g., "attendanceDates.fromDate")
+        if (actualFieldPath.includes('.')) {
+          const [parentField, childField] = actualFieldPath.split('.');
           if (entry[parentField as keyof EducationEntry]) {
-            (entry[parentField as keyof EducationEntry] as any)[childField].value = newValue;
+            const parentObj = entry[parentField as keyof EducationEntry] as any;
+            if (parentObj[childField]) {
+              parentObj[childField].value = newValue;
+            }
           }
         } else {
-          if (entry[fieldName as keyof EducationEntry]) {
-            (entry[fieldName as keyof EducationEntry] as any).value = newValue;
+          // Handle direct field updates (e.g., "schoolName")
+          if (entry[actualFieldPath as keyof EducationEntry]) {
+            (entry[actualFieldPath as keyof EducationEntry] as any).value = newValue;
           }
         }
       }
-      
+
       entry.updatedAt = new Date();
       newData.section12.entries[entryIndex] = entry;
     }

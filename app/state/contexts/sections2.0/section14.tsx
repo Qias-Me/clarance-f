@@ -48,10 +48,10 @@ export interface Section14ContextType {
 
   // Basic Actions
   updateSelectiveServiceInfo: (fieldPath: string, value: string) => void;
+  updateBornMaleAfter1959: (status: string) => void;
   updateRegistrationStatus: (status: string) => void;
   updateRegistrationNumber: (number: string) => void;
   updateExplanation: (type: 'no' | 'unknown', explanation: string) => void;
-  updateMilitaryServiceStatus: (status: string) => void;
   updateFieldValue: (path: string, value: any) => void;
 
   // Validation
@@ -170,8 +170,14 @@ export const Section14Provider: React.FC<Section14ProviderProps> = ({ children }
   }, [section14Data]);
 
   const getActiveExplanationFieldCallback = useCallback(() => {
-    return getActiveExplanationField(section14Data.section14.registrationStatus.value);
-  }, [section14Data.section14.registrationStatus.value]);
+    const bornMale = section14Data.section14.bornMaleAfter1959.value;
+    const status = section14Data.section14.registrationStatus.value;
+
+    // Only show fields if born male after 1959
+    if (bornMale !== 'YES') return null;
+
+    return getActiveExplanationField(status);
+  }, [section14Data.section14.bornMaleAfter1959.value, section14Data.section14.registrationStatus.value]);
 
   // Update errors when section data changes (but not during initial render)
   useEffect(() => {
@@ -202,45 +208,93 @@ export const Section14Provider: React.FC<Section14ProviderProps> = ({ children }
   // ============================================================================
 
   const updateSelectiveServiceInfo = useCallback((fieldPath: string, value: string) => {
+    console.log(`🔧 Section14: updateSelectiveServiceInfo called with fieldPath=${fieldPath}, value=${value}`);
     setSection14Data(prevData => {
+      console.log(`🔧 Section14: prevData before update=`, prevData);
       const newData = updateSection14Field(prevData, { fieldPath, newValue: value });
+      console.log(`🔧 Section14: newData after update=`, newData);
       return newData;
     });
   }, []);
 
+  const updateBornMaleAfter1959 = useCallback((status: string) => {
+    console.log(`🔧 Section14: updateBornMaleAfter1959 called with status=${status}`);
+    updateSelectiveServiceInfo('section14.bornMaleAfter1959', status);
+    setIsDirty(true);
+  }, [updateSelectiveServiceInfo]);
+
   const updateRegistrationStatus = useCallback((status: string) => {
+    console.log(`🔧 Section14: updateRegistrationStatus called with status=${status}`);
     updateSelectiveServiceInfo('section14.registrationStatus', status);
+    setIsDirty(true);
   }, [updateSelectiveServiceInfo]);
 
   const updateRegistrationNumber = useCallback((number: string) => {
+    console.log(`🔧 Section14: updateRegistrationNumber called with number=${number}`);
     updateSelectiveServiceInfo('section14.registrationNumber', number);
+    setIsDirty(true);
   }, [updateSelectiveServiceInfo]);
 
   const updateExplanation = useCallback((type: 'no' | 'unknown', explanation: string) => {
-    const fieldPath = type === 'no' 
-      ? 'section14.noRegistrationExplanation' 
+    console.log(`🔧 Section14: updateExplanation called with type=${type}, explanation=${explanation}`);
+    const fieldPath = type === 'no'
+      ? 'section14.noRegistrationExplanation'
       : 'section14.unknownStatusExplanation';
     updateSelectiveServiceInfo(fieldPath, explanation);
+    setIsDirty(true);
   }, [updateSelectiveServiceInfo]);
 
-  const updateMilitaryServiceStatus = useCallback((status: string) => {
-    updateSelectiveServiceInfo('section14.militaryServiceStatus', status);
-  }, [updateSelectiveServiceInfo]);
 
+
+  /**
+   * Generic field update function for SF86FormContext integration
+   * Maps generic field paths to Section 14 specific update functions
+   * Uses flexible approach similar to Section 29 with fallback to lodash set
+   */
   const updateFieldValue = useCallback((path: string, value: any) => {
-    // Parse path to update the correct field
-    if (path === 'section14.registrationStatus') {
-      updateRegistrationStatus(value);
-    } else if (path === 'section14.registrationNumber') {
-      updateRegistrationNumber(value);
-    } else if (path === 'section14.noRegistrationExplanation') {
-      updateExplanation('no', value);
-    } else if (path === 'section14.unknownStatusExplanation') {
-      updateExplanation('unknown', value);
-    } else if (path === 'section14.militaryServiceStatus') {
-      updateMilitaryServiceStatus(value);
+    console.log(`🔍 Section14: updateFieldValue called with path=${path}, value=`, value);
+
+    // Handle both direct field paths and mapped paths
+    let targetPath = path;
+
+    // If the path doesn't start with 'section14.', prepend it
+    if (!path.startsWith('section14.')) {
+      targetPath = `section14.${path}`;
     }
-  }, [updateRegistrationStatus, updateRegistrationNumber, updateExplanation, updateMilitaryServiceStatus]);
+
+    // Try specific field handlers first for better validation and business logic
+    if (path === 'section14.bornMaleAfter1959' || path === 'bornMaleAfter1959') {
+      console.log(`✅ Section14: Updating bornMaleAfter1959 with value=${value}`);
+      updateBornMaleAfter1959(value);
+      return;
+    } else if (path === 'section14.registrationStatus' || path === 'registrationStatus') {
+      console.log(`✅ Section14: Updating registrationStatus with value=${value}`);
+      updateRegistrationStatus(value);
+      return;
+    } else if (path === 'section14.registrationNumber' || path === 'registrationNumber') {
+      console.log(`✅ Section14: Updating registrationNumber with value=${value}`);
+      updateRegistrationNumber(value);
+      return;
+    } else if (path === 'section14.noRegistrationExplanation' || path === 'noRegistrationExplanation') {
+      console.log(`✅ Section14: Updating noRegistrationExplanation with value=${value}`);
+      updateExplanation('no', value);
+      return;
+    } else if (path === 'section14.unknownStatusExplanation' || path === 'unknownStatusExplanation') {
+      console.log(`✅ Section14: Updating unknownStatusExplanation with value=${value}`);
+      updateExplanation('unknown', value);
+      return;
+    }
+
+    // Fallback: use lodash set for direct path updates (like Section 29 and Section 1)
+    console.log(`🔧 Section14: Using flexible lodash set approach for path=${targetPath}`);
+    setSection14Data(prev => {
+      const updated = cloneDeep(prev);
+      set(updated, targetPath, value);
+      console.log(`✅ Section14: Field updated successfully at path: ${targetPath}`);
+      return updated;
+    });
+    setIsDirty(true);
+  }, [updateBornMaleAfter1959, updateRegistrationStatus, updateRegistrationNumber, updateExplanation]);
 
   // ============================================================================
   // UTILITY FUNCTIONS
@@ -276,7 +330,15 @@ export const Section14Provider: React.FC<Section14ProviderProps> = ({ children }
   // SF86FORM INTEGRATION
   // ============================================================================
 
-  // Integration with main form context using standard pattern
+  // Create a wrapper function that matches the integration hook's expected signature
+  // Integration expects: (path: string, value: any) => void
+  // Section 14 has: (path: string, value: any) => void (already compatible)
+  const updateFieldValueWrapper = useCallback((path: string, value: any) => {
+    console.log(`🔧 Section14: updateFieldValueWrapper called with path=${path}, value=`, value);
+    updateFieldValue(path, value);
+  }, [updateFieldValue]);
+
+  // Integration with main form context using Section 1 gold standard pattern
   // Note: integration variable is used internally by the hook for registration
   const integration = useSection86FormIntegration(
     'section14',
@@ -285,7 +347,7 @@ export const Section14Provider: React.FC<Section14ProviderProps> = ({ children }
     setSection14Data,
     () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
     getChanges,
-    updateFieldValue // Pass Section 14's updateFieldValue function to integration
+    updateFieldValueWrapper // Pass wrapper function that matches expected signature
   );
 
   // ============================================================================
@@ -301,10 +363,10 @@ export const Section14Provider: React.FC<Section14ProviderProps> = ({ children }
 
     // Basic Actions
     updateSelectiveServiceInfo,
+    updateBornMaleAfter1959,
     updateRegistrationStatus,
     updateRegistrationNumber,
     updateExplanation,
-    updateMilitaryServiceStatus,
     updateFieldValue,
 
     // Validation

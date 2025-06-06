@@ -154,7 +154,7 @@ export const Section11Provider: React.FC<Section11ProviderProps> = ({ children }
 
   // Debug field mapping on initialization
   useEffect(() => {
-    console.log('🔍 Section 11 Context: Initializing with field mapping debug');
+    // console.log('🔍 Section 11 Context: Initializing with field mapping debug');
     debugAllEntries();
   }, []);
 

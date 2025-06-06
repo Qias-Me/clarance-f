@@ -113,9 +113,32 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
   } = useSection12();
 
 
-      // SF86 Form Context for data persistence
-      const sf86Form = useSF86Form();
-    
+  // SF86 Form Context for data persistence
+  const sf86Form = useSF86Form();
+
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setShowValidation(true);
+
+    const result = validateSection();
+    console.log(`🔍 Section 12 validation result:`, result);
+
+    try {
+      // Update the central form context with Section 12 data
+      sf86Form.updateSectionData('section12', sectionData);
+
+      // Save the form data to persistence layer
+      await sf86Form.saveForm();
+
+      console.log('✅ Section 12 data saved successfully');
+    } catch (error) {
+      console.error('❌ Failed to save Section 12 data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [validateSection, sf86Form, sectionData]);
+
 
   // Get direct access to SF86Form context for debugging
   const { updateSectionData } = useSF86Form();
@@ -124,6 +147,8 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
   const [validationErrors, setValidationErrors] = useState<Record<number, any[]>>({});
   const [globalErrors, setGlobalErrors] = useState<any[]>([]);
   const [isDebugMode, setIsDebugMode] = useState(true); // Default to true for debugging
+  const [isLoading, setIsLoading] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
 
   // Enhanced debug logging to help identify the radio button issue
   useEffect(() => {
@@ -142,24 +167,33 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
     }
   }, [sectionData, expandedEntries, validationErrors, isDebugMode]);
 
-  // Initialize with default entry if none exist and education flag is YES
+  // Initialize with default entry if needed and clear entries when both flags are NO
   useEffect(() => {
     const hasEducationFlag = sectionData?.section12?.hasEducation?.value === "YES";
     const hasHighSchoolFlag = sectionData?.section12?.hasHighSchool?.value === "YES";
     const entriesCount = getEducationEntryCount();
-    
+
+    // If both flags are NO, clear all entries
+    if (!hasEducationFlag && !hasHighSchoolFlag && entriesCount > 0) {
+      // Clear all entries when both flags are NO
+      while (getEducationEntryCount() > 0) {
+        removeEducationEntry(0);
+      }
+      setExpandedEntries(new Set());
+    }
     // If either education flag is YES but no entries exist, add a default entry
-    if ((hasEducationFlag || hasHighSchoolFlag) && entriesCount === 0) {
+    else if ((hasEducationFlag || hasHighSchoolFlag) && entriesCount === 0) {
       addEducationEntry();
       setExpandedEntries(new Set([0])); // Expand the first entry
     }
-  }, [sectionData?.section12?.hasEducation?.value, sectionData?.section12?.hasHighSchool?.value, getEducationEntryCount, addEducationEntry]);
+  }, [sectionData?.section12?.hasEducation?.value, sectionData?.section12?.hasHighSchool?.value]);
 
   // Enhanced validation with real-time feedback
+  // FIXED: Removed function dependencies to prevent excessive re-renders
   useEffect(() => {
     const validation = validateSection();
     const newErrors: Record<number, string[]> = {};
-    
+
     // Validate each entry individually
     sectionData?.section12?.entries?.forEach((entry, index) => {
       const entryValidation = validateEducationEntry(index);
@@ -169,20 +203,20 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
     });
 
     setValidationErrors(newErrors);
-    
+
     // Extract error messages from validation result objects
-    const globalErrorMessages = validation.errors?.map((error: any) => 
+    const globalErrorMessages = validation.errors?.map((error: any) =>
       typeof error === 'string' ? error : error.message || String(error)
     ) || [];
-    
+
     setGlobalErrors(globalErrorMessages);
     onValidationChange?.(validation.isValid);
-  }, [sectionData, validateSection, validateEducationEntry, onValidationChange]);
+  }, [sectionData]); // Only depend on sectionData changes
 
   // Date validation helper
   const validateDate = (dateString: string, fieldName: string): string | null => {
     if (!dateString) return null;
-    
+
     const datePattern = /^(0[1-9]|1[0-2])\/(\d{4})$/;
     if (!datePattern.test(dateString)) {
       return `${fieldName} must be in MM/YYYY format`;
@@ -190,7 +224,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
 
     const [month, year] = dateString.split('/').map(Number);
     const currentYear = new Date().getFullYear();
-    
+
     if (year < 1900 || year > currentYear + 10) {
       return `${fieldName} year must be between 1900 and ${currentYear + 10}`;
     }
@@ -203,9 +237,9 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
     if (isDebugMode) {
       console.log('🔧 Updating field:', { index, fieldPath, value });
     }
-    
+
     updateEducationEntry(index, fieldPath, value);
-    
+
     // Real-time validation for date fields
     if (fieldPath.includes('Date') && typeof value === 'string') {
       const error = validateDate(value, fieldPath);
@@ -248,29 +282,32 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
   }, [addEducationEntry, getEducationEntryCount]);
 
   const handleRemoveEntry = useCallback((index: number) => {
-    if (getEducationEntryCount() <= 1) {
-      alert("You must have at least one education entry.");
-      return;
-    }
-    
-    if (window.confirm("Are you sure you want to remove this education entry?")) {
-      removeEducationEntry(index);
-      setExpandedEntries(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(index);
-        // Shift indices down for remaining entries
-        const shiftedSet = new Set<number>();
-        for (const expandedIndex of newSet) {
-          if (expandedIndex > index) {
-            shiftedSet.add(expandedIndex - 1);
-          } else {
-            shiftedSet.add(expandedIndex);
+    const hasEducationFlag = sectionData?.section12?.hasEducation?.value === "YES";
+    const hasHighSchoolFlag = sectionData?.section12?.hasHighSchool?.value === "YES";
+
+    // Allow removal if both flags are NO, or if there are multiple entries
+    if ((!hasEducationFlag && !hasHighSchoolFlag) || getEducationEntryCount() > 1) {
+      if (window.confirm("Are you sure you want to remove this education entry?")) {
+        removeEducationEntry(index);
+        setExpandedEntries(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(index);
+          // Shift indices down for remaining entries
+          const shiftedSet = new Set<number>();
+          for (const expandedIndex of newSet) {
+            if (expandedIndex > index) {
+              shiftedSet.add(expandedIndex - 1);
+            } else {
+              shiftedSet.add(expandedIndex);
+            }
           }
-        }
-        return shiftedSet;
-      });
+          return shiftedSet;
+        });
+      }
+    } else {
+      alert("You must have at least one education entry when either education flag is YES.");
     }
-  }, [removeEducationEntry, getEducationEntryCount]);
+  }, [removeEducationEntry, getEducationEntryCount, sectionData]);
 
   // Enhanced education flag change handler with debugging and fallback
   const handleEducationFlagChange = useCallback((value: "YES" | "NO") => {
@@ -281,13 +318,13 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
     try {
       // Primary method: use the context hook
       updateEducationFlag(value);
-      
+
       if (isDebugMode) {
         console.log('✅ updateEducationFlag called successfully');
       }
     } catch (error) {
       console.error('❌ updateEducationFlag failed, trying fallback:', error);
-      
+
       // Fallback method: direct update through SF86Form context
       if (sectionData && updateSectionData) {
         const updatedSection = {
@@ -300,12 +337,12 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
             }
           }
         };
-        
+
         updateSectionData('section12', updatedSection);
         console.log('🔄 Used fallback updateSectionData method');
       }
     }
-    
+
     // If setting to YES and no entries exist, add a default entry
     if (value === "YES" && getEducationEntryCount() === 0) {
       setTimeout(() => {
@@ -323,13 +360,13 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
     try {
       // Primary method: use the context hook
       updateHighSchoolFlag(value);
-      
+
       if (isDebugMode) {
         console.log('✅ updateHighSchoolFlag called successfully');
       }
     } catch (error) {
       console.error('❌ updateHighSchoolFlag failed, trying fallback:', error);
-      
+
       // Fallback method: direct update through SF86Form context
       if (sectionData && updateSectionData) {
         const updatedSection = {
@@ -342,12 +379,12 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
             }
           }
         };
-        
+
         updateSectionData('section12', updatedSection);
         console.log('🔄 Used fallback updateSectionData method');
       }
     }
-    
+
     // If setting to YES and no entries exist, add a default entry
     if (value === "YES" && getEducationEntryCount() === 0) {
       setTimeout(() => {
@@ -356,6 +393,14 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
       }, 100); // Small delay to allow flag update to process
     }
   }, [updateHighSchoolFlag, getEducationEntryCount, addEducationEntry, sectionData, updateSectionData, isDebugMode]);
+
+  // Save function to update SF86 context
+  const handleSaveSection = useCallback(() => {
+    if (sectionData && updateSectionData) {
+      updateSectionData('section12', sectionData);
+      console.log('💾 Section 12 data saved to SF86 context');
+    }
+  }, [sectionData, updateSectionData]);
 
   const renderValidationErrors = (errors: any[]) => {
     if (errors.length === 0) return null;
@@ -388,7 +433,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
   const renderEducationEntry = (entry: EducationEntry, index: number) => {
     const isExpanded = expandedEntries.has(index);
     const entryErrors = validationErrors[index] || [];
-    
+
     return (
       <div key={entry._id} className="border border-gray-200 rounded-lg p-6 mb-4">
         <div className="flex justify-between items-center mb-4">
@@ -443,9 +488,8 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                   onChange={(e) =>
                     handleFieldUpdate(index, "attendanceDates.fromDate", e.target.value)
                   }
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    entryErrors.some(e => e.includes('fromDate')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('fromDate')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
                 />
                 <label className="flex items-center mt-2">
                   <input
@@ -473,9 +517,8 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                     handleFieldUpdate(index, "attendanceDates.toDate", e.target.value)
                   }
                   disabled={entry.attendanceDates.present.value}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed ${
-                    entryErrors.some(e => e.includes('toDate')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed ${entryErrors.some(e => e.includes('toDate')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
                 />
                 <div className="mt-2 space-y-1">
                   <label className="flex items-center">
@@ -518,9 +561,8 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                 onChange={(e) =>
                   handleFieldUpdate(index, "schoolType", e.target.value)
                 }
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  entryErrors.some(e => e.includes('schoolType')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                }`}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('schoolType')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
               >
                 <option value="">Select school type...</option>
                 {getSchoolTypeOptions().map((type) => (
@@ -542,9 +584,8 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                 onChange={(e) =>
                   handleFieldUpdate(index, "schoolName", e.target.value)
                 }
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  entryErrors.some(e => e.includes('schoolName')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                }`}
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('schoolName')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                  }`}
                 placeholder="Enter the complete name of the school"
                 maxLength={100}
               />
@@ -553,7 +594,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
             {/* School Address */}
             <div className="space-y-4">
               <h5 className="text-md font-medium text-gray-800">School Address</h5>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Street Address <span className="text-red-500">*</span>
@@ -564,9 +605,8 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                   onChange={(e) =>
                     handleFieldUpdate(index, "schoolAddress.street", e.target.value)
                   }
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    entryErrors.some(e => e.includes('street')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('street')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
                   placeholder="Enter street address"
                   maxLength={200}
                 />
@@ -583,9 +623,8 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                     onChange={(e) =>
                       handleFieldUpdate(index, "schoolAddress.city", e.target.value)
                     }
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      entryErrors.some(e => e.includes('city')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('city')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
                     placeholder="Enter city"
                   />
                 </div>
@@ -599,9 +638,8 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                     onChange={(e) =>
                       handleFieldUpdate(index, "schoolAddress.state", e.target.value)
                     }
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      entryErrors.some(e => e.includes('state')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('state')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
                   >
                     {US_STATES.map((state) => (
                       <option key={state.value} value={state.value}>
@@ -621,9 +659,8 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                     onChange={(e) =>
                       handleFieldUpdate(index, "schoolAddress.zipCode", e.target.value)
                     }
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      entryErrors.some(e => e.includes('zipCode')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('zipCode')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
                     placeholder="Enter ZIP code"
                   />
                 </div>
@@ -638,9 +675,8 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                   onChange={(e) =>
                     handleFieldUpdate(index, "schoolAddress.country", e.target.value)
                   }
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    entryErrors.some(e => e.includes('country')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('country')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                    }`}
                 >
                   {COUNTRIES.map((country) => (
                     <option key={country.value} value={country.value}>
@@ -654,7 +690,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
             {/* Degree Information */}
             <div className="space-y-4">
               <h5 className="text-md font-medium text-gray-800">Degree Information</h5>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Did you receive a degree from this school?
@@ -694,9 +730,8 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                       onChange={(e) =>
                         handleFieldUpdate(index, "degreeType", e.target.value)
                       }
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        entryErrors.some(e => e.includes('degreeType')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                      }`}
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('degreeType')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                        }`}
                     >
                       <option value="">Select degree type...</option>
                       {getDegreeTypeOptions().map((type) => (
@@ -718,9 +753,8 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                       onChange={(e) =>
                         handleFieldUpdate(index, "degreeDate", e.target.value)
                       }
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                        entryErrors.some(e => e.includes('degreeDate')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                      }`}
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('degreeDate')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                        }`}
                     />
                     <label className="flex items-center mt-2">
                       <input
@@ -833,102 +867,115 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
         </div>
       </div>
 
-      {/* Education Entries - Enhanced with always-show logic */}
-      {(sectionData?.section12?.hasEducation?.value === "YES" || 
-        sectionData?.section12?.hasHighSchool?.value === "YES" ||
-        getEducationEntryCount() > 0) && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium text-gray-900">
-              Educational History
-            </h3>
-            <button
-              type="button"
-              onClick={handleAddEntry}
-              disabled={getEducationEntryCount() >= 10}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-              title={getEducationEntryCount() >= 10 ? "Maximum of 10 education entries allowed" : "Add new education entry"}
-            >
-              Add Education Entry
-              {getEducationEntryCount() >= 10 && (
-                <span className="ml-1 text-xs">(Max: 10)</span>
-              )}
-            </button>
+      {/* Education Entries - Only show when at least one flag is YES */}
+      {(sectionData?.section12?.hasEducation?.value === "YES" ||
+        sectionData?.section12?.hasHighSchool?.value === "YES") && (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-medium text-gray-900">
+                Educational History
+              </h3>
+              <button
+                type="button"
+                onClick={handleAddEntry}
+                disabled={getEducationEntryCount() >= 10}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                title={getEducationEntryCount() >= 10 ? "Maximum of 10 education entries allowed" : "Add new education entry"}
+              >
+                Add Education Entry
+                {getEducationEntryCount() >= 10 && (
+                  <span className="ml-1 text-xs">(Max: 10)</span>
+                )}
+              </button>
+            </div>
+
+            {/* Show entries or helpful message */}
+            {sectionData?.section12?.entries && sectionData.section12.entries.length > 0 ? (
+              sectionData.section12.entries.map((entry, index) =>
+                renderEducationEntry(entry, index)
+              )
+            ) : (
+              <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                <p className="text-gray-500 mb-4">
+                  No education entries yet. Click "Add Education Entry" to get started.
+                </p>
+                <p className="text-sm text-gray-400">
+                  You can add up to 10 education entries covering your educational history.
+                </p>
+              </div>
+            )}
+
+            {/* Summary Statistics */}
+            {getEducationEntryCount() > 0 && (
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h4 className="text-md font-medium text-gray-800 mb-2">Education Summary</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
+                  <div>
+                    <span className="font-medium">Total Entries:</span> {getEducationEntryCount()}
+                  </div>
+                  <div>
+                    <span className="font-medium">Total Years:</span> {getTotalEducationYears()}
+                  </div>
+                  <div>
+                    <span className="font-medium">Highest Degree:</span> {getHighestDegree() || "None"}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Help Text */}
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-blue-800">Tips for completing this section:</h3>
+                  <div className="mt-2 text-sm text-blue-700">
+                    <ul className="list-disc list-inside space-y-1">
+                      <li>List all educational institutions attended, starting with the most recent</li>
+                      <li>Include high school, college, university, vocational, technical, and trade schools</li>
+                      <li>Use MM/YYYY format for dates (e.g., 09/2018)</li>
+                      <li>Check "Estimated" if you're unsure of exact dates</li>
+                      <li>If currently attending, check "Present" for the end date</li>
+                      <li>Answer "Yes" to 12.a or 12.b to add education entries</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+        )}
 
-          {/* Show entries or helpful message */}
-          {sectionData?.section12?.entries && sectionData.section12.entries.length > 0 ? (
-            sectionData.section12.entries.map((entry, index) =>
-              renderEducationEntry(entry, index)
-            )
-          ) : (
-            <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-              <p className="text-gray-500 mb-4">
-                No education entries yet. Click "Add Education Entry" to get started.
-              </p>
-              <p className="text-sm text-gray-400">
-                You can add up to 10 education entries covering your educational history.
-              </p>
-            </div>
-          )}
-
-          {/* Summary Statistics */}
-          {getEducationEntryCount() > 0 && (
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="text-md font-medium text-gray-800 mb-2">Education Summary</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                <div>
-                  <span className="font-medium">Total Entries:</span> {getEducationEntryCount()}
-                </div>
-                <div>
-                  <span className="font-medium">Total Years:</span> {getTotalEducationYears()}
-                </div>
-                <div>
-                  <span className="font-medium">Highest Degree:</span> {getHighestDegree() || "None"}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Help Text */}
-          <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-blue-800">Tips for completing this section:</h3>
-                <div className="mt-2 text-sm text-blue-700">
-                  <ul className="list-disc list-inside space-y-1">
-                    <li>List all educational institutions attended, starting with the most recent</li>
-                    <li>Include high school, college, university, vocational, technical, and trade schools</li>
-                    <li>Use MM/YYYY format for dates (e.g., 09/2018)</li>
-                    <li>Check "Estimated" if you're unsure of exact dates</li>
-                    <li>If currently attending, check "Present" for the end date</li>
-                    <li>Answer "Yes" to 12.a or 12.b to add education entries</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <button
+        type="button"
+        onClick={handleSubmit}
+        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled={isLoading}
+      >
+        {isLoading ? 'Saving...' : 'Save & Continue'}
+      </button>
 
       {/* Show instruction when no education flags are selected */}
-      {sectionData?.section12?.hasEducation?.value === "NO" && 
-       sectionData?.section12?.hasHighSchool?.value === "NO" && 
-       getEducationEntryCount() === 0 && (
-        <div className="text-center py-8 bg-yellow-50 rounded-lg border border-yellow-200">
-          <p className="text-yellow-800 mb-2">
-            <strong>Instructions:</strong> Answer "Yes" to either question 12.a or 12.b to add education entries.
-          </p>
-          <p className="text-sm text-yellow-600">
-            If you answered "No" to both questions, you may proceed to Section 13A.
-          </p>
-        </div>
-      )}
+      {sectionData?.section12?.hasEducation?.value === "NO" &&
+        sectionData?.section12?.hasHighSchool?.value === "NO" && (
+          <div className="text-center py-8 bg-green-50 rounded-lg border border-green-200 mt-6">
+            <div className="flex justify-center mb-3">
+              <svg className="h-8 w-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <p className="text-green-800 mb-2 text-lg font-medium">
+              Section 12 Complete
+            </p>
+            <p className="text-sm text-green-600">
+              Since you answered "No" to both questions 12.a and 12.b, no education entries are required.
+              You may proceed to Section 13A.
+            </p>
+          </div>
+        )}
     </div>
   );
 };

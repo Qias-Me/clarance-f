@@ -207,7 +207,8 @@ const section12Config = {
     },
     addEducationEntry: (data: Section12): Section12 => {
       const newData = { ...data };
-      const newEntry = createDefaultEducationEntry(Date.now());
+      const entryIndex = newData.section12.entries.length; // Get the next entry index
+      const newEntry = createDefaultEducationEntry(Date.now(), entryIndex);
       newData.section12.entries.push(newEntry);
       newData.section12.entriesCount = newData.section12.entries.length;
       return newData;
@@ -427,24 +428,47 @@ export const useSection12 = (): Section12ContextType => {
   };
 
   const updateEducationEntry = (entryIndex: number, fieldPath: string, value: any): void => {
-    const update: Section12FieldUpdate = {
-      fieldPath: `section12.entries.${fieldPath}`,
-      newValue: value,
-      entryIndex
-    };
-    const updatedData = section12Config.customActions.updateEducationField(baseContext.sectionData, update);
-    baseContext.loadSection(updatedData);
+    // Use the enhanced template's updateField method for direct state updates
+    // This avoids the loadSection method which can cause race conditions
+
+    // For Field<T> structures, we need to target the .value property
+    const fullFieldPath = `section12.entries[${entryIndex}].${fieldPath}.value`;
+
+    if (baseContext.updateField) {
+      console.log(`🔧 Section12: Using updateField for ${fullFieldPath} = ${value}`);
+      baseContext.updateField(fullFieldPath, value);
+    } else {
+      // Fallback to the original method if updateField is not available
+      console.log(`🔧 Section12: Using fallback method for ${fieldPath} = ${value}`);
+      const update: Section12FieldUpdate = {
+        fieldPath: `section12.entries.${fieldPath}`,
+        newValue: value,
+        entryIndex
+      };
+      const updatedData = section12Config.customActions.updateEducationField(baseContext.sectionData, update);
+      baseContext.loadSection(updatedData);
+    }
   };
 
   // Education-specific field updates
   const updateEducationFlag = (hasEducation: "YES" | "NO"): void => {
-    const updatedData = section12Config.customActions.updateEducationFlag(baseContext.sectionData, hasEducation);
-    baseContext.loadSection(updatedData);
+    if (baseContext.updateField) {
+      console.log(`🔧 Section12: Using updateField for hasEducation = ${hasEducation}`);
+      baseContext.updateField('section12.hasEducation.value', hasEducation);
+    } else {
+      const updatedData = section12Config.customActions.updateEducationFlag(baseContext.sectionData, hasEducation);
+      baseContext.loadSection(updatedData);
+    }
   };
 
   const updateHighSchoolFlag = (hasHighSchool: "YES" | "NO"): void => {
-    const updatedData = section12Config.customActions.updateHighSchoolFlag(baseContext.sectionData, hasHighSchool);
-    baseContext.loadSection(updatedData);
+    if (baseContext.updateField) {
+      console.log(`🔧 Section12: Using updateField for hasHighSchool = ${hasHighSchool}`);
+      baseContext.updateField('section12.hasHighSchool.value', hasHighSchool);
+    } else {
+      const updatedData = section12Config.customActions.updateHighSchoolFlag(baseContext.sectionData, hasHighSchool);
+      baseContext.loadSection(updatedData);
+    }
   };
 
   const updateSchoolType = (entryIndex: number, schoolType: string): void => {

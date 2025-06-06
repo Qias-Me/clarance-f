@@ -92,10 +92,7 @@ export const getImplementedSections = (): SectionDefinition[] => {
  * This can be used to gradually enable sections during development
  */
 export const getActiveSections = (): SectionDefinition[] => {
-  // For now, return the main sections that are being actively used
-  const activeSectionIds = ['section1', 'section2', 'section10', 'section11', 'section17', 'section28', 'section29', 'section30'];
-  return ALL_SF86_SECTIONS.filter(section =>
-    activeSectionIds.includes(section.id)
+  return ALL_SF86_SECTIONS.filter(section => section.isImplemented
   );
 };
 

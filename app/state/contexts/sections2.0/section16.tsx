@@ -101,6 +101,8 @@ export interface Section16ProviderProps {
 }
 
 export const Section16Provider: React.FC<Section16ProviderProps> = ({ children }) => {
+  // console.log('🔄 Section16Provider: Provider initializing...');
+
   // ============================================================================
   // CORE STATE MANAGEMENT
   // ============================================================================
@@ -113,6 +115,14 @@ export const Section16Provider: React.FC<Section16ProviderProps> = ({ children }
 
   // Generate unique context ID for logging
   const contextId = useMemo(() => `section16-${Date.now()}`, []);
+
+  // console.log('🔍 Section16Provider: State initialized', {
+  //   section16Data,
+  //   isLoading,
+  //   errors,
+  //   isInitialized,
+  //   contextId
+  // });
 
   // Initialize logging
   useEffect(() => {
@@ -188,11 +198,13 @@ export const Section16Provider: React.FC<Section16ProviderProps> = ({ children }
   // ============================================================================
 
   const updatePersonWhoKnowsYou = useCallback((index: number, person: Partial<PersonWhoKnowsYouEntry>) => {
+    console.log('🔄 Section16: updatePersonWhoKnowsYou called', { index, person, timestamp: new Date().toISOString() });
     setSection16Data(prevData => {
       const newData = cloneDeep(prevData);
       if (index >= 0 && index < newData.section16.peopleWhoKnowYou.length) {
         // FIXED: Properly handle Field<T> structure updates
         const currentPerson = newData.section16.peopleWhoKnowYou[index];
+        console.log('🔍 Section16: Current person before update', { index, currentPerson });
 
         // Update each field while preserving Field<T> structure
         Object.keys(person).forEach(key => {
@@ -233,6 +245,13 @@ export const Section16Provider: React.FC<Section16ProviderProps> = ({ children }
             }
           }
         });
+        console.log('🔍 Section16: Person updated', {
+          index,
+          updatedPerson: newData.section16.peopleWhoKnowYou[index],
+          fullSectionData: newData
+        });
+      } else {
+        console.warn('⚠️ Section16: Invalid person index', { index, maxIndex: newData.section16.peopleWhoKnowYou.length - 1 });
       }
       return newData;
     });
@@ -247,14 +266,25 @@ export const Section16Provider: React.FC<Section16ProviderProps> = ({ children }
    * Simplified approach following Section 1 pattern
    */
   const updateFieldValue = useCallback((path: string, value: any) => {
+    console.log('🔄 Section16: updateFieldValue called', { path, value, timestamp: new Date().toISOString() });
     PerformanceMonitor.startTiming(`updateField-${path}`);
 
     setSection16Data(prevData => {
       const newData = cloneDeep(prevData);
+      const oldValue = get(newData, path);
 
       try {
         // Use lodash set for all field updates - simpler and more reliable
         set(newData, path, value);
+        const newValue = get(newData, path);
+
+        console.log('🔍 Section16: Field value updated', {
+          path,
+          oldValue,
+          newValue,
+          success: newValue === value,
+          fullSectionData: newData
+        });
 
         SectionLogger.info('section16', contextId, `Field updated: ${path}`, {
           newValue: value
@@ -263,6 +293,7 @@ export const Section16Provider: React.FC<Section16ProviderProps> = ({ children }
         PerformanceMonitor.endTiming('section16', contextId, `updateField-${path}`);
         return newData;
       } catch (error) {
+        console.error('❌ Section16: Failed to update field', { path, value, error });
         SectionLogger.error('section16', contextId, `Failed to update field: ${path}`, {
           path,
           value,
@@ -327,6 +358,7 @@ export const Section16Provider: React.FC<Section16ProviderProps> = ({ children }
   // SF86FORM INTEGRATION
   // ============================================================================
 
+  // console.log('🔄 Section16: About to call useSection86FormIntegration...');
   // Integration with main form context using standard pattern
   const integration = useSection86FormIntegration(
     'section16',
@@ -337,6 +369,7 @@ export const Section16Provider: React.FC<Section16ProviderProps> = ({ children }
     getChanges,
     updateFieldValue
   );
+  // console.log('🔍 Section16: Integration hook result', { integration });
 
   // ============================================================================
   // CONTEXT VALUE

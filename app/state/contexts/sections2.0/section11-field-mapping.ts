@@ -150,7 +150,7 @@ export function getFieldsForEntry(entryIndex: number): Section11Field[] {
     field.name.includes(entryPattern)
   );
   
-  console.log(`📋 Found ${entryFields.length} fields for entry ${entryIndex} (${entryPattern})`);
+  // console.log(`📋 Found ${entryFields.length} fields for entry ${entryIndex} (${entryPattern})`);
   return entryFields;
 }
 
@@ -192,13 +192,13 @@ export function getAvailableFieldTypes(): string[] {
  * Debug function to show all fields for all entries
  */
 export function debugAllEntries(): void {
-  console.log('🔍 Section 11 Field Mapping Debug:');
-  console.log(`📊 Total fields: ${section11Fields.length}`);
-  console.log(`📊 Metadata says ${(section11Data as Section11JsonData).metadata.entryCount} entry, but actual data shows 4 entries`);
+  // console.log('🔍 Section 11 Field Mapping Debug:');
+  // console.log(`📊 Total fields: ${section11Fields.length}`);
+  // console.log(`📊 Metadata says ${(section11Data as Section11JsonData).metadata.entryCount} entry, but actual data shows 4 entries`);
 
   for (let i = 0; i < 4; i++) {
     const entryFields = getFieldsForEntry(i);
-    console.log(`📋 Entry ${i + 1} (${getEntryPattern(i)}): ${entryFields.length} fields`);
+    // console.log(`📋 Entry ${i + 1} (${getEntryPattern(i)}): ${entryFields.length} fields`);
 
     // Show key fields as examples
     const keyFields = entryFields.filter(field =>
@@ -208,13 +208,13 @@ export function debugAllEntries(): void {
     );
 
     keyFields.forEach(field => {
-      console.log(`   - ${field.name} = ${field.value} (ID: ${field.id})`);
+      // console.log(`   - ${field.name} = ${field.value} (ID: ${field.id})`);
     });
 
     if (entryFields.length > keyFields.length) {
-      console.log(`   ... and ${entryFields.length - keyFields.length} more fields`);
+      // console.log(`   ... and ${entryFields.length - keyFields.length} more fields`);
     }
   }
 
-  console.log('🔧 Available field types:', getAvailableFieldTypes().slice(0, 10));
+  // console.log('🔧 Available field types:', getAvailableFieldTypes().slice(0, 10));
 }

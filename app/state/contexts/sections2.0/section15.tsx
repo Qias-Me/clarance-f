@@ -13,17 +13,15 @@ import React, {
   useCallback,
   useEffect
 } from 'react';
-import cloneDeep from 'lodash.clonedeep';
-import set from 'lodash.set';
+import cloneDeep from 'lodash/cloneDeep';
+import set from 'lodash/set';
+import get from 'lodash/get';
 import type {
   Section15,
   Section15SubsectionKey,
-  Section15FieldUpdate,
   Section15ValidationRules,
   Section15ValidationContext,
   MilitaryHistoryValidationResult,
-  MilitaryServiceEntry,
-  MilitaryDisciplinaryEntry,
   ForeignMilitaryServiceEntry
 } from '../../../../api/interfaces/sections2.0/section15';
 import {
@@ -32,13 +30,15 @@ import {
   createDefaultDisciplinaryEntry,
   createDefaultForeignMilitaryEntry,
   validateMilitaryHistory,
-  updateSection15Field,
   isSection15Complete,
   getVisibleFields
 } from '../../../../api/interfaces/sections2.0/section15';
 
 import { useSection86FormIntegration } from '../shared/section-context-integration';
 import type { ValidationResult, ValidationError, ChangeSet } from '../shared/base-interfaces';
+import {
+  validateSectionFieldCount,
+} from "../../../../api/utils/sections-references-loader";
 
 // ============================================================================
 // VALIDATION RULES
@@ -108,7 +108,14 @@ export interface Section15ContextType {
 // INITIAL STATE CREATION
 // ============================================================================
 
+/**
+ * DRY Initial State Creation using sections-references data
+ * This eliminates hardcoded values and uses the single source of truth
+ */
 const createInitialSection15State = (): Section15 => {
+  // Validate field count against sections-references
+  validateSectionFieldCount(15, 95);
+
   return createDefaultSection15();
 };
 
@@ -127,15 +134,25 @@ export interface Section15ProviderProps {
 }
 
 export const Section15Provider: React.FC<Section15ProviderProps> = ({ children }) => {
+  // console.log('🔄 Section15Provider: Provider initializing...');
+
   // ============================================================================
   // CORE STATE MANAGEMENT
   // ============================================================================
 
   const [section15Data, setSection15Data] = useState<Section15>(createInitialSection15State());
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [initialData] = useState<Section15>(createInitialSection15State());
   const [isInitialized, setIsInitialized] = useState(false);
+
+  // console.log('🔍 Section15Provider: State initialized', {
+  //   section15Data,
+  //   isLoading,
+  //   errors,
+  //   isInitialized,
+  //   isDirty: JSON.stringify(section15Data) !== JSON.stringify(initialData)
+  // });
 
   // ============================================================================
   // COMPUTED VALUES
@@ -147,6 +164,8 @@ export const Section15Provider: React.FC<Section15ProviderProps> = ({ children }
   useEffect(() => {
     setIsInitialized(true);
   }, []);
+
+
 
   // ============================================================================
   // MILITARY SERVICE ACTIONS
@@ -301,12 +320,32 @@ export const Section15Provider: React.FC<Section15ProviderProps> = ({ children }
   // ============================================================================
 
   const updateFieldValue = useCallback((path: string, value: any) => {
+    console.log('🔄 Section15: updateFieldValue called', {
+      path,
+      value
+    });
+
     setSection15Data(prev => {
       const newData = cloneDeep(prev);
+      console.log('🔍 Section15: Before field update', {
+        path,
+        value,
+        prevData: prev,
+        newDataBefore: newData
+      });
+
       set(newData, path, value);
+
+      console.log('🔍 Section15: After field update', {
+        path,
+        value,
+        newDataAfter: newData,
+        fieldValueSet: get(newData, path)
+      });
+
       return newData;
     });
-  }, []);
+  }, []); // Removed section15Data dependency to prevent infinite loops
 
   // ============================================================================
   // VALIDATION FUNCTIONS
@@ -380,13 +419,119 @@ export const Section15Provider: React.FC<Section15ProviderProps> = ({ children }
   }, []);
 
   const loadSection = useCallback((data: Section15) => {
-    setSection15Data(data);
-  }, []);
+    console.log(`🔄 Section15: Loading section data`);
+    console.log(`📊 Incoming data:`, data);
 
-  const getChanges = useCallback(() => {
-    // Simple change detection - in production might want more sophisticated diffing
-    return section15Data;
+    // Safeguard: Only load if the incoming data is different and not empty
+    const hasCurrentEntries =
+      section15Data.section15.militaryService.length > 0 ||
+      section15Data.section15.disciplinaryProcedures.length > 0 ||
+      section15Data.section15.foreignMilitaryService.length > 0;
+
+    const hasIncomingEntries =
+      data.section15.militaryService.length > 0 ||
+      data.section15.disciplinaryProcedures.length > 0 ||
+      data.section15.foreignMilitaryService.length > 0;
+
+    // If we have current data with entries and incoming data is empty/default, preserve current data
+    if (hasCurrentEntries && !hasIncomingEntries) {
+      console.log(
+        `🛡️ Section15: Preserving current data - incoming data appears to be default/empty`
+      );
+      return;
+    }
+
+    // If incoming data has entries or current data is empty, load the new data
+    console.log(`✅ Section15: Loading new data`);
+    setSection15Data(data);
   }, [section15Data]);
+
+  const getChanges = useCallback((): ChangeSet => {
+    // Return changes for tracking purposes
+    const changes: ChangeSet = {};
+
+    if (isDirty) {
+      changes['section15'] = {
+        oldValue: createInitialSection15State(),
+        newValue: section15Data,
+        timestamp: new Date()
+      };
+    }
+
+    return changes;
+  }, [section15Data, isDirty]);
+
+  // ============================================================================
+  // FIELD FLATTENING FOR PDF GENERATION
+  // ============================================================================
+
+  /**
+   * Flatten Section15 data structure into Field objects for PDF generation
+   * This converts the nested Section15 structure into a flat object with Field<T> objects
+   * TODO: Implement when needed for PDF generation
+   */
+  // Commented out for now - will implement when needed for PDF generation
+  // const flattenSection15Fields = useCallback((): Record<string, any> => { ... }, [section15Data]);
+
+  // ============================================================================
+  // SF86 FORM INTEGRATION
+  // ============================================================================
+
+  // console.log('🔄 Section15: About to call useSection86FormIntegration...');
+
+  // Create wrapper function for updateFieldValue following Section 29 pattern
+  const updateFieldValueWrapper = useCallback((path: string, value: any) => {
+    // console.log('🔄 Section15: updateFieldValueWrapper called', { path, value });
+
+    // Parse the path to extract subsection, entry index, and field path
+    // Expected format: "section15.subsectionKey.entries[index].fieldPath"
+    const pathParts = path.split('.');
+
+    if (pathParts.length >= 4 && pathParts[0] === 'section15') {
+      const subsectionKey = pathParts[1] as Section15SubsectionKey;
+      const entriesMatch = pathParts[2].match(/entries\[(\d+)\]/);
+
+      if (entriesMatch) {
+        const entryIndex = parseInt(entriesMatch[1]);
+        const fieldPath = pathParts.slice(3).join('.');
+
+        console.log('🔍 Section15: Parsed path', {
+          subsectionKey,
+          entryIndex,
+          fieldPath,
+          value
+        });
+
+        // Call the appropriate update function based on subsection
+        if (subsectionKey === 'militaryService') {
+          updateMilitaryServiceEntry(entryIndex, fieldPath, value);
+        } else if (subsectionKey === 'disciplinaryProcedures') {
+          updateDisciplinaryEntry(entryIndex, fieldPath, value);
+        } else if (subsectionKey === 'foreignMilitaryService') {
+          updateForeignMilitaryEntry(entryIndex, fieldPath, value);
+        }
+        return;
+      }
+    }
+
+    // Fallback: use lodash set for direct path updates
+    console.log('🔍 Section15: Using direct path update', { path, value });
+    updateFieldValue(path, value);
+  }, [updateFieldValue, updateMilitaryServiceEntry, updateDisciplinaryEntry, updateForeignMilitaryEntry]);
+
+  // Integration with main form context using Section 29 gold standard pattern
+  // Note: integration variable is used internally by the hook for registration
+  const integration = useSection86FormIntegration(
+    'section15',
+    'Section 15: Military History',
+    section15Data,
+    setSection15Data,
+    () => ({ isValid: validateSection().isValid, errors: [], warnings: [] }), // Anonymous function like Section 29
+    () => getChanges(), // Anonymous function like Section 29
+    updateFieldValueWrapper // Pass wrapper function that matches expected signature
+  );
+
+  // console.log('🔍 Section15: Integration hook result', { integration });
 
   // Update errors when section data changes (but not during initial render)
   useEffect(() => {
@@ -408,7 +553,7 @@ export const Section15Provider: React.FC<Section15ProviderProps> = ({ children }
     if (errorsChanged) {
       setErrors(newErrors);
     }
-  }, [section15Data, isInitialized, errors]);
+  }, [section15Data, isInitialized, errors, validateSection]);
 
   // ============================================================================
   // CONTEXT VALUE
@@ -476,4 +621,4 @@ export const useSection15 = (): Section15ContextType => {
     throw new Error('useSection15 must be used within a Section15Provider');
   }
   return context;
-}; 
+};

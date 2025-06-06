@@ -9,7 +9,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSection14 } from '~/state/contexts/sections2.0/section14';
 import { useSF86Form } from '~/state/contexts/SF86FormContext';
-import { REGISTRATION_STATUS_OPTIONS, MILITARY_SERVICE_OPTIONS } from '../../../api/interfaces/sections2.0/section14';
+import { BORN_MALE_AFTER_1959_OPTIONS, REGISTRATION_STATUS_OPTIONS } from '../../../api/interfaces/sections2.0/section14';
 
 interface Section14ComponentProps {
   className?: string;
@@ -22,19 +22,24 @@ export const Section14Component: React.FC<Section14ComponentProps> = ({
   onValidationChange,
   onNext
 }) => {
+  console.log('🔄 Section14Component: Component rendering...');
+
   // Section 14 Context
   const {
     section14Data,
     errors,
     isDirty,
+    updateBornMaleAfter1959,
     updateRegistrationStatus,
     updateRegistrationNumber,
     updateExplanation,
-    updateMilitaryServiceStatus,
     validateSection,
     resetSection,
     getActiveExplanationField
   } = useSection14();
+
+  console.log('🔍 Section14Component: section14Data=', section14Data);
+  console.log('🔍 Section14Component: isDirty=', isDirty);
 
   // SF86 Form Context for data persistence
   const sf86Form = useSF86Form();
@@ -42,8 +47,16 @@ export const Section14Component: React.FC<Section14ComponentProps> = ({
   // Track validation state internally
   const [isValid, setIsValid] = useState(false);
 
-  const { registrationStatus, registrationNumber, noRegistrationExplanation, unknownStatusExplanation, militaryServiceStatus } = section14Data.section14;
+  const { bornMaleAfter1959, registrationStatus, registrationNumber, noRegistrationExplanation, unknownStatusExplanation } = section14Data.section14;
   const activeExplanationField = getActiveExplanationField();
+
+  console.log('🔍 Section14Component: Field values=', {
+    bornMaleAfter1959: bornMaleAfter1959.value,
+    registrationStatus: registrationStatus.value,
+    registrationNumber: registrationNumber.value,
+    noRegistrationExplanation: noRegistrationExplanation.value,
+    unknownStatusExplanation: unknownStatusExplanation.value
+  });
 
   // Handle validation on component mount and when data changes
   useEffect(() => {
@@ -100,37 +113,74 @@ export const Section14Component: React.FC<Section14ComponentProps> = ({
       {/* Selective Service Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
 
-        {/* Registration Status */}
+        {/* Born Male After 1959 */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-3">
-            Are you registered with the Selective Service System? <span className="text-red-500">*</span>
+            Were you born a male after December 31, 1959? <span className="text-red-500">*</span>
           </label>
           <div className="space-y-2">
-            {REGISTRATION_STATUS_OPTIONS.map((option) => (
+            {BORN_MALE_AFTER_1959_OPTIONS.map((option) => (
               <label key={option} className="flex items-center space-x-3">
                 <input
                   type="radio"
-                  name="registrationStatus"
+                  name="bornMaleAfter1959"
                   value={option}
-                  checked={registrationStatus.value === option}
-                  onChange={(e) => updateRegistrationStatus(e.target.value)}
+                  checked={bornMaleAfter1959.value === option}
+                  onChange={(e) => {
+                    console.log(`🔍 Section14Component: Born male after 1959 changed to: ${e.target.value}`);
+                    updateBornMaleAfter1959(e.target.value);
+                  }}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  data-testid={`registration-status-${option.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
+                  data-testid={`born-male-after-1959-${option.toLowerCase()}`}
                 />
                 <span className="text-sm text-gray-700">{option}</span>
               </label>
             ))}
           </div>
-          {errors.selectiveService && (
-            <p className="mt-1 text-sm text-red-600">{errors.selectiveService}</p>
+          {errors.bornMaleAfter1959 && (
+            <p className="mt-1 text-sm text-red-600">{errors.bornMaleAfter1959}</p>
           )}
           <p className="mt-1 text-xs text-gray-500">
-            All male U.S. citizens and male immigrants are required to register with the Selective Service within 30 days of their 18th birthday.
+            If NO, proceed to Section 15.
           </p>
         </div>
 
-        {/* Conditional Fields Based on Registration Status */}
-        {activeExplanationField === 'registrationNumber' && (
+        {/* Registration Status - Only show if born male after 1959 */}
+        {bornMaleAfter1959.value === 'YES' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Have you registered with the Selective Service System (SSS)? <span className="text-red-500">*</span>
+            </label>
+            <div className="space-y-2">
+              {REGISTRATION_STATUS_OPTIONS.map((option) => (
+                <label key={option} className="flex items-center space-x-3">
+                  <input
+                    type="radio"
+                    name="registrationStatus"
+                    value={option}
+                    checked={registrationStatus.value === option}
+                    onChange={(e) => {
+                      console.log(`🔍 Section14Component: Registration status changed to: ${e.target.value}`);
+                      updateRegistrationStatus(e.target.value);
+                    }}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    data-testid={`registration-status-${option.toLowerCase().replace(/[^a-z0-9]/g, '-')}`}
+                  />
+                  <span className="text-sm text-gray-700">{option}</span>
+                </label>
+              ))}
+            </div>
+            {errors.selectiveService && (
+              <p className="mt-1 text-sm text-red-600">{errors.selectiveService}</p>
+            )}
+            <p className="mt-1 text-xs text-gray-500">
+              The Selective Service website, <a href="https://www.sss.gov" className="text-blue-600 underline">www.sss.gov</a>, can help provide the registration number for persons who have registered. Note: Selective Service Number is not your Social Security Number.
+            </p>
+          </div>
+        )}
+
+        {/* Conditional Fields Based on Registration Status - Only show if born male after 1959 */}
+        {bornMaleAfter1959.value === 'YES' && activeExplanationField === 'registrationNumber' && (
           <div>
             <label htmlFor="registrationNumber" className="block text-sm font-medium text-gray-700 mb-2">
               Registration Number <span className="text-red-500">*</span>
@@ -139,7 +189,10 @@ export const Section14Component: React.FC<Section14ComponentProps> = ({
               type="text"
               id="registrationNumber"
               value={registrationNumber.value}
-              onChange={(e) => updateRegistrationNumber(e.target.value)}
+              onChange={(e) => {
+                console.log(`🔍 Section14Component: Registration number changed to: ${e.target.value}`);
+                updateRegistrationNumber(e.target.value);
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Enter your Selective Service registration number"
               data-testid="registration-number-input"
@@ -151,7 +204,7 @@ export const Section14Component: React.FC<Section14ComponentProps> = ({
           </div>
         )}
 
-        {activeExplanationField === 'noRegistrationExplanation' && (
+        {bornMaleAfter1959.value === 'YES' && activeExplanationField === 'noRegistrationExplanation' && (
           <div>
             <label htmlFor="noRegistrationExplanation" className="block text-sm font-medium text-gray-700 mb-2">
               Explanation for Non-Registration <span className="text-red-500">*</span>
@@ -159,7 +212,10 @@ export const Section14Component: React.FC<Section14ComponentProps> = ({
             <textarea
               id="noRegistrationExplanation"
               value={noRegistrationExplanation.value}
-              onChange={(e) => updateExplanation('no', e.target.value)}
+              onChange={(e) => {
+                console.log(`🔍 Section14Component: No registration explanation changed to: ${e.target.value}`);
+                updateExplanation('no', e.target.value);
+              }}
               rows={4}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Please explain why you are not registered with the Selective Service..."
@@ -172,7 +228,7 @@ export const Section14Component: React.FC<Section14ComponentProps> = ({
           </div>
         )}
 
-        {activeExplanationField === 'unknownStatusExplanation' && (
+        {bornMaleAfter1959.value === 'YES' && activeExplanationField === 'unknownStatusExplanation' && (
           <div>
             <label htmlFor="unknownStatusExplanation" className="block text-sm font-medium text-gray-700 mb-2">
               Explanation for Unknown Status <span className="text-red-500">*</span>
@@ -180,7 +236,10 @@ export const Section14Component: React.FC<Section14ComponentProps> = ({
             <textarea
               id="unknownStatusExplanation"
               value={unknownStatusExplanation.value}
-              onChange={(e) => updateExplanation('unknown', e.target.value)}
+              onChange={(e) => {
+                console.log(`🔍 Section14Component: Unknown status explanation changed to: ${e.target.value}`);
+                updateExplanation('unknown', e.target.value);
+              }}
               rows={4}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="Please explain why you don't know your Selective Service registration status..."
@@ -193,32 +252,7 @@ export const Section14Component: React.FC<Section14ComponentProps> = ({
           </div>
         )}
 
-        {/* Military Service Status */}
-        <div className="border rounded-lg p-4 bg-blue-50">
-          <h3 className="text-lg font-semibold mb-3">Military Service History</h3>
-          <label className="block text-sm font-medium text-gray-700 mb-3">
-            Have you ever served in the United States military? <span className="text-red-500">*</span>
-          </label>
-          <div className="space-y-2">
-            {MILITARY_SERVICE_OPTIONS.map((option) => (
-              <label key={option} className="flex items-center space-x-3">
-                <input
-                  type="radio"
-                  name="militaryServiceStatus"
-                  value={option}
-                  checked={militaryServiceStatus.value === option}
-                  onChange={(e) => updateMilitaryServiceStatus(e.target.value)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                  data-testid={`military-service-${option.toLowerCase()}`}
-                />
-                <span className="text-sm text-gray-700">{option}</span>
-              </label>
-            ))}
-          </div>
-          <p className="mt-2 text-xs text-gray-600">
-            This includes service in the Army, Navy, Air Force, Marines, Coast Guard, or National Guard.
-          </p>
-        </div>
+
 
         {/* Form Actions */}
         <div className="mt-8 flex justify-between items-center pt-6 border-t border-gray-200">
@@ -264,17 +298,19 @@ export const Section14Component: React.FC<Section14ComponentProps> = ({
         <div className="mt-6 p-4 bg-gray-50 rounded-lg">
           <h3 className="text-sm font-medium text-gray-700 mb-2">Section Summary</h3>
           <div className="space-y-1 text-xs text-gray-600">
-            <div>Registration Status: {registrationStatus.value || 'Not selected'}</div>
-            {activeExplanationField === 'registrationNumber' && (
+            <div>Born Male After 1959: {bornMaleAfter1959.value || 'Not selected'}</div>
+            {bornMaleAfter1959.value === 'YES' && (
+              <div>Registration Status: {registrationStatus.value || 'Not selected'}</div>
+            )}
+            {bornMaleAfter1959.value === 'YES' && activeExplanationField === 'registrationNumber' && (
               <div>Registration Number: {registrationNumber.value || 'Not provided'}</div>
             )}
-            {activeExplanationField === 'noRegistrationExplanation' && (
+            {bornMaleAfter1959.value === 'YES' && activeExplanationField === 'noRegistrationExplanation' && (
               <div>Explanation: {noRegistrationExplanation.value ? 'Provided' : 'Not provided'}</div>
             )}
-            {activeExplanationField === 'unknownStatusExplanation' && (
+            {bornMaleAfter1959.value === 'YES' && activeExplanationField === 'unknownStatusExplanation' && (
               <div>Explanation: {unknownStatusExplanation.value ? 'Provided' : 'Not provided'}</div>
             )}
-            <div>Military Service: {militaryServiceStatus.value || 'Not selected'}</div>
           </div>
         </div>
       </form>

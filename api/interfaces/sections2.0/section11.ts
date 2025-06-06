@@ -222,12 +222,6 @@ export function getSection11FieldName(entryIndex: number, fieldType: string): st
   return generateFieldName(fieldType, entryIndex);
 }
 
-/**
- * Get field data from sections-references for a specific entry and field type
- */
-export function getSection11FieldData(entryIndex: number, fieldType: string) {
-  return getFieldByEntryAndType(entryIndex, fieldType);
-}
 
 /**
  * Create a field using sections-references data for Section 11
@@ -823,7 +817,7 @@ export const createDefaultResidenceEntry = (index: number): ResidenceEntry => {
     index = 0;
   }
 
-  console.log(`🏠 Creating Section 11 residence entry ${index + 1} using sections-references`);
+  // console.log(`🏠 Creating Section 11 residence entry ${index + 1} using sections-references`);
 
   try {
     return {
