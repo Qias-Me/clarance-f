@@ -336,56 +336,110 @@ export const Section28Provider: React.FC<Section28ProviderProps> = ({ children }
     });
   }, []);
 
-  // Updated field update method for compatibility
+  // Optimized field update method with reduced cloning
   const updateCourtActionField = useCallback((entryIndex: number, fieldPath: string, newValue: any) => {
     setSection28Data(prevData => {
-      const newData = cloneDeep(prevData);
-      const entry = newData.section28.courtActionEntries[entryIndex];
-
+      // Only clone if we're actually making a change
+      const entry = prevData.section28.courtActionEntries[entryIndex];
       if (!entry) {
-        console.error(`Court action entry ${entryIndex} not found`);
+        if (process.env.NODE_ENV === 'development') {
+          console.error(`Court action entry ${entryIndex} not found`);
+        }
         return prevData;
       }
 
-      // Navigate to the field using dot notation
+      // Check if the value is actually changing to avoid unnecessary updates
       const pathParts = fieldPath.split('.');
       let current: any = entry;
 
+      // Navigate to the field
       for (let i = 0; i < pathParts.length - 1; i++) {
         if (current[pathParts[i]] === undefined) {
-          console.error(`Field path ${fieldPath} not found in court action entry`);
+          if (process.env.NODE_ENV === 'development') {
+            console.error(`Field path ${fieldPath} not found in court action entry`);
+          }
           return prevData;
         }
         current = current[pathParts[i]];
       }
 
       const finalField = pathParts[pathParts.length - 1];
-      if (current[finalField] && typeof current[finalField] === 'object' && 'value' in current[finalField]) {
-        current[finalField].value = newValue;
+      const currentValue = current[finalField]?.value ?? current[finalField];
+
+      // Skip update if value hasn't changed
+      if (currentValue === newValue) {
+        return prevData;
+      }
+
+      // Only now perform the deep clone since we know we need to update
+      const newData = cloneDeep(prevData);
+      const newEntry = newData.section28.courtActionEntries[entryIndex];
+      let newCurrent: any = newEntry;
+
+      // Navigate to the field in the cloned data
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        newCurrent = newCurrent[pathParts[i]];
+      }
+
+      // Update the field
+      if (newCurrent[finalField] && typeof newCurrent[finalField] === 'object' && 'value' in newCurrent[finalField]) {
+        newCurrent[finalField].value = newValue;
       } else {
-        current[finalField] = newValue;
+        newCurrent[finalField] = newValue;
       }
 
       return newData;
     });
+    setIsDirty(true);
   }, []);
 
   /**
-   * Generic field update function for integration compatibility
-   * Maps generic field paths to Section 28 specific update functions
+   * Optimized field update function for integration compatibility
+   * Reduced logging and improved performance for real-time input
    */
   const updateFieldValue = useCallback((path: string, value: any) => {
+    // Only log in debug mode to improve performance
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🔍 Section28: updateFieldValue path=${path}`);
+    }
+
     // Parse path to update the correct field
-    if (path === 'section28.hasCourtActions') {
+    if (path === 'section28.hasCourtActions' || path === 'hasCourtActions') {
       updateHasCourtActions(value);
-    } else if (path.startsWith('section28.courtActionEntries.')) {
-      // Handle court action entry field updates
-      const pathParts = path.split('.');
-      if (pathParts.length >= 4) {
-        const entryIndex = parseInt(pathParts[2]);
-        const fieldPath = pathParts.slice(3).join('.');
-        updateCourtActionField(entryIndex, fieldPath, value);
+      return;
+    }
+
+    if (path.startsWith('section28.courtActionEntries') || path.includes('courtActionEntries')) {
+      // Optimized path parsing
+      let entryIndex: number;
+      let fieldPath: string;
+
+      // Handle array bracket notation first (most common)
+      const bracketMatch = path.match(/courtActionEntries\[(\d+)\]\.(.+)/);
+      if (bracketMatch) {
+        entryIndex = parseInt(bracketMatch[1]);
+        fieldPath = bracketMatch[2];
+      } else {
+        // Handle dot notation
+        const pathParts = path.split('.');
+        const entriesIndex = pathParts.findIndex(part => part === 'courtActionEntries');
+        if (entriesIndex >= 0 && pathParts.length > entriesIndex + 2) {
+          entryIndex = parseInt(pathParts[entriesIndex + 1]);
+          fieldPath = pathParts.slice(entriesIndex + 2).join('.');
+        } else {
+          if (process.env.NODE_ENV === 'development') {
+            console.error(`Section28: Invalid path format: ${path}`);
+          }
+          return;
+        }
       }
+
+      updateCourtActionField(entryIndex, fieldPath, value);
+      return;
+    }
+
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`Section28: Unhandled field path: ${path}`);
     }
   }, [updateHasCourtActions, updateCourtActionField]);
 
@@ -427,8 +481,19 @@ export const Section28Provider: React.FC<Section28ProviderProps> = ({ children }
   }, [isDirty, initialData, section28Data]);
 
   // ============================================================================
-  // SF86FORM INTEGRATION - Updated to match Section1 pattern
+  // SF86FORM INTEGRATION - Following Section 29 pattern
   // ============================================================================
+
+  // Optimized wrapper function with minimal overhead
+  const updateFieldValueWrapper = useCallback((path: string, value: any) => {
+    // Direct call to updateFieldValue with minimal processing
+    // Only normalize path if necessary
+    const targetPath = path.startsWith('section28.') || path.includes('courtActionEntries')
+      ? path
+      : `section28.${path}`;
+
+    updateFieldValue(targetPath, value);
+  }, [updateFieldValue]);
 
   // Integration with main form context using Section 1 gold standard pattern
   const integration = useSection86FormIntegration(
@@ -438,7 +503,7 @@ export const Section28Provider: React.FC<Section28ProviderProps> = ({ children }
     setSection28Data,
     () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
     getChanges,
-    updateFieldValue
+    updateFieldValueWrapper // Pass wrapper function that matches expected signature
   );
 
   // ============================================================================

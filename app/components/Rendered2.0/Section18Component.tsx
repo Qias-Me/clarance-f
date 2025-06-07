@@ -147,7 +147,15 @@ export const Section18Component: React.FC<Section18ComponentProps> = ({
         </label>
         <select
           value={getFieldValueSafe(entry, 'relationship')}
-          onChange={(e) => updateField('relationship.value', e.target.value, index, 'immediateFamily')}
+          onChange={(e) => {
+            console.log(`🎯 Section18Component: Relationship field changed:`, {
+              index,
+              fieldPath: 'relationship.value',
+              newValue: e.target.value,
+              currentValue: getFieldValueSafe(entry, 'relationship')
+            });
+            updateField('relationship.value', e.target.value, index, 'immediateFamily');
+          }}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
           required
         >
@@ -234,7 +242,15 @@ export const Section18Component: React.FC<Section18ComponentProps> = ({
           <input
             type="text"
             value={getFieldValueSafe(entry, 'fullName.firstName')}
-            onChange={(e) => updateField('fullName.firstName.value', e.target.value, index, 'immediateFamily')}
+            onChange={(e) => {
+              console.log(`🎯 Section18Component: First name field changed:`, {
+                index,
+                fieldPath: 'fullName.firstName.value',
+                newValue: e.target.value,
+                currentValue: getFieldValueSafe(entry, 'fullName.firstName')
+              });
+              updateField('fullName.firstName.value', e.target.value, index, 'immediateFamily');
+            }}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
             required
           />

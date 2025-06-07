@@ -25,7 +25,7 @@ interface Section19ComponentProps {
 }
 
 // Maximum number of foreign contact entries allowed
-const MAX_FOREIGN_CONTACTS = 10;
+const MAX_FOREIGN_CONTACTS = 4;
 
 // Common countries for dropdown
 const COUNTRIES = [
@@ -254,7 +254,13 @@ export const Section19Component: React.FC<Section19ComponentProps> = ({
       }
     }
 
-    return current?.value || current || '';
+    // If current is a Field object, return its value, otherwise return current if it's a primitive
+    if (current && typeof current === 'object' && 'value' in current) {
+      return current.value || '';
+    }
+
+    // Return primitive values or empty string for objects
+    return typeof current === 'object' ? '' : current || '';
   };
 
   // Check if field has error

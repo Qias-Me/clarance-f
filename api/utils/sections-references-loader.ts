@@ -270,7 +270,7 @@ export const EXPECTED_FIELD_COUNTS = {
   13: 1086,
   16: 154,
   17: 332,
-  18: 946,
+  18: 964, // FIXED: Updated to match actual field count in sections-references JSON
   27: 57, // Will be determined from sections-references
   28: 23, // Section 28: Involvement in Non-Criminal Court Actions
   29: 141,

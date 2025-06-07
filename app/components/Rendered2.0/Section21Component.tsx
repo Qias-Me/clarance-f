@@ -43,28 +43,43 @@ const MentalHealthSubsection: React.FC<MentalHealthSubsectionProps> = ({
   const sf86Form = useSF86Form();
 
   // Get subsection data
-  const subsectionData = section21.sectionData?.section21?.[subsectionKey];
+  const subsectionData = section21.section21Data?.section21?.[subsectionKey];
   const hasFlag = isCourtOrdered
     ? (subsectionData as any)?.hasCourtOrdered?.value || 'NO'
     : (subsectionData as any)?.hasConsultation?.value || 'NO';
   const entries = subsectionData?.entries || [];
 
+  // Debug logging for radio button state (reduced for cleaner console)
+  console.log(`🔍 Section21 ${subsectionKey}: hasFlag=${hasFlag}, entries=${entries.length}`);
+
   // Handle flag change (YES/NO)
   const handleFlagChange = useCallback((value: 'YES' | 'NO') => {
+    console.log('🎯 Section21Component handleFlagChange called:', { subsectionKey, value });
+    // console.log('🎯 Section21Component current section data before flag change:', JSON.stringify(section21.section21Data, null, 2));
+
     // Follow the data flow: User Input → handleFieldChange → updateSection21Field
     section21.updateSubsectionFlag(subsectionKey, value);
 
+    console.log('🎯 Section21Component section data after updateSubsectionFlag:', JSON.stringify(section21.section21Data, null, 2));
+
     // Update in global form context
-    sf86Form.updateSectionData('section21', section21.sectionData);
+    sf86Form.updateSectionData('section21', section21.section21Data);
+    console.log('🎯 Section21Component called sf86Form.updateSectionData with:', JSON.stringify(section21.section21Data, null, 2));
   }, [section21, subsectionKey, sf86Form]);
 
   // Handle field changes in entries
   const handleFieldChange = useCallback((entryIndex: number, fieldPath: string, newValue: any) => {
+    console.log('🎯 Section21Component handleFieldChange called:', { subsectionKey, entryIndex, fieldPath, newValue });
+    console.log('🎯 Section21Component current section data before field change:', JSON.stringify(section21.section21Data, null, 2));
+
     // Follow the data flow pattern
     section21.updateEntryField(subsectionKey, entryIndex, fieldPath, newValue);
 
+    console.log('🎯 Section21Component section data after updateEntryField:', JSON.stringify(section21.section21Data, null, 2));
+
     // Update in global form context
-    sf86Form.updateSectionData('section21', section21.sectionData);
+    sf86Form.updateSectionData('section21', section21.section21Data);
+    console.log('🎯 Section21Component called sf86Form.updateSectionData with:', JSON.stringify(section21.section21Data, null, 2));
   }, [section21, subsectionKey, sf86Form]);
 
   // Add new entry
@@ -72,7 +87,7 @@ const MentalHealthSubsection: React.FC<MentalHealthSubsectionProps> = ({
     section21.addEntry(subsectionKey);
 
     // Update in global form context
-    sf86Form.updateSectionData('section21', section21.sectionData);
+    sf86Form.updateSectionData('section21', section21.section21Data);
   }, [section21, subsectionKey, sf86Form]);
 
   // Remove entry
@@ -80,7 +95,7 @@ const MentalHealthSubsection: React.FC<MentalHealthSubsectionProps> = ({
     section21.removeEntry(subsectionKey, entryIndex);
 
     // Update in global form context
-    sf86Form.updateSectionData('section21', section21.sectionData);
+    sf86Form.updateSectionData('section21', section21.section21Data);
   }, [section21, subsectionKey, sf86Form]);
 
   const flagFieldName = isCourtOrdered ? 'court_ordered_treatment' : 'mental_health_consultation';
@@ -442,7 +457,7 @@ export const Section21Component: React.FC = () => {
 
       if (validationResult.isValid) {
         // Update global form data
-        sf86Form.updateSectionData('section21', section21.sectionData);
+        sf86Form.updateSectionData('section21', section21.section21Data);
 
         // Save form
         await sf86Form.saveForm();

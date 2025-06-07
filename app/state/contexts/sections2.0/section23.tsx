@@ -124,6 +124,7 @@ interface Section23ContextType {
 
 /**
  * Create initial Section 23 state using sections-references data
+ * Fixed field mappings based on actual sections-references/section-23.json structure
  */
 const createInitialSection23State = (): Section23 => {
   // Validate field count against sections-references
@@ -132,125 +133,126 @@ const createInitialSection23State = (): Section23 => {
   return {
     _id: 23,
     section23: {
-      // Drug Use Subsection (7-year timeframe)
+      // Drug Use Subsection (Section23_1) - Based on actual JSON field names
       drugUse: {
+        // Main drug use questions - using actual field names from JSON
         hasUsedIllegalDrugs: createFieldFromReference(
           23,
-          "form1[0].Section23_1[0].RadioButtonList[0]",
+          "form1[0].Section23_1[0].RadioButtonList[0]", // Actual field from JSON
           "NO"
         ),
         hasUsedPrescriptionDrugsIllegally: createFieldFromReference(
           23,
-          "form1[0].Section23_1[0].RadioButtonList[1]",
+          "form1[0].Section23_1[0].RadioButtonList[1]", // Actual field from JSON
           "NO"
         ),
         hasUsedMarijuana: createFieldFromReference(
           23,
-          "form1[0].Section23_1[0].#area[2].RadioButtonList[2]",
+          "form1[0].Section23_1[0].#area[2].RadioButtonList[2]", // Actual field from JSON
           "NO"
         ),
         drugUseInLast7Years: createFieldFromReference(
           23,
-          "form1[0].Section23_1[0].RadioButtonList[0]",
+          "form1[0].Section23_1[0].#area[3].RadioButtonList[3]", // Actual field from JSON
           "NO"
         ),
         drugUseWhileEmployed: createFieldFromReference(
           23,
-          "form1[0].Section23_1[0].RadioButtonList[1]",
+          "form1[0].Section23_1[0].RadioButtonList[4]", // Actual field from JSON
           "NO"
         ),
         drugUseWithClearance: createFieldFromReference(
           23,
-          "form1[0].Section23_1[0].#area[2].RadioButtonList[2]",
+          "form1[0].Section23_1[0].#area[6].RadioButtonList[5]", // Actual field from JSON
           "NO"
         ),
         intentToContinueUse: createFieldFromReference(
           23,
-          "form1[0].Section23_1[0].RadioButtonList[3]",
+          "form1[0].Section23_1[0].#area[7].RadioButtonList[6]", // Actual field from JSON
           "NO"
         ),
         intentExplanation: createFieldFromReference(
           23,
-          "form1[0].Section23_1[0].TextField11[0]",
+          "form1[0].Section23_1[0].TextField11[0]", // Actual field from JSON
           ""
         ),
         entries: [],
         entriesCount: 0,
       },
 
-      // Drug Activity Subsection
+      // Drug Activity Subsection (Section23_2) - Based on actual JSON field names
       drugActivity: {
         hasEngagedInDrugActivity: createFieldFromReference(
           23,
-          "form1[0].Section23_2[0].RadioButtonList[0]",
+          "form1[0].Section23_2[0].#area[1].RadioButtonList[0]", // Actual field from JSON
           "NO"
         ),
         hasSoldDrugs: createFieldFromReference(
           23,
-          "form1[0].Section23_2[0].RadioButtonList[1]",
+          "form1[0].Section23_2[0].RadioButtonList[1]", // Actual field from JSON
           "NO"
         ),
         hasDistributedDrugs: createFieldFromReference(
           23,
-          "form1[0].Section23_2[0].RadioButtonList[2]",
+          "form1[0].Section23_2[0].RadioButtonList[2]", // Actual field from JSON
           "NO"
         ),
         hasManufacturedDrugs: createFieldFromReference(
           23,
-          "form1[0].Section23_2[0].RadioButtonList[3]",
+          "form1[0].Section23_2[0].RadioButtonList[3]", // Actual field from JSON
           "NO"
         ),
         hasTransportedDrugs: createFieldFromReference(
           23,
-          "form1[0].Section23_2[0].RadioButtonList[4]",
+          "form1[0].Section23_2[0].#area[3].RadioButtonList[4]", // Actual field from JSON
           "NO"
         ),
         entries: [],
         entriesCount: 0,
       },
 
-      // Drug Treatment Subsection
+      // Drug Treatment Subsection (Section_23_3) - Based on actual JSON field names
       drugTreatment: {
         hasReceivedDrugTreatment: createFieldFromReference(
           23,
-          "form1[0].Section_23_3[0].RadioButtonList[0]",
+          "form1[0].Section_23_3[0].RadioButtonList[0]", // Actual field from JSON
           "NO"
         ),
         hasVoluntaryTreatment: createFieldFromReference(
           23,
-          "form1[0].Section_23_3[0].RadioButtonList[1]",
+          "form1[0].Section_23_3[0].RadioButtonList[1]", // Actual field from JSON
           "NO"
         ),
-        // NOTE: Reusing fields since there are only 2 RadioButtonList elements available in section-23.json
+        // Using separate fields for court-ordered and current treatment
         hasCourtOrderedTreatment: createFieldFromReference(
           23,
-          "form1[0].Section_23_3[0].RadioButtonList[0]", // Reusing field
+          "form1[0].Section_23_5[0].#area[0].RadioButtonList[0]", // Treatment provider field
           "NO"
         ),
         currentlyInTreatment: createFieldFromReference(
           23,
-          "form1[0].Section_23_3[0].RadioButtonList[1]", // Reusing field
+          "form1[0].Section_23_5[0].RadioButtonList[1]", // Treatment provider field
           "NO"
         ),
         entries: [],
         entriesCount: 0,
       },
 
-      // Foreign Drug Use Subsection
+      // Foreign Drug Use Subsection (Section_23_4) - Based on actual JSON field names
       foreignDrugUse: {
         hasUsedDrugsAbroad: createFieldFromReference(
           23,
-          "form1[0].Section_23_4[0].RadioButtonList[0]",
+          "form1[0].Section_23_4[0].RadioButtonList[0]", // Actual field from JSON
           "NO"
         ),
         hasUsedLegalDrugsAbroad: createFieldFromReference(
           23,
-          "form1[0].Section_23_4[0].#area[1].RadioButtonList[1]",
+          "form1[0].Section_23_4[0].#area[1].RadioButtonList[1]", // Actual field from JSON
           "NO"
         ),
         awareOfLocalLaws: createFieldFromReference(
           23,
-          "form1[0].Section_23_4[0].RadioButtonList[2]",
+          "form1[0].Section_23_4[0].RadioButtonList[2]", // Actual field from JSON
           "YES"
         ),
         entries: [],
@@ -659,12 +661,24 @@ export const Section23Provider: React.FC<{ children: ReactNode }> = ({
     });
   }, []);
 
-  // Update field value with path notation
+  // Update field value with path notation - Following Section 1 Gold Standard Pattern
   const updateFieldValue = useCallback((path: string, value: any) => {
+    console.log(`🔄 Section23: updateFieldValue called with path: ${path}, value:`, value);
+
     setSection23Data(prev => {
       const updated = cloneDeep(prev);
-      set(updated, path, value);
+
+      // Handle both direct field updates and .value property updates
+      if (path.includes('.value')) {
+        // Direct .value path update
+        set(updated, path, value);
+      } else {
+        // Assume we need to update the .value property of the field
+        set(updated, `${path}.value`, value);
+      }
+
       setIsDirty(true);
+      console.log(`✅ Section23: Field updated successfully. Path: ${path}, New data:`, updated);
       return updated;
     });
   }, []);
@@ -981,6 +995,16 @@ export const Section23Provider: React.FC<{ children: ReactNode }> = ({
   // ============================================================================
   // SF86FORM INTEGRATION - Following Section 1 Gold Standard Pattern
   // ============================================================================
+
+  // Add logging for debugging data flow
+  useEffect(() => {
+    console.log(`🔍 Section23: Context data updated:`, {
+      section23Data,
+      isDirty,
+      hasUsedIllegalDrugs: section23Data.section23.drugUse.hasUsedIllegalDrugs.value,
+      hasUsedPrescriptionDrugs: section23Data.section23.drugUse.hasUsedPrescriptionDrugsIllegally.value
+    });
+  }, [section23Data, isDirty]);
 
   // Integration with main form context using Section 1 pattern
   const integration = useSection86FormIntegration(

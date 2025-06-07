@@ -1,17 +1,19 @@
 /**
  * Section 22: Police Record - Context Provider
  *
- * This implementation follows the established patterns for SF-86 sections,
- * learning from Section 21 and avoiding the setSectionData issues.
+ * FIXED: Replaced Enhanced Section Template with Section 29 pattern for better SF86FormContext integration
+ * This implementation follows Section 29 patterns for proper data persistence and field updates.
  *
  * Features:
- * - Enhanced section template with performance monitoring
- * - Standardized field operations and validation
+ * - Direct Section 29-style context implementation
+ * - Proper SF86FormContext integration with updateFieldValue wrapper
  * - Police record subsections management
- * - PDF field flattening
- * - Proper context integration
+ * - Field<T> interface compliance
+ * - IndexedDB persistence support
  */
 
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react';
+import { cloneDeep, set, get } from 'lodash';
 import type {
   Section22,
   Section22FieldUpdate,
@@ -32,92 +34,183 @@ import {
   getTotalPoliceRecordEntries,
   hasAnyPoliceRecordIssues
 } from '../../../../api/interfaces/sections2.0/section22';
-import type { ValidationResult, ValidationError } from '../shared/base-interfaces';
-import {
-  createEnhancedSectionContext,
-  StandardFieldOperations,
-  type EnhancedSectionContextType
-} from '../shared/enhanced-section-template';
+import { useSection86FormIntegration } from '../shared/section-context-integration';
 
 // ============================================================================
-// FIELD FLATTENING FOR PDF GENERATION
+// CONTEXT DEFINITION (Following Section 29 Pattern)
 // ============================================================================
 
-/**
- * Flattens Section 22 fields for PDF generation
- * Converts nested Field<T> objects to a flat Record<string, any> structure
- */
-export const flattenSection22Fields = (section22Data: Section22): Record<string, any> => {
-  const flattened: Record<string, any> = {};
+interface Section22ContextType {
+  // State
+  section22Data: Section22;
+  isLoading: boolean;
+  errors: Record<string, string>;
+  isDirty: boolean;
 
-  // Flatten each subsection
-  Object.entries(section22Data.section22).forEach(([subsectionKey, subsection]) => {
-    // Flatten flag fields
-    if ('hasSummonsOrCitation' in subsection && subsection.hasSummonsOrCitation) {
-      flattened[subsection.hasSummonsOrCitation.id] = subsection.hasSummonsOrCitation;
-    }
-    if ('hasArrest' in subsection && subsection.hasArrest) {
-      flattened[subsection.hasArrest.id] = subsection.hasArrest;
-    }
-    if ('hasChargedOrConvicted' in subsection && subsection.hasChargedOrConvicted) {
-      flattened[subsection.hasChargedOrConvicted.id] = subsection.hasChargedOrConvicted;
-    }
-    if ('hasProbationOrParole' in subsection && subsection.hasProbationOrParole) {
-      flattened[subsection.hasProbationOrParole.id] = subsection.hasProbationOrParole;
-    }
-    if ('hasCurrentTrial' in subsection && subsection.hasCurrentTrial) {
-      flattened[subsection.hasCurrentTrial.id] = subsection.hasCurrentTrial;
-    }
-    if ('hasCurrentOrder' in subsection && subsection.hasCurrentOrder) {
-      flattened[subsection.hasCurrentOrder.id] = subsection.hasCurrentOrder;
-    }
-    if ('hasMilitaryCourtProceedings' in subsection && subsection.hasMilitaryCourtProceedings) {
-      flattened[subsection.hasMilitaryCourtProceedings.id] = subsection.hasMilitaryCourtProceedings;
-    }
-    if ('hasForeignCourtProceedings' in subsection && subsection.hasForeignCourtProceedings) {
-      flattened[subsection.hasForeignCourtProceedings.id] = subsection.hasForeignCourtProceedings;
-    }
+  // Basic Actions
+  updateSubsectionFlag: (subsectionKey: Section22SubsectionKey, flagType: string, value: 'YES' | 'NO') => void;
+  addEntry: (subsectionKey: Section22SubsectionKey) => void;
+  removeEntry: (subsectionKey: Section22SubsectionKey, entryIndex: number) => void;
+  updateFieldValue: (subsectionKey: Section22SubsectionKey, entryIndex: number, fieldPath: string, newValue: any) => void;
 
-    // Flatten entry fields
-    if (subsection.entries && Array.isArray(subsection.entries)) {
-      subsection.entries.forEach((entry: any, entryIndex: number) => {
-        // Flatten all fields in the entry recursively
-        const flattenEntry = (obj: any, prefix: string = '') => {
-          Object.entries(obj).forEach(([key, value]) => {
-            if (value && typeof value === 'object' && 'id' in value && 'value' in value) {
-              // This is a Field<T> object
-              const fieldObj = value as { id: string; value: any };
-              flattened[fieldObj.id] = fieldObj;
-            } else if (value && typeof value === 'object' && !Array.isArray(value)) {
-              // Nested object, recurse
-              flattenEntry(value, `${prefix}${key}.`);
-            }
-          });
-        };
+  // Section-specific computed values
+  getTotalPoliceRecordEntries: () => number;
+  getSubsectionEntryCount: (subsectionKey: Section22SubsectionKey) => number;
+  hasAnyPoliceRecordIssues: () => boolean;
 
-        flattenEntry(entry, `${subsectionKey}[${entryIndex}].`);
-      });
-    }
-  });
+  // Section-specific validation
+  validateEntry: (subsectionKey: Section22SubsectionKey, entryIndex: number) => PoliceRecordValidationResult;
+  validateSubsection: (subsectionKey: Section22SubsectionKey) => PoliceRecordValidationResult;
+  validateSection: () => boolean;
 
-  return flattened;
-};
+  // Utility functions
+  getEntryById: (subsectionKey: Section22SubsectionKey, entryId: string | number) => any | null;
+  resetSection: () => void;
+  loadSection: (data: Section22) => void;
+  getChanges: () => any;
+}
+
+const Section22Context = createContext<Section22ContextType | null>(null);
 
 // ============================================================================
-// SECTION 22 CONFIGURATION
+// PROVIDER IMPLEMENTATION (Following Section 29 Pattern)
 // ============================================================================
 
-const section22Config = {
-  sectionId: 'section22',
-  sectionName: 'Section 22: Police Record',
-  expectedFieldCount: 267, // From section-22.json metadata
-  createInitialState: createDefaultSection22,
-  flattenFields: flattenSection22Fields,
-  validateSection: (data: Section22): ValidationResult => {
-    const validationErrors: ValidationError[] = [];
-    const validationWarnings: ValidationError[] = [];
+export const Section22Provider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [section22Data, setSection22Data] = useState<Section22>(createDefaultSection22);
+  const [isLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isDirty, setIsDirty] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-    // Create validation context
+  // Safeguard: Prevent data loss during save operations
+  const currentDataRef = useRef<Section22>(section22Data);
+  useEffect(() => {
+    currentDataRef.current = section22Data;
+  }, [section22Data]);
+
+  // Initialize section data
+  useEffect(() => {
+    if (!isInitialized) {
+      console.log('🔧 Section22: Initializing with default data');
+      setIsInitialized(true);
+    }
+  }, [isInitialized]);
+
+  // ============================================================================
+  // CORE ACTIONS (Following Section 29 Pattern)
+  // ============================================================================
+
+  const updateSubsectionFlag = useCallback((subsectionKey: Section22SubsectionKey, flagType: string, value: 'YES' | 'NO') => {
+    console.log(`🔧 Section22: updateSubsectionFlag called:`, { subsectionKey, flagType, value });
+    
+    setSection22Data(prev => {
+      const updated = cloneDeep(prev);
+      const subsection = updated.section22[subsectionKey] as any;
+      
+      if (subsection[flagType] && typeof subsection[flagType] === 'object' && 'value' in subsection[flagType]) {
+        subsection[flagType].value = value;
+        console.log(`✅ Section22: updateSubsectionFlag - updated ${flagType} to ${value}`);
+      }
+      
+      setIsDirty(true);
+      return updated;
+    });
+  }, []);
+
+  const addEntry = useCallback((subsectionKey: Section22SubsectionKey) => {
+    console.log(`🔧 Section22: addEntry called for subsection: ${subsectionKey}`);
+    
+    setSection22Data(prev => {
+      const updated = cloneDeep(prev);
+      const subsection = updated.section22[subsectionKey];
+      
+      let newEntry: any;
+      if (subsectionKey === 'domesticViolenceOrders') {
+        newEntry = createDefaultDomesticViolenceEntry();
+      } else {
+        newEntry = createDefaultPoliceRecordEntry();
+      }
+      
+      subsection.entries.push(newEntry);
+      subsection.entriesCount = subsection.entries.length;
+      
+      console.log(`✅ Section22: addEntry - added entry to ${subsectionKey}, new count: ${subsection.entriesCount}`);
+      setIsDirty(true);
+      return updated;
+    });
+  }, []);
+
+  const removeEntry = useCallback((subsectionKey: Section22SubsectionKey, entryIndex: number) => {
+    console.log(`🔧 Section22: removeEntry called:`, { subsectionKey, entryIndex });
+    
+    setSection22Data(prev => {
+      const updated = cloneDeep(prev);
+      const subsection = updated.section22[subsectionKey];
+      
+      if (entryIndex >= 0 && entryIndex < subsection.entries.length) {
+        subsection.entries.splice(entryIndex, 1);
+        subsection.entriesCount = subsection.entries.length;
+        console.log(`✅ Section22: removeEntry - removed entry from ${subsectionKey}, new count: ${subsection.entriesCount}`);
+        setIsDirty(true);
+      }
+      
+      return updated;
+    });
+  }, []);
+
+  const updateFieldValue = useCallback((
+    subsectionKey: Section22SubsectionKey,
+    entryIndex: number,
+    fieldPath: string,
+    newValue: any
+  ) => {
+    console.log(`🔧 Section22: updateFieldValue called:`, { subsectionKey, entryIndex, fieldPath, newValue });
+    
+    setSection22Data(prev => {
+      const updated = cloneDeep(prev);
+      const subsection = updated.section22[subsectionKey];
+      
+      if (subsection?.entries && entryIndex >= 0 && entryIndex < subsection.entries.length) {
+        const entry = subsection.entries[entryIndex];
+        
+        try {
+          set(entry, `${fieldPath}.value`, newValue);
+          console.log(`✅ Section22: updateFieldValue - field updated successfully`);
+          setIsDirty(true);
+        } catch (error) {
+          console.error(`❌ Section22: updateFieldValue - failed:`, error);
+        }
+      } else {
+        console.error(`❌ Section22: updateFieldValue - invalid entry access:`, {
+          hasSubsection: !!subsection,
+          hasEntries: !!subsection?.entries,
+          entriesLength: subsection?.entries?.length,
+          entryIndex
+        });
+      }
+      
+      return updated;
+    });
+  }, []);
+
+  // ============================================================================
+  // COMPUTED VALUES AND VALIDATION
+  // ============================================================================
+
+  const getTotalPoliceRecordEntriesCount = useCallback((): number => {
+    return getTotalPoliceRecordEntries(section22Data);
+  }, [section22Data]);
+
+  const getSubsectionEntryCount = useCallback((subsectionKey: Section22SubsectionKey): number => {
+    return section22Data.section22[subsectionKey].entriesCount;
+  }, [section22Data]);
+
+  const hasAnyPoliceRecordIssuesReported = useCallback((): boolean => {
+    return hasAnyPoliceRecordIssues(section22Data);
+  }, [section22Data]);
+
+  const validateSection = useCallback((): boolean => {
     const validationContext: Section22ValidationContext = {
       currentDate: new Date(),
       rules: {
@@ -131,183 +224,42 @@ const section22Config = {
         requiresDocumentation: false
       }
     };
-
-    // Validate the entire section
-    const sectionValidation = validateSection22(data, validationContext);
     
-    // Convert to ValidationError format
-    sectionValidation.errors.forEach(error => {
-      validationErrors.push({
-        field: 'section22',
-        message: error,
-        code: 'POLICE_RECORD_VALIDATION_ERROR',
-        severity: 'error'
-      });
-    });
+    const result = validateSection22(section22Data, validationContext);
+    return result.isValid;
+  }, [section22Data]);
 
-    sectionValidation.warnings.forEach(warning => {
-      validationWarnings.push({
-        field: 'section22',
-        message: warning,
-        code: 'POLICE_RECORD_VALIDATION_WARNING',
-        severity: 'warning'
-      });
-    });
-
-    return {
-      isValid: validationErrors.length === 0,
-      errors: validationErrors,
-      warnings: validationWarnings
-    };
-  },
-  updateField: (data: Section22, fieldPath: string, newValue: any): Section22 => {
-    // Parse field path to determine subsection and entry
-    const pathParts = fieldPath.split('.');
-    
-    if (pathParts.length >= 2) {
-      const subsectionKey = pathParts[1] as Section22SubsectionKey;
-      
-      if (pathParts.length === 3 && [
-        'hasSummonsOrCitation', 'hasArrest', 'hasChargedOrConvicted', 
-        'hasProbationOrParole', 'hasCurrentTrial', 'hasCurrentOrder',
-        'hasMilitaryCourtProceedings', 'hasForeignCourtProceedings'
-      ].includes(pathParts[2])) {
-        // Update subsection flag
-        const update: Section22FieldUpdate = {
-          subsectionKey,
-          fieldPath: pathParts[2],
-          newValue
-        };
-        return updateSection22Field(data, update);
-      } else if (pathParts.length >= 4) {
-        // Update entry field
-        const entryIndex = parseInt(pathParts[2]);
-        const entryFieldPath = pathParts.slice(3).join('.');
-        
-        const update: Section22FieldUpdate = {
-          subsectionKey,
-          entryIndex,
-          fieldPath: entryFieldPath,
-          newValue
-        };
-        return updateSection22Field(data, update);
-      }
-    }
-    
-    return StandardFieldOperations.updateSimpleField(data, fieldPath, newValue);
-  },
-  customActions: {
-    // Subsection flag operations
-    updateSubsectionFlag: (data: Section22, subsectionKey: Section22SubsectionKey, flagType: string, value: 'YES' | 'NO'): Section22 => {
-      const update: Section22FieldUpdate = {
-        subsectionKey,
-        fieldPath: flagType,
-        newValue: value
+  const getChanges = useCallback(() => {
+    const changes: any = {};
+    if (isDirty) {
+      changes['section22'] = {
+        oldValue: createDefaultSection22(),
+        newValue: section22Data,
+        timestamp: new Date()
       };
-      return updateSection22Field(data, update);
-    },
-
-    // Entry management operations
-    addPoliceRecordEntry: (data: Section22, subsectionKey: Section22SubsectionKey): Section22 => {
-      const newData = { ...data };
-      let newEntry: any;
-
-      if (subsectionKey === 'domesticViolenceOrders') {
-        newEntry = createDefaultDomesticViolenceEntry();
-      } else {
-        newEntry = createDefaultPoliceRecordEntry();
-      }
-
-      newData.section22[subsectionKey].entries.push(newEntry);
-      newData.section22[subsectionKey].entriesCount = newData.section22[subsectionKey].entries.length;
-      
-      return newData;
-    },
-
-    removePoliceRecordEntry: (data: Section22, subsectionKey: Section22SubsectionKey, entryIndex: number): Section22 => {
-      const newData = { ...data };
-      
-      if (newData.section22[subsectionKey].entries.length > entryIndex) {
-        newData.section22[subsectionKey].entries.splice(entryIndex, 1);
-        newData.section22[subsectionKey].entriesCount = newData.section22[subsectionKey].entries.length;
-      }
-      
-      return newData;
     }
-  }
-};
+    return changes;
+  }, [section22Data, isDirty]);
 
-// ============================================================================
-// CONTEXT CREATION
-// ============================================================================
+  const resetSection = useCallback(() => {
+    console.log('🔧 Section22: resetSection called');
+    setSection22Data(createDefaultSection22());
+    setIsDirty(false);
+    setErrors({});
+  }, []);
 
-const {
-  SectionProvider: Section22Provider,
-  useSection: useSection22Context
-} = createEnhancedSectionContext(section22Config);
+  const loadSection = useCallback((data: Section22) => {
+    console.log('🔧 Section22: loadSection called with data:', data);
+    setSection22Data(cloneDeep(data));
+    setIsDirty(false);
+  }, []);
 
-// ============================================================================
-// SECTION 22 SPECIFIC CONTEXT TYPE
-// ============================================================================
+  // ============================================================================
+  // ADDITIONAL VALIDATION AND UTILITY FUNCTIONS
+  // ============================================================================
 
-export interface Section22ContextType extends EnhancedSectionContextType<Section22> {
-  // Section-specific computed values
-  getTotalPoliceRecordEntries: () => number;
-  getSubsectionEntryCount: (subsectionKey: Section22SubsectionKey) => number;
-  hasAnyPoliceRecordIssues: () => boolean;
-
-  // Section-specific operations
-  updateSubsectionFlag: (subsectionKey: Section22SubsectionKey, flagType: string, value: 'YES' | 'NO') => void;
-  addEntry: (subsectionKey: Section22SubsectionKey) => void;
-  removeEntry: (subsectionKey: Section22SubsectionKey, entryIndex: number) => void;
-  updateEntryField: (subsectionKey: Section22SubsectionKey, entryIndex: number, fieldPath: string, newValue: any) => void;
-
-  // Section-specific validation
-  validateEntry: (subsectionKey: Section22SubsectionKey, entryIndex: number) => PoliceRecordValidationResult;
-  validateSubsection: (subsectionKey: Section22SubsectionKey) => PoliceRecordValidationResult;
-
-  // Utility functions
-  getEntryById: (subsectionKey: Section22SubsectionKey, entryId: string | number) => any | null;
-}
-
-// ============================================================================
-// ENHANCED HOOK IMPLEMENTATION
-// ============================================================================
-
-export const useSection22 = (): Section22ContextType => {
-  const baseContext = useSection22Context();
-
-  const getTotalPoliceRecordEntriesCount = (): number => {
-    return getTotalPoliceRecordEntries(baseContext.sectionData);
-  };
-
-  const getSubsectionEntryCount = (subsectionKey: Section22SubsectionKey): number => {
-    return baseContext.sectionData.section22[subsectionKey].entriesCount;
-  };
-
-  const hasAnyPoliceRecordIssuesReported = (): boolean => {
-    return hasAnyPoliceRecordIssues(baseContext.sectionData);
-  };
-
-  const updateSubsectionFlag = (subsectionKey: Section22SubsectionKey, flagType: string, value: 'YES' | 'NO'): void => {
-    baseContext.customActions.updateSubsectionFlag(subsectionKey, flagType, value);
-  };
-
-  const addEntry = (subsectionKey: Section22SubsectionKey): void => {
-    baseContext.customActions.addPoliceRecordEntry(subsectionKey);
-  };
-
-  const removeEntry = (subsectionKey: Section22SubsectionKey, entryIndex: number): void => {
-    baseContext.customActions.removePoliceRecordEntry(subsectionKey, entryIndex);
-  };
-
-  const updateEntryField = (subsectionKey: Section22SubsectionKey, entryIndex: number, fieldPath: string, newValue: any): void => {
-    const fullFieldPath = `section22.${subsectionKey}.entries.${entryIndex}.${fieldPath}`;
-    baseContext.updateField(fullFieldPath, newValue);
-  };
-
-  const validateEntry = (subsectionKey: Section22SubsectionKey, entryIndex: number): PoliceRecordValidationResult => {
-    const entry = baseContext.sectionData.section22[subsectionKey].entries[entryIndex];
+  const validateEntry = useCallback((subsectionKey: Section22SubsectionKey, entryIndex: number): PoliceRecordValidationResult => {
+    const entry = section22Data.section22[subsectionKey].entries[entryIndex];
     if (!entry) {
       return {
         isValid: false,
@@ -338,9 +290,9 @@ export const useSection22 = (): Section22ContextType => {
     } else {
       return validatePoliceRecordEntry(entry as PoliceRecordEntry, validationContext);
     }
-  };
+  }, [section22Data]);
 
-  const validateSubsection = (subsectionKey: Section22SubsectionKey): PoliceRecordValidationResult => {
+  const validateSubsection = useCallback((subsectionKey: Section22SubsectionKey): PoliceRecordValidationResult => {
     const combinedResult: PoliceRecordValidationResult = {
       isValid: true,
       errors: [],
@@ -350,14 +302,14 @@ export const useSection22 = (): Section22ContextType => {
       inconsistencies: []
     };
 
-    const subsection = baseContext.sectionData.section22[subsectionKey];
+    const subsection = section22Data.section22[subsectionKey];
     subsection.entries.forEach((entry: any, index: number) => {
       const entryValidation = validateEntry(subsectionKey, index);
-      
+
       if (!entryValidation.isValid) {
         combinedResult.isValid = false;
       }
-      
+
       combinedResult.errors.push(...entryValidation.errors.map(error => `Entry ${index + 1}: ${error}`));
       combinedResult.warnings.push(...entryValidation.warnings.map(warning => `Entry ${index + 1}: ${warning}`));
       combinedResult.missingRequiredFields.push(...entryValidation.missingRequiredFields.map(field => `Entry ${index + 1}: ${field}`));
@@ -366,31 +318,127 @@ export const useSection22 = (): Section22ContextType => {
     });
 
     return combinedResult;
-  };
+  }, [section22Data, validateEntry]);
 
-  const getEntryById = (subsectionKey: Section22SubsectionKey, entryId: string | number): any | null => {
-    const subsection = baseContext.sectionData.section22[subsectionKey];
+  const getEntryById = useCallback((subsectionKey: Section22SubsectionKey, entryId: string | number): any | null => {
+    const subsection = section22Data.section22[subsectionKey];
     return subsection.entries.find((entry: any) => entry._id.value === entryId) || null;
-  };
+  }, [section22Data]);
 
-  return {
-    ...baseContext,
-    getTotalPoliceRecordEntries: getTotalPoliceRecordEntriesCount,
-    getSubsectionEntryCount,
-    hasAnyPoliceRecordIssues: hasAnyPoliceRecordIssuesReported,
+  // ============================================================================
+  // SF86FORM INTEGRATION (Following Section 29 Pattern)
+  // ============================================================================
+
+  // Create a wrapper function that matches the integration hook's expected signature
+  // Integration expects: (path: string, value: any) => void
+  // Section 22 has: (subsectionKey, entryIndex, fieldPath, newValue) => void
+  const updateFieldValueWrapper = useCallback((path: string, value: any) => {
+    console.log(`🔧 Section22: updateFieldValueWrapper called with path=${path}, value=`, value);
+
+    // Parse the path to extract subsection, entry index, and field path
+    // Expected format: "section22.subsectionKey.entries[index].fieldPath" or "section22.subsectionKey.flagField"
+    const pathParts = path.split('.');
+
+    if (pathParts.length >= 3 && pathParts[0] === 'section22') {
+      const subsectionKey = pathParts[1] as Section22SubsectionKey;
+
+      // Check if this is a subsection flag update
+      if (pathParts.length === 3 && [
+        'hasSummonsOrCitation', 'hasArrest', 'hasChargedOrConvicted',
+        'hasProbationOrParole', 'hasCurrentTrial', 'hasCurrentOrder',
+        'hasMilitaryCourtProceedings', 'hasForeignCourtProceedings'
+      ].includes(pathParts[2])) {
+        updateSubsectionFlag(subsectionKey, pathParts[2], value);
+        return;
+      }
+
+      // Check if this is an entry field update
+      const entriesMatch = pathParts[2].match(/entries\[(\d+)\]/);
+      if (entriesMatch) {
+        const entryIndex = parseInt(entriesMatch[1]);
+        const fieldPath = pathParts.slice(3).join('.');
+
+        // Call Section 22's updateFieldValue with the correct signature
+        updateFieldValue(subsectionKey, entryIndex, fieldPath, value);
+        return;
+      }
+    }
+
+    // Fallback: use lodash set for direct path updates
+    console.log(`🔧 Section22: Using fallback lodash set for path: ${path}`);
+    setSection22Data(prev => {
+      const updated = cloneDeep(prev);
+      set(updated, path, value);
+      return updated;
+    });
+  }, [updateFieldValue, updateSubsectionFlag]);
+
+  // Integration with main form context using Section 29 pattern
+  const integration = useSection86FormIntegration(
+    'section22',
+    'Section 22: Police Record',
+    section22Data,
+    setSection22Data,
+    () => ({ isValid: validateSection(), errors: [], warnings: [] }),
+    () => getChanges(),
+    updateFieldValueWrapper // Pass wrapper function that matches expected signature
+  );
+
+  // ============================================================================
+  // CONTEXT VALUE
+  // ============================================================================
+
+  const contextValue: Section22ContextType = {
+    // State
+    section22Data,
+    isLoading,
+    errors,
+    isDirty,
+
+    // Basic Actions
     updateSubsectionFlag,
     addEntry,
     removeEntry,
-    updateEntryField,
+    updateFieldValue,
+
+    // Section-specific computed values
+    getTotalPoliceRecordEntries: getTotalPoliceRecordEntriesCount,
+    getSubsectionEntryCount,
+    hasAnyPoliceRecordIssues: hasAnyPoliceRecordIssuesReported,
+
+    // Section-specific validation
     validateEntry,
     validateSubsection,
-    getEntryById
+    validateSection,
+
+    // Utility functions
+    getEntryById,
+    resetSection,
+    loadSection,
+    getChanges
   };
+
+  return (
+    <Section22Context.Provider value={contextValue}>
+      {children}
+    </Section22Context.Provider>
+  );
+};
+
+// ============================================================================
+// HOOK
+// ============================================================================
+
+export const useSection22 = (): Section22ContextType => {
+  const context = useContext(Section22Context);
+  if (!context) {
+    throw new Error('useSection22 must be used within a Section22Provider');
+  }
+  return context;
 };
 
 // ============================================================================
 // EXPORTS
 // ============================================================================
 
-export { Section22Provider };
-export type { Section22 } from '../../../../api/interfaces/sections2.0/section22'; 
+export type { Section22 } from '../../../../api/interfaces/sections2.0/section22';

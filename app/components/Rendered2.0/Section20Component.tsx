@@ -1,11 +1,13 @@
 /**
- * Section 20: Financial Record Component
+ * Section 20: Foreign Activities Component
  *
  * This component follows the established data flow pattern:
- * User Input → handleFieldChange → updateSection20Field → Section Context → SF86FormContext → IndexedDB
+ * User Input → handleFieldChange → updateFieldValue → Section Context → SF86FormContext → IndexedDB
  *
  * Features:
- * - Financial issue subsections (bankruptcy, liens, garnishments, etc.)
+ * - Foreign financial interests subsection
+ * - Foreign business activities subsection
+ * - Foreign travel subsection
  * - Dynamic entry management
  * - Validation integration
  * - PDF generation compatibility
@@ -15,71 +17,104 @@ import React, { useState, useCallback } from 'react';
 import { useSection20 } from '../../state/contexts/sections2.0/section20';
 import { useSF86Form } from '../../state/contexts/SF86FormContext';
 import type {
-  Section20SubsectionKey,
-  Section20EntryType,
-  FinancialIssueEntry,
-  BankruptcyEntry,
-  TaxDelinquencyEntry,
-  CreditCounselingEntry
+  Section20,
+  ForeignFinancialInterestEntry,
+  ForeignBusinessEntry,
+  ForeignTravelEntry
 } from '../../../api/interfaces/sections2.0/section20';
 
 // ============================================================================
-// FINANCIAL SUBSECTION COMPONENT
+// FOREIGN ACTIVITIES SUBSECTION COMPONENT
 // ============================================================================
 
-interface FinancialSubsectionProps {
-  subsectionKey: Section20SubsectionKey;
+// Map subsection keys to their actual field names
+const FLAG_FIELD_MAP = {
+  'foreignFinancialInterests': 'hasForeignFinancialInterests',
+  'foreignBusinessActivities': 'hasForeignBusinessActivities',
+  'foreignTravel': 'hasForeignTravel'
+} as const;
+
+interface ForeignActivitiesSubsectionProps {
+  subsectionKey: 'foreignFinancialInterests' | 'foreignBusinessActivities' | 'foreignTravel';
   title: string;
   description: string;
-  entryType?: Section20EntryType;
 }
 
-const FinancialSubsection: React.FC<FinancialSubsectionProps> = ({
+const ForeignActivitiesSubsection: React.FC<ForeignActivitiesSubsectionProps> = ({
   subsectionKey,
   title,
-  description,
-  entryType = 'financial_issue'
+  description
 }) => {
   const section20 = useSection20();
   const sf86Form = useSF86Form();
 
-  // Get subsection data
-  const subsectionData = section20.sectionData?.section20?.[subsectionKey];
-  const hasFlag = subsectionData?.hasFlag?.value || 'NO';
+  // Get subsection data with correct field names
+  const subsectionData = section20.section20Data?.section20?.[subsectionKey];
+
+  const flagFieldName = FLAG_FIELD_MAP[subsectionKey];
+  const hasFlag = subsectionData?.[flagFieldName]?.value || 'NO';
   const entries = subsectionData?.entries || [];
+
+  // Debug logging to track component re-renders and values
+  console.log(`🔍 Section 20 - ${subsectionKey} component render:`, {
+    subsectionData: subsectionData,
+    flagFieldName: flagFieldName,
+    hasFlag: hasFlag,
+    flagFieldValue: subsectionData?.[flagFieldName]?.value,
+    section20DataExists: !!section20.section20Data,
+    section20Exists: !!section20.section20Data?.section20
+  });
 
   // Handle flag change (YES/NO)
   const handleFlagChange = useCallback((value: 'YES' | 'NO') => {
-    // Follow the data flow: User Input → handleFieldChange → updateSection20Field
-    section20.updateField(`section20.${subsectionKey}.hasFlag`, value);
+    console.log(`🔄 Section 20 - ${subsectionKey} flag change:`, value);
+
+    // FIXED: Use updateSubsectionFlag instead of updateFieldValue to maintain proper data structure
+    // This ensures the field is stored as an object with .value property, not a direct string
+    section20.updateSubsectionFlag(subsectionKey, value);
+
+    // Automatically create an entry if YES is selected and no entries exist
+    if (value === 'YES' && entries.length === 0) {
+      console.log(`🚀 Section 20 - Auto-creating first entry for ${subsectionKey}`, {
+        subsectionKey,
+        entriesLength: entries.length,
+        hasAddEntryFunction: typeof section20.addEntry === 'function'
+      });
+      section20.addEntry(subsectionKey);
+    } else {
+      console.log(`🔍 Section 20 - Not auto-creating entry:`, {
+        value,
+        entriesLength: entries.length,
+        shouldCreate: value === 'YES' && entries.length === 0
+      });
+    }
 
     // Update in global form context
-    sf86Form.updateSectionData('section20', section20.sectionData);
-  }, [section20, subsectionKey, sf86Form]);
+    sf86Form.updateSectionData('section20', section20.section20Data);
+  }, [section20, subsectionKey, sf86Form, entries.length]);
 
   // Handle field changes in entries
   const handleFieldChange = useCallback((entryIndex: number, fieldPath: string, newValue: any) => {
+    console.log(`🔄 Section 20 - ${subsectionKey} entry ${entryIndex} field change:`, fieldPath, newValue);
+
     // Follow the data flow pattern
     const fullFieldPath = `section20.${subsectionKey}.entries.${entryIndex}.${fieldPath}`;
-    section20.updateField(fullFieldPath, newValue);
+    section20.updateFieldValue(fullFieldPath, newValue);
 
     // Update in global form context
-    sf86Form.updateSectionData('section20', section20.sectionData);
+    sf86Form.updateSectionData('section20', section20.section20Data);
   }, [section20, subsectionKey, sf86Form]);
 
   // Add new entry
   const handleAddEntry = useCallback(() => {
-    // For now, we'll use the basic customActions approach
-    section20.customActions.updateEntryField(
-      subsectionKey,
-      entries.length,
-      'new_entry_marker',
-      true
-    );
-  }, [section20, subsectionKey, entries.length]);
+    console.log(`➕ Section 20 - Adding new ${subsectionKey} entry`);
+
+    // Use the addEntry method to create a new entry
+    section20.addEntry(subsectionKey);
+  }, [section20, subsectionKey]);
 
   return (
-    <div className="financial-subsection border rounded-lg p-6 mb-6 bg-white shadow-sm">
+    <div className="foreign-activities-subsection border rounded-lg p-6 mb-6 bg-white shadow-sm">
       <div className="subsection-header mb-4">
         <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
         <p className="text-sm text-gray-600 mt-1">{description}</p>
@@ -143,11 +178,11 @@ const FinancialSubsection: React.FC<FinancialSubsectionProps> = ({
           ) : (
             <div className="entries-list space-y-4">
               {entries.map((entry: any, index: number) => (
-                <FinancialEntryForm
+                <ForeignActivityEntryForm
                   key={entry._id || index}
                   entry={entry}
                   entryIndex={index}
-                  entryType={entryType}
+                  subsectionKey={subsectionKey}
                   onFieldChange={(fieldPath, newValue) =>
                     handleFieldChange(index, fieldPath, newValue)
                   }
@@ -162,24 +197,22 @@ const FinancialSubsection: React.FC<FinancialSubsectionProps> = ({
 };
 
 // ============================================================================
-// FINANCIAL ENTRY FORM COMPONENT
+// FOREIGN ACTIVITY ENTRY FORM COMPONENT
 // ============================================================================
 
-interface FinancialEntryFormProps {
-  entry: FinancialIssueEntry | BankruptcyEntry | TaxDelinquencyEntry | CreditCounselingEntry;
+interface ForeignActivityEntryFormProps {
+  entry: ForeignFinancialInterestEntry | ForeignBusinessEntry | ForeignTravelEntry;
   entryIndex: number;
-  entryType: Section20EntryType;
+  subsectionKey: 'foreignFinancialInterests' | 'foreignBusinessActivities' | 'foreignTravel';
   onFieldChange: (fieldPath: string, newValue: any) => void;
 }
 
-const FinancialEntryForm: React.FC<FinancialEntryFormProps> = ({
+const ForeignActivityEntryForm: React.FC<ForeignActivityEntryFormProps> = ({
   entry,
   entryIndex,
-  entryType,
+  subsectionKey,
   onFieldChange
 }) => {
-  const section20 = useSection20();
-
   return (
     <div className="entry-form border border-gray-200 rounded p-4 bg-gray-50">
       <div className="entry-header mb-3">
@@ -189,97 +222,198 @@ const FinancialEntryForm: React.FC<FinancialEntryFormProps> = ({
       </div>
 
       <div className="form-grid grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Common fields for all foreign activities */}
+
+        {/* Country Field */}
+        {'country' in entry && (
+          <div className="form-field">
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Country *
+            </label>
+            <input
+              type="text"
+              value={entry.country?.value || ''}
+              onChange={(e) => onFieldChange('country.value', e.target.value)}
+              placeholder="Enter country name..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+        )}
+
+        {/* Date From Field */}
+        {'dateFrom' in entry && (
+          <div className="form-field">
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Date From *
+            </label>
+            <input
+              type="date"
+              value={entry.dateFrom?.value || ''}
+              onChange={(e) => onFieldChange('dateFrom.value', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+        )}
+
+        {/* Date To Field */}
+        {'dateTo' in entry && (
+          <div className="form-field">
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Date To
+            </label>
+            <input
+              type="date"
+              value={entry.dateTo?.value || ''}
+              onChange={(e) => onFieldChange('dateTo.value', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        )}
+
         {/* Description Field */}
         {'description' in entry && (
-          <div className="form-field">
+          <div className="form-field md:col-span-2">
             <label className="block text-xs font-medium text-gray-700 mb-1">
               Description *
             </label>
             <textarea
               value={entry.description?.value || ''}
               onChange={(e) => onFieldChange('description.value', e.target.value)}
-              placeholder="Provide details about this financial issue..."
+              placeholder="Provide details about this foreign activity..."
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
         )}
-
-        {/* Amount Field */}
-        {'amount' in entry && (
-          <div className="form-field">
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              Amount
-            </label>
-            <input
-              type="text"
-              value={entry.amount?.value || ''}
-              onChange={(e) => onFieldChange('amount.value', e.target.value)}
-              placeholder="$0.00"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <div className="mt-1 text-xs text-gray-500">
-              Formatted: {section20.formatCurrency(entry.amount?.value || '')}
-            </div>
-          </div>
-        )}
-
-        {/* Date Occurred Field */}
-        {'dateOccurred' in entry && (
-          <div className="form-field">
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              Date Occurred *
-            </label>
-            <input
-              type="date"
-              value={entry.dateOccurred?.value || ''}
-              onChange={(e) => onFieldChange('dateOccurred.value', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-        )}
-
-        {/* Court/Agency Field */}
-        {'courtOrAgency' in entry && (
-          <div className="form-field">
-            <label className="block text-xs font-medium text-gray-700 mb-1">
-              Court or Agency
-            </label>
-            <input
-              type="text"
-              value={entry.courtOrAgency?.value || ''}
-              onChange={(e) => onFieldChange('courtOrAgency.value', e.target.value)}
-              placeholder="Enter court or agency name..."
-              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        )}
       </div>
 
-      {/* Entry-specific fields based on type */}
-      {entryType === 'bankruptcy' && 'bankruptcyType' in entry && (
-        <div className="bankruptcy-specific mt-4">
-          <h6 className="text-xs font-medium text-gray-700 mb-2">Bankruptcy Details</h6>
+      {/* Subsection-specific fields */}
+      {subsectionKey === 'foreignFinancialInterests' && (
+        <div className="financial-interests-specific mt-4">
+          <h6 className="text-xs font-medium text-gray-700 mb-2">Financial Interest Details</h6>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="form-field">
-              <label className="block text-xs font-medium text-gray-700 mb-1">
-                Bankruptcy Type
-              </label>
-              <select
-                value={entry.bankruptcyType?.value || ''}
-                onChange={(e) => onFieldChange('bankruptcyType.value', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select type...</option>
-                <option value="chapter7">Chapter 7</option>
-                <option value="chapter11">Chapter 11</option>
-                <option value="chapter12">Chapter 12</option>
-                <option value="chapter13">Chapter 13</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
+            {/* Type of Interest */}
+            {'typeOfInterest' in entry && (
+              <div className="form-field">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Type of Interest
+                </label>
+                <select
+                  value={entry.typeOfInterest?.value || ''}
+                  onChange={(e) => onFieldChange('typeOfInterest.value', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select type...</option>
+                  <option value="bank_account">Bank Account</option>
+                  <option value="investment">Investment</option>
+                  <option value="property">Property</option>
+                  <option value="business">Business</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            )}
+
+            {/* Value */}
+            {'value' in entry && (
+              <div className="form-field">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Estimated Value
+                </label>
+                <input
+                  type="text"
+                  value={entry.value?.value || ''}
+                  onChange={(e) => onFieldChange('value.value', e.target.value)}
+                  placeholder="$0.00"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {subsectionKey === 'foreignBusinessActivities' && (
+        <div className="business-activities-specific mt-4">
+          <h6 className="text-xs font-medium text-gray-700 mb-2">Business Activity Details</h6>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Organization Name */}
+            {'organizationName' in entry && (
+              <div className="form-field">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Organization Name
+                </label>
+                <input
+                  type="text"
+                  value={entry.organizationName?.value || ''}
+                  onChange={(e) => onFieldChange('organizationName.value', e.target.value)}
+                  placeholder="Enter organization name..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
+
+            {/* Position */}
+            {'position' in entry && (
+              <div className="form-field">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Position/Role
+                </label>
+                <input
+                  type="text"
+                  value={entry.position?.value || ''}
+                  onChange={(e) => onFieldChange('position.value', e.target.value)}
+                  placeholder="Enter your position..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {subsectionKey === 'foreignTravel' && (
+        <div className="foreign-travel-specific mt-4">
+          <h6 className="text-xs font-medium text-gray-700 mb-2">Travel Details</h6>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Purpose */}
+            {'purpose' in entry && (
+              <div className="form-field">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Purpose of Travel
+                </label>
+                <select
+                  value={entry.purpose?.value || ''}
+                  onChange={(e) => onFieldChange('purpose.value', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select purpose...</option>
+                  <option value="business">Business</option>
+                  <option value="pleasure">Pleasure</option>
+                  <option value="education">Education</option>
+                  <option value="family">Family</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            )}
+
+            {/* Frequency */}
+            {'frequency' in entry && (
+              <div className="form-field">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Frequency
+                </label>
+                <input
+                  type="text"
+                  value={entry.frequency?.value || ''}
+                  onChange={(e) => onFieldChange('frequency.value', e.target.value)}
+                  placeholder="e.g., Once per year, Monthly..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -295,98 +429,84 @@ export const Section20Component: React.FC = () => {
   const section20 = useSection20();
   const sf86Form = useSF86Form();
   const [isLoading, setIsLoading] = useState(false);
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Handle validation and continue
+  const handleValidateAndContinue = useCallback(async () => {
+    console.log('🔍 Section 20 - Starting validation and continue process');
+    setIsLoading(true);
     setShowValidationErrors(true);
 
-    const result = validateSection();
-    setIsValid(result.isValid);
-    onValidationChange?.(result.isValid);
+    try {
+      // Validate the section
+      const validationResult = section20.validateSection();
+      console.log('📋 Section 20 validation result:', validationResult);
 
-    if (result.isValid) {
-      try {
-        sf86Form.updateSectionData('section17', section20Data);
+      if (validationResult.isValid) {
+        // Update the main form context with current section data
+        sf86Form.updateSectionData('section20', section20.section20Data);
+
+        // Save to IndexedDB
         await sf86Form.saveForm();
-        console.log('✅ Section 20 data saved successfully:', section20Data);
+        console.log('✅ Section 20 data saved successfully to IndexedDB');
 
-        if (onNext) {
-          onNext();
-        }
-      } catch (error) {
-        console.error('❌ Failed to save Section 20 data:', error);
+        // Log the data being saved for debugging
+        console.log('💾 Section 20 data being saved:', section20.section20Data);
+      } else {
+        console.warn('⚠️ Section 20 validation failed:', validationResult.errors);
       }
+    } catch (error) {
+      console.error('❌ Failed to save Section 20 data:', error);
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [section20, sf86Form]);
 
   return (
     <div className="section20-component max-w-4xl mx-auto p-6">
       {/* Section Header */}
       <div className="section-header mb-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">
-          Section 20: Financial Record
+          Section 20: Foreign Activities
         </h1>
         <p className="text-gray-600">
-          Report any financial issues including bankruptcy, liens, judgments, garnishments,
-          delinquent taxes, credit counseling, and other financial problems.
+          Report any foreign financial interests, business activities, or travel that may be relevant
+          to your background investigation.
         </p>
 
-        {/* Summary Stats */}
-        <div className="stats-summary mt-4 p-4 bg-blue-50 rounded-lg">
+        {/* Debug Info */}
+        <div className="debug-info mt-4 p-4 bg-gray-50 rounded-lg">
           <div className="flex flex-wrap gap-4 text-sm">
             <div>
-              <span className="font-medium">Total Financial Impact:</span>
-              <span className="ml-1 text-green-600">
-                {section20.formatCurrency(section20.getTotalFinancialImpact().toString())}
-              </span>
+              <span className="font-medium">Section Data Status:</span>
+              <span className="ml-1">{section20.section20Data ? 'Loaded' : 'Not Loaded'}</span>
             </div>
             <div>
-              <span className="font-medium">Financial Issues Reported:</span>
-              <span className="ml-1">{section20.hasAnyFinancialIssues() ? 'Yes' : 'None'}</span>
+              <span className="font-medium">Validation Status:</span>
+              <span className="ml-1">{showValidationErrors ? 'Showing Errors' : 'Normal'}</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Financial Subsections */}
+      {/* Foreign Activities Subsections */}
       <div className="subsections">
-        <FinancialSubsection
-          subsectionKey="bankruptcy"
-          title="Bankruptcy"
-          description="Have you ever filed a petition under any chapter of the bankruptcy code?"
-          entryType="bankruptcy"
+        <ForeignActivitiesSubsection
+          subsectionKey="foreignFinancialInterests"
+          title="Foreign Financial Interests"
+          description="Do you have any financial interests in foreign countries (bank accounts, investments, property, etc.)?"
         />
 
-        <FinancialSubsection
-          subsectionKey="liensJudgments"
-          title="Liens and Judgments"
-          description="Have you had any property subject to a lien, judgment, or garnishment?"
+        <ForeignActivitiesSubsection
+          subsectionKey="foreignBusinessActivities"
+          title="Foreign Business Activities"
+          description="Have you been involved in any business activities in foreign countries?"
         />
 
-        <FinancialSubsection
-          subsectionKey="garnishments"
-          title="Garnishments"
-          description="Have you had wages, salary, or assets garnished or attached for any debt?"
-        />
-
-        <FinancialSubsection
-          subsectionKey="delinquentTaxes"
-          title="Delinquent Taxes"
-          description="Have you failed to file or pay federal, state, or other taxes when required?"
-          entryType="tax_delinquency"
-        />
-
-        <FinancialSubsection
-          subsectionKey="creditCounseling"
-          title="Credit Counseling"
-          description="Have you consulted with a credit counseling service or similar organization?"
-          entryType="credit_counseling"
-        />
-
-        <FinancialSubsection
-          subsectionKey="otherFinancialIssues"
-          title="Other Financial Issues"
-          description="Have you had any other financial issues not covered above?"
+        <ForeignActivitiesSubsection
+          subsectionKey="foreignTravel"
+          title="Foreign Travel"
+          description="Have you traveled to foreign countries for business, pleasure, or other purposes?"
         />
       </div>
 

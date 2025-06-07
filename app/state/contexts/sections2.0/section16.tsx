@@ -36,6 +36,7 @@ import {
 import { useSection86FormIntegration } from '../shared/section-context-integration';
 import type { ValidationResult, ValidationError, ChangeSet } from '../shared/base-interfaces';
 import { SectionLogger, PerformanceMonitor } from '../shared/section-optimization-utils';
+import get from 'lodash/get';
 
 // ============================================================================
 // CONTEXT INTERFACE
@@ -70,7 +71,6 @@ export interface Section16ContextType {
 // ============================================================================
 
 const defaultValidationRules: Section16ValidationRules = {
-  requiresForeignOrgContact: true,
   requiresAllThreePeople: true,
   requiresContactInfo: true,
   requiresDateRanges: true,

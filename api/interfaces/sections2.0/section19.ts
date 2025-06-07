@@ -58,9 +58,15 @@ export interface Section19 {
   /** Section identifier */
   _id: number;
   section19: {
-    /** 19.1: Foreign Contacts and Relationships (Section19_1[0]) - 277 fields
-     *  Radio Button: form1[0].Section19_1[0].RadioButtonList[0] (ID: 16873) */
+    /** 19.1: Foreign Contacts and Relationships - 4 subsections with identical structures
+     *  Section19_1[0], Section19_2[0], Section19_3[0], Section19_4[0] - 277 total fields
+     *  Main Radio Button: form1[0].Section19_1[0].RadioButtonList[0] (ID: 16873) */
     foreignContacts?: ForeignContactsSubsection;
+
+    /** Additional subsections for multiple foreign contacts */
+    foreignContacts2?: ForeignContactsSubsection;
+    foreignContacts3?: ForeignContactsSubsection;
+    foreignContacts4?: ForeignContactsSubsection;
   };
 }
 
@@ -325,8 +331,9 @@ interface DateRange {
 
 /**
  * Section 19 subsection keys for type safety
+ * Reflects the 4 subsections found in sections-references
  */
-export type Section19SubsectionKey = "foreignContacts";
+export type Section19SubsectionKey = "foreignContacts" | "foreignContacts2" | "foreignContacts3" | "foreignContacts4";
 
 /**
  * Section 19 field types for validation

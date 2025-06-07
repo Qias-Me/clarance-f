@@ -202,49 +202,53 @@ export interface Section21FieldUpdate {
 // ============================================================================
 
 /**
- * Creates a default mental health entry
+ * Creates a default mental health entry using actual PDF field names
+ * Following Section 1 gold standard pattern
  */
 export const createDefaultMentalHealthEntry = (): MentalHealthEntry => {
+  console.log('🔧 Creating mental health entry with actual PDF field names');
+
+  // Use actual PDF field names from section-21.json for Entry 1 (Section21a)
   return {
-    _id: createFieldFromReference(21, 'entry_id', Date.now()),
-    consultationType: createFieldFromReference(21, 'consultation_type', 'consultation'),
-    reason: createFieldFromReference(21, 'reason', ''),
-    diagnosis: createFieldFromReference(21, 'diagnosis', ''),
-    treatmentDetails: createFieldFromReference(21, 'treatment_details', ''),
+    _id: createFieldFromReference(21, 'form1[0].Section21a[0].#field[0]', Date.now()),
+    consultationType: createFieldFromReference(21, 'form1[0].Section21a[0].#field[1]', 'consultation'),
+    reason: createFieldFromReference(21, 'form1[0].Section21a[0].TextField11[0]', ''),
+    diagnosis: createFieldFromReference(21, 'form1[0].Section21a[0].TextField11[1]', ''),
+    treatmentDetails: createFieldFromReference(21, 'form1[0].Section21a[0].TextField11[2]', ''),
     dateRange: {
       from: {
-        date: createFieldFromReference(21, 'date_from', ''),
-        estimated: createFieldFromReference(21, 'date_from_estimated', false)
+        date: createFieldFromReference(21, 'form1[0].Section21a[0].From_Datefield_Name_2[0]', ''),
+        estimated: createFieldFromReference(21, 'form1[0].Section21a[0].#field[3]', false)
       },
       to: {
-        date: createFieldFromReference(21, 'date_to', ''),
-        estimated: createFieldFromReference(21, 'date_to_estimated', false)
+        date: createFieldFromReference(21, 'form1[0].Section21a[0].From_Datefield_Name_2[1]', ''),
+        estimated: createFieldFromReference(21, 'form1[0].Section21a[0].#field[4]', false)
       },
-      present: createFieldFromReference(21, 'present', false)
+      present: createFieldFromReference(21, 'form1[0].Section21a[0].#field[5]', false)
     },
     professionalInfo: {
       name: {
-        first: createFieldFromReference(21, 'professional_first_name', ''),
-        middle: createFieldFromReference(21, 'professional_middle_name', ''),
-        last: createFieldFromReference(21, 'professional_last_name', ''),
-        suffix: createFieldFromReference(21, 'professional_suffix', '')
+        first: createFieldFromReference(21, 'form1[0].Section21a[0].TextField11[4]', ''),
+        middle: createFieldFromReference(21, 'form1[0].Section21a[0].TextField11[5]', ''),
+        last: createFieldFromReference(21, 'form1[0].Section21a[0].TextField11[6]', ''),
+        suffix: createFieldFromReference(21, 'form1[0].Section21a[0].TextField11[7]', '')
       },
-      title: createFieldFromReference(21, 'professional_title', ''),
-      organization: createFieldFromReference(21, 'professional_organization', ''),
+      title: createFieldFromReference(21, 'form1[0].Section21a[0].TextField11[8]', ''),
+      organization: createFieldFromReference(21, 'form1[0].Section21a[0].TextField11[9]', ''),
       address: {
-        street: createFieldFromReference(21, 'professional_street', ''),
-        city: createFieldFromReference(21, 'professional_city', ''),
-        state: createFieldFromReference(21, 'professional_state', ''),
-        zipCode: createFieldFromReference(21, 'professional_zip', ''),
-        country: createFieldFromReference(21, 'professional_country', 'United States')
+        street: createFieldFromReference(21, 'form1[0].Section21a[0].TextField11[10]', ''),
+        city: createFieldFromReference(21, 'form1[0].Section21a[0].TextField11[11]', ''),
+        state: createFieldFromReference(21, 'form1[0].Section21a[0].School6_State[0]', ''),
+        zipCode: createFieldFromReference(21, 'form1[0].Section21a[0].TextField11[12]', ''),
+        country: createFieldFromReference(21, 'form1[0].Section21a[0].#field[8]', 'United States')
       },
-      phone: createFieldFromReference(21, 'professional_phone', '')
+      phone: createFieldFromReference(21, 'form1[0].Section21a[0].TextField11[13]', '')
     },
-    wasVoluntary: createFieldFromReference(21, 'was_voluntary', true),
-    currentlyReceivingTreatment: createFieldFromReference(21, 'currently_receiving_treatment', false),
-    medicationPrescribed: createFieldFromReference(21, 'medication_prescribed', false),
-    medicationDetails: createFieldFromReference(21, 'medication_details', ''),
-    additionalComments: createFieldFromReference(21, 'additional_comments', '')
+    wasVoluntary: createFieldFromReference(21, 'form1[0].Section21a[0].#field[6]', true),
+    currentlyReceivingTreatment: createFieldFromReference(21, 'form1[0].Section21a[0].#field[7]', false),
+    medicationPrescribed: createFieldFromReference(21, 'form1[0].Section21a[0].#field[9]', false),
+    medicationDetails: createFieldFromReference(21, 'form1[0].Section21a[0].TextField11[14]', ''),
+    additionalComments: createFieldFromReference(21, 'form1[0].Section21a[0].TextField11[15]', '')
   };
 };
 
@@ -301,29 +305,58 @@ export const createDefaultCourtOrderedEntry = (): CourtOrderedTreatmentEntry => 
 };
 
 /**
- * Creates default Section 21 data structure
+ * Creates default Section 21 data structure using actual field names from sections-references
+ * Following Section 1 gold standard pattern with proper PDF field names
  */
 export const createDefaultSection21 = (): Section21 => {
+  console.log('🔧 Creating Section 21 default data with actual PDF field names from sections-references');
+
+  // Use actual PDF field names from section-21.json (following Section 1 pattern)
+  const mentalHealthField = createFieldFromReference(21, 'form1[0].Section21a[0].RadioButtonList[0]', 'NO' as 'YES' | 'NO');
+  const courtOrderedField = createFieldFromReference(21, 'form1[0].Section21b[0].RadioButtonList[0]', 'NO' as 'YES' | 'NO');
+  const hospitalizationField = createFieldFromReference(21, 'form1[0].Section21c[0].RadioButtonList[0]', 'NO' as 'YES' | 'NO');
+  const otherMentalHealthField = createFieldFromReference(21, 'form1[0].section21d1[0].RadioButtonList[0]', 'NO' as 'YES' | 'NO');
+
+  console.log('🔧 Section 21 field creation results:', {
+    mentalHealthField: mentalHealthField ? 'SUCCESS' : 'FAILED',
+    courtOrderedField: courtOrderedField ? 'SUCCESS' : 'FAILED',
+    hospitalizationField: hospitalizationField ? 'SUCCESS' : 'FAILED',
+    otherMentalHealthField: otherMentalHealthField ? 'SUCCESS' : 'FAILED'
+  });
+
+  console.log('🔍 Section 21 field details:', {
+    mentalHealthField: {
+      id: mentalHealthField?.id,
+      name: mentalHealthField?.name,
+      value: mentalHealthField?.value
+    },
+    courtOrderedField: {
+      id: courtOrderedField?.id,
+      name: courtOrderedField?.name,
+      value: courtOrderedField?.value
+    }
+  });
+
   return {
     _id: 21,
     section21: {
       mentalHealthConsultations: {
-        hasConsultation: createFieldFromReference(21, 'has_mental_health_consultation', 'NO'),
+        hasConsultation: mentalHealthField,
         entries: [],
         entriesCount: 0
       },
       courtOrderedTreatment: {
-        hasCourtOrdered: createFieldFromReference(21, 'has_court_ordered_treatment', 'NO'),
+        hasCourtOrdered: courtOrderedField,
         entries: [],
         entriesCount: 0
       },
       hospitalization: {
-        hasConsultation: createFieldFromReference(21, 'has_hospitalization', 'NO'),
+        hasConsultation: hospitalizationField,
         entries: [],
         entriesCount: 0
       },
       otherMentalHealth: {
-        hasConsultation: createFieldFromReference(21, 'has_other_mental_health', 'NO'),
+        hasConsultation: otherMentalHealthField,
         entries: [],
         entriesCount: 0
       }

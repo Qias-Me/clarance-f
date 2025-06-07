@@ -95,8 +95,13 @@ const Section18Context = createContext<Section18ContextType | null>(null);
 // ============================================================================
 
 export const Section18Provider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Core state
-  const [section18Data, setSection18Data] = useState<Section18>(() => createDefaultSection18());
+  // Core state with enhanced logging
+  const [section18Data, setSection18Data] = useState<Section18>(() => {
+    // console.log('🚀 Section18Provider: Initializing with createDefaultSection18()');
+    const defaultData = createDefaultSection18();
+    // console.log('✅ Section18Provider: Default data created:', defaultData);
+    return defaultData;
+  });
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
   const [isDirty, setIsDirty] = useState(false);
@@ -116,7 +121,9 @@ export const Section18Provider: React.FC<{ children: React.ReactNode }> = ({ chi
   // ============================================================================
 
   const addImmediateFamilyMember = useCallback(() => {
+    console.log('🔍 Section18: Adding immediate family member');
     const newEntry = createDefaultImmediateFamilyEntry();
+    console.log('✅ Section18: Created immediate family entry:', newEntry);
     setSection18Data(prev => ({
       ...prev,
       section18: {
@@ -169,7 +176,9 @@ export const Section18Provider: React.FC<{ children: React.ReactNode }> = ({ chi
   // ============================================================================
 
   const addExtendedFamilyMember = useCallback(() => {
+    console.log('🔍 Section18: Adding extended family member');
     const newEntry = createDefaultExtendedFamilyEntry();
+    console.log('✅ Section18: Created extended family entry:', newEntry);
     setSection18Data(prev => ({
       ...prev,
       section18: {
@@ -222,7 +231,9 @@ export const Section18Provider: React.FC<{ children: React.ReactNode }> = ({ chi
   // ============================================================================
 
   const addAssociate = useCallback(() => {
+    console.log('🔍 Section18: Adding associate');
     const newEntry = createDefaultAssociateEntry();
+    console.log('✅ Section18: Created associate entry:', newEntry);
     setSection18Data(prev => ({
       ...prev,
       section18: {
@@ -275,24 +286,47 @@ export const Section18Provider: React.FC<{ children: React.ReactNode }> = ({ chi
   // ============================================================================
 
   const updateField = useCallback((
-    fieldPath: string, 
-    value: any, 
-    entryIndex?: number, 
+    fieldPath: string,
+    value: any,
+    entryIndex?: number,
     subsection?: Section18SubsectionKey
   ) => {
+    console.log(`🔧 Section18: updateField called:`, {
+      fieldPath,
+      value,
+      entryIndex,
+      subsection
+    });
+
     setSection18Data(prev => {
+      console.log(`🔍 Section18: updateField - starting with prev data:`, prev);
+
       const newData = cloneDeep(prev);
-      
+
       if (subsection && entryIndex !== undefined) {
         const fullPath = `section18.${subsection}[${entryIndex}].${fieldPath}`;
+        console.log(`🔍 Section18: updateField - setting fullPath: ${fullPath} to value:`, value);
+
+        // Get the current field object before update
+        const currentField = get(newData, fullPath);
+        console.log(`🔍 Section18: updateField - current field before update:`, currentField);
+
         set(newData, fullPath, value);
+
+        // Get the field object after update
+        const updatedField = get(newData, fullPath);
+        console.log(`🔍 Section18: updateField - field after update:`, updatedField);
       } else {
-        set(newData, `section18.${fieldPath}`, value);
+        const fullPath = `section18.${fieldPath}`;
+        console.log(`🔍 Section18: updateField - setting direct path: ${fullPath} to value:`, value);
+        set(newData, fullPath, value);
       }
-      
+
+      console.log(`🔍 Section18: updateField - returning updated data:`, newData);
       return newData;
     });
     setIsDirty(true);
+    console.log(`✅ Section18: updateField - setIsDirty(true) called`);
   }, []);
 
   const getFieldValue = useCallback((
@@ -312,28 +346,62 @@ export const Section18Provider: React.FC<{ children: React.ReactNode }> = ({ chi
   // ============================================================================
 
   /**
-   * Generic field update function for SF86FormContext integration
-   * Maps generic field paths to Section 18 specific update functions
+   * FIXED: Specific field update function following Section 1 gold standard pattern
+   * Maps field paths to Section 18 specific update functions
    */
   const updateFieldValue = useCallback((path: string, value: any) => {
     console.log(`🔍 Section18: updateFieldValue called with path=${path}, value=`, value);
 
-    // Handle both direct field paths and mapped paths
-    let targetPath = path;
+    // Parse the path to determine which field to update
+    // Expected format: "section18.subsection.entries[index].fieldName" or "section18.fieldName"
+    if (path.startsWith('section18.')) {
+      const fieldPath = path.replace('section18.', '');
 
-    // If the path doesn't start with 'section18.', prepend it
-    if (!path.startsWith('section18.')) {
-      targetPath = `section18.${path}`;
+      // Handle direct field updates (like Section 1 does)
+      if (fieldPath.includes('immediateFamily')) {
+        // Extract entry index and field name
+        const match = fieldPath.match(/immediateFamily\.entries\[(\d+)\]\.(.+)/);
+        if (match) {
+          const entryIndex = parseInt(match[1]);
+          const fieldName = match[2];
+          updateImmediateFamilyMember(entryIndex, { [fieldName]: value });
+          console.log(`✅ Section18: Updated immediateFamily[${entryIndex}].${fieldName}`);
+          return;
+        }
+      }
+
+      if (fieldPath.includes('extendedFamily')) {
+        const match = fieldPath.match(/extendedFamily\.entries\[(\d+)\]\.(.+)/);
+        if (match) {
+          const entryIndex = parseInt(match[1]);
+          const fieldName = match[2];
+          updateExtendedFamilyMember(entryIndex, { [fieldName]: value });
+          console.log(`✅ Section18: Updated extendedFamily[${entryIndex}].${fieldName}`);
+          return;
+        }
+      }
+
+      if (fieldPath.includes('associates')) {
+        const match = fieldPath.match(/associates\.entries\[(\d+)\]\.(.+)/);
+        if (match) {
+          const entryIndex = parseInt(match[1]);
+          const fieldName = match[2];
+          updateAssociate(entryIndex, { [fieldName]: value });
+          console.log(`✅ Section18: Updated associates[${entryIndex}].${fieldName}`);
+          return;
+        }
+      }
     }
 
+    // Fallback: use generic update for unmatched paths
+    console.warn(`⚠️ Section18: Unmatched field path: ${path}, using fallback update`);
     setSection18Data(prev => {
       const newData = cloneDeep(prev);
-      set(newData, targetPath, value);
-      console.log(`✅ Section18: updateFieldValue - field updated at path: ${targetPath}`);
+      set(newData, path, value);
       return newData;
     });
     setIsDirty(true);
-  }, []);
+  }, [updateImmediateFamilyMember, updateExtendedFamilyMember, updateAssociate]);
 
   /**
    * Change tracking function for integration

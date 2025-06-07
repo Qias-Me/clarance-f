@@ -9,17 +9,21 @@
 import type { Section23SubsectionKey } from "../../../api/interfaces/sections2.0/section23";
 import React, { useState, useCallback } from "react";
 import { useSection23 } from "~/state/contexts/sections2.0/section23";
+import { useSF86Form } from "~/state/contexts/SF86FormContext";
 
 interface Section23ComponentProps {
   onValidationChange?: (isValid: boolean) => void;
+  onNext?: () => void;
 }
 
 export const Section23Component: React.FC<Section23ComponentProps> = ({
   onValidationChange,
+  onNext,
 }) => {
   const {
     section23Data,
     updateSubsectionFlag,
+    updateFieldValue,
     addDrugUseEntry,
     addDrugActivityEntry,
     addDrugTreatmentEntry,
@@ -37,6 +41,7 @@ export const Section23Component: React.FC<Section23ComponentProps> = ({
   const sf86Form = useSF86Form();
 
   const [activeSubsection, setActiveSubsection] = useState<Section23SubsectionKey>("drugUse");
+  const [isValid, setIsValid] = useState(true);
 
   // Handle validation changes
   const handleValidation = useCallback(() => {
@@ -45,16 +50,29 @@ export const Section23Component: React.FC<Section23ComponentProps> = ({
     return validation;
   }, [validateSection, onValidationChange]);
 
-  // Handle subsection flag changes
+  // Handle subsection flag changes with proper field path updates
   const handleSubsectionFlagChange = useCallback((
     subsectionKey: Section23SubsectionKey,
+    fieldName: string,
     value: "YES" | "NO"
   ) => {
-    updateSubsectionFlag(subsectionKey, value);
+    console.log(`🔄 Section23Component: Updating ${subsectionKey}.${fieldName} to ${value}`);
+    const fieldPath = `section23.${subsectionKey}.${fieldName}.value`;
+    updateFieldValue(fieldPath, value);
     setTimeout(handleValidation, 0);
-  }, [updateSubsectionFlag, handleValidation]);
+  }, [updateFieldValue, handleValidation]);
 
-  // Handle field updates
+  // Handle direct field updates
+  const handleDirectFieldUpdate = useCallback((
+    fieldPath: string,
+    value: any
+  ) => {
+    console.log(`🔄 Section23Component: Direct field update ${fieldPath} to`, value);
+    updateFieldValue(fieldPath, value);
+    setTimeout(handleValidation, 0);
+  }, [updateFieldValue, handleValidation]);
+
+  // Handle field updates for entries
   const handleFieldUpdate = useCallback((
     subsectionKey: Section23SubsectionKey,
     entryIndex: number,
@@ -186,8 +204,9 @@ export const Section23Component: React.FC<Section23ComponentProps> = ({
                       name="hasUsedIllegalDrugs"
                       value="YES"
                       checked={section23Data.section23.drugUse.hasUsedIllegalDrugs.value === "YES"}
-                      onChange={() => handleSubsectionFlagChange("drugUse", "YES")}
+                      onChange={() => handleSubsectionFlagChange("drugUse", "hasUsedIllegalDrugs", "YES")}
                       className="mr-2"
+                      data-testid="illegal-drugs-yes"
                     />
                     YES
                   </label>
@@ -197,8 +216,9 @@ export const Section23Component: React.FC<Section23ComponentProps> = ({
                       name="hasUsedIllegalDrugs"
                       value="NO"
                       checked={section23Data.section23.drugUse.hasUsedIllegalDrugs.value === "NO"}
-                      onChange={() => handleSubsectionFlagChange("drugUse", "NO")}
+                      onChange={() => handleSubsectionFlagChange("drugUse", "hasUsedIllegalDrugs", "NO")}
                       className="mr-2"
+                      data-testid="illegal-drugs-no"
                     />
                     NO
                   </label>
@@ -216,8 +236,9 @@ export const Section23Component: React.FC<Section23ComponentProps> = ({
                       name="hasUsedPrescriptionDrugsIllegally"
                       value="YES"
                       checked={section23Data.section23.drugUse.hasUsedPrescriptionDrugsIllegally.value === "YES"}
-                      onChange={() => handleSubsectionFlagChange("drugUse", "YES")}
+                      onChange={() => handleSubsectionFlagChange("drugUse", "hasUsedPrescriptionDrugsIllegally", "YES")}
                       className="mr-2"
+                      data-testid="prescription-drugs-yes"
                     />
                     YES
                   </label>
@@ -227,8 +248,9 @@ export const Section23Component: React.FC<Section23ComponentProps> = ({
                       name="hasUsedPrescriptionDrugsIllegally"
                       value="NO"
                       checked={section23Data.section23.drugUse.hasUsedPrescriptionDrugsIllegally.value === "NO"}
-                      onChange={() => handleSubsectionFlagChange("drugUse", "NO")}
+                      onChange={() => handleSubsectionFlagChange("drugUse", "hasUsedPrescriptionDrugsIllegally", "NO")}
                       className="mr-2"
+                      data-testid="prescription-drugs-no"
                     />
                     NO
                   </label>
@@ -246,8 +268,9 @@ export const Section23Component: React.FC<Section23ComponentProps> = ({
                       name="intentToContinueUse"
                       value="YES"
                       checked={section23Data.section23.drugUse.intentToContinueUse.value === "YES"}
-                      onChange={() => handleSubsectionFlagChange("drugUse", "YES")}
+                      onChange={() => handleSubsectionFlagChange("drugUse", "intentToContinueUse", "YES")}
                       className="mr-2"
+                      data-testid="intent-continue-yes"
                     />
                     YES
                   </label>
@@ -257,8 +280,9 @@ export const Section23Component: React.FC<Section23ComponentProps> = ({
                       name="intentToContinueUse"
                       value="NO"
                       checked={section23Data.section23.drugUse.intentToContinueUse.value === "NO"}
-                      onChange={() => handleSubsectionFlagChange("drugUse", "NO")}
+                      onChange={() => handleSubsectionFlagChange("drugUse", "intentToContinueUse", "NO")}
                       className="mr-2"
+                      data-testid="intent-continue-no"
                     />
                     NO
                   </label>
@@ -272,10 +296,11 @@ export const Section23Component: React.FC<Section23ComponentProps> = ({
                   </label>
                   <textarea
                     value={section23Data.section23.drugUse.intentExplanation.value || ""}
-                    onChange={(e) => handleFieldUpdate("drugUse", 0, "intentExplanation.value", e.target.value)}
+                    onChange={(e) => handleDirectFieldUpdate("section23.drugUse.intentExplanation.value", e.target.value)}
                     rows={4}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     placeholder="Provide explanation..."
+                    data-testid="intent-explanation"
                   />
                 </div>
               )}

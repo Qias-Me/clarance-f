@@ -94,16 +94,24 @@ export function createEnhancedSectionContext<T>(config: EnhancedSectionConfig<T>
     // ============================================================================
 
     const updateField = useCallback((fieldPath: string, newValue: any) => {
+      console.log(`🔧 Enhanced Template updateField called for ${config.sectionId}:`, { fieldPath, newValue });
       const operationId = `updateField-${fieldPath}`;
 
       PerformanceMonitor.measure(config.sectionId, contextId, operationId, () => {
         setSectionData(prevData => {
+          console.log(`🔧 Enhanced Template current data before update:`, JSON.stringify(prevData, null, 2));
+
           if (config.updateField) {
-            return config.updateField(prevData, fieldPath, newValue);
+            console.log(`🔧 Enhanced Template using custom updateField for ${config.sectionId}`);
+            const result = config.updateField(prevData, fieldPath, newValue);
+            console.log(`🔧 Enhanced Template custom updateField result:`, JSON.stringify(result, null, 2));
+            return result;
           } else {
+            console.log(`🔧 Enhanced Template using default lodash set for ${config.sectionId}`);
             // Default field update logic using lodash set for consistency
             const newData = cloneDeep(prevData);
             set(newData as any, fieldPath, newValue);
+            console.log(`🔧 Enhanced Template lodash set result:`, JSON.stringify(newData, null, 2));
             return newData;
           }
         });

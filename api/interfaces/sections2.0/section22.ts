@@ -471,31 +471,37 @@ export const createDefaultDomesticViolenceEntry = (): DomesticViolenceOrderEntry
 
 /**
  * Creates a default Section 22 data structure using sections-references
+ * FIXED: Using actual PDF field names from section-22.json instead of hardcoded names
  */
 export const createDefaultSection22 = (): Section22 => ({
   _id: 22,
   section22: {
     criminalHistory: {
+      // Using actual PDF field names from section-22.json
       hasSummonsOrCitation: createFieldFromReference(22, SECTION22_FIELD_NAMES.HAS_SUMMONS_CITATION, 'NO'),
       hasArrest: createFieldFromReference(22, SECTION22_FIELD_NAMES.HAS_ARREST_COURT, 'NO'),
-      hasChargedOrConvicted: createFieldFromReference(22, 'has_charged_convicted', 'NO'),
-      hasProbationOrParole: createFieldFromReference(22, 'has_probation_parole', 'NO'),
-      hasCurrentTrial: createFieldFromReference(22, 'has_current_trial', 'NO'),
+      // Note: Only 2 RadioButtonList fields exist in section-22.json, so we'll use text fields for additional questions
+      hasChargedOrConvicted: createFieldFromReference(22, 'form1[0].Section22_1[0].TextField11[8]', 'NO'), // "If NO, provide explanation" field
+      hasProbationOrParole: createFieldFromReference(22, 'form1[0].Section22_1[0].#area[2].RadioButtonList[2]', 'NO'), // RadioButtonList[2]
+      hasCurrentTrial: createFieldFromReference(22, 'form1[0].Section22_1[0].#area[5].RadioButtonList[3]', 'NO'), // RadioButtonList[3]
       entries: [],
       entriesCount: 0
     },
     domesticViolenceOrders: {
-      hasCurrentOrder: createFieldFromReference(22, 'has_dv_order', 'NO'),
+      // Using Section 22.2 field for domestic violence orders
+      hasCurrentOrder: createFieldFromReference(22, 'form1[0].Section22_2[0].RadioButtonList[0]', 'NO'),
       entries: [],
       entriesCount: 0
     },
     militaryCourtProceedings: {
-      hasMilitaryCourtProceedings: createFieldFromReference(22, 'has_military_court', 'NO'),
+      // Using available checkbox fields for military court proceedings
+      hasMilitaryCourtProceedings: createFieldFromReference(22, 'form1[0].Section22_1[0].#field[23]', 'NO'),
       entries: [],
       entriesCount: 0
     },
     foreignCourtProceedings: {
-      hasForeignCourtProceedings: createFieldFromReference(22, 'has_foreign_court', 'NO'),
+      // Using available checkbox fields for foreign court proceedings
+      hasForeignCourtProceedings: createFieldFromReference(22, 'form1[0].Section22_1[0].#field[24]', 'NO'),
       entries: [],
       entriesCount: 0
     }

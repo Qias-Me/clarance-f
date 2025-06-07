@@ -48,33 +48,33 @@ const Section25ComponentInner: React.FC<Section25ComponentProps> = ({
     }
   }, [sectionData, onValidationChange, validateSection]);
 
-    // Handle submission with data persistence
-    const handleSubmit = async (e: React.FormEvent) => {
-      e.preventDefault();
-      const result = validateSection();
-      setIsValid(result.isValid);
-      onValidationChange?.(result.isValid);
-  
-      if (result.isValid) {
-        try {
-          // Update the central form context with Section 1 data
-          sf86Form.updateSectionData('section25', section25Data);
-  
-          // Save the form data to persistence layer
-          await sf86Form.saveForm();
-  
-          console.log('✅ Section 25 data saved successfully:', section25Data);
-  
-          // Proceed to next section if callback provided
-          if (onNext) {
-            onNext();
-          }
-        } catch (error) {
-          console.error('❌ Failed to save Section 25 data:', error);
-          // Could show an error message to user here
-        }
+  // State for validation
+  const [isValid, setIsValid] = useState(false);
+
+  // Handle submission with data persistence
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const result = validateSection();
+    setIsValid(result.isValid);
+    onValidationChange?.(result.isValid);
+
+    if (result.isValid) {
+      try {
+        // Update the central form context with Section 25 data
+        sf86Form.updateSectionData('section25', sectionData);
+
+        // Save the form data to persistence layer
+        await sf86Form.saveForm();
+
+        console.log('✅ Section 25 data saved successfully:', sectionData);
+
+        // Note: onNext callback would be passed as prop if needed for navigation
+      } catch (error) {
+        console.error('❌ Failed to save Section 25 data:', error);
+        // Could show an error message to user here
       }
-    };
+    }
+  };
   
 
   // Get current investigation status

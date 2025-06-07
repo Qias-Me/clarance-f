@@ -10,10 +10,12 @@ import React, {
   useContext,
   useState,
   useCallback,
+  useMemo,
   type ReactNode,
 } from "react";
 import cloneDeep from "lodash/cloneDeep";
 import set from "lodash/set";
+import get from "lodash/get";
 import type {
   Section24,
   Section24SubsectionKey,
@@ -27,6 +29,8 @@ import {
   createDefaultAlcoholConsumptionEntry,
   createDefaultSection24,
 } from "../../../../api/interfaces/sections2.0/section24";
+import { useSection86FormIntegration } from "../shared/section-context-integration";
+import type { ChangeSet } from "../shared/base-interfaces";
 
 // ============================================================================
 // CONTEXT INTERFACE
@@ -36,19 +40,20 @@ interface Section24ContextType {
   // Core state
   sectionData: Section24;
   isLoading: boolean;
-  
+  isDirty: boolean;
+
   // Core methods
   updateSubsectionFlag: (
     subsectionKey: Section24SubsectionKey,
     hasValue: "YES" | "NO"
   ) => void;
-  
+
   // Entry management
   addAlcoholImpactEntry: () => void;
   addAlcoholTreatmentEntry: () => void;
   addAlcoholConsumptionEntry: () => void;
   removeEntry: (subsectionKey: string, index: number) => void;
-  
+
   // Field updates
   updateEntryField: (
     subsectionKey: Section24SubsectionKey,
@@ -56,10 +61,12 @@ interface Section24ContextType {
     fieldPath: string,
     newValue: any
   ) => void;
-  
+  updateFieldValue: (path: string, value: any) => void;
+
   // Utility functions
   getEntryCount: (subsectionKey: string) => number;
-  
+  getChanges: () => ChangeSet;
+
   // Section-specific queries
   hasAnyAlcoholImpacts: () => boolean;
   hasAnyAlcoholTreatment: () => boolean;
@@ -69,7 +76,7 @@ interface Section24ContextType {
     hasCurrentTreatment: boolean;
     requiresMonitoring: boolean;
   };
-  
+
   // Validation
   validateSection: () => {
     isValid: boolean;
@@ -91,10 +98,11 @@ export const Section24Provider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   // State management
-  const [sectionData, setSectionData] = useState<Section24>(() => 
+  const [sectionData, setSectionData] = useState<Section24>(() =>
     createDefaultSection24()
   );
   const [isLoading] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
 
   // ============================================================================
   // FIELD UPDATE METHODS
@@ -109,7 +117,7 @@ export const Section24Provider: React.FC<{ children: ReactNode }> = ({
   ) => {
     setSectionData((prevData) => {
       const newData = cloneDeep(prevData);
-      
+
       // Update the main flag based on subsection
       switch (subsectionKey) {
         case 'alcoholImpacts':
@@ -122,9 +130,10 @@ export const Section24Provider: React.FC<{ children: ReactNode }> = ({
           newData.section24.alcoholConsumption.currentlyConsumesAlcohol.value = hasValue;
           break;
       }
-      
+
       return newData;
     });
+    setIsDirty(true);
   }, []);
 
   /**
@@ -142,6 +151,32 @@ export const Section24Provider: React.FC<{ children: ReactNode }> = ({
       set(newData, fullPath, newValue);
       return newData;
     });
+    setIsDirty(true);
+  }, []);
+
+  /**
+   * Generic field update function for SF86FormContext integration
+   * Maps generic field paths to Section 24 specific update functions
+   */
+  const updateFieldValue = useCallback((path: string, value: any) => {
+    console.log(`🔍 Section24: updateFieldValue called with path=${path}, value=`, value);
+
+    setSectionData(prevData => {
+      const newData = cloneDeep(prevData);
+
+      // Handle both direct field paths and mapped paths
+      let targetPath = path;
+
+      // If the path doesn't start with 'section24.', prepend it
+      if (!path.startsWith('section24.')) {
+        targetPath = `section24.${path}`;
+      }
+
+      set(newData, targetPath, value);
+      console.log(`✅ Section24: updateFieldValue - field updated at path: ${targetPath}`);
+      return newData;
+    });
+    setIsDirty(true);
   }, []);
 
   // ============================================================================
@@ -155,15 +190,16 @@ export const Section24Provider: React.FC<{ children: ReactNode }> = ({
     setSectionData((prevData) => {
       const newData = cloneDeep(prevData);
       const newEntry = createDefaultAlcoholImpactEntry();
-      
+
       newData.section24.alcoholImpacts.entries.push(newEntry);
       newData.section24.alcoholImpacts.entriesCount = newData.section24.alcoholImpacts.entries.length;
-      
+
       // Auto-update the main flag to YES when adding an entry
       newData.section24.alcoholImpacts.hasAlcoholNegativeImpacts.value = "YES";
-      
+
       return newData;
     });
+    setIsDirty(true);
   }, []);
 
   /**
@@ -173,15 +209,16 @@ export const Section24Provider: React.FC<{ children: ReactNode }> = ({
     setSectionData((prevData) => {
       const newData = cloneDeep(prevData);
       const newEntry = createDefaultAlcoholTreatmentEntry();
-      
+
       newData.section24.alcoholTreatment.entries.push(newEntry);
       newData.section24.alcoholTreatment.entriesCount = newData.section24.alcoholTreatment.entries.length;
-      
+
       // Auto-update the main flag to YES when adding an entry
       newData.section24.alcoholTreatment.hasReceivedAlcoholTreatment.value = "YES";
-      
+
       return newData;
     });
+    setIsDirty(true);
   }, []);
 
   /**
@@ -191,15 +228,16 @@ export const Section24Provider: React.FC<{ children: ReactNode }> = ({
     setSectionData((prevData) => {
       const newData = cloneDeep(prevData);
       const newEntry = createDefaultAlcoholConsumptionEntry();
-      
+
       newData.section24.alcoholConsumption.entries.push(newEntry);
       newData.section24.alcoholConsumption.entriesCount = newData.section24.alcoholConsumption.entries.length;
-      
+
       // Auto-update the main flag to YES when adding an entry
       newData.section24.alcoholConsumption.currentlyConsumesAlcohol.value = "YES";
-      
+
       return newData;
     });
+    setIsDirty(true);
   }, []);
 
   /**
@@ -239,6 +277,7 @@ export const Section24Provider: React.FC<{ children: ReactNode }> = ({
       
       return newData;
     });
+    setIsDirty(true);
   }, []);
 
   // ============================================================================
@@ -259,6 +298,21 @@ export const Section24Provider: React.FC<{ children: ReactNode }> = ({
       default:
         return 0;
     }
+  }, [sectionData]);
+
+  /**
+   * Get changes for integration tracking
+   */
+  const getChanges = useCallback((): ChangeSet => {
+    // Simple change tracking implementation
+    // In a real implementation, you'd compare with initial data
+    return {
+      section24: {
+        oldValue: createDefaultSection24(),
+        newValue: sectionData,
+        timestamp: new Date()
+      }
+    };
   }, [sectionData]);
 
   // ============================================================================
@@ -352,6 +406,50 @@ export const Section24Provider: React.FC<{ children: ReactNode }> = ({
   }, [sectionData]);
 
   // ============================================================================
+  // SF86FORM INTEGRATION
+  // ============================================================================
+
+  // Create a wrapper function that matches the integration hook's expected signature
+  // Integration expects: (path: string, value: any) => void
+  // Section 24 has: (subsectionKey, entryIndex, fieldPath, newValue) => void
+  const updateFieldValueWrapper = useCallback((path: string, value: any) => {
+    console.log(`🔧 Section24: updateFieldValueWrapper called with path=${path}, value=`, value);
+
+    // Parse the path to extract subsection, entry index, and field path
+    // Expected format: "section24.subsectionKey.entries[index].fieldPath"
+    const pathParts = path.split('.');
+
+    if (pathParts.length >= 4 && pathParts[0] === 'section24') {
+      const subsectionKey = pathParts[1] as Section24SubsectionKey;
+      const entriesMatch = pathParts[2].match(/entries\[(\d+)\]/);
+
+      if (entriesMatch) {
+        const entryIndex = parseInt(entriesMatch[1]);
+        const fieldPath = pathParts.slice(3).join('.');
+
+        // Call Section 24's updateEntryField with the correct signature
+        updateEntryField(subsectionKey, entryIndex, fieldPath, value);
+        return;
+      }
+    }
+
+    // Fallback: use the generic updateFieldValue for direct path updates
+    updateFieldValue(path, value);
+  }, [updateEntryField, updateFieldValue]);
+
+  // Integration with main form context using Section 1 gold standard pattern
+  // Note: integration variable is used internally by the hook for registration
+  const integration = useSection86FormIntegration(
+    'section24',
+    'Section 24: Use of Alcohol',
+    sectionData,
+    setSectionData,
+    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
+    getChanges,
+    updateFieldValueWrapper // Pass wrapper function that matches expected signature
+  );
+
+  // ============================================================================
   // CONTEXT VALUE
   // ============================================================================
 
@@ -359,6 +457,7 @@ export const Section24Provider: React.FC<{ children: ReactNode }> = ({
     // Core state
     sectionData,
     isLoading,
+    isDirty,
 
     // Core methods
     updateSubsectionFlag,
@@ -367,7 +466,9 @@ export const Section24Provider: React.FC<{ children: ReactNode }> = ({
     addAlcoholConsumptionEntry,
     removeEntry,
     updateEntryField,
+    updateFieldValue,
     getEntryCount,
+    getChanges,
 
     // Section-specific queries
     hasAnyAlcoholImpacts,

@@ -10,10 +10,12 @@ import React, {
   useContext,
   useState,
   useCallback,
+  useEffect,
   type ReactNode,
 } from "react";
 import cloneDeep from "lodash/cloneDeep";
 import set from "lodash/set";
+import get from "lodash/get";
 import type {
   Section25,
   Section25SubsectionKey,
@@ -27,6 +29,11 @@ import {
   createDefaultClearanceRevocationEntry,
   createDefaultSection25,
 } from "../../../../api/interfaces/sections2.0/section25";
+import type {
+  ValidationResult,
+  ChangeSet,
+} from "../shared/base-interfaces";
+import { useSection86FormIntegration } from "../shared/section-context-integration";
 
 // ============================================================================
 // CONTEXT INTERFACE
@@ -36,19 +43,21 @@ interface Section25ContextType {
   // Core state
   sectionData: Section25;
   isLoading: boolean;
-  
+  errors: Record<string, string>;
+  isDirty: boolean;
+
   // Core methods
   updateSubsectionFlag: (
     subsectionKey: Section25SubsectionKey,
     hasValue: "YES" | "NO"
   ) => void;
-  
+
   // Entry management
   addBackgroundInvestigationEntry: () => void;
   addClearanceDenialEntry: () => void;
   addClearanceRevocationEntry: () => void;
   removeEntry: (subsectionKey: string, index: number) => void;
-  
+
   // Field updates
   updateEntryField: (
     subsectionKey: Section25SubsectionKey,
@@ -56,10 +65,14 @@ interface Section25ContextType {
     fieldPath: string,
     newValue: any
   ) => void;
-  
+  updateFieldValue: (path: string, value: any) => void;
+
   // Utility functions
   getEntryCount: (subsectionKey: string) => number;
-  
+  resetSection: () => void;
+  loadSection: (data: Section25) => void;
+  getChanges: () => ChangeSet;
+
   // Section-specific queries
   hasAnyInvestigations: () => boolean;
   hasAnyDenials: () => boolean;
@@ -70,13 +83,9 @@ interface Section25ContextType {
     hasCurrentIssues: boolean;
     totalRecords: number;
   };
-  
+
   // Validation
-  validateSection: () => {
-    isValid: boolean;
-    errors: string[];
-    warnings: string[];
-  };
+  validateSection: () => ValidationResult;
 }
 
 // ============================================================================
@@ -92,10 +101,19 @@ export const Section25Provider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
   // State management
-  const [sectionData, setSectionData] = useState<Section25>(() => 
+  const [sectionData, setSectionData] = useState<Section25>(() =>
     createDefaultSection25()
   );
   const [isLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isDirty, setIsDirty] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Safeguard: Prevent data loss during save operations
+  const currentDataRef = React.useRef<Section25>(sectionData);
+  React.useEffect(() => {
+    currentDataRef.current = sectionData;
+  }, [sectionData]);
 
   // ============================================================================
   // FIELD UPDATE METHODS
@@ -308,13 +326,69 @@ export const Section25Provider: React.FC<{ children: ReactNode }> = ({
   }, [sectionData, hasAnyInvestigations, hasAnyDenials, hasAnyRevocations]);
 
   // ============================================================================
+  // UTILITY METHODS (Section 29 Pattern)
+  // ============================================================================
+
+  /**
+   * Generic field update function for SF86FormContext integration
+   * Maps generic field paths to Section 25 specific update functions
+   */
+  const updateFieldValue = useCallback((path: string, value: any) => {
+    console.log(`🔍 Section25: updateFieldValue called with path=${path}, value=`, value);
+
+    // Handle both direct field paths and mapped paths
+    let targetPath = path;
+
+    // If the path doesn't start with 'section25.', prepend it
+    if (!path.startsWith('section25.')) {
+      targetPath = `section25.${path}`;
+    }
+
+    setSectionData(prev => {
+      const newData = cloneDeep(prev);
+      set(newData, targetPath, value);
+      console.log(`✅ Section25: updateFieldValue - field updated at path: ${targetPath}`);
+      return newData;
+    });
+    setIsDirty(true);
+  }, []);
+
+  /**
+   * Reset section to default state
+   */
+  const resetSection = useCallback(() => {
+    setSectionData(createDefaultSection25());
+    setErrors({});
+    setIsDirty(false);
+  }, []);
+
+  /**
+   * Load section data
+   */
+  const loadSection = useCallback((data: Section25) => {
+    setSectionData(data);
+    setIsDirty(false);
+  }, []);
+
+  /**
+   * Get changes for tracking
+   */
+  const getChanges = useCallback((): ChangeSet => {
+    return {
+      hasChanges: isDirty,
+      changes: sectionData,
+      timestamp: new Date().toISOString(),
+    };
+  }, [isDirty, sectionData]);
+
+  // ============================================================================
   // VALIDATION METHODS
   // ============================================================================
 
   /**
    * Validate section data
    */
-  const validateSection = useCallback(() => {
+  const validateSection = useCallback((): ValidationResult => {
     const errors: string[] = [];
     const warnings: string[] = [];
 
@@ -323,12 +397,12 @@ export const Section25Provider: React.FC<{ children: ReactNode }> = ({
       if (sectionData.section25.backgroundInvestigations.entries.length === 0) {
         errors.push("At least one background investigation entry is required when answering YES");
       }
-      
+
       sectionData.section25.backgroundInvestigations.entries.forEach((entry, index) => {
         if (!entry.investigatingAgency.agencyName.value && entry.investigatingAgency.type.value === "US_GOVERNMENT") {
           errors.push(`Investigation ${index + 1}: Agency name is required`);
         }
-        
+
         if (!entry.investigationCompletedDate.date.value && !entry.investigationCompletedDate.dontKnow.value) {
           errors.push(`Investigation ${index + 1}: Investigation completion date is required`);
         }
@@ -340,12 +414,12 @@ export const Section25Provider: React.FC<{ children: ReactNode }> = ({
       if (sectionData.section25.clearanceDenials.entries.length === 0) {
         errors.push("At least one clearance denial entry is required when answering YES");
       }
-      
+
       sectionData.section25.clearanceDenials.entries.forEach((entry, index) => {
         if (!entry.denyingAgency.value) {
           errors.push(`Denial ${index + 1}: Denying agency is required`);
         }
-        
+
         if (!entry.reasonForDenial.value) {
           errors.push(`Denial ${index + 1}: Reason for denial is required`);
         }
@@ -357,12 +431,12 @@ export const Section25Provider: React.FC<{ children: ReactNode }> = ({
       if (sectionData.section25.clearanceRevocations.entries.length === 0) {
         errors.push("At least one clearance revocation entry is required when answering YES");
       }
-      
+
       sectionData.section25.clearanceRevocations.entries.forEach((entry, index) => {
         if (!entry.revokingAgency.value) {
           errors.push(`Revocation ${index + 1}: Revoking agency is required`);
         }
-        
+
         if (!entry.reasonForRevocation.value) {
           errors.push(`Revocation ${index + 1}: Reason for revocation is required`);
         }
@@ -377,6 +451,56 @@ export const Section25Provider: React.FC<{ children: ReactNode }> = ({
   }, [sectionData]);
 
   // ============================================================================
+  // SF86FORM INTEGRATION (Section 29 Pattern)
+  // ============================================================================
+
+  // Create a wrapper function that matches the integration hook's expected signature
+  // Integration expects: (path: string, value: any) => void
+  // Section 25 has: (subsectionKey, entryIndex, fieldPath, newValue) => void
+  const updateFieldValueWrapper = useCallback((path: string, value: any) => {
+    console.log(`🔧 Section25: updateFieldValueWrapper called with path=${path}, value=`, value);
+
+    // Parse the path to extract subsection, entry index, and field path
+    // Expected format: "section25.subsectionKey.entries[index].fieldPath"
+    const pathParts = path.split('.');
+
+    if (pathParts.length >= 4 && pathParts[0] === 'section25') {
+      const subsectionKey = pathParts[1] as Section25SubsectionKey;
+      const entriesMatch = pathParts[2].match(/entries\[(\d+)\]/);
+
+      if (entriesMatch) {
+        const entryIndex = parseInt(entriesMatch[1]);
+        const fieldPath = pathParts.slice(3).join('.');
+
+        // Call Section 25's updateEntryField with the correct signature
+        updateEntryField(subsectionKey, entryIndex, fieldPath, value);
+        return;
+      }
+    }
+
+    // Fallback: use lodash set for direct path updates
+    console.log(`🔧 Section25: Using fallback lodash set for path=${path}`);
+    setSectionData(prev => {
+      const updated = cloneDeep(prev);
+      set(updated, path, value);
+      return updated;
+    });
+    setIsDirty(true);
+  }, [updateEntryField]);
+
+  // Integration with main form context using Section 29 pattern
+  // Note: integration variable is used internally by the hook for registration
+  const integration = useSection86FormIntegration(
+    'section25',
+    'Section 25: Investigation and Clearance Record',
+    sectionData,
+    setSectionData,
+    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
+    () => getChanges(),
+    updateFieldValueWrapper // Pass wrapper function that matches expected signature
+  );
+
+  // ============================================================================
   // CONTEXT VALUE
   // ============================================================================
 
@@ -384,28 +508,34 @@ export const Section25Provider: React.FC<{ children: ReactNode }> = ({
     // Core state
     sectionData,
     isLoading,
-    
+    errors,
+    isDirty,
+
     // Core methods
     updateSubsectionFlag,
-    
+
     // Entry management
     addBackgroundInvestigationEntry,
     addClearanceDenialEntry,
     addClearanceRevocationEntry,
     removeEntry,
-    
+
     // Field updates
     updateEntryField,
-    
+    updateFieldValue,
+
     // Utility functions
     getEntryCount,
-    
+    resetSection,
+    loadSection,
+    getChanges,
+
     // Section-specific queries
     hasAnyInvestigations,
     hasAnyDenials,
     hasAnyRevocations,
     getCurrentInvestigationStatus,
-    
+
     // Validation
     validateSection,
   };

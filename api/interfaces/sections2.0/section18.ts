@@ -12,6 +12,12 @@
 
 import type { Field, FieldWithOptions } from '../formDefinition2.0';
 import { createFieldFromReference, validateSectionFieldCount } from '../../utils/sections-references-loader';
+import {
+  generateImmediateFamilyEntry,
+  generateExtendedFamilyEntry,
+  generateAssociateEntry,
+  validateSection18FieldMappings
+} from '../../../app/state/contexts/sections2.0/section18-field-generator';
 
 // ============================================================================
 // HELPER TYPES
@@ -551,16 +557,23 @@ export type RelativeAssociateValidationResult = {
 // ============================================================================
 
 /**
- * Creates a default Section 18 data structure using DRY approach with sections-references
+ * Creates a default Section 18 data structure using field generators
+ * FIXED: Now uses field generators with actual field names from sections-references JSON
  */
 export const createDefaultSection18 = (): Section18 => {
   // Validate field count against sections-references
-  validateSectionFieldCount(18);
+  validateSectionFieldCount(18, 964); // Expected field count from sections-references
+
+  // Validate field mappings
+  const validation = validateSection18FieldMappings();
+  if (!validation.isValid) {
+    console.warn('Section 18 field mapping validation failed:', validation.errors);
+  }
 
   return {
     _id: 18,
     section18: {
-      immediateFamily: [createDefaultImmediateFamilyEntry()],
+      immediateFamily: [generateImmediateFamilyEntry()],
       extendedFamily: [],
       associates: []
     }
@@ -568,271 +581,27 @@ export const createDefaultSection18 = (): Section18 => {
 };
 
 /**
- * Creates a default immediate family entry
+ * Creates a default immediate family entry using field generators
+ * FIXED: Now uses field generators with actual field names from sections-references JSON
  */
 export const createDefaultImmediateFamilyEntry = (): ImmediateFamilyEntry => {
-  return {
-    relationship: {
-      ...createFieldFromReference(18, 'form1[0].Section18_1[0].relationship[0]', ''),
-      options: IMMEDIATE_FAMILY_RELATIONSHIP_OPTIONS
-    },
-    isDeceased: {
-      ...createFieldFromReference(18, 'form1[0].Section18_1[0].deceased[0]', ''),
-      options: YES_NO_OPTIONS
-    },
-    dateOfDeath: {
-      month: createFieldFromReference(18, 'form1[0].Section18_1[0].deathDate[0]', ''),
-      year: createFieldFromReference(18, 'form1[0].Section18_1[0].deathDate[0]', '')
-    },
-    dateOfDeathEstimated: createFieldFromReference(18, 'form1[0].Section18_1[0].deathEstimated[0]', false),
-    fullName: {
-      lastName: createFieldFromReference(18, 'form1[0].Section18_1[0].lastName[0]', ''),
-      firstName: createFieldFromReference(18, 'form1[0].Section18_1[0].firstName[0]', ''),
-      middleName: createFieldFromReference(18, 'form1[0].Section18_1[0].middleName[0]', ''),
-      suffix: createFieldFromReference(18, 'form1[0].Section18_1[0].suffix[0]', '')
-    },
-    dateOfBirth: {
-      month: createFieldFromReference(18, 'form1[0].Section18_1[0].dob[0]', ''),
-      year: createFieldFromReference(18, 'form1[0].Section18_1[0].dob[0]', '')
-    },
-    dateOfBirthEstimated: createFieldFromReference(18, 'form1[0].Section18_1[0].dobEstimated[0]', false),
-    placeOfBirth: {
-      city: createFieldFromReference(18, 'form1[0].Section18_1[0].pobCity[0]', ''),
-      state: createFieldFromReference(18, 'form1[0].Section18_1[0].pobState[0]', ''),
-      country: createFieldFromReference(18, 'form1[0].Section18_1[0].pobCountry[0]', '')
-    },
-    citizenship: {
-      ...createFieldFromReference(18, 'form1[0].Section18_1[0].citizenship[0]', ''),
-      options: CITIZENSHIP_OPTIONS
-    },
-    citizenshipCountry: createFieldFromReference(18, 'form1[0].Section18_1[0].citizenshipCountry[0]', ''),
-    currentAddress: {
-      street: createFieldFromReference(18, 'form1[0].Section18_1[0].addressStreet[0]', ''),
-      city: createFieldFromReference(18, 'form1[0].Section18_1[0].addressCity[0]', ''),
-      state: createFieldFromReference(18, 'form1[0].Section18_1[0].addressState[0]', ''),
-      country: createFieldFromReference(18, 'form1[0].Section18_1[0].addressCountry[0]', ''),
-      zipCode: createFieldFromReference(18, 'form1[0].Section18_1[0].addressZip[0]', '')
-    },
-    contactInfo: {
-      homePhone: createFieldFromReference(18, 'form1[0].Section18_1[0].homePhone[0]', ''),
-      workPhone: createFieldFromReference(18, 'form1[0].Section18_1[0].workPhone[0]', ''),
-      cellPhone: createFieldFromReference(18, 'form1[0].Section18_1[0].cellPhone[0]', ''),
-      email: createFieldFromReference(18, 'form1[0].Section18_1[0].email[0]', '')
-    },
-    otherNames: {
-      hasOtherNames: {
-        ...createFieldFromReference(18, 'form1[0].Section18_1[0].otherNamesYesNo[0]', ''),
-        options: YES_NO_OPTIONS
-      },
-      names: []
-    },
-    foreignTravelFrequency: createFieldFromReference(18, 'form1[0].Section18_1[0].foreignTravel[0]', ''),
-    lastContactDate: {
-      month: createFieldFromReference(18, 'form1[0].Section18_1[0].lastContact[0]', ''),
-      year: createFieldFromReference(18, 'form1[0].Section18_1[0].lastContact[0]', '')
-    },
-    lastContactDateEstimated: createFieldFromReference(18, 'form1[0].Section18_1[0].lastContactEstimated[0]', false),
-    natureOfContact: createFieldFromReference(18, 'form1[0].Section18_1[0].contactNature[0]', ''),
-    currentEmployment: {
-      isEmployed: {
-        ...createFieldFromReference(18, 'form1[0].Section18_1[0].employedYesNo[0]', ''),
-        options: YES_NO_OPTIONS
-      },
-      employerName: createFieldFromReference(18, 'form1[0].Section18_1[0].employerName[0]', ''),
-      position: createFieldFromReference(18, 'form1[0].Section18_1[0].position[0]', ''),
-      address: {
-        street: createFieldFromReference(18, 'form1[0].Section18_1[0].employerStreet[0]', ''),
-        city: createFieldFromReference(18, 'form1[0].Section18_1[0].employerCity[0]', ''),
-        state: createFieldFromReference(18, 'form1[0].Section18_1[0].employerState[0]', ''),
-        country: createFieldFromReference(18, 'form1[0].Section18_1[0].employerCountry[0]', ''),
-        zipCode: createFieldFromReference(18, 'form1[0].Section18_1[0].employerZip[0]', '')
-      },
-      phone: createFieldFromReference(18, 'form1[0].Section18_1[0].employerPhone[0]', '')
-    },
-    hasGovernmentAffiliation: {
-      ...createFieldFromReference(18, 'form1[0].Section18_1[0].govAffiliationYesNo[0]', ''),
-      options: YES_NO_OPTIONS
-    },
-    governmentAffiliation: []
-  };
+  return generateImmediateFamilyEntry() as ImmediateFamilyEntry;
 };
 
 /**
- * Creates a default extended family entry
+ * Creates a default extended family entry using field generators
+ * FIXED: Now uses field generators with actual field names from sections-references JSON
  */
 export const createDefaultExtendedFamilyEntry = (): ExtendedFamilyEntry => {
-  return {
-    relationship: {
-      ...createFieldFromReference(18, 'form1[0].Section18_2[0].relationship[0]', ''),
-      options: EXTENDED_FAMILY_RELATIONSHIP_OPTIONS
-    },
-    isDeceased: {
-      ...createFieldFromReference(18, 'form1[0].Section18_2[0].deceased[0]', ''),
-      options: YES_NO_OPTIONS
-    },
-    dateOfDeath: {
-      month: createFieldFromReference(18, 'form1[0].Section18_2[0].deathDate[0]', ''),
-      year: createFieldFromReference(18, 'form1[0].Section18_2[0].deathDate[0]', '')
-    },
-    dateOfDeathEstimated: createFieldFromReference(18, 'form1[0].Section18_2[0].deathEstimated[0]', false),
-    fullName: {
-      lastName: createFieldFromReference(18, 'form1[0].Section18_2[0].lastName[0]', ''),
-      firstName: createFieldFromReference(18, 'form1[0].Section18_2[0].firstName[0]', ''),
-      middleName: createFieldFromReference(18, 'form1[0].Section18_2[0].middleName[0]', ''),
-      suffix: createFieldFromReference(18, 'form1[0].Section18_2[0].suffix[0]', '')
-    },
-    dateOfBirth: {
-      month: createFieldFromReference(18, 'form1[0].Section18_2[0].dob[0]', ''),
-      year: createFieldFromReference(18, 'form1[0].Section18_2[0].dob[0]', '')
-    },
-    dateOfBirthEstimated: createFieldFromReference(18, 'form1[0].Section18_2[0].dobEstimated[0]', false),
-    placeOfBirth: {
-      city: createFieldFromReference(18, 'form1[0].Section18_2[0].pobCity[0]', ''),
-      state: createFieldFromReference(18, 'form1[0].Section18_2[0].pobState[0]', ''),
-      country: createFieldFromReference(18, 'form1[0].Section18_2[0].pobCountry[0]', '')
-    },
-    citizenship: {
-      ...createFieldFromReference(18, 'form1[0].Section18_2[0].citizenship[0]', ''),
-      options: CITIZENSHIP_OPTIONS
-    },
-    citizenshipCountry: createFieldFromReference(18, 'form1[0].Section18_2[0].citizenshipCountry[0]', ''),
-    currentAddress: {
-      street: createFieldFromReference(18, 'form1[0].Section18_2[0].addressStreet[0]', ''),
-      city: createFieldFromReference(18, 'form1[0].Section18_2[0].addressCity[0]', ''),
-      state: createFieldFromReference(18, 'form1[0].Section18_2[0].addressState[0]', ''),
-      country: createFieldFromReference(18, 'form1[0].Section18_2[0].addressCountry[0]', ''),
-      zipCode: createFieldFromReference(18, 'form1[0].Section18_2[0].addressZip[0]', '')
-    },
-    contactInfo: {
-      homePhone: createFieldFromReference(18, 'form1[0].Section18_2[0].homePhone[0]', ''),
-      workPhone: createFieldFromReference(18, 'form1[0].Section18_2[0].workPhone[0]', ''),
-      cellPhone: createFieldFromReference(18, 'form1[0].Section18_2[0].cellPhone[0]', ''),
-      email: createFieldFromReference(18, 'form1[0].Section18_2[0].email[0]', '')
-    },
-    otherNames: {
-      hasOtherNames: {
-        ...createFieldFromReference(18, 'form1[0].Section18_2[0].otherNamesYesNo[0]', ''),
-        options: YES_NO_OPTIONS
-      },
-      names: []
-    },
-    contactFrequency: {
-      ...createFieldFromReference(18, 'form1[0].Section18_2[0].contactFrequency[0]', ''),
-      options: CONTACT_FREQUENCY_OPTIONS
-    },
-    lastContactDate: {
-      month: createFieldFromReference(18, 'form1[0].Section18_2[0].lastContact[0]', ''),
-      year: createFieldFromReference(18, 'form1[0].Section18_2[0].lastContact[0]', '')
-    },
-    lastContactDateEstimated: createFieldFromReference(18, 'form1[0].Section18_2[0].lastContactEstimated[0]', false),
-    foreignTravelFrequency: createFieldFromReference(18, 'form1[0].Section18_2[0].foreignTravel[0]', ''),
-    natureOfContact: createFieldFromReference(18, 'form1[0].Section18_2[0].contactNature[0]', ''),
-    hasGovernmentAffiliation: {
-      ...createFieldFromReference(18, 'form1[0].Section18_2[0].govAffiliationYesNo[0]', ''),
-      options: YES_NO_OPTIONS
-    },
-    governmentAffiliation: []
-  };
+  return generateExtendedFamilyEntry() as ExtendedFamilyEntry;
 };
 
 /**
- * Creates a default associate entry
+ * Creates a default associate entry using field generators
+ * FIXED: Now uses field generators with actual field names from sections-references JSON
  */
 export const createDefaultAssociateEntry = (): AssociateEntry => {
-  return {
-    associateType: {
-      ...createFieldFromReference(18, 'form1[0].Section18_3[0].associateType[0]', ''),
-      options: ASSOCIATE_TYPE_OPTIONS
-    },
-    relationshipDescription: createFieldFromReference(18, 'form1[0].Section18_3[0].relationshipDesc[0]', ''),
-    fullName: {
-      lastName: createFieldFromReference(18, 'form1[0].Section18_3[0].lastName[0]', ''),
-      firstName: createFieldFromReference(18, 'form1[0].Section18_3[0].firstName[0]', ''),
-      middleName: createFieldFromReference(18, 'form1[0].Section18_3[0].middleName[0]', ''),
-      suffix: createFieldFromReference(18, 'form1[0].Section18_3[0].suffix[0]', '')
-    },
-    dateOfBirth: {
-      month: createFieldFromReference(18, 'form1[0].Section18_3[0].dob[0]', ''),
-      year: createFieldFromReference(18, 'form1[0].Section18_3[0].dob[0]', '')
-    },
-    dateOfBirthEstimated: createFieldFromReference(18, 'form1[0].Section18_3[0].dobEstimated[0]', false),
-    placeOfBirth: {
-      city: createFieldFromReference(18, 'form1[0].Section18_3[0].pobCity[0]', ''),
-      state: createFieldFromReference(18, 'form1[0].Section18_3[0].pobState[0]', ''),
-      country: createFieldFromReference(18, 'form1[0].Section18_3[0].pobCountry[0]', '')
-    },
-    citizenship: {
-      ...createFieldFromReference(18, 'form1[0].Section18_3[0].citizenship[0]', ''),
-      options: CITIZENSHIP_OPTIONS
-    },
-    citizenshipCountry: createFieldFromReference(18, 'form1[0].Section18_3[0].citizenshipCountry[0]', ''),
-    currentAddress: {
-      street: createFieldFromReference(18, 'form1[0].Section18_3[0].addressStreet[0]', ''),
-      city: createFieldFromReference(18, 'form1[0].Section18_3[0].addressCity[0]', ''),
-      state: createFieldFromReference(18, 'form1[0].Section18_3[0].addressState[0]', ''),
-      country: createFieldFromReference(18, 'form1[0].Section18_3[0].addressCountry[0]', ''),
-      zipCode: createFieldFromReference(18, 'form1[0].Section18_3[0].addressZip[0]', '')
-    },
-    contactInfo: {
-      homePhone: createFieldFromReference(18, 'form1[0].Section18_3[0].homePhone[0]', ''),
-      workPhone: createFieldFromReference(18, 'form1[0].Section18_3[0].workPhone[0]', ''),
-      cellPhone: createFieldFromReference(18, 'form1[0].Section18_3[0].cellPhone[0]', ''),
-      email: createFieldFromReference(18, 'form1[0].Section18_3[0].email[0]', '')
-    },
-    otherNames: {
-      hasOtherNames: {
-        ...createFieldFromReference(18, 'form1[0].Section18_3[0].otherNamesYesNo[0]', ''),
-        options: YES_NO_OPTIONS
-      },
-      names: []
-    },
-    howMet: createFieldFromReference(18, 'form1[0].Section18_3[0].howMet[0]', ''),
-    whenMet: {
-      month: createFieldFromReference(18, 'form1[0].Section18_3[0].whenMet[0]', ''),
-      year: createFieldFromReference(18, 'form1[0].Section18_3[0].whenMet[0]', '')
-    },
-    whenMetEstimated: createFieldFromReference(18, 'form1[0].Section18_3[0].whenMetEstimated[0]', false),
-    frequencyOfContact: {
-      ...createFieldFromReference(18, 'form1[0].Section18_3[0].contactFrequency[0]', ''),
-      options: CONTACT_FREQUENCY_OPTIONS
-    },
-    lastContactDate: {
-      month: createFieldFromReference(18, 'form1[0].Section18_3[0].lastContact[0]', ''),
-      year: createFieldFromReference(18, 'form1[0].Section18_3[0].lastContact[0]', '')
-    },
-    lastContactDateEstimated: createFieldFromReference(18, 'form1[0].Section18_3[0].lastContactEstimated[0]', false),
-    personalRelationship: createFieldFromReference(18, 'form1[0].Section18_3[0].personalRel[0]', false),
-    businessRelationship: createFieldFromReference(18, 'form1[0].Section18_3[0].businessRel[0]', false),
-    professionalRelationship: createFieldFromReference(18, 'form1[0].Section18_3[0].professionalRel[0]', false),
-    otherRelationship: createFieldFromReference(18, 'form1[0].Section18_3[0].otherRel[0]', false),
-    otherRelationshipDescription: createFieldFromReference(18, 'form1[0].Section18_3[0].otherRelDesc[0]', ''),
-    currentEmployment: {
-      isEmployed: {
-        ...createFieldFromReference(18, 'form1[0].Section18_3[0].employedYesNo[0]', ''),
-        options: YES_NO_OPTIONS
-      },
-      employerName: createFieldFromReference(18, 'form1[0].Section18_3[0].employerName[0]', ''),
-      position: createFieldFromReference(18, 'form1[0].Section18_3[0].position[0]', ''),
-      address: {
-        street: createFieldFromReference(18, 'form1[0].Section18_3[0].employerStreet[0]', ''),
-        city: createFieldFromReference(18, 'form1[0].Section18_3[0].employerCity[0]', ''),
-        state: createFieldFromReference(18, 'form1[0].Section18_3[0].employerState[0]', ''),
-        country: createFieldFromReference(18, 'form1[0].Section18_3[0].employerCountry[0]', ''),
-        zipCode: createFieldFromReference(18, 'form1[0].Section18_3[0].employerZip[0]', '')
-      },
-      phone: createFieldFromReference(18, 'form1[0].Section18_3[0].employerPhone[0]', '')
-    },
-    hasGovernmentAffiliation: {
-      ...createFieldFromReference(18, 'form1[0].Section18_3[0].govAffiliationYesNo[0]', ''),
-      options: YES_NO_OPTIONS
-    },
-    governmentAffiliation: [],
-    hasForeignConnections: {
-      ...createFieldFromReference(18, 'form1[0].Section18_3[0].foreignConnectionsYesNo[0]', ''),
-      options: YES_NO_OPTIONS
-    },
-    foreignConnections: []
-  };
+  return generateAssociateEntry() as AssociateEntry;
 };
 
 /**

@@ -1,5 +1,5 @@
 import type { CourtActionEntry } from "api/interfaces/sections2.0/section28";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, memo } from "react";
 import { useSection28 } from "~/state/contexts/sections2.0/section28";
 import { useSF86Form } from "~/state/contexts/SF86FormContext";
 
@@ -8,7 +8,7 @@ interface Section28ComponentProps {
   onNext?: () => void;
 }
 
-const Section28Component: React.FC<Section28ComponentProps> = ({
+const Section28Component: React.FC<Section28ComponentProps> = memo(({
   onValidationChange,
   onNext
 }) => {
@@ -18,6 +18,7 @@ const Section28Component: React.FC<Section28ComponentProps> = ({
     addCourtAction,
     updateCourtAction,
     removeCourtAction,
+    updateFieldValue,
     validateSection
   } = useSection28();
 
@@ -73,53 +74,103 @@ const Section28Component: React.FC<Section28ComponentProps> = ({
     }
   };
 
-  // Handle court action type change
-  const handleHasCourtActionsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle court action type change (optimized)
+  const handleHasCourtActionsChangeEvent = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value as "YES" | "NO (If NO, proceed to Section 29)";
-    updateHasCourtActions(value);
-  };
+    updateFieldValue('section28.hasCourtActions', value);
+  }, [updateFieldValue]);
 
   // Handle adding a new court action entry
   const handleAddCourtAction = () => {
+    console.log(`🔍 Section28Component: handleAddCourtAction called`);
     addCourtAction();
   };
 
-  // Handle updating a court action entry
-  const handleCourtActionChange = (id: string, field: keyof CourtActionEntry, value: string) => {
-    const courtAction = sectionData.section28.courtActionEntries.find(entry => entry._id.toString() === id);
+  // Optimized court action change handler with reduced logging
+  const handleCourtActionChange = useCallback((id: string, field: keyof CourtActionEntry, value: string) => {
+    // Find the entry index
+    const entryIndex = sectionData.section28.courtActionEntries.findIndex(entry => entry._id.toString() === id);
 
-    if (courtAction) {
-      const updatedEntry = { ...courtAction };
-
-      // Handle nested field updates
-      if (field === 'courtName' || field === 'natureOfAction' || field === 'resultsDescription' || field === 'principalParties') {
-        (updatedEntry[field] as any).value = value;
-      } else if (field === 'actionDate') {
-        updatedEntry.dateOfAction.date.value = value;
-      } else if (field === 'partyType') {
-        // Handle party type or other special fields
-        (updatedEntry as any)[field] = value;
+    if (entryIndex === -1) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`Court action entry with id ${id} not found`);
       }
-
-      updateCourtAction(id, updatedEntry);
+      return;
     }
-  };
 
-  // Handle court address field updates
-  const handleCourtAddressChange = (id: string, addressField: string, value: string) => {
-    const courtAction = sectionData.section28.courtActionEntries.find(entry => entry._id.toString() === id);
+    // Optimized field path mapping
+    let fieldPath: string;
 
-    if (courtAction) {
-      const updatedEntry = { ...courtAction };
-      (updatedEntry.courtAddress as any)[addressField].value = value;
-      updateCourtAction(id, updatedEntry);
+    switch (field) {
+      case 'courtName':
+      case 'natureOfAction':
+      case 'resultsDescription':
+      case 'principalParties':
+        fieldPath = `section28.courtActionEntries.${entryIndex}.${field}.value`;
+        break;
+      case 'actionDate':
+        fieldPath = `section28.courtActionEntries.${entryIndex}.dateOfAction.date.value`;
+        break;
+      default:
+        fieldPath = `section28.courtActionEntries.${entryIndex}.${field}`;
     }
-  };
 
-  // Handle removing a court action entry
-  const handleRemoveCourtAction = (id: string) => {
+    updateFieldValue(fieldPath, value);
+  }, [sectionData.section28.courtActionEntries, updateFieldValue]);
+
+  // Optimized court address change handler
+  const handleCourtAddressChange = useCallback((id: string, addressField: string, value: string) => {
+    // Find the entry index
+    const entryIndex = sectionData.section28.courtActionEntries.findIndex(entry => entry._id.toString() === id);
+
+    if (entryIndex === -1) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error(`Court action entry with id ${id} not found`);
+      }
+      return;
+    }
+
+    // Create field path and update
+    const fieldPath = `section28.courtActionEntries.${entryIndex}.courtAddress.${addressField}.value`;
+    updateFieldValue(fieldPath, value);
+  }, [sectionData.section28.courtActionEntries, updateFieldValue]);
+
+
+
+  // Optimized remove handler
+  const handleRemoveCourtAction = useCallback((id: string) => {
     removeCourtAction(id);
-  };
+  }, [removeCourtAction]);
+
+  // Test data population for debugging (only in development)
+  const handlePopulateTestData = useCallback(() => {
+    if (process.env.NODE_ENV !== 'development') return;
+
+    // First set hasCourtActions to YES
+    updateFieldValue('section28.hasCourtActions', "YES");
+
+    // Add a court action entry
+    handleAddCourtAction();
+
+    // Wait a bit for the entry to be added, then populate it
+    setTimeout(() => {
+      if (sectionData.section28.courtActionEntries.length > 0) {
+        const entryId = sectionData.section28.courtActionEntries[0]._id.toString();
+
+        // Populate test data
+        handleCourtActionChange(entryId, "courtName", "Superior Court of California");
+        handleCourtActionChange(entryId, "natureOfAction", "Civil lawsuit regarding contract dispute");
+        handleCourtActionChange(entryId, "resultsDescription", "Case settled out of court");
+        handleCourtActionChange(entryId, "principalParties", "John Doe vs. ABC Corporation");
+        handleCourtActionChange(entryId, "actionDate", "03/2020");
+
+        // Populate address
+        handleCourtAddressChange(entryId, "street", "123 Main Street");
+        handleCourtAddressChange(entryId, "city", "Los Angeles");
+        handleCourtAddressChange(entryId, "country", "United States");
+      }
+    }, 100);
+  }, [updateFieldValue, handleAddCourtAction, handleCourtActionChange, handleCourtAddressChange, sectionData.section28.courtActionEntries]);
 
   return (
     <div className="bg-white shadow-md rounded-lg p-6">
@@ -133,6 +184,17 @@ const Section28Component: React.FC<Section28ComponentProps> = ({
           <span className="font-semibold">seven (7) years</span>, have you been a party to any
           public record civil court action not listed elsewhere on this form?
         </p>
+
+        {/* Debug Test Button */}
+        <div className="mt-3">
+          <button
+            type="button"
+            onClick={handlePopulateTestData}
+            className="px-3 py-1 bg-green-500 text-white text-xs rounded hover:bg-green-600 transition-colors"
+          >
+            🧪 Populate Test Data (Debug)
+          </button>
+        </div>
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -146,7 +208,7 @@ const Section28Component: React.FC<Section28ComponentProps> = ({
               name="hasCourtActions"
               value="YES"
               checked={sectionData.section28.hasCourtActions.value === "YES"}
-              onChange={handleHasCourtActionsChange}
+              onChange={handleHasCourtActionsChangeEvent}
               className="form-radio h-5 w-5 text-blue-600"
             />
             <span className="ml-2 text-gray-700">Yes</span>
@@ -158,7 +220,7 @@ const Section28Component: React.FC<Section28ComponentProps> = ({
               name="hasCourtActions"
               value="NO (If NO, proceed to Section 29)"
               checked={sectionData.section28.hasCourtActions.value === "NO (If NO, proceed to Section 29)"}
-              onChange={handleHasCourtActionsChange}
+              onChange={handleHasCourtActionsChangeEvent}
               className="form-radio h-5 w-5 text-blue-600"
             />
             <span className="ml-2 text-gray-700">No</span>
@@ -377,6 +439,6 @@ const Section28Component: React.FC<Section28ComponentProps> = ({
       </form>
     </div>
   );
-};
+});
 
 export default Section28Component;
