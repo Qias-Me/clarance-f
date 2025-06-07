@@ -68,10 +68,16 @@ const ForeignActivitiesSubsection: React.FC<ForeignActivitiesSubsectionProps> = 
   // Handle flag change (YES/NO)
   const handleFlagChange = useCallback((value: 'YES' | 'NO') => {
     console.log(`🔄 Section 20 - ${subsectionKey} flag change:`, value);
+    console.log(`🔍 Section 20 - Current section20Data before flag change:`, section20.section20Data);
 
     // FIXED: Use updateSubsectionFlag instead of updateFieldValue to maintain proper data structure
     // This ensures the field is stored as an object with .value property, not a direct string
     section20.updateSubsectionFlag(subsectionKey, value);
+
+    // Log data after flag update
+    setTimeout(() => {
+      console.log(`🔍 Section 20 - section20Data after flag change:`, section20.section20Data);
+    }, 100);
 
     // Automatically create an entry if YES is selected and no entries exist
     if (value === 'YES' && entries.length === 0) {
@@ -90,19 +96,53 @@ const ForeignActivitiesSubsection: React.FC<ForeignActivitiesSubsectionProps> = 
     }
 
     // Update in global form context
+    console.log(`🔄 Section 20 - Updating SF86FormContext with section20Data:`, section20.section20Data);
     sf86Form.updateSectionData('section20', section20.section20Data);
+
+    // Log SF86 form data after update
+    setTimeout(() => {
+      console.log(`🔍 Section 20 - SF86 formData after update:`, sf86Form.formData);
+    }, 200);
   }, [section20, subsectionKey, sf86Form, entries.length]);
 
   // Handle field changes in entries
   const handleFieldChange = useCallback((entryIndex: number, fieldPath: string, newValue: any) => {
     console.log(`🔄 Section 20 - ${subsectionKey} entry ${entryIndex} field change:`, fieldPath, newValue);
+    console.log(`🔍 Section 20 - Current section20Data before field change:`, section20.section20Data);
 
-    // Follow the data flow pattern
-    const fullFieldPath = `section20.${subsectionKey}.entries.${entryIndex}.${fieldPath}`;
+    // CRITICAL FIX: The component already includes .value in fieldPath (e.g., 'country.value')
+    // So we don't need to add .value again - just use the fieldPath as provided
+    const fullFieldPath = `section20.${subsectionKey}.entries[${entryIndex}].${fieldPath}`;
+    console.log(`🔍 Section 20 - Full field path (CORRECTED):`, fullFieldPath);
+
+    // DEBUGGING: Check if the path exists before updating
+    const currentEntry = section20.section20Data.section20[subsectionKey].entries[entryIndex];
+    console.log(`🔍 Section 20 - Current entry structure:`, currentEntry);
+
+    // Extract field name from path (remove .value suffix if present)
+    const fieldName = fieldPath.replace('.value', '');
+    console.log(`🔍 Section 20 - Field name:`, fieldName);
+    console.log(`🔍 Section 20 - Field exists in entry:`, fieldName in currentEntry);
+    console.log(`🔍 Section 20 - Field object:`, currentEntry[fieldName]);
+    console.log(`🔍 Section 20 - Current field value:`, currentEntry[fieldName]?.value);
+
     section20.updateFieldValue(fullFieldPath, newValue);
 
+    // Log data after field update
+    setTimeout(() => {
+      console.log(`🔍 Section 20 - section20Data after field change:`, section20.section20Data);
+      console.log(`🔍 Section 20 - Specific entry after change:`, section20.section20Data.section20[subsectionKey].entries[entryIndex]);
+      console.log(`🔍 Section 20 - Updated field value:`, section20.section20Data.section20[subsectionKey].entries[entryIndex][fieldName]?.value);
+    }, 100);
+
     // Update in global form context
+    console.log(`🔄 Section 20 - Updating SF86FormContext with section20Data:`, section20.section20Data);
     sf86Form.updateSectionData('section20', section20.section20Data);
+
+    // Log SF86 form data after update
+    setTimeout(() => {
+      console.log(`🔍 Section 20 - SF86 formData after field update:`, sf86Form.formData);
+    }, 200);
   }, [section20, subsectionKey, sf86Form]);
 
   // Add new entry
@@ -224,8 +264,8 @@ const ForeignActivityEntryForm: React.FC<ForeignActivityEntryFormProps> = ({
       <div className="form-grid grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Common fields for all foreign activities */}
 
-        {/* Country Field */}
-        {'country' in entry && (
+        {/* Country Field - Different field names for different subsections */}
+        {subsectionKey !== 'foreignTravel' && 'country' in entry && (
           <div className="form-field">
             <label className="block text-xs font-medium text-gray-700 mb-1">
               Country *
@@ -241,6 +281,23 @@ const ForeignActivityEntryForm: React.FC<ForeignActivityEntryFormProps> = ({
           </div>
         )}
 
+        {/* Country Visited Field - For travel entries */}
+        {subsectionKey === 'foreignTravel' && 'countryVisited' in entry && (
+          <div className="form-field">
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Country Visited *
+            </label>
+            <input
+              type="text"
+              value={entry.countryVisited?.value || ''}
+              onChange={(e) => onFieldChange('countryVisited.value', e.target.value)}
+              placeholder="Enter country visited..."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+        )}
+
         {/* Date From Field */}
         {'dateFrom' in entry && (
           <div className="form-field">
@@ -249,8 +306,8 @@ const ForeignActivityEntryForm: React.FC<ForeignActivityEntryFormProps> = ({
             </label>
             <input
               type="date"
-              value={entry.dateFrom?.value || ''}
-              onChange={(e) => onFieldChange('dateFrom.value', e.target.value)}
+              value={entry.dateFrom?.date?.value || ''}
+              onChange={(e) => onFieldChange('dateFrom.date.value', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
@@ -265,15 +322,15 @@ const ForeignActivityEntryForm: React.FC<ForeignActivityEntryFormProps> = ({
             </label>
             <input
               type="date"
-              value={entry.dateTo?.value || ''}
-              onChange={(e) => onFieldChange('dateTo.value', e.target.value)}
+              value={entry.dateTo?.date?.value || ''}
+              onChange={(e) => onFieldChange('dateTo.date.value', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
         )}
 
-        {/* Description Field */}
-        {'description' in entry && (
+        {/* Description Field - Different field names for different subsections */}
+        {subsectionKey === 'foreignFinancialInterests' && 'description' in entry && (
           <div className="form-field md:col-span-2">
             <label className="block text-xs font-medium text-gray-700 mb-1">
               Description *
@@ -281,7 +338,24 @@ const ForeignActivityEntryForm: React.FC<ForeignActivityEntryFormProps> = ({
             <textarea
               value={entry.description?.value || ''}
               onChange={(e) => onFieldChange('description.value', e.target.value)}
-              placeholder="Provide details about this foreign activity..."
+              placeholder="Provide details about this financial interest..."
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+        )}
+
+        {/* Business Description Field - For business activities */}
+        {subsectionKey === 'foreignBusinessActivities' && 'businessDescription' in entry && (
+          <div className="form-field md:col-span-2">
+            <label className="block text-xs font-medium text-gray-700 mb-1">
+              Business Description *
+            </label>
+            <textarea
+              value={entry.businessDescription?.value || ''}
+              onChange={(e) => onFieldChange('businessDescription.value', e.target.value)}
+              placeholder="Describe the business activity..."
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
@@ -295,16 +369,17 @@ const ForeignActivityEntryForm: React.FC<ForeignActivityEntryFormProps> = ({
         <div className="financial-interests-specific mt-4">
           <h6 className="text-xs font-medium text-gray-700 mb-2">Financial Interest Details</h6>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Type of Interest */}
-            {'typeOfInterest' in entry && (
+            {/* Financial Interest Type - FIXED: Use correct field name */}
+            {'financialInterestType' in entry && (
               <div className="form-field">
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Type of Interest
+                  Type of Financial Interest *
                 </label>
                 <select
-                  value={entry.typeOfInterest?.value || ''}
-                  onChange={(e) => onFieldChange('typeOfInterest.value', e.target.value)}
+                  value={entry.financialInterestType?.value || ''}
+                  onChange={(e) => onFieldChange('financialInterestType.value', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
                 >
                   <option value="">Select type...</option>
                   <option value="bank_account">Bank Account</option>
@@ -316,16 +391,48 @@ const ForeignActivityEntryForm: React.FC<ForeignActivityEntryFormProps> = ({
               </div>
             )}
 
-            {/* Value */}
-            {'value' in entry && (
+            {/* Date Acquired - FIXED: Use correct field structure */}
+            {'dateAcquired' in entry && (
               <div className="form-field">
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Estimated Value
+                  Date Acquired *
+                </label>
+                <input
+                  type="date"
+                  value={entry.dateAcquired?.date?.value || ''}
+                  onChange={(e) => onFieldChange('dateAcquired.date.value', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+            )}
+
+            {/* How Acquired */}
+            {'howAcquired' in entry && (
+              <div className="form-field">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  How Acquired
                 </label>
                 <input
                   type="text"
-                  value={entry.value?.value || ''}
-                  onChange={(e) => onFieldChange('value.value', e.target.value)}
+                  value={entry.howAcquired?.value || ''}
+                  onChange={(e) => onFieldChange('howAcquired.value', e.target.value)}
+                  placeholder="e.g., Purchase, Inheritance, Gift..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
+
+            {/* Current Value - FIXED: Use correct field structure */}
+            {'currentValue' in entry && (
+              <div className="form-field">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Current Value
+                </label>
+                <input
+                  type="text"
+                  value={entry.currentValue?.amount?.value || ''}
+                  onChange={(e) => onFieldChange('currentValue.amount.value', e.target.value)}
                   placeholder="$0.00"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -339,33 +446,70 @@ const ForeignActivityEntryForm: React.FC<ForeignActivityEntryFormProps> = ({
         <div className="business-activities-specific mt-4">
           <h6 className="text-xs font-medium text-gray-700 mb-2">Business Activity Details</h6>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Organization Name */}
-            {'organizationName' in entry && (
+            {/* Business Type - FIXED: Use correct field name */}
+            {'businessType' in entry && (
               <div className="form-field">
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Organization Name
+                  Business Type *
                 </label>
                 <input
                   type="text"
-                  value={entry.organizationName?.value || ''}
-                  onChange={(e) => onFieldChange('organizationName.value', e.target.value)}
-                  placeholder="Enter organization name..."
+                  value={entry.businessType?.value || ''}
+                  onChange={(e) => onFieldChange('businessType.value', e.target.value)}
+                  placeholder="e.g., Consulting, Manufacturing..."
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
                 />
               </div>
             )}
 
-            {/* Position */}
-            {'position' in entry && (
+            {/* Is Ongoing */}
+            {'isOngoing' in entry && (
               <div className="form-field">
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Position/Role
+                  Is this activity ongoing?
                 </label>
-                <input
-                  type="text"
-                  value={entry.position?.value || ''}
-                  onChange={(e) => onFieldChange('position.value', e.target.value)}
-                  placeholder="Enter your position..."
+                <select
+                  value={entry.isOngoing?.value || ''}
+                  onChange={(e) => onFieldChange('isOngoing.value', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select...</option>
+                  <option value="YES">Yes</option>
+                  <option value="NO">No</option>
+                </select>
+              </div>
+            )}
+
+            {/* Received Compensation */}
+            {'receivedCompensation' in entry && (
+              <div className="form-field">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Did you receive compensation?
+                </label>
+                <select
+                  value={entry.receivedCompensation?.value || ''}
+                  onChange={(e) => onFieldChange('receivedCompensation.value', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select...</option>
+                  <option value="YES">Yes</option>
+                  <option value="NO">No</option>
+                </select>
+              </div>
+            )}
+
+            {/* Circumstances */}
+            {'circumstances' in entry && (
+              <div className="form-field md:col-span-2">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Circumstances
+                </label>
+                <textarea
+                  value={entry.circumstances?.value || ''}
+                  onChange={(e) => onFieldChange('circumstances.value', e.target.value)}
+                  placeholder="Describe the circumstances of this business activity..."
+                  rows={3}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -378,15 +522,63 @@ const ForeignActivityEntryForm: React.FC<ForeignActivityEntryFormProps> = ({
         <div className="foreign-travel-specific mt-4">
           <h6 className="text-xs font-medium text-gray-700 mb-2">Travel Details</h6>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Travel Dates From */}
+            {'travelDates' in entry && (
+              <div className="form-field">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Travel Date From *
+                </label>
+                <input
+                  type="date"
+                  value={entry.travelDates?.from?.date?.value || ''}
+                  onChange={(e) => onFieldChange('travelDates.from.date.value', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+            )}
+
+            {/* Travel Dates To */}
+            {'travelDates' in entry && (
+              <div className="form-field">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Travel Date To *
+                </label>
+                <input
+                  type="date"
+                  value={entry.travelDates?.to?.date?.value || ''}
+                  onChange={(e) => onFieldChange('travelDates.to.date.value', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+            )}
+
+            {/* Number of Days */}
+            {'numberOfDays' in entry && (
+              <div className="form-field">
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Number of Days
+                </label>
+                <input
+                  type="number"
+                  value={entry.numberOfDays?.value || ''}
+                  onChange={(e) => onFieldChange('numberOfDays.value', parseInt(e.target.value) || 0)}
+                  placeholder="0"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            )}
+
             {/* Purpose */}
-            {'purpose' in entry && (
+            {'purposeOfTravel' in entry && (
               <div className="form-field">
                 <label className="block text-xs font-medium text-gray-700 mb-1">
                   Purpose of Travel
                 </label>
                 <select
-                  value={entry.purpose?.value || ''}
-                  onChange={(e) => onFieldChange('purpose.value', e.target.value)}
+                  value={entry.purposeOfTravel?.value || ''}
+                  onChange={(e) => onFieldChange('purposeOfTravel.value', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Select purpose...</option>
@@ -396,22 +588,6 @@ const ForeignActivityEntryForm: React.FC<ForeignActivityEntryFormProps> = ({
                   <option value="family">Family</option>
                   <option value="other">Other</option>
                 </select>
-              </div>
-            )}
-
-            {/* Frequency */}
-            {'frequency' in entry && (
-              <div className="form-field">
-                <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Frequency
-                </label>
-                <input
-                  type="text"
-                  value={entry.frequency?.value || ''}
-                  onChange={(e) => onFieldChange('frequency.value', e.target.value)}
-                  placeholder="e.g., Once per year, Monthly..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
               </div>
             )}
           </div>

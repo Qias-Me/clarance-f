@@ -62,7 +62,7 @@ export interface Section18ContextType {
 
   // Field Operations
   updateField: (fieldPath: string, value: any, entryIndex?: number, subsection?: Section18SubsectionKey) => void;
-  updateFieldValue: (path: string, value: any) => void; // ADDED: For SF86FormContext integration
+  updateFieldValue: (subsection: Section18SubsectionKey, entryIndex: number, fieldPath: string, newValue: any) => void; // FIXED: Section 18 specific signature
   getFieldValue: (fieldPath: string, entryIndex?: number, subsection?: Section18SubsectionKey) => any;
   
   // Validation
@@ -298,36 +298,34 @@ export const Section18Provider: React.FC<{ children: React.ReactNode }> = ({ chi
       subsection
     });
 
-    setSection18Data(prev => {
-      console.log(`🔍 Section18: updateField - starting with prev data:`, prev);
+    if (subsection && entryIndex !== undefined) {
+      // Remove ".value" suffix if present since updateFieldValue adds it
+      const cleanFieldPath = fieldPath.endsWith('.value') ? fieldPath.slice(0, -6) : fieldPath;
 
-      const newData = cloneDeep(prev);
+      console.log(`🔍 Section18: updateField - calling updateFieldValue with:`, {
+        subsection,
+        entryIndex,
+        cleanFieldPath,
+        value
+      });
 
-      if (subsection && entryIndex !== undefined) {
-        const fullPath = `section18.${subsection}[${entryIndex}].${fieldPath}`;
-        console.log(`🔍 Section18: updateField - setting fullPath: ${fullPath} to value:`, value);
-
-        // Get the current field object before update
-        const currentField = get(newData, fullPath);
-        console.log(`🔍 Section18: updateField - current field before update:`, currentField);
-
-        set(newData, fullPath, value);
-
-        // Get the field object after update
-        const updatedField = get(newData, fullPath);
-        console.log(`🔍 Section18: updateField - field after update:`, updatedField);
-      } else {
+      // Use the new updateFieldValue function for subsection entries
+      updateFieldValue(subsection, entryIndex, cleanFieldPath, value);
+    } else {
+      // Handle direct section18 field updates (if any)
+      console.log(`🔍 Section18: updateField - direct field update:`, fieldPath);
+      setSection18Data(prev => {
+        const newData = cloneDeep(prev);
         const fullPath = `section18.${fieldPath}`;
-        console.log(`🔍 Section18: updateField - setting direct path: ${fullPath} to value:`, value);
         set(newData, fullPath, value);
-      }
+        console.log(`✅ Section18: updateField - set ${fullPath} to:`, value);
+        return newData;
+      });
+      setIsDirty(true);
+    }
 
-      console.log(`🔍 Section18: updateField - returning updated data:`, newData);
-      return newData;
-    });
-    setIsDirty(true);
-    console.log(`✅ Section18: updateField - setIsDirty(true) called`);
-  }, []);
+    console.log(`✅ Section18: updateField completed`);
+  }, [updateFieldValue]);
 
   const getFieldValue = useCallback((
     fieldPath: string,
@@ -346,62 +344,74 @@ export const Section18Provider: React.FC<{ children: React.ReactNode }> = ({ chi
   // ============================================================================
 
   /**
-   * FIXED: Specific field update function following Section 1 gold standard pattern
-   * Maps field paths to Section 18 specific update functions
+   * FIXED: Section 18 specific field update function following Section 29 pattern
+   * This is the internal updateFieldValue that handles component-level updates
    */
-  const updateFieldValue = useCallback((path: string, value: any) => {
-    console.log(`🔍 Section18: updateFieldValue called with path=${path}, value=`, value);
-
-    // Parse the path to determine which field to update
-    // Expected format: "section18.subsection.entries[index].fieldName" or "section18.fieldName"
-    if (path.startsWith('section18.')) {
-      const fieldPath = path.replace('section18.', '');
-
-      // Handle direct field updates (like Section 1 does)
-      if (fieldPath.includes('immediateFamily')) {
-        // Extract entry index and field name
-        const match = fieldPath.match(/immediateFamily\.entries\[(\d+)\]\.(.+)/);
-        if (match) {
-          const entryIndex = parseInt(match[1]);
-          const fieldName = match[2];
-          updateImmediateFamilyMember(entryIndex, { [fieldName]: value });
-          console.log(`✅ Section18: Updated immediateFamily[${entryIndex}].${fieldName}`);
-          return;
-        }
-      }
-
-      if (fieldPath.includes('extendedFamily')) {
-        const match = fieldPath.match(/extendedFamily\.entries\[(\d+)\]\.(.+)/);
-        if (match) {
-          const entryIndex = parseInt(match[1]);
-          const fieldName = match[2];
-          updateExtendedFamilyMember(entryIndex, { [fieldName]: value });
-          console.log(`✅ Section18: Updated extendedFamily[${entryIndex}].${fieldName}`);
-          return;
-        }
-      }
-
-      if (fieldPath.includes('associates')) {
-        const match = fieldPath.match(/associates\.entries\[(\d+)\]\.(.+)/);
-        if (match) {
-          const entryIndex = parseInt(match[1]);
-          const fieldName = match[2];
-          updateAssociate(entryIndex, { [fieldName]: value });
-          console.log(`✅ Section18: Updated associates[${entryIndex}].${fieldName}`);
-          return;
-        }
-      }
-    }
-
-    // Fallback: use generic update for unmatched paths
-    console.warn(`⚠️ Section18: Unmatched field path: ${path}, using fallback update`);
-    setSection18Data(prev => {
-      const newData = cloneDeep(prev);
-      set(newData, path, value);
-      return newData;
+  const updateFieldValue = useCallback((
+    subsection: Section18SubsectionKey,
+    entryIndex: number,
+    fieldPath: string,
+    newValue: any
+  ) => {
+    console.log(`🔧 Section18: updateFieldValue called:`, {
+      subsection,
+      entryIndex,
+      fieldPath,
+      newValue
     });
-    setIsDirty(true);
-  }, [updateImmediateFamilyMember, updateExtendedFamilyMember, updateAssociate]);
+
+    try {
+      setSection18Data(prev => {
+        console.log(`🔍 Section18: updateFieldValue - starting with prev data:`, prev);
+
+        const updated = cloneDeep(prev);
+        const subsectionData = updated.section18[subsection];
+
+        console.log(`🔍 Section18: updateFieldValue - subsection found:`, !!subsectionData);
+        console.log(`🔍 Section18: updateFieldValue - entries length:`, subsectionData?.length);
+        console.log(`🔍 Section18: updateFieldValue - entryIndex valid:`,
+          entryIndex >= 0 && entryIndex < (subsectionData?.length || 0));
+
+        if (subsectionData && entryIndex >= 0 && entryIndex < subsectionData.length) {
+          const entry = subsectionData[entryIndex];
+          console.log(`🔍 Section18: updateFieldValue - entry before update:`, entry);
+          console.log(`🔍 Section18: updateFieldValue - field path: ${fieldPath}.value`);
+          console.log(`🔍 Section18: updateFieldValue - current field value:`, get(entry, `${fieldPath}.value`));
+
+          try {
+            set(entry, `${fieldPath}.value`, newValue);
+            console.log(`✅ Section18: updateFieldValue - lodash set completed successfully`);
+          } catch (setError) {
+            console.error(`❌ Section18: updateFieldValue - lodash set failed:`, setError);
+            throw setError;
+          }
+
+          console.log(`✅ Section18: updateFieldValue - field updated successfully`);
+          console.log(`🔍 Section18: updateFieldValue - new field value:`, get(entry, `${fieldPath}.value`));
+          console.log(`🔍 Section18: updateFieldValue - entry after update:`, entry);
+
+          setIsDirty(true);
+          console.log(`🔄 Section18: updateFieldValue - setIsDirty(true) called`);
+        } else {
+          console.error(`❌ Section18: updateFieldValue - invalid entry access:`, {
+            hasSubsection: !!subsectionData,
+            entriesLength: subsectionData?.length,
+            entryIndex,
+            subsection
+          });
+        }
+
+        console.log(`🔍 Section18: updateFieldValue - returning updated data:`, updated);
+        return updated;
+      });
+
+      console.log(`✅ Section18: updateFieldValue - setSection18Data completed successfully`);
+    } catch (error) {
+      console.error(`❌ Section18: updateFieldValue - CRITICAL ERROR:`, error);
+      console.error(`❌ Section18: updateFieldValue - Error stack:`,
+        error instanceof Error ? error.stack : "No stack trace available");
+    }
+  }, []);
 
   /**
    * Change tracking function for integration
@@ -477,7 +487,53 @@ export const Section18Provider: React.FC<{ children: React.ReactNode }> = ({ chi
   // SF86FORM INTEGRATION
   // ============================================================================
 
-  // Integration with main form context using Section 1 gold standard pattern
+  // ============================================================================
+  // SF86FORMCONTEXT INTEGRATION WRAPPER
+  // ============================================================================
+
+  /**
+   * Wrapper function for SF86FormContext integration following Section 29 pattern
+   * Converts SF86FormContext paths to Section 18's updateFieldValue signature
+   */
+  const updateFieldValueWrapper = useCallback((path: string, value: any) => {
+    console.log(`🔧 Section18: updateFieldValueWrapper called with path=${path}, value=`, value);
+
+    // Parse the path to extract subsection, entry index, and field path
+    // Expected format: "section18.subsectionKey[index].fieldPath"
+    const pathParts = path.split('.');
+
+    if (pathParts.length >= 3 && pathParts[0] === 'section18') {
+      const subsectionWithIndex = pathParts[1]; // e.g., "immediateFamily[0]"
+      const fieldPath = pathParts.slice(2).join('.'); // e.g., "fullName.firstName.value"
+
+      // Extract subsection and index from "subsectionKey[index]" format
+      const subsectionMatch = subsectionWithIndex.match(/^(\w+)\[(\d+)\]$/);
+      if (subsectionMatch) {
+        const subsectionKey = subsectionMatch[1] as Section18SubsectionKey;
+        const entryIndex = parseInt(subsectionMatch[2]);
+
+        console.log(`🔍 Section18: Parsed path - subsection: ${subsectionKey}, index: ${entryIndex}, field: ${fieldPath}`);
+
+        // Remove ".value" suffix if present since updateFieldValue adds it
+        const cleanFieldPath = fieldPath.endsWith('.value') ? fieldPath.slice(0, -6) : fieldPath;
+
+        // Call Section 18's updateFieldValue with the correct signature
+        updateFieldValue(subsectionKey, entryIndex, cleanFieldPath, value);
+        return;
+      }
+    }
+
+    // Fallback: use lodash set for direct path updates
+    console.warn(`⚠️ Section18: Unmatched path format: ${path}, using fallback update`);
+    setSection18Data(prev => {
+      const updated = cloneDeep(prev);
+      set(updated, path, value);
+      setIsDirty(true);
+      return updated;
+    });
+  }, [updateFieldValue]);
+
+  // Integration with main form context using Section 29 pattern
   // Note: integration variable is used internally by the hook for registration
   const integration = useSection86FormIntegration(
     'section18',
@@ -486,8 +542,35 @@ export const Section18Provider: React.FC<{ children: React.ReactNode }> = ({ chi
     setSection18Data,
     () => ({ isValid: validate().isValid, errors: validate().errors, warnings: validate().warnings }),
     getChanges,
-    updateFieldValue // Pass Section 18's updateFieldValue function to integration
+    updateFieldValueWrapper // Pass wrapper function that matches expected signature
   );
+
+  // ============================================================================
+  // SF86FORM CONTEXT SYNCHRONIZATION
+  // ============================================================================
+
+  // Sync Section 18 data to SF86FormContext whenever it changes
+  // This ensures the central form context always has the latest Section 18 data
+  useEffect(() => {
+    // Only sync if we have a valid SF86FormContext and section18Data has been initialized
+    if (section18Data && section18Data._id === 18) {
+      console.log(`🔄 Section18: Syncing data to SF86FormContext:`, section18Data);
+
+      // Use a small delay to ensure state updates are complete
+      const syncTimeout = setTimeout(() => {
+        try {
+          // The integration hook should handle this automatically, but we can also
+          // emit a data sync event to ensure the central context is updated
+          integration.emitDataSync('data_updated', section18Data);
+          console.log(`✅ Section18: Data sync event emitted successfully`);
+        } catch (error) {
+          console.error(`❌ Section18: Error syncing data to SF86FormContext:`, error);
+        }
+      }, 50); // Small delay to ensure state consistency
+
+      return () => clearTimeout(syncTimeout);
+    }
+  }, [section18Data, integration]);
 
   // ============================================================================
   // UTILITY FUNCTIONS
@@ -556,7 +639,7 @@ export const Section18Provider: React.FC<{ children: React.ReactNode }> = ({ chi
     
     // Field Operations
     updateField,
-    updateFieldValue, // ADDED: For SF86FormContext integration
+    updateFieldValue, // Section 18 specific signature for component use
     getFieldValue,
 
     // Validation
