@@ -24,6 +24,7 @@ import React, {
 } from 'react';
 import cloneDeep from 'lodash/cloneDeep';
 import set from 'lodash/set';
+import get from 'lodash/get';
 import type {
   Section20,
   Section20SubsectionKey,
@@ -241,15 +242,26 @@ export const Section20Provider: React.FC<Section20ProviderProps> = ({ children }
    */
   const updateFieldValue = useCallback((path: string, value: any) => {
     console.log(`🔧 Section20: updateFieldValue called:`, { path, value });
-    // console.log(`🔍 Section20: Current data before update:`, JSON.stringify(section20Data, null, 2));
+    console.log(`🔍 Section20: Current data before update:`, JSON.stringify(section20Data, null, 2));
 
     // CRITICAL FIX: Use direct path update like Section 1 and Section 19 gold standard
     // This prevents the double .value nesting issue that was breaking field updates
     setSection20Data(prev => {
       const newData = cloneDeep(prev);
+
+      // Enhanced logging for debugging
+      console.log(`🔍 Section20: Setting path "${path}" to value:`, value);
+      console.log(`🔍 Section20: Data structure before set():`, JSON.stringify(newData, null, 2));
+
       set(newData, path, value);
+
       console.log(`✅ Section20: Updated field ${path} to:`, value);
       console.log(`🔍 Section20: Data after update:`, JSON.stringify(newData, null, 2));
+
+      // Verify the field was actually set
+      const verifyValue = get(newData, path);
+      console.log(`🔍 Section20: Verification - get("${path}") returns:`, verifyValue);
+
       return newData;
     });
   }, [section20Data]);
@@ -392,6 +404,13 @@ export const Section20Provider: React.FC<Section20ProviderProps> = ({ children }
     getChanges,
     updateFieldValue // Pass Section 20's updateFieldValue function to integration
   );
+
+  // Enhanced logging for Section 20 registration
+  useEffect(() => {
+    console.log(`🔗 Section20: Integration hook initialized`);
+    console.log(`🔍 Section20: Current section20Data:`, section20Data);
+    console.log(`🔍 Section20: Integration object:`, integration);
+  }, [integration, section20Data]);
 
   // ============================================================================
   // CONTEXT VALUE

@@ -68,10 +68,16 @@ const ForeignActivitiesSubsection: React.FC<ForeignActivitiesSubsectionProps> = 
   // Handle flag change (YES/NO)
   const handleFlagChange = useCallback((value: 'YES' | 'NO') => {
     console.log(`🔄 Section 20 - ${subsectionKey} flag change:`, value);
+    console.log(`🔍 Section 20 - Current section20Data before flag change:`, section20.section20Data);
 
     // FIXED: Use updateSubsectionFlag instead of updateFieldValue to maintain proper data structure
     // This ensures the field is stored as an object with .value property, not a direct string
     section20.updateSubsectionFlag(subsectionKey, value);
+
+    // Log data after flag update
+    setTimeout(() => {
+      console.log(`🔍 Section 20 - section20Data after flag change:`, section20.section20Data);
+    }, 100);
 
     // Automatically create an entry if YES is selected and no entries exist
     if (value === 'YES' && entries.length === 0) {
@@ -90,19 +96,40 @@ const ForeignActivitiesSubsection: React.FC<ForeignActivitiesSubsectionProps> = 
     }
 
     // Update in global form context
+    console.log(`🔄 Section 20 - Updating SF86FormContext with section20Data:`, section20.section20Data);
     sf86Form.updateSectionData('section20', section20.section20Data);
+
+    // Log SF86 form data after update
+    setTimeout(() => {
+      console.log(`🔍 Section 20 - SF86 formData after update:`, sf86Form.formData);
+    }, 200);
   }, [section20, subsectionKey, sf86Form, entries.length]);
 
   // Handle field changes in entries
   const handleFieldChange = useCallback((entryIndex: number, fieldPath: string, newValue: any) => {
     console.log(`🔄 Section 20 - ${subsectionKey} entry ${entryIndex} field change:`, fieldPath, newValue);
+    console.log(`🔍 Section 20 - Current section20Data before field change:`, section20.section20Data);
 
     // Follow the data flow pattern
     const fullFieldPath = `section20.${subsectionKey}.entries.${entryIndex}.${fieldPath}`;
+    console.log(`🔍 Section 20 - Full field path:`, fullFieldPath);
+
     section20.updateFieldValue(fullFieldPath, newValue);
 
+    // Log data after field update
+    setTimeout(() => {
+      console.log(`🔍 Section 20 - section20Data after field change:`, section20.section20Data);
+      console.log(`🔍 Section 20 - Specific entry after change:`, section20.section20Data.section20[subsectionKey].entries[entryIndex]);
+    }, 100);
+
     // Update in global form context
+    console.log(`🔄 Section 20 - Updating SF86FormContext with section20Data:`, section20.section20Data);
     sf86Form.updateSectionData('section20', section20.section20Data);
+
+    // Log SF86 form data after update
+    setTimeout(() => {
+      console.log(`🔍 Section 20 - SF86 formData after field update:`, sf86Form.formData);
+    }, 200);
   }, [section20, subsectionKey, sf86Form]);
 
   // Add new entry

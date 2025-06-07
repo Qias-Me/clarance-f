@@ -51,6 +51,7 @@ import { Section29Provider } from "./sections2.0/section29";
 import { Section30Provider } from "./sections2.0/section30";
 import { Section16Provider } from "./sections2.0/section16";
 import { Section18Provider } from "./sections2.0/section18";
+import { Section20Provider } from "./sections2.0/section20";
 
 // ============================================================================
 // SF86 FORM CONTEXT INTERFACE
@@ -365,6 +366,25 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
         );
       }
 
+      // Special debugging for Section 20
+      if (sectionId === "section20") {
+        console.log(
+          "🔍 SF86FormContext: updateSectionData called for Section 20:",
+          {
+            sectionId,
+            data,
+            dataType: typeof data,
+            dataKeys: data ? Object.keys(data) : "N/A",
+            section20Property: data?.section20,
+            hasSection20: !!data?.section20,
+            section20Keys: data?.section20 ? Object.keys(data.section20) : "N/A",
+            foreignFinancialInterests: data?.section20?.foreignFinancialInterests?.hasForeignFinancialInterests?.value,
+            foreignBusinessActivities: data?.section20?.foreignBusinessActivities?.hasForeignBusinessActivities?.value,
+            foreignTravel: data?.section20?.foreignTravel?.hasForeignTravel?.value,
+          }
+        );
+      }
+
       // Special debugging for Section 29
       if (sectionId === "section29") {
         console.log(
@@ -421,6 +441,21 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
               newFormData: newData,
               section14InFormData: newData.section14,
               section14Property: (newData.section14 as any)?.section14,
+            }
+          );
+        }
+
+        // Special debugging for Section 20 after data is set
+        if (sectionId === "section20") {
+          console.log(
+            "🔍 SF86FormContext: After setting Section 20 data in formData:",
+            {
+              newFormData: newData,
+              section20InFormData: newData.section20,
+              section20Property: (newData.section20 as any)?.section20,
+              foreignFinancialInterests: (newData.section20 as any)?.section20?.foreignFinancialInterests,
+              foreignBusinessActivities: (newData.section20 as any)?.section20?.foreignBusinessActivities,
+              foreignTravel: (newData.section20 as any)?.section20?.foreignTravel,
             }
           );
         }
@@ -2100,9 +2135,9 @@ export const CompleteSF86FormProvider: React.FC<{
                                       <Section16Provider>
                                         <Section17Provider>
                                           <Section18Provider>
-                                    {/*   <Section19Provider>
+                                    {/*   <Section19Provider> */}
                                         <Section20Provider>
-                                          <Section21Provider>
+                                          {/* <Section21Provider>
                                             <Section22Provider>
                                               <Section23Provider>
                                                 <Section24Provider>
@@ -2114,6 +2149,7 @@ export const CompleteSF86FormProvider: React.FC<{
                                               <Section30Provider>{children}</Section30Provider>
                                             </Section29Provider>
                                           </Section28Provider>
+                                        </Section20Provider>
                                           {/* </Section27Provider>
                                                     </Section26Provider>
                                                   </Section25Provider>
@@ -2121,7 +2157,6 @@ export const CompleteSF86FormProvider: React.FC<{
                                               </Section23Provider>
                                             </Section22Provider>
                                           </Section21Provider>
-                                        </Section20Provider>
                                       </Section19Provider>*/}
                                     </Section18Provider> 
                                         </Section17Provider>
