@@ -637,9 +637,8 @@ export const Section20Component: React.FC = () => {
       setIsLoading(false);
     }
   }, [section20, sf86Form]);
-
   return (
-    <div className="section20-component max-w-4xl mx-auto p-6">
+    <div className="section20-component max-w-4xl mx-auto p-6" data-testid="section20-form">
       {/* Section Header */}
       <div className="section-header mb-8">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">

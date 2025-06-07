@@ -51,8 +51,15 @@ import { Section29Provider } from "./sections2.0/section29";
 import { Section30Provider } from "./sections2.0/section30";
 import { Section16Provider } from "./sections2.0/section16";
 import { Section18Provider } from "./sections2.0/section18";
-import { Section21Provider } from "./sections2.0/section21";
+import { Section19Provider } from "./sections2.0/section19";
 import { Section20Provider } from "./sections2.0/section20";
+import { Section21Provider } from "./sections2.0/section21";
+import { Section22Provider } from "./sections2.0/section22";
+import { Section23Provider } from "./sections2.0/section23";
+import { Section24Provider } from "./sections2.0/section24";
+import { Section25Provider } from "./sections2.0/section25";
+import { Section26Provider } from "./sections2.0/section26";
+import { Section27Provider } from "./sections2.0/section27";
 
 // ============================================================================
 // SF86 FORM CONTEXT INTERFACE
@@ -2129,39 +2136,38 @@ export const CompleteSF86FormProvider: React.FC<{
                           <Section10Provider>
                             <Section11Provider>
                               <Section12Provider>
-                                {/* TEMPORARILY DISABLED: Section13Provider causing performance issues */}
                                 <Section13Provider>
                                   <Section14Provider>
                                     <Section15Provider>
                                       <Section16Provider>
                                         <Section17Provider>
                                           <Section18Provider>
-                                    {/*   <Section19Provider>
-                                        <Section20Provider> */}
-                                          <Section21Provider>
-                                    {/*     <Section22Provider>
-                                              <Section23Provider>
-                                                <Section24Provider>
-                                                  <Section25Provider>
-                                                    <Section26Provider>
-                                                      <Section27Provider> */}
-                                          <Section28Provider>
-                                            <Section29Provider>
-                                              <Section30Provider>{children}</Section30Provider>
-                                            </Section29Provider>
-                                          </Section28Provider>
-                                        </Section20Provider>
-                                          {/* </Section27Provider>
-                                                    </Section26Provider>
-                                                  </Section25Provider>
-                                                </Section24Provider>
-                                              </Section23Provider>
-                                            </Section22Provider> */}
-                                          </Section21Provider>
-                                        {/* </Section20Provider>
-
-                                      </Section19Provider>*/}
-                                    </Section18Provider> 
+                                            <Section19Provider>
+                                              <Section20Provider>
+                                                <Section21Provider>
+                                                  <Section22Provider>
+                                                    <Section23Provider>
+                                                      <Section24Provider>
+                                                        <Section25Provider>
+                                                          <Section26Provider>
+                                                            <Section27Provider>
+                                                              <Section28Provider>
+                                                                <Section29Provider>
+                                                                  <Section30Provider>
+                                                                    {children}
+                                                                  </Section30Provider>
+                                                                </Section29Provider>
+                                                              </Section28Provider>
+                                                            </Section27Provider>
+                                                          </Section26Provider>
+                                                        </Section25Provider>
+                                                      </Section24Provider>
+                                                    </Section23Provider>
+                                                  </Section22Provider>
+                                                </Section21Provider>
+                                              </Section20Provider>
+                                            </Section19Provider>
+                                          </Section18Provider>
                                         </Section17Provider>
                                       </Section16Provider>
                                     </Section15Provider>

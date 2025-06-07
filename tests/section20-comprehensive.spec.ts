@@ -50,11 +50,20 @@ const fieldsByType = {
 };
 
 test.describe('Section 20: Foreign Activities - Comprehensive Field Tests', () => {
-  
-  test.beforeEach(async ({ page }) => {
+    test.beforeEach(async ({ page }) => {
+    // Navigate to the form
+    await page.goto('/startForm');
+      // Wait for the form to load
+    await page.waitForSelector('[data-testid="centralized-sf86-form"]');
+    
+    // Expand all sections to make Section 20 visible
+    await page.click('[data-testid="toggle-sections-button"]');
+    
     // Navigate to Section 20
-    await page.goto('/form/section/20');
-    await page.waitForLoadState('networkidle');
+    await page.click('[data-testid="section-section20-button"]');
+    
+    // Wait for Section 20 component to load
+    await page.waitForSelector('[data-testid="section20-form"]');
     
     // Ensure we're on the correct section
     await expect(page.locator('h1, h2, h3')).toContainText(/Section 20|Foreign Activities/i);

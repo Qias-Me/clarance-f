@@ -325,7 +325,7 @@ export const Section18Provider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
 
     console.log(`✅ Section18: updateField completed`);
-  }, [updateFieldValue]);
+  }, []); // Remove dependency on updateFieldValue which is declared later
 
   const getFieldValue = useCallback((
     fieldPath: string,

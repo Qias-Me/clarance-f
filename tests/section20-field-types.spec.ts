@@ -55,10 +55,20 @@ function getTestValue(field: FieldReference): string | boolean {
 }
 
 test.describe('Section 20: Field Type Specific Tests', () => {
-  
-  test.beforeEach(async ({ page }) => {
-    await page.goto('/form/section/20');
-    await page.waitForLoadState('networkidle');
+    test.beforeEach(async ({ page }) => {
+    // Navigate to the form
+    await page.goto('/startForm');
+      // Wait for the form to load
+    await page.waitForSelector('[data-testid="centralized-sf86-form"]');
+    
+    // Expand all sections to make Section 20 visible
+    await page.click('[data-testid="toggle-sections-button"]');
+    
+    // Navigate to Section 20
+    await page.click('[data-testid="section-section20-button"]');
+    
+    // Wait for Section 20 component to load
+    await page.waitForSelector('[data-testid="section20-form"]');
   });
 
   test.describe('PDFTextField Tests (1,242 instances)', () => {
