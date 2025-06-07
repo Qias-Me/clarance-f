@@ -1,16 +1,29 @@
 /**
- * Section 21: Psychological and Emotional Health
+ * Section 21: Psychological and Emotional Health - Context Provider
  *
- * TypeScript interface definitions for SF-86 Section 21 (Psychological and Emotional Health) data structure.
- * Based on the established Field<T> interface patterns and PDF field ID mappings from section-21.json.
- * 
+ * React context provider for SF-86 Section 21 (Psychological and Emotional Health) following the established
+ * patterns from Section 1 and Section 29. Provides comprehensive state management, CRUD operations for mental
+ * health entries, validation, and SF86FormContext integration.
+ *
  * This section covers mental health consultations, diagnoses, treatments, hospitalizations,
  * and other psychological/emotional health issues.
  */
 
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+  useMemo
+} from 'react';
+import cloneDeep from 'lodash/cloneDeep';
+import set from 'lodash/set';
 import type { Field } from '../formDefinition2.0';
 import { createFieldFromReference } from '../../utils/sections-references-loader';
 import { createSection21MainQuestionField } from './section21-field-mapping';
+import { useSection86FormIntegration } from '../shared/section-context-integration';
+import type { ValidationResult, ValidationError, ChangeSet } from '../shared/base-interfaces';
 
 // ============================================================================
 // LOCAL TYPE DEFINITIONS (avoiding import path issues)
@@ -502,4 +515,342 @@ export const hasAnyMentalHealthIssues = (section21: Section21): boolean => {
     }
     return false;
   });
-}; 
+};
+
+// ============================================================================
+// CONTEXT INTERFACE
+// ============================================================================
+
+export interface Section21ContextType {
+  // State
+  section21Data: Section21;
+  isLoading: boolean;
+  errors: Record<string, string>;
+  isDirty: boolean;
+
+  // Basic Actions
+  updateSubsectionFlag: (subsectionKey: Section21SubsectionKey, value: 'YES' | 'NO') => void;
+  updateEntryField: (subsectionKey: Section21SubsectionKey, entryIndex: number, fieldPath: string, newValue: any) => void;
+  addEntry: (subsectionKey: Section21SubsectionKey) => void;
+  removeEntry: (subsectionKey: Section21SubsectionKey, entryIndex: number) => void;
+  updateFieldValue: (path: string, value: any) => void;
+
+  // Validation
+  validateSection: () => ValidationResult;
+
+  // Utility
+  resetSection: () => void;
+  loadSection: (data: Section21) => void;
+  getChanges: () => any;
+
+  // Section-specific utility functions
+  getTotalMentalHealthEntries: () => number;
+  hasAnyMentalHealthIssues: () => boolean;
+}
+
+// ============================================================================
+// CONTEXT CREATION
+// ============================================================================
+
+const Section21Context = createContext<Section21ContextType | undefined>(undefined);
+
+// ============================================================================
+// PROVIDER COMPONENT
+// ============================================================================
+
+export interface Section21ProviderProps {
+  children: React.ReactNode;
+}
+
+export const Section21Provider: React.FC<Section21ProviderProps> = ({ children }) => {
+  // ============================================================================
+  // CORE STATE MANAGEMENT
+  // ============================================================================
+
+  const [section21Data, setSection21Data] = useState<Section21>(createDefaultSection21());
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [initialData] = useState<Section21>(createDefaultSection21());
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // ============================================================================
+  // COMPUTED VALUES
+  // ============================================================================
+
+  const isDirty = useMemo(() => {
+    return JSON.stringify(section21Data) !== JSON.stringify(initialData);
+  }, [section21Data, initialData]);
+
+  // Set initialized flag after component mounts
+  useEffect(() => {
+    setIsInitialized(true);
+  }, []);
+
+  // ============================================================================
+  // VALIDATION FUNCTIONS
+  // ============================================================================
+
+  const validateSection = useCallback((): ValidationResult => {
+    const validationErrors: ValidationError[] = [];
+    const validationWarnings: ValidationError[] = [];
+
+    // Create validation context
+    const validationContext: Section21ValidationContext = {
+      currentDate: new Date(),
+      rules: {
+        requiresReason: true,
+        requiresProfessionalInfo: true,
+        requiresDateRange: true,
+        requiresTreatmentDetails: true,
+        maxReasonLength: 500,
+        maxTreatmentLength: 1000,
+        allowsFutureDate: false
+      },
+      requiresDocumentation: false
+    };
+
+    // Validate using the existing validation function
+    const section21Validation = validateSection21(section21Data, validationContext);
+
+    section21Validation.errors.forEach(error => {
+      validationErrors.push({
+        field: 'section21',
+        message: error,
+        code: 'VALIDATION_ERROR',
+        severity: 'error'
+      });
+    });
+
+    section21Validation.warnings.forEach(warning => {
+      validationWarnings.push({
+        field: 'section21',
+        message: warning,
+        code: 'VALIDATION_WARNING',
+        severity: 'warning'
+      });
+    });
+
+    return {
+      isValid: validationErrors.length === 0,
+      errors: validationErrors,
+      warnings: validationWarnings
+    };
+  }, [section21Data]);
+
+  // ============================================================================
+  // CRUD OPERATIONS
+  // ============================================================================
+
+  const updateSubsectionFlag = useCallback((subsectionKey: Section21SubsectionKey, value: 'YES' | 'NO') => {
+    console.log(`🔄 Section21Context: updateSubsectionFlag called with ${subsectionKey} = ${value}`);
+
+    setSection21Data(prevData => {
+      const newData = cloneDeep(prevData);
+      const subsection = newData.section21[subsectionKey];
+
+      if ('hasConsultation' in subsection) {
+        subsection.hasConsultation = { ...subsection.hasConsultation, value };
+      }
+      if ('hasCourtOrdered' in subsection) {
+        (subsection as any).hasCourtOrdered = { ...(subsection as any).hasCourtOrdered, value };
+      }
+
+      console.log(`✅ Section21Context: updateSubsectionFlag updated data:`, newData);
+      return newData;
+    });
+  }, []);
+
+  const updateEntryField = useCallback((subsectionKey: Section21SubsectionKey, entryIndex: number, fieldPath: string, newValue: any) => {
+    console.log(`🔄 Section21Context: updateEntryField called with ${subsectionKey}[${entryIndex}].${fieldPath} = ${newValue}`);
+
+    setSection21Data(prevData => {
+      const newData = cloneDeep(prevData);
+      const subsection = newData.section21[subsectionKey];
+
+      if (subsection.entries[entryIndex]) {
+        set(subsection.entries[entryIndex], fieldPath, newValue);
+      }
+
+      console.log(`✅ Section21Context: updateEntryField updated data:`, newData);
+      return newData;
+    });
+  }, []);
+
+  const addEntry = useCallback((subsectionKey: Section21SubsectionKey) => {
+    console.log(`🔄 Section21Context: addEntry called for ${subsectionKey}`);
+
+    setSection21Data(prevData => {
+      const newData = cloneDeep(prevData);
+      const subsection = newData.section21[subsectionKey];
+
+      // Create new entry based on subsection type
+      let newEntry: any;
+      if (subsectionKey === 'courtOrderedTreatment') {
+        newEntry = createDefaultCourtOrderedEntry();
+      } else {
+        newEntry = createDefaultMentalHealthEntry();
+      }
+
+      subsection.entries.push(newEntry);
+      subsection.entriesCount = subsection.entries.length;
+
+      console.log(`✅ Section21Context: addEntry added entry to ${subsectionKey}:`, newData);
+      return newData;
+    });
+  }, []);
+
+  const removeEntry = useCallback((subsectionKey: Section21SubsectionKey, entryIndex: number) => {
+    console.log(`🔄 Section21Context: removeEntry called for ${subsectionKey}[${entryIndex}]`);
+
+    setSection21Data(prevData => {
+      const newData = cloneDeep(prevData);
+      const subsection = newData.section21[subsectionKey];
+
+      if (entryIndex >= 0 && entryIndex < subsection.entries.length) {
+        subsection.entries.splice(entryIndex, 1);
+        subsection.entriesCount = subsection.entries.length;
+      }
+
+      console.log(`✅ Section21Context: removeEntry removed entry from ${subsectionKey}:`, newData);
+      return newData;
+    });
+  }, []);
+
+  /**
+   * Generic field update function for SF86FormContext integration
+   * Maps generic field paths to Section 21 specific update functions
+   */
+  const updateFieldValue = useCallback((path: string, value: any) => {
+    console.log(`🔍 Section21Context: updateFieldValue called with path=${path}, value=`, value);
+
+    setSection21Data(prevData => {
+      const newData = cloneDeep(prevData);
+
+      // Handle both direct field paths and mapped paths
+      let targetPath = path;
+
+      // If the path doesn't start with 'section21.', prepend it
+      if (!path.startsWith('section21.')) {
+        targetPath = `section21.${path}`;
+      }
+
+      set(newData, targetPath, value);
+      console.log(`✅ Section21Context: updateFieldValue - field updated at path: ${targetPath}`);
+      return newData;
+    });
+  }, []);
+
+  // ============================================================================
+  // UTILITY FUNCTIONS
+  // ============================================================================
+
+  const resetSection = useCallback(() => {
+    const newData = createDefaultSection21();
+    setSection21Data(newData);
+    setErrors({});
+    console.log('🔄 Section21Context: resetSection called');
+  }, []);
+
+  const loadSection = useCallback((data: Section21) => {
+    setSection21Data(cloneDeep(data));
+    setErrors({});
+    console.log('🔄 Section21Context: loadSection called with data:', data);
+  }, []);
+
+  const getChanges = useCallback((): ChangeSet => {
+    const changes: ChangeSet = {};
+
+    // Simple change detection - compare with initial data
+    if (JSON.stringify(section21Data) !== JSON.stringify(initialData)) {
+      changes['section21'] = {
+        oldValue: initialData,
+        newValue: section21Data,
+        timestamp: new Date()
+      };
+    }
+
+    return changes;
+  }, [section21Data, initialData]);
+
+  // ============================================================================
+  // SECTION-SPECIFIC UTILITY FUNCTIONS
+  // ============================================================================
+
+  const getTotalMentalHealthEntries = useCallback((): number => {
+    return getTotalMentalHealthEntries(section21Data);
+  }, [section21Data]);
+
+  const hasAnyMentalHealthIssuesCallback = useCallback((): boolean => {
+    return hasAnyMentalHealthIssues(section21Data);
+  }, [section21Data]);
+
+  // ============================================================================
+  // SF86FORM INTEGRATION
+  // ============================================================================
+
+  // Integration with main form context using standard pattern
+  const integration = useSection86FormIntegration(
+    'section21',
+    'Section 21: Psychological and Emotional Health',
+    section21Data,
+    setSection21Data,
+    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
+    getChanges,
+    updateFieldValue // Pass Section 21's updateFieldValue function to integration
+  );
+
+  // ============================================================================
+  // CONTEXT VALUE
+  // ============================================================================
+
+  const contextValue: Section21ContextType = {
+    // State
+    section21Data,
+    isLoading,
+    errors,
+    isDirty,
+
+    // Basic Actions
+    updateSubsectionFlag,
+    updateEntryField,
+    addEntry,
+    removeEntry,
+    updateFieldValue,
+
+    // Validation
+    validateSection,
+
+    // Utility
+    resetSection,
+    loadSection,
+    getChanges,
+
+    // Section-specific utility functions
+    getTotalMentalHealthEntries,
+    hasAnyMentalHealthIssues: hasAnyMentalHealthIssuesCallback
+  };
+
+  return (
+    <Section21Context.Provider value={contextValue}>
+      {children}
+    </Section21Context.Provider>
+  );
+};
+
+// ============================================================================
+// HOOK
+// ============================================================================
+
+export const useSection21 = (): Section21ContextType => {
+  const context = useContext(Section21Context);
+  if (!context) {
+    throw new Error('useSection21 must be used within a Section21Provider');
+  }
+  return context;
+};
+
+// ============================================================================
+// EXPORTS
+// ============================================================================
+
+export default Section21Provider;
