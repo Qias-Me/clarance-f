@@ -279,6 +279,13 @@ export const Section20Provider: React.FC<Section20ProviderProps> = ({ children }
       switch (subsectionKey) {
         case 'foreignFinancialInterests':
           const financialEntry = createDefaultForeignFinancialInterestEntry();
+          console.log(`🔍 Section20: Created financial entry structure:`, financialEntry);
+          console.log(`🔍 Section20: Financial entry field types:`, Object.keys(financialEntry).map(key => ({
+            key,
+            type: typeof financialEntry[key],
+            hasValue: financialEntry[key]?.value !== undefined,
+            value: financialEntry[key]?.value
+          })));
           newData.section20.foreignFinancialInterests.entries.push(financialEntry);
           newData.section20.foreignFinancialInterests.entriesCount = newData.section20.foreignFinancialInterests.entries.length;
           console.log(`✅ Section20: Added foreign financial interest entry #${newData.section20.foreignFinancialInterests.entries.length}`);
@@ -286,6 +293,7 @@ export const Section20Provider: React.FC<Section20ProviderProps> = ({ children }
 
         case 'foreignBusinessActivities':
           const businessEntry = createDefaultForeignBusinessEntry();
+          console.log(`🔍 Section20: Created business entry structure:`, businessEntry);
           newData.section20.foreignBusinessActivities.entries.push(businessEntry);
           newData.section20.foreignBusinessActivities.entriesCount = newData.section20.foreignBusinessActivities.entries.length;
           console.log(`✅ Section20: Added foreign business activity entry #${newData.section20.foreignBusinessActivities.entries.length}`);
@@ -293,6 +301,7 @@ export const Section20Provider: React.FC<Section20ProviderProps> = ({ children }
 
         case 'foreignTravel':
           const travelEntry = createDefaultForeignTravelEntry();
+          console.log(`🔍 Section20: Created travel entry structure:`, travelEntry);
           newData.section20.foreignTravel.entries.push(travelEntry);
           newData.section20.foreignTravel.entriesCount = newData.section20.foreignTravel.entries.length;
           console.log(`✅ Section20: Added foreign travel entry #${newData.section20.foreignTravel.entries.length}`);
