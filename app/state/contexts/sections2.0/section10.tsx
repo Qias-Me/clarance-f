@@ -13,15 +13,19 @@ import type {
   Section10,
   DualCitizenshipEntry,
   ForeignPassportEntry,
+  TravelCountryEntry,  // NEW: Added travel country support
 } from '../../../../api/interfaces/sections2.0/section10';
 import {
   createDefaultSection10,
   createDualCitizenshipEntry,
   createForeignPassportEntry,
+  createTravelCountryEntry,  // NEW: Added travel country creation
   addDualCitizenshipEntry,
   addForeignPassportEntry,
+  addTravelCountryEntry,  // NEW: Added travel country management
   removeDualCitizenshipEntry,
-  removeForeignPassportEntry
+  removeForeignPassportEntry,
+  removeTravelCountryEntry  // NEW: Added travel country management
 } from '../../../../api/interfaces/sections2.0/section10';
 import { useSection86FormIntegration } from '../shared/section-context-integration';
 
@@ -31,6 +35,7 @@ import { useSection86FormIntegration } from '../shared/section-context-integrati
 
 /**
  * Section 10 Context interface following Section 1 gold standard pattern
+ * UPDATED: Added travel country management functions
  */
 interface Section10ContextType {
   // State
@@ -51,6 +56,12 @@ interface Section10ContextType {
   removeForeignPassport: (index: number) => void;
   updateForeignPassport: (index: number, field: string, value: any) => void;
   canAddForeignPassport: () => boolean;
+
+  // NEW: Travel Country Actions
+  addTravelCountry: (passportIndex: number) => void;
+  removeTravelCountry: (passportIndex: number, travelIndex: number) => void;
+  updateTravelCountry: (passportIndex: number, travelIndex: number, field: string, value: any) => void;
+  canAddTravelCountry: (passportIndex: number) => boolean;
 
   // Utility Functions
   resetSection: () => void;
@@ -186,6 +197,33 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
             message: errorMsg,
             code: 'REQUIRED_FIELD',
             severity: 'error'
+          });
+        }
+
+        // NEW: Validate travel countries if any are filled
+        if (entry.travelCountries && entry.travelCountries.length > 0) {
+          entry.travelCountries.forEach((travelEntry, travelIndex) => {
+            if (travelEntry.country.value && !travelEntry.fromDate.value) {
+              const errorMsg = 'From date is required when country is specified';
+              newErrors[`foreignPassport.entries[${index}].travelCountries[${travelIndex}].fromDate`] = errorMsg;
+              validationErrors.push({
+                field: `foreignPassport.entries[${index}].travelCountries[${travelIndex}].fromDate`,
+                message: errorMsg,
+                code: 'REQUIRED_FIELD',
+                severity: 'error'
+              });
+            }
+
+            if (travelEntry.country.value && !travelEntry.toDate.value && !travelEntry.isPresent.value) {
+              const errorMsg = 'To date is required (or check Present) when country is specified';
+              newErrors[`foreignPassport.entries[${index}].travelCountries[${travelIndex}].toDate`] = errorMsg;
+              validationErrors.push({
+                field: `foreignPassport.entries[${index}].travelCountries[${travelIndex}].toDate`,
+                message: errorMsg,
+                code: 'REQUIRED_FIELD',
+                severity: 'error'
+              });
+            }
           });
         }
       });
@@ -337,6 +375,55 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [updateFieldValue]);
 
   // ============================================================================
+  // TRAVEL COUNTRY ACTIONS (NEW)
+  // ============================================================================
+
+  const addTravelCountry = useCallback((passportIndex: number) => {
+    setSection10Data(prev => {
+      const passport = prev.section10.foreignPassport.entries[passportIndex];
+      if (!passport || passport.travelCountries.length >= 6) {
+        return prev; // Don't add if passport doesn't exist or already at limit
+      }
+      return addTravelCountryEntry(prev, passportIndex);
+    });
+  }, []);
+
+  const removeTravelCountry = useCallback((passportIndex: number, travelIndex: number) => {
+    setSection10Data(prev => {
+      return removeTravelCountryEntry(prev, passportIndex, travelIndex);
+    });
+  }, []);
+
+  const updateTravelCountry = useCallback((passportIndex: number, travelIndex: number, field: string, value: any) => {
+    try {
+      setSection10Data((prev) => {
+        const updated = cloneDeep(prev);
+        const passport = updated.section10.foreignPassport.entries[passportIndex];
+
+        if (passport && passport.travelCountries[travelIndex]) {
+          const travelEntry = passport.travelCountries[travelIndex];
+          const fullFieldPath = `${field}.value`;
+          set(travelEntry, fullFieldPath, value);
+
+          // Special handling for "present" checkbox
+          if (field === "isPresent" && value === true) {
+            travelEntry.toDate.value = "Present";
+          }
+        }
+
+        return updated;
+      });
+    } catch (error) {
+      console.error('Section10: updateTravelCountry error:', error);
+    }
+  }, []);
+
+  const canAddTravelCountry = useCallback((passportIndex: number) => {
+    const passport = section10Data.section10.foreignPassport.entries[passportIndex];
+    return passport && passport.travelCountries.length < 6;
+  }, [section10Data.section10.foreignPassport.entries]);
+
+  // ============================================================================
   // ENTRY LIMIT HELPER FUNCTIONS
   // ============================================================================
 
@@ -471,6 +558,12 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
     updateForeignPassport,
     canAddForeignPassport,
 
+    // NEW: Travel Country Actions
+    addTravelCountry,
+    removeTravelCountry,
+    updateTravelCountry,
+    canAddTravelCountry,
+
     // Utility Functions
     resetSection,
     loadSection,
@@ -491,6 +584,11 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
     removeForeignPassport,
     updateForeignPassport,
     canAddForeignPassport,
+    // NEW: Travel Country Dependencies
+    addTravelCountry,
+    removeTravelCountry,
+    updateTravelCountry,
+    canAddTravelCountry,
     resetSection,
     loadSection,
     validateSection,
