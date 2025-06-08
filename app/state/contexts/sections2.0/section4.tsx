@@ -32,9 +32,7 @@ import {
   createDefaultSection4,
   validateSSN,
   updateSection4Field,
-  formatSSN,
   updateMainSSNAndPropagate,
-  validateAndUpdateSSN,
   propagateSSNToAllFields as propagateSSNHelper
 } from '../../../../api/interfaces/sections2.0/section4';
 
@@ -66,7 +64,6 @@ export interface Section4ContextType {
   resetSection: () => void;
   loadSection: (data: Section4) => void;
   getChanges: () => any;
-  getFormattedSSN: () => string;
   propagateSSNToAllFields: () => void;
 }
 
@@ -255,7 +252,7 @@ export const Section4Provider: React.FC<Section4ProviderProps> = ({ children }) 
   const updateSSN = useCallback((ssn: string) => {
     setSection4Data(prevData => {
       // Use the enhanced SSN propagation logic
-      return updateMainSSNAndPropagate(prevData, ssn, true);
+      return updateMainSSNAndPropagate(prevData, ssn);
     });
   }, []);
 
@@ -313,15 +310,6 @@ export const Section4Provider: React.FC<Section4ProviderProps> = ({ children }) 
     return isDirty ? { 4: section4Data } : {};
   }, [section4Data, isDirty]);
 
-  const getFormattedSSN = useCallback((): string => {
-    if (section4Data.section4.ssn && section4Data.section4.ssn.length > 0) {
-      const primarySSN = section4Data.section4.ssn[0];
-      if (primarySSN?.value?.value) {
-        return formatSSN(primarySSN.value.value);
-      }
-    }
-    return '';
-  }, [section4Data]);
 
   const propagateSSNToAllFields = useCallback(() => {
     setSection4Data(prevData => {
@@ -374,7 +362,6 @@ export const Section4Provider: React.FC<Section4ProviderProps> = ({ children }) 
     resetSection,
     loadSection,
     getChanges,
-    getFormattedSSN,
     propagateSSNToAllFields
   }), [
     section4Data,
@@ -390,7 +377,6 @@ export const Section4Provider: React.FC<Section4ProviderProps> = ({ children }) 
     resetSection,
     loadSection,
     getChanges,
-    getFormattedSSN,
     propagateSSNToAllFields
   ]);
 

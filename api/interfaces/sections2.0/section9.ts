@@ -75,6 +75,12 @@ export interface NaturalizedCitizenInfo {
   entryCity?: Field<string>;
   entryState?: Field<string>;
   priorCitizenship?: Field<string>;
+  // Additional missing fields for multiple citizenships
+  priorCitizenship2?: Field<string>; // DropDownList15[1]
+  priorCitizenship3?: Field<string>; // DropDownList15[2]
+  priorCitizenship4?: Field<string>; // DropDownList15[3]
+  // Additional alien registration radio button
+  hasAlienRegistrationRadio?: Field<"YES" | "NO">; // RadioButtonList[1]
 }
 
 /**
@@ -92,6 +98,16 @@ export interface DerivedCitizenInfo {
   };
   basis: Field<"By operation of law through my U.S. citizen parent" | "Other">;
   otherExplanation?: Field<string>;
+  // Additional missing fields for derived citizenship
+  documentIssueDate?: Field<string>; // From_Datefield_Name_2[5]
+  isDocumentIssueDateEstimated?: Field<boolean>; // #field[50]
+  isBasisEstimated?: Field<boolean>; // #field[51]
+  isDateEstimated?: Field<boolean>; // #field[53]
+  // Missing fields identified in audit
+  additionalFirstName?: Field<string>; // TextField11[24] - Additional first name field
+  additionalExplanation?: Field<string>; // TextField11[25] - Additional explanation field
+  otherProvideExplanation?: Field<boolean>; // #field[27] - "Other (provide explanation)" checkbox
+  basisOfNaturalization?: Field<boolean>; // #field[28] - "Provide the basis of naturalization" checkbox
 }
 
 /**
@@ -115,6 +131,11 @@ export interface NonUSCitizenInfo {
   documentNumber?: Field<string>;
   hasAlienRegistration: Field<"1" | "2" | "3" | "4" | "5">; // Must be numeric string for PDF radio button
   explanation?: Field<string>;
+  // Additional missing fields for non-US citizens
+  additionalDocumentExpirationDate?: Field<string>; // From_Datefield_Name_2[6] - "9.4Expiration(I-766)"
+  isAdditionalDocumentExpirationEstimated?: Field<boolean>; // #field[55]
+  entryCity?: Field<string>; // TextField11[18] - "9.4City"
+  entryState?: Field<string>; // School6_State[2]
 }
 
 /**
@@ -262,10 +283,66 @@ export const SECTION9_FIELD_IDS = {
     name: "form1[0].Section9\\.1-9\\.4[0].DropDownList15[1]",
     type: "PDFDropdown",
   },
+  CITIZENSHIP_COUNTRY_3: {
+    id: "9580 0 R",
+    name: "form1[0].Section9\\.1-9\\.4[0].DropDownList15[2]",
+    type: "PDFDropdown",
+  },
+  CITIZENSHIP_COUNTRY_4: {
+    id: "9579 0 R",
+    name: "form1[0].Section9\\.1-9\\.4[0].DropDownList15[3]",
+    type: "PDFDropdown",
+  },
   HAS_ALIEN_REGISTRATION: {
     id: "17229 0 R",
     name: "form1[0].Section9\\.1-9\\.4[0].RadioButtonList[0]",
     type: "PDFRadioGroup",
+  },
+  HAS_ALIEN_REGISTRATION_RADIO: {
+    id: "17230 0 R",
+    name: "form1[0].Section9\\.1-9\\.4[0].RadioButtonList[1]",
+    type: "PDFRadioGroup",
+  },
+  // Additional missing fields
+  DERIVED_DOCUMENT_ISSUE_DATE: {
+    id: "9568 0 R",
+    name: "form1[0].Section9\\.1-9\\.4[0].From_Datefield_Name_2[5]",
+    type: "PDFTextField",
+  },
+  NON_US_ADDITIONAL_EXPIRATION_DATE: {
+    id: "9566 0 R",
+    name: "form1[0].Section9\\.1-9\\.4[0].From_Datefield_Name_2[6]",
+    type: "PDFTextField",
+  },
+  DERIVED_DOCUMENT_ESTIMATED: {
+    id: "9570 0 R",
+    name: "form1[0].Section9\\.1-9\\.4[0].#field[50]",
+    type: "PDFCheckBox",
+  },
+  DERIVED_BASIS_ESTIMATED: {
+    id: "9569 0 R",
+    name: "form1[0].Section9\\.1-9\\.4[0].#field[51]",
+    type: "PDFCheckBox",
+  },
+  DERIVED_DATE_ESTIMATED: {
+    id: "9567 0 R",
+    name: "form1[0].Section9\\.1-9\\.4[0].#field[53]",
+    type: "PDFCheckBox",
+  },
+  NON_US_ADDITIONAL_EXPIRATION_ESTIMATED: {
+    id: "9565 0 R",
+    name: "form1[0].Section9\\.1-9\\.4[0].#field[55]",
+    type: "PDFCheckBox",
+  },
+  NON_US_ENTRY_CITY: {
+    id: "9581 0 R",
+    name: "form1[0].Section9\\.1-9\\.4[0].TextField11[18]",
+    type: "PDFTextField",
+  },
+  NON_US_ENTRY_STATE: {
+    id: "9582 0 R",
+    name: "form1[0].Section9\\.1-9\\.4[0].School6_State[2]",
+    type: "PDFDropdown",
   },
 } as const;
 
@@ -532,6 +609,26 @@ export const createDefaultSection9 = (): Section9 => {
           'form1[0].Section9\\.1-9\\.4[0].DropDownList15[0]',
           ""
         ),
+        priorCitizenship2: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].DropDownList15[1]',
+          ""
+        ),
+        priorCitizenship3: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].DropDownList15[2]',
+          ""
+        ),
+        priorCitizenship4: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].DropDownList15[3]',
+          ""
+        ),
+        hasAlienRegistrationRadio: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].RadioButtonList[1]',
+          "YES"
+        ),
       },
       // Derived Citizen subsection (9.3) - using actual field names from sections-reference
       derivedCitizen: {
@@ -581,6 +678,47 @@ export const createDefaultSection9 = (): Section9 => {
           9,
           'form1[0].Section9\\.1-9\\.4[0].TextField11[23]',
           ""
+        ),
+        documentIssueDate: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].From_Datefield_Name_2[5]',
+          ""
+        ),
+        isDocumentIssueDateEstimated: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].#field[50]',
+          false
+        ),
+        isBasisEstimated: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].#field[51]',
+          false
+        ),
+        isDateEstimated: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].#field[53]',
+          false
+        ),
+        // Missing fields identified in audit
+        additionalFirstName: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].TextField11[24]',
+          ""
+        ),
+        additionalExplanation: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].TextField11[25]',
+          ""
+        ),
+        otherProvideExplanation: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].#field[27]',
+          false
+        ),
+        basisOfNaturalization: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].#field[28]',
+          false
         ),
       },
       // Non-US Citizen subsection (9.4) - using actual field names from sections-reference
@@ -660,6 +798,26 @@ export const createDefaultSection9 = (): Section9 => {
         explanation: createFieldFromReference(
           9,
           'form1[0].Section9\\.1-9\\.4[0].TextField11[14]',
+          ""
+        ),
+        additionalDocumentExpirationDate: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].From_Datefield_Name_2[6]',
+          ""
+        ),
+        isAdditionalDocumentExpirationEstimated: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].#field[55]',
+          false
+        ),
+        entryCity: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].TextField11[18]',
+          ""
+        ),
+        entryState: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].School6_State[2]',
           ""
         ),
       },

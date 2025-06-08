@@ -22,6 +22,7 @@ export default [
       }
     ]
   },
+  route("test/section5", "routes/test.section5.tsx"),
   // API Routes for PDF operations
   route("api/pdf-proxy", "routes/api/pdf-proxy.ts"),
   route("api/generate-pdf", "routes/api/generate-pdf.ts"),

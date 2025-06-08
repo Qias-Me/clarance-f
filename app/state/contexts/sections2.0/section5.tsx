@@ -56,7 +56,7 @@ interface Section5ContextType {
 
   // Basic Actions
   updateHasOtherNames: (value: boolean) => void;
-  addOtherNameEntry: () => void;
+  addOtherNameEntry: (caller?: string) => void;
   removeOtherNameEntry: (index: number) => void;
   updateFieldValue: (fieldPath: string, value: any, index?: number) => void;
 
@@ -212,41 +212,58 @@ export const Section5Provider: React.FC<Section5ProviderProps> = ({ children }) 
   /**
    * Flatten Section5 data structure into Field objects for PDF generation
    * This converts the nested Section5 structure into a flat object with Field<T> objects
+   * Uses the new field mapping system to ensure correct PDF field IDs
    */
   const flattenSection5Fields = useCallback((): Record<string, any> => {
     const flatFields: Record<string, any> = {};
 
-    const addField = (field: any, _path: string) => {
+    console.log('🔄 Section5: Flattening fields for PDF generation');
+
+    // Helper function to add field with proper validation
+    const addField = (field: any, logicalPath: string, debugInfo?: string) => {
       if (field && typeof field === 'object' && 'id' in field && 'value' in field) {
-        flatFields[field.id] = field;
+        // Ensure the field has a valid ID
+        if (field.id && field.id !== '0000') {
+          flatFields[field.id] = field;
+          console.log(`✅ Section5: Added field ${field.id} (${logicalPath}) = "${field.value}"${debugInfo ? ` - ${debugInfo}` : ''}`);
+        } else {
+          console.warn(`⚠️ Section5: Skipping field with invalid ID: ${field.id} (${logicalPath})`);
+        }
+      } else {
+        console.warn(`⚠️ Section5: Invalid field structure for ${logicalPath}:`, field);
       }
     };
 
-    // Flatten main flag field
+    // Flatten main flag field (hasOtherNames)
     if (section5Data.section5.hasOtherNames) {
-      addField(section5Data.section5.hasOtherNames, 'section5.hasOtherNames');
+      addField(
+        section5Data.section5.hasOtherNames,
+        'section5.hasOtherNames',
+        'Main question'
+      );
     }
 
-    // Flatten entries
+    // Flatten all other name entries
     section5Data.section5.otherNames.forEach((entry, entryIndex) => {
-      const flattenEntry = (obj: any, prefix: string) => {
-        Object.entries(obj).forEach(([key, value]) => {
-          if (key === '_id') return;
+      console.log(`🔄 Section5: Processing entry ${entryIndex}:`, entry);
 
-          const currentPath = `${prefix}.${key}`;
+      // Process each field in the entry (including estimate checkboxes and maiden name)
+      const fieldTypes = ['lastName', 'firstName', 'middleName', 'suffix', 'from', 'fromEstimate', 'to', 'toEstimate', 'reasonChanged', 'present', 'isMaidenName'];
 
-          if (value && typeof value === 'object' && 'id' in value && 'value' in value) {
-            // This is a Field object
-            addField(value, currentPath);
-          } else if (value && typeof value === 'object') {
-            // This is a nested object, recurse
-            flattenEntry(value, currentPath);
-          }
-        });
-      };
-
-      flattenEntry(entry, `section5.otherNames.${entryIndex}`);
+      fieldTypes.forEach(fieldType => {
+        const field = (entry as any)[fieldType];
+        if (field) {
+          const logicalPath = `section5.otherNames.${entryIndex}.${fieldType}`;
+          addField(field, logicalPath, `Entry ${entryIndex + 1} ${fieldType}`);
+        } else {
+          console.warn(`⚠️ Section5: Missing field ${fieldType} in entry ${entryIndex}`);
+        }
+      });
     });
+
+    const fieldCount = Object.keys(flatFields).length;
+    console.log(`✅ Section5: Flattened ${fieldCount} fields for PDF generation`);
+    console.log('📊 Section5: Field summary:', Object.keys(flatFields).map(id => `${id}: "${flatFields[id].value}"`));
 
     return flatFields;
   }, [section5Data]);
@@ -278,18 +295,46 @@ export const Section5Provider: React.FC<Section5ProviderProps> = ({ children }) 
       // If setting to false, clear all entries
       if (!value) {
         newData.section5.otherNames = [];
-      } else if (newData.section5.otherNames.length === 0) {
-        // If setting to true and no entries exist, add one default entry
-        const updatedData = addOtherNameEntryImpl(newData);
-        newData.section5.otherNames = updatedData.section5.otherNames;
       }
+      // Note: We no longer automatically add an entry when setting to YES
+      // This will be handled by the component to ensure only 1 initial entry
 
       return newData;
     });
   }, []);
 
-  const addOtherNameEntry = useCallback(() => {
-    setSection5Data(prevData => addOtherNameEntryImpl(prevData));
+
+
+  // Maximum number of other name entries allowed
+  const MAX_OTHER_NAME_ENTRIES = 4;
+
+  // Use a ref to track the last operation to prevent React Strict Mode duplicates
+  const lastOperationRef = useRef<{ count: number; timestamp: number }>({ count: 0, timestamp: 0 });
+
+  const addOtherNameEntry = useCallback((caller?: string) => {
+    setSection5Data(prevData => {
+      // Check if we're at the maximum limit
+      if (prevData.section5.otherNames.length >= MAX_OTHER_NAME_ENTRIES) {
+        console.warn(`Cannot add more entries. Maximum of ${MAX_OTHER_NAME_ENTRIES} other names allowed.`);
+        return prevData;
+      }
+
+      // IMPORTANT: Prevent React Strict Mode double execution
+      // Use a combination of count and timestamp to detect rapid duplicate calls
+      const currentCount = prevData.section5.otherNames.length;
+      const now = Date.now();
+      const lastOp = lastOperationRef.current;
+
+      // If this is a duplicate call within 50ms with the same count, skip it
+      if (now - lastOp.timestamp < 50 && currentCount === lastOp.count) {
+        return prevData;
+      }
+
+      // Update the last operation tracking
+      lastOperationRef.current = { count: currentCount + 1, timestamp: now };
+
+      return addOtherNameEntryImpl(prevData);
+    });
   }, []);
 
   const removeOtherNameEntry = useCallback((index: number) => {
@@ -297,7 +342,9 @@ export const Section5Provider: React.FC<Section5ProviderProps> = ({ children }) 
   }, []);
 
   const updateFieldValue = useCallback((fieldPath: string, value: any, index?: number) => {
-    setSection5Data(prevData => updateSection5FieldImpl(prevData, { fieldPath, newValue: value, index }));
+    setSection5Data(prevData => {
+      return updateSection5FieldImpl(prevData, { fieldPath, newValue: value, index });
+    });
   }, []);
 
   // ============================================================================
@@ -356,9 +403,12 @@ export const Section5Provider: React.FC<Section5ProviderProps> = ({ children }) 
         entry.middleName.value = '';
         entry.suffix.value = '';
         entry.from.value = '';
+        entry.fromEstimate.value = false;
         entry.to.value = '';
+        entry.toEstimate.value = false;
         entry.reasonChanged.value = '';
         entry.present.value = false;
+        entry.isMaidenName.value = "NO";
       }
 
       return newData;
@@ -470,7 +520,7 @@ export const Section5Provider: React.FC<Section5ProviderProps> = ({ children }) 
     return {
       sectionId: 'section5',
       sectionName: 'Other Names Used',
-      sectionData: section5Data, // Use structured data format (preferred)
+      sectionData: flattenSection5Fields(), // Use flattened fields for PDF generation
       isLoading,
       errors: Object.keys(errors).map(key => ({
         field: key,
@@ -491,7 +541,7 @@ export const Section5Provider: React.FC<Section5ProviderProps> = ({ children }) 
       loadSection,
       getChanges: () => ({}) // Return empty changeset for now
     };
-  }, [section5Data, isLoading, errors, isDirty, updateFieldValue, validateSection, resetSection, loadSection]);
+  }, [section5Data, isLoading, errors, isDirty, updateFieldValue, validateSection, resetSection, loadSection, flattenSection5Fields]);
 
   // Integration with SF86FormContext
   const integration = useSectionIntegration();

@@ -405,15 +405,13 @@ export const createDefaultSection4 = (): Section4 => ({
       type: "PDFCheckbox",
       label: "Not Applicable",
       value: false,
-      rect: { x: 0, y: 0, width: 0, height: 0 },
     },
     Acknowledgement: {
       id: SECTION4_FIELD_IDS.ACKNOWLEDGEMENT,
       name: SECTION4_FIELD_NAMES.ACKNOWLEDGEMENT,
       type: "PDFRadioGroup",
       label: "Acknowledgement",
-      value: "YES",
-      rect: { x: 0, y: 0, width: 0, height: 0 },
+      value: "NO",
     },
     ssn: [
       {
@@ -422,8 +420,7 @@ export const createDefaultSection4 = (): Section4 => ({
           name: SECTION4_FIELD_NAMES.SSN_MAIN,
           type: "PDFTextField",
           label: "Social Security Number",
-          value: "123456789",
-          rect: { x: 0, y: 0, width: 0, height: 0 },
+          value: "",
         },
       },
     ],
@@ -592,7 +589,6 @@ export const propagateSSNToAllFields = (
             type: "PDFTextField",
             label: `Auto-fill SSN ${i + 1}`,
             value: mainSSNValue,
-            rect: { x: 0, y: 0, width: 0, height: 0 },
           },
         };
       } else {
@@ -617,13 +613,10 @@ export const propagateSSNToAllFields = (
 export const updateMainSSNAndPropagate = (
   section4Data: Section4,
   newSSNValue: string,
-  shouldFormat: boolean = true
 ): Section4 => {
-  // Format the SSN if requested
-  const formattedSSN = shouldFormat ? formatSSN(newSSNValue) : newSSNValue;
-  
+
   // Propagate to all fields
-  return propagateSSNToAllFields(section4Data, formattedSSN);
+  return propagateSSNToAllFields(section4Data, newSSNValue);
 };
 
 /**
@@ -637,10 +630,10 @@ export const validateAndUpdateSSN = (
 ): { updatedData: Section4; validationResult: SSNValidationResult } => {
   // Validate the SSN
   const validationResult = validateSSN(newSSNValue, context);
-  
+
   // Update and propagate if valid, or just update if validation allows it
-  const updatedData = updateMainSSNAndPropagate(section4Data, newSSNValue, shouldFormat);
-  
+  const updatedData = updateMainSSNAndPropagate(section4Data, newSSNValue);
+
   return {
     updatedData,
     validationResult,

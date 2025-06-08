@@ -55,8 +55,8 @@ export const Section4Component: React.FC<Section4ComponentProps> = ({
 
     if (result.isValid) {
       try {
-        // Update the central form context with Section 1 data
-        sf86Form.updateSectionData('section5', section4Data);
+        // Update the central form context with Section 4 data
+        sf86Form.updateSectionData('section4', section4Data);
 
         // Save the form data to persistence layer
         await sf86Form.saveForm();
@@ -104,50 +104,7 @@ export const Section4Component: React.FC<Section4ComponentProps> = ({
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
 
-        {/* 1. SSN Field */}
-        <div>
-          <label
-            htmlFor="ssn-input"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Social Security Number <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            id="ssn-input"
-            data-testid="ssn-input"
-            value={section4Data.section4.ssn[0]?.value?.value || ''}
-            onChange={handleSSNChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="XXX-XX-XXXX"
-            maxLength={11}
-            required={!section4Data.section4.notApplicable.value}
-          />
-          {errors['section4.ssn'] && (
-            <p className="mt-1 text-sm text-red-600">{errors['section4.ssn']}</p>
-          )}
-          <p className="mt-1 text-xs text-gray-500">
-            Format: XXX-XX-XXXX (hyphens will be added automatically)
-          </p>
-        </div>
-
-        {/* 2. Not Applicable Checkbox */}
-        <div>
-          <label className="flex items-center space-x-3">
-            <input
-              type="checkbox"
-              checked={section4Data.section4.notApplicable.value}
-              onChange={handleNotApplicableChange}
-              className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              data-testid="not-applicable-checkbox"
-            />
-            <span className="text-base font-medium text-gray-700">
-              Not Applicable (I do not have a Social Security Number)
-            </span>
-          </label>
-        </div>
-
-        {/* 3. Acknowledgement Radio Buttons */}
+             {/* 3. Acknowledgement Radio Buttons */}
         <div className="border rounded-lg p-4 bg-blue-50">
           <h3 className="text-lg font-semibold mb-3">Acknowledgement</h3>
           <p className="text-sm text-gray-700 mb-3">
@@ -180,6 +137,48 @@ export const Section4Component: React.FC<Section4ComponentProps> = ({
             </label>
           </div>
         </div>
+
+        {/* 1. SSN Field */}
+        <div>
+          <label
+            htmlFor="ssn-input"
+            className="block text-sm font-medium text-gray-700 mb-2"
+          >
+            Social Security Number <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            id="ssn-input"
+            data-testid="ssn-input"
+            value={section4Data.section4.ssn[0]?.value?.value}
+            onChange={handleSSNChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="XXXXXXXXX"
+            maxLength={9}
+            required={!section4Data.section4.notApplicable.value}
+          />
+          {errors['section4.ssn'] && (
+            <p className="mt-1 text-sm text-red-600">{errors['section4.ssn']}</p>
+          )}
+        </div>
+
+        {/* 2. Not Applicable Checkbox */}
+        <div>
+          <label className="flex items-center space-x-3">
+            <input
+              type="checkbox"
+              checked={section4Data.section4.notApplicable.value }
+              onChange={handleNotApplicableChange}
+              className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              data-testid="not-applicable-checkbox"
+            />
+            <span className="text-base font-medium text-gray-700">
+              Not Applicable (I do not have a Social Security Number)
+            </span>
+          </label>
+        </div>
+
+   
 
         {/* Form Actions */}
         <div className="mt-8 flex justify-between items-center pt-6 border-t border-gray-200">

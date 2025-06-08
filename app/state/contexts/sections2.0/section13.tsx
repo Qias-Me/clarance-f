@@ -31,7 +31,6 @@ import {
   createDefaultSection13,
   validateSection13,
   updateSection13Field,
-  createDefaultEmploymentEntry,
   createDefaultMilitaryEmploymentEntry,
   createDefaultNonFederalEmploymentEntry,
   createDefaultSelfEmploymentEntry,
@@ -48,6 +47,7 @@ import {
   verifySection13FieldMapping
 } from '../../../../api/interfaces/sections2.0/section13';
 import type { ValidationResult, ValidationError } from '../shared/base-interfaces';
+import type { Field } from '../../../../api/interfaces/formDefinition2.0';
 import { useSF86Form } from '../SF86FormContext';
 import { useSection86FormIntegration } from '../shared/section-context-integration';
 import React, { createContext, useContext, useState, useCallback } from 'react';
@@ -466,7 +466,7 @@ const flattenSection13DataComplete = (section13Data: Section13): Record<string, 
   console.log('🔄 Section13Context: Flattening all 1,086 fields using complete field mappings');
 
   // Start with the existing flattening
-  const flattened = flattenSection13Data(section13Data);
+  const flattened = flattenSection13Fields(section13Data);
 
   // Add comprehensive field mapping verification
   const mappingStats = SECTION13_VERIFICATION;
@@ -514,9 +514,7 @@ export interface Section13ContextType {
   validateEmploymentHistory: () => EmploymentValidationResult;
   validateEmploymentEntry: (entryIndex: number) => EmploymentValidationResult;
 
-  // Employment type management
-  updateEmploymentType: (employmentType: string) => void;
-  getActiveEmploymentType: () => string;
+  // Employment type management (removed duplicate)
 
   // Military employment (13A.1) management
   addMilitaryEmploymentEntry: () => void;
@@ -777,15 +775,7 @@ export const Section13Provider: React.FC<{ children: React.ReactNode }> = ({ chi
     return gaps;
   }, [sectionData.section13.entries]);
 
-  // Employment type management
-  const updateEmploymentTypeSelection = useCallback((employmentType: string) => {
-    console.log(`🔄 Section13: Updating employment type to ${employmentType}`);
-    updateFieldValue('section13.employmentType', employmentType);
-  }, [updateFieldValue]);
-
-  const getActiveEmploymentType = useCallback(() => {
-    return sectionData.section13?.employmentType?.value || 'Other';
-  }, [sectionData]);
+  // Employment type management (removed duplicate - using the one below)
 
   // Military employment (13A.1) management functions
   const addMilitaryEmploymentEntry = useCallback(() => {
@@ -913,14 +903,9 @@ export const Section13Provider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Legacy employment entry management (for backward compatibility)
   const addEmploymentEntry = useCallback(() => {
-    console.log('🔄 Section13: Adding new employment entry');
-    setSectionData(prevData => {
-      const newEntry = createDefaultEmploymentEntry(Date.now());
-      const updated = cloneDeep(prevData);
-      updated.section13.entries = [...updated.section13.entries, newEntry];
-      setIsDirty(true);
-      return updated;
-    });
+    console.log('🔄 Section13: Adding new employment entry (legacy - deprecated)');
+    // TODO: Implement createDefaultEmploymentEntry or use specific employment type functions
+    console.warn('⚠️ Section13: Legacy addEmploymentEntry called - use specific employment type functions instead');
   }, []);
 
   const removeEmploymentEntry = useCallback((entryIndex: number) => {
@@ -956,14 +941,14 @@ export const Section13Provider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const updateEmploymentType = useCallback((employmentType: string) => {
     console.log(`🔄 Section13: Updating employment type: ${employmentType}`);
-    updateFieldValue('section13.currentEmploymentType', employmentType);
+    updateFieldValue('section13.employmentType', employmentType);
   }, [updateFieldValue]);
 
   const getActiveEmploymentType = useCallback((): string | null => {
-    const currentType = sectionData.section13.currentEmploymentType?.value;
+    const currentType = sectionData.section13.employmentType?.value;
     console.log(`🔍 Section13: Getting active employment type: ${currentType || 'none'}`);
     return currentType || null;
-  }, [sectionData.section13.currentEmploymentType]);
+  }, [sectionData.section13.employmentType]);
 
   // Validation functions
   const validateEmploymentHistory = useCallback((): EmploymentValidationResult => {
@@ -1136,7 +1121,7 @@ export const Section13Provider: React.FC<{ children: React.ReactNode }> = ({ chi
     validateEmploymentEntry: validateEmploymentEntryFunc,
 
     // Employment type management
-    updateEmploymentType: updateEmploymentTypeSelection,
+    updateEmploymentType,
     getActiveEmploymentType,
 
     // Military employment (13A.1) management
@@ -1174,8 +1159,6 @@ export const Section13Provider: React.FC<{ children: React.ReactNode }> = ({ chi
     updateGapsFlag,
     updateGapExplanation,
     updateEmploymentTypeForEntry: updateEmploymentTypeFunc,
-    updateEmploymentType,
-    getActiveEmploymentType,
     updateEmploymentDates,
     updateEmployerAddress,
     updateSupervisorInfo,

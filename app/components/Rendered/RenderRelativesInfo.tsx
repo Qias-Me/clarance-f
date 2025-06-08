@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { RenderSection18_1 } from "../_relatives/Section18.1";
-import { RenderSection18_2 } from "../_relatives/Section18.2";
-import { RenderSection18_3 } from "../_relatives/Section18.3";
-import { RenderSection18_4 } from "../_relatives/Section18.4";
-import { RenderSection18_5 } from "../_relatives/Section18.5";
+// NOTE: Old _relatives components removed - this component is deprecated
+// Use Section18Component from Rendered2.0 instead
 import pkg from "lodash";
 import {
   RelativeEntry,
@@ -220,55 +217,31 @@ const RenderRelativesInfo: React.FC<FormProps> = ({
             </div>
           </div>
 
+          {/* DEPRECATED: Old section components removed */}
           {entry.details.section18_1 && (
-            <RenderSection18_1
-              data={entry.details.section18_1}
-              onInputChange={(path, value) => {
-                handleInputChange(`${path}`, value);
-              }}
-              path={`${path}.entries[${index}].details.section18_1`}
-              isReadOnlyField={isReadOnlyField}
-            />
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded">
+              <p className="text-yellow-800">Section 18.1 - Component deprecated. Use Section18Component from Rendered2.0 instead.</p>
+            </div>
           )}
           {entry.details.section18_2 && (
-            <RenderSection18_2
-              data={entry.details.section18_2}
-              onInputChange={(path, value) => {
-                handleInputChange(`${path}`, value);
-              }}
-              path={`${path}.entries[${index}].details.section18_2`}
-              isReadOnlyField={isReadOnlyField}
-            />
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded">
+              <p className="text-yellow-800">Section 18.2 - Component deprecated. Use Section18Component from Rendered2.0 instead.</p>
+            </div>
           )}
           {entry.details.section18_3 && (
-            <RenderSection18_3
-              data={entry.details.section18_3}
-              onInputChange={(path, value) => {
-                handleInputChange(`${path}`, value);
-              }}
-              path={`${path}.entries[${index}].details.section18_3`}
-              isReadOnlyField={isReadOnlyField}
-            />
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded">
+              <p className="text-yellow-800">Section 18.3 - Component deprecated. Use Section18Component from Rendered2.0 instead.</p>
+            </div>
           )}
           {entry.details.section18_4 && (
-            <RenderSection18_4
-              data={entry.details.section18_4}
-              onInputChange={(path, value) => {
-                handleInputChange(`${path}`, value);
-              }}
-              path={`${path}.entries[${index}].details.section18_4`}
-              isReadOnlyField={isReadOnlyField}
-            />
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded">
+              <p className="text-yellow-800">Section 18.4 - Component deprecated. Use Section18Component from Rendered2.0 instead.</p>
+            </div>
           )}
           {entry.details.section18_5 && (
-            <RenderSection18_5
-              data={entry.details.section18_5}
-              onInputChange={(path, value) => {
-                handleInputChange(`${path}`, value);
-              }}
-              path={`${path}.entries[${index}].details.section18_5`}
-              isReadOnlyField={isReadOnlyField}
-            />
+            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded">
+              <p className="text-yellow-800">Section 18.5 - Component deprecated. Use Section18Component from Rendered2.0 instead.</p>
+            </div>
           )}
         </div>
       ))}

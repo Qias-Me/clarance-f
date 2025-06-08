@@ -14,9 +14,9 @@ import type {
   Section18SubsectionKey
 } from '../../../api/interfaces/sections2.0/Section18';
 import { SECTION18_OPTIONS } from '~/state/contexts/sections2.0/section18-field-generator';
-import Section18_2Component from './sections/Section18_2';
-import Section18_3Component from './sections/Section18_3';
-import { Section18_5Component } from './sections/Section18_5';
+import { Section18_2Component } from '~/components/Rendered2.0/Section18/Section18_2';
+import Section18_3Component from '~/components/Rendered2.0/Section18/Section18_3';
+import { Section18_5Component } from '~/components/Rendered2.0/Section18/Section18_5';
 
 // Maximum number of relatives allowed (as per PDF form structure)
 const MAX_RELATIVES = 6;

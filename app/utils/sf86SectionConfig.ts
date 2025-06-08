@@ -53,7 +53,7 @@ export const ALL_SF86_SECTIONS: SectionDefinition[] = [
   { id: "section2", name: "Date / Place of Birth", component: Section2Component, isImplemented: true },
   { id: "section3", name: "Place of Birth", component: Section3Component, isImplemented: true },
   { id: "section4", name: "Social Security Number", component: Section4Component, isImplemented: true },
-  { id: "section5", name: "Residence", component: Section5Component, isImplemented: true },
+  { id: "section5", name: "Other Names Used", component: Section5Component, isImplemented: true },
   { id: "section6", name: "Physical Characteristics", component: Section6Component, isImplemented: true },
   { id: "section7", name: "Contact Information", component: Section7Component, isImplemented: true },
   { id: "section8", name: "U.S. Passport Information", component: Section8Component, isImplemented: true },

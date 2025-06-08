@@ -96,39 +96,47 @@ const Section2Component: React.FC<Section2ComponentProps> = ({
     return section2Data?.section2?.isEstimated?.value || false;
   };
 
-  // Get date parts for display in dropdowns
+  // Get date parts for display in dropdowns - handle partial dates
   const getDateParts = (): { month: string, day: string, year: string } => {
     const dateValue = getDateValue();
     if (!dateValue) return { month: '', day: '', year: '' };
 
     try {
-      // Handle MM/DD/YYYY format
+      // Handle MM/DD/YYYY format (including partial dates like "03//" or "/15/")
       if (dateValue.includes('/')) {
-        const [month, day, year] = dateValue.split('/');
+        const parts = dateValue.split('/');
+        const month = parts[0] || '';
+        const day = parts[1] || '';
+        const year = parts[2] || '';
         return { month, day, year };
       }
 
       // Handle YYYY-MM-DD format
       if (dateValue.includes('-')) {
-        const [year, month, day] = dateValue.split('-');
+        const parts = dateValue.split('-');
+        const year = parts[0] || '';
+        const month = parts[1] || '';
+        const day = parts[2] || '';
         return { month, day, year };
       }
 
-      // Fallback to date object
+      // Fallback to date object only if it's a complete date
       const date = new Date(dateValue);
-      if (isNaN(date.getTime())) return { month: '', day: '', year: '' };
+      if (!isNaN(date.getTime())) {
+        return {
+          month: String(date.getMonth() + 1).padStart(2, '0'),
+          day: String(date.getDate()).padStart(2, '0'),
+          year: String(date.getFullYear())
+        };
+      }
 
-      return {
-        month: String(date.getMonth() + 1).padStart(2, '0'),
-        day: String(date.getDate()).padStart(2, '0'),
-        year: String(date.getFullYear())
-      };
+      return { month: '', day: '', year: '' };
     } catch {
       return { month: '', day: '', year: '' };
     }
   };
 
-  // Handle field changes - direct update pattern similar to Section1
+  // Handle field changes - allow partial updates and store individual field values
   const handleDateFieldChange = (type: 'month' | 'day' | 'year', value: string) => {
     const { month, day, year } = getDateParts();
 
@@ -141,14 +149,13 @@ const Section2Component: React.FC<Section2ComponentProps> = ({
     if (type === 'day') newDay = value;
     if (type === 'year') newYear = value;
 
-    // Only update if we have all three values
-    if (newMonth && newDay && newYear) {
-      const newDate = `${newMonth}/${newDay}/${newYear}`;
-      console.log('🔧 Section2Component: Updating date:', { newDate });
+    // Always update the date field, even with partial values
+    // This ensures individual field changes are preserved
+    const newDate = `${newMonth || ''}/${newDay || ''}/${newYear || ''}`;
+    console.log('🔧 Section2Component: Updating date (partial allowed):', { type, value, newDate });
 
-      // Update section data directly
-      updateDateOfBirth(newDate);
-    }
+    // Update section data directly - this will preserve partial values
+    updateDateOfBirth(newDate);
   };
 
   // Handle estimated checkbox change

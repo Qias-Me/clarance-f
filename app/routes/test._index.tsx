@@ -2,6 +2,7 @@ import type { Route } from "./+types/startForm._index";
 import { useState } from "react";
 import { useSection1 } from "~/state/contexts/sections2.0/section1";
 import { useSection2 } from "~/state/contexts/sections2.0/section2";
+import { useSection5 } from "~/state/contexts/sections2.0/section5";
 import { useSection8 } from "~/state/contexts/sections2.0/section8";
 import { useSection9 } from "~/state/contexts/sections2.0/section9";
 import { useSection27 } from "~/state/contexts/sections2.0/section27";
@@ -284,6 +285,131 @@ function Section2TestComponent() {
         <p><strong>Custom Actions:</strong> {section2.customActions ? Object.keys(section2.customActions).join(', ') : 'None'}</p>
         <p><strong>Date Value:</strong> {section2.sectionData.section2.date?.value || 'Empty'}</p>
         <p><strong>Estimated Value:</strong> {section2.sectionData.section2.isEstimated?.value ? 'Yes' : 'No'}</p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Section 5 Test Component - Other Names Used
+ */
+function Section5TestComponent() {
+  const section5 = useSection5();
+
+  const handleUpdateOtherNames = () => {
+    console.log('🔍 Testing Section 5 - Adding other names...');
+    section5.updateHasOtherNames(true);
+
+    // Add test data to the first entry
+    setTimeout(() => {
+      section5.updateFieldValue('section5.otherNames[0].lastName', 'TestOtherLast');
+      section5.updateFieldValue('section5.otherNames[0].firstName', 'TestOtherFirst');
+      section5.updateFieldValue('section5.otherNames[0].middleName', 'TestOtherMiddle');
+      section5.updateFieldValue('section5.otherNames[0].suffix', 'Jr');
+      section5.updateFieldValue('section5.otherNames[0].from', '01/2020');
+      section5.updateFieldValue('section5.otherNames[0].to', '12/2022');
+      section5.updateFieldValue('section5.otherNames[0].reasonChanged', 'Marriage');
+      console.log('✅ Added test data to first entry');
+    }, 100);
+  };
+
+  const handleAddMoreEntries = () => {
+    console.log('🔍 Testing Section 5 - Adding more entries...');
+    const currentCount = section5.getEntryCount();
+    console.log(`Current entry count: ${currentCount}`);
+
+    if (currentCount < 4) {
+      section5.addOtherNameEntry();
+      console.log(`✅ Added entry. New count: ${section5.getEntryCount()}`);
+    } else {
+      console.log('❌ Cannot add more entries - at maximum limit');
+    }
+  };
+
+  const handleClearOtherNames = () => {
+    section5.updateHasOtherNames(false);
+  };
+
+  const handleTestMaxLimit = () => {
+    console.log('🔍 Testing Section 5 - Maximum limit test...');
+    section5.updateHasOtherNames(true);
+
+    // Try to add 5 entries (should only allow 4)
+    for (let i = 0; i < 5; i++) {
+      setTimeout(() => {
+        const currentCount = section5.getEntryCount();
+        console.log(`Attempting to add entry ${i + 1}. Current count: ${currentCount}`);
+        section5.addOtherNameEntry();
+        console.log(`After add attempt. New count: ${section5.getEntryCount()}`);
+      }, i * 100);
+    }
+  };
+
+  return (
+    <div className="section-test-panel border rounded-lg p-4 mb-4" data-testid="section5-test-panel">
+      <h3 className="text-lg font-semibold mb-3">Section 5: Other Names Used (Max 4 Entries)</h3>
+
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Has Other Names</label>
+          <select
+            value={section5.section5Data.section5.hasOtherNames.value}
+            onChange={(e) => section5.updateHasOtherNames(e.target.value === 'YES')}
+            className="w-full border rounded px-3 py-2"
+            data-testid="section5-has-other-names"
+          >
+            <option value="NO">NO</option>
+            <option value="YES">YES</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">Number of Entries</label>
+          <input
+            type="text"
+            value={`${section5.getEntryCount()}/4`}
+            readOnly
+            className="w-full border rounded px-3 py-2 bg-gray-100"
+            data-testid="section5-entries-count"
+          />
+        </div>
+      </div>
+
+      <div className="flex space-x-2 mb-4">
+        <button
+          onClick={handleUpdateOtherNames}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          data-testid="section5-update-names-btn"
+        >
+          Fill Test Data
+        </button>
+        <button
+          onClick={handleAddMoreEntries}
+          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+          data-testid="section5-add-entry-btn"
+        >
+          Add Entry
+        </button>
+        <button
+          onClick={handleTestMaxLimit}
+          className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
+          data-testid="section5-test-max-btn"
+        >
+          Test Max Limit
+        </button>
+        <button
+          onClick={handleClearOtherNames}
+          className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+          data-testid="section5-clear-names-btn"
+        >
+          Clear Data
+        </button>
+      </div>
+
+      <div className="text-sm text-gray-600">
+        <p><strong>Validation:</strong> {section5.validateSection().isValid ? '✅ Valid' : '❌ Invalid'}</p>
+        <p><strong>Has Changes:</strong> {section5.isDirty ? '🔄 Yes' : '✅ No'}</p>
+        <p><strong>Entry Count:</strong> {section5.getEntryCount()}/4</p>
+        <p><strong>Can Add More:</strong> {section5.getEntryCount() < 4 ? '✅ Yes' : '❌ No (at limit)'}</p>
       </div>
     </div>
   );
@@ -916,7 +1042,7 @@ function CrossSectionIntegrationTest() {
 // ============================================================================
 
 export default function MultiSectionTestPage({}: Route.ComponentProps) {
-  const [activeTab, setActiveTab] = useState<'section1' | 'section2' | 'section7' | 'section8' | 'section9' | 'section27' | 'section29' | 'integration'>('section1');
+  const [activeTab, setActiveTab] = useState<'section1' | 'section2' | 'section5' | 'section7' | 'section8' | 'section9' | 'section27' | 'section29' | 'integration'>('section1');
 
   return (
     <CompleteSF86FormProvider>
@@ -940,6 +1066,13 @@ export default function MultiSectionTestPage({}: Route.ComponentProps) {
                 data-testid="section2-tab"
               >
                 Section 2
+              </button>
+              <button
+                className={`px-4 py-2 rounded-lg font-semibold ${activeTab === 'section5' ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 border border-blue-500'}`}
+                onClick={() => setActiveTab('section5')}
+                data-testid="section5-tab"
+              >
+                Section 5
               </button>
               <button
                 className={`px-4 py-2 rounded-lg font-semibold ${activeTab === 'section7' ? 'bg-blue-500 text-white' : 'bg-white text-blue-500 border border-blue-500'}`}
@@ -990,6 +1123,7 @@ export default function MultiSectionTestPage({}: Route.ComponentProps) {
           <main className="test-content bg-white rounded-lg shadow-lg p-6">
             {activeTab === 'section1' && <Section1TestComponent />}
             {activeTab === 'section2' && <Section2TestComponent />}
+            {activeTab === 'section5' && <Section5TestComponent />}
             {activeTab === 'section7' && <div data-testid="section7-placeholder">Section 7 test component (API methods need verification)</div>}
             {activeTab === 'section8' && <Section8TestComponent />}
             {activeTab === 'section9' && <Section9TestComponent />}

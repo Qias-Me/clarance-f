@@ -6,7 +6,7 @@
  * with the ability to add multiple entries with date ranges.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useSection5 } from '~/state/contexts/sections2.0/section5';
 import { useSF86Form } from '~/state/contexts/SF86FormContext';
 
@@ -35,8 +35,8 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
     errors
   } = useSection5();
 
-    // SF86 Form Context for data persistence
-    const sf86Form = useSF86Form();
+  // SF86 Form Context for data persistence
+  const sf86Form = useSF86Form();
 
   // Track validation state internally
   const [isValid, setIsValid] = useState(false);
@@ -48,6 +48,17 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
     onValidationChange?.(validationResult.isValid);
   }, [section5Data]); // Removed validateSection and onValidationChange to prevent infinite loops
 
+  // Ensure data consistency on mount
+  useEffect(() => {
+    const entryCount = getEntryCount();
+    const hasOtherNamesValue = section5Data.section5.hasOtherNames.value;
+
+    // If we have entries but hasOtherNames is "NO", clear the entries
+    if (entryCount > 0 && hasOtherNamesValue === "NO") {
+      updateHasOtherNames(false);
+    }
+  }, []); // Only run on mount
+
   // Handle submission with data persistence
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +68,7 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
 
     if (result.isValid) {
       try {
-        // Update the central form context with Section 1 data
+        // Update the central form context with Section 5 data
         sf86Form.updateSectionData('section5', section5Data);
 
         // Save the form data to persistence layer
@@ -74,22 +85,77 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
         // Could show an error message to user here
       }
     }
+    
+  };
+
+  // Use a ref to prevent multiple rapid calls
+  const isAddingEntryRef = useRef(false);
+
+  // Helper function to get current month/year in MM/YYYY format
+  const getCurrentMonthYear = () => {
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, '0'); // getMonth() returns 0-11
+    const year = now.getFullYear();
+    return `${month}/${year}`;
+  };
+
+  // Custom handler for the "Present" checkbox
+  const handlePresentChange = (index: number, isChecked: boolean) => {
+    // Update the present field
+    updateFieldValue(`section5.otherNames[${index}].present`, isChecked);
+
+    // If checked, set the "to" field to current month/year
+    // If unchecked, clear the "to" field
+    const toValue = isChecked ? getCurrentMonthYear() : '';
+    updateFieldValue(`section5.otherNames[${index}].to`, toValue);
   };
 
   // Handle Yes/No radio selection
   const handleHasOtherNamesChange = (value: boolean) => {
-    updateHasOtherNames(value);
+    if (value) {
+      // If selecting "Yes", ensure we have exactly 1 entry
+      // First, always update the flag
+      updateHasOtherNames(true);
 
-    // If changing to Yes and no entries exist, add one
-    if (value && getEntryCount() === 0) {
-      addOtherNameEntry();
+      // Prevent multiple rapid calls
+      if (isAddingEntryRef.current) {
+        return;
+      }
+
+      // Then, check if we need to add an entry (use a timeout to ensure state has updated)
+      setTimeout(() => {
+        const countAfterUpdate = getEntryCount();
+
+        if (countAfterUpdate === 0 && !isAddingEntryRef.current) {
+          isAddingEntryRef.current = true;
+          addOtherNameEntry('handleHasOtherNamesChange');
+
+          // Reset the flag after a short delay
+          setTimeout(() => {
+            isAddingEntryRef.current = false;
+          }, 100);
+        }
+      }, 0);
+    } else {
+      // If selecting "No", clear all entries
+      updateHasOtherNames(false);
     }
+  };
+
+  // Maximum number of other name entries allowed
+  const MAX_OTHER_NAME_ENTRIES = 4;
+
+  // Check if we can add more entries
+  const canAddMoreEntries = () => {
+    return getEntryCount() < MAX_OTHER_NAME_ENTRIES;
   };
 
   // Get value for Has Other Names radio buttons
   const getHasOtherNamesValue = (): boolean => {
     return section5Data.section5.hasOtherNames.value === "YES";
   };
+
+
 
   // Render a single other name entry
   const renderOtherNameEntry = (index: number) => {
@@ -116,14 +182,14 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
           {/* Last Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Last Name <span className="text-red-500">*</span>
+              Last Name 
             </label>
             <input
               type="text"
               value={entry.lastName.value || ''}
               onChange={(e) => updateFieldValue(`section5.otherNames[${index}].lastName`, e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              required
+
               data-testid={`other-name-${index}-last-name`}
             />
             {errors[`section5.otherNames[${index}].lastName`] && (
@@ -136,14 +202,14 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
           {/* First Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              First Name <span className="text-red-500">*</span>
+              First Name 
             </label>
             <input
               type="text"
               value={entry.firstName.value || ''}
               onChange={(e) => updateFieldValue(`section5.otherNames[${index}].firstName`, e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              required
+
               data-testid={`other-name-${index}-first-name`}
             />
             {errors[`section5.otherNames[${index}].firstName`] && (
@@ -191,7 +257,7 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
           {/* From Date */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              From (Month/Year) <span className="text-red-500">*</span>
+              From (Month/Year)
             </label>
             <input
               type="text"
@@ -199,9 +265,21 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
               onChange={(e) => updateFieldValue(`section5.otherNames[${index}].from`, e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="MM/YYYY"
-              required
               data-testid={`other-name-${index}-from-date`}
             />
+            <div className="mt-1 flex items-center">
+              <input
+                type="checkbox"
+                checked={entry.fromEstimate.value || false}
+                onChange={(e) => updateFieldValue(`section5.otherNames[${index}].fromEstimate`, e.target.checked)}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                id={`from-estimate-${index}`}
+                data-testid={`other-name-${index}-from-estimate`}
+              />
+              <label htmlFor={`from-estimate-${index}`} className="ml-2 block text-sm text-gray-700">
+                Estimate
+              </label>
+            </div>
             <p className="mt-1 text-xs text-gray-500">
               Enter the month and year you began using this name (e.g., 01/2010).
             </p>
@@ -215,7 +293,7 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
           {/* To Date / Present */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              To (Month/Year) <span className="text-red-500">*</span>
+              To (Month/Year)
             </label>
             <div className="flex items-center space-x-2">
               <input
@@ -229,18 +307,34 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
                 data-testid={`other-name-${index}-to-date`}
               />
             </div>
-            <div className="mt-1 flex items-center">
-              <input
-                type="checkbox"
-                checked={entry.present.value || false}
-                onChange={(e) => updateFieldValue(`section5.otherNames[${index}].present`, e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                id={`present-${index}`}
-                data-testid={`other-name-${index}-present`}
-              />
-              <label htmlFor={`present-${index}`} className="ml-2 block text-sm text-gray-700">
-                Present
-              </label>
+            <div className="mt-1 flex items-center space-x-4">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={entry.toEstimate.value || false}
+                  onChange={(e) => updateFieldValue(`section5.otherNames[${index}].toEstimate`, e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  id={`to-estimate-${index}`}
+                  disabled={entry.present.value}
+                  data-testid={`other-name-${index}-to-estimate`}
+                />
+                <label htmlFor={`to-estimate-${index}`} className="ml-2 block text-sm text-gray-700">
+                  Estimate
+                </label>
+              </div>
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={entry.present.value || false}
+                  onChange={(e) => handlePresentChange(index, e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  id={`present-${index}`}
+                  data-testid={`other-name-${index}-present`}
+                />
+                <label htmlFor={`present-${index}`} className="ml-2 block text-sm text-gray-700">
+                  Present
+                </label>
+              </div>
             </div>
             {errors[`section5.otherNames[${index}].to`] && (
               <p className="mt-1 text-sm text-red-600">
@@ -252,14 +346,14 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
           {/* Reason for Change */}
           <div className="col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Reason for Name Change <span className="text-red-500">*</span>
+              Reason for Name Change
             </label>
             <textarea
               value={entry.reasonChanged.value || ''}
               onChange={(e) => updateFieldValue(`section5.otherNames[${index}].reasonChanged`, e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               rows={3}
-              required
+
               data-testid={`other-name-${index}-reason`}
             ></textarea>
             <p className="mt-1 text-xs text-gray-500">
@@ -270,6 +364,46 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
                 {errors[`section5.otherNames[${index}].reasonChanged`]}
               </p>
             )}
+          </div>
+
+          {/* Maiden Name Radio Buttons */}
+          <div className="col-span-2">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Is this a maiden name?
+            </label>
+            <div className="flex space-x-6">
+              <div className="flex items-center">
+                <input
+                  type="radio"
+                  id={`maiden-name-yes-${index}`}
+                  name={`maiden-name-${index}`}
+                  checked={entry.isMaidenName?.value === "YES"}
+                  onChange={() => updateFieldValue(`section5.otherNames[${index}].isMaidenName`, "YES")}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  data-testid={`other-name-${index}-maiden-name-yes`}
+                />
+                <label htmlFor={`maiden-name-yes-${index}`} className="ml-2 block text-sm text-gray-700">
+                  Yes
+                </label>
+              </div>
+              <div className="flex items-center">
+                <input
+                  type="radio"
+                  id={`maiden-name-no-${index}`}
+                  name={`maiden-name-${index}`}
+                  checked={entry.isMaidenName?.value === "NO"}
+                  onChange={() => updateFieldValue(`section5.otherNames[${index}].isMaidenName`, "NO")}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  data-testid={`other-name-${index}-maiden-name-no`}
+                />
+                <label htmlFor={`maiden-name-no-${index}`} className="ml-2 block text-sm text-gray-700">
+                  No
+                </label>
+              </div>
+            </div>
+            <p className="mt-1 text-xs text-gray-500">
+              Select "Yes" if this name is a maiden name.
+            </p>
           </div>
         </div>
       </div>
@@ -331,6 +465,8 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
           )}
         </div>
 
+
+
         {/* Other Names Entries */}
         {getHasOtherNamesValue() && (
           <div className="other-names-entries">
@@ -340,25 +476,33 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
             <div className="mt-4">
               <button
                 type="button"
-                onClick={() => addOtherNameEntry()}
-                className="flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                onClick={() => addOtherNameEntry('addAnotherNameButton')}
+                disabled={!canAddMoreEntries()}
+                className={`flex items-center px-4 py-2 border rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${canAddMoreEntries()
+                    ? 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:ring-blue-500'
+                    : 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed'
+                  }`}
                 data-testid="add-other-name-button"
               >
-                <svg className="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                   <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
                 </svg>
-                Add Another Name
+                Add Another Name ({getEntryCount()}/{MAX_OTHER_NAME_ENTRIES})
               </button>
+
+              {/* Show message when at maximum */}
+              {!canAddMoreEntries() && (
+                <p className="mt-2 text-sm text-gray-500">
+                  Maximum of {MAX_OTHER_NAME_ENTRIES} other names allowed.
+                </p>
+              )}
             </div>
           </div>
         )}
 
         {/* Form Actions */}
         <div className="mt-8 flex justify-between items-center pt-6 border-t border-gray-200">
-          <div className="text-sm text-gray-500">
-            <span className="text-red-500">*</span> Required fields
-          </div>
-
+         
           <div className="flex space-x-4">
             <button
               type="submit"

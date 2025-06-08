@@ -714,45 +714,7 @@ export const SECTION13_FIELD_MAPPINGS = {
     ENTRY1: 'sect13A.3Entry'
   },
 
-  // Section 13A.3 - Self-Employment (30 fields)
-  SELF_EMPLOYMENT: {
-    ENTRY1_START_DATE: 'sect13A.3Entry1Start',
-    ENTRY1_TO_DATE: 'sect13A.3Entry1ToDate',
-    ENTRY1_EMPLOYMENT: 'sect13A.3Entry1Employment',
-    ENTRY1_POSITION_TITLE: 'sect13A.3Entry1PositionTitle',
-    ENTRY1_STREET: 'sect13A.3Entry1Street',
-    ENTRY1_CITY: 'sect13A.3Entry1City',
-    ENTRY1_ZIP: 'sect13A.3Entry1Zip',
-    ENTRY1_PHONE: 'sect13A.3Entry1Phone',
-    ENTRY1_EXTENSION: 'sect13A.3Entry1Ext',
 
-    // Verifier information
-    ENTRY1_VERIFIER_FIRST_NAME: 'sect13A.3Entry1_FName',
-    ENTRY1_VERIFIER_LAST_NAME: 'sect13A.3Entry1_LName',
-    ENTRY1_VERIFIER_STREET: 'sect13A.3Entry1_Street',
-    ENTRY1_VERIFIER_CITY: 'sect13A.3Entry1_City',
-    ENTRY1_VERIFIER_EXTENSION: 'sect13A.3Entry1_Ext',
-    ENTRY1_VERIFIER_PHONE: 'sect13A.3Entry1_phone',
-
-    // Address variations
-    ENTRY1_A_STREET: 'sect13A.3Entry1_a_Street',
-    ENTRY1_A_CITY: 'sect13A.3Entry1_a_City',
-    ENTRY1_A_ZIP: 'sect13A.3Entry1_a_Zip',
-    ENTRY1_A_PHONE: 'sect13A.3Entry1_a_Phone',
-    ENTRY1_A_EXTENSION: 'sect13A.3Entry1_a_ext',
-
-    ENTRY1_B1_STREET: 'sect13A.3Entry1_b1_Street',
-    ENTRY1_B1_CITY: 'sect13A.3Entry1_b1_City',
-    ENTRY1_B1_ZIP: 'sect13A.3Entry1_b1_zipcode',
-
-    ENTRY1_B2_APO: 'sect13A.3Entry1_b2_APO',
-    ENTRY1_B2_STREET: 'sect13A.3Entry1_b2_Street',
-    ENTRY1_B2_ZIP: 'sect13A.3Entry1_b2_Zip',
-
-    ENTRY1_B_APO: 'sect13A.3Entry1_b_APO',
-    ENTRY1_B_STREET: 'sect13A.3Entry1_b_Street',
-    ENTRY1_B_ZIP: 'sect13A.3Entry1_b_Zip'
-  },
 
   // Section 13A.4 - Unemployment (14 fields) - All fields already mapped
   UNEMPLOYMENT: {
@@ -1018,7 +980,7 @@ export const SECTION13_FIELD_MAPPINGS = {
     // Numeric values
     'VALUE_1': '1',
     'VALUE_10512': '10512',
-    'VALUE_GENERIC': 'value'
+    'VALUE_GENERIC': 'value',
 
     // Numeric variations
     '13A1_ENTRY_1': '13A1Entry1',
@@ -1640,130 +1602,6 @@ export const createDefaultMilitaryEmploymentEntry = (entryId: string | number): 
       'form1[0].section_13_1-2[0].TextField11[13]', // Maps to sect13A.1Entry1OtherExplanation
       ''
     ),
-    createdAt: new Date(),
-    updatedAt: new Date()
-  };
-};
-    employerAddress: {
-      street: createFieldFromReference(
-        13,
-        'form1[0].section_13_1-2[0].TextField11[3]', // Maps to sect13A.1Entry1EmployerStreet
-        ''
-      ),
-      city: createFieldFromReference(
-        13,
-        'form1[0].section_13_1-2[0].TextField11[4]', // Maps to sect13A.1Entry1EmployerCity
-        ''
-      ),
-      state: {
-        ...createFieldFromReference(
-          13,
-          'form1[0].section_13_1-2[0].School6_State[0]', // Maps to sect13A.1Entry1EmployerState
-          ''
-        ),
-        options: []
-      },
-      zipCode: createFieldFromReference(
-        13,
-        'form1[0].section_13_1-2[0].TextField11[5]', // Maps to sect13A.1Entry1EmployerZip
-        ''
-      ),
-      country: {
-        ...createFieldFromReference(
-          13,
-          'form1[0].section_13_1-2[0].DropDownList18[0]', // Maps to sect13A.1Entry1EmployerCountry
-          ''
-        ),
-        options: []
-      }
-    },
-    businessType: createFieldFromReference(
-      13,
-      'form1[0].section_13_1-2[0].TextField11[6]', // Maps to sect13A.1Entry1BusinessType
-      ''
-    ),
-    positionTitle: createFieldFromReference(
-      13,
-      'form1[0].section_13_1-2[0].p3-t68[3]', // Maps to sect13A.1Entry1RankTitle
-      ''
-    ),
-    positionDescription: createFieldFromReference(
-      13,
-      'form1[0].section_13_1-2[0].TextField11[7]', // Maps to sect13A.1Entry1PositionDescription - CORRECTED
-      ''
-    ),
-    salary: createFieldFromReference(
-      13,
-      'form1[0].section_13_1-2[0].TextField11[8]', // Maps to sect13A.1Entry1Salary
-      ''
-    ),
-    supervisor: {
-      name: createFieldFromReference(
-        13,
-        'form1[0].section_13_1-2[0].TextField11[0]', // Maps to sect13A.1Entry1SupervisorName
-        ''
-      ),
-      title: createFieldFromReference(
-        13,
-        'form1[0].section_13_1-2[0].TextField11[1]', // Maps to sect13A.1Entry1SupervisorRank
-        ''
-      ),
-      email: createFieldFromReference(
-        13,
-        'form1[0].section_13_1-2[0].TextField11[9]', // Maps to sect13A.1Entry1SupervisorEmail
-        ''
-      ),
-      phone: createFieldFromReference(
-        13,
-        'form1[0].section_13_1-2[0].p3-t68[0]', // Maps to sect13A.1Entry1SupervisorPhone
-        ''
-      ),
-      canContact: createFieldFromReference(
-        13,
-        'form1[0].section_13_1-2[0].#field[30]', // Maps to sect13A.1Entry1CanContact - CORRECTED
-        "YES" as "YES" | "NO"
-      ),
-      contactRestrictions: createFieldFromReference(
-        13,
-        'form1[0].section_13_1-2[0].TextField11[10]', // Maps to sect13A.1Entry1ContactRestrictions - CORRECTED
-        ''
-      )
-    },
-    reasonForLeaving: {
-      ...createFieldFromReference(
-        13,
-        'form1[0].section_13_1-2[0].#field[28]', // Maps to sect13A.1Entry1ReasonForLeaving - CORRECTED
-        'Still Employed' as ReasonForLeaving
-      ),
-      options: REASON_FOR_LEAVING_OPTIONS
-    },
-    additionalComments: createFieldFromReference(
-      13,
-      'form1[0].section_13_1-2[0].TextField11[12]', // Maps to sect13A.1Entry1AdditionalComments - CORRECTED
-      ''
-    ),
-    verification: {
-      verified: createFieldFromReference(
-        13,
-        'form1[0].section_13_1-2[0].#field[37]', // Maps to sect13A.1Entry1Verified - CORRECTED
-        false
-      ),
-      verificationDate: createFieldFromReference(
-        13,
-        'form1[0].section_13_1-2[0].TextField11[14]', // Maps to sect13A.1Entry1VerificationDate - CORRECTED
-        ''
-      ),
-      verificationMethod: createFieldFromReference(
-        13,
-        'form1[0].section_13_1-2[0].TextField11[11]', // Maps to sect13A.1Entry1VerificationMethod
-        ''
-      ),
-      notes: createFieldFromReference(
-        13,
-        'form1[0].section_13_1-2[0].TextField11[13]', // Maps to sect13A.1Entry1VerificationNotes - CORRECTED
-        ''
-      )
-    },
     createdAt: new Date(),
     updatedAt: new Date()
   };

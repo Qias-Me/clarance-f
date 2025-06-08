@@ -15,6 +15,15 @@
  * - Education entry management with CRUD operations
  */
 
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo
+} from 'react';
+import { cloneDeep } from 'lodash';
+import set from 'lodash/set';
 import type {
   Section12,
   Section12FieldUpdate,
@@ -35,11 +44,7 @@ import {
   DEGREE_TYPE_OPTIONS
 } from '../../../../api/interfaces/sections2.0/section12';
 import type { ValidationResult, ValidationError } from '../shared/base-interfaces';
-import {
-  createEnhancedSectionContext,
-  StandardFieldOperations,
-  type EnhancedSectionContextType
-} from '../shared/enhanced-section-template';
+import { useSection86FormIntegration } from '../shared/section-context-integration';
 
 // ============================================================================
 // FIELD FLATTENING FOR PDF GENERATION
@@ -129,147 +134,22 @@ export const flattenSection12Fields = (section12Data: Section12): Record<string,
 };
 
 // ============================================================================
-// SECTION 12 CONFIGURATION (GOLD STANDARD)
+// SECTION 12 CONTEXT TYPE
 // ============================================================================
 
-const section12Config = {
-  sectionId: 'section12',
-  sectionName: 'Section 12: Where You Went to School',
-  expectedFieldCount: 150,
-  createInitialState: createDefaultSection12,
-  validateSection: (data: Section12): ValidationResult => {
-    const validationErrors: ValidationError[] = [];
-    const validationWarnings: ValidationError[] = [];
+export interface Section12ContextType {
+  // Core state
+  section12Data: Section12;
+  isLoading: boolean;
+  errors: Record<string, string>;
+  isDirty: boolean;
 
-    // Validate education history
-    const validationContext: Section12ValidationContext = {
-      currentDate: new Date(),
-      minimumEducationAge: 16,
-      rules: {
-        requiresEducationHistory: true,
-        requiresHighSchoolInfo: true,
-        maxEducationEntries: 10,
-        requiresSchoolName: true,
-        requiresSchoolAddress: true,
-        requiresAttendanceDates: true,
-        allowsEstimatedDates: true,
-        maxSchoolNameLength: 100,
-        maxAddressLength: 200
-      }
-    };
+  // Core operations
+  updateField: (fieldPath: string, newValue: any) => void;
+  validateSection: () => ValidationResult;
+  resetSection: () => void;
+  loadSection: (data: Section12) => void;
 
-    const educationValidation = validateSection12(data, validationContext);
-    if (!educationValidation.isValid) {
-      educationValidation.errors.forEach(error => {
-        validationErrors.push({
-          field: 'section12.educationHistory',
-          message: error,
-          code: 'EDUCATION_VALIDATION_ERROR',
-          severity: 'error'
-        });
-      });
-    }
-
-    educationValidation.warnings.forEach(warning => {
-      validationWarnings.push({
-        field: 'section12.educationHistory',
-        message: warning,
-        code: 'EDUCATION_VALIDATION_WARNING',
-        severity: 'warning'
-      });
-    });
-
-    return {
-      isValid: validationErrors.length === 0,
-      errors: validationErrors,
-      warnings: validationWarnings
-    };
-  },
-  updateField: (data: Section12, fieldPath: string, newValue: any, entryIndex?: number): Section12 => {
-    if (fieldPath === 'section12.hasEducation') {
-      return StandardFieldOperations.updateFieldValue(data, 'section12.hasEducation', newValue);
-    } else if (fieldPath === 'section12.hasHighSchool') {
-      return StandardFieldOperations.updateFieldValue(data, 'section12.hasHighSchool', newValue);
-    } else if (fieldPath.startsWith('section12.entries') && entryIndex !== undefined) {
-      return updateSection12Field(data, { fieldPath, newValue, entryIndex });
-    }
-    return StandardFieldOperations.updateSimpleField(data, fieldPath, newValue);
-  },
-  customActions: {
-    updateEducationFlag: (data: Section12, hasEducation: "YES" | "NO"): Section12 => {
-      return StandardFieldOperations.updateFieldValue(data, 'section12.hasEducation', hasEducation);
-    },
-    updateHighSchoolFlag: (data: Section12, hasHighSchool: "YES" | "NO"): Section12 => {
-      return StandardFieldOperations.updateFieldValue(data, 'section12.hasHighSchool', hasHighSchool);
-    },
-    updateEducationField: (data: Section12, update: Section12FieldUpdate): Section12 => {
-      return updateSection12Field(data, update);
-    },
-    addEducationEntry: (data: Section12): Section12 => {
-      const newData = { ...data };
-      const entryIndex = newData.section12.entries.length; // Get the next entry index
-      const newEntry = createDefaultEducationEntry(Date.now(), entryIndex);
-      newData.section12.entries.push(newEntry);
-      newData.section12.entriesCount = newData.section12.entries.length;
-      return newData;
-    },
-    removeEducationEntry: (data: Section12, entryIndex: number): Section12 => {
-      const newData = { ...data };
-      if (entryIndex >= 0 && entryIndex < newData.section12.entries.length) {
-        newData.section12.entries.splice(entryIndex, 1);
-        newData.section12.entriesCount = newData.section12.entries.length;
-      }
-      return newData;
-    },
-    moveEducationEntry: (data: Section12, fromIndex: number, toIndex: number): Section12 => {
-      const newData = { ...data };
-      if (fromIndex >= 0 && fromIndex < newData.section12.entries.length &&
-          toIndex >= 0 && toIndex < newData.section12.entries.length) {
-        const [movedEntry] = newData.section12.entries.splice(fromIndex, 1);
-        newData.section12.entries.splice(toIndex, 0, movedEntry);
-      }
-      return newData;
-    },
-    duplicateEducationEntry: (data: Section12, entryIndex: number): Section12 => {
-      const newData = { ...data };
-      if (entryIndex >= 0 && entryIndex < newData.section12.entries.length) {
-        const originalEntry = newData.section12.entries[entryIndex];
-        const duplicatedEntry = {
-          ...originalEntry,
-          _id: Date.now(),
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-        newData.section12.entries.splice(entryIndex + 1, 0, duplicatedEntry);
-        newData.section12.entriesCount = newData.section12.entries.length;
-      }
-      return newData;
-    },
-    clearEducationEntry: (data: Section12, entryIndex: number): Section12 => {
-      const newData = { ...data };
-      if (entryIndex >= 0 && entryIndex < newData.section12.entries.length) {
-        const clearedEntry = createDefaultEducationEntry(newData.section12.entries[entryIndex]._id);
-        newData.section12.entries[entryIndex] = clearedEntry;
-      }
-      return newData;
-    }
-  }
-};
-
-// ============================================================================
-// CREATE ENHANCED SECTION CONTEXT
-// ============================================================================
-
-const {
-  SectionProvider: Section12Provider,
-  useSection: useSection12Base
-} = createEnhancedSectionContext(section12Config);
-
-// ============================================================================
-// ENHANCED SECTION 12 CONTEXT TYPE
-// ============================================================================
-
-export interface Section12ContextType extends EnhancedSectionContextType<Section12> {
   // Section-specific computed values
   getEducationEntryCount: () => number;
   getTotalEducationYears: () => number;
@@ -308,52 +188,41 @@ export interface Section12ContextType extends EnhancedSectionContextType<Section
 }
 
 // ============================================================================
-// ENHANCED HOOK WITH SECTION-SPECIFIC FEATURES
+// SECTION 12 CONTEXT
 // ============================================================================
 
-export const useSection12 = (): Section12ContextType => {
-  const baseContext = useSection12Base();
+const Section12Context = createContext<Section12ContextType | undefined>(undefined);
+// ============================================================================
+// SECTION 12 PROVIDER
+// ============================================================================
 
-  // Add section-specific computed values and methods
-  const getEducationEntryCount = (): number => {
-    return baseContext.sectionData.section12.entries.length;
-  };
+const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // ============================================================================
+  // STATE MANAGEMENT
+  // ============================================================================
 
-  const getTotalEducationYears = (): number => {
-    return baseContext.sectionData.section12.entries.reduce((total, entry) => {
-      const duration = calculateEducationDuration(
-        entry.attendanceDates.fromDate.value,
-        entry.attendanceDates.toDate.value
-      );
-      return total + duration;
-    }, 0);
-  };
+  const [section12Data, setSection12Data] = useState<Section12>(createDefaultSection12());
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [initialData] = useState<Section12>(createDefaultSection12());
 
-  const getHighestDegree = (): string | null => {
-    const degreeHierarchy = [
-      'Doctorate',
-      'Master',
-      'Bachelor',
-      'Associate',
-      'Professional',
-      'Certificate',
-      'High School Diploma',
-      'Other'
-    ];
+  // ============================================================================
+  // COMPUTED VALUES
+  // ============================================================================
 
-    for (const degree of degreeHierarchy) {
-      const hasThisDegree = baseContext.sectionData.section12.entries.some(
-        entry => entry.degreeReceived.value && entry.degreeType.value === degree
-      );
-      if (hasThisDegree) {
-        return degree;
-      }
-    }
+  const isDirty = useMemo(() => {
+    return JSON.stringify(section12Data) !== JSON.stringify(initialData);
+  }, [section12Data, initialData]);
 
-    return null;
-  };
+  // ============================================================================
+  // VALIDATION
+  // ============================================================================
 
-  const validateEducationHistoryOnly = (): EducationValidationResult => {
+  const validateSectionData = useCallback((): ValidationResult => {
+    const validationErrors: ValidationError[] = [];
+    const validationWarnings: ValidationError[] = [];
+
+    // Validate education history
     const validationContext: Section12ValidationContext = {
       currentDate: new Date(),
       minimumEducationAge: 16,
@@ -370,11 +239,144 @@ export const useSection12 = (): Section12ContextType => {
       }
     };
 
-    return validateSection12(baseContext.sectionData, validationContext);
-  };
+    const educationValidation = validateSection12(section12Data, validationContext);
+    if (!educationValidation.isValid) {
+      educationValidation.errors.forEach(error => {
+        validationErrors.push({
+          field: 'section12.educationHistory',
+          message: error,
+          code: 'EDUCATION_VALIDATION_ERROR',
+          severity: 'error'
+        });
+      });
+    }
 
-  const validateEducationEntryOnly = (entryIndex: number): EducationValidationResult => {
-    if (entryIndex < 0 || entryIndex >= baseContext.sectionData.section12.entries.length) {
+    educationValidation.warnings.forEach(warning => {
+      validationWarnings.push({
+        field: 'section12.educationHistory',
+        message: warning,
+        code: 'EDUCATION_VALIDATION_WARNING',
+        severity: 'warning'
+      });
+    });
+
+    return {
+      isValid: validationErrors.length === 0,
+      errors: validationErrors,
+      warnings: validationWarnings
+    };
+  }, [section12Data]);
+
+  // ============================================================================
+  // CHANGE TRACKING
+  // ============================================================================
+
+  const getChanges = useCallback(() => {
+    // Implementation for change tracking
+    return {};
+  }, [section12Data, initialData]);
+
+  // ============================================================================
+  // FIELD OPERATIONS
+  // ============================================================================
+
+  const updateField = useCallback((fieldPath: string, newValue: any) => {
+    setSection12Data(prevData => {
+      const newData = cloneDeep(prevData);
+      set(newData, fieldPath, newValue);
+      return newData;
+    });
+  }, []);
+
+  const resetSection = useCallback(() => {
+    setSection12Data(createDefaultSection12());
+    setErrors({});
+  }, []);
+
+  const loadSection = useCallback((data: Section12) => {
+    setSection12Data(data);
+    setErrors({});
+  }, []);
+
+  // ============================================================================
+  // INTEGRATION HOOKS
+  // ============================================================================
+
+  const integration = useSection86FormIntegration(
+    'section12',
+    'Section 12: Where You Went to School',
+    section12Data,
+    setSection12Data,
+    validateSectionData,
+    getChanges,
+    flattenSection12Fields
+  );
+
+  // ============================================================================
+  // SECTION-SPECIFIC OPERATIONS
+  // ============================================================================
+
+  // Add section-specific computed values and methods
+  const getEducationEntryCount = useCallback((): number => {
+    return section12Data.section12.entries.length;
+  }, [section12Data]);
+
+  const getTotalEducationYears = useCallback((): number => {
+    return section12Data.section12.entries.reduce((total, entry) => {
+      const duration = calculateEducationDuration(
+        entry.attendanceDates.fromDate.value,
+        entry.attendanceDates.toDate.value
+      );
+      return total + duration;
+    }, 0);
+  }, [section12Data]);
+
+  const getHighestDegree = useCallback((): string | null => {
+    const degreeHierarchy = [
+      'Doctorate',
+      'Master',
+      'Bachelor',
+      'Associate',
+      'Professional',
+      'Certificate',
+      'High School Diploma',
+      'Other'
+    ];
+
+    for (const degree of degreeHierarchy) {
+      const hasThisDegree = section12Data.section12.entries.some(
+        entry => entry.degreeReceived.value && entry.degreeType.value === degree
+      );
+      if (hasThisDegree) {
+        return degree;
+      }
+    }
+
+    return null;
+  }, [section12Data]);
+
+  const validateEducationHistory = useCallback((): EducationValidationResult => {
+    const validationContext: Section12ValidationContext = {
+      currentDate: new Date(),
+      minimumEducationAge: 16,
+      rules: {
+        requiresEducationHistory: true,
+        requiresHighSchoolInfo: true,
+        maxEducationEntries: 10,
+        requiresSchoolName: true,
+        requiresSchoolAddress: true,
+        requiresAttendanceDates: true,
+        allowsEstimatedDates: true,
+        maxSchoolNameLength: 100,
+        maxAddressLength: 200
+      }
+    };
+
+    return validateSection12(section12Data, validationContext);
+  }, [section12Data]);
+
+  const validateEducationEntry = useCallback((entryIndex: number): EducationValidationResult => {
+    if (entryIndex < 0 || entryIndex >= section12Data.section12.entries.length) {
       return {
         isValid: false,
         errors: ['Invalid entry index'],
@@ -398,92 +400,100 @@ export const useSection12 = (): Section12ContextType => {
       }
     };
 
-    return validateEducationEntry(baseContext.sectionData.section12.entries[entryIndex], validationContext);
-  };
+    return validateEducationEntry(section12Data.section12.entries[entryIndex], validationContext);
+  }, [section12Data]);
 
   // Education entry management functions
-  const addEducationEntry = (): void => {
-    const updatedData = section12Config.customActions.addEducationEntry(baseContext.sectionData);
-    baseContext.loadSection(updatedData);
-  };
+  const addEducationEntry = useCallback((): void => {
+    setSection12Data(prevData => {
+      const newData = cloneDeep(prevData);
+      const entryIndex = newData.section12.entries.length;
+      const newEntry = createDefaultEducationEntry(Date.now(), entryIndex);
+      newData.section12.entries.push(newEntry);
+      newData.section12.entriesCount = newData.section12.entries.length;
+      return newData;
+    });
+  }, []);
 
-  const removeEducationEntry = (entryIndex: number): void => {
-    const updatedData = section12Config.customActions.removeEducationEntry(baseContext.sectionData, entryIndex);
-    baseContext.loadSection(updatedData);
-  };
+  const removeEducationEntry = useCallback((entryIndex: number): void => {
+    setSection12Data(prevData => {
+      const newData = cloneDeep(prevData);
+      if (entryIndex >= 0 && entryIndex < newData.section12.entries.length) {
+        newData.section12.entries.splice(entryIndex, 1);
+        newData.section12.entriesCount = newData.section12.entries.length;
+      }
+      return newData;
+    });
+  }, []);
 
-  const moveEducationEntry = (fromIndex: number, toIndex: number): void => {
-    const updatedData = section12Config.customActions.moveEducationEntry(baseContext.sectionData, fromIndex, toIndex);
-    baseContext.loadSection(updatedData);
-  };
+  const moveEducationEntry = useCallback((fromIndex: number, toIndex: number): void => {
+    setSection12Data(prevData => {
+      const newData = cloneDeep(prevData);
+      if (fromIndex >= 0 && fromIndex < newData.section12.entries.length &&
+          toIndex >= 0 && toIndex < newData.section12.entries.length) {
+        const [movedEntry] = newData.section12.entries.splice(fromIndex, 1);
+        newData.section12.entries.splice(toIndex, 0, movedEntry);
+      }
+      return newData;
+    });
+  }, []);
 
-  const duplicateEducationEntry = (entryIndex: number): void => {
-    const updatedData = section12Config.customActions.duplicateEducationEntry(baseContext.sectionData, entryIndex);
-    baseContext.loadSection(updatedData);
-  };
+  const duplicateEducationEntry = useCallback((entryIndex: number): void => {
+    setSection12Data(prevData => {
+      const newData = cloneDeep(prevData);
+      if (entryIndex >= 0 && entryIndex < newData.section12.entries.length) {
+        const originalEntry = newData.section12.entries[entryIndex];
+        const duplicatedEntry = {
+          ...originalEntry,
+          _id: Date.now(),
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+        newData.section12.entries.splice(entryIndex + 1, 0, duplicatedEntry);
+        newData.section12.entriesCount = newData.section12.entries.length;
+      }
+      return newData;
+    });
+  }, []);
 
-  const clearEducationEntry = (entryIndex: number): void => {
-    const updatedData = section12Config.customActions.clearEducationEntry(baseContext.sectionData, entryIndex);
-    baseContext.loadSection(updatedData);
-  };
+  const clearEducationEntry = useCallback((entryIndex: number): void => {
+    setSection12Data(prevData => {
+      const newData = cloneDeep(prevData);
+      if (entryIndex >= 0 && entryIndex < newData.section12.entries.length) {
+        const clearedEntry = createDefaultEducationEntry(newData.section12.entries[entryIndex]._id);
+        newData.section12.entries[entryIndex] = clearedEntry;
+      }
+      return newData;
+    });
+  }, []);
 
-  const updateEducationEntry = (entryIndex: number, fieldPath: string, value: any): void => {
-    // Use the enhanced template's updateField method for direct state updates
-    // This avoids the loadSection method which can cause race conditions
-
-    // For Field<T> structures, we need to target the .value property
-    const fullFieldPath = `section12.entries[${entryIndex}].${fieldPath}.value`;
-
-    if (baseContext.updateField) {
-      console.log(`🔧 Section12: Using updateField for ${fullFieldPath} = ${value}`);
-      baseContext.updateField(fullFieldPath, value);
-    } else {
-      // Fallback to the original method if updateField is not available
-      console.log(`🔧 Section12: Using fallback method for ${fieldPath} = ${value}`);
-      const update: Section12FieldUpdate = {
-        fieldPath: `section12.entries.${fieldPath}`,
-        newValue: value,
-        entryIndex
-      };
-      const updatedData = section12Config.customActions.updateEducationField(baseContext.sectionData, update);
-      baseContext.loadSection(updatedData);
-    }
-  };
+  const updateEducationEntry = useCallback((entryIndex: number, fieldPath: string, value: any): void => {
+    const fullFieldPath = `section12.entries[${entryIndex}].${fieldPath}`;
+    updateField(fullFieldPath, value);
+  }, [updateField]);
 
   // Education-specific field updates
-  const updateEducationFlag = (hasEducation: "YES" | "NO"): void => {
-    if (baseContext.updateField) {
-      console.log(`🔧 Section12: Using updateField for hasEducation = ${hasEducation}`);
-      baseContext.updateField('section12.hasEducation.value', hasEducation);
-    } else {
-      const updatedData = section12Config.customActions.updateEducationFlag(baseContext.sectionData, hasEducation);
-      baseContext.loadSection(updatedData);
-    }
-  };
+  const updateEducationFlag = useCallback((hasEducation: "YES" | "NO"): void => {
+    updateField('section12.hasEducation.value', hasEducation);
+  }, [updateField]);
 
-  const updateHighSchoolFlag = (hasHighSchool: "YES" | "NO"): void => {
-    if (baseContext.updateField) {
-      console.log(`🔧 Section12: Using updateField for hasHighSchool = ${hasHighSchool}`);
-      baseContext.updateField('section12.hasHighSchool.value', hasHighSchool);
-    } else {
-      const updatedData = section12Config.customActions.updateHighSchoolFlag(baseContext.sectionData, hasHighSchool);
-      baseContext.loadSection(updatedData);
-    }
-  };
+  const updateHighSchoolFlag = useCallback((hasHighSchool: "YES" | "NO"): void => {
+    updateField('section12.hasHighSchool.value', hasHighSchool);
+  }, [updateField]);
 
-  const updateSchoolType = (entryIndex: number, schoolType: string): void => {
-    updateEducationEntry(entryIndex, 'schoolType', schoolType);
-  };
+  const updateSchoolType = useCallback((entryIndex: number, schoolType: string): void => {
+    updateEducationEntry(entryIndex, 'schoolType.value', schoolType);
+  }, [updateEducationEntry]);
 
-  const updateAttendanceDates = (entryIndex: number, fromDate: string, toDate: string, present?: boolean): void => {
-    updateEducationEntry(entryIndex, 'attendanceDates.fromDate', fromDate);
-    updateEducationEntry(entryIndex, 'attendanceDates.toDate', toDate);
+  const updateAttendanceDates = useCallback((entryIndex: number, fromDate: string, toDate: string, present?: boolean): void => {
+    updateEducationEntry(entryIndex, 'attendanceDates.fromDate.value', fromDate);
+    updateEducationEntry(entryIndex, 'attendanceDates.toDate.value', toDate);
     if (present !== undefined) {
-      updateEducationEntry(entryIndex, 'attendanceDates.present', present);
+      updateEducationEntry(entryIndex, 'attendanceDates.present.value', present);
     }
-  };
+  }, [updateEducationEntry]);
 
-  const updateSchoolAddress = (entryIndex: number, address: Partial<{
+  const updateSchoolAddress = useCallback((entryIndex: number, address: Partial<{
     street: string;
     city: string;
     state: string;
@@ -491,63 +501,105 @@ export const useSection12 = (): Section12ContextType => {
     country: string;
   }>): void => {
     Object.entries(address).forEach(([field, value]) => {
-      updateEducationEntry(entryIndex, `schoolAddress.${field}`, value);
+      updateEducationEntry(entryIndex, `schoolAddress.${field}.value`, value);
     });
-  };
+  }, [updateEducationEntry]);
 
   // Utility functions
-  const formatEducationDateWrapper = (date: string, format?: 'MM/YYYY' | 'MM/DD/YYYY'): string => {
+  const formatEducationDateWrapper = useCallback((date: string, format?: 'MM/YYYY' | 'MM/DD/YYYY'): string => {
     return formatEducationDate(date, format);
-  };
+  }, []);
 
-  const calculateEducationDurationWrapper = (entryIndex: number): number => {
-    if (entryIndex < 0 || entryIndex >= baseContext.sectionData.section12.entries.length) {
+  const calculateEducationDurationWrapper = useCallback((entryIndex: number): number => {
+    if (entryIndex < 0 || entryIndex >= section12Data.section12.entries.length) {
       return 0;
     }
 
-    const entry = baseContext.sectionData.section12.entries[entryIndex];
+    const entry = section12Data.section12.entries[entryIndex];
     return calculateEducationDuration(
       entry.attendanceDates.fromDate.value,
       entry.attendanceDates.toDate.value
     );
-  };
+  }, [section12Data]);
 
-  const getSchoolTypeOptions = (): string[] => {
+  const getSchoolTypeOptions = useCallback((): string[] => {
     return [...SCHOOL_TYPE_OPTIONS];
-  };
+  }, []);
 
-  const getDegreeTypeOptions = (): string[] => {
+  const getDegreeTypeOptions = useCallback((): string[] => {
     return [...DEGREE_TYPE_OPTIONS];
-  };
+  }, []);
 
-  return {
-    ...baseContext,
+  // ============================================================================
+  // CONTEXT VALUE
+  // ============================================================================
+
+  const contextValue: Section12ContextType = {
+    // Core state
+    section12Data,
+    isLoading,
+    errors,
+    isDirty,
+
+    // Core operations
+    updateField,
+    validateSection: validateSectionData,
+    resetSection,
+    loadSection,
+
+    // Section-specific computed values
     getEducationEntryCount,
     getTotalEducationYears,
     getHighestDegree,
-    validateEducationHistory: validateEducationHistoryOnly,
-    validateEducationEntry: validateEducationEntryOnly,
+
+    // Section-specific validation
+    validateEducationHistory,
+    validateEducationEntry,
+
+    // Education entry management
     addEducationEntry,
     removeEducationEntry,
     moveEducationEntry,
     duplicateEducationEntry,
     clearEducationEntry,
     updateEducationEntry,
+
+    // Education-specific field updates
     updateEducationFlag,
     updateHighSchoolFlag,
     updateSchoolType,
     updateAttendanceDates,
     updateSchoolAddress,
+
+    // Utility functions
     formatEducationDate: formatEducationDateWrapper,
     calculateEducationDuration: calculateEducationDurationWrapper,
     getSchoolTypeOptions,
     getDegreeTypeOptions
   };
+
+  return (
+    <Section12Context.Provider value={contextValue}>
+      {children}
+    </Section12Context.Provider>
+  );
 };
 
 // ============================================================================
-// EXPORTS (GOLD STANDARD)
+// HOOK
 // ============================================================================
 
-export { Section12Provider };
-export default Section12Provider; 
+const useSection12 = (): Section12ContextType => {
+  const context = useContext(Section12Context);
+  if (!context) {
+    throw new Error('useSection12 must be used within a Section12Provider');
+  }
+  return context;
+};
+
+// ============================================================================
+// EXPORTS
+// ============================================================================
+
+export { Section12Provider, useSection12 };
+export default Section12Provider;

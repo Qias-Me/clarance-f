@@ -274,5 +274,3 @@ export const Section18_2Component: React.FC<Section18_2Props> = ({
     </div>
   );
 };
-
-export default Section18_2Component;
