@@ -1275,6 +1275,65 @@ export class ClientPdfService2 {
   }
 
   /**
+   * Download JSON data for debugging analysis
+   */
+  downloadJson(jsonData: any, filename = 'SF86-form-data.json'): void {
+    try {
+      console.log(`📄 Starting JSON download: ${filename}`);
+
+      // Create formatted JSON string
+      const jsonString = JSON.stringify(jsonData, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      // Detect mobile devices
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+      if (!isMobile) {
+        // Desktop download
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        link.style.display = 'none';
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        console.log('✅ JSON download initiated (desktop)');
+
+        // Cleanup
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+        }, 5000);
+      } else {
+        // Mobile fallback - open in new tab
+        const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+        if (newWindow) {
+          console.log('✅ JSON opened in new tab (mobile)');
+        } else {
+          // Final fallback - show instructions
+          const instructions = `📱 JSON download ready!\n\nTo save the JSON file:\n1. Copy this link\n2. Paste in a new browser tab\n3. Save the file\n\nLink: ${url}`;
+          const shouldCopy = confirm(`${instructions}\n\nCopy link to clipboard?`);
+          if (shouldCopy) {
+            navigator.clipboard?.writeText(url).catch(() => {
+              prompt('Copy this link:', url);
+            });
+          }
+        }
+
+        // Mobile cleanup
+        setTimeout(() => {
+          URL.revokeObjectURL(url);
+        }, 30000);
+      }
+    } catch (error) {
+      console.error('❌ JSON download failed:', error);
+      alert(`JSON download failed: ${error}`);
+    }
+  }
+
+  /**
    * Download the generated PDF - Enhanced mobile compatibility (Fixed)
    */
   downloadPdf(pdfBytes: Uint8Array, filename = 'SF86-filled.pdf'): void {

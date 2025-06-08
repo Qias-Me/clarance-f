@@ -143,8 +143,12 @@ export interface SF86FormContextType {
     fieldsApplied?: number;
   }>;
   downloadPdf: (
-    filename?: string
+    filename?: string,
+    alsoDownloadJson?: boolean
   ) => Promise<{ success: boolean; errors: string[] }>;
+  downloadJsonData: (
+    filename?: string
+  ) => { success: boolean; errors: string[] };
   validatePdfMapping: () => Promise<{
     isValid: boolean;
     errors: string[];
@@ -1638,11 +1642,81 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [collectAllSectionData, integration]);
 
   /**
-   * Generate and download a filled PDF
+   * Download JSON data for debugging analysis
+   */
+  const downloadJsonData = useCallback(
+    (filename = "SF86-form-data.json"): { success: boolean; errors: string[] } => {
+      const isDebugMode =
+        typeof window !== "undefined" &&
+        window.location.search.includes("debug=true");
+
+      try {
+        if (isDebugMode) {
+          console.log(`Downloading JSON data as: ${filename}`);
+        }
+
+        // Collect all section data
+        const completeFormData = collectAllSectionData();
+
+        // Create enhanced JSON data with metadata for debugging
+        const jsonData = {
+          metadata: {
+            timestamp: new Date().toISOString(),
+            version: "1.0",
+            generatedBy: "SF86 Form Client",
+            totalSections: Object.keys(completeFormData).length,
+            registeredSections: registeredSections.map(r => ({
+              sectionId: r.sectionId,
+              hasData: !!completeFormData[r.sectionId]
+            }))
+          },
+          formData: completeFormData,
+          debugInfo: {
+            registeredSectionsCount: registeredSections.length,
+            registeredSectionIds: registeredSections.map(r => r.sectionId),
+            sectionsWithData: Object.keys(completeFormData).filter(key =>
+              completeFormData[key] && Object.keys(completeFormData[key]).length > 0
+            )
+          }
+        };
+
+        // Use the JSON download utility
+        clientPdfService2.downloadJson(jsonData, filename);
+
+        // Emit download event
+        integration.emitEvent({
+          type: "SECTION_UPDATE",
+          sectionId: "global",
+          payload: {
+            action: "json_downloaded",
+            filename,
+            method: "client",
+            totalSections: Object.keys(completeFormData).length,
+          },
+        });
+
+        if (isDebugMode) {
+          console.log(`JSON data downloaded successfully: ${filename}`);
+          console.log("JSON data structure:", jsonData);
+        }
+
+        return { success: true, errors: [] };
+      } catch (error) {
+        const errorMessage = `JSON download failed: ${error}`;
+        console.error(errorMessage);
+        return { success: false, errors: [errorMessage] };
+      }
+    },
+    [collectAllSectionData, registeredSections, integration]
+  );
+
+  /**
+   * Generate and download a filled PDF (with optional JSON download)
    */
   const downloadPdf = useCallback(
     async (
-      filename = "SF86-filled.pdf"
+      filename = "SF86-filled.pdf",
+      alsoDownloadJson = true
     ): Promise<{ success: boolean; errors: string[] }> => {
       const isDebugMode =
         typeof window !== "undefined" &&
@@ -1653,6 +1727,18 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
           console.log(
             `Downloading PDF as: ${filename} (client-side only for privacy)`
           );
+          if (alsoDownloadJson) {
+            console.log("Also downloading JSON data for debugging");
+          }
+        }
+
+        // Download JSON data first if requested
+        if (alsoDownloadJson) {
+          const jsonFilename = filename.replace('.pdf', '-data.json');
+          const jsonResult = downloadJsonData(jsonFilename);
+          if (!jsonResult.success) {
+            console.warn("JSON download failed, but continuing with PDF:", jsonResult.errors);
+          }
         }
 
         // Use client-side generation and download for privacy and security
@@ -1671,6 +1757,7 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
               method: "client",
               fieldsMapped: result.fieldsMapped,
               fieldsApplied: result.fieldsApplied,
+              jsonAlsoDownloaded: alsoDownloadJson,
             },
           });
 
@@ -1678,6 +1765,9 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
             console.log(
               `PDF downloaded successfully: ${filename}. Fields applied: ${result.fieldsApplied}`
             );
+            if (alsoDownloadJson) {
+              console.log("JSON data also downloaded for debugging analysis");
+            }
           }
           return { success: true, errors: [] };
         } else {
@@ -1689,7 +1779,7 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
         return { success: false, errors: [errorMessage] };
       }
     },
-    [generatePdf, integration]
+    [generatePdf, downloadJsonData, integration]
   );
 
   /**
@@ -2109,6 +2199,7 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
     // PDF Integration
     generatePdf,
     downloadPdf,
+    downloadJsonData,
     validatePdfMapping,
     getPdfFieldStats,
 
