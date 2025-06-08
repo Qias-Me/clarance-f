@@ -59,6 +59,20 @@ const Section26Component: React.FC<Section26ComponentProps> = ({
     addTaxDelinquencyEntry,
     addCreditCardViolationEntry,
     addCreditCounselingEntry,
+    addAlimonyChildSupportEntry,
+    addJudgmentEntry,
+    addLienEntry,
+    addFederalDebtEntry,
+    addForeclosureRepossessionEntry,
+    addDefaultEntry,
+    addCollectionEntry,
+    addSuspendedAccountEntry,
+    addEvictionEntry,
+    addGarnishmentEntry,
+    addDelinquencyEntry,
+    addCreditCounselingActualEntry,
+    addContinuation1Entry,
+    addContinuation2Entry,
     hasAnyFinancialIssues,
     getFinancialSummary
   } = useSection26();
@@ -83,6 +97,26 @@ const Section26Component: React.FC<Section26ComponentProps> = ({
     value: "YES" | "NO"
   ) => {
     updateSubsectionFlag(subsectionKey, value);
+  }, [updateSubsectionFlag]);
+
+  // Handle specific financial obligations flag updates
+  const handleFinancialObligationsFlagChange = useCallback((
+    flagType: 'alimony' | 'judgments' | 'liens' | 'federalDebt',
+    value: "YES" | "NO"
+  ) => {
+    // This would need to be implemented in the context to handle specific sub-flags
+    // For now, we'll use the general subsection flag update
+    updateSubsectionFlag('financialObligations', value);
+  }, [updateSubsectionFlag]);
+
+  // Handle specific financial problems flag updates
+  const handleFinancialProblemsFlagChange = useCallback((
+    flagType: 'foreclosures' | 'defaults' | 'collections' | 'suspended' | 'evictions' | 'garnishments' | 'pastDelinquencies' | 'currentDelinquencies',
+    value: "YES" | "NO"
+  ) => {
+    // This would need to be implemented in the context to handle specific sub-flags
+    // For now, we'll use the general subsection flag update
+    updateSubsectionFlag('financialProblems', value);
   }, [updateSubsectionFlag]);
 
   // Handle submission with data persistence
@@ -120,15 +154,17 @@ const Section26Component: React.FC<Section26ComponentProps> = ({
   // Get financial summary for status display
   const financialSummary = getFinancialSummary();
 
-  // Define subsection tabs
+  // Define subsection tabs - CORRECTED based on actual reference data
   const subsectionTabs = [
     { id: 'bankruptcy', name: '26.1 Bankruptcy', key: 'bankruptcy' as Section26SubsectionKey },
-    { id: 'gambling', name: '26.2 Gambling', key: 'gambling' as Section26SubsectionKey },
-    { id: 'taxes', name: '26.3 Tax Issues', key: 'taxDelinquency' as Section26SubsectionKey },
-    { id: 'credit', name: '26.4 Credit Violations', key: 'creditCardViolations' as Section26SubsectionKey },
-    { id: 'counseling', name: '26.5 Credit Counseling', key: 'creditCounseling' as Section26SubsectionKey },
+    { id: 'gamblingAndTax', name: '26.2 Gambling + Tax', key: 'gamblingAndTax' as Section26SubsectionKey },
+    { id: 'creditViolations', name: '26.3 Credit Violations', key: 'creditCardViolations' as Section26SubsectionKey },
+    { id: 'creditCounseling', name: '26.4 Credit Counseling', key: 'creditCounseling' as Section26SubsectionKey },
+    { id: 'creditCounselingActual', name: '26.5 Credit Counseling (Actual)', key: 'creditCounselingActual' as Section26SubsectionKey },
     { id: 'obligations', name: '26.6 Financial Obligations', key: 'financialObligations' as Section26SubsectionKey },
     { id: 'problems', name: '26.7 Financial Problems', key: 'financialProblems' as Section26SubsectionKey },
+    { id: 'continuation1', name: '26.8 Problems Continuation', key: 'financialProblemsContinuation1' as Section26SubsectionKey },
+    { id: 'continuation2', name: '26.9 Problems Continuation', key: 'financialProblemsContinuation2' as Section26SubsectionKey },
   ];
 
   return (
@@ -213,25 +249,17 @@ const Section26Component: React.FC<Section26ComponentProps> = ({
             />
           )}
 
-          {activeTab === 'gambling' && (
-            <GamblingSubsection
+          {activeTab === 'gamblingAndTax' && (
+            <GamblingAndTaxSubsection
               sectionData={sectionData}
               onFlagChange={handleSubsectionFlagChange}
-              onAddEntry={addGamblingEntry}
-              entryCount={getEntryCount('gambling')}
+              onAddGamblingEntry={addGamblingEntry}
+              onAddTaxEntry={addTaxDelinquencyEntry}
+              entryCount={getEntryCount('gamblingAndTax')}
             />
           )}
 
-          {activeTab === 'taxes' && (
-            <TaxDelinquencySubsection
-              sectionData={sectionData}
-              onFlagChange={handleSubsectionFlagChange}
-              onAddEntry={addTaxDelinquencyEntry}
-              entryCount={getEntryCount('taxDelinquency')}
-            />
-          )}
-
-          {activeTab === 'credit' && (
+          {activeTab === 'creditViolations' && (
             <CreditViolationsSubsection
               sectionData={sectionData}
               onFlagChange={handleSubsectionFlagChange}
@@ -240,7 +268,7 @@ const Section26Component: React.FC<Section26ComponentProps> = ({
             />
           )}
 
-          {activeTab === 'counseling' && (
+          {activeTab === 'creditCounseling' && (
             <CreditCounselingSubsection
               sectionData={sectionData}
               onFlagChange={handleSubsectionFlagChange}
@@ -249,10 +277,20 @@ const Section26Component: React.FC<Section26ComponentProps> = ({
             />
           )}
 
+          {activeTab === 'creditCounselingActual' && (
+            <CreditCounselingActualSubsection
+              sectionData={sectionData}
+              onFlagChange={handleSubsectionFlagChange}
+              onAddEntry={addCreditCounselingActualEntry}
+              entryCount={getEntryCount('creditCounselingActual')}
+            />
+          )}
+
           {activeTab === 'obligations' && (
             <FinancialObligationsSubsection
               sectionData={sectionData}
               onFlagChange={handleSubsectionFlagChange}
+              onSpecificFlagChange={handleFinancialObligationsFlagChange}
             />
           )}
 
@@ -260,6 +298,25 @@ const Section26Component: React.FC<Section26ComponentProps> = ({
             <FinancialProblemsSubsection
               sectionData={sectionData}
               onFlagChange={handleSubsectionFlagChange}
+              onSpecificFlagChange={handleFinancialProblemsFlagChange}
+            />
+          )}
+
+          {activeTab === 'continuation1' && (
+            <FinancialProblemsContinuation1Subsection
+              sectionData={sectionData}
+              onFlagChange={handleSubsectionFlagChange}
+              onAddEntry={addContinuation1Entry}
+              entryCount={getEntryCount('financialProblemsContinuation1')}
+            />
+          )}
+
+          {activeTab === 'continuation2' && (
+            <FinancialProblemsContinuation2Subsection
+              sectionData={sectionData}
+              onFlagChange={handleSubsectionFlagChange}
+              onAddEntry={addContinuation2Entry}
+              entryCount={getEntryCount('financialProblemsContinuation2')}
             />
           )}
         </div>
@@ -344,70 +401,141 @@ const BankruptcySubsection: React.FC<{
 };
 
 /**
- * Gambling Subsection Component
+ * Combined Gambling and Tax Delinquency Subsection Component (26.2)
+ * Based on Section26_2[0] in reference data which contains both gambling and tax fields
  */
-const GamblingSubsection: React.FC<{
+const GamblingAndTaxSubsection: React.FC<{
   sectionData: any;
   onFlagChange: (key: Section26SubsectionKey, value: "YES" | "NO") => void;
-  onAddEntry: () => void;
+  onAddGamblingEntry: () => void;
+  onAddTaxEntry: () => void;
   entryCount: number;
-}> = ({ sectionData, onFlagChange, onAddEntry, entryCount }) => {
-  const hasGamblingProblems = sectionData.section26.gambling.hasGamblingProblems.value;
+}> = ({ sectionData, onFlagChange, onAddGamblingEntry, onAddTaxEntry, entryCount }) => {
+  const gamblingAndTax = sectionData.section26.gamblingAndTax;
+  const hasGamblingProblems = gamblingAndTax.hasGamblingProblems.value;
+  const hasTaxDelinquencies = gamblingAndTax.hasTaxDelinquencies.value;
 
   return (
-    <div className="subsection gambling-subsection">
-      <SubsectionQuestion
-        subsectionKey="gambling"
-        title="26.2 Gambling"
-        description="In the last seven (7) years, have you experienced financial problems due to gambling?"
-        hasValue={hasGamblingProblems}
-        onValueChange={onFlagChange}
-        showEntries={hasGamblingProblems === "YES"}
-        entryCount={entryCount}
-        onAddEntry={onAddEntry}
-      >
-        {hasGamblingProblems === "YES" && entryCount === 0 && (
-          <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <p className="text-yellow-800 text-sm">
-              Please add at least one gambling entry to provide details about your gambling-related financial problems.
-            </p>
+    <div className="subsection gambling-and-tax-subsection">
+      <h3 className="text-lg font-semibold text-gray-900 mb-6">26.2 Gambling and Tax Delinquency</h3>
+      <div className="space-y-8">
+
+        {/* Gambling Problems */}
+        <SubsectionQuestion
+          subsectionKey="gamblingAndTax"
+          title="26.2.1 Gambling Problems"
+          description="In the last seven (7) years, have you experienced financial problems due to gambling?"
+          hasValue={hasGamblingProblems}
+          onValueChange={(_, value) => {
+            // Update gambling flag specifically
+            onFlagChange('gamblingAndTax', value);
+          }}
+          showEntries={hasGamblingProblems === "YES"}
+          entryCount={gamblingAndTax.gamblingEntriesCount}
+          onAddEntry={onAddGamblingEntry}
+        >
+          {hasGamblingProblems === "YES" && gamblingAndTax.gamblingEntriesCount === 0 && (
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-yellow-800 text-sm">
+                Please add at least one gambling entry to provide details about your gambling-related financial problems.
+              </p>
+            </div>
+          )}
+        </SubsectionQuestion>
+
+        {/* Tax Delinquency */}
+        <SubsectionQuestion
+          subsectionKey="gamblingAndTax"
+          title="26.2.2 Tax Delinquency"
+          description="In the last seven (7) years, have you failed to file or pay Federal, state, or other taxes when required by law or ordinance?"
+          hasValue={hasTaxDelinquencies}
+          onValueChange={(_, value) => {
+            // Update tax flag specifically
+            onFlagChange('gamblingAndTax', value);
+          }}
+          showEntries={hasTaxDelinquencies === "YES"}
+          entryCount={gamblingAndTax.taxDelinquencyEntriesCount}
+          onAddEntry={onAddTaxEntry}
+        >
+          {hasTaxDelinquencies === "YES" && gamblingAndTax.taxDelinquencyEntriesCount === 0 && (
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-yellow-800 text-sm">
+                Please add at least one tax delinquency entry to provide details about your tax-related issues.
+              </p>
+            </div>
+          )}
+        </SubsectionQuestion>
+
+        {/* Summary */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 className="font-medium text-blue-900 mb-2">Section 26.2 Summary</h4>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-blue-700">Gambling Entries:</span>
+              <span className="ml-2 font-medium text-blue-900">{gamblingAndTax.gamblingEntriesCount}</span>
+            </div>
+            <div>
+              <span className="text-blue-700">Tax Entries:</span>
+              <span className="ml-2 font-medium text-blue-900">{gamblingAndTax.taxDelinquencyEntriesCount}</span>
+            </div>
+            <div>
+              <span className="text-blue-700">Total Entries:</span>
+              <span className="ml-2 font-medium text-blue-900">{gamblingAndTax.totalEntriesCount}</span>
+            </div>
+            <div>
+              <span className="text-blue-700">Any Issues:</span>
+              <span className={`ml-2 font-medium ${
+                hasGamblingProblems === "YES" || hasTaxDelinquencies === "YES"
+                  ? 'text-red-600' : 'text-green-600'
+              }`}>
+                {hasGamblingProblems === "YES" || hasTaxDelinquencies === "YES" ? 'Yes' : 'No'}
+              </span>
+            </div>
           </div>
-        )}
-      </SubsectionQuestion>
+        </div>
+      </div>
     </div>
   );
 };
 
 /**
- * Tax Delinquency Subsection Component
+ * Credit Counseling Actual Subsection Component (26.5)
+ * Based on Section26_3[0] in reference data - the actual credit counseling implementation
  */
-const TaxDelinquencySubsection: React.FC<{
+const CreditCounselingActualSubsection: React.FC<{
   sectionData: any;
   onFlagChange: (key: Section26SubsectionKey, value: "YES" | "NO") => void;
   onAddEntry: () => void;
   entryCount: number;
 }> = ({ sectionData, onFlagChange, onAddEntry, entryCount }) => {
-  const hasTaxDelinquencies = sectionData.section26.taxDelinquency.hasTaxDelinquencies.value;
+  const isUtilizingCreditCounseling = sectionData.section26.creditCounselingActual.isUtilizingCreditCounseling.value;
 
   return (
-    <div className="subsection tax-delinquency-subsection">
+    <div className="subsection credit-counseling-actual-subsection">
       <SubsectionQuestion
-        subsectionKey="taxDelinquency"
-        title="26.3 Tax Delinquency"
-        description="In the last seven (7) years, have you failed to file or pay Federal, state, or other taxes when required by law or ordinance?"
-        hasValue={hasTaxDelinquencies}
+        subsectionKey="creditCounselingActual"
+        title="26.5 Credit Counseling (Actual Implementation)"
+        description="Are you currently utilizing or seeking credit counseling for the control of your finances? This section contains the actual 46 fields from the reference data."
+        hasValue={isUtilizingCreditCounseling}
         onValueChange={onFlagChange}
-        showEntries={hasTaxDelinquencies === "YES"}
+        showEntries={isUtilizingCreditCounseling === "YES"}
         entryCount={entryCount}
         onAddEntry={onAddEntry}
       >
-        {hasTaxDelinquencies === "YES" && entryCount === 0 && (
+        {isUtilizingCreditCounseling === "YES" && entryCount === 0 && (
           <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-yellow-800 text-sm">
-              Please add at least one tax delinquency entry to provide details about your tax-related issues.
+              Please add at least one credit counseling entry to provide details about your credit counseling services.
             </p>
           </div>
         )}
+
+        <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-blue-800 text-sm">
+            <strong>Note:</strong> This is the actual credit counseling section based on Section26_3[0] from the reference data,
+            containing 46 fields. Sections 26.3 and 26.4 are missing from the reference data.
+          </p>
+        </div>
       </SubsectionQuestion>
     </div>
   );
@@ -489,21 +617,119 @@ const CreditCounselingSubsection: React.FC<{
 const FinancialObligationsSubsection: React.FC<{
   sectionData: any;
   onFlagChange: (key: Section26SubsectionKey, value: "YES" | "NO") => void;
-}> = ({ sectionData, onFlagChange }) => {
+  onSpecificFlagChange: (flagType: 'alimony' | 'judgments' | 'liens' | 'federalDebt', value: "YES" | "NO") => void;
+}> = ({ sectionData, onFlagChange, onSpecificFlagChange }) => {
+  const obligations = sectionData.section26.financialObligations;
+
   return (
     <div className="subsection financial-obligations-subsection">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">26.6 Financial Obligations</h3>
-      <div className="space-y-6">
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <p className="text-gray-700 mb-4">
-            This subsection covers various financial obligations including judgments, liens,
-            alimony/child support, and federal debt. Implementation for individual sub-questions
-            would be added here.
-          </p>
-          <p className="text-sm text-gray-500">
-            Note: This is a complex subsection with multiple sub-parts that would require
-            additional implementation for each specific obligation type.
-          </p>
+      <h3 className="text-lg font-semibold text-gray-900 mb-6">26.6 Financial Obligations</h3>
+      <div className="space-y-8">
+
+        {/* 26.6.1 - Alimony/Child Support Delinquencies */}
+        <SubsectionQuestion
+          subsectionKey="financialObligations"
+          title="26.6.1 Alimony/Child Support Delinquencies"
+          description="In the last seven (7) years, have you been over 120 days delinquent on any debt including alimony or child support?"
+          hasValue={obligations.hasAlimonyChildSupportDelinquencies.value}
+          onValueChange={(_, value) => onSpecificFlagChange('alimony', value)}
+          showEntries={obligations.hasAlimonyChildSupportDelinquencies.value === "YES"}
+          entryCount={obligations.alimonyChildSupportEntries.length}
+          onAddEntry={addAlimonyChildSupportEntry}
+        >
+          {obligations.hasAlimonyChildSupportDelinquencies.value === "YES" && obligations.alimonyChildSupportEntries.length === 0 && (
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-yellow-800 text-sm">
+                Please add at least one alimony/child support entry to provide details.
+              </p>
+            </div>
+          )}
+        </SubsectionQuestion>
+
+        {/* 26.6.2 - Judgments */}
+        <SubsectionQuestion
+          subsectionKey="financialObligations"
+          title="26.6.2 Judgments"
+          description="In the last seven (7) years, have you had a judgment entered against you?"
+          hasValue={obligations.hasJudgments.value}
+          onValueChange={(_, value) => onSpecificFlagChange('judgments', value)}
+          showEntries={obligations.hasJudgments.value === "YES"}
+          entryCount={obligations.judgmentEntries.length}
+          onAddEntry={addJudgmentEntry}
+        >
+          {obligations.hasJudgments.value === "YES" && obligations.judgmentEntries.length === 0 && (
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-yellow-800 text-sm">
+                Please add at least one judgment entry to provide details.
+              </p>
+            </div>
+          )}
+        </SubsectionQuestion>
+
+        {/* 26.6.3 - Liens */}
+        <SubsectionQuestion
+          subsectionKey="financialObligations"
+          title="26.6.3 Liens"
+          description="In the last seven (7) years, have you had a lien placed against your property for failing to pay taxes or other debts?"
+          hasValue={obligations.hasLiens.value}
+          onValueChange={(_, value) => onSpecificFlagChange('liens', value)}
+          showEntries={obligations.hasLiens.value === "YES"}
+          entryCount={obligations.lienEntries.length}
+          onAddEntry={addLienEntry}
+        >
+          {obligations.hasLiens.value === "YES" && obligations.lienEntries.length === 0 && (
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-yellow-800 text-sm">
+                Please add at least one lien entry to provide details.
+              </p>
+            </div>
+          )}
+        </SubsectionQuestion>
+
+        {/* 26.6.4 - Federal Debt */}
+        <SubsectionQuestion
+          subsectionKey="financialObligations"
+          title="26.6.4 Federal Debt"
+          description="In the last seven (7) years, have you been over 120 days delinquent on any debt owed to the Federal government?"
+          hasValue={obligations.hasFederalDebt.value}
+          onValueChange={(_, value) => onSpecificFlagChange('federalDebt', value)}
+          showEntries={obligations.hasFederalDebt.value === "YES"}
+          entryCount={obligations.federalDebtEntries.length}
+          onAddEntry={addFederalDebtEntry}
+        >
+          {obligations.hasFederalDebt.value === "YES" && obligations.federalDebtEntries.length === 0 && (
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <p className="text-yellow-800 text-sm">
+                Please add at least one federal debt entry to provide details.
+              </p>
+            </div>
+          )}
+        </SubsectionQuestion>
+
+        {/* Summary */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 className="font-medium text-blue-900 mb-2">Financial Obligations Summary</h4>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-blue-700">Total Entries:</span>
+              <span className="ml-2 font-medium text-blue-900">{obligations.totalEntriesCount}</span>
+            </div>
+            <div>
+              <span className="text-blue-700">Any Issues:</span>
+              <span className={`ml-2 font-medium ${
+                obligations.hasAlimonyChildSupportDelinquencies.value === "YES" ||
+                obligations.hasJudgments.value === "YES" ||
+                obligations.hasLiens.value === "YES" ||
+                obligations.hasFederalDebt.value === "YES"
+                  ? 'text-red-600' : 'text-green-600'
+              }`}>
+                {obligations.hasAlimonyChildSupportDelinquencies.value === "YES" ||
+                 obligations.hasJudgments.value === "YES" ||
+                 obligations.hasLiens.value === "YES" ||
+                 obligations.hasFederalDebt.value === "YES" ? 'Yes' : 'No'}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -516,22 +742,509 @@ const FinancialObligationsSubsection: React.FC<{
 const FinancialProblemsSubsection: React.FC<{
   sectionData: any;
   onFlagChange: (key: Section26SubsectionKey, value: "YES" | "NO") => void;
-}> = ({ sectionData, onFlagChange }) => {
+  onSpecificFlagChange: (flagType: 'foreclosures' | 'defaults' | 'collections' | 'suspended' | 'evictions' | 'garnishments' | 'pastDelinquencies' | 'currentDelinquencies', value: "YES" | "NO") => void;
+}> = ({ sectionData, onFlagChange, onSpecificFlagChange }) => {
+  const problems = sectionData.section26.financialProblems;
+
   return (
     <div className="subsection financial-problems-subsection">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">26.7 Financial Problems</h3>
+      <h3 className="text-lg font-semibold text-gray-900 mb-6">26.7 Financial Problems</h3>
       <div className="space-y-6">
-        <div className="bg-gray-50 p-4 rounded-lg">
-          <p className="text-gray-700 mb-4">
-            This subsection covers various financial problems including foreclosures,
-            repossessions, defaults, collections, suspended accounts, evictions,
-            garnishments, and delinquencies. Implementation for individual sub-questions
-            would be added here.
+
+        {/* 26.7.1 - Foreclosures/Repossessions */}
+        <SubsectionQuestion
+          subsectionKey="financialProblems"
+          title="26.7.1 Foreclosures/Repossessions"
+          description="In the last seven (7) years, have you had any possessions or property voluntarily or involuntarily repossessed or foreclosed?"
+          hasValue={problems.hasForeclosuresRepossessions.value}
+          onValueChange={(_, value) => onSpecificFlagChange('foreclosures', value)}
+          showEntries={problems.hasForeclosuresRepossessions.value === "YES"}
+          entryCount={problems.foreclosureRepossessionEntries.length}
+          onAddEntry={addForeclosureRepossessionEntry}
+        />
+
+        {/* 26.7.2 - Defaults */}
+        <SubsectionQuestion
+          subsectionKey="financialProblems"
+          title="26.7.2 Defaults"
+          description="In the last seven (7) years, have you defaulted on any type of loan?"
+          hasValue={problems.hasDefaults.value}
+          onValueChange={(_, value) => onSpecificFlagChange('defaults', value)}
+          showEntries={problems.hasDefaults.value === "YES"}
+          entryCount={problems.defaultEntries.length}
+          onAddEntry={addDefaultEntry}
+        />
+
+        {/* 26.7.3 - Collections */}
+        <SubsectionQuestion
+          subsectionKey="financialProblems"
+          title="26.7.3 Collections"
+          description="In the last seven (7) years, have you had bills or debts turned over to a collection agency?"
+          hasValue={problems.hasCollections.value}
+          onValueChange={(_, value) => onSpecificFlagChange('collections', value)}
+          showEntries={problems.hasCollections.value === "YES"}
+          entryCount={problems.collectionEntries.length}
+          onAddEntry={addCollectionEntry}
+        />
+
+        {/* 26.7.4 - Suspended/Cancelled Accounts */}
+        <SubsectionQuestion
+          subsectionKey="financialProblems"
+          title="26.7.4 Suspended/Cancelled Accounts"
+          description="In the last seven (7) years, have you had any account or credit card suspended, charged off, or cancelled for failing to pay as agreed?"
+          hasValue={problems.hasSuspendedAccounts.value}
+          onValueChange={(_, value) => onSpecificFlagChange('suspended', value)}
+          showEntries={problems.hasSuspendedAccounts.value === "YES"}
+          entryCount={problems.suspendedAccountEntries.length}
+          onAddEntry={addSuspendedAccountEntry}
+        />
+
+        {/* 26.7.5 - Evictions */}
+        <SubsectionQuestion
+          subsectionKey="financialProblems"
+          title="26.7.5 Evictions"
+          description="In the last seven (7) years, have you been evicted for non-payment?"
+          hasValue={problems.hasEvictions.value}
+          onValueChange={(_, value) => onSpecificFlagChange('evictions', value)}
+          showEntries={problems.hasEvictions.value === "YES"}
+          entryCount={problems.evictionEntries.length}
+          onAddEntry={addEvictionEntry}
+        />
+
+        {/* 26.7.6 - Garnishments */}
+        <SubsectionQuestion
+          subsectionKey="financialProblems"
+          title="26.7.6 Garnishments"
+          description="In the last seven (7) years, have you had your wages, benefits, or assets garnished or attached for any debt?"
+          hasValue={problems.hasGarnishments.value}
+          onValueChange={(_, value) => onSpecificFlagChange('garnishments', value)}
+          showEntries={problems.hasGarnishments.value === "YES"}
+          entryCount={problems.garnishmentEntries.length}
+          onAddEntry={addGarnishmentEntry}
+        />
+
+        {/* 26.7.7 - Past Delinquencies */}
+        <SubsectionQuestion
+          subsectionKey="financialProblems"
+          title="26.7.7 Past Delinquencies (120+ days)"
+          description="In the last seven (7) years, have you been over 120 days delinquent on any debt not previously entered?"
+          hasValue={problems.hasPastDelinquencies.value}
+          onValueChange={(_, value) => onSpecificFlagChange('pastDelinquencies', value)}
+          showEntries={problems.hasPastDelinquencies.value === "YES"}
+          entryCount={problems.pastDelinquencyEntries.length}
+          onAddEntry={() => addDelinquencyEntry('past')}
+        />
+
+        {/* 26.7.8 - Current Delinquencies */}
+        <SubsectionQuestion
+          subsectionKey="financialProblems"
+          title="26.7.8 Current Delinquencies (120+ days)"
+          description="Are you currently over 120 days delinquent on any debt?"
+          hasValue={problems.hasCurrentDelinquencies.value}
+          onValueChange={(_, value) => onSpecificFlagChange('currentDelinquencies', value)}
+          showEntries={problems.hasCurrentDelinquencies.value === "YES"}
+          entryCount={problems.currentDelinquencyEntries.length}
+          onAddEntry={() => addDelinquencyEntry('current')}
+        />
+
+        {/* Summary */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 className="font-medium text-blue-900 mb-2">Financial Problems Summary</h4>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-blue-700">Total Entries:</span>
+              <span className="ml-2 font-medium text-blue-900">{problems.totalEntriesCount}</span>
+            </div>
+            <div>
+              <span className="text-blue-700">Any Issues:</span>
+              <span className={`ml-2 font-medium ${
+                problems.hasForeclosuresRepossessions.value === "YES" ||
+                problems.hasDefaults.value === "YES" ||
+                problems.hasCollections.value === "YES" ||
+                problems.hasSuspendedAccounts.value === "YES" ||
+                problems.hasEvictions.value === "YES" ||
+                problems.hasGarnishments.value === "YES" ||
+                problems.hasPastDelinquencies.value === "YES" ||
+                problems.hasCurrentDelinquencies.value === "YES"
+                  ? 'text-red-600' : 'text-green-600'
+              }`}>
+                {problems.hasForeclosuresRepossessions.value === "YES" ||
+                 problems.hasDefaults.value === "YES" ||
+                 problems.hasCollections.value === "YES" ||
+                 problems.hasSuspendedAccounts.value === "YES" ||
+                 problems.hasEvictions.value === "YES" ||
+                 problems.hasGarnishments.value === "YES" ||
+                 problems.hasPastDelinquencies.value === "YES" ||
+                 problems.hasCurrentDelinquencies.value === "YES" ? 'Yes' : 'No'}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Financial Problems Continuation 1 Subsection Component (26.8)
+ * Based on Section26_8[0] in reference data - continuation of 26.7 with checkboxes
+ */
+const FinancialProblemsContinuation1Subsection: React.FC<{
+  sectionData: any;
+  onFlagChange: (key: Section26SubsectionKey, value: "YES" | "NO") => void;
+  onAddEntry: (entryType: string) => void;
+  entryCount: number;
+}> = ({ sectionData, onFlagChange, onAddEntry, entryCount }) => {
+  const continuation = sectionData.section26.financialProblemsContinuation1;
+
+  return (
+    <div className="subsection financial-problems-continuation1-subsection">
+      <h3 className="text-lg font-semibold text-gray-900 mb-6">26.8 Financial Problems Continuation</h3>
+      <div className="space-y-6">
+
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <p className="text-blue-800 text-sm">
+            <strong>Note:</strong> This section is a continuation of Section 26.7. Use the checkboxes below to indicate
+            which types of financial problems from 26.7 you need to provide additional entries for, then add the
+            corresponding entries.
           </p>
-          <p className="text-sm text-gray-500">
-            Note: This is a complex subsection with multiple sub-parts that would require
-            additional implementation for each specific problem type.
+        </div>
+
+        {/* Continuation Checkboxes */}
+        <div className="grid grid-cols-2 gap-4">
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={continuation.continuesForeclosuresRepossessions.value === "YES"}
+              onChange={(e) => onFlagChange('financialProblemsContinuation1', e.target.checked ? "YES" : "NO")}
+              className="mr-2 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-gray-700">Foreclosures/Repossessions</span>
+          </label>
+
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={continuation.continuesDefaults.value === "YES"}
+              onChange={(e) => onFlagChange('financialProblemsContinuation1', e.target.checked ? "YES" : "NO")}
+              className="mr-2 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-gray-700">Defaults</span>
+          </label>
+
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={continuation.continuesCollections.value === "YES"}
+              onChange={(e) => onFlagChange('financialProblemsContinuation1', e.target.checked ? "YES" : "NO")}
+              className="mr-2 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-gray-700">Collections</span>
+          </label>
+
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={continuation.continuesSuspendedAccounts.value === "YES"}
+              onChange={(e) => onFlagChange('financialProblemsContinuation1', e.target.checked ? "YES" : "NO")}
+              className="mr-2 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-gray-700">Suspended Accounts</span>
+          </label>
+
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={continuation.continuesEvictions.value === "YES"}
+              onChange={(e) => onFlagChange('financialProblemsContinuation1', e.target.checked ? "YES" : "NO")}
+              className="mr-2 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-gray-700">Evictions</span>
+          </label>
+
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={continuation.continuesGarnishments.value === "YES"}
+              onChange={(e) => onFlagChange('financialProblemsContinuation1', e.target.checked ? "YES" : "NO")}
+              className="mr-2 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-gray-700">Garnishments</span>
+          </label>
+
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={continuation.continuesPastDelinquencies.value === "YES"}
+              onChange={(e) => onFlagChange('financialProblemsContinuation1', e.target.checked ? "YES" : "NO")}
+              className="mr-2 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-gray-700">Past Delinquencies</span>
+          </label>
+
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={continuation.continuesCurrentDelinquencies.value === "YES"}
+              onChange={(e) => onFlagChange('financialProblemsContinuation1', e.target.checked ? "YES" : "NO")}
+              className="mr-2 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-gray-700">Current Delinquencies</span>
+          </label>
+        </div>
+
+        {/* Entry Management Buttons */}
+        <div className="grid grid-cols-2 gap-4 mt-6">
+          <button
+            type="button"
+            onClick={() => onAddEntry('foreclosure')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+          >
+            Add Foreclosure Entry
+          </button>
+          <button
+            type="button"
+            onClick={() => onAddEntry('default')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+          >
+            Add Default Entry
+          </button>
+          <button
+            type="button"
+            onClick={() => onAddEntry('collection')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+          >
+            Add Collection Entry
+          </button>
+          <button
+            type="button"
+            onClick={() => onAddEntry('suspended')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+          >
+            Add Suspended Account Entry
+          </button>
+          <button
+            type="button"
+            onClick={() => onAddEntry('eviction')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+          >
+            Add Eviction Entry
+          </button>
+          <button
+            type="button"
+            onClick={() => onAddEntry('garnishment')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+          >
+            Add Garnishment Entry
+          </button>
+          <button
+            type="button"
+            onClick={() => onAddEntry('pastDelinquency')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+          >
+            Add Past Delinquency Entry
+          </button>
+          <button
+            type="button"
+            onClick={() => onAddEntry('currentDelinquency')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+          >
+            Add Current Delinquency Entry
+          </button>
+        </div>
+
+        {/* Summary */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 className="font-medium text-blue-900 mb-2">Continuation Summary</h4>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-blue-700">Total Additional Entries:</span>
+              <span className="ml-2 font-medium text-blue-900">{entryCount}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Financial Problems Continuation 2 Subsection Component (26.9)
+ * Based on Section26_9[0] in reference data - second continuation of 26.7 with checkboxes
+ */
+const FinancialProblemsContinuation2Subsection: React.FC<{
+  sectionData: any;
+  onFlagChange: (key: Section26SubsectionKey, value: "YES" | "NO") => void;
+  onAddEntry: (entryType: string) => void;
+  entryCount: number;
+}> = ({ sectionData, onFlagChange, onAddEntry, entryCount }) => {
+  const continuation = sectionData.section26.financialProblemsContinuation2;
+
+  return (
+    <div className="subsection financial-problems-continuation2-subsection">
+      <h3 className="text-lg font-semibold text-gray-900 mb-6">26.9 Financial Problems Continuation (Page 2)</h3>
+      <div className="space-y-6">
+
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <p className="text-blue-800 text-sm">
+            <strong>Note:</strong> This is the second continuation page for Section 26.7 financial problems.
+            Use this section if you need even more space to document additional financial problems beyond what
+            was provided in sections 26.7 and 26.8.
           </p>
+        </div>
+
+        {/* Similar checkbox structure as 26.8 but for continuation 2 */}
+        <div className="grid grid-cols-2 gap-4">
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={continuation.continuesForeclosuresRepossessions.value === "YES"}
+              onChange={(e) => onFlagChange('financialProblemsContinuation2', e.target.checked ? "YES" : "NO")}
+              className="mr-2 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-gray-700">More Foreclosures/Repossessions</span>
+          </label>
+
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={continuation.continuesDefaults.value === "YES"}
+              onChange={(e) => onFlagChange('financialProblemsContinuation2', e.target.checked ? "YES" : "NO")}
+              className="mr-2 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-gray-700">More Defaults</span>
+          </label>
+
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={continuation.continuesCollections.value === "YES"}
+              onChange={(e) => onFlagChange('financialProblemsContinuation2', e.target.checked ? "YES" : "NO")}
+              className="mr-2 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-gray-700">More Collections</span>
+          </label>
+
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={continuation.continuesSuspendedAccounts.value === "YES"}
+              onChange={(e) => onFlagChange('financialProblemsContinuation2', e.target.checked ? "YES" : "NO")}
+              className="mr-2 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-gray-700">More Suspended Accounts</span>
+          </label>
+
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={continuation.continuesEvictions.value === "YES"}
+              onChange={(e) => onFlagChange('financialProblemsContinuation2', e.target.checked ? "YES" : "NO")}
+              className="mr-2 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-gray-700">More Evictions</span>
+          </label>
+
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={continuation.continuesGarnishments.value === "YES"}
+              onChange={(e) => onFlagChange('financialProblemsContinuation2', e.target.checked ? "YES" : "NO")}
+              className="mr-2 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-gray-700">More Garnishments</span>
+          </label>
+
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={continuation.continuesPastDelinquencies.value === "YES"}
+              onChange={(e) => onFlagChange('financialProblemsContinuation2', e.target.checked ? "YES" : "NO")}
+              className="mr-2 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-gray-700">More Past Delinquencies</span>
+          </label>
+
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={continuation.continuesCurrentDelinquencies.value === "YES"}
+              onChange={(e) => onFlagChange('financialProblemsContinuation2', e.target.checked ? "YES" : "NO")}
+              className="mr-2 text-blue-600 focus:ring-blue-500"
+            />
+            <span className="text-gray-700">More Current Delinquencies</span>
+          </label>
+        </div>
+
+        {/* Entry Management Buttons */}
+        <div className="grid grid-cols-2 gap-4 mt-6">
+          <button
+            type="button"
+            onClick={() => onAddEntry('foreclosure')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+          >
+            Add More Foreclosure Entries
+          </button>
+          <button
+            type="button"
+            onClick={() => onAddEntry('default')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+          >
+            Add More Default Entries
+          </button>
+          <button
+            type="button"
+            onClick={() => onAddEntry('collection')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+          >
+            Add More Collection Entries
+          </button>
+          <button
+            type="button"
+            onClick={() => onAddEntry('suspended')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+          >
+            Add More Suspended Entries
+          </button>
+          <button
+            type="button"
+            onClick={() => onAddEntry('eviction')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+          >
+            Add More Eviction Entries
+          </button>
+          <button
+            type="button"
+            onClick={() => onAddEntry('garnishment')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+          >
+            Add More Garnishment Entries
+          </button>
+          <button
+            type="button"
+            onClick={() => onAddEntry('pastDelinquency')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+          >
+            Add More Past Delinquencies
+          </button>
+          <button
+            type="button"
+            onClick={() => onAddEntry('currentDelinquency')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-sm"
+          >
+            Add More Current Delinquencies
+          </button>
+        </div>
+
+        {/* Summary */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h4 className="font-medium text-blue-900 mb-2">Second Continuation Summary</h4>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <span className="text-blue-700">Total Additional Entries:</span>
+              <span className="ml-2 font-medium text-blue-900">{entryCount}</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

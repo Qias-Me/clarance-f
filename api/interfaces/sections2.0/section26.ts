@@ -165,12 +165,22 @@ export interface GamblingEntry {
 }
 
 /**
- * Gambling subsection (26.2)
+ * Combined Gambling and Tax Delinquency subsection (26.2)
+ * Based on Section26_2[0] in reference data which contains both
  */
-export interface GamblingSubsection {
+export interface GamblingAndTaxSubsection {
+  // Gambling portion
   hasGamblingProblems: Field<"YES" | "NO">;
-  entries: GamblingEntry[];
-  entriesCount: number;
+  gamblingEntries: GamblingEntry[];
+  gamblingEntriesCount: number;
+
+  // Tax delinquency portion
+  hasTaxDelinquencies: Field<"YES" | "NO">;
+  taxDelinquencyEntries: TaxDelinquencyEntry[];
+  taxDelinquencyEntriesCount: number;
+
+  // Combined count
+  totalEntriesCount: number;
 }
 
 // ============================================================================
@@ -217,11 +227,12 @@ export interface TaxDelinquencyEntry {
 }
 
 /**
- * Tax delinquency subsection (26.3)
+ * Credit Card Violations subsection (26.3) - MISSING from reference data
+ * This subsection exists in the SF-86 form but has no corresponding fields in the reference data
  */
-export interface TaxDelinquencySubsection {
-  hasTaxDelinquencies: Field<"YES" | "NO">;
-  entries: TaxDelinquencyEntry[];
+export interface CreditCardViolationSubsection {
+  hasCreditCardViolations: Field<"YES" | "NO">;
+  entries: CreditCardViolationEntry[];
   entriesCount: number;
 }
 
@@ -260,11 +271,12 @@ export interface CreditCardViolationEntry {
 }
 
 /**
- * Credit card violations subsection (26.4)
+ * Credit Counseling subsection (26.4) - MISSING from reference data
+ * This subsection exists in the SF-86 form but has no corresponding fields in the reference data
  */
-export interface CreditCardViolationSubsection {
-  hasCreditCardViolations: Field<"YES" | "NO">;
-  entries: CreditCardViolationEntry[];
+export interface CreditCounselingMissingSubsection {
+  isUtilizingCreditCounseling: Field<"YES" | "NO">;
+  entries: CreditCounselingEntry[];
   entriesCount: number;
 }
 
@@ -304,9 +316,10 @@ export interface CreditCounselingEntry {
 }
 
 /**
- * Credit counseling subsection (26.5)
+ * Actual Credit Counseling subsection (26.5) - Based on Section26_3[0] in reference data
+ * This contains the actual credit counseling fields with 46 fields
  */
-export interface CreditCounselingSubsection {
+export interface CreditCounselingActualSubsection {
   isUtilizingCreditCounseling: Field<"YES" | "NO">;
   entries: CreditCounselingEntry[];
   entriesCount: number;
@@ -464,27 +477,27 @@ export interface FinancialObligationsSubsection {
  */
 export interface ForeclosureRepossessionEntry {
   _id: number;
-  
+
   // Property/Item details
   propertyType: Field<"REAL_ESTATE" | "VEHICLE" | "OTHER">;
   propertyDescription: Field<string>;
   propertyValue: AmountField;
-  
+
   // Financial institution
   creditor: {
     name: Field<string>;
     address: Address;
   };
-  
+
   // Action details
   actionType: Field<"FORECLOSURE" | "REPOSSESSION">;
   actionDate: DateInfo;
   wasVoluntary: Field<"YES" | "NO">;
-  
+
   // Deficiency information
   hasDeficiencyBalance: Field<"YES" | "NO">;
   deficiencyAmount: AmountField;
-  
+
   explanation: Field<string>;
 }
 
@@ -651,35 +664,101 @@ export interface FinancialProblemsSubsection {
   // 26.7.1 - Foreclosures/Repossessions
   hasForeclosuresRepossessions: Field<"YES" | "NO">;
   foreclosureRepossessionEntries: ForeclosureRepossessionEntry[];
-  
+
   // 26.7.2 - Defaults
   hasDefaults: Field<"YES" | "NO">;
   defaultEntries: DefaultEntry[];
-  
+
   // 26.7.3 - Collections
   hasCollections: Field<"YES" | "NO">;
   collectionEntries: CollectionEntry[];
-  
+
   // 26.7.4 - Suspended/Cancelled Accounts
   hasSuspendedAccounts: Field<"YES" | "NO">;
   suspendedAccountEntries: SuspendedAccountEntry[];
-  
+
   // 26.7.5 - Evictions
   hasEvictions: Field<"YES" | "NO">;
   evictionEntries: EvictionEntry[];
-  
+
   // 26.7.6 - Garnishments
   hasGarnishments: Field<"YES" | "NO">;
   garnishmentEntries: GarnishmentEntry[];
-  
+
   // 26.7.7 - Past Delinquencies (120+ days)
   hasPastDelinquencies: Field<"YES" | "NO">;
   pastDelinquencyEntries: DelinquencyEntry[];
-  
+
   // 26.7.8 - Current Delinquencies (120+ days)
   hasCurrentDelinquencies: Field<"YES" | "NO">;
   currentDelinquencyEntries: DelinquencyEntry[];
-  
+
+  totalEntriesCount: number;
+}
+
+// ============================================================================
+// FINANCIAL PROBLEMS CONTINUATION INTERFACES (26.8)
+// ============================================================================
+
+/**
+ * Financial problems continuation subsection (26.8)
+ * Based on Section26_8[0] in reference data - continuation of 26.7
+ * Contains checkboxes for which specific problems apply and additional entry space
+ */
+export interface FinancialProblemsContinuation1Subsection {
+  // Continuation flags - which problems from 26.7 continue here
+  continuesForeclosuresRepossessions: Field<"YES" | "NO">;
+  continuesDefaults: Field<"YES" | "NO">;
+  continuesCollections: Field<"YES" | "NO">;
+  continuesSuspendedAccounts: Field<"YES" | "NO">;
+  continuesEvictions: Field<"YES" | "NO">;
+  continuesGarnishments: Field<"YES" | "NO">;
+  continuesPastDelinquencies: Field<"YES" | "NO">;
+  continuesCurrentDelinquencies: Field<"YES" | "NO">;
+
+  // Additional entries for the continued problems
+  additionalForeclosureRepossessionEntries: ForeclosureRepossessionEntry[];
+  additionalDefaultEntries: DefaultEntry[];
+  additionalCollectionEntries: CollectionEntry[];
+  additionalSuspendedAccountEntries: SuspendedAccountEntry[];
+  additionalEvictionEntries: EvictionEntry[];
+  additionalGarnishmentEntries: GarnishmentEntry[];
+  additionalPastDelinquencyEntries: DelinquencyEntry[];
+  additionalCurrentDelinquencyEntries: DelinquencyEntry[];
+
+  totalEntriesCount: number;
+}
+
+// ============================================================================
+// FINANCIAL PROBLEMS CONTINUATION INTERFACES (26.9)
+// ============================================================================
+
+/**
+ * Financial problems continuation subsection (26.9)
+ * Based on Section26_9[0] in reference data - second continuation of 26.7
+ * Contains checkboxes for which specific problems apply and additional entry space
+ */
+export interface FinancialProblemsContinuation2Subsection {
+  // Continuation flags - which problems from 26.7 continue here
+  continuesForeclosuresRepossessions: Field<"YES" | "NO">;
+  continuesDefaults: Field<"YES" | "NO">;
+  continuesCollections: Field<"YES" | "NO">;
+  continuesSuspendedAccounts: Field<"YES" | "NO">;
+  continuesEvictions: Field<"YES" | "NO">;
+  continuesGarnishments: Field<"YES" | "NO">;
+  continuesPastDelinquencies: Field<"YES" | "NO">;
+  continuesCurrentDelinquencies: Field<"YES" | "NO">;
+
+  // Additional entries for the continued problems
+  additionalForeclosureRepossessionEntries: ForeclosureRepossessionEntry[];
+  additionalDefaultEntries: DefaultEntry[];
+  additionalCollectionEntries: CollectionEntry[];
+  additionalSuspendedAccountEntries: SuspendedAccountEntry[];
+  additionalEvictionEntries: EvictionEntry[];
+  additionalGarnishmentEntries: GarnishmentEntry[];
+  additionalPastDelinquencyEntries: DelinquencyEntry[];
+  additionalCurrentDelinquencyEntries: DelinquencyEntry[];
+
   totalEntriesCount: number;
 }
 
@@ -689,20 +768,24 @@ export interface FinancialProblemsSubsection {
 
 /**
  * Section 26 subsection keys
+ * Based on actual reference data structure
  */
-export type Section26SubsectionKey = 
-  | 'bankruptcy'
-  | 'gambling'
-  | 'taxDelinquency'
-  | 'creditCardViolations'
-  | 'creditCounseling'
-  | 'financialObligations'
-  | 'financialProblems';
+export type Section26SubsectionKey =
+  | 'bankruptcy'                    // 26.1: Section26[0] - 55 fields
+  | 'gamblingAndTax'               // 26.2: Section26_2[0] - 42 fields (gambling + tax delinquency)
+  | 'creditCardViolations'         // 26.3: MISSING from reference data
+  | 'creditCounseling'             // 26.4: MISSING from reference data
+  | 'creditCounselingActual'       // 26.5: Section26_3[0] - 46 fields (actual credit counseling)
+  | 'financialObligations'         // 26.6: Section26_6[0] - 25 fields
+  | 'financialProblems'            // 26.7: Section26_7[0] - 24 fields
+  | 'financialProblemsContinuation1' // 26.8: Section26_8[0] - 23 fields (continuation)
+  | 'financialProblemsContinuation2'; // 26.9: Section26_9[0] - 22 fields (continuation)
 
 /**
  * Section 26 entry types for unified handling
+ * Based on actual reference data structure
  */
-export type Section26EntryType = 
+export type Section26EntryType =
   | BankruptcyEntry
   | GamblingEntry
   | TaxDelinquencyEntry
@@ -722,30 +805,37 @@ export type Section26EntryType =
 
 /**
  * Main Section 26 interface
+ * Based on actual reference data structure with 237 fields
  */
 export interface Section26 {
   _id: number;
   section26: {
-    // 26.1 - Bankruptcy
+    // 26.1 - Bankruptcy (Section26[0] - 55 fields)
     bankruptcy: BankruptcySubsection;
-    
-    // 26.2 - Gambling
-    gambling: GamblingSubsection;
-    
-    // 26.3 - Tax Delinquency
-    taxDelinquency: TaxDelinquencySubsection;
-    
-    // 26.4 - Credit Card Violations
+
+    // 26.2 - Gambling + Tax Delinquency (Section26_2[0] - 42 fields)
+    gamblingAndTax: GamblingAndTaxSubsection;
+
+    // 26.3 - Credit Card Violations (MISSING from reference data)
     creditCardViolations: CreditCardViolationSubsection;
-    
-    // 26.5 - Credit Counseling
-    creditCounseling: CreditCounselingSubsection;
-    
-    // 26.6 - Financial Obligations
+
+    // 26.4 - Credit Counseling (MISSING from reference data)
+    creditCounseling: CreditCounselingMissingSubsection;
+
+    // 26.5 - Actual Credit Counseling (Section26_3[0] - 46 fields)
+    creditCounselingActual: CreditCounselingActualSubsection;
+
+    // 26.6 - Financial Obligations (Section26_6[0] - 25 fields)
     financialObligations: FinancialObligationsSubsection;
-    
-    // 26.7 - Financial Problems
+
+    // 26.7 - Financial Problems (Section26_7[0] - 24 fields)
     financialProblems: FinancialProblemsSubsection;
+
+    // 26.8 - Financial Problems Continuation 1 (Section26_8[0] - 23 fields)
+    financialProblemsContinuation1: FinancialProblemsContinuation1Subsection;
+
+    // 26.9 - Financial Problems Continuation 2 (Section26_9[0] - 22 fields)
+    financialProblemsContinuation2: FinancialProblemsContinuation2Subsection;
   };
 }
 
@@ -867,36 +957,214 @@ export const createDefaultBankruptcyEntry = (): BankruptcyEntry => ({
 });
 
 /**
+ * Create default gambling entry
+ */
+export const createDefaultGamblingEntry = (): GamblingEntry => ({
+  _id: Date.now(),
+  gamblingType: createField("gambling_type", ""),
+  timeframe: {
+    startDate: createDefaultDateInfo("gambling_start_date"),
+    endDate: createDefaultDateInfo("gambling_end_date"),
+    isOngoing: createField<"YES" | "NO">("gambling_ongoing", "NO")
+  },
+  financialLoss: createDefaultAmountField("gambling_loss"),
+  receivedTreatment: createField<"YES" | "NO">("gambling_treatment", "NO"),
+  treatmentDetails: {
+    provider: createField("gambling_treatment_provider", ""),
+    address: createDefaultAddress("gambling_treatment_address"),
+    treatmentDates: {
+      startDate: createDefaultDateInfo("gambling_treatment_start"),
+      endDate: createDefaultDateInfo("gambling_treatment_end")
+    }
+  },
+  currentStatus: createField("gambling_current_status", ""),
+  explanation: createField("gambling_explanation", "")
+});
+
+/**
+ * Create default tax delinquency entry
+ */
+export const createDefaultTaxDelinquencyEntry = (): TaxDelinquencyEntry => ({
+  _id: Date.now(),
+  taxAuthority: {
+    type: createField<TaxAuthority>("tax_authority_type", "FEDERAL"),
+    authorityName: createField("tax_authority_name", ""),
+    otherAuthorityDescription: createField("tax_authority_other", "")
+  },
+  taxYears: createField("tax_years", ""),
+  delinquencyType: createField<"FAILED_TO_FILE" | "FAILED_TO_PAY" | "BOTH">("tax_delinquency_type", "FAILED_TO_PAY"),
+  amountOwed: createDefaultAmountField("tax_amount_owed"),
+  isResolved: createField<"YES" | "NO" | "PARTIALLY">("tax_resolved", "NO"),
+  resolutionDate: createDefaultDateInfo("tax_resolution_date"),
+  resolutionMethod: createField("tax_resolution_method", ""),
+  currentStatus: createField("tax_current_status", ""),
+  explanation: createField("tax_explanation", "")
+});
+
+/**
+ * Create default credit card violation entry
+ */
+export const createDefaultCreditCardViolationEntry = (): CreditCardViolationEntry => ({
+  _id: Date.now(),
+  employer: {
+    name: createField("credit_violation_employer", ""),
+    address: createDefaultAddress("credit_violation_employer_address")
+  },
+  violationDate: createDefaultDateInfo("credit_violation_date"),
+  violationType: createField<"MISUSE" | "UNAUTHORIZED_USE" | "FAILURE_TO_PAY" | "OTHER">("credit_violation_type", "MISUSE"),
+  otherViolationDescription: createField("credit_violation_other", ""),
+  disciplinaryAction: createField("credit_violation_action", ""),
+  amountInvolved: createDefaultAmountField("credit_violation_amount"),
+  wasRepaid: createField<"YES" | "NO">("credit_violation_repaid", "NO"),
+  repaymentDate: createDefaultDateInfo("credit_violation_repayment_date"),
+  explanation: createField("credit_violation_explanation", "")
+});
+
+/**
+ * Create default credit counseling entry
+ */
+export const createDefaultCreditCounselingEntry = (): CreditCounselingEntry => ({
+  _id: Date.now(),
+  serviceProvider: {
+    name: createField("credit_counseling_provider", ""),
+    address: createDefaultAddress("credit_counseling_address"),
+    phoneNumber: createField("credit_counseling_phone", "")
+  },
+  counselingDates: {
+    startDate: createDefaultDateInfo("credit_counseling_start"),
+    endDate: createDefaultDateInfo("credit_counseling_end"),
+    isOngoing: createField<"YES" | "NO">("credit_counseling_ongoing", "NO")
+  },
+  serviceType: createField<"DEBT_MANAGEMENT" | "BUDGET_COUNSELING" | "BANKRUPTCY_COUNSELING" | "OTHER">("credit_counseling_type", "DEBT_MANAGEMENT"),
+  otherServiceDescription: createField("credit_counseling_other", ""),
+  wasSuccessful: createField<"YES" | "NO" | "PARTIALLY">("credit_counseling_successful", "YES"),
+  currentStatus: createField("credit_counseling_status", ""),
+  explanation: createField("credit_counseling_explanation", "")
+});
+
+/**
+ * Create default alimony/child support entry
+ */
+export const createDefaultAlimonyChildSupportEntry = (): AlimonyChildSupportEntry => ({
+  _id: Date.now(),
+  court: {
+    courtName: createField("alimony_court_name", ""),
+    address: createDefaultAddress("alimony_court_address")
+  },
+  supportType: createField<"ALIMONY" | "CHILD_SUPPORT" | "BOTH">("alimony_support_type", "CHILD_SUPPORT"),
+  monthlyAmount: createDefaultAmountField("alimony_monthly_amount"),
+  delinquencyStartDate: createDefaultDateInfo("alimony_delinquency_start"),
+  delinquencyEndDate: createDefaultDateInfo("alimony_delinquency_end"),
+  totalDelinquentAmount: createDefaultAmountField("alimony_total_delinquent"),
+  isCurrent: createField<"YES" | "NO">("alimony_current", "YES"),
+  currentStatus: createField("alimony_status", ""),
+  explanation: createField("alimony_explanation", "")
+});
+
+/**
+ * Create default judgment entry
+ */
+export const createDefaultJudgmentEntry = (): JudgmentEntry => ({
+  _id: Date.now(),
+  court: {
+    courtName: createField("judgment_court_name", ""),
+    address: createDefaultAddress("judgment_court_address"),
+    caseNumber: createField("judgment_case_number", "")
+  },
+  judgmentDate: createDefaultDateInfo("judgment_date"),
+  judgmentAmount: createDefaultAmountField("judgment_amount"),
+  creditorName: createField("judgment_creditor", ""),
+  judgmentType: createField("judgment_type", ""),
+  isSatisfied: createField<"YES" | "NO" | "PARTIALLY">("judgment_satisfied", "NO"),
+  satisfactionDate: createDefaultDateInfo("judgment_satisfaction_date"),
+  amountPaid: createDefaultAmountField("judgment_amount_paid"),
+  explanation: createField("judgment_explanation", "")
+});
+
+/**
+ * Create default lien entry
+ */
+export const createDefaultLienEntry = (): LienEntry => ({
+  _id: Date.now(),
+  lienType: createField<"TAX_LIEN" | "MECHANIC_LIEN" | "JUDGMENT_LIEN" | "OTHER">("lien_type", "TAX_LIEN"),
+  otherLienDescription: createField("lien_other_description", ""),
+  propertyDescription: createField("lien_property_description", ""),
+  propertyAddress: createDefaultAddress("lien_property_address"),
+  lienHolder: {
+    name: createField("lien_holder_name", ""),
+    address: createDefaultAddress("lien_holder_address")
+  },
+  lienAmount: createDefaultAmountField("lien_amount"),
+  lienDate: createDefaultDateInfo("lien_date"),
+  isReleased: createField<"YES" | "NO">("lien_released", "NO"),
+  releaseDate: createDefaultDateInfo("lien_release_date"),
+  explanation: createField("lien_explanation", "")
+});
+
+/**
+ * Create default federal debt entry
+ */
+export const createDefaultFederalDebtEntry = (): FederalDebtEntry => ({
+  _id: Date.now(),
+  debtType: createField("federal_debt_type", ""),
+  creditorAgency: createField("federal_debt_agency", ""),
+  originalAmount: createDefaultAmountField("federal_debt_original"),
+  currentBalance: createDefaultAmountField("federal_debt_current"),
+  delinquencyStartDate: createDefaultDateInfo("federal_debt_delinquency_start"),
+  monthsDelinquent: createField("federal_debt_months_delinquent", 0),
+  hasPaymentPlan: createField<"YES" | "NO">("federal_debt_payment_plan", "NO"),
+  paymentPlanDetails: createField("federal_debt_payment_details", ""),
+  currentStatus: createField("federal_debt_status", ""),
+  explanation: createField("federal_debt_explanation", "")
+});
+
+/**
  * Create default Section 26
+ * Based on actual reference data structure with 237 fields
  */
 export const createDefaultSection26 = (): Section26 => ({
   _id: Date.now(),
   section26: {
+    // 26.1 - Bankruptcy (Section26[0] - 55 fields)
     bankruptcy: {
       hasBankruptcyFilings: createField<"YES" | "NO">("has_bankruptcy", "NO"),
       entries: [],
       entriesCount: 0
     },
-    gambling: {
+
+    // 26.2 - Gambling + Tax Delinquency (Section26_2[0] - 42 fields)
+    gamblingAndTax: {
       hasGamblingProblems: createField<"YES" | "NO">("has_gambling", "NO"),
-      entries: [],
-      entriesCount: 0
-    },
-    taxDelinquency: {
+      gamblingEntries: [],
+      gamblingEntriesCount: 0,
       hasTaxDelinquencies: createField<"YES" | "NO">("has_tax_delinquency", "NO"),
-      entries: [],
-      entriesCount: 0
+      taxDelinquencyEntries: [],
+      taxDelinquencyEntriesCount: 0,
+      totalEntriesCount: 0
     },
+
+    // 26.3 - Credit Card Violations (MISSING from reference data)
     creditCardViolations: {
       hasCreditCardViolations: createField<"YES" | "NO">("has_credit_violations", "NO"),
       entries: [],
       entriesCount: 0
     },
+
+    // 26.4 - Credit Counseling (MISSING from reference data)
     creditCounseling: {
       isUtilizingCreditCounseling: createField<"YES" | "NO">("has_credit_counseling", "NO"),
       entries: [],
       entriesCount: 0
     },
+
+    // 26.5 - Actual Credit Counseling (Section26_3[0] - 46 fields)
+    creditCounselingActual: {
+      isUtilizingCreditCounseling: createField<"YES" | "NO">("has_credit_counseling_actual", "NO"),
+      entries: [],
+      entriesCount: 0
+    },
+
+    // 26.6 - Financial Obligations (Section26_6[0] - 25 fields)
     financialObligations: {
       hasAlimonyChildSupportDelinquencies: createField<"YES" | "NO">("has_alimony_child_support", "NO"),
       alimonyChildSupportEntries: [],
@@ -908,6 +1176,8 @@ export const createDefaultSection26 = (): Section26 => ({
       federalDebtEntries: [],
       totalEntriesCount: 0
     },
+
+    // 26.7 - Financial Problems (Section26_7[0] - 24 fields)
     financialProblems: {
       hasForeclosuresRepossessions: createField<"YES" | "NO">("has_foreclosures", "NO"),
       foreclosureRepossessionEntries: [],
@@ -926,8 +1196,190 @@ export const createDefaultSection26 = (): Section26 => ({
       hasCurrentDelinquencies: createField<"YES" | "NO">("has_current_delinquencies", "NO"),
       currentDelinquencyEntries: [],
       totalEntriesCount: 0
-    }
+    },
+
+    // 26.8 - Financial Problems Continuation 1 (Section26_8[0] - 23 fields)
+    financialProblemsContinuation1: createDefaultFinancialProblemsContinuation1Subsection(),
+
+    // 26.9 - Financial Problems Continuation 2 (Section26_9[0] - 22 fields)
+    financialProblemsContinuation2: createDefaultFinancialProblemsContinuation2Subsection()
   }
+});
+
+/**
+ * Create default foreclosure/repossession entry
+ */
+export const createDefaultForeclosureRepossessionEntry = (): ForeclosureRepossessionEntry => ({
+  _id: Date.now(),
+  propertyType: createField<"REAL_ESTATE" | "VEHICLE" | "OTHER">("foreclosure_property_type", "REAL_ESTATE"),
+  propertyDescription: createField("foreclosure_property_description", ""),
+  propertyValue: createDefaultAmountField("foreclosure_property_value"),
+  creditor: {
+    name: createField("foreclosure_creditor_name", ""),
+    address: createDefaultAddress("foreclosure_creditor_address")
+  },
+  actionType: createField<"FORECLOSURE" | "REPOSSESSION">("foreclosure_action_type", "FORECLOSURE"),
+  actionDate: createDefaultDateInfo("foreclosure_action_date"),
+  wasVoluntary: createField<"YES" | "NO">("foreclosure_voluntary", "NO"),
+  hasDeficiencyBalance: createField<"YES" | "NO">("foreclosure_deficiency", "NO"),
+  deficiencyAmount: createDefaultAmountField("foreclosure_deficiency_amount"),
+  explanation: createField("foreclosure_explanation", "")
+});
+
+/**
+ * Create default default entry
+ */
+export const createDefaultDefaultEntry = (): DefaultEntry => ({
+  _id: Date.now(),
+  loanType: createField("default_loan_type", ""),
+  creditorName: createField("default_creditor", ""),
+  originalAmount: createDefaultAmountField("default_original_amount"),
+  defaultDate: createDefaultDateInfo("default_date"),
+  defaultAmount: createDefaultAmountField("default_amount"),
+  isResolved: createField<"YES" | "NO">("default_resolved", "NO"),
+  resolutionDate: createDefaultDateInfo("default_resolution_date"),
+  resolutionMethod: createField("default_resolution_method", ""),
+  explanation: createField("default_explanation", "")
+});
+
+/**
+ * Create default collection entry
+ */
+export const createDefaultCollectionEntry = (): CollectionEntry => ({
+  _id: Date.now(),
+  originalCreditor: createField("collection_original_creditor", ""),
+  collectionAgency: {
+    name: createField("collection_agency_name", ""),
+    address: createDefaultAddress("collection_agency_address")
+  },
+  debtType: createField("collection_debt_type", ""),
+  originalAmount: createDefaultAmountField("collection_original_amount"),
+  collectionAmount: createDefaultAmountField("collection_amount"),
+  collectionDate: createDefaultDateInfo("collection_date"),
+  isResolved: createField<"YES" | "NO">("collection_resolved", "NO"),
+  resolutionDate: createDefaultDateInfo("collection_resolution_date"),
+  amountPaid: createDefaultAmountField("collection_amount_paid"),
+  explanation: createField("collection_explanation", "")
+});
+
+/**
+ * Create default suspended account entry
+ */
+export const createDefaultSuspendedAccountEntry = (): SuspendedAccountEntry => ({
+  _id: Date.now(),
+  accountType: createField<"CREDIT_CARD" | "LINE_OF_CREDIT" | "OTHER">("suspended_account_type", "CREDIT_CARD"),
+  creditorName: createField("suspended_creditor", ""),
+  accountNumber: createField("suspended_account_number", ""),
+  actionType: createField<"SUSPENDED" | "CHARGED_OFF" | "CANCELLED">("suspended_action_type", "SUSPENDED"),
+  actionDate: createDefaultDateInfo("suspended_action_date"),
+  reasonForAction: createField("suspended_reason", ""),
+  balanceAtAction: createDefaultAmountField("suspended_balance_at_action"),
+  currentBalance: createDefaultAmountField("suspended_current_balance"),
+  explanation: createField("suspended_explanation", "")
+});
+
+/**
+ * Create default eviction entry
+ */
+export const createDefaultEvictionEntry = (): EvictionEntry => ({
+  _id: Date.now(),
+  propertyAddress: createDefaultAddress("eviction_property_address"),
+  landlord: {
+    name: createField("eviction_landlord_name", ""),
+    address: createDefaultAddress("eviction_landlord_address")
+  },
+  evictionDate: createDefaultDateInfo("eviction_date"),
+  reasonForEviction: createField("eviction_reason", ""),
+  amountOwed: createDefaultAmountField("eviction_amount_owed"),
+  court: {
+    courtName: createField("eviction_court_name", ""),
+    address: createDefaultAddress("eviction_court_address"),
+    caseNumber: createField("eviction_case_number", "")
+  },
+  explanation: createField("eviction_explanation", "")
+});
+
+/**
+ * Create default garnishment entry
+ */
+export const createDefaultGarnishmentEntry = (): GarnishmentEntry => ({
+  _id: Date.now(),
+  garnishmentType: createField<"WAGE" | "BANK" | "OTHER">("garnishment_type", "WAGE"),
+  creditorName: createField("garnishment_creditor", ""),
+  garnishmentAmount: createDefaultAmountField("garnishment_amount"),
+  garnishmentStartDate: createDefaultDateInfo("garnishment_start_date"),
+  garnishmentEndDate: createDefaultDateInfo("garnishment_end_date"),
+  isActive: createField<"YES" | "NO">("garnishment_active", "NO"),
+  court: {
+    courtName: createField("garnishment_court_name", ""),
+    address: createDefaultAddress("garnishment_court_address"),
+    caseNumber: createField("garnishment_case_number", "")
+  },
+  explanation: createField("garnishment_explanation", "")
+});
+
+/**
+ * Create default delinquency entry
+ */
+export const createDefaultDelinquencyEntry = (): DelinquencyEntry => ({
+  _id: Date.now(),
+  creditorName: createField("delinquency_creditor", ""),
+  debtType: createField("delinquency_debt_type", ""),
+  originalAmount: createDefaultAmountField("delinquency_original_amount"),
+  currentBalance: createDefaultAmountField("delinquency_current_balance"),
+  delinquencyStartDate: createDefaultDateInfo("delinquency_start_date"),
+  daysDelinquent: createField("delinquency_days", 0),
+  isCurrentlyDelinquent: createField<"YES" | "NO">("delinquency_current", "YES"),
+  lastPaymentDate: createDefaultDateInfo("delinquency_last_payment"),
+  hasPaymentPlan: createField<"YES" | "NO">("delinquency_payment_plan", "NO"),
+  paymentPlanDetails: createField("delinquency_payment_details", ""),
+  explanation: createField("delinquency_explanation", "")
+});
+
+/**
+ * Create default financial problems continuation 1 subsection
+ */
+export const createDefaultFinancialProblemsContinuation1Subsection = (): FinancialProblemsContinuation1Subsection => ({
+  continuesForeclosuresRepossessions: createField<"YES" | "NO">("continues_foreclosures", "NO"),
+  continuesDefaults: createField<"YES" | "NO">("continues_defaults", "NO"),
+  continuesCollections: createField<"YES" | "NO">("continues_collections", "NO"),
+  continuesSuspendedAccounts: createField<"YES" | "NO">("continues_suspended", "NO"),
+  continuesEvictions: createField<"YES" | "NO">("continues_evictions", "NO"),
+  continuesGarnishments: createField<"YES" | "NO">("continues_garnishments", "NO"),
+  continuesPastDelinquencies: createField<"YES" | "NO">("continues_past_delinquencies", "NO"),
+  continuesCurrentDelinquencies: createField<"YES" | "NO">("continues_current_delinquencies", "NO"),
+  additionalForeclosureRepossessionEntries: [],
+  additionalDefaultEntries: [],
+  additionalCollectionEntries: [],
+  additionalSuspendedAccountEntries: [],
+  additionalEvictionEntries: [],
+  additionalGarnishmentEntries: [],
+  additionalPastDelinquencyEntries: [],
+  additionalCurrentDelinquencyEntries: [],
+  totalEntriesCount: 0
+});
+
+/**
+ * Create default financial problems continuation 2 subsection
+ */
+export const createDefaultFinancialProblemsContinuation2Subsection = (): FinancialProblemsContinuation2Subsection => ({
+  continuesForeclosuresRepossessions: createField<"YES" | "NO">("continues_foreclosures_2", "NO"),
+  continuesDefaults: createField<"YES" | "NO">("continues_defaults_2", "NO"),
+  continuesCollections: createField<"YES" | "NO">("continues_collections_2", "NO"),
+  continuesSuspendedAccounts: createField<"YES" | "NO">("continues_suspended_2", "NO"),
+  continuesEvictions: createField<"YES" | "NO">("continues_evictions_2", "NO"),
+  continuesGarnishments: createField<"YES" | "NO">("continues_garnishments_2", "NO"),
+  continuesPastDelinquencies: createField<"YES" | "NO">("continues_past_delinquencies_2", "NO"),
+  continuesCurrentDelinquencies: createField<"YES" | "NO">("continues_current_delinquencies_2", "NO"),
+  additionalForeclosureRepossessionEntries: [],
+  additionalDefaultEntries: [],
+  additionalCollectionEntries: [],
+  additionalSuspendedAccountEntries: [],
+  additionalEvictionEntries: [],
+  additionalGarnishmentEntries: [],
+  additionalPastDelinquencyEntries: [],
+  additionalCurrentDelinquencyEntries: [],
+  totalEntriesCount: 0
 });
 
 // ============================================================================
