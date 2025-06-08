@@ -26,30 +26,7 @@ export interface ContinuationPersonalInfo {
     zipCode: Field<string>;
     telephoneNumber: Field<string>;
   };
-  // Additional fields to support all 25 fields from reference data
-  additionalInfo?: {
-    whatIsPrognosis: Field<string>;
-    natureOfCondition: Field<string>;
-    datesOfTreatment: Field<string>;
-    dropdown: Field<string>;
-  };
-}
 
-/**
- * Main continuation entry for extended text
- */
-export interface ContinuationEntry {
-  _id: number | string;
-  remarks: Field<string>;
-  personalInfo: ContinuationPersonalInfo;
-
-  // Additional fields from page 2 (page 134)
-  additionalInfo1?: {
-    whatIsPrognosis: Field<string>;
-    natureOfCondition: Field<string>;
-    datesOfTreatment: Field<string>;
-    radioButtonOption?: Field<string>;
-  };
 }
 
 /**
@@ -58,8 +35,8 @@ export interface ContinuationEntry {
 export interface Section30 {
   _id: number;
   section30: {
-    hasContinuationSheets: Field<"YES" | "NO">;
-    entries: ContinuationEntry[];
+  continuationSheet: Field<string>;
+  personalInfo: ContinuationPersonalInfo;
   };
 }
 
@@ -98,11 +75,6 @@ export const SECTION30_FIELD_IDS = {
   ZIP_CODE_PAGE2: "form1[0].continuation2[0].p17-t10[0]",
   TELEPHONE_PAGE2: "form1[0].continuation2[0].p17-t11[0]",
 
-  // Additional info fields - Page 3 (page 135)
-  RADIO_BUTTON_PAGE3: "form1[0].continuation3[0].RadioButtonList[0]",
-  PROGNOSIS_PAGE3: "form1[0].continuation3[0].TextField1[0]",
-  NATURE_CONDITION_PAGE3: "form1[0].continuation3[0].TextField1[1]",
-  DATES_TREATMENT_PAGE3: "form1[0].continuation3[0].TextField1[2]",
 
   // Personal info fields - Page 3 (page 135)
   FULL_NAME_PAGE3: "form1[0].continuation3[0].p17-t1[0]",
@@ -137,14 +109,4 @@ export type ContinuationEntryUpdate = {
   entryIndex: number;
   fieldPath: string;
   newValue: any;
-};
-
-/**
- * Type for bulk continuation entry operations
- */
-export type BulkContinuationOperation = {
-  operation: 'add' | 'remove' | 'update' | 'move';
-  entryIndex?: number;
-  targetIndex?: number;
-  data?: Partial<ContinuationEntry>;
 };

@@ -6,6 +6,7 @@
  */
 
 import type { Field } from '../formDefinition2.0';
+import { createFieldFromReference, validateSectionFieldCount } from '../../utils/sections-references-loader';
 
 // ============================================================================
 // CORE INTERFACES
@@ -189,45 +190,39 @@ export const getStateList = (): string[] => [
 ];
 
 /**
- * Creates a default Section 3 data structure with correct field IDs
+ * Creates a default Section 3 data structure using DRY approach with sections-references
+ * This eliminates hardcoded values and uses the single source of truth
  */
-export const createDefaultSection3 = (): Section3 => ({
-  _id: 3,
-  section3: {
-    city: {
-      id: SECTION3_FIELD_IDS.CITY,
-      name: SECTION3_FIELD_NAMES.CITY,
-      type: 'PDFTextField',
-      label: 'City',
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    county: {
-      id: SECTION3_FIELD_IDS.COUNTY,
-      name: SECTION3_FIELD_NAMES.COUNTY,
-      type: 'PDFTextField',
-      label: 'County',
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    country: {
-      id: SECTION3_FIELD_IDS.COUNTRY,
-      name: SECTION3_FIELD_NAMES.COUNTRY,
-      type: 'PDFDropdown',
-      label: 'Country',
-      value: 'United States',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    state: {
-      id: SECTION3_FIELD_IDS.STATE,
-      name: SECTION3_FIELD_NAMES.STATE,
-      type: 'PDFDropdown',
-      label: 'State',
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
+export const createDefaultSection3 = (): Section3 => {
+  // Validate field count against sections-references
+  validateSectionFieldCount(3);
+
+  return {
+    _id: 3,
+    section3: {
+      city: createFieldFromReference(
+        3,
+        'form1[0].Sections1-6[0].TextField11[3]',
+        ''
+      ),
+      county: createFieldFromReference(
+        3,
+        'form1[0].Sections1-6[0].TextField11[4]',
+        ''
+      ),
+      country: createFieldFromReference(
+        3,
+        'form1[0].Sections1-6[0].DropDownList1[0]',
+        'United States'
+      ),
+      state: createFieldFromReference(
+        3,
+        'form1[0].Sections1-6[0].School6_State[0]',
+        ''
+      )
     }
-  }
-});
+  };
+};
 
 /**
  * Updates a specific field in the Section 3 data structure

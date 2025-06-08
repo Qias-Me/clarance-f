@@ -8,6 +8,7 @@
 // Section component imports
 import Section1Component from "~/components/Rendered2.0/Section1Component";
 import Section2Component from "~/components/Rendered2.0/Section2Component";
+import Section3Component from "~/components/Rendered2.0/Section3Component";
 import Section4Component from "~/components/Rendered2.0/Section4Component";
 import Section5Component from "~/components/Rendered2.0/Section5Component";
 import Section6Component from "~/components/Rendered2.0/Section6Component";
@@ -50,7 +51,7 @@ export interface SectionDefinition {
 export const ALL_SF86_SECTIONS: SectionDefinition[] = [
   { id: "section1", name: "Full Name", component: Section1Component, isImplemented: true },
   { id: "section2", name: "Date / Place of Birth", component: Section2Component, isImplemented: true },
-  { id: "section3", name: "Place of Birth", component: Section2Component, isImplemented: true },
+  { id: "section3", name: "Place of Birth", component: Section3Component, isImplemented: true },
   { id: "section4", name: "Social Security Number", component: Section4Component, isImplemented: true },
   { id: "section5", name: "Residence", component: Section5Component, isImplemented: true },
   { id: "section6", name: "Physical Characteristics", component: Section6Component, isImplemented: true },

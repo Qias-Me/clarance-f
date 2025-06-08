@@ -220,7 +220,6 @@ const createOrganizationEntryTemplate = (
       type: getFieldInputType("organizationName"),
       label: generateFieldLabel("organizationName", entryIndex),
       value: "",
-      rect: { x: 0, y: 0, width: 0, height: 0 },
     },
     address: createAddressTemplate(entryIndex, subsectionKey),
     dateRange: createDateRangeTemplate(entryIndex, subsectionKey),
@@ -232,7 +231,6 @@ const createOrganizationEntryTemplate = (
       type: getFieldInputType("involvementDescription"),
       label: generateFieldLabel("involvementDescription", entryIndex),
       value: "",
-      rect: { x: 0, y: 0, width: 0, height: 0 },
     },
   };
 };
@@ -260,7 +258,6 @@ const createTerrorismActivityEntryTemplate = (
       type: getFieldInputType("activityDescription"),
       label: generateFieldLabel("activityDescription", entryIndex),
       value: "",
-      rect: { x: 0, y: 0, width: 0, height: 0 },
     },
     dateRange: createDateRangeTemplate(entryIndex, subsectionKey),
   };
@@ -289,7 +286,6 @@ const createTerrorismAdvocacyEntryTemplate = (
       type: getFieldInputType("advocacyReason"),
       label: generateFieldLabel("advocacyReason", entryIndex),
       value: "",
-      rect: { x: 0, y: 0, width: 0, height: 0 },
     },
     dateRange: createDateRangeTemplate(entryIndex, subsectionKey),
   };
@@ -423,7 +419,6 @@ const createAddressTemplate = (
       type: getFieldInputType("address.street"),
       label: generateFieldLabel("address.street", entryIndex),
       value: "",
-      rect: { x: 0, y: 0, width: 0, height: 0 },
     },
     city: {
       id: cityFieldId,
@@ -431,7 +426,6 @@ const createAddressTemplate = (
       type: getFieldInputType("address.city"),
       label: generateFieldLabel("address.city", entryIndex),
       value: "",
-      rect: { x: 0, y: 0, width: 0, height: 0 },
     },
     state: {
       id: stateFieldId,
@@ -439,7 +433,6 @@ const createAddressTemplate = (
       type: getFieldInputType("address.state"),
       label: generateFieldLabel("address.state", entryIndex),
       value: "",
-      rect: { x: 0, y: 0, width: 0, height: 0 },
     },
     zipCode: {
       id: zipCodeFieldId,
@@ -447,7 +440,6 @@ const createAddressTemplate = (
       type: getFieldInputType("address.zipCode"),
       label: generateFieldLabel("address.zipCode", entryIndex),
       value: "",
-      rect: { x: 0, y: 0, width: 0, height: 0 },
     },
     country: {
       id: countryFieldId,
@@ -455,7 +447,6 @@ const createAddressTemplate = (
       type: getFieldInputType("address.country"),
       label: generateFieldLabel("address.country", entryIndex),
       value: "",
-      rect: { x: 0, y: 0, width: 0, height: 0 },
     },
   };
 };
@@ -528,16 +519,14 @@ const createDateRangeTemplate = (
         type: getFieldInputType("dateRange.from"),
         label: generateFieldLabel("dateRange.from", entryIndex),
         value: "",
-        rect: { x: 0, y: 0, width: 0, height: 0 },
-      },
+        },
       estimated: {
         id: fromEstimatedFieldId,
         name: fromEstimatedFieldName,
         type: getFieldInputType("dateRange.from.estimated"),
         label: generateFieldLabel("dateRange.from.estimated", entryIndex),
         value: false,
-        rect: { x: 0, y: 0, width: 0, height: 0 },
-      },
+        },
     },
     to: {
       date: {
@@ -546,16 +535,14 @@ const createDateRangeTemplate = (
         type: getFieldInputType("dateRange.to"),
         label: generateFieldLabel("dateRange.to", entryIndex),
         value: "",
-        rect: { x: 0, y: 0, width: 0, height: 0 },
-      },
+        },
       estimated: {
         id: toEstimatedFieldId,
         name: toEstimatedFieldName,
         type: getFieldInputType("dateRange.to.estimated"),
         label: generateFieldLabel("dateRange.to.estimated", entryIndex),
         value: false,
-        rect: { x: 0, y: 0, width: 0, height: 0 },
-      },
+        },
     },
     present: {
       id: presentFieldId,
@@ -563,7 +550,6 @@ const createDateRangeTemplate = (
       type: getFieldInputType("dateRange.present"),
       label: generateFieldLabel("dateRange.present", entryIndex),
       value: false,
-      rect: { x: 0, y: 0, width: 0, height: 0 },
     },
   };
 };
@@ -601,7 +587,6 @@ const createPositionsFieldTemplate = (
       type: getFieldInputType("positions.description"),
       label: generateFieldLabel("positions.description", entryIndex),
       value: "",
-      rect: { x: 0, y: 0, width: 0, height: 0 },
     },
     noPositionsHeld: {
       id: noPositionsHeldFieldId,
@@ -609,7 +594,6 @@ const createPositionsFieldTemplate = (
       type: getFieldInputType("positions.noPositionsHeld"),
       label: generateFieldLabel("positions.noPositionsHeld", entryIndex),
       value: false,
-      rect: { x: 0, y: 0, width: 0, height: 0 },
     },
   };
 };
@@ -647,7 +631,6 @@ const createContributionsFieldTemplate = (
       type: getFieldInputType("contributions.description"),
       label: generateFieldLabel("contributions.description", entryIndex),
       value: "",
-      rect: { x: 0, y: 0, width: 0, height: 0 },
     },
     noContributionsMade: {
       id: noContributionsMadeFieldId,
@@ -658,7 +641,6 @@ const createContributionsFieldTemplate = (
         entryIndex
       ),
       value: false,
-      rect: { x: 0, y: 0, width: 0, height: 0 },
     },
   };
 };

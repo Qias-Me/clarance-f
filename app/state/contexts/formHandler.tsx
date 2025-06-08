@@ -37,7 +37,7 @@ import { RenderAcknowledgementInfo } from "~/components/Rendered/RenderAcknowled
 // import { RenderCivil } from "~/components/Rendered/RenderCivil";
 // import { RenderAssociation } from "~/components/Rendered/RenderAssociation";
 import { RenderSignature } from "~/components/Rendered/RenderSignature";
-import { RenderPrintPDF } from "~/components/RenderPrintPDF";
+import { RenderPrintPDF } from "~/components/buttons/RenderPrintPDF";
 
 import { useEmployee } from "~/state/contexts/new-context";
 import type { ApplicantFormValues } from "api/interfaces/formDefinition";

@@ -109,15 +109,14 @@ const createInitialSection30State = (): Section30 => {
     const radioButtonField = createFieldFromReference(
       30,
       SECTION30_NUMERIC_FIELD_IDS.RADIO_BUTTON_PAGE3, // Use the actual radio button field
-      "NO" // Default to NO
+      "" 
     );
 
     const initialState = {
       _id: 30,
       section30: {
-        hasContinuationSheets: {
-          ...radioButtonField,
-          value: "NO" as "YES" | "NO"
+        continuationSheet: {
+          value: ""
         },
         entries: [],
       },

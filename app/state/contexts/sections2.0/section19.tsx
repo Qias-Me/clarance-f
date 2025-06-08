@@ -39,6 +39,12 @@ import type {
   ChangeSet
 } from '../shared/base-interfaces';
 import type { Field } from '../../../../api/interfaces/formDefinition2.0';
+import {
+  createSection19Field,
+  SECTION19_MAIN_FIELDS,
+  createSection19EntryFields,
+  validateSection19FieldMappings
+} from './section19-field-mapping';
 
 // ============================================================================
 // HELPER FUNCTIONS
@@ -123,10 +129,7 @@ const createSection19FieldsFromReferences = (): Record<string, Field<any>> => {
 
   const fields: Record<string, Field<any>> = {};
 
-  // Import the field mapping system
-  const { createSection19Field, SECTION19_MAIN_FIELDS } = require('./section19-field-mapping');
-
-  // Create the main hasContact field
+  // Create the main hasContact field using imported functions
   fields.hasContact = createSection19Field(
     SECTION19_MAIN_FIELDS.mainRadio,
     'NO' as "YES" | "NO (If NO, proceed to Section 20A)"
@@ -148,7 +151,6 @@ const createInitialSection19State = (): Section19 => {
 
   // Validate field mappings during initialization
   try {
-    const { validateSection19FieldMappings } = require('./section19-field-mapping');
     const validation = validateSection19FieldMappings();
 
     console.log('📊 Section 19 Field Validation Results:');
@@ -198,10 +200,7 @@ const createDefaultForeignContactEntry = (entryIndex: number) => {
 
   console.log(`🔍 Creating comprehensive foreign contact entry ${entryIndex} using subsection ${subsectionNumber}...`);
 
-  // Import the field mapping system
-  const { createSection19EntryFields } = require('./section19-field-mapping');
-
-  // Create all fields for this subsection
+  // Create all fields for this subsection using imported function
   const allFields = createSection19EntryFields(subsectionNumber);
 
   console.log(`📊 Created ${Object.keys(allFields).length} fields for entry ${entryIndex} (subsection ${subsectionNumber})`);

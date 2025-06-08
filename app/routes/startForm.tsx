@@ -13,12 +13,9 @@ import {
   CompleteSF86FormProvider,
   useSF86Form,
 } from "~/state/contexts/SF86FormContext";
-// Section context imports - only import what's actually used
-import { useSection1 } from "~/state/contexts/sections2.0/section1";
-import { useSection2 } from "~/state/contexts/sections2.0/section2";
-import { useSection3 } from "~/state/contexts/sections2.0/section3";
+
 import type { ApplicantFormValues } from "api/interfaces/formDefinition2.0";
-import ClearCacheButton from "~/components/ClearCacheButton";
+import ClearCacheButton from "~/components/buttons/ClearCacheButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
 import { clientPdfService2 } from "../../api/service/clientPdfService2.0";
 import { ServerPdfService2 } from "api/service/serverPdfService2.0";
@@ -26,13 +23,12 @@ import { ServerPdfService2 } from "api/service/serverPdfService2.0";
 // Section component imports from Rendered2.0
 // Import shared SF-86 section configuration instead of individual components
 import { ALL_SF86_SECTIONS, SECTION_ORDER, createSectionTitleMapping } from "~/utils/sf86SectionConfig";
-import { populateTestData } from "~/utils/testDataPopulator";
 
 // ============================================================================
 // ROUTE FUNCTIONS (React Router v7 Pattern)
 // ============================================================================
 
-export function meta({}: Route.MetaArgs) {
+export function meta({ }: Route.MetaArgs) {
   return [
     { title: "SF-86 Security Clearance Application" },
     {
@@ -134,9 +130,8 @@ export async function action({
         } catch (error) {
           return {
             success: false,
-            message: `PDF generation failed: ${
-              error instanceof Error ? error.message : "Unknown error"
-            }`,
+            message: `PDF generation failed: ${error instanceof Error ? error.message : "Unknown error"
+              }`,
           };
         }
 
@@ -172,8 +167,7 @@ export async function action({
             console.log("\n🎉 SERVER PDF GENERATION COMPLETED SUCCESSFULLY");
             console.log("=".repeat(80));
             console.log(
-              `📊 Summary: ${result.fieldsApplied}/${
-                result.fieldsMapped
+              `📊 Summary: ${result.fieldsApplied}/${result.fieldsMapped
               } fields applied (${result.stats.applicationSuccessRate.toFixed(
                 2
               )}%)`
@@ -190,13 +184,11 @@ export async function action({
 
             return {
               success: true,
-              message: `Server-side PDF generated successfully! Fields applied: ${
-                result.fieldsApplied
-              }/${
-                result.fieldsMapped
-              } (${result.stats.applicationSuccessRate.toFixed(
-                2
-              )}%). Check terminal for detailed logs.`,
+              message: `Server-side PDF generated successfully! Fields applied: ${result.fieldsApplied
+                }/${result.fieldsMapped
+                } (${result.stats.applicationSuccessRate.toFixed(
+                  2
+                )}%). Check terminal for detailed logs.`,
               data: {
                 pdfBase64: base64String,
                 fieldsMapped: result.fieldsMapped,
@@ -245,8 +237,7 @@ export async function action({
                 Object.entries(errorsByType as Record<string, any[]>).forEach(
                   ([errorType, errors]) => {
                     console.error(
-                      `\n🔍 ${errorType.toUpperCase().replace(/_/g, " ")} (${
-                        errors.length
+                      `\n🔍 ${errorType.toUpperCase().replace(/_/g, " ")} (${errors.length
                       } fields):`
                     );
                     errors.forEach((error, index) => {
@@ -267,8 +258,7 @@ export async function action({
                 console.error(`\n📋 ===== QUICK ERROR SUMMARY =====`);
                 result.fieldsWithErrors.forEach((error: any, index: number) => {
                   console.error(
-                    `💥 [${index + 1}] ${error.errorType}: Field "${
-                      error.fieldId
+                    `💥 [${index + 1}] ${error.errorType}: Field "${error.fieldId
                     }" (${error.fieldName}) - ${error.errorMessage}`
                   );
                 });
@@ -314,8 +304,7 @@ export async function action({
           console.error("\n💥 FATAL ERROR IN SERVER PDF GENERATION");
           console.error("-".repeat(50));
           console.error(
-            `❌ Error: ${
-              error instanceof Error ? error.message : String(error)
+            `❌ Error: ${error instanceof Error ? error.message : String(error)
             }`
           );
           console.error(
@@ -326,9 +315,8 @@ export async function action({
 
           return {
             success: false,
-            message: `Server-side PDF generation failed with fatal error: ${
-              error instanceof Error ? error.message : "Unknown error"
-            }. Check terminal for details.`,
+            message: `Server-side PDF generation failed with fatal error: ${error instanceof Error ? error.message : "Unknown error"
+              }. Check terminal for details.`,
           };
         }
 
@@ -344,9 +332,8 @@ export async function action({
         } catch (error) {
           return {
             success: false,
-            message: `JSON generation failed: ${
-              error instanceof Error ? error.message : "Unknown error"
-            }`,
+            message: `JSON generation failed: ${error instanceof Error ? error.message : "Unknown error"
+              }`,
           };
         }
 
@@ -361,9 +348,8 @@ export async function action({
         } catch (error) {
           return {
             success: false,
-            message: `Form fields mapping failed: ${
-              error instanceof Error ? error.message : "Unknown error"
-            }`,
+            message: `Form fields mapping failed: ${error instanceof Error ? error.message : "Unknown error"
+              }`,
           };
         }
 
@@ -381,9 +367,8 @@ export async function action({
         } catch (error) {
           return {
             success: false,
-            message: `Form save failed: ${
-              error instanceof Error ? error.message : "Unknown error"
-            }`,
+            message: `Form save failed: ${error instanceof Error ? error.message : "Unknown error"
+              }`,
           };
         }
 
@@ -419,9 +404,8 @@ export async function action({
         } catch (error) {
           return {
             success: false,
-            message: `Form validation failed: ${
-              error instanceof Error ? error.message : "Unknown error"
-            }`,
+            message: `Form validation failed: ${error instanceof Error ? error.message : "Unknown error"
+              }`,
           };
         }
 
@@ -436,9 +420,8 @@ export async function action({
         } catch (error) {
           return {
             success: false,
-            message: `Form export failed: ${
-              error instanceof Error ? error.message : "Unknown error"
-            }`,
+            message: `Form export failed: ${error instanceof Error ? error.message : "Unknown error"
+              }`,
           };
         }
 
@@ -460,9 +443,8 @@ export async function action({
         } catch (error) {
           return {
             success: false,
-            message: `Form submission failed: ${
-              error instanceof Error ? error.message : "Unknown error"
-            }`,
+            message: `Form submission failed: ${error instanceof Error ? error.message : "Unknown error"
+              }`,
           };
         }
 
@@ -477,9 +459,8 @@ export async function action({
         } catch (error) {
           return {
             success: false,
-            message: `Form reset failed: ${
-              error instanceof Error ? error.message : "Unknown error"
-            }`,
+            message: `Form reset failed: ${error instanceof Error ? error.message : "Unknown error"
+              }`,
           };
         }
 
@@ -501,12 +482,12 @@ export async function action({
   }
 }
 
-export async function loader({}: Route.LoaderArgs) {
+export async function loader({ }: Route.LoaderArgs) {
   // Load form configuration and section status
   const sf86Config = {
     formVersion: "2024.1",
     totalSections: 30,
-    implementedSections: ["section1", "section2", "section3","section4", "section5","section6","section7","section8", "section9","section10","section11","section12","section13","section14","section15","section16","section17","section18","section19","section20","section21","section22","section23","section24","section25","section26","section27","section28","section29", "section30"],
+    implementedSections: ["section1", "section2", "section3", "section4", "section5", "section6", "section7", "section8", "section9", "section10", "section11", "section12", "section13", "section14", "section15", "section16", "section17", "section18", "section19", "section20", "section21", "section22", "section23", "section24", "section25", "section26", "section27", "section28", "section29", "section30"],
     availableActions: [
       "generatePDF",
       "generatePDFServer",
@@ -634,7 +615,7 @@ export default function CentralizedSF86Form({
                   <span>Updated: {new Date(config.config.lastUpdated).toLocaleDateString()}</span>
                 </div>
               </div>
-              
+
               <div className="flex flex-wrap items-center gap-4 text-sm">
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 rounded-full bg-green-500"></div>
@@ -643,7 +624,7 @@ export default function CentralizedSF86Form({
                     {config.environment}
                   </span>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                   <span className="text-gray-600">Progress:</span>
@@ -660,33 +641,29 @@ export default function CentralizedSF86Form({
         {actionData && (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div
-              className={`p-4 rounded-lg ${
-                actionData.success
-                  ? "bg-green-100 border border-green-400"
-                  : "bg-red-100 border border-red-400"
-              }`}
+              className={`p-4 rounded-lg ${actionData.success
+                ? "bg-green-100 border border-green-400"
+                : "bg-red-100 border border-red-400"
+                }`}
               data-testid="action-results"
             >
               <div className="flex items-center">
                 <div
-                  className={`flex-shrink-0 ${
-                    actionData.success ? "text-green-600" : "text-red-600"
-                  }`}
+                  className={`flex-shrink-0 ${actionData.success ? "text-green-600" : "text-red-600"
+                    }`}
                 >
                   {actionData.success ? "✓" : "✗"}
                 </div>
                 <div className="ml-3">
                   <h3
-                    className={`text-sm font-medium ${
-                      actionData.success ? "text-green-800" : "text-red-800"
-                    }`}
+                    className={`text-sm font-medium ${actionData.success ? "text-green-800" : "text-red-800"
+                      }`}
                   >
                     {actionData.success ? "Success" : "Error"}
                   </h3>
                   <p
-                    className={`text-sm ${
-                      actionData.success ? "text-green-700" : "text-red-700"
-                    }`}
+                    className={`text-sm ${actionData.success ? "text-green-700" : "text-red-700"
+                      }`}
                   >
                     {actionData.message}
                   </p>
@@ -751,10 +728,6 @@ function SectionNavigation({
   availableSections,
 }: SectionNavigationProps) {
   const sf86Context = useSF86Form();
-  // Only use the contexts that are actually needed for active functionality
-  const section1Context = useSection1();
-  const section2Context = useSection2();
-  const section3Context = useSection3();
 
   const { formData, validateForm, saveForm, exportForm, generatePdf } =
     sf86Context;
@@ -775,18 +748,6 @@ function SectionNavigation({
     }
   };
 
-  const handlePopulateTestData = () => {
-    // Use the centralized test data populator to reduce file clutter
-    console.log("🧪 Starting comprehensive test data population...");
-    populateTestData({
-      section1Context,
-      section2Context,
-      section3Context,
-      sf86Context
-    });
-    console.log("🔄 Test data population complete - checking registrations...");
-    console.log("📊 Registered sections:", sf86Context.registeredSections.map((s: any) => s.sectionId));
-  };
 
   const handleServerPdfGeneration = async () => {
     setIsGeneratingPdf(true);
@@ -829,9 +790,8 @@ function SectionNavigation({
         const url = URL.createObjectURL(pdfBlob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = `SF86_Server_Generated_${
-          new Date().toISOString().split("T")[0]
-        }.pdf`;
+        link.download = `SF86_Server_Generated_${new Date().toISOString().split("T")[0]
+          }.pdf`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -839,8 +799,7 @@ function SectionNavigation({
 
         console.log("✅ PDF downloaded successfully!");
         console.log(
-          `📊 Statistics: ${result.data.fieldsApplied}/${
-            result.data.fieldsMapped
+          `📊 Statistics: ${result.data.fieldsApplied}/${result.data.fieldsMapped
           } fields applied (${result.data.successRate?.toFixed(2)}%)`
         );
         console.log("📄 Check the terminal for detailed server logs!");
@@ -889,9 +848,8 @@ function SectionNavigation({
 
       if (result.success && result.pdfBytes) {
         // Use the service's enhanced download method with mobile support
-        const filename = `SF86_Client_Generated_${
-          new Date().toISOString().split("T")[0]
-        }.pdf`;
+        const filename = `SF86_Client_Generated_${new Date().toISOString().split("T")[0]
+          }.pdf`;
         console.log(`📄 Initiating download with filename: ${filename}`);
 
         // Detect mobile device for user messaging
@@ -909,8 +867,7 @@ function SectionNavigation({
         );
         console.log("=".repeat(80));
         console.log(
-          `📊 Summary: ${result.fieldsApplied}/${
-            result.fieldsMapped
+          `📊 Summary: ${result.fieldsApplied}/${result.fieldsMapped
           } fields applied (${result.stats.applicationSuccessRate.toFixed(2)}%)`
         );
         console.log(
@@ -932,7 +889,7 @@ function SectionNavigation({
         // Provide specific mobile guidance based on device type
         let mobileInstructions = '';
         if (isIOSDevice) {
-          mobileInstructions = 
+          mobileInstructions =
             `\n🍎 iOS Users:\n` +
             `• If download didn't start, check if a new tab opened\n` +
             `• Look for the Share button (⬆️) in Safari's toolbar\n` +
@@ -940,7 +897,7 @@ function SectionNavigation({
             `• Choose your preferred save location\n` +
             `• Alternative: Long-press the PDF and select "Save"\n`;
         } else if (isAndroidDevice) {
-          mobileInstructions = 
+          mobileInstructions =
             `\n🤖 Android Users:\n` +
             `• Check your notification panel for download progress\n` +
             `• PDF should be saved to Downloads folder automatically\n` +
@@ -948,14 +905,14 @@ function SectionNavigation({
             `• Try long-pressing the PDF and selecting "Download"\n` +
             `• Some browsers may open PDF instead - look for save options\n`;
         } else if (isMobileDevice) {
-          mobileInstructions = 
+          mobileInstructions =
             `\n📱 Mobile Browser:\n` +
             `• Download behavior varies by mobile browser\n` +
             `• Check if a new tab opened with the PDF\n` +
             `• Look for save/download options in your browser\n` +
             `• Check your device's Downloads folder\n`;
         } else {
-          mobileInstructions = 
+          mobileInstructions =
             `\n💻 Desktop: If download doesn't start, check browser's download settings or popup blocker.\n`;
         }
 
@@ -1022,9 +979,8 @@ function SectionNavigation({
       );
       console.error("-".repeat(50) + "\n");
 
-      const errorMessage = `💥 Enhanced client PDF generation error:\n\n${
-        error instanceof Error ? error.message : String(error)
-      }\n\nCheck the browser console for details.`;
+      const errorMessage = `💥 Enhanced client PDF generation error:\n\n${error instanceof Error ? error.message : String(error)
+        }\n\nCheck the browser console for details.`;
       alert(errorMessage);
     } finally {
       setIsGeneratingPdf(false);
@@ -1050,7 +1006,7 @@ function SectionNavigation({
               <p className="text-sm text-gray-600">Validate, save, and generate PDFs</p>
             </div>
           </div>
-          
+
           <div className="flex flex-wrap gap-2">
             {/* Primary Actions */}
             <div className="flex flex-wrap gap-2">
@@ -1064,7 +1020,7 @@ function SectionNavigation({
                 </svg>
                 <span>Validate All</span>
               </button>
-              
+
               <button
                 onClick={handleGlobalSave}
                 className="px-3 py-2 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 active:bg-green-700 transition-all duration-200 flex items-center space-x-1"
@@ -1075,15 +1031,6 @@ function SectionNavigation({
                 </svg>
                 <span>Save Form</span>
               </button>
-              
-              <button
-                onClick={handlePopulateTestData}
-                className="px-3 py-2 bg-purple-500 text-white text-sm rounded-lg hover:bg-purple-600 active:bg-purple-700 transition-all duration-200 flex items-center space-x-1"
-                data-testid="populate-test-data-button"
-              >
-                <span>🧪</span>
-                <span className="hidden sm:inline">Test Data</span>
-              </button>
             </div>
 
             {/* PDF Generation */}
@@ -1091,11 +1038,10 @@ function SectionNavigation({
               <button
                 onClick={handleServerPdfGeneration}
                 disabled={isGeneratingPdf}
-                className={`px-3 py-2 text-sm rounded-lg transition-all duration-200 flex items-center space-x-1 ${
-                  isGeneratingPdf
-                    ? "bg-orange-300 text-orange-700 cursor-not-allowed"
-                    : "bg-orange-500 text-white hover:bg-orange-600 active:bg-orange-700"
-                }`}
+                className={`px-3 py-2 text-sm rounded-lg transition-all duration-200 flex items-center space-x-1 ${isGeneratingPdf
+                  ? "bg-orange-300 text-orange-700 cursor-not-allowed"
+                  : "bg-orange-500 text-white hover:bg-orange-600 active:bg-orange-700"
+                  }`}
                 data-testid="server-pdf-button"
               >
                 {isGeneratingPdf ? (
@@ -1120,11 +1066,10 @@ function SectionNavigation({
               <button
                 onClick={handleClientPdfGeneration}
                 disabled={isGeneratingPdf}
-                className={`px-3 py-2 text-sm rounded-lg transition-all duration-200 flex items-center space-x-1 ${
-                  isGeneratingPdf
-                    ? "bg-purple-300 text-purple-700 cursor-not-allowed"
-                    : "bg-purple-500 text-white hover:bg-purple-600 active:bg-purple-700"
-                }`}
+                className={`px-3 py-2 text-sm rounded-lg transition-all duration-200 flex items-center space-x-1 ${isGeneratingPdf
+                  ? "bg-purple-300 text-purple-700 cursor-not-allowed"
+                  : "bg-purple-500 text-white hover:bg-purple-600 active:bg-purple-700"
+                  }`}
                 data-testid="client-pdf-button"
               >
                 {isGeneratingPdf ? (
@@ -1158,7 +1103,7 @@ function SectionNavigation({
                 }}
                 className="px-3 py-2 text-sm"
               />
-              
+
               <button
                 onClick={() => setIsExpanded(!isExpanded)}
                 className="px-3 py-2 bg-gray-500 text-white text-sm rounded-lg hover:bg-gray-600 active:bg-gray-700 transition-all duration-200 flex items-center space-x-1"
@@ -1182,7 +1127,7 @@ function SectionNavigation({
           </svg>
           <h3 className="font-semibold">Development Mode: Enhanced PDF Generation</h3>
         </div>
-        
+
         <div className="p-4">
           <div className="grid md:grid-cols-2 gap-4 text-sm">
             <div className="space-y-2">
@@ -1194,7 +1139,7 @@ function SectionNavigation({
                 </div>
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <div className="flex items-start space-x-2">
                 <div className="w-2 h-2 rounded-full bg-purple-500 mt-2 flex-shrink-0"></div>
@@ -1205,7 +1150,7 @@ function SectionNavigation({
               </div>
             </div>
           </div>
-          
+
           <div className="mt-4 pt-3 border-t border-blue-200">
             <div className="flex flex-wrap items-center gap-4 text-xs text-blue-700">
               <div className="flex items-center space-x-1">
@@ -1287,56 +1232,50 @@ function SectionNavigation({
                 const isImplemented = config.implementedSections.includes(sectionId);
                 const isActive = currentSection === sectionId;
                 const isCompleted = formProgress[sectionId];
-                
+
                 return (
                   <button
                     key={sectionId}
                     onClick={() => onSectionChange(sectionId)}
                     disabled={!isImplemented}
-                    className={`p-3 rounded-lg text-left text-sm transition-all duration-200 border ${
-                      isActive
-                        ? "bg-blue-500 text-white border-blue-600 shadow-md scale-105"
-                        : isImplemented
+                    className={`p-3 rounded-lg text-left text-sm transition-all duration-200 border ${isActive
+                      ? "bg-blue-500 text-white border-blue-600 shadow-md scale-105"
+                      : isImplemented
                         ? "bg-white hover:bg-gray-50 text-gray-900 border-gray-200 hover:border-gray-300 hover:shadow-sm"
                         : "bg-gray-50 text-gray-400 border-gray-100 cursor-not-allowed"
-                    }`}
+                      }`}
                     data-testid={`section-${sectionId}-nav-button`}
                   >
                     <div className="flex items-start justify-between space-x-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-2 mb-1">
-                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                            isActive 
-                              ? "bg-white/20 text-white" 
-                              : "bg-gray-100 text-gray-600"
-                          }`}>
+                          <span className={`text-xs px-2 py-1 rounded-full font-medium ${isActive
+                            ? "bg-white/20 text-white"
+                            : "bg-gray-100 text-gray-600"
+                            }`}>
                             {index + 1}
                           </span>
                           {isCompleted && (
-                            <div className={`w-2 h-2 rounded-full ${
-                              isActive ? "bg-white/60" : "bg-green-400"
-                            }`}></div>
+                            <div className={`w-2 h-2 rounded-full ${isActive ? "bg-white/60" : "bg-green-400"
+                              }`}></div>
                           )}
                         </div>
                         <div className="font-medium truncate">
                           {config.sectionTitles[sectionId] || sectionId}
                         </div>
-                        <div className={`text-xs mt-1 truncate ${
-                          isActive ? "text-white/70" : "text-gray-500"
-                        }`}>
+                        <div className={`text-xs mt-1 truncate ${isActive ? "text-white/70" : "text-gray-500"
+                          }`}>
                           {sectionId}
                         </div>
                       </div>
-                      
+
                       {isImplemented && (
-                        <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
-                          isActive 
-                            ? "bg-white/20" 
-                            : "bg-green-100"
-                        }`}>
-                          <svg className={`w-4 h-4 ${
-                            isActive ? "text-white" : "text-green-600"
-                          }`} fill="currentColor" viewBox="0 0 20 20">
+                        <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${isActive
+                          ? "bg-white/20"
+                          : "bg-green-100"
+                          }`}>
+                          <svg className={`w-4 h-4 ${isActive ? "text-white" : "text-green-600"
+                            }`} fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                         </div>

@@ -33,6 +33,7 @@ import {
 
 import { useSection86FormIntegration } from '../shared/section-context-integration';
 import type { ValidationResult, ValidationError, SectionId } from '../shared/base-interfaces';
+import { generateSection3Fields, validateSection3FieldMappings } from './section3-field-generator';
 
 // ============================================================================
 // CONTEXT INTERFACE
@@ -48,6 +49,7 @@ export interface Section3ContextType {
   // Basic Actions
   updatePlaceOfBirth: (fieldPath: string, value: string) => void;
   updateBirthLocation: (update: Section3FieldUpdate) => void;
+  updateFieldValue: (path: string, value: any) => void; // Added for integration compatibility
 
   // Validation
   validateSection: () => ValidationResult;
@@ -123,6 +125,15 @@ export interface Section3ProviderProps {
 }
 
 export const Section3Provider: React.FC<Section3ProviderProps> = ({ children }) => {
+  // ============================================================================
+  // FIELD MAPPING VALIDATION
+  // ============================================================================
+
+  // Validate field mappings on provider initialization
+  useEffect(() => {
+    validateSection3FieldMappings();
+  }, []);
+
   // ============================================================================
   // CORE STATE MANAGEMENT
   // ============================================================================
@@ -237,6 +248,49 @@ export const Section3Provider: React.FC<Section3ProviderProps> = ({ children }) 
   }, [section3Data, isDirty]);
 
   // ============================================================================
+  // INTEGRATION FIELD UPDATE FUNCTION
+  // ============================================================================
+
+  /**
+   * Generic field update function for integration compatibility
+   * Maps generic field paths to Section 3 specific update functions
+   * Includes fallback mechanism using lodash set() following Section 1 pattern
+   */
+  const updateFieldValue = useCallback((path: string, value: any) => {
+    console.log(`🔍 Section3: updateFieldValue called with path=${path}, value=`, value);
+
+    // Parse path to update the correct field using specific handlers
+    if (path === 'section3.city' || path.includes('city')) {
+      console.log(`✅ Section3: Using specific handler for city field`);
+      updatePlaceOfBirth('section3.city.value', value);
+      return;
+    } else if (path === 'section3.county' || path.includes('county')) {
+      console.log(`✅ Section3: Using specific handler for county field`);
+      updatePlaceOfBirth('section3.county.value', value);
+      return;
+    } else if (path === 'section3.country' || path.includes('country')) {
+      console.log(`✅ Section3: Using specific handler for country field`);
+      updatePlaceOfBirth('section3.country.value', value);
+      return;
+    } else if (path === 'section3.state' || path.includes('state')) {
+      console.log(`✅ Section3: Using specific handler for state field`);
+      updatePlaceOfBirth('section3.state.value', value);
+      return;
+    }
+
+    // CRITICAL FIX: Fallback using lodash set for any unmatched paths
+    // This ensures compatibility with the integration system and prevents silent failures
+    console.log(`🔧 Section3: Using fallback lodash set for path: ${path}`);
+    setSection3Data(prev => {
+      const newData = cloneDeep(prev);
+      // Fix: Ensure we're setting the .value property like Section 1 gold standard
+      set(newData, `${path}.value`, value);
+      console.log(`✅ Section3: Field updated via fallback at path: ${path}.value`);
+      return newData;
+    });
+  }, [updatePlaceOfBirth]);
+
+  // ============================================================================
   // SF86FORM INTEGRATION WITH FIELD FLATTENING
   // ============================================================================
 
@@ -245,9 +299,9 @@ export const Section3Provider: React.FC<Section3ProviderProps> = ({ children }) 
     'Section 3: Place of Birth',
     section3Data,
     setSection3Data,
-    validateSection,
-    getChanges
-    // Removed flattenFields parameter to use structured format (preferred)
+    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
+    getChanges,
+    updateFieldValue // Pass Section 3's updateFieldValue function to integration
   );
 
   // ============================================================================
@@ -264,6 +318,7 @@ export const Section3Provider: React.FC<Section3ProviderProps> = ({ children }) 
     // Basic Actions
     updatePlaceOfBirth,
     updateBirthLocation,
+    updateFieldValue,
 
     // Validation
     validateSection,
@@ -280,6 +335,7 @@ export const Section3Provider: React.FC<Section3ProviderProps> = ({ children }) 
     isDirty,
     updatePlaceOfBirth,
     updateBirthLocation,
+    updateFieldValue,
     validateSection,
     validateLocationOnly,
     resetSection,

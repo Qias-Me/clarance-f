@@ -23,10 +23,7 @@ import type {
   ValidationError,
   ChangeSet,
 } from "./shared/base-interfaces";
-import {
-  SectionIntegrationProvider,
-  useSectionIntegration,
-} from "./shared/section-integration";
+import { useSectionIntegration, SectionIntegrationProvider } from "./shared/section-integration";
 import { clientPdfService2 } from "../../../api/service/clientPdfService2.0";
 import DynamicService from "../../../api/service/dynamicService";
 import { Section1Provider } from "./sections2.0/section1";

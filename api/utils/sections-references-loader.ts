@@ -192,8 +192,8 @@ export function createFieldFromReference<T = any>(
 } {
   // Try to find field by ID first, then by name, then by unique ID
   let fieldRef = findFieldById(sectionId, fieldIdentifier) ||
-                 findFieldByName(sectionId, fieldIdentifier) ||
-                 findFieldByUniqueId(sectionId, fieldIdentifier);
+    findFieldByName(sectionId, fieldIdentifier) ||
+    findFieldByUniqueId(sectionId, fieldIdentifier);
 
   if (!fieldRef) {
     console.warn(`Field not found in section ${sectionId}: ${fieldIdentifier}`);
@@ -266,13 +266,25 @@ export const EXPECTED_FIELD_COUNTS = {
   7: 17,
   8: 10,
   9: 78,
-  12: 150, // Will be determined from sections-references
+  10: 122,
+  11: 252,
+  12: 150,
   13: 1086,
+  14: 5,
+  15: 95,
   16: 154,
   17: 332,
-  18: 964, // FIXED: Updated to match actual field count in sections-references JSON
-  27: 57, // Will be determined from sections-references
-  28: 23, // Section 28: Involvement in Non-Criminal Court Actions
+  18: 964,
+  19: 277,
+  20: 790,
+  21: 486,
+  22: 267,
+  23: 191,
+  24: 160,
+  25: 79,
+  26: 237,
+  27: 57,
+  28: 23,
   29: 141,
   30: 25
 } as const;

@@ -222,7 +222,7 @@ export function useSection86FormIntegration<T>(
    * FIXED: Added debounce and deep equality check to prevent infinite loops
    */
   const lastSyncedDataRef = useRef<any>(null);
-  const syncTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (isInitializedRef.current) {

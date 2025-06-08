@@ -14,6 +14,18 @@ import type { Section7 } from "./sections2.0/section7";
 import type { Section8 } from "./sections2.0/section8";
 import type { Section9 } from "./sections2.0/section9";
 import type { Section10 } from "./sections2.0/section10";
+import type { Section11 } from "./sections2.0/section11";
+import type { Section12 } from "./sections2.0/section12";
+import type { Section13 } from "./sections2.0/section13";
+import type { Section17 } from "./sections2.0/section17";
+import type { Section20 } from "./sections2.0/section20";
+import type { Section21 } from "./sections2.0/section21";
+import type { Section22 } from "./sections2.0/section22";
+import type { Section23 } from "./sections2.0/section23";
+import type { Section24 } from "./sections2.0/section24";
+import type { Section25 } from "./sections2.0/section25";
+import type { Section27 } from "./sections2.0/section27";
+import type { Section28 } from "./sections2.0/section28";
 import type { Section14 } from "./sections2.0/section14";
 import type { Section15 } from "./sections2.0/section15";
 import type { Section16 } from "./sections2.0/section16";
@@ -21,34 +33,8 @@ import type { Section29 } from "./sections2.0/section29";
 import type { Section19 } from "./sections2.0/section19";
 import type { Section18 } from "./sections2.0/Section18";
 import type { Section26 } from "./sections2.0/section26";
+import type { Section30 } from "./sections2.0/section30";
 
-// Legacy imports (commented out for now)
-// import type { AlcoholUse } from "./sections/alcoholUse";
-// import type { Association } from "./sections/association";
-// import type { BirthInfo } from "./sections/birthnfo";
-// import type { CitizenshipInfo } from "./sections/citizenship";
-// import type { Civil } from "./sections/civil";
-// import type { ContactInfo } from "./sections/contact";
-// import type { DrugActivity } from "./sections/drugsActivity";
-// import type { DualCitizenshipInfo } from "./sections/duelCitizenship";
-// import type { EmploymentInfo } from "./sections/employmentInfo";
-// import type { Finances } from "./sections/finances";
-// import type { ForeignActivities } from "./sections/foreignActivities";
-// import type { ForeignContacts } from "./sections/foreignContacts";
-// import type { InvestigationsInfo } from "./sections/InvestigationsInfo";
-// import type { MentalHealth } from "./sections/mentalHealth";
-// import type { MilitaryHistoryInfo } from "./sections/militaryHistoryInfo";
-// import type { NamesInfo } from "./sections/namesInfo";
-// import type { PassportInfo } from "./sections/passport";
-// import type { PeopleThatKnow } from "./sections/peopleThatKnow";
-// import type { PhysicalAttributes } from "./sections/physicalAttributes";
-// import type { PoliceRecord } from "./sections/policeRecord";
-// import type { RelationshipInfo } from "./sections/relationshipInfo";
-// import type { RelativesInfo } from "./sections/relativesInfo";
-// import type { ResidencyInfo } from "./sections/residency";
-// import type { SchoolInfo } from "./sections/schoolInfo";
-// import type { ServiceInfo } from "./sections/service";
-// import type { Technology } from "./sections/technology";
 
 /**
  * Field interface for PDF form field mapping
@@ -61,7 +47,7 @@ interface Field<T> {
   name: string; // Full field path (e.g., "form1[0].Sections7-9[0].TextField11[13]")
   type: string;
   label: string;
-  rect: {
+  rect?: {
     x: number;
     y: number;
     width: number;
@@ -92,30 +78,26 @@ interface ApplicantFormValues {
   section8?: Section8;
   section9?: Section9;
   section10?: Section10;
-  section11?: any; // TODO: Create Section11 interface
-  section12?: any; // TODO: Create Section12 interface
-  section13?: any; // TODO: Create Section13 interface
+  section11?: Section11;
+  section12?: Section12;
+  section13?: Section13;
   section14?: Section14;
   section15?: Section15;
   section16?: Section16;
-  section17?: any; // TODO: Create Section17 interface
+  section17?: Section17;
   section18?: Section18;
   section19?: Section19;
-  section20?: any; // TODO: Create Section20 interface
-  section21?: any; // TODO: Create Section21 interface
-  section22?: any; // TODO: Create Section22 interface
-  section23?: any; // TODO: Create Section23 interface
-  section24?: any; // TODO: Create Section24 interface
-  section25?: any; // TODO: Create Section25 interface
+  section20?: Section20;
+  section21?: Section21;
+  section22?: Section22;
+  section23?: Section23;
+  section24?: Section24;
+  section25?: Section25;
   section26?: Section26;
-  section27?: any; // TODO: Create Section27 interface
-  section28?: any; // TODO: Create Section28 interface
+  section27?: Section27;
+  section28?: Section28;
   section29?: Section29;
-  section30?: any; // TODO: Create Section30 interface
-
-  // Legacy/Additional sections
-  signature?: Signature;
-  acknowledgement?: AknowledgeInfo;
+  section30?: Section30;
   print?: Print;
 }
 

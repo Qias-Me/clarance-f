@@ -8,7 +8,7 @@
     "api/**/*",
     "workers/**/*",
     "worker-configuration.d.ts"
-, "api/interfaces/.ts"  ],
+, "api/interfaces/.ts", "react-router.cinfig.ts"  ],
   "compilerOptions": {
     "composite": true,
     "strict": true,

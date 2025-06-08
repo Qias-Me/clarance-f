@@ -831,21 +831,26 @@ export const createDefaultForeignBusinessEntry = (entryIndex: number = 0): Forei
 
     dateFrom: {
       date: createFieldFromReference(20, getSubformField('From_Datefield_Name_2', 0), ''),
-    // FIXED: #field[0] doesn't exist, use #field[17] instead
-    estimated: createFieldFromReference(20, 'form1[0].Section20a2[0].#field[17]', false)
-  },
-  dateTo: {
-    date: createFieldFromReference(20, 'form1[0].Section20a2[0].From_Datefield_Name_2[1]', ''),
-    // FIXED: #field[1] doesn't exist, use #field[18] instead
-    estimated: createFieldFromReference(20, 'form1[0].Section20a2[0].#field[18]', false)
-  },
-  isOngoing: createFieldFromReference(20, 'form1[0].Section20a2[0].RadioButtonList[0]', 'NO'),
-  // FIXED: Section20a2[0] only has RadioButtonList[0], using a different field for compensation
-  // Since RadioButtonList[1] doesn't exist, we'll use a checkbox field instead
-  receivedCompensation: createFieldFromReference(20, 'form1[0].Section20a2[0].#field[19]', false),
-  // FIXED: TextField11[2] doesn't exist in Section20a2[0], use TextField11[5] instead
-  circumstances: createFieldFromReference(20, 'form1[0].Section20a2[0].TextField11[5]', '')
-});
+      // FIXED: #field[0] doesn't exist, use #field[17] instead
+      estimated: createFieldFromReference(20, 'form1[0].Section20a2[0].#field[17]', false)
+    },
+    dateTo: {
+      date: createFieldFromReference(20, 'form1[0].Section20a2[0].From_Datefield_Name_2[1]', ''),
+      // FIXED: #field[1] doesn't exist, use #field[18] instead
+      estimated: createFieldFromReference(20, 'form1[0].Section20a2[0].#field[18]', false)
+    },
+    isOngoing: createFieldFromReference(20, 'form1[0].Section20a2[0].RadioButtonList[0]', 'NO'),
+    // FIXED: Section20a2[0] only has RadioButtonList[0], using a different field for compensation
+    // Since RadioButtonList[1] doesn't exist, we'll use a checkbox field instead
+    receivedCompensation: createFieldFromReference(20, 'form1[0].Section20a2[0].#field[19]', false),
+    // FIXED: TextField11[2] doesn't exist in Section20a2[0], use TextField11[5] instead
+    circumstances: createFieldFromReference(20, 'form1[0].Section20a2[0].TextField11[5]', ''),
+
+    // Subform tracking
+    subformId,
+    pageNumber
+  };
+};
 
 /**
  * Creates a default foreign travel entry using ACTUAL subform field mappings

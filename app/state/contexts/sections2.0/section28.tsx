@@ -342,9 +342,8 @@ export const Section28Provider: React.FC<Section28ProviderProps> = ({ children }
       // Only clone if we're actually making a change
       const entry = prevData.section28.courtActionEntries[entryIndex];
       if (!entry) {
-        if (process.env.NODE_ENV === 'development') {
           console.error(`Court action entry ${entryIndex} not found`);
-        }
+        
         return prevData;
       }
 
@@ -355,9 +354,8 @@ export const Section28Provider: React.FC<Section28ProviderProps> = ({ children }
       // Navigate to the field
       for (let i = 0; i < pathParts.length - 1; i++) {
         if (current[pathParts[i]] === undefined) {
-          if (process.env.NODE_ENV === 'development') {
             console.error(`Field path ${fieldPath} not found in court action entry`);
-          }
+          
           return prevData;
         }
         current = current[pathParts[i]];
@@ -390,7 +388,6 @@ export const Section28Provider: React.FC<Section28ProviderProps> = ({ children }
 
       return newData;
     });
-    setIsDirty(true);
   }, []);
 
   /**
@@ -399,9 +396,8 @@ export const Section28Provider: React.FC<Section28ProviderProps> = ({ children }
    */
   const updateFieldValue = useCallback((path: string, value: any) => {
     // Only log in debug mode to improve performance
-    if (process.env.NODE_ENV === 'development') {
       console.log(`🔍 Section28: updateFieldValue path=${path}`);
-    }
+    
 
     // Parse path to update the correct field
     if (path === 'section28.hasCourtActions' || path === 'hasCourtActions') {
@@ -427,9 +423,8 @@ export const Section28Provider: React.FC<Section28ProviderProps> = ({ children }
           entryIndex = parseInt(pathParts[entriesIndex + 1]);
           fieldPath = pathParts.slice(entriesIndex + 2).join('.');
         } else {
-          if (process.env.NODE_ENV === 'development') {
-            console.error(`Section28: Invalid path format: ${path}`);
-          }
+          console.error(`Section28: Invalid path format: ${path}`);
+
           return;
         }
       }
@@ -438,9 +433,8 @@ export const Section28Provider: React.FC<Section28ProviderProps> = ({ children }
       return;
     }
 
-    if (process.env.NODE_ENV === 'development') {
-      console.warn(`Section28: Unhandled field path: ${path}`);
-    }
+    console.warn(`Section28: Unhandled field path: ${path}`);
+
   }, [updateHasCourtActions, updateCourtActionField]);
 
   // ============================================================================

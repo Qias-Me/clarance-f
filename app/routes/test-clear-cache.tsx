@@ -6,7 +6,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import ClearCacheButton from '~/components/ClearCacheButton';
+import ClearCacheButton from '~/components/buttons/ClearCacheButton';
 import { getCacheStats, clearSF86Cache, clearIndexedDBOnly, clearLocalStorageOnly } from '~/utils/clearCache';
 import type { Route } from "./+types/test-clear-cache";
 

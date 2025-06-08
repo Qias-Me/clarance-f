@@ -13,6 +13,7 @@ import React, {
   useEffect
 } from 'react';
 import cloneDeep from 'lodash/cloneDeep';
+import set from 'lodash/set';
 
 import { useSection86FormIntegration } from '../shared/section-context-integration';
 import type {
@@ -221,14 +222,31 @@ export const Section2Provider: React.FC<Section2ProviderProps> = ({ children }) 
   /**
    * Generic field update function for integration compatibility
    * Maps generic field paths to Section 2 specific update functions
+   * FIXED: Added fallback mechanism using lodash set() following Section 29 pattern
    */
   const updateFieldValue = useCallback((path: string, value: any) => {
-    // Parse path to update the correct field
+    console.log(`🔍 Section2: updateFieldValue called with path=${path}, value=`, value);
+
+    // Parse path to update the correct field using specific handlers
     if (path === 'section2.date') {
+      console.log(`✅ Section2: Using specific handler for date field`);
       updateDateOfBirth(value);
+      return;
     } else if (path === 'section2.isEstimated') {
+      console.log(`✅ Section2: Using specific handler for estimated field`);
       updateEstimated(value);
+      return;
     }
+
+    // CRITICAL FIX: Fallback using lodash set for any unmatched paths
+    // This ensures compatibility with the integration system and prevents silent failures
+    console.log(`🔧 Section2: Using fallback lodash set for path: ${path}`);
+    setSection2Data(prev => {
+      const newData = cloneDeep(prev);
+      set(newData, path, value);
+      console.log(`✅ Section2: Field updated via fallback at path: ${path}`);
+      return newData;
+    });
   }, [updateDateOfBirth, updateEstimated]);
 
   // ============================================================================
@@ -290,6 +308,38 @@ export const Section2Provider: React.FC<Section2ProviderProps> = ({ children }) 
 
     return changes;
   }, [section2Data, initialData]);
+
+  // ============================================================================
+  // FIELD FLATTENING FOR PDF GENERATION
+  // ============================================================================
+
+  /**
+   * Flatten Section2 data structure into Field objects for PDF generation
+   * This converts the nested Section2 structure into a flat object with Field<T> objects
+   * Following the Section 1 pattern for consistency
+   */
+  const flattenSection2Fields = useCallback((): Record<string, any> => {
+    const flatFields: Record<string, any> = {};
+
+    const addField = (field: any, _path: string) => {
+      if (
+        field &&
+        typeof field === "object" &&
+        "id" in field &&
+        "value" in field
+      ) {
+        flatFields[field.id] = field;
+      }
+    };
+
+    // Flatten section2 date of birth fields
+    if (section2Data.section2) {
+      addField(section2Data.section2.date, 'section2.date');
+      addField(section2Data.section2.isEstimated, 'section2.isEstimated');
+    }
+
+    return flatFields;
+  }, [section2Data]);
 
   // ============================================================================
   // SF86FORM INTEGRATION
