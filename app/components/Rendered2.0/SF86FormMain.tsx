@@ -17,7 +17,7 @@ interface SF86FormMainProps {
 }
 
 const SF86FormMain: React.FC<SF86FormMainProps> = ({ className = "" }) => {
-  const { generatePdf, validateForm, saveForm, formData, exportForm } =
+  const { generatePdf, validateForm, saveForm, formData, exportForm, downloadJsonData } =
     useSF86Form();
   const [currentSection, setCurrentSection] = useState<string>("section1");
   const [sectionValidation, setSectionValidation] = useState<
@@ -64,7 +64,12 @@ const SF86FormMain: React.FC<SF86FormMainProps> = ({ className = "" }) => {
         // Call the enhanced download method
         clientPdfService2.downloadPdf(result.pdfBytes, filename);
 
-        console.log("✅ PDF downloaded successfully!");
+        // Also download JSON data for debugging
+        const jsonFilename = filename.replace('.pdf', '-data.json');
+        console.log(`📄 Also downloading JSON data: ${jsonFilename}`);
+        downloadJsonData(jsonFilename);
+
+        console.log("✅ PDF and JSON downloaded successfully!");
         console.log(
           `📊 Statistics: ${result.fieldsApplied}/${result.fieldsMapped} fields applied`
         );
@@ -76,7 +81,9 @@ const SF86FormMain: React.FC<SF86FormMainProps> = ({ className = "" }) => {
           `• Fields mapped: ${result.fieldsMapped}\n` +
           `• Fields applied: ${result.fieldsApplied}\n` +
           `• PDF size: ${result.pdfBytes.length} bytes\n` +
-          `• Filename: ${filename}\n\n` +
+          `• PDF filename: ${filename}\n` +
+          `• JSON filename: ${jsonFilename}\n\n` +
+          `🔍 JSON data downloaded for debugging analysis\n\n` +
           `💡 If the download doesn't start automatically, check your browser's download settings or popup blocker.`;
 
         alert(message);
@@ -149,6 +156,11 @@ const SF86FormMain: React.FC<SF86FormMainProps> = ({ className = "" }) => {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
 
+        // Also download JSON data for debugging
+        const jsonFilename = filename.replace('.pdf', '-data.json');
+        console.log(`📄 Also downloading JSON data: ${jsonFilename}`);
+        downloadJsonData(jsonFilename);
+
         // Show success message with detailed server-side info
         const message =
           `🎉 SERVER-SIDE PDF generated and downloaded successfully!\n\n` +
@@ -158,7 +170,9 @@ const SF86FormMain: React.FC<SF86FormMainProps> = ({ className = "" }) => {
           `• Success rate: ${result.data.successRate?.toFixed(2)}%\n` +
           `• Total PDF fields: ${result.data.totalPdfFields}\n` +
           `• Total form fields: ${result.data.totalFormFields}\n` +
-          `• Filename: ${filename}\n\n` +
+          `• PDF filename: ${filename}\n` +
+          `• JSON filename: ${jsonFilename}\n\n` +
+          `🔍 JSON data downloaded for debugging analysis\n\n` +
           `🖥️ IMPORTANT: Check your terminal/console for comprehensive field mapping logs!\n` +
           `This includes detailed analysis of Section 29 radio button mappings and field lookup effectiveness.`;
 
@@ -207,6 +221,27 @@ const SF86FormMain: React.FC<SF86FormMainProps> = ({ className = "" }) => {
       alert("Form saved successfully!");
     } catch (error) {
       alert(`Form save error: ${error}`);
+    }
+  };
+
+  // Handle standalone JSON download
+  const handleDownloadJson = () => {
+    try {
+      const filename = `SF86_Form_Data_${
+        new Date().toISOString().split("T")[0]
+      }.json`;
+      console.log(`📄 Downloading JSON data: ${filename}`);
+
+      const result = downloadJsonData(filename);
+
+      if (result.success) {
+        alert(`🎉 JSON data downloaded successfully!\n\nFilename: ${filename}\n\n🔍 This file contains all form data for debugging analysis.`);
+      } else {
+        alert(`❌ JSON download failed:\n\n${result.errors.join("\n")}`);
+      }
+    } catch (error) {
+      console.error("💥 JSON download error:", error);
+      alert(`💥 JSON download error: ${error}`);
     }
   };
 
@@ -375,6 +410,17 @@ const SF86FormMain: React.FC<SF86FormMainProps> = ({ className = "" }) => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
                     </svg>
                     Save Form
+                  </button>
+
+                  <button
+                    onClick={handleDownloadJson}
+                    className="w-full px-4 py-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600 active:bg-teal-700 transition-all duration-200 text-sm font-medium flex items-center justify-center group"
+                    data-testid="download-json-button"
+                  >
+                    <svg className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M7 7h10a2 2 0 012 2v10a2 2 0 01-2 2H7a2 2 0 01-2-2V9a2 2 0 012-2z" />
+                    </svg>
+                    Download JSON
                   </button>
 
                   <div className="pt-2 border-t border-gray-100">
