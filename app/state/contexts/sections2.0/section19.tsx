@@ -113,32 +113,26 @@ export interface Section19ContextType {
  * Following Section 29 implementation patterns
  */
 /**
- * SIMPLIFIED SECTION 19 FIELD CREATION - FOLLOWING SECTION 1 GOLD STANDARD
+ * COMPREHENSIVE SECTION 19 FIELD CREATION - USING COMPLETE FIELD MAPPINGS
  *
- * Instead of trying to create complex field mappings, we'll use the actual field names
- * from sections-references and create fields directly using createFieldFromReference.
- * This follows the Section 1 pattern exactly.
+ * Creates the main Section 19 field (hasContact radio button) using the comprehensive
+ * field mapping system. Individual entry fields are created dynamically when entries are added.
  */
 const createSection19FieldsFromReferences = (): Record<string, Field<any>> => {
-  // console.log('🔍 Creating Section 19 fields using Section 1 gold standard pattern...');
+  console.log('🔍 Creating main Section 19 fields using complete field mappings...');
 
   const fields: Record<string, Field<any>> = {};
 
-  // Create the main hasContact field using the actual field name from sections-references
-  const hasContactField = createFieldFromReference(
-    19,
-    'form1[0].Section19_1[0].RadioButtonList[0]',
+  // Import the field mapping system
+  const { createSection19Field, SECTION19_MAIN_FIELDS } = require('./section19-field-mapping');
+
+  // Create the main hasContact field
+  fields.hasContact = createSection19Field(
+    SECTION19_MAIN_FIELDS.mainRadio,
     'NO' as "YES" | "NO (If NO, proceed to Section 20A)"
   );
 
-  if (hasContactField) {
-    fields.hasContact = hasContactField;
-    // console.log('✅ Created hasContact field from reference');
-  }
-
-  // Create additional fields directly from sections-references as needed
-  // Following Section 1 pattern: only create fields that are actually used
-
+  console.log('✅ Created main Section 19 field with proper PDF reference');
   return fields;
 };
 
@@ -147,10 +141,29 @@ const createSection19FieldsFromReferences = (): Record<string, Field<any>> => {
 // ============================================================================
 
 const createInitialSection19State = (): Section19 => {
-  // console.log('🚀 Creating initial Section 19 state using sections-references...');
+  console.log('🚀 Creating initial Section 19 state with comprehensive field validation...');
 
   // Generate fields from sections-references
   const fields = createSection19FieldsFromReferences();
+
+  // Validate field mappings during initialization
+  try {
+    const { validateSection19FieldMappings } = require('./section19-field-mapping');
+    const validation = validateSection19FieldMappings();
+
+    console.log('📊 Section 19 Field Validation Results:');
+    console.log(`  - Mapped Fields: ${validation.mappedCount}`);
+    console.log(`  - Expected Fields: ${validation.expectedCount}`);
+    console.log(`  - Missing Fields: ${validation.missingCount}`);
+    console.log(`  - Validation Status: ${validation.isValid ? '✅ PASSED' : '❌ FAILED'}`);
+
+    if (!validation.isValid) {
+      console.warn(`⚠️ Section 19 is missing ${validation.missingCount} fields from the reference data`);
+      console.warn('This may cause issues with PDF generation. All 277 fields should be mapped.');
+    }
+  } catch (error) {
+    console.warn('⚠️ Could not validate Section 19 field mappings:', error);
+  }
 
   const initialState = {
     _id: 19,
@@ -166,144 +179,199 @@ const createInitialSection19State = (): Section19 => {
     }
   };
 
-  // console.log('✅ Created initial Section 19 state with proper field references');
+  console.log('✅ Section 19 initial state created with comprehensive field structure');
   return initialState;
 };
 
 /**
- * SIMPLIFIED ENTRY CREATION - FOLLOWING SECTION 1 GOLD STANDARD
+ * COMPREHENSIVE ENTRY CREATION - USING SUBSECTION-BASED PDF FIELD MAPPINGS
  *
- * Create a basic entry structure with proper Field objects.
- * Using placeholder field names to avoid "Field not found" warnings.
+ * Create a complete foreign contact entry using the appropriate subsection (1-4)
+ * from the PDF form. Each entry maps to a specific subsection with all fields properly
+ * mapped to their corresponding PDF field references from section-19.json.
  */
 const createDefaultForeignContactEntry = (entryIndex: number) => {
   const entryId = Date.now() + entryIndex;
 
-  console.log(`🔍 Creating simplified foreign contact entry ${entryIndex}...`);
+  // Map entry index to subsection number (1-4, cycling if more than 4 entries)
+  const subsectionNumber = (entryIndex % 4) + 1;
 
-  // Create proper Field objects with placeholder names to avoid warnings
-  const createStringField = (value: string = '', fieldType: string = 'text'): Field<string> => ({
-    value,
-    id: `placeholder-${Date.now()}-${Math.random()}`,
-    name: `placeholder-field-${entryIndex}`,
-    type: fieldType,
-    label: 'Placeholder Field',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  });
+  console.log(`🔍 Creating comprehensive foreign contact entry ${entryIndex} using subsection ${subsectionNumber}...`);
 
-  const createBooleanField = (value: boolean = false): Field<boolean> => ({
-    value,
-    id: `placeholder-${Date.now()}-${Math.random()}`,
-    name: `placeholder-field-${entryIndex}`,
-    type: 'checkbox',
-    label: 'Placeholder Field',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  });
+  // Import the field mapping system
+  const { createSection19EntryFields } = require('./section19-field-mapping');
 
-  const createYesNoField = (value: "YES" | "NO" = "NO"): Field<"YES" | "NO"> => ({
-    value,
-    id: `placeholder-${Date.now()}-${Math.random()}`,
-    name: `placeholder-field-${entryIndex}`,
-    type: 'radio',
-    label: 'Placeholder Field',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  });
+  // Create all fields for this subsection
+  const allFields = createSection19EntryFields(subsectionNumber);
 
-  // Create a basic entry structure with proper Field objects
+  console.log(`📊 Created ${Object.keys(allFields).length} fields for entry ${entryIndex} (subsection ${subsectionNumber})`);
+
+  // Helper function to get field from the created fields
+  const getField = (fieldPath: string) => {
+    return allFields[fieldPath] || {
+      id: '0000',
+      name: `fallback-${fieldPath}`,
+      type: 'PDFTextField',
+      label: 'Fallback Field',
+      value: '',
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    };
+  };
+
+  // Create comprehensive entry structure with all PDF field mappings
   const entry = {
     _id: entryId,
+    subsectionNumber, // Track which PDF subsection this entry maps to
     personalInfo: {
       name: {
-        first: createStringField(''),
-        middle: createStringField(''),
-        last: createStringField(''),
-        suffix: createStringField(''),
-        unknown: createBooleanField(false)
+        first: getField('name.first'),
+        middle: getField('name.middle'),
+        last: getField('name.last'),
+        suffix: getField('name.suffix'),
+        unknown: getField('name.unknown'),
+        explanation: getField('name.explanation')
       },
       dateOfBirth: {
-        date: createStringField('', 'date'),
-        estimated: createBooleanField(false),
-        unknown: createBooleanField(false)
+        date: getField('dateOfBirth.date'),
+        estimated: getField('dateOfBirth.estimated'),
+        unknown: getField('dateOfBirth.unknown')
       },
       placeOfBirth: {
-        city: createStringField(''),
-        country: createStringField('', 'select'),
-        unknown: createBooleanField(false)
+        city: getField('placeOfBirth.city'),
+        country: getField('placeOfBirth.country'),
+        unknown: getField('placeOfBirth.unknown')
       },
       address: {
-        street: createStringField(''),
-        city: createStringField(''),
-        state: createStringField('', 'select'),
-        zipCode: createStringField(''),
-        country: createStringField('', 'select')
+        street: getField('address.street'),
+        city: getField('address.city'),
+        state: getField('address.state'),
+        zipCode: getField('address.zipCode'),
+        country: getField('address.country'),
+        unknown: getField('address.unknown')
       }
     },
     citizenship: {
-      country1: createStringField('', 'select'),
-      country2: createStringField('', 'select'),
-      additionalCountries: createStringField(''),
-      unknown: createBooleanField(false)
+      country1: getField('citizenship.country1'),
+      country2: getField('citizenship.country2')
     },
-    contact: {
-      phone: createStringField('', 'tel'),
-      email: createStringField('', 'email'),
-      relationship: createStringField(''),
-      correspondenceMethods: createStringField('')
+    // Contact Methods (5 checkboxes + explanation)
+    contactMethods: {
+      inPerson: getField('contactMethods.inPerson'),
+      telephone: getField('contactMethods.telephone'),
+      electronic: getField('contactMethods.electronic'),
+      writtenCorrespondence: getField('contactMethods.writtenCorrespondence'),
+      other: getField('contactMethods.other'),
+      otherExplanation: getField('contactMethods.otherExplanation')
     },
+
+    // Contact Dates
+    contactDates: {
+      firstContact: getField('contactDates.firstContact'),
+      firstContactEstimated: getField('contactDates.firstContactEstimated'),
+      lastContact: getField('contactDates.lastContact'),
+      lastContactEstimated: getField('contactDates.lastContactEstimated')
+    },
+
+    // Contact Frequency (radio groups)
+    contactFrequency: getField('contactFrequency'),
+    contactFrequency2: getField('contactFrequency2'),
+
+    // Relationship Types (4 checkboxes + explanations)
+    relationshipTypes: {
+      professionalBusiness: getField('relationshipTypes.professionalBusiness'),
+      personal: getField('relationshipTypes.personal'),
+      obligation: getField('relationshipTypes.obligation'),
+      other: getField('relationshipTypes.other'),
+      professionalExplanation: getField('relationshipTypes.professionalExplanation'),
+      personalExplanation: getField('relationshipTypes.personalExplanation'),
+      obligationExplanation: getField('relationshipTypes.obligationExplanation'),
+      otherExplanation: getField('relationshipTypes.otherExplanation')
+    },
+
+    // Additional Names Table (4 rows × 4 columns = 16 fields)
+    additionalNames: {
+      row1: {
+        last: getField('additionalNames.row1.last'),
+        first: getField('additionalNames.row1.first'),
+        middle: getField('additionalNames.row1.middle'),
+        suffix: getField('additionalNames.row1.suffix')
+      },
+      row2: {
+        last: getField('additionalNames.row2.last'),
+        first: getField('additionalNames.row2.first'),
+        middle: getField('additionalNames.row2.middle'),
+        suffix: getField('additionalNames.row2.suffix')
+      },
+      row3: {
+        last: getField('additionalNames.row3.last'),
+        first: getField('additionalNames.row3.first'),
+        middle: getField('additionalNames.row3.middle'),
+        suffix: getField('additionalNames.row3.suffix')
+      },
+      row4: {
+        last: getField('additionalNames.row4.last'),
+        first: getField('additionalNames.row4.first'),
+        middle: getField('additionalNames.row4.middle'),
+        suffix: getField('additionalNames.row4.suffix')
+      }
+    },
+    // Employment Information
     employment: {
-      employerName: createStringField(''),
+      employerName: getField('employment.employerName'),
+      unknownEmployer: getField('employment.employerUnknown'),
       employerAddress: {
-        street: createStringField(''),
-        city: createStringField(''),
-        state: createStringField('', 'select'),
-        zipCode: createStringField(''),
-        country: createStringField('', 'select')
-      },
-      position: createStringField(''),
-      dateRange: {
-        from: {
-          date: createStringField('', 'date'),
-          estimated: createBooleanField(false),
-          unknown: createBooleanField(false)
-        },
-        to: {
-          date: createStringField('', 'date'),
-          estimated: createBooleanField(false),
-          unknown: createBooleanField(false)
-        },
-        present: createBooleanField(false)
-      },
-      unknownEmployer: createBooleanField(false)
+        street: getField('employment.employerAddress.street'),
+        city: getField('employment.employerAddress.city'),
+        state: getField('employment.employerAddress.state'),
+        zipCode: getField('employment.employerAddress.zipCode'),
+        country: getField('employment.employerAddress.country'),
+        unknown: getField('employment.employerAddress.unknown')
+      }
     },
+
+    // Government/Military/Intelligence Relationship
     governmentRelationship: {
-      hasRelationship: createYesNoField('NO'),
-      relationshipDescription: createStringField(''),
-      entityType: createStringField(''),
-      securityAccess: createStringField('')
-    },
-    contactDetails: {
-      firstContact: {
-        date: createStringField('', 'date'),
-        estimated: createBooleanField(false),
-        unknown: createBooleanField(false)
-      },
-      lastContact: {
-        date: createStringField('', 'date'),
-        estimated: createBooleanField(false),
-        unknown: createBooleanField(false)
-      },
-      frequency: createStringField('', 'select'),
-      natureOfContact: createStringField('', 'textarea'),
-      initialMeetingCircumstances: createStringField('', 'textarea'),
-      otherPersonsPresent: createStringField('', 'textarea'),
-      contactLocations: createStringField('', 'textarea'),
-      sponsoredBy: createStringField('', 'textarea'),
-      purpose: createStringField('', 'textarea')
+      hasRelationship: getField('governmentRelationship.hasRelationship'),
+      description: getField('governmentRelationship.description'),
+      additionalDetails: getField('governmentRelationship.additionalDetails'),
+      address: {
+        street: getField('governmentRelationship.address.street'),
+        apoFpo: getField('governmentRelationship.address.apoFpo'),
+        state: getField('governmentRelationship.address.state'),
+        zipCode: getField('governmentRelationship.address.zipCode')
+      }
     }
   };
 
-  console.log(`✅ Created simplified foreign contact entry ${entryIndex}`);
+  console.log(`✅ Created comprehensive foreign contact entry ${entryIndex} with all PDF field mappings`);
+
+  // Validate field count for this entry
+  const fieldCount = countFieldsInEntry(entry);
+  console.log(`📊 Entry ${entryIndex} contains ${fieldCount} mapped fields`);
+
   return entry;
+};
+
+/**
+ * Helper function to count fields in an entry for validation
+ */
+const countFieldsInEntry = (entry: any): number => {
+  let count = 0;
+
+  const countFields = (obj: any): void => {
+    Object.values(obj).forEach(value => {
+      if (value && typeof value === 'object') {
+        if ('id' in value && 'name' in value && 'value' in value) {
+          count++; // This is a Field object
+        } else {
+          countFields(value); // Recurse into nested objects
+        }
+      }
+    });
+  };
+
+  countFields(entry);
+  return count;
 };
 
 // ============================================================================
