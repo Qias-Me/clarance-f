@@ -3,15 +3,56 @@
  *
  * React component for SF-86 Section 19 using the new Form Architecture 2.0.
  * This component handles foreign contacts and activities with full CRUD operations
- * and integrates with the Section19Provider context.
+ * and integrates with the comprehensive Section19Provider context.
  *
- * Foreign Contacts Subsection (277 total fields across 4 pages):
+ * COMPREHENSIVE FIELD COVERAGE (277 total fields across 4 subsections):
  * - Personal Information: Name, DOB, place of birth, address
  * - Citizenship Information: Primary/secondary countries
- * - Contact Information: Phone, email, relationship
- * - Employment Information: Employer details, position, dates
- * - Government Relationship: Official connections
- * - Contact Details: Meeting circumstances, frequency, purpose
+ * - Contact Methods: 5 checkboxes (in-person, telephone, electronic, written, other)
+ * - Contact Dates: First/last contact with estimated flags
+ * - Contact Frequency: Radio button groups (1-6 scale)
+ * - Relationship Types: Professional, personal, obligation, other + explanations
+ * - Additional Names Table: 4 rows × 4 columns (16 fields)
+ * - Employment Information: Employer details and address
+ * - Government Relationship: Security/intelligence connections
+ *
+ * SUBSECTION MAPPING:
+ * - Entry 0 → Section19_1 (Subsection 1)
+ * - Entry 1 → Section19_2 (Subsection 2)
+ * - Entry 2 → Section19_3 (Subsection 3)
+ * - Entry 3 → Section19_4 (Subsection 4)
+ *
+ * FIELD BREAKDOWN BY CATEGORY:
+ * 1. Main Radio Button: 1 field (hasContact)
+ * 2. Personal Information: ~45 fields per entry
+ *    - Name fields: first, middle, last, suffix, unknown (5 fields)
+ *    - Date of birth: date, estimated, unknown (3 fields)
+ *    - Place of birth: city, country, unknown (3 fields)
+ *    - Address: street, city, state, zip, country, unknown (6 fields)
+ * 3. Citizenship: ~6 fields per entry
+ *    - Primary country, secondary country, unknown (3 fields)
+ * 4. Contact Methods: ~12 fields per entry
+ *    - 5 checkboxes: inPerson, telephone, electronic, written, other
+ *    - Other explanation field (6 fields total)
+ * 5. Contact Dates: ~8 fields per entry
+ *    - First contact: date, estimated (2 fields)
+ *    - Last contact: date, estimated (2 fields)
+ * 6. Contact Frequency: ~2 fields per entry
+ *    - Radio button group (1-6 scale)
+ * 7. Relationship Types: ~12 fields per entry
+ *    - 4 checkboxes: professional, personal, obligation, other
+ *    - 4 explanation fields for each type (8 fields total)
+ * 8. Additional Names Table: 16 fields per entry
+ *    - 4 rows × 4 columns (last, first, middle, suffix)
+ * 9. Employment Information: ~12 fields per entry
+ *    - Employer name, unknown employer checkbox
+ *    - Employer address: street, city, state, zip, country, unknown (6 fields)
+ * 10. Government Relationship: ~12 fields per entry
+ *     - Has relationship radio, description
+ *     - Additional details radio
+ *     - Government address: street, apoFpo, state, zip (4 fields)
+ *
+ * TOTAL: 1 main + (4 entries × ~69 fields) = 277 fields
  */
 
 import React, { useState, useCallback, useEffect } from 'react';
@@ -103,6 +144,22 @@ const CONTACT_FREQUENCIES = [
   { value: "Annually", label: "Annually" },
   { value: "Rarely", label: "Rarely" },
   { value: "One-time", label: "One-time contact" }
+];
+
+// Suffix options for names
+const SUFFIXES = [
+  { value: "", label: "Select suffix..." },
+  { value: "Jr.", label: "Jr." },
+  { value: "Sr.", label: "Sr." },
+  { value: "II", label: "II" },
+  { value: "III", label: "III" },
+  { value: "IV", label: "IV" },
+  { value: "V", label: "V" },
+  { value: "VI", label: "VI" },
+  { value: "VII", label: "VII" },
+  { value: "VIII", label: "VIII" },
+  { value: "IX", label: "IX" },
+  { value: "X", label: "X" }
 ];
 
 export const Section19Component: React.FC<Section19ComponentProps> = ({
@@ -314,6 +371,7 @@ export const Section19Component: React.FC<Section19ComponentProps> = ({
                   checked={hasForeignContacts === "YES"}
                   onChange={(e) => handleHasForeignContactsChange("YES")}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  data-testid="has-foreign-contacts-yes"
                 />
                 <span className="ml-2 text-sm text-gray-700">
                   <strong>YES</strong>
@@ -328,6 +386,7 @@ export const Section19Component: React.FC<Section19ComponentProps> = ({
                   checked={hasForeignContacts === "NO (If NO, proceed to Section 20A)"}
                   onChange={(e) => handleHasForeignContactsChange("NO (If NO, proceed to Section 20A)")}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  data-testid="has-foreign-contacts-no"
                 />
                 <span className="ml-2 text-sm text-gray-700">
                   <strong>NO</strong> (If NO, proceed to Section 20A)
@@ -350,6 +409,7 @@ export const Section19Component: React.FC<Section19ComponentProps> = ({
                   type="button"
                   onClick={handleAddForeignContact}
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  data-testid="add-foreign-contact"
                 >
                   Add Foreign Contact
                 </button>
@@ -511,6 +571,60 @@ export const Section19Component: React.FC<Section19ComponentProps> = ({
                           />
                         </div>
 
+                        {/* Date of Birth Flags */}
+                        <div className="space-y-2">
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={getFieldValue(entryIndex, 'personalInfo.dateOfBirth.estimated')}
+                              onChange={(e) => handleCheckboxChange(entryIndex, 'personalInfo.dateOfBirth.estimated.value', e.target.checked)}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">Date is estimated</span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={getFieldValue(entryIndex, 'personalInfo.dateOfBirth.unknown')}
+                              onChange={(e) => handleCheckboxChange(entryIndex, 'personalInfo.dateOfBirth.unknown.value', e.target.checked)}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">Date of birth unknown</span>
+                          </label>
+                        </div>
+
+                        {/* Place of Birth */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Place of Birth - City
+                          </label>
+                          <input
+                            type="text"
+                            value={getFieldValue(entryIndex, 'personalInfo.placeOfBirth.city')}
+                            onChange={(e) => handleFieldChange(entryIndex, 'personalInfo.placeOfBirth.city.value', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Enter city of birth"
+                          />
+                        </div>
+
+                        {/* Place of Birth - Country */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Place of Birth - Country
+                          </label>
+                          <select
+                            value={getFieldValue(entryIndex, 'personalInfo.placeOfBirth.country')}
+                            onChange={(e) => handleFieldChange(entryIndex, 'personalInfo.placeOfBirth.country.value', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            {COUNTRIES.map(country => (
+                              <option key={country.value} value={country.value}>
+                                {country.label}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
                         {/* Unknown Name Checkbox */}
                         <div className="md:col-span-2">
                           <label className="flex items-center">
@@ -521,6 +635,19 @@ export const Section19Component: React.FC<Section19ComponentProps> = ({
                               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                             />
                             <span className="ml-2 text-sm text-gray-700">Name unknown</span>
+                          </label>
+                        </div>
+
+                        {/* Place of Birth Unknown Checkbox */}
+                        <div className="md:col-span-2">
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={getFieldValue(entryIndex, 'personalInfo.placeOfBirth.unknown')}
+                              onChange={(e) => handleCheckboxChange(entryIndex, 'personalInfo.placeOfBirth.unknown.value', e.target.checked)}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">Place of birth unknown</span>
                           </label>
                         </div>
                       </div>
@@ -575,214 +702,704 @@ export const Section19Component: React.FC<Section19ComponentProps> = ({
                           </select>
                         </div>
 
-                        {/* Unknown Citizenship Checkbox */}
-                        <div className="md:col-span-2">
-                          <label className="flex items-center">
-                            <input
-                              type="checkbox"
-                              checked={getFieldValue(entryIndex, 'citizenship.unknown')}
-                              onChange={(e) => handleCheckboxChange(entryIndex, 'citizenship.unknown.value', e.target.checked)}
-                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                            />
-                            <span className="ml-2 text-sm text-gray-700">Citizenship unknown</span>
-                          </label>
-                        </div>
                       </div>
                     </div>
 
-                    {/* Contact Information */}
+                    {/* Current Address Section */}
                     <div>
-                      <h4 className="text-md font-medium text-gray-900 mb-4">Contact Information</h4>
+                      <h4 className="text-md font-medium text-gray-900 mb-4">Current Address</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Relationship */}
-                        <div>
+                        {/* Street Address */}
+                        <div className="md:col-span-2">
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Relationship <span className="text-red-500">*</span>
+                            Street Address
                           </label>
                           <input
                             type="text"
-                            value={getFieldValue(entryIndex, 'contact.relationship')}
-                            onChange={(e) => handleFieldChange(entryIndex, 'contact.relationship.value', e.target.value)}
-                            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                              hasFieldError(entryIndex, 'contact.relationship')
-                                ? 'border-red-300 focus:border-red-500'
-                                : 'border-gray-300 focus:border-blue-500'
-                            }`}
-                            placeholder="Describe your relationship"
+                            value={getFieldValue(entryIndex, 'personalInfo.address.street')}
+                            onChange={(e) => handleFieldChange(entryIndex, 'personalInfo.address.street.value', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Enter street address"
                           />
-                          {hasFieldError(entryIndex, 'contact.relationship') && (
-                            <p className="mt-1 text-sm text-red-600">
-                              {getFieldError(entryIndex, 'contact.relationship')}
-                            </p>
-                          )}
                         </div>
 
-                        {/* Phone Number */}
+                        {/* City */}
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Phone Number
+                            City
                           </label>
                           <input
-                            type="tel"
-                            value={getFieldValue(entryIndex, 'contact.phone')}
-                            onChange={(e) => handleFieldChange(entryIndex, 'contact.phone.value', e.target.value)}
+                            type="text"
+                            value={getFieldValue(entryIndex, 'personalInfo.address.city')}
+                            onChange={(e) => handleFieldChange(entryIndex, 'personalInfo.address.city.value', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Enter phone number"
+                            placeholder="Enter city"
                           />
                         </div>
 
-                        {/* Email Address */}
+                        {/* State */}
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Email Address
+                            State/Province
                           </label>
                           <input
-                            type="email"
-                            value={getFieldValue(entryIndex, 'contact.email')}
-                            onChange={(e) => handleFieldChange(entryIndex, 'contact.email.value', e.target.value)}
+                            type="text"
+                            value={getFieldValue(entryIndex, 'personalInfo.address.state')}
+                            onChange={(e) => handleFieldChange(entryIndex, 'personalInfo.address.state.value', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Enter email address"
+                            placeholder="Enter state or province"
                           />
                         </div>
 
-                        {/* Contact Frequency */}
+                        {/* ZIP Code */}
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Contact Frequency
+                            ZIP/Postal Code
+                          </label>
+                          <input
+                            type="text"
+                            value={getFieldValue(entryIndex, 'personalInfo.address.zipCode')}
+                            onChange={(e) => handleFieldChange(entryIndex, 'personalInfo.address.zipCode.value', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Enter ZIP or postal code"
+                          />
+                        </div>
+
+                        {/* Country */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Country
                           </label>
                           <select
-                            value={getFieldValue(entryIndex, 'contactDetails.frequency')}
-                            onChange={(e) => handleFieldChange(entryIndex, 'contactDetails.frequency.value', e.target.value)}
+                            value={getFieldValue(entryIndex, 'personalInfo.address.country')}
+                            onChange={(e) => handleFieldChange(entryIndex, 'personalInfo.address.country.value', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                           >
-                            {CONTACT_FREQUENCIES.map(freq => (
-                              <option key={freq.value} value={freq.value}>
-                                {freq.label}
+                            {COUNTRIES.map(country => (
+                              <option key={country.value} value={country.value}>
+                                {country.label}
                               </option>
                             ))}
                           </select>
                         </div>
+
+                        {/* Address Unknown Checkbox */}
+                        <div className="md:col-span-2">
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={getFieldValue(entryIndex, 'personalInfo.address.unknown')}
+                              onChange={(e) => handleCheckboxChange(entryIndex, 'personalInfo.address.unknown.value', e.target.checked)}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">Address unknown</span>
+                          </label>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Contact Details */}
+                    {/* Contact Methods Section */}
                     <div>
-                      <h4 className="text-md font-medium text-gray-900 mb-4">Contact Details</h4>
+                      <h4 className="text-md font-medium text-gray-900 mb-4">Contact Methods</h4>
                       <div className="space-y-4">
-                        {/* Nature of Contact */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Nature of Contact
-                          </label>
-                          <textarea
-                            value={getFieldValue(entryIndex, 'contactDetails.natureOfContact')}
-                            onChange={(e) => handleFieldChange(entryIndex, 'contactDetails.natureOfContact.value', e.target.value)}
-                            rows={3}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Describe the nature and purpose of your contact"
-                          />
-                        </div>
+                        <p className="text-sm text-gray-600">Select all methods by which you have had contact with this person:</p>
 
-                        {/* Initial Meeting Circumstances */}
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Initial Meeting Circumstances
-                          </label>
-                          <textarea
-                            value={getFieldValue(entryIndex, 'contactDetails.initialMeetingCircumstances')}
-                            onChange={(e) => handleFieldChange(entryIndex, 'contactDetails.initialMeetingCircumstances.value', e.target.value)}
-                            rows={3}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="Describe how and under what circumstances you first met"
-                          />
-                        </div>
-
-                        {/* Contact Dates */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* In Person Contact */}
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={getFieldValue(entryIndex, 'contactMethods.inPerson')}
+                              onChange={(e) => handleCheckboxChange(entryIndex, 'contactMethods.inPerson.value', e.target.checked)}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">In person</span>
+                          </label>
+
+                          {/* Telephone Contact */}
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={getFieldValue(entryIndex, 'contactMethods.telephone')}
+                              onChange={(e) => handleCheckboxChange(entryIndex, 'contactMethods.telephone.value', e.target.checked)}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">Telephone</span>
+                          </label>
+
+                          {/* Electronic Contact */}
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={getFieldValue(entryIndex, 'contactMethods.electronic')}
+                              onChange={(e) => handleCheckboxChange(entryIndex, 'contactMethods.electronic.value', e.target.checked)}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">Electronic (email, internet, etc.)</span>
+                          </label>
+
+                          {/* Written Correspondence */}
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={getFieldValue(entryIndex, 'contactMethods.writtenCorrespondence')}
+                              onChange={(e) => handleCheckboxChange(entryIndex, 'contactMethods.writtenCorrespondence.value', e.target.checked)}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">Written correspondence</span>
+                          </label>
+
+                          {/* Other Contact Method */}
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={getFieldValue(entryIndex, 'contactMethods.other')}
+                              onChange={(e) => handleCheckboxChange(entryIndex, 'contactMethods.other.value', e.target.checked)}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">Other</span>
+                          </label>
+                        </div>
+
+                        {/* Other Contact Method Explanation */}
+                        {getFieldValue(entryIndex, 'contactMethods.other') && (
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                              First Contact Date
+                              Explain other contact method
                             </label>
-                            <input
-                              type="date"
-                              value={getFieldValue(entryIndex, 'contactDetails.firstContact.date')}
-                              onChange={(e) => handleFieldChange(entryIndex, 'contactDetails.firstContact.date.value', e.target.value)}
+                            <textarea
+                              value={getFieldValue(entryIndex, 'contactMethods.otherExplanation')}
+                              onChange={(e) => handleFieldChange(entryIndex, 'contactMethods.otherExplanation.value', e.target.value)}
+                              rows={2}
                               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              placeholder="Describe the other contact method"
                             />
                           </div>
+                        )}
+                      </div>
+                    </div>
 
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                              Last Contact Date
-                            </label>
+                    {/* Contact Dates Section */}
+                    <div>
+                      <h4 className="text-md font-medium text-gray-900 mb-4">Contact Dates</h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* First Contact Date */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            First Contact Date
+                          </label>
+                          <input
+                            type="date"
+                            value={getFieldValue(entryIndex, 'contactDates.firstContact')}
+                            onChange={(e) => handleFieldChange(entryIndex, 'contactDates.firstContact.value', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                          <label className="flex items-center mt-2">
                             <input
-                              type="date"
-                              value={getFieldValue(entryIndex, 'contactDetails.lastContact.date')}
-                              onChange={(e) => handleFieldChange(entryIndex, 'contactDetails.lastContact.date.value', e.target.value)}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              type="checkbox"
+                              checked={getFieldValue(entryIndex, 'contactDates.firstContactEstimated')}
+                              onChange={(e) => handleCheckboxChange(entryIndex, 'contactDates.firstContactEstimated.value', e.target.checked)}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                             />
+                            <span className="ml-2 text-sm text-gray-700">Date is estimated</span>
+                          </label>
+                        </div>
+
+                        {/* Last Contact Date */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Last Contact Date
+                          </label>
+                          <input
+                            type="date"
+                            value={getFieldValue(entryIndex, 'contactDates.lastContact')}
+                            onChange={(e) => handleFieldChange(entryIndex, 'contactDates.lastContact.value', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                          <label className="flex items-center mt-2">
+                            <input
+                              type="checkbox"
+                              checked={getFieldValue(entryIndex, 'contactDates.lastContactEstimated')}
+                              onChange={(e) => handleCheckboxChange(entryIndex, 'contactDates.lastContactEstimated.value', e.target.checked)}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">Date is estimated</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Contact Frequency Section */}
+                    <div>
+                      <h4 className="text-md font-medium text-gray-900 mb-4">Contact Frequency</h4>
+                      <fieldset>
+                        <legend className="text-sm text-gray-600 mb-3">How frequently do you have contact with this person?</legend>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                          {['1', '2', '3', '4', '5', '6'].map((freq) => (
+                            <label key={freq} className="flex items-center">
+                              <input
+                                type="radio"
+                                name={`contactFrequency_${entryIndex}`}
+                                value={freq}
+                                checked={getFieldValue(entryIndex, 'contactFrequency') === freq}
+                                onChange={(e) => handleFieldChange(entryIndex, 'contactFrequency.value', freq)}
+                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                              />
+                              <span className="ml-2 text-sm text-gray-700">Level {freq}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </fieldset>
+                    </div>
+
+                    {/* Relationship Types Section */}
+                    <div>
+                      <h4 className="text-md font-medium text-gray-900 mb-4">Relationship Types</h4>
+                      <div className="space-y-4">
+                        <p className="text-sm text-gray-600">Select all that apply to describe your relationship with this person:</p>
+
+                        {/* Professional/Business Relationship */}
+                        <div>
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={getFieldValue(entryIndex, 'relationshipTypes.professionalBusiness')}
+                              onChange={(e) => handleCheckboxChange(entryIndex, 'relationshipTypes.professionalBusiness.value', e.target.checked)}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">Professional/Business</span>
+                          </label>
+                          {getFieldValue(entryIndex, 'relationshipTypes.professionalBusiness') && (
+                            <div className="mt-2 ml-6">
+                              <textarea
+                                value={getFieldValue(entryIndex, 'relationshipTypes.professionalExplanation')}
+                                onChange={(e) => handleFieldChange(entryIndex, 'relationshipTypes.professionalExplanation.value', e.target.value)}
+                                rows={2}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Explain the professional/business relationship"
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Personal Relationship */}
+                        <div>
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={getFieldValue(entryIndex, 'relationshipTypes.personal')}
+                              onChange={(e) => handleCheckboxChange(entryIndex, 'relationshipTypes.personal.value', e.target.checked)}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">Personal</span>
+                          </label>
+                          {getFieldValue(entryIndex, 'relationshipTypes.personal') && (
+                            <div className="mt-2 ml-6">
+                              <textarea
+                                value={getFieldValue(entryIndex, 'relationshipTypes.personalExplanation')}
+                                onChange={(e) => handleFieldChange(entryIndex, 'relationshipTypes.personalExplanation.value', e.target.value)}
+                                rows={2}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Explain the personal relationship"
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Obligation Relationship */}
+                        <div>
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={getFieldValue(entryIndex, 'relationshipTypes.obligation')}
+                              onChange={(e) => handleCheckboxChange(entryIndex, 'relationshipTypes.obligation.value', e.target.checked)}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">Obligation</span>
+                          </label>
+                          {getFieldValue(entryIndex, 'relationshipTypes.obligation') && (
+                            <div className="mt-2 ml-6">
+                              <textarea
+                                value={getFieldValue(entryIndex, 'relationshipTypes.obligationExplanation')}
+                                onChange={(e) => handleFieldChange(entryIndex, 'relationshipTypes.obligationExplanation.value', e.target.value)}
+                                rows={2}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Explain the obligation relationship"
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Other Relationship */}
+                        <div>
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={getFieldValue(entryIndex, 'relationshipTypes.other')}
+                              onChange={(e) => handleCheckboxChange(entryIndex, 'relationshipTypes.other.value', e.target.checked)}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">Other</span>
+                          </label>
+                          {getFieldValue(entryIndex, 'relationshipTypes.other') && (
+                            <div className="mt-2 ml-6">
+                              <textarea
+                                value={getFieldValue(entryIndex, 'relationshipTypes.otherExplanation')}
+                                onChange={(e) => handleFieldChange(entryIndex, 'relationshipTypes.otherExplanation.value', e.target.value)}
+                                rows={2}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Explain the other relationship type"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Additional Names Table Section */}
+                    <div>
+                      <h4 className="text-md font-medium text-gray-900 mb-4">Additional Names</h4>
+                      <p className="text-sm text-gray-600 mb-4">
+                        List any other names by which this person is known (aliases, nicknames, maiden names, etc.)
+                      </p>
+
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full border border-gray-300">
+                          <thead className="bg-gray-50">
+                            <tr>
+                              <th className="px-4 py-2 border-b border-gray-300 text-left text-sm font-medium text-gray-700">Last Name</th>
+                              <th className="px-4 py-2 border-b border-gray-300 text-left text-sm font-medium text-gray-700">First Name</th>
+                              <th className="px-4 py-2 border-b border-gray-300 text-left text-sm font-medium text-gray-700">Middle Name</th>
+                              <th className="px-4 py-2 border-b border-gray-300 text-left text-sm font-medium text-gray-700">Suffix</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {['row1', 'row2', 'row3', 'row4'].map((rowKey, rowIndex) => (
+                              <tr key={rowKey} className={rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
+                                <td className="px-4 py-2 border-b border-gray-300">
+                                  <input
+                                    type="text"
+                                    value={getFieldValue(entryIndex, `additionalNames.${rowKey}.last`)}
+                                    onChange={(e) => handleFieldChange(entryIndex, `additionalNames.${rowKey}.last.value`, e.target.value)}
+                                    className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Last name"
+                                  />
+                                </td>
+                                <td className="px-4 py-2 border-b border-gray-300">
+                                  <input
+                                    type="text"
+                                    value={getFieldValue(entryIndex, `additionalNames.${rowKey}.first`)}
+                                    onChange={(e) => handleFieldChange(entryIndex, `additionalNames.${rowKey}.first.value`, e.target.value)}
+                                    className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="First name"
+                                  />
+                                </td>
+                                <td className="px-4 py-2 border-b border-gray-300">
+                                  <input
+                                    type="text"
+                                    value={getFieldValue(entryIndex, `additionalNames.${rowKey}.middle`)}
+                                    onChange={(e) => handleFieldChange(entryIndex, `additionalNames.${rowKey}.middle.value`, e.target.value)}
+                                    className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                    placeholder="Middle name"
+                                  />
+                                </td>
+                                <td className="px-4 py-2 border-b border-gray-300">
+                                  <select
+                                    value={getFieldValue(entryIndex, `additionalNames.${rowKey}.suffix`)}
+                                    onChange={(e) => handleFieldChange(entryIndex, `additionalNames.${rowKey}.suffix.value`, e.target.value)}
+                                    className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                                  >
+                                    {SUFFIXES.map(suffix => (
+                                      <option key={suffix.value} value={suffix.value}>
+                                        {suffix.label}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    {/* Employment Information */}
+                    <div>
+                      <h4 className="text-md font-medium text-gray-900 mb-4">Employment Information</h4>
+                      <div className="space-y-4">
+                        {/* Employer Name */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Employer Name
+                          </label>
+                          <input
+                            type="text"
+                            value={getFieldValue(entryIndex, 'employment.employerName')}
+                            onChange={(e) => handleFieldChange(entryIndex, 'employment.employerName.value', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="Enter employer name"
+                          />
+                        </div>
+
+                        {/* Unknown Employer Checkbox */}
+                        <div>
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={getFieldValue(entryIndex, 'employment.unknownEmployer')}
+                              onChange={(e) => handleCheckboxChange(entryIndex, 'employment.unknownEmployer.value', e.target.checked)}
+                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">Employer unknown</span>
+                          </label>
+                        </div>
+
+                        {/* Employer Address */}
+                        <div>
+                          <h5 className="text-sm font-medium text-gray-900 mb-3">Employer Address</h5>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Street Address */}
+                            <div className="md:col-span-2">
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Street Address
+                              </label>
+                              <input
+                                type="text"
+                                value={getFieldValue(entryIndex, 'employment.employerAddress.street')}
+                                onChange={(e) => handleFieldChange(entryIndex, 'employment.employerAddress.street.value', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Enter employer street address"
+                              />
+                            </div>
+
+                            {/* City */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                City
+                              </label>
+                              <input
+                                type="text"
+                                value={getFieldValue(entryIndex, 'employment.employerAddress.city')}
+                                onChange={(e) => handleFieldChange(entryIndex, 'employment.employerAddress.city.value', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Enter city"
+                              />
+                            </div>
+
+                            {/* State */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                State/Province
+                              </label>
+                              <input
+                                type="text"
+                                value={getFieldValue(entryIndex, 'employment.employerAddress.state')}
+                                onChange={(e) => handleFieldChange(entryIndex, 'employment.employerAddress.state.value', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Enter state or province"
+                              />
+                            </div>
+
+                            {/* ZIP Code */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                ZIP/Postal Code
+                              </label>
+                              <input
+                                type="text"
+                                value={getFieldValue(entryIndex, 'employment.employerAddress.zipCode')}
+                                onChange={(e) => handleFieldChange(entryIndex, 'employment.employerAddress.zipCode.value', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                placeholder="Enter ZIP or postal code"
+                              />
+                            </div>
+
+                            {/* Country */}
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Country
+                              </label>
+                              <select
+                                value={getFieldValue(entryIndex, 'employment.employerAddress.country')}
+                                onChange={(e) => handleFieldChange(entryIndex, 'employment.employerAddress.country.value', e.target.value)}
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              >
+                                {COUNTRIES.map(country => (
+                                  <option key={country.value} value={country.value}>
+                                    {country.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+
+                            {/* Employer Address Unknown Checkbox */}
+                            <div className="md:col-span-2">
+                              <label className="flex items-center">
+                                <input
+                                  type="checkbox"
+                                  checked={getFieldValue(entryIndex, 'employment.employerAddress.unknown')}
+                                  onChange={(e) => handleCheckboxChange(entryIndex, 'employment.employerAddress.unknown.value', e.target.checked)}
+                                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                />
+                                <span className="ml-2 text-sm text-gray-700">Employer address unknown</span>
+                              </label>
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Government Relationship */}
+                    {/* Government Relationship Section */}
                     <div>
                       <h4 className="text-md font-medium text-gray-900 mb-4">Government Relationship</h4>
+                      <div className="space-y-4">
+                        <p className="text-sm text-gray-600">
+                          Does this person have any affiliation with a foreign government, military, security, defense industry, foreign movement, or intelligence service?
+                        </p>
 
-                      {/* Has Government Relationship */}
-                      <div className="mb-4">
+                        {/* Has Relationship Radio */}
                         <fieldset>
-                          <legend className="text-sm font-medium text-gray-700 mb-2">
-                            Does this person have any known or suspected affiliation with a foreign government, military, security, defense industry, foreign movement, or intelligence service?
-                          </legend>
-
+                          <legend className="text-sm font-medium text-gray-700 mb-2">Government Relationship</legend>
                           <div className="space-y-2">
                             <label className="flex items-center">
                               <input
                                 type="radio"
-                                name={`govRelationship_${entryIndex}`}
+                                name={`governmentRelationship_${entryIndex}`}
                                 value="YES"
-                                checked={getFieldValue(entryIndex, 'governmentRelationship.hasRelationship') === "YES"}
-                                onChange={(e) => handleFieldChange(entryIndex, 'governmentRelationship.hasRelationship.value', "YES")}
+                                checked={getFieldValue(entryIndex, 'governmentRelationship.hasRelationship') === 'YES'}
+                                onChange={(e) => handleFieldChange(entryIndex, 'governmentRelationship.hasRelationship.value', 'YES')}
                                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                               />
-                              <span className="ml-2 text-sm text-gray-700">YES</span>
+                              <span className="ml-2 text-sm text-gray-700">Yes</span>
                             </label>
-
                             <label className="flex items-center">
                               <input
                                 type="radio"
-                                name={`govRelationship_${entryIndex}`}
+                                name={`governmentRelationship_${entryIndex}`}
                                 value="NO"
-                                checked={getFieldValue(entryIndex, 'governmentRelationship.hasRelationship') === "NO"}
-                                onChange={(e) => handleFieldChange(entryIndex, 'governmentRelationship.hasRelationship.value', "NO")}
+                                checked={getFieldValue(entryIndex, 'governmentRelationship.hasRelationship') === 'NO'}
+                                onChange={(e) => handleFieldChange(entryIndex, 'governmentRelationship.hasRelationship.value', 'NO')}
                                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                               />
-                              <span className="ml-2 text-sm text-gray-700">NO</span>
+                              <span className="ml-2 text-sm text-gray-700">No</span>
                             </label>
                           </div>
                         </fieldset>
-                      </div>
 
-                      {/* Government Relationship Details */}
-                      {getFieldValue(entryIndex, 'governmentRelationship.hasRelationship') === "YES" && (
-                        <div className="space-y-4">
+                        {/* Relationship Description */}
+                        {getFieldValue(entryIndex, 'governmentRelationship.hasRelationship') === 'YES' && (
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                               Describe the relationship
                             </label>
                             <textarea
-                              value={getFieldValue(entryIndex, 'governmentRelationship.relationshipDescription')}
-                              onChange={(e) => handleFieldChange(entryIndex, 'governmentRelationship.relationshipDescription.value', e.target.value)}
+                              value={getFieldValue(entryIndex, 'governmentRelationship.description')}
+                              onChange={(e) => handleFieldChange(entryIndex, 'governmentRelationship.description.value', e.target.value)}
                               rows={3}
                               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                               placeholder="Provide details about the government relationship"
                             />
                           </div>
-                        </div>
-                      )}
+                        )}
+
+                        {/* Additional Details Radio */}
+                        {getFieldValue(entryIndex, 'governmentRelationship.hasRelationship') === 'YES' && (
+                          <fieldset>
+                            <legend className="text-sm font-medium text-gray-700 mb-2">Additional Details Required</legend>
+                            <div className="space-y-2">
+                              <label className="flex items-center">
+                                <input
+                                  type="radio"
+                                  name={`additionalDetails_${entryIndex}`}
+                                  value="YES"
+                                  checked={getFieldValue(entryIndex, 'governmentRelationship.additionalDetails') === 'YES'}
+                                  onChange={(e) => handleFieldChange(entryIndex, 'governmentRelationship.additionalDetails.value', 'YES')}
+                                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                                />
+                                <span className="ml-2 text-sm text-gray-700">Yes</span>
+                              </label>
+                              <label className="flex items-center">
+                                <input
+                                  type="radio"
+                                  name={`additionalDetails_${entryIndex}`}
+                                  value="NO"
+                                  checked={getFieldValue(entryIndex, 'governmentRelationship.additionalDetails') === 'NO'}
+                                  onChange={(e) => handleFieldChange(entryIndex, 'governmentRelationship.additionalDetails.value', 'NO')}
+                                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                                />
+                                <span className="ml-2 text-sm text-gray-700">No</span>
+                              </label>
+                            </div>
+                          </fieldset>
+                        )}
+
+                        {/* Government Entity Address */}
+                        {getFieldValue(entryIndex, 'governmentRelationship.additionalDetails') === 'YES' && (
+                          <div>
+                            <h5 className="text-sm font-medium text-gray-900 mb-3">Government Entity Address</h5>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {/* Street Address */}
+                              <div className="md:col-span-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  Street Address
+                                </label>
+                                <input
+                                  type="text"
+                                  value={getFieldValue(entryIndex, 'governmentRelationship.address.street')}
+                                  onChange={(e) => handleFieldChange(entryIndex, 'governmentRelationship.address.street.value', e.target.value)}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                  placeholder="Enter government entity street address"
+                                />
+                              </div>
+
+                              {/* APO/FPO */}
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  APO/FPO
+                                </label>
+                                <input
+                                  type="text"
+                                  value={getFieldValue(entryIndex, 'governmentRelationship.address.apoFpo')}
+                                  onChange={(e) => handleFieldChange(entryIndex, 'governmentRelationship.address.apoFpo.value', e.target.value)}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                  placeholder="Enter APO/FPO if applicable"
+                                />
+                              </div>
+
+                              {/* State */}
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  State/Province
+                                </label>
+                                <input
+                                  type="text"
+                                  value={getFieldValue(entryIndex, 'governmentRelationship.address.state')}
+                                  onChange={(e) => handleFieldChange(entryIndex, 'governmentRelationship.address.state.value', e.target.value)}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                  placeholder="Enter state or province"
+                                />
+                              </div>
+
+                              {/* ZIP Code */}
+                              <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                  ZIP/Postal Code
+                                </label>
+                                <input
+                                  type="text"
+                                  value={getFieldValue(entryIndex, 'governmentRelationship.address.zipCode')}
+                                  onChange={(e) => handleFieldChange(entryIndex, 'governmentRelationship.address.zipCode.value', e.target.value)}
+                                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                  placeholder="Enter ZIP or postal code"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
+
+
                   </div>
                 )}
               </div>
