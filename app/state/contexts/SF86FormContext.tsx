@@ -50,7 +50,7 @@ import { Section28Provider } from "./sections2.0/section28";
 import { Section29Provider } from "./sections2.0/section29";
 import { Section30Provider } from "./sections2.0/section30";
 import { Section16Provider } from "./sections2.0/section16";
-import { Section18Provider } from "./sections2.0/section18";
+import { Section18Provider } from "./sections2.0/Section18";
 import { Section19Provider } from "./sections2.0/section19";
 import { Section20Provider } from "./sections2.0/section20";
 import { Section21Provider } from "./sections2.0/section21";
@@ -393,6 +393,24 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
         );
       }
 
+      // Special debugging for Section 22
+      if (sectionId === "section22") {
+        console.log(
+          "🔍 SF86FormContext: updateSectionData called for Section 22:",
+          {
+            sectionId,
+            data,
+            dataType: typeof data,
+            dataKeys: data ? Object.keys(data) : "N/A",
+            section22Property: data?.section22,
+            hasSection22: !!data?.section22,
+            section22Keys: data?.section22 ? Object.keys(data.section22) : "N/A",
+            criminalHistoryEntries: data?.section22?.criminalHistory?.entries?.length || 0,
+            domesticViolenceEntries: data?.section22?.domesticViolenceOrders?.entries?.length || 0,
+          }
+        );
+      }
+
       // Special debugging for Section 29
       if (sectionId === "section29") {
         console.log(
@@ -464,6 +482,20 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
               foreignFinancialInterests: (newData.section20 as any)?.section20?.foreignFinancialInterests,
               foreignBusinessActivities: (newData.section20 as any)?.section20?.foreignBusinessActivities,
               foreignTravel: (newData.section20 as any)?.section20?.foreignTravel,
+            }
+          );
+        }
+
+        // Special debugging for Section 22 after data is set
+        if (sectionId === "section22") {
+          console.log(
+            "🔍 SF86FormContext: After setting Section 22 data in formData:",
+            {
+              newFormData: newData,
+              section22InFormData: newData.section22,
+              section22Property: (newData.section22 as any)?.section22,
+              criminalHistory: (newData.section22 as any)?.section22?.criminalHistory,
+              domesticViolenceOrders: (newData.section22 as any)?.section22?.domesticViolenceOrders,
             }
           );
         }

@@ -19,7 +19,7 @@ import type { Section15 } from "./sections2.0/section15";
 import type { Section16 } from "./sections2.0/section16";
 import type { Section29 } from "./sections2.0/section29";
 import type { Section19 } from "./sections2.0/section19";
-import type { Section18 } from "./sections2.0/section18";
+import type { Section18 } from "./sections2.0/Section18";
 import type { Section26 } from "./sections2.0/section26";
 
 // Legacy imports (commented out for now)

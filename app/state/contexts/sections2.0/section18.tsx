@@ -1,84 +1,74 @@
 /**
- * Section 18 Context - Relatives and Associates
- *
- * Manages state and operations for SF-86 Section 18 (Relatives and Associates).
- * Provides CRUD operations, validation, and integration with the global SF86 form context.
- *
- * FIXED: Now uses proper SF86FormContext integration pattern like Section 1 and Section 29
+ * Section 18 Context (REDESIGNED)
+ * 
+ * Manages state and operations for SF-86 Section 18 based on the actual PDF form structure.
+ * The form has 6 relative entries with subsections 18.1-18.5, totaling 964 fields.
+ * 
+ * STRUCTURE:
+ * - 6 Relative Entries (Entry #1-6)
+ * - Section 18.1: Basic relative information
+ * - Section 18.2: Current address for living relatives
+ * - Section 18.3: Citizenship documentation for US citizens
+ * - Section 18.4: Documentation for non-US citizens with US address
+ * - Section 18.5: Contact info for non-US citizens with foreign address
  */
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
 import { cloneDeep, set, get } from 'lodash';
 import type {
   Section18,
-  ImmediateFamilyEntry,
-  ExtendedFamilyEntry,
-  AssociateEntry,
-  Section18SubsectionKey,
-  Section18FieldUpdate,
-  RelativeAssociateValidationResult,
-  Section18ValidationContext
-} from '../../../../api/interfaces/sections2.0/section18';
+  RelativeEntry,
+  Section18SubsectionKey
+} from '../../../../api/interfaces/sections2.0/Section18';
 import {
-  createDefaultSection18,
-  createDefaultImmediateFamilyEntry,
-  createDefaultExtendedFamilyEntry,
-  createDefaultAssociateEntry,
-  updateSection18Field,
-  validateRelativesAndAssociates,
-  isSection18Complete
-} from '../../../../api/interfaces/sections2.0/section18';
+  generateAllRelativeEntries,
+  generateRelativeEntry
+} from './section18-field-generator';
 import { useSection86FormIntegration } from '../shared/section-context-integration';
 import type { ChangeSet } from '../shared/base-interfaces';
 
 // ============================================================================
-// SECTION 18 CONTEXT INTERFACE
+// SECTION 18 CONTEXT INTERFACE (REDESIGNED)
 // ============================================================================
 
 export interface Section18ContextType {
   // Section 18 specific data
   section18Data: Section18;
 
-  // Immediate Family Operations
-  immediateFamily: ImmediateFamilyEntry[];
-  addImmediateFamilyMember: () => void;
-  updateImmediateFamilyMember: (index: number, updates: Partial<ImmediateFamilyEntry>) => void;
-  removeImmediateFamilyMember: (index: number) => void;
-  duplicateImmediateFamilyMember: (index: number) => void;
+  // Relative Operations (6 entries)
+  relatives: RelativeEntry[];
+  addRelative: () => void;
+  updateRelative: (entryNumber: number, updates: Partial<RelativeEntry>) => void;
+  removeRelative: (entryNumber: number) => void;
+  duplicateRelative: (entryNumber: number) => void;
+  getRelativeByEntryNumber: (entryNumber: number) => RelativeEntry | undefined;
 
-  // Extended Family Operations
-  extendedFamily: ExtendedFamilyEntry[];
-  addExtendedFamilyMember: () => void;
-  updateExtendedFamilyMember: (index: number, updates: Partial<ExtendedFamilyEntry>) => void;
-  removeExtendedFamilyMember: (index: number) => void;
-  duplicateExtendedFamilyMember: (index: number) => void;
-
-  // Associate Operations
-  associates: AssociateEntry[];
-  addAssociate: () => void;
-  updateAssociate: (index: number, updates: Partial<AssociateEntry>) => void;
-  removeAssociate: (index: number) => void;
-  duplicateAssociate: (index: number) => void;
+  // Subsection Operations
+  updateSubsection: (entryNumber: number, subsection: Section18SubsectionKey, updates: any) => void;
+  getSubsectionData: (entryNumber: number, subsection: Section18SubsectionKey) => any;
 
   // Field Operations
-  updateField: (fieldPath: string, value: any, entryIndex?: number, subsection?: Section18SubsectionKey) => void;
-  updateFieldValue: (subsection: Section18SubsectionKey, entryIndex: number, fieldPath: string, newValue: any) => void; // FIXED: Section 18 specific signature
-  getFieldValue: (fieldPath: string, entryIndex?: number, subsection?: Section18SubsectionKey) => any;
-  
+  updateField: (fieldPath: string, value: any, entryNumber?: number, subsection?: Section18SubsectionKey) => void;
+  updateFieldValue: (entryNumber: number, subsection: Section18SubsectionKey, fieldPath: string, newValue: any) => void;
+  getFieldValue: (fieldPath: string, entryNumber?: number, subsection?: Section18SubsectionKey) => any;
+
+  // Relative Type Selection
+  relativeTypes: any;
+  updateRelativeTypeSelection: (relativeType: string, isSelected: boolean) => void;
+
   // Validation
-  validate: () => RelativeAssociateValidationResult;
-  validateEntry: (subsection: Section18SubsectionKey, entryIndex: number) => RelativeAssociateValidationResult;
+  validate: () => { isValid: boolean; errors: string[]; warnings: string[] };
+  validateEntry: (entryNumber: number) => { isValid: boolean; errors: string[]; warnings: string[] };
   validationErrors: string[];
   validationWarnings: string[];
-  
+
   // Utility
   isComplete: boolean;
   getTotalEntries: () => number;
-  getEntriesBySubsection: (subsection: Section18SubsectionKey) => any[];
   exportData: () => Section18;
   importData: (data: Section18) => void;
   resetSection: () => void;
-  
+
   // Integration
   sectionId: number;
   sectionName: string;
@@ -91,195 +81,150 @@ export interface Section18ContextType {
 const Section18Context = createContext<Section18ContextType | null>(null);
 
 // ============================================================================
-// SECTION 18 PROVIDER
+// DEFAULT DATA CREATION
+// ============================================================================
+
+function createDefaultSection18(): Section18 {
+  return {
+    _id: 18,
+    section18: {
+      // relativeTypes field is deprecated - relative type selection now happens per entry
+      // Each relative entry has its own relativeType dropdown field
+      relatives: generateAllRelativeEntries()
+    }
+  };
+}
+
+// ============================================================================
+// SECTION 18 PROVIDER (REDESIGNED)
 // ============================================================================
 
 export const Section18Provider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Core state with enhanced logging
+  // Core state
   const [section18Data, setSection18Data] = useState<Section18>(() => {
-    // console.log('🚀 Section18Provider: Initializing with createDefaultSection18()');
+    console.log('🚀 Section18Provider: Initializing with new structure');
     const defaultData = createDefaultSection18();
-    // console.log('✅ Section18Provider: Default data created:', defaultData);
+    console.log('✅ Section18Provider: Default data created:', defaultData);
     return defaultData;
   });
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
   const [isDirty, setIsDirty] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   // ============================================================================
   // COMPUTED VALUES
   // ============================================================================
 
-  const immediateFamily = useMemo(() => section18Data.section18.immediateFamily, [section18Data]);
-  const extendedFamily = useMemo(() => section18Data.section18.extendedFamily, [section18Data]);
-  const associates = useMemo(() => section18Data.section18.associates, [section18Data]);
-  const isComplete = useMemo(() => isSection18Complete(section18Data), [section18Data]);
+  const relatives = useMemo(() => section18Data.section18.relatives, [section18Data]);
+  const relativeTypes = useMemo(() => section18Data.section18.relativeTypes, [section18Data]);
+  const isComplete = useMemo(() => {
+    // Basic completion check - at least one relative with basic info
+    return relatives.some(relative => 
+      relative.section18_1.fullName.firstName.value && 
+      relative.section18_1.fullName.lastName.value
+    );
+  }, [relatives]);
 
   // ============================================================================
-  // IMMEDIATE FAMILY OPERATIONS
+  // RELATIVE OPERATIONS
   // ============================================================================
 
-  const addImmediateFamilyMember = useCallback(() => {
-    console.log('🔍 Section18: Adding immediate family member');
-    const newEntry = createDefaultImmediateFamilyEntry();
-    console.log('✅ Section18: Created immediate family entry:', newEntry);
-    setSection18Data(prev => ({
-      ...prev,
-      section18: {
-        ...prev.section18,
-        immediateFamily: [...prev.section18.immediateFamily, newEntry]
-      }
-    }));
-    setIsDirty(true);
-  }, []);
+  const addRelative = useCallback(() => {
+    console.log('🔍 Section18: Adding new relative');
+    const nextEntryNumber = relatives.length + 1;
+    const MAX_RELATIVES = 6;
 
-  const updateImmediateFamilyMember = useCallback((index: number, updates: Partial<ImmediateFamilyEntry>) => {
+    if (nextEntryNumber <= MAX_RELATIVES && relatives.length < MAX_RELATIVES) {
+      const newEntry = generateRelativeEntry(nextEntryNumber);
+      console.log('✅ Section18: Created relative entry:', newEntry);
+      setSection18Data(prev => ({
+        ...prev,
+        section18: {
+          ...prev.section18,
+          relatives: [...prev.section18.relatives, newEntry]
+        }
+      }));
+      setIsDirty(true);
+    } else {
+      console.warn(`⚠️ Section18: Cannot add more than ${MAX_RELATIVES} relatives. Current count: ${relatives.length}`);
+    }
+  }, [relatives.length]);
+
+  const updateRelative = useCallback((entryNumber: number, updates: Partial<RelativeEntry>) => {
     setSection18Data(prev => {
       const newData = cloneDeep(prev);
-      newData.section18.immediateFamily[index] = {
-        ...newData.section18.immediateFamily[index],
-        ...updates
-      };
+      const relativeIndex = newData.section18.relatives.findIndex(r => r.entryNumber === entryNumber);
+      if (relativeIndex !== -1) {
+        newData.section18.relatives[relativeIndex] = {
+          ...newData.section18.relatives[relativeIndex],
+          ...updates
+        };
+      }
       return newData;
     });
     setIsDirty(true);
   }, []);
 
-  const removeImmediateFamilyMember = useCallback((index: number) => {
+  const removeRelative = useCallback((entryNumber: number) => {
     setSection18Data(prev => ({
       ...prev,
       section18: {
         ...prev.section18,
-        immediateFamily: prev.section18.immediateFamily.filter((_, i) => i !== index)
+        relatives: prev.section18.relatives.filter(r => r.entryNumber !== entryNumber)
       }
     }));
     setIsDirty(true);
   }, []);
 
-  const duplicateImmediateFamilyMember = useCallback((index: number) => {
-    setSection18Data(prev => {
-      const entryToDuplicate = cloneDeep(prev.section18.immediateFamily[index]);
-      return {
+  const duplicateRelative = useCallback((entryNumber: number) => {
+    const relativeToDuplicate = relatives.find(r => r.entryNumber === entryNumber);
+    if (relativeToDuplicate && relatives.length < 6) {
+      const nextEntryNumber = Math.max(...relatives.map(r => r.entryNumber)) + 1;
+      const duplicatedEntry = cloneDeep(relativeToDuplicate);
+      duplicatedEntry.entryNumber = nextEntryNumber;
+      
+      setSection18Data(prev => ({
         ...prev,
         section18: {
           ...prev.section18,
-          immediateFamily: [...prev.section18.immediateFamily, entryToDuplicate]
+          relatives: [...prev.section18.relatives, duplicatedEntry]
         }
-      };
-    });
-    setIsDirty(true);
-  }, []);
+      }));
+      setIsDirty(true);
+    }
+  }, [relatives]);
+
+  const getRelativeByEntryNumber = useCallback((entryNumber: number) => {
+    return relatives.find(r => r.entryNumber === entryNumber);
+  }, [relatives]);
 
   // ============================================================================
-  // EXTENDED FAMILY OPERATIONS
+  // SUBSECTION OPERATIONS
   // ============================================================================
 
-  const addExtendedFamilyMember = useCallback(() => {
-    console.log('🔍 Section18: Adding extended family member');
-    const newEntry = createDefaultExtendedFamilyEntry();
-    console.log('✅ Section18: Created extended family entry:', newEntry);
-    setSection18Data(prev => ({
-      ...prev,
-      section18: {
-        ...prev.section18,
-        extendedFamily: [...prev.section18.extendedFamily, newEntry]
-      }
-    }));
-    setIsDirty(true);
-  }, []);
-
-  const updateExtendedFamilyMember = useCallback((index: number, updates: Partial<ExtendedFamilyEntry>) => {
+  const updateSubsection = useCallback((
+    entryNumber: number, 
+    subsection: Section18SubsectionKey, 
+    updates: any
+  ) => {
     setSection18Data(prev => {
       const newData = cloneDeep(prev);
-      newData.section18.extendedFamily[index] = {
-        ...newData.section18.extendedFamily[index],
-        ...updates
-      };
+      const relativeIndex = newData.section18.relatives.findIndex(r => r.entryNumber === entryNumber);
+      if (relativeIndex !== -1) {
+        newData.section18.relatives[relativeIndex][subsection] = {
+          ...newData.section18.relatives[relativeIndex][subsection],
+          ...updates
+        };
+      }
       return newData;
     });
     setIsDirty(true);
   }, []);
 
-  const removeExtendedFamilyMember = useCallback((index: number) => {
-    setSection18Data(prev => ({
-      ...prev,
-      section18: {
-        ...prev.section18,
-        extendedFamily: prev.section18.extendedFamily.filter((_, i) => i !== index)
-      }
-    }));
-    setIsDirty(true);
-  }, []);
-
-  const duplicateExtendedFamilyMember = useCallback((index: number) => {
-    setSection18Data(prev => {
-      const entryToDuplicate = cloneDeep(prev.section18.extendedFamily[index]);
-      return {
-        ...prev,
-        section18: {
-          ...prev.section18,
-          extendedFamily: [...prev.section18.extendedFamily, entryToDuplicate]
-        }
-      };
-    });
-    setIsDirty(true);
-  }, []);
-
-  // ============================================================================
-  // ASSOCIATE OPERATIONS
-  // ============================================================================
-
-  const addAssociate = useCallback(() => {
-    console.log('🔍 Section18: Adding associate');
-    const newEntry = createDefaultAssociateEntry();
-    console.log('✅ Section18: Created associate entry:', newEntry);
-    setSection18Data(prev => ({
-      ...prev,
-      section18: {
-        ...prev.section18,
-        associates: [...prev.section18.associates, newEntry]
-      }
-    }));
-    setIsDirty(true);
-  }, []);
-
-  const updateAssociate = useCallback((index: number, updates: Partial<AssociateEntry>) => {
-    setSection18Data(prev => {
-      const newData = cloneDeep(prev);
-      newData.section18.associates[index] = {
-        ...newData.section18.associates[index],
-        ...updates
-      };
-      return newData;
-    });
-    setIsDirty(true);
-  }, []);
-
-  const removeAssociate = useCallback((index: number) => {
-    setSection18Data(prev => ({
-      ...prev,
-      section18: {
-        ...prev.section18,
-        associates: prev.section18.associates.filter((_, i) => i !== index)
-      }
-    }));
-    setIsDirty(true);
-  }, []);
-
-  const duplicateAssociate = useCallback((index: number) => {
-    setSection18Data(prev => {
-      const entryToDuplicate = cloneDeep(prev.section18.associates[index]);
-      return {
-        ...prev,
-        section18: {
-          ...prev.section18,
-          associates: [...prev.section18.associates, entryToDuplicate]
-        }
-      };
-    });
-    setIsDirty(true);
-  }, []);
+  const getSubsectionData = useCallback((entryNumber: number, subsection: Section18SubsectionKey) => {
+    const relative = getRelativeByEntryNumber(entryNumber);
+    return relative ? relative[subsection] : null;
+  }, [getRelativeByEntryNumber]);
 
   // ============================================================================
   // FIELD OPERATIONS
@@ -288,310 +233,154 @@ export const Section18Provider: React.FC<{ children: React.ReactNode }> = ({ chi
   const updateField = useCallback((
     fieldPath: string,
     value: any,
-    entryIndex?: number,
+    entryNumber?: number,
     subsection?: Section18SubsectionKey
   ) => {
     console.log(`🔧 Section18: updateField called:`, {
       fieldPath,
       value,
-      entryIndex,
+      entryNumber,
       subsection
     });
 
-    if (subsection && entryIndex !== undefined) {
-      // Remove ".value" suffix if present since updateFieldValue adds it
-      const cleanFieldPath = fieldPath.endsWith('.value') ? fieldPath.slice(0, -6) : fieldPath;
-
-      console.log(`🔍 Section18: updateField - calling updateFieldValue with:`, {
-        subsection,
-        entryIndex,
-        cleanFieldPath,
-        value
-      });
-
-      // Use the new updateFieldValue function for subsection entries
-      updateFieldValue(subsection, entryIndex, cleanFieldPath, value);
+    if (entryNumber !== undefined && subsection) {
+      updateFieldValue(entryNumber, subsection, fieldPath, value);
+    } else if (fieldPath.startsWith('relativeTypes.')) {
+      // Handle relative type selection
+      const relativeType = fieldPath.replace('relativeTypes.', '');
+      updateRelativeTypeSelection(relativeType, value);
     } else {
-      // Handle direct section18 field updates (if any)
-      console.log(`🔍 Section18: updateField - direct field update:`, fieldPath);
+      // Handle direct section18 field updates
       setSection18Data(prev => {
         const newData = cloneDeep(prev);
         const fullPath = `section18.${fieldPath}`;
         set(newData, fullPath, value);
-        console.log(`✅ Section18: updateField - set ${fullPath} to:`, value);
         return newData;
       });
       setIsDirty(true);
     }
+  }, []);
 
-    console.log(`✅ Section18: updateField completed`);
-  }, []); // Remove dependency on updateFieldValue which is declared later
-
-  const getFieldValue = useCallback((
-    fieldPath: string,
-    entryIndex?: number,
-    subsection?: Section18SubsectionKey
-  ) => {
-    if (subsection && entryIndex !== undefined) {
-      const fullPath = `section18.${subsection}[${entryIndex}].${fieldPath}`;
-      return get(section18Data, fullPath);
-    }
-    return get(section18Data, `section18.${fieldPath}`);
-  }, [section18Data]);
-
-  // ============================================================================
-  // SF86FORM INTEGRATION FUNCTIONS
-  // ============================================================================
-
-  /**
-   * FIXED: Section 18 specific field update function following Section 29 pattern
-   * This is the internal updateFieldValue that handles component-level updates
-   */
   const updateFieldValue = useCallback((
+    entryNumber: number,
     subsection: Section18SubsectionKey,
-    entryIndex: number,
     fieldPath: string,
     newValue: any
   ) => {
     console.log(`🔧 Section18: updateFieldValue called:`, {
+      entryNumber,
       subsection,
-      entryIndex,
       fieldPath,
       newValue
     });
 
-    try {
-      setSection18Data(prev => {
-        console.log(`🔍 Section18: updateFieldValue - starting with prev data:`, prev);
-
-        const updated = cloneDeep(prev);
-        const subsectionData = updated.section18[subsection];
-
-        console.log(`🔍 Section18: updateFieldValue - subsection found:`, !!subsectionData);
-        console.log(`🔍 Section18: updateFieldValue - entries length:`, subsectionData?.length);
-        console.log(`🔍 Section18: updateFieldValue - entryIndex valid:`,
-          entryIndex >= 0 && entryIndex < (subsectionData?.length || 0));
-
-        if (subsectionData && entryIndex >= 0 && entryIndex < subsectionData.length) {
-          const entry = subsectionData[entryIndex];
-          console.log(`🔍 Section18: updateFieldValue - entry before update:`, entry);
-          console.log(`🔍 Section18: updateFieldValue - field path: ${fieldPath}.value`);
-          console.log(`🔍 Section18: updateFieldValue - current field value:`, get(entry, `${fieldPath}.value`));
-
-          try {
-            set(entry, `${fieldPath}.value`, newValue);
-            console.log(`✅ Section18: updateFieldValue - lodash set completed successfully`);
-          } catch (setError) {
-            console.error(`❌ Section18: updateFieldValue - lodash set failed:`, setError);
-            throw setError;
-          }
-
-          console.log(`✅ Section18: updateFieldValue - field updated successfully`);
-          console.log(`🔍 Section18: updateFieldValue - new field value:`, get(entry, `${fieldPath}.value`));
-          console.log(`🔍 Section18: updateFieldValue - entry after update:`, entry);
-
-          setIsDirty(true);
-          console.log(`🔄 Section18: updateFieldValue - setIsDirty(true) called`);
-        } else {
-          console.error(`❌ Section18: updateFieldValue - invalid entry access:`, {
-            hasSubsection: !!subsectionData,
-            entriesLength: subsectionData?.length,
-            entryIndex,
-            subsection
-          });
+    setSection18Data(prev => {
+      const newData = cloneDeep(prev);
+      const relativeIndex = newData.section18.relatives.findIndex(r => r.entryNumber === entryNumber);
+      
+      if (relativeIndex !== -1) {
+        const relative = newData.section18.relatives[relativeIndex];
+        const fullFieldPath = `${fieldPath}.value`;
+        
+        try {
+          set(relative[subsection], fullFieldPath, newValue);
+          console.log(`✅ Section18: Field updated successfully`);
+        } catch (error) {
+          console.error(`❌ Section18: Failed to update field:`, error);
         }
-
-        console.log(`🔍 Section18: updateFieldValue - returning updated data:`, updated);
-        return updated;
-      });
-
-      console.log(`✅ Section18: updateFieldValue - setSection18Data completed successfully`);
-    } catch (error) {
-      console.error(`❌ Section18: updateFieldValue - CRITICAL ERROR:`, error);
-      console.error(`❌ Section18: updateFieldValue - Error stack:`,
-        error instanceof Error ? error.stack : "No stack trace available");
-    }
+      }
+      
+      return newData;
+    });
+    setIsDirty(true);
   }, []);
 
-  /**
-   * Change tracking function for integration
-   */
-  const getChanges = useCallback((): ChangeSet => {
-    // Simple change tracking implementation
-    // In a real implementation, you'd compare with initial data
-    return {
-      section18: {
-        oldValue: createDefaultSection18(),
-        newValue: section18Data,
-        timestamp: new Date()
+  const getFieldValue = useCallback((
+    fieldPath: string,
+    entryNumber?: number,
+    subsection?: Section18SubsectionKey
+  ) => {
+    if (entryNumber !== undefined && subsection) {
+      const relative = getRelativeByEntryNumber(entryNumber);
+      if (relative) {
+        return get(relative[subsection], `${fieldPath}.value`);
       }
-    };
-  }, [section18Data]);
+    }
+    return get(section18Data, `section18.${fieldPath}`);
+  }, [section18Data, getRelativeByEntryNumber]);
+
+  // ============================================================================
+  // RELATIVE TYPE SELECTION
+  // ============================================================================
+
+  /**
+   * DEPRECATED: updateRelativeTypeSelection
+   * Relative type selection now happens per entry via updateRelativeEntry
+   * This function is kept for backward compatibility but does nothing
+   */
+  const updateRelativeTypeSelection = useCallback((_relativeType: string, _isSelected: boolean) => {
+    console.warn('⚠️ Section18: updateRelativeTypeSelection is deprecated. Use updateRelativeEntry to set relativeType per entry.');
+    // No-op - relative type selection now happens per entry
+  }, []);
 
   // ============================================================================
   // VALIDATION
   // ============================================================================
 
-  const validate = useCallback((): RelativeAssociateValidationResult => {
-    const context: Section18ValidationContext = {
-      rules: {
-        requiresImmediateFamilyInfo: true,
-        requiresExtendedFamilyInfo: false,
-        requiresAssociateInfo: false,
-        requiresCitizenshipDocumentation: true,
-        requiresContactInformation: true,
-        maxNameLength: 100,
-        maxAddressLength: 200,
-        maxDescriptionLength: 2000,
-        minContactFrequency: 'Yearly'
-      },
-      allowPartialCompletion: false
+  const validate = useCallback(() => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    // Basic validation - check if at least one relative has required info
+    const hasValidRelative = relatives.some(relative => 
+      relative.section18_1.fullName.firstName.value && 
+      relative.section18_1.fullName.lastName.value &&
+      relative.section18_1.relativeType.value
+    );
+
+    if (!hasValidRelative) {
+      errors.push('At least one relative must have a name and relationship type');
+    }
+
+    setValidationErrors(errors);
+    setValidationWarnings(warnings);
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings
     };
+  }, [relatives]);
 
-    const result = validateRelativesAndAssociates(section18Data.section18, context);
-    setValidationErrors(result.errors);
-    setValidationWarnings(result.warnings);
-    return result;
-  }, [section18Data]);
+  const validateEntry = useCallback((entryNumber: number) => {
+    const relative = getRelativeByEntryNumber(entryNumber);
+    const errors: string[] = [];
+    const warnings: string[] = [];
 
-  const validateEntry = useCallback((
-    subsection: Section18SubsectionKey, 
-    entryIndex: number
-  ): RelativeAssociateValidationResult => {
-    // Create a temporary section with only the specific entry
-    const tempSection = {
-      immediateFamily: subsection === 'immediateFamily' ? [section18Data.section18.immediateFamily[entryIndex]] : [],
-      extendedFamily: subsection === 'extendedFamily' ? [section18Data.section18.extendedFamily[entryIndex]] : [],
-      associates: subsection === 'associates' ? [section18Data.section18.associates[entryIndex]] : []
-    };
-
-    const context: Section18ValidationContext = {
-      rules: {
-        requiresImmediateFamilyInfo: true,
-        requiresExtendedFamilyInfo: false,
-        requiresAssociateInfo: false,
-        requiresCitizenshipDocumentation: true,
-        requiresContactInformation: true,
-        maxNameLength: 100,
-        maxAddressLength: 200,
-        maxDescriptionLength: 2000,
-        minContactFrequency: 'Yearly'
-      },
-      allowPartialCompletion: true
-    };
-
-    return validateRelativesAndAssociates(tempSection, context);
-  }, [section18Data]);
-
-  // ============================================================================
-  // SF86FORM INTEGRATION
-  // ============================================================================
-
-  // ============================================================================
-  // SF86FORMCONTEXT INTEGRATION WRAPPER
-  // ============================================================================
-
-  /**
-   * Wrapper function for SF86FormContext integration following Section 29 pattern
-   * Converts SF86FormContext paths to Section 18's updateFieldValue signature
-   */
-  const updateFieldValueWrapper = useCallback((path: string, value: any) => {
-    console.log(`🔧 Section18: updateFieldValueWrapper called with path=${path}, value=`, value);
-
-    // Parse the path to extract subsection, entry index, and field path
-    // Expected format: "section18.subsectionKey[index].fieldPath"
-    const pathParts = path.split('.');
-
-    if (pathParts.length >= 3 && pathParts[0] === 'section18') {
-      const subsectionWithIndex = pathParts[1]; // e.g., "immediateFamily[0]"
-      const fieldPath = pathParts.slice(2).join('.'); // e.g., "fullName.firstName.value"
-
-      // Extract subsection and index from "subsectionKey[index]" format
-      const subsectionMatch = subsectionWithIndex.match(/^(\w+)\[(\d+)\]$/);
-      if (subsectionMatch) {
-        const subsectionKey = subsectionMatch[1] as Section18SubsectionKey;
-        const entryIndex = parseInt(subsectionMatch[2]);
-
-        console.log(`🔍 Section18: Parsed path - subsection: ${subsectionKey}, index: ${entryIndex}, field: ${fieldPath}`);
-
-        // Remove ".value" suffix if present since updateFieldValue adds it
-        const cleanFieldPath = fieldPath.endsWith('.value') ? fieldPath.slice(0, -6) : fieldPath;
-
-        // Call Section 18's updateFieldValue with the correct signature
-        updateFieldValue(subsectionKey, entryIndex, cleanFieldPath, value);
-        return;
+    if (relative) {
+      if (!relative.section18_1.fullName.firstName.value) {
+        errors.push('First name is required');
+      }
+      if (!relative.section18_1.fullName.lastName.value) {
+        errors.push('Last name is required');
+      }
+      if (!relative.section18_1.relativeType.value) {
+        errors.push('Relationship type is required');
       }
     }
 
-    // Fallback: use lodash set for direct path updates
-    console.warn(`⚠️ Section18: Unmatched path format: ${path}, using fallback update`);
-    setSection18Data(prev => {
-      const updated = cloneDeep(prev);
-      set(updated, path, value);
-      setIsDirty(true);
-      return updated;
-    });
-  }, [updateFieldValue]);
-
-  // Integration with main form context using Section 29 pattern
-  // Note: integration variable is used internally by the hook for registration
-  const integration = useSection86FormIntegration(
-    'section18',
-    'Section 18: Relatives and Associates',
-    section18Data,
-    setSection18Data,
-    () => ({ isValid: validate().isValid, errors: validate().errors, warnings: validate().warnings }),
-    getChanges,
-    updateFieldValueWrapper // Pass wrapper function that matches expected signature
-  );
-
-  // ============================================================================
-  // SF86FORM CONTEXT SYNCHRONIZATION
-  // ============================================================================
-
-  // Sync Section 18 data to SF86FormContext whenever it changes
-  // This ensures the central form context always has the latest Section 18 data
-  useEffect(() => {
-    // Only sync if we have a valid SF86FormContext and section18Data has been initialized
-    if (section18Data && section18Data._id === 18) {
-      console.log(`🔄 Section18: Syncing data to SF86FormContext:`, section18Data);
-
-      // Use a small delay to ensure state updates are complete
-      const syncTimeout = setTimeout(() => {
-        try {
-          // The integration hook should handle this automatically, but we can also
-          // emit a data sync event to ensure the central context is updated
-          integration.emitDataSync('data_updated', section18Data);
-          console.log(`✅ Section18: Data sync event emitted successfully`);
-        } catch (error) {
-          console.error(`❌ Section18: Error syncing data to SF86FormContext:`, error);
-        }
-      }, 50); // Small delay to ensure state consistency
-
-      return () => clearTimeout(syncTimeout);
-    }
-  }, [section18Data, integration]);
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings
+    };
+  }, [getRelativeByEntryNumber]);
 
   // ============================================================================
   // UTILITY FUNCTIONS
   // ============================================================================
 
-  const getTotalEntries = useCallback(() => {
-    return immediateFamily.length + extendedFamily.length + associates.length;
-  }, [immediateFamily, extendedFamily, associates]);
-
-  const getEntriesBySubsection = useCallback((subsection: Section18SubsectionKey) => {
-    switch (subsection) {
-      case 'immediateFamily':
-        return immediateFamily;
-      case 'extendedFamily':
-        return extendedFamily;
-      case 'associates':
-        return associates;
-      default:
-        return [];
-    }
-  }, [immediateFamily, extendedFamily, associates]);
+  const getTotalEntries = useCallback(() => relatives.length, [relatives]);
 
   const exportData = useCallback(() => section18Data, [section18Data]);
 
@@ -608,39 +397,93 @@ export const Section18Provider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, []);
 
   // ============================================================================
+  // CHANGE TRACKING
+  // ============================================================================
+
+  const getChanges = useCallback((): ChangeSet => {
+    return {
+      section18: {
+        oldValue: createDefaultSection18(),
+        newValue: section18Data,
+        timestamp: new Date()
+      }
+    };
+  }, [section18Data]);
+
+  // ============================================================================
+  // SF86FORM INTEGRATION
+  // ============================================================================
+
+  const updateFieldValueWrapper = useCallback((path: string, value: any) => {
+    console.log(`🔧 Section18: updateFieldValueWrapper called with path=${path}, value=`, value);
+
+    // Parse path format: "section18.relatives[0].section18_1.fullName.firstName.value"
+    const pathParts = path.split('.');
+
+    if (pathParts.length >= 4 && pathParts[0] === 'section18' && pathParts[1] === 'relatives') {
+      const relativeMatch = pathParts[1].match(/relatives\[(\d+)\]/);
+      if (relativeMatch) {
+        const relativeIndex = parseInt(relativeMatch[1]);
+        const entryNumber = relativeIndex + 1; // Convert index to entry number
+        const subsection = pathParts[2] as Section18SubsectionKey;
+        const fieldPath = pathParts.slice(3).join('.');
+        
+        // Remove .value suffix if present
+        const cleanFieldPath = fieldPath.endsWith('.value') ? fieldPath.slice(0, -6) : fieldPath;
+        
+        updateFieldValue(entryNumber, subsection, cleanFieldPath, value);
+        return;
+      }
+    }
+
+    // Fallback for other paths
+    setSection18Data(prev => {
+      const updated = cloneDeep(prev);
+      set(updated, path, value);
+      setIsDirty(true);
+      return updated;
+    });
+  }, [updateFieldValue]);
+
+  // Integration with main form context
+  const _integration = useSection86FormIntegration(
+    'section18',
+    'Section 18: Relatives',
+    section18Data,
+    setSection18Data,
+    validate,
+    getChanges,
+    updateFieldValueWrapper
+  );
+
+  // ============================================================================
   // CONTEXT VALUE
   // ============================================================================
 
   const contextValue: Section18ContextType = {
-    
     // Section 18 specific data
     section18Data,
-    
-    // Immediate Family
-    immediateFamily,
-    addImmediateFamilyMember,
-    updateImmediateFamilyMember,
-    removeImmediateFamilyMember,
-    duplicateImmediateFamilyMember,
-    
-    // Extended Family
-    extendedFamily,
-    addExtendedFamilyMember,
-    updateExtendedFamilyMember,
-    removeExtendedFamilyMember,
-    duplicateExtendedFamilyMember,
-    
-    // Associates
-    associates,
-    addAssociate,
-    updateAssociate,
-    removeAssociate,
-    duplicateAssociate,
-    
+
+    // Relative Operations
+    relatives,
+    addRelative,
+    updateRelative,
+    removeRelative,
+    duplicateRelative,
+    getRelativeByEntryNumber,
+
+    // Subsection Operations
+    updateSubsection,
+    getSubsectionData,
+
     // Field Operations
     updateField,
-    updateFieldValue, // Section 18 specific signature for component use
+    updateFieldValue,
     getFieldValue,
+
+    // Relative Type Selection
+    relativeTypes,
+    updateRelativeTypeSelection,
 
     // Validation
     validate,
@@ -651,14 +494,13 @@ export const Section18Provider: React.FC<{ children: React.ReactNode }> = ({ chi
     // Utility
     isComplete,
     getTotalEntries,
-    getEntriesBySubsection,
     exportData,
     importData,
     resetSection,
 
     // Integration
     sectionId: 18,
-    sectionName: 'Relatives and Associates'
+    sectionName: 'Relatives'
   };
 
   return (
@@ -686,10 +528,6 @@ export const useSection18 = (): Section18ContextType => {
 
 export type {
   Section18,
-  ImmediateFamilyEntry,
-  ExtendedFamilyEntry,
-  AssociateEntry,
-  Section18SubsectionKey,
-  Section18FieldUpdate,
-  RelativeAssociateValidationResult
-}; 
+  RelativeEntry,
+  Section18SubsectionKey
+};

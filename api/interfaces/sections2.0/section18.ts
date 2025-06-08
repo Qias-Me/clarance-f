@@ -1,23 +1,19 @@
 /**
- * Section 18: Relatives and Associates
- *
- * TypeScript interface definitions for SF-86 Section 18 (Relatives and Associates) data structure.
- * Based on the established Field<T> interface patterns and PDF field ID mappings from section-18.json.
+ * Section 18 Interface - Relatives (REDESIGNED)
  * 
- * Section 18 covers:
- * - Immediate family members (18.1)
- * - Extended family members (18.2)  
- * - Associates and close friends (18.3)
+ * This interface defines the structure for SF-86 Section 18 data based on the actual PDF form structure.
+ * The form has 6 relative entries with subsections 18.1-18.5, totaling 964 fields.
+ * 
+ * STRUCTURE:
+ * - 6 Relative Entries (Entry #1-6)
+ * - Section 18.1: Basic relative information (name, birth, other names, citizenship)
+ * - Section 18.2: Current address for living relatives
+ * - Section 18.3: Citizenship documentation for US citizens
+ * - Section 18.4: Documentation for non-US citizens with US address
+ * - Section 18.5: Contact info for non-US citizens with foreign address
  */
 
 import type { Field, FieldWithOptions } from '../formDefinition2.0';
-import { createFieldFromReference, validateSectionFieldCount } from '../../utils/sections-references-loader';
-import {
-  generateImmediateFamilyEntry,
-  generateExtendedFamilyEntry,
-  generateAssociateEntry,
-  validateSection18FieldMappings
-} from '../../../app/state/contexts/sections2.0/section18-field-generator';
 
 // ============================================================================
 // HELPER TYPES
@@ -32,260 +28,354 @@ export interface DateField {
 }
 
 /**
- * Address structure for relative/associate entries
- */
-export interface AddressField {
-  street: Field<string>;
-  city: Field<string>;
-  state: Field<string>;
-  country: Field<string>;
-  zipCode: Field<string>;
-}
-
-/**
- * Full name structure
+ * Full name structure for relatives
  */
 export interface FullNameField {
   lastName: Field<string>;
   firstName: Field<string>;
   middleName: Field<string>;
-  suffix: Field<string>;
+  suffix: FieldWithOptions<string>;
 }
 
 /**
- * Other names used structure
+ * Address field structure
  */
-export interface OtherNamesField {
-  hasOtherNames: FieldWithOptions<string>; // YES/NO
-  names: {
-    lastName: Field<string>;
-    firstName: Field<string>;
-    middleName: Field<string>;
-    suffix: Field<string>;
-    fromDate: DateField;
-    fromDateEstimated: Field<boolean>;
-    toDate: DateField;
-    toDateEstimated: Field<boolean>;
-    isPresent: Field<boolean>;
-    isMaidenName: Field<boolean>;
-  }[];
+export interface AddressField {
+  street: Field<string>;
+  city: Field<string>;
+  state: FieldWithOptions<string>;
+  zipCode: Field<string>;
+  country: FieldWithOptions<string>;
 }
 
 /**
  * Contact information structure
  */
-export interface ContactInformationField {
-  homePhone: Field<string>;
-  workPhone: Field<string>;
-  cellPhone: Field<string>;
+export interface ContactField {
+  phone: Field<string>;
   email: Field<string>;
+  contactMethod: FieldWithOptions<string>; // Phone, Email, Mail, In Person
+  frequency: FieldWithOptions<string>; // Daily, Weekly, Monthly, Yearly, Other
+}
+
+/**
+ * Employment information structure
+ */
+export interface EmploymentField {
+  employer: Field<string>;
+  position: Field<string>;
+  address: AddressField;
+  phone: Field<string>;
+  isCurrentlyEmployed: FieldWithOptions<string>; // YES/NO
+  dontKnow: Field<boolean>;
+}
+
+/**
+ * Other names used structure (4 entries per relative)
+ */
+export interface OtherNameField {
+  fullName: FullNameField;
+  timeUsed: {
+    from: DateField;
+    to: DateField;
+    isPresent: Field<boolean>;
+    isEstimated: Field<boolean>;
+  };
+  reasonForChange: Field<string>;
+  isApplicable: Field<boolean>; // "Not applicable" checkbox
 }
 
 // ============================================================================
-// CORE INTERFACES
+// SUBSECTION INTERFACES (18.1-18.5)
 // ============================================================================
 
 /**
- * Immediate family member information for Section 18.1
+ * Section 18.1: Basic relative information
  */
-export interface ImmediateFamilyEntry {
-  // Basic Information
-  relationship: FieldWithOptions<string>; // Mother, Father, Stepmother, Stepfather, Foster Parent, Child, Stepchild, Brother, Sister, etc.
-  isDeceased: FieldWithOptions<string>; // YES/NO
-  dateOfDeath: DateField;
-  dateOfDeathEstimated: Field<boolean>;
+export interface Section18_1 {
+  // Relative type and basic info
+  relativeType: FieldWithOptions<string>; // Mother, Father, Stepmother, etc.
   
-  // Personal Details
+  // Full name
   fullName: FullNameField;
+  
+  // Mother's maiden name (if applicable)
+  mothersMaidenName: {
+    sameAsListed: Field<boolean>;
+    dontKnow: Field<boolean>;
+    maidenName: FullNameField;
+  };
+  
+  // Other names used (4 entries)
+  otherNames: OtherNameField[];
+  
+  // Birth information
   dateOfBirth: DateField;
   dateOfBirthEstimated: Field<boolean>;
   placeOfBirth: {
     city: Field<string>;
-    state: Field<string>;
-    country: Field<string>;
+    state: FieldWithOptions<string>;
+    country: FieldWithOptions<string>;
   };
   
-  // Citizenship Information
-  citizenship: FieldWithOptions<string>; // US Citizen, Permanent Resident, Other
-  citizenshipCountry: Field<string>; // If "Other" is selected
-  
-  // Current Address
-  currentAddress: AddressField;
-  
-  // Contact Information
-  contactInfo: ContactInformationField;
-  
-  // Other names used
-  otherNames: OtherNamesField;
-  
-  // For foreign relatives - additional information
-  foreignTravelFrequency: Field<string>;
-  lastContactDate: DateField;
-  lastContactDateEstimated: Field<boolean>;
-  natureOfContact: Field<string>;
-  
-  // Employment/Occupation
-  currentEmployment: {
-    isEmployed: FieldWithOptions<string>; // YES/NO
-    employerName: Field<string>;
-    position: Field<string>;
-    address: AddressField;
-    phone: Field<string>;
+  // Citizenship
+  citizenship: {
+    countries: FieldWithOptions<string>[]; // Multiple countries possible
   };
-  
-  // Government affiliations
-  hasGovernmentAffiliation: FieldWithOptions<string>; // YES/NO
-  governmentAffiliation: {
-    organization: Field<string>;
-    position: Field<string>;
-    startDate: DateField;
-    endDate: DateField;
-    isPresent: Field<boolean>;
-    description: Field<string>;
-  }[];
 }
 
 /**
- * Extended family member information for Section 18.2
+ * APO/FPO address structure
  */
-export interface ExtendedFamilyEntry {
-  // Basic Information
-  relationship: FieldWithOptions<string>; // Grandparent, Aunt, Uncle, Cousin, In-law, etc.
-  isDeceased: FieldWithOptions<string>; // YES/NO
-  dateOfDeath: DateField;
-  dateOfDeathEstimated: Field<boolean>;
-  
-  // Personal Details
-  fullName: FullNameField;
-  dateOfBirth: DateField;
-  dateOfBirthEstimated: Field<boolean>;
-  placeOfBirth: {
-    city: Field<string>;
-    state: Field<string>;
-    country: Field<string>;
-  };
-  
-  // Citizenship Information
-  citizenship: FieldWithOptions<string>; // US Citizen, Permanent Resident, Other
-  citizenshipCountry: Field<string>; // If "Other" is selected
-  
-  // Current Address
-  currentAddress: AddressField;
-  
-  // Contact Information
-  contactInfo: ContactInformationField;
-  
-  // Other names used
-  otherNames: OtherNamesField;
-  
-  // Frequency of contact
-  contactFrequency: FieldWithOptions<string>; // Daily, Weekly, Monthly, Yearly, Rarely, Never
-  lastContactDate: DateField;
-  lastContactDateEstimated: Field<boolean>;
-  
-  // For foreign relatives
-  foreignTravelFrequency: Field<string>;
-  natureOfContact: Field<string>;
-  
-  // Government affiliations
-  hasGovernmentAffiliation: FieldWithOptions<string>; // YES/NO
-  governmentAffiliation: {
-    organization: Field<string>;
-    position: Field<string>;
-    startDate: DateField;
-    endDate: DateField;
-    isPresent: Field<boolean>;
-    description: Field<string>;
-  }[];
+export interface APOFPOAddressField {
+  address: Field<string>;
+  apoFpo: Field<string>; // APO or FPO designation
+  stateCode: FieldWithOptions<string>; // State code for APO/FPO
+  zipCode: Field<string>;
 }
 
 /**
- * Associate information for Section 18.3
+ * Section 18.2: Current address for living relatives
  */
-export interface AssociateEntry {
-  // Basic Information
-  associateType: FieldWithOptions<string>; // Close Friend, Business Associate, Other
-  relationshipDescription: Field<string>;
-  
-  // Personal Details
-  fullName: FullNameField;
-  dateOfBirth: DateField;
-  dateOfBirthEstimated: Field<boolean>;
-  placeOfBirth: {
-    city: Field<string>;
-    state: Field<string>;
-    country: Field<string>;
-  };
-  
-  // Citizenship Information
-  citizenship: FieldWithOptions<string>; // US Citizen, Permanent Resident, Other
-  citizenshipCountry: Field<string>; // If "Other" is selected
-  
-  // Current Address
+export interface Section18_2 {
+  // Applicability
+  isApplicable: Field<boolean>; // If relative is not deceased
+
+  // Current address
   currentAddress: AddressField;
-  
-  // Contact Information
-  contactInfo: ContactInformationField;
-  
-  // Other names used
-  otherNames: OtherNamesField;
-  
-  // Relationship Details
-  howMet: Field<string>;
-  whenMet: DateField;
-  whenMetEstimated: Field<boolean>;
-  frequencyOfContact: FieldWithOptions<string>; // Daily, Weekly, Monthly, Yearly, Rarely
-  lastContactDate: DateField;
-  lastContactDateEstimated: Field<boolean>;
-  
-  // Nature of relationship
-  personalRelationship: Field<boolean>; // Personal friendship
-  businessRelationship: Field<boolean>; // Business relationship
-  professionalRelationship: Field<boolean>; // Professional relationship
-  otherRelationship: Field<boolean>; // Other type
-  otherRelationshipDescription: Field<string>;
-  
-  // Employment/Occupation
-  currentEmployment: {
-    isEmployed: FieldWithOptions<string>; // YES/NO
-    employerName: Field<string>;
-    position: Field<string>;
-    address: AddressField;
-    phone: Field<string>;
-  };
-  
-  // Government affiliations
-  hasGovernmentAffiliation: FieldWithOptions<string>; // YES/NO
-  governmentAffiliation: {
-    organization: Field<string>;
-    position: Field<string>;
-    startDate: DateField;
-    endDate: DateField;
-    isPresent: Field<boolean>;
-    description: Field<string>;
-  }[];
-  
-  // Foreign connections
-  hasForeignConnections: FieldWithOptions<string>; // YES/NO
-  foreignConnections: {
-    country: Field<string>;
-    organization: Field<string>;
-    description: Field<string>;
-    startDate: DateField;
-    endDate: DateField;
-    isPresent: Field<boolean>;
-  }[];
+
+  // APO/FPO handling
+  hasAPOFPOAddress: FieldWithOptions<string>; // YES/NO
+  apoFpoAddress: APOFPOAddressField;
 }
 
 /**
- * Section 18 main data structure
+ * Contact methods structure for Section 18.3
+ */
+export interface ContactMethodsField {
+  inPerson: Field<boolean>;
+  telephone: Field<boolean>;
+  electronic: Field<boolean>;
+  writtenCorrespondence: Field<boolean>;
+  other: Field<boolean>;
+  otherExplanation: Field<string>;
+}
+
+/**
+ * Contact frequency structure for Section 18.3
+ */
+export interface ContactFrequencyField {
+  daily: Field<boolean>;
+  weekly: Field<boolean>;
+  monthly: Field<boolean>;
+  quarterly: Field<boolean>;
+  annually: Field<boolean>;
+  other: Field<boolean>;
+  otherExplanation: Field<string>;
+}
+
+/**
+ * Employment information structure for Section 18.3
+ */
+export interface EmploymentInfoField {
+  employerName: Field<string>;
+  dontKnowEmployer: Field<boolean>;
+  employerAddress: AddressField & {
+    dontKnowAddress: Field<boolean>;
+  };
+}
+
+/**
+ * Foreign government relations structure for Section 18.3
+ */
+export interface ForeignGovernmentRelationsField {
+  hasRelations: FieldWithOptions<string>; // YES/NO/I don't know
+  description: Field<string>;
+}
+
+/**
+ * Contact dates structure for Section 18.3
+ */
+export interface ContactDatesField {
+  firstContact: {
+    date: Field<string>; // Month/Year
+    isEstimate: Field<boolean>;
+  };
+  lastContact: {
+    date: Field<string>; // Month/Year
+    isEstimate: Field<boolean>;
+    isPresent: Field<boolean>;
+  };
+}
+
+/**
+ * Documentation types structure for Section 18.3/18.4
+ */
+export interface DocumentationTypesField {
+  i551PermanentResident: Field<boolean>;
+  i766EmploymentAuth: Field<boolean>;
+  usVisa: Field<boolean>;
+  i94ArrivalDeparture: Field<boolean>;
+  i20StudentCertificate: Field<boolean>;
+  ds2019ExchangeVisitor: Field<boolean>;
+  other: Field<boolean>;
+  otherExplanation: Field<string>;
+  documentNumber: Field<string>;
+  expirationDate: Field<string>; // Month/Day/Year
+  expirationIsEstimate: Field<boolean>;
+}
+
+/**
+ * Section 18.3: Contact Information and Foreign Relations
+ * Based on actual PDF field structure analysis
+ */
+export interface Section18_3 {
+  // Applicability - for non-US citizens with foreign address
+  isApplicable: Field<boolean>;
+
+  // Contact methods (checkboxes)
+  contactMethods: ContactMethodsField;
+
+  // Contact frequency (checkboxes)
+  contactFrequency: ContactFrequencyField;
+
+  // Employment information
+  employmentInfo: EmploymentInfoField;
+
+  // Foreign government relations
+  foreignGovernmentRelations: ForeignGovernmentRelationsField;
+
+  // Contact dates (for Section 18.5 functionality)
+  contactDates: ContactDatesField;
+
+  // Documentation types (for Section 18.4 functionality)
+  documentationTypes: DocumentationTypesField;
+}
+
+/**
+ * Section 18.4: Documentation for non-US citizens with US address
+ */
+export interface Section18_4 {
+  // Applicability (non-US citizen with US address, not deceased)
+  isApplicable: Field<boolean>;
+  
+  // Documentation
+  documentationType: FieldWithOptions<string>; // I-551 Permanent Resident, etc.
+  documentNumber: Field<string>;
+}
+
+/**
+ * Section 18.5: Contact info for non-US citizens with foreign address
+ * Complete the following if the relative listed is your Mother, Father, Stepmother, Stepfather,
+ * Foster parent, Child (including adopted/foster), Stepchild, Brother, Sister, Stepbrother,
+ * Stepsister, Half-brother, Half-sister, Father-in-law, Mother-in-law, Guardian and is not
+ * a U.S. Citizen, has a foreign address and is not deceased.
+ */
+export interface Section18_5 {
+  // Contact dates
+  firstContactDate: DateField;
+  firstContactDateEstimated: Field<boolean>;
+  lastContactDate: DateField;
+  lastContactDateEstimated: Field<boolean>;
+  lastContactDatePresent: Field<boolean>;
+
+  // Contact methods (Check all that apply)
+  contactMethods: {
+    inPerson: Field<boolean>;
+    telephone: Field<boolean>;
+    electronic: Field<boolean>; // Such as e-mail, texting, chat rooms, etc
+    writtenCorrespondence: Field<boolean>;
+    other: Field<boolean>;
+    otherExplanation: Field<string>; // Provide explanation
+  };
+
+  // Contact frequency
+  contactFrequency: {
+    daily: Field<boolean>;
+    weekly: Field<boolean>;
+    monthly: Field<boolean>;
+    quarterly: Field<boolean>;
+    annually: Field<boolean>;
+    other: Field<boolean>;
+    otherExplanation: Field<string>; // Provide explanation
+  };
+
+  // Employment information
+  employerName: Field<string>;
+  employerNameDontKnow: Field<boolean>;
+
+  // Employer address
+  employerAddress: {
+    street: Field<string>;
+    city: Field<string>;
+    state: FieldWithOptions<string>;
+    zipCode: Field<string>;
+    country: FieldWithOptions<string>;
+    dontKnow: Field<boolean>;
+  };
+
+  // Foreign government affiliation
+  foreignGovernmentAffiliation: FieldWithOptions<string>; // YES, NO, I don't know
+  foreignGovernmentDescription: Field<string>; // Describe the relative's relationship
+}
+
+// ============================================================================
+// MAIN RELATIVE ENTRY INTERFACE
+// ============================================================================
+
+/**
+ * Complete relative entry (Entry #1-6)
+ * Each entry contains all subsections 18.1-18.5
+ */
+export interface RelativeEntry {
+  // Entry metadata
+  entryNumber: number; // 1-6
+  
+  // All subsections
+  section18_1: Section18_1;
+  section18_2: Section18_2;
+  section18_3: Section18_3;
+  section18_4: Section18_4;
+  section18_5: Section18_5;
+}
+
+// ============================================================================
+// MAIN SECTION INTERFACE
+// ============================================================================
+
+/**
+ * Section 18 main data structure (REDESIGNED)
+ * Based on actual PDF form with 6 relative entries and 964 total fields
+ *
+ * IMPORTANT: The PDF form uses dropdown fields for relative types within each entry,
+ * not global checkboxes. Each relative entry has its own relativeType dropdown.
  */
 export interface Section18 {
   _id: number;
   section18: {
-    immediateFamily: ImmediateFamilyEntry[];
-    extendedFamily: ExtendedFamilyEntry[];
-    associates: AssociateEntry[];
+    // DEPRECATED: Global relative type selection (kept for backward compatibility)
+    // The actual PDF form uses dropdown fields within each relative entry
+    relativeTypes?: {
+      mother?: Field<boolean>;
+      father?: Field<boolean>;
+      stepmother?: Field<boolean>;
+      stepfather?: Field<boolean>;
+      fosterParent?: Field<boolean>;
+      child?: Field<boolean>;
+      stepchild?: Field<boolean>;
+      brother?: Field<boolean>;
+      sister?: Field<boolean>;
+      stepbrother?: Field<boolean>;
+      stepsister?: Field<boolean>;
+      halfBrother?: Field<boolean>;
+      halfSister?: Field<boolean>;
+      fatherInLaw?: Field<boolean>;
+      motherInLaw?: Field<boolean>;
+      guardian?: Field<boolean>;
+    };
+
+    // 6 relative entries (each with their own relativeType dropdown)
+    relatives: RelativeEntry[];
   };
 }
 
@@ -294,440 +384,40 @@ export interface Section18 {
 // ============================================================================
 
 /**
- * Section 18 subsection keys for type safety
+ * Section 18 subsection keys for type safety (REDESIGNED)
  */
-export type Section18SubsectionKey = 'immediateFamily' | 'extendedFamily' | 'associates';
+export type Section18SubsectionKey = 'section18_1' | 'section18_2' | 'section18_3' | 'section18_4' | 'section18_5';
 
 // ============================================================================
-// FIELD ID MAPPINGS
+// FIELD ID MAPPINGS (Based on Reference Data)
 // ============================================================================
 
 /**
- * PDF field ID mappings for Section 18 (Relatives and Associates)
- * Based on the actual field IDs from section-18.json
+ * Field ID constants for Section 18 based on actual PDF form structure
  */
 export const SECTION18_FIELD_IDS = {
-  // General Yes/No for having relatives to report
-  HAS_RELATIVES_YES: "16980", // RadioButtonList YES
-  HAS_RELATIVES_NO: "16981", // RadioButtonList NO
-  
-  // Immediate Family - Basic Info
-  IMMEDIATE_FAMILY_RELATIONSHIP: "12100", // Relationship dropdown
-  IMMEDIATE_FAMILY_DECEASED_YES: "12101",
-  IMMEDIATE_FAMILY_DECEASED_NO: "12102",
-  IMMEDIATE_FAMILY_DEATH_DATE: "12103",
-  IMMEDIATE_FAMILY_DEATH_ESTIMATED: "12104",
-  
-  // Immediate Family - Personal Details
-  IMMEDIATE_FAMILY_LAST_NAME: "12105",
-  IMMEDIATE_FAMILY_FIRST_NAME: "12106",
-  IMMEDIATE_FAMILY_MIDDLE_NAME: "12107",
-  IMMEDIATE_FAMILY_SUFFIX: "12108",
-  IMMEDIATE_FAMILY_DOB: "12109",
-  IMMEDIATE_FAMILY_DOB_ESTIMATED: "12110",
-  IMMEDIATE_FAMILY_POB_CITY: "12111",
-  IMMEDIATE_FAMILY_POB_STATE: "12112",
-  IMMEDIATE_FAMILY_POB_COUNTRY: "12113",
-  
-  // Immediate Family - Citizenship
-  IMMEDIATE_FAMILY_CITIZENSHIP: "12114",
-  IMMEDIATE_FAMILY_CITIZENSHIP_COUNTRY: "12115",
-  
-  // Immediate Family - Address
-  IMMEDIATE_FAMILY_ADDRESS_STREET: "12116",
-  IMMEDIATE_FAMILY_ADDRESS_CITY: "12117",
-  IMMEDIATE_FAMILY_ADDRESS_STATE: "12118",
-  IMMEDIATE_FAMILY_ADDRESS_COUNTRY: "12119",
-  IMMEDIATE_FAMILY_ADDRESS_ZIP: "12120",
-  
-  // Immediate Family - Contact
-  IMMEDIATE_FAMILY_HOME_PHONE: "12121",
-  IMMEDIATE_FAMILY_WORK_PHONE: "12122",
-  IMMEDIATE_FAMILY_CELL_PHONE: "12123",
-  IMMEDIATE_FAMILY_EMAIL: "12124",
-  
-  // Immediate Family - Other Names
-  IMMEDIATE_FAMILY_OTHER_NAMES_YES: "12125",
-  IMMEDIATE_FAMILY_OTHER_NAMES_NO: "12126",
-  IMMEDIATE_FAMILY_OTHER_NAME_LAST: "12127",
-  IMMEDIATE_FAMILY_OTHER_NAME_FIRST: "12128",
-  IMMEDIATE_FAMILY_OTHER_NAME_MIDDLE: "12129",
-  IMMEDIATE_FAMILY_OTHER_NAME_SUFFIX: "12130",
-  IMMEDIATE_FAMILY_OTHER_NAME_FROM: "12131",
-  IMMEDIATE_FAMILY_OTHER_NAME_TO: "12132",
-  IMMEDIATE_FAMILY_OTHER_NAME_MAIDEN: "12133",
-  
-  // Immediate Family - Employment
-  IMMEDIATE_FAMILY_EMPLOYED_YES: "12134",
-  IMMEDIATE_FAMILY_EMPLOYED_NO: "12135",
-  IMMEDIATE_FAMILY_EMPLOYER_NAME: "12136",
-  IMMEDIATE_FAMILY_POSITION: "12137",
-  IMMEDIATE_FAMILY_EMPLOYER_ADDRESS: "12138",
-  IMMEDIATE_FAMILY_EMPLOYER_PHONE: "12139",
-  
-  // Immediate Family - Government Affiliation
-  IMMEDIATE_FAMILY_GOV_AFFILIATION_YES: "12140",
-  IMMEDIATE_FAMILY_GOV_AFFILIATION_NO: "12141",
-  IMMEDIATE_FAMILY_GOV_ORGANIZATION: "12142",
-  IMMEDIATE_FAMILY_GOV_POSITION: "12143",
-  IMMEDIATE_FAMILY_GOV_START_DATE: "12144",
-  IMMEDIATE_FAMILY_GOV_END_DATE: "12145",
-  
-  // Extended Family - Similar pattern with different IDs
-  EXTENDED_FAMILY_RELATIONSHIP: "12200",
-  EXTENDED_FAMILY_DECEASED_YES: "12201",
-  EXTENDED_FAMILY_DECEASED_NO: "12202",
-  EXTENDED_FAMILY_LAST_NAME: "12205",
-  EXTENDED_FAMILY_FIRST_NAME: "12206",
-  // ... (continuing pattern)
-  
-  // Associates
-  ASSOCIATE_TYPE: "12300",
-  ASSOCIATE_RELATIONSHIP_DESC: "12301",
-  ASSOCIATE_LAST_NAME: "12305",
-  ASSOCIATE_FIRST_NAME: "12306",
-  // ... (continuing pattern)
-  
+  // Entry 1 fields
+  ENTRY_1: {
+    SECTION_18_1: {
+      RELATIVE_TYPE: 'section18_entry1_relativeType',
+      FULL_NAME_FIRST: 'section18_entry1_firstName',
+      FULL_NAME_MIDDLE: 'section18_entry1_middleName',
+      FULL_NAME_LAST: 'section18_entry1_lastName',
+      FULL_NAME_SUFFIX: 'section18_entry1_suffix',
+      // ... more field IDs to be added
+    },
+    SECTION_18_2: {
+      CURRENT_ADDRESS_STREET: 'section18_entry1_currentAddress_street',
+      CURRENT_ADDRESS_CITY: 'section18_entry1_currentAddress_city',
+      // ... more field IDs to be added
+    },
+    // ... sections 18.3, 18.4, 18.5
+  },
+  // Entry 2-6 fields follow same pattern
+  // ... to be expanded
 } as const;
 
-// ============================================================================
-// VALIDATION INTERFACES
-// ============================================================================
-
 /**
- * Validation rules specific to Section 18
+ * Type for Section 18 field IDs
  */
-export interface Section18ValidationRules {
-  requiresImmediateFamilyInfo: boolean;
-  requiresExtendedFamilyInfo: boolean;
-  requiresAssociateInfo: boolean;
-  requiresCitizenshipDocumentation: boolean;
-  requiresContactInformation: boolean;
-  maxNameLength: number;
-  maxAddressLength: number;
-  maxDescriptionLength: number;
-  minContactFrequency: string;
-}
-
-/**
- * Section 18 validation context
- */
-export interface Section18ValidationContext {
-  rules: Section18ValidationRules;
-  allowPartialCompletion: boolean;
-}
-
-// ============================================================================
-// HELPER TYPES
-// ============================================================================
-
-/**
- * Relationship options for immediate family
- */
-export const IMMEDIATE_FAMILY_RELATIONSHIP_OPTIONS = [
-  "Mother",
-  "Father", 
-  "Stepmother",
-  "Stepfather",
-  "Foster Mother",
-  "Foster Father",
-  "Child",
-  "Stepchild",
-  "Brother",
-  "Sister",
-  "Half Brother",
-  "Half Sister",
-  "Stepbrother",
-  "Stepsister"
-] as const;
-
-/**
- * Relationship options for extended family
- */
-export const EXTENDED_FAMILY_RELATIONSHIP_OPTIONS = [
-  "Grandfather",
-  "Grandmother",
-  "Aunt",
-  "Uncle", 
-  "Cousin",
-  "Mother-in-law",
-  "Father-in-law",
-  "Brother-in-law",
-  "Sister-in-law",
-  "Other Relative"
-] as const;
-
-/**
- * Associate type options
- */
-export const ASSOCIATE_TYPE_OPTIONS = [
-  "Close Friend",
-  "Business Associate",
-  "Professional Colleague",
-  "Other"
-] as const;
-
-/**
- * Citizenship options
- */
-export const CITIZENSHIP_OPTIONS = [
-  "U.S. Citizen",
-  "Permanent Resident", 
-  "Other"
-] as const;
-
-/**
- * Contact frequency options
- */
-export const CONTACT_FREQUENCY_OPTIONS = [
-  "Daily",
-  "Weekly",
-  "Monthly", 
-  "Yearly",
-  "Rarely",
-  "Never"
-] as const;
-
-/**
- * Yes/No options
- */
-export const YES_NO_OPTIONS = [
-  "YES",
-  "NO"
-] as const;
-
-/**
- * Suffix options
- */
-export const SUFFIX_OPTIONS = [
-  "Jr",
-  "Sr", 
-  "II",
-  "III",
-  "IV",
-  "V",
-  "VI",
-  "VII",
-  "VIII",
-  "IX",
-  "X",
-  "Other"
-] as const;
-
-/**
- * Validation patterns for Section 18
- */
-export const SECTION18_VALIDATION = {
-  NAME_MIN_LENGTH: 1,
-  NAME_MAX_LENGTH: 100,
-  ADDRESS_MIN_LENGTH: 1,
-  ADDRESS_MAX_LENGTH: 200,
-  DESCRIPTION_MIN_LENGTH: 1,
-  DESCRIPTION_MAX_LENGTH: 2000,
-  EMAIL_PATTERN: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-  PHONE_PATTERN: /^\(\d{3}\) \d{3}-\d{4}$/,
-  ZIP_PATTERN: /^\d{5}(-\d{4})?$/,
-} as const;
-
-// ============================================================================
-// UTILITY TYPES
-// ============================================================================
-
-/**
- * Type for relative/associate field updates
- */
-export type Section18FieldUpdate = {
-  fieldPath: string;
-  newValue: any;
-  entryIndex?: number;
-  subsection: Section18SubsectionKey;
-};
-
-/**
- * Type for relative/associate validation results
- */
-export type RelativeAssociateValidationResult = {
-  isValid: boolean;
-  errors: string[];
-  warnings: string[];
-};
-
-// ============================================================================
-// HELPER FUNCTIONS
-// ============================================================================
-
-/**
- * Creates a default Section 18 data structure using field generators
- * FIXED: Now uses field generators with actual field names from sections-references JSON
- */
-export const createDefaultSection18 = (): Section18 => {
-  // Validate field count against sections-references
-  validateSectionFieldCount(18, 964); // Expected field count from sections-references
-
-  // Validate field mappings
-  const validation = validateSection18FieldMappings();
-  if (!validation.isValid) {
-    console.warn('Section 18 field mapping validation failed:', validation.errors);
-  }
-
-  return {
-    _id: 18,
-    section18: {
-      immediateFamily: [generateImmediateFamilyEntry()],
-      extendedFamily: [],
-      associates: []
-    }
-  };
-};
-
-/**
- * Creates a default immediate family entry using field generators
- * FIXED: Now uses field generators with actual field names from sections-references JSON
- */
-export const createDefaultImmediateFamilyEntry = (): ImmediateFamilyEntry => {
-  return generateImmediateFamilyEntry() as ImmediateFamilyEntry;
-};
-
-/**
- * Creates a default extended family entry using field generators
- * FIXED: Now uses field generators with actual field names from sections-references JSON
- */
-export const createDefaultExtendedFamilyEntry = (): ExtendedFamilyEntry => {
-  return generateExtendedFamilyEntry() as ExtendedFamilyEntry;
-};
-
-/**
- * Creates a default associate entry using field generators
- * FIXED: Now uses field generators with actual field names from sections-references JSON
- */
-export const createDefaultAssociateEntry = (): AssociateEntry => {
-  return generateAssociateEntry() as AssociateEntry;
-};
-
-/**
- * Updates a Section 18 field
- */
-export const updateSection18Field = (
-  section18Data: Section18,
-  update: Section18FieldUpdate
-): Section18 => {
-  const updatedData = { ...section18Data };
-  
-  // Handle field updates based on subsection and entry index
-  // Implementation would use lodash.set or similar for deep updates
-  
-  return updatedData;
-};
-
-/**
- * Validates relatives and associates information
- */
-export function validateRelativesAndAssociates(
-  relativesData: Section18['section18'], 
-  context: Section18ValidationContext
-): RelativeAssociateValidationResult {
-  const errors: string[] = [];
-  const warnings: string[] = [];
-
-  // Validate immediate family entries
-  relativesData.immediateFamily.forEach((entry, index) => {
-    if (!entry.fullName.firstName.value || !entry.fullName.lastName.value) {
-      errors.push(`Immediate family entry ${index + 1}: Full name is required`);
-    }
-    if (!entry.relationship.value) {
-      errors.push(`Immediate family entry ${index + 1}: Relationship is required`);
-    }
-    if (!entry.dateOfBirth.month.value || !entry.dateOfBirth.year.value) {
-      errors.push(`Immediate family entry ${index + 1}: Date of birth is required`);
-    }
-    if (!entry.citizenship.value) {
-      errors.push(`Immediate family entry ${index + 1}: Citizenship information is required`);
-    }
-    if (entry.citizenship.value === 'Other' && !entry.citizenshipCountry.value) {
-      errors.push(`Immediate family entry ${index + 1}: Citizenship country is required when citizenship is "Other"`);
-    }
-  });
-
-  // Validate extended family entries
-  relativesData.extendedFamily.forEach((entry, index) => {
-    if (!entry.fullName.firstName.value || !entry.fullName.lastName.value) {
-      errors.push(`Extended family entry ${index + 1}: Full name is required`);
-    }
-    if (!entry.relationship.value) {
-      errors.push(`Extended family entry ${index + 1}: Relationship is required`);
-    }
-  });
-
-  // Validate associate entries
-  relativesData.associates.forEach((entry, index) => {
-    if (!entry.fullName.firstName.value || !entry.fullName.lastName.value) {
-      errors.push(`Associate entry ${index + 1}: Full name is required`);
-    }
-    if (!entry.associateType.value) {
-      errors.push(`Associate entry ${index + 1}: Associate type is required`);
-    }
-    if (!entry.howMet.value) {
-      errors.push(`Associate entry ${index + 1}: How you met is required`);
-    }
-    if (!entry.whenMet.month.value || !entry.whenMet.year.value) {
-      errors.push(`Associate entry ${index + 1}: When you met is required`);
-    }
-  });
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-    warnings
-  };
-}
-
-/**
- * Checks if Section 18 is complete
- */
-export function isSection18Complete(section18Data: Section18): boolean {
-  const { immediateFamily, extendedFamily, associates } = section18Data.section18;
-  
-  // Check if at least some relatives/associates information has been provided
-  const hasImmediateFamilyData = immediateFamily.some(entry => 
-    entry.fullName.firstName.value || entry.fullName.lastName.value
-  );
-  const hasExtendedFamilyData = extendedFamily.some(entry => 
-    entry.fullName.firstName.value || entry.fullName.lastName.value
-  );
-  const hasAssociateData = associates.some(entry => 
-    entry.fullName.firstName.value || entry.fullName.lastName.value
-  );
-  
-  return hasImmediateFamilyData || hasExtendedFamilyData || hasAssociateData;
-}
-
-/**
- * Determines which fields should be visible based on citizenship status
- */
-export function getVisibleFieldsForCitizenship(citizenship: string): string[] {
-  const visibleFields: string[] = ['citizenship'];
-  
-  if (citizenship === 'Other') {
-    visibleFields.push('citizenshipCountry');
-  }
-  
-  return visibleFields;
-}
-
-/**
- * Determines which fields should be visible based on deceased status
- */
-export function getVisibleFieldsForDeceased(isDeceased: string): string[] {
-  const visibleFields: string[] = ['isDeceased'];
-  
-  if (isDeceased === 'YES') {
-    visibleFields.push('dateOfDeath', 'dateOfDeathEstimated');
-  } else {
-    visibleFields.push(
-      'currentAddress', 'contactInfo', 'currentEmployment', 
-      'foreignTravelFrequency', 'lastContactDate', 'natureOfContact'
-    );
-  }
-  
-  return visibleFields;
-} 
+export type Section18FieldId = typeof SECTION18_FIELD_IDS[keyof typeof SECTION18_FIELD_IDS];

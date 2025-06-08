@@ -1,29 +1,25 @@
 /**
- * Section 18: Relatives and Associates - Component
+ * Section 18: Relatives - Component (REDESIGNED)
  *
  * React component for SF-86 Section 18 using the new Form Architecture 2.0.
- * This component handles comprehensive relatives and associates information including
- * immediate family, extended family, and close associates/friends.
+ * This component handles the actual PDF form structure with 6 relative entries
+ * and subsections 18.1-18.5.
  */
 
 import React, { useEffect, useState } from 'react';
-import { useSection18 } from '~/state/contexts/sections2.0/section18';
+import { useSection18 } from '~/state/contexts/sections2.0/Section18';
 import { useSF86Form } from '~/state/contexts/SF86FormContext';
 import type {
-  ImmediateFamilyEntry,
-  ExtendedFamilyEntry,
-  AssociateEntry,
+  RelativeEntry,
   Section18SubsectionKey
-} from '../../../api/interfaces/sections2.0/section18';
-import {
-  IMMEDIATE_FAMILY_RELATIONSHIP_OPTIONS,
-  EXTENDED_FAMILY_RELATIONSHIP_OPTIONS,
-  ASSOCIATE_TYPE_OPTIONS,
-  CITIZENSHIP_OPTIONS,
-  CONTACT_FREQUENCY_OPTIONS,
-  YES_NO_OPTIONS,
-  SUFFIX_OPTIONS
-} from '../../../api/interfaces/sections2.0/section18';
+} from '../../../api/interfaces/sections2.0/Section18';
+import { SECTION18_OPTIONS } from '~/state/contexts/sections2.0/section18-field-generator';
+import Section18_2Component from './sections/Section18_2';
+import Section18_3Component from './sections/Section18_3';
+import { Section18_5Component } from './sections/Section18_5';
+
+// Maximum number of relatives allowed (as per PDF form structure)
+const MAX_RELATIVES = 6;
 
 interface Section18ComponentProps {
   className?: string;
@@ -36,26 +32,22 @@ export const Section18Component: React.FC<Section18ComponentProps> = ({
   onValidationChange,
   onNext
 }) => {
-  // Section 18 Context
+  // Section 18 Context (REDESIGNED)
   const {
     section18Data,
-    immediateFamily,
-    extendedFamily,
-    associates,
-    addImmediateFamilyMember,
-    updateImmediateFamilyMember,
-    removeImmediateFamilyMember,
-    duplicateImmediateFamilyMember,
-    addExtendedFamilyMember,
-    updateExtendedFamilyMember,
-    removeExtendedFamilyMember,
-    duplicateExtendedFamilyMember,
-    addAssociate,
-    updateAssociate,
-    removeAssociate,
-    duplicateAssociate,
+    relatives,
+    // relativeTypes, // DEPRECATED: Now handled per entry
+    addRelative,
+    updateRelative,
+    removeRelative,
+    duplicateRelative,
+    getRelativeByEntryNumber,
+    updateSubsection,
+    getSubsectionData,
     updateField,
+    updateFieldValue,
     getFieldValue,
+    // updateRelativeTypeSelection, // DEPRECATED: Now handled per entry
     validate,
     validateEntry,
     validationErrors,
@@ -68,7 +60,8 @@ export const Section18Component: React.FC<Section18ComponentProps> = ({
 
   // Component state
   const [isValid, setIsValid] = useState(false);
-  const [activeTab, setActiveTab] = useState<'immediateFamily' | 'extendedFamily' | 'associates'>('immediateFamily');
+  const [activeRelativeIndex, setActiveRelativeIndex] = useState(0);
+  const [activeSubsection, setActiveSubsection] = useState<Section18SubsectionKey>('section18_1');
   const [showValidationErrors, setShowValidationErrors] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
 
@@ -79,178 +72,127 @@ export const Section18Component: React.FC<Section18ComponentProps> = ({
     onValidationChange?.(validationResult.isValid);
   }, [section18Data, validate, onValidationChange]);
 
-  // Handle submission with data persistence
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setShowValidationErrors(true);
-
-    const result = validate();
-    setIsValid(result.isValid);
-    onValidationChange?.(result.isValid);
-
-    if (result.isValid) {
-      try {
-        sf86Form.updateSectionData('section18', section18Data);
-        await sf86Form.saveForm();
-        console.log('✅ Section 18 data saved successfully:', section18Data);
-
-        if (onNext) {
-          onNext();
-        }
-      } catch (error) {
-        console.error('❌ Failed to save Section 18 data:', error);
-      }
+  // Helper function to get field value safely
+  const getFieldValueSafe = (relative: RelativeEntry, subsection: Section18SubsectionKey, fieldPath: string) => {
+    try {
+      return getFieldValue(fieldPath, relative.entryNumber, subsection) || '';
+    } catch (error) {
+      console.warn(`Failed to get field value for ${fieldPath}:`, error);
+      return '';
     }
   };
 
-  // Helper function to safely get field value
-  const getFieldValueSafe = (obj: any, path: string): string => {
-    return path.split('.').reduce((current, key) => current?.[key]?.value || '', obj);
+  // Helper function to handle field updates
+  const handleFieldUpdate = (relative: RelativeEntry, subsection: Section18SubsectionKey, fieldPath: string, value: any) => {
+    try {
+      updateFieldValue(relative.entryNumber, subsection, fieldPath, value);
+      setIsDirty(true);
+    } catch (error) {
+      console.error(`Failed to update field ${fieldPath}:`, error);
+    }
   };
 
-  // Helper function to check if field has error
-  const hasFieldError = (fieldPath: string): boolean => {
-    return showValidationErrors && validationErrors.some(error => error.includes(fieldPath));
+  // Handle form submission
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const validationResult = validate();
+    setShowValidationErrors(true);
+    
+    if (validationResult.isValid) {
+      onNext?.();
+    }
   };
 
-  const getFieldError = (fieldPath: string): string => {
-    return validationErrors.find(error => error.includes(fieldPath)) || '';
-  };
+  // DEPRECATED: Global relative type selection removed
+  // Relative type selection now happens per entry in Section 18.1
+  // Each relative has its own relativeType dropdown field
 
-  // Immediate Family Form Component
-  const ImmediateFamilyForm: React.FC<{ entry: ImmediateFamilyEntry; index: number }> = ({ entry, index }) => (
-    <div className="bg-gray-50 p-6 rounded-lg mb-6" data-testid={`immediate-family-${index}`}>
-      <div className="flex justify-between items-center mb-4">
-        <h4 className="font-semibold text-lg">Immediate Family Member #{index + 1}</h4>
-        <div className="flex space-x-2">
+  // Render relative navigation tabs
+  const renderRelativeNavigation = () => (
+    <div className="mb-6">
+      <div className="flex flex-wrap gap-2">
+        {relatives.map((relative, index) => (
           <button
-            type="button"
-            onClick={() => duplicateImmediateFamilyMember(index)}
-            className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+            key={relative.entryNumber}
+            onClick={() => setActiveRelativeIndex(index)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium ${
+              activeRelativeIndex === index
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
           >
-            Duplicate
+            Entry #{relative.entryNumber}
+            {getFieldValueSafe(relative, 'section18_1', 'fullName.firstName') && 
+             ` - ${getFieldValueSafe(relative, 'section18_1', 'fullName.firstName')}`}
           </button>
+        ))}
+        {relatives.length < MAX_RELATIVES && (
           <button
-            type="button"
-            onClick={() => removeImmediateFamilyMember(index)}
-            className="text-red-600 hover:text-red-800 font-medium text-sm"
+            onClick={addRelative}
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-green-100 text-green-700 hover:bg-green-200"
+            disabled={relatives.length >= MAX_RELATIVES}
           >
-            Remove
+            + Add Relative ({relatives.length}/{MAX_RELATIVES})
           </button>
-        </div>
+        )}
       </div>
+    </div>
+  );
 
-      {/* Relationship */}
-      <div className="mb-4">
+  // Render subsection navigation
+  const renderSubsectionNavigation = () => (
+    <div className="mb-6">
+      <div className="flex flex-wrap gap-2">
+        {(['section18_1', 'section18_2', 'section18_3', 'section18_4', 'section18_5'] as Section18SubsectionKey[]).map((subsection) => (
+          <button
+            key={subsection}
+            onClick={() => setActiveSubsection(subsection)}
+            className={`px-3 py-2 rounded text-sm font-medium ${
+              activeSubsection === subsection
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {subsection.replace('section18_', '18.')}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Render basic form fields for Section 18.1
+  const renderSection18_1 = (relative: RelativeEntry) => (
+    <div className="space-y-4">
+      <h4 className="text-md font-semibold">18.1 - Basic Information</h4>
+      
+      {/* Relative Type */}
+      <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Relationship <span className="text-red-500">*</span>
+          Relationship Type <span className="text-red-500">*</span>
         </label>
         <select
-          value={getFieldValueSafe(entry, 'relationship')}
-          onChange={(e) => {
-            console.log(`🎯 Section18Component: Relationship field changed:`, {
-              index,
-              fieldPath: 'relationship.value',
-              newValue: e.target.value,
-              currentValue: getFieldValueSafe(entry, 'relationship')
-            });
-            updateField('relationship.value', e.target.value, index, 'immediateFamily');
-          }}
+          value={getFieldValueSafe(relative, 'section18_1', 'relativeType')}
+          onChange={(e) => handleFieldUpdate(relative, 'section18_1', 'relativeType', e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
           required
         >
           <option value="">Select relationship</option>
-          {IMMEDIATE_FAMILY_RELATIONSHIP_OPTIONS.map(option => (
+          {SECTION18_OPTIONS.RELATIVE_TYPES.map(option => (
             <option key={option} value={option}>{option}</option>
           ))}
         </select>
-        {hasFieldError(`immediateFamily[${index}].relationship`) && (
-          <p className="mt-1 text-sm text-red-600">{getFieldError(`immediateFamily[${index}].relationship`)}</p>
-        )}
       </div>
-
-      {/* Is Deceased */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Is this person deceased?
-        </label>
-        <div className="flex space-x-4">
-          {YES_NO_OPTIONS.map(option => (
-            <label key={option} className="flex items-center">
-              <input
-                type="radio"
-                name={`deceased_${index}`}
-                value={option}
-                checked={getFieldValueSafe(entry, 'isDeceased') === option}
-                onChange={(e) => updateField('isDeceased.value', e.target.value, index, 'immediateFamily')}
-                className="mr-2"
-              />
-              {option}
-            </label>
-          ))}
-        </div>
-      </div>
-
-      {/* Date of Death (if deceased) */}
-      {getFieldValueSafe(entry, 'isDeceased') === 'YES' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Date of Death (Month)
-            </label>
-            <input
-              type="text"
-              placeholder="MM"
-              value={getFieldValueSafe(entry, 'dateOfDeath.month')}
-              onChange={(e) => updateField('dateOfDeath.month.value', e.target.value, index, 'immediateFamily')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Date of Death (Year)
-            </label>
-            <input
-              type="text"
-              placeholder="YYYY"
-              value={getFieldValueSafe(entry, 'dateOfDeath.year')}
-              onChange={(e) => updateField('dateOfDeath.year.value', e.target.value, index, 'immediateFamily')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-      )}
 
       {/* Full Name */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Last Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={getFieldValueSafe(entry, 'fullName.lastName')}
-            onChange={(e) => updateField('fullName.lastName.value', e.target.value, index, 'immediateFamily')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             First Name <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
-            value={getFieldValueSafe(entry, 'fullName.firstName')}
-            onChange={(e) => {
-              console.log(`🎯 Section18Component: First name field changed:`, {
-                index,
-                fieldPath: 'fullName.firstName.value',
-                newValue: e.target.value,
-                currentValue: getFieldValueSafe(entry, 'fullName.firstName')
-              });
-              updateField('fullName.firstName.value', e.target.value, index, 'immediateFamily');
-            }}
+            value={getFieldValueSafe(relative, 'section18_1', 'fullName.firstName')}
+            onChange={(e) => handleFieldUpdate(relative, 'section18_1', 'fullName.firstName', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
             required
           />
@@ -261,745 +203,429 @@ export const Section18Component: React.FC<Section18ComponentProps> = ({
           </label>
           <input
             type="text"
-            value={getFieldValueSafe(entry, 'fullName.middleName')}
-            onChange={(e) => updateField('fullName.middleName.value', e.target.value, index, 'immediateFamily')}
+            value={getFieldValueSafe(relative, 'section18_1', 'fullName.middleName')}
+            onChange={(e) => handleFieldUpdate(relative, 'section18_1', 'fullName.middleName', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Suffix
+            Last Name <span className="text-red-500">*</span>
           </label>
-          <select
-            value={getFieldValueSafe(entry, 'fullName.suffix')}
-            onChange={(e) => updateField('fullName.suffix.value', e.target.value, index, 'immediateFamily')}
+          <input
+            type="text"
+            value={getFieldValueSafe(relative, 'section18_1', 'fullName.lastName')}
+            onChange={(e) => handleFieldUpdate(relative, 'section18_1', 'fullName.lastName', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="">Select suffix</option>
-            {SUFFIX_OPTIONS.map(option => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </select>
+            required
+          />
         </div>
       </div>
 
       {/* Date of Birth */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Date of Birth (Month) <span className="text-red-500">*</span>
+            Birth Month
           </label>
           <input
             type="text"
             placeholder="MM"
-            value={getFieldValueSafe(entry, 'dateOfBirth.month')}
-            onChange={(e) => updateField('dateOfBirth.month.value', e.target.value, index, 'immediateFamily')}
+            value={getFieldValueSafe(relative, 'section18_1', 'dateOfBirth.month')}
+            onChange={(e) => handleFieldUpdate(relative, 'section18_1', 'dateOfBirth.month', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            required
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Date of Birth (Year) <span className="text-red-500">*</span>
+            Birth Year
           </label>
           <input
             type="text"
             placeholder="YYYY"
-            value={getFieldValueSafe(entry, 'dateOfBirth.year')}
-            onChange={(e) => updateField('dateOfBirth.year.value', e.target.value, index, 'immediateFamily')}
+            value={getFieldValueSafe(relative, 'section18_1', 'dateOfBirth.year')}
+            onChange={(e) => handleFieldUpdate(relative, 'section18_1', 'dateOfBirth.year', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            required
           />
         </div>
       </div>
 
       {/* Place of Birth */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Place of Birth - City
+            Birth City
           </label>
           <input
             type="text"
-            value={getFieldValueSafe(entry, 'placeOfBirth.city')}
-            onChange={(e) => updateField('placeOfBirth.city.value', e.target.value, index, 'immediateFamily')}
+            value={getFieldValueSafe(relative, 'section18_1', 'placeOfBirth.city')}
+            onChange={(e) => handleFieldUpdate(relative, 'section18_1', 'placeOfBirth.city', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Place of Birth - State/Province
-          </label>
-          <input
-            type="text"
-            value={getFieldValueSafe(entry, 'placeOfBirth.state')}
-            onChange={(e) => updateField('placeOfBirth.state.value', e.target.value, index, 'immediateFamily')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Place of Birth - Country <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={getFieldValueSafe(entry, 'placeOfBirth.country')}
-            onChange={(e) => updateField('placeOfBirth.country.value', e.target.value, index, 'immediateFamily')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-      </div>
-
-      {/* Citizenship */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Citizenship <span className="text-red-500">*</span>
+            Birth State
           </label>
           <select
-            value={getFieldValueSafe(entry, 'citizenship')}
-            onChange={(e) => updateField('citizenship.value', e.target.value, index, 'immediateFamily')}
+            value={getFieldValueSafe(relative, 'section18_1', 'placeOfBirth.state')}
+            onChange={(e) => handleFieldUpdate(relative, 'section18_1', 'placeOfBirth.state', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            required
           >
-            <option value="">Select citizenship</option>
-            {CITIZENSHIP_OPTIONS.map(option => (
-              <option key={option} value={option}>{option}</option>
+            <option value="">Select state</option>
+            {SECTION18_OPTIONS.STATES.map(state => (
+              <option key={state} value={state}>{state}</option>
             ))}
           </select>
         </div>
-        {getFieldValueSafe(entry, 'citizenship') === 'Other' && (
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Citizenship Country <span className="text-red-500">*</span>
-            </label>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Birth Country
+          </label>
+          <select
+            value={getFieldValueSafe(relative, 'section18_1', 'placeOfBirth.country')}
+            onChange={(e) => handleFieldUpdate(relative, 'section18_1', 'placeOfBirth.country', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Select country</option>
+            {SECTION18_OPTIONS.COUNTRIES.map(country => (
+              <option key={country} value={country}>{country}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Other Names Section */}
+      <div className="mt-8 p-6 bg-gray-50 rounded-lg">
+        <h5 className="text-md font-semibold text-gray-800 mb-4">
+          Other Names Used
+        </h5>
+        <p className="text-sm text-gray-600 mb-4">
+          Provide other names used and the period of time that your relative used them
+          (such as maiden name by a former marriage, former name, alias, or nickname).
+        </p>
+
+        {/* Not Applicable Checkbox */}
+        <div className="mb-6">
+          <label className="flex items-center space-x-2">
             <input
-              type="text"
-              value={getFieldValueSafe(entry, 'citizenshipCountry')}
-              onChange={(e) => updateField('citizenshipCountry.value', e.target.value, index, 'immediateFamily')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-              required
+              type="checkbox"
+              checked={getFieldValueSafe(relative, 'section18_1', 'otherNames.0.isApplicable') || false}
+              onChange={(e) => {
+                // Update all other name entries' isApplicable flag
+                for (let i = 0; i < 4; i++) {
+                  handleFieldUpdate(relative, 'section18_1', `otherNames.${i}.isApplicable`, e.target.checked);
+                }
+              }}
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
+            <span className="text-sm font-medium text-gray-700">
+              Not applicable (no other names used)
+            </span>
+          </label>
+        </div>
+
+        {/* Other Names Entries */}
+        {!getFieldValueSafe(relative, 'section18_1', 'otherNames.0.isApplicable') && (
+          <div className="space-y-8">
+            {[1, 2, 3, 4].map((otherNameIndex) => (
+              <div key={otherNameIndex} className="p-4 bg-white rounded-lg border border-gray-200">
+                <h6 className="text-sm font-medium text-gray-800 mb-4">
+                  Other Name #{otherNameIndex}
+                </h6>
+
+                {/* Name Fields */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      First Name
+                    </label>
+                    <input
+                      type="text"
+                      value={getFieldValueSafe(relative, 'section18_1', `otherNames.${otherNameIndex - 1}.fullName.firstName`) || ''}
+                      onChange={(e) => handleFieldUpdate(relative, 'section18_1', `otherNames.${otherNameIndex - 1}.fullName.firstName`, e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter first name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Middle Name
+                    </label>
+                    <input
+                      type="text"
+                      value={getFieldValueSafe(relative, 'section18_1', `otherNames.${otherNameIndex - 1}.fullName.middleName`) || ''}
+                      onChange={(e) => handleFieldUpdate(relative, 'section18_1', `otherNames.${otherNameIndex - 1}.fullName.middleName`, e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter middle name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Last Name
+                    </label>
+                    <input
+                      type="text"
+                      value={getFieldValueSafe(relative, 'section18_1', `otherNames.${otherNameIndex - 1}.fullName.lastName`) || ''}
+                      onChange={(e) => handleFieldUpdate(relative, 'section18_1', `otherNames.${otherNameIndex - 1}.fullName.lastName`, e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter last name"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Suffix
+                    </label>
+                    <select
+                      value={getFieldValueSafe(relative, 'section18_1', `otherNames.${otherNameIndex - 1}.fullName.suffix`) || ''}
+                      onChange={(e) => handleFieldUpdate(relative, 'section18_1', `otherNames.${otherNameIndex - 1}.fullName.suffix`, e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select suffix</option>
+                      {SECTION18_OPTIONS.SUFFIX.map(suffix => (
+                        <option key={suffix} value={suffix}>{suffix}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Time Period Used */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      From (Month/Year)
+                    </label>
+                    <input
+                      type="text"
+                      value={getFieldValueSafe(relative, 'section18_1', `otherNames.${otherNameIndex - 1}.timeUsed.from.month`) || ''}
+                      onChange={(e) => handleFieldUpdate(relative, 'section18_1', `otherNames.${otherNameIndex - 1}.timeUsed.from.month`, e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      placeholder="MM/YYYY"
+                    />
+                    <div className="mt-2">
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={getFieldValueSafe(relative, 'section18_1', `otherNames.${otherNameIndex - 1}.timeUsed.from.isEstimated`) || false}
+                          onChange={(e) => handleFieldUpdate(relative, 'section18_1', `otherNames.${otherNameIndex - 1}.timeUsed.from.isEstimated`, e.target.checked)}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700">Estimated</span>
+                      </label>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      To (Month/Year)
+                    </label>
+                    <input
+                      type="text"
+                      value={getFieldValueSafe(relative, 'section18_1', `otherNames.${otherNameIndex - 1}.timeUsed.to.month`) || ''}
+                      onChange={(e) => handleFieldUpdate(relative, 'section18_1', `otherNames.${otherNameIndex - 1}.timeUsed.to.month`, e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                      placeholder="MM/YYYY"
+                    />
+                    <div className="mt-2 space-y-2">
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={getFieldValueSafe(relative, 'section18_1', `otherNames.${otherNameIndex - 1}.timeUsed.to.isEstimated`) || false}
+                          onChange={(e) => handleFieldUpdate(relative, 'section18_1', `otherNames.${otherNameIndex - 1}.timeUsed.to.isEstimated`, e.target.checked)}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700">Estimated</span>
+                      </label>
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={getFieldValueSafe(relative, 'section18_1', `otherNames.${otherNameIndex - 1}.timeUsed.isPresent`) || false}
+                          onChange={(e) => handleFieldUpdate(relative, 'section18_1', `otherNames.${otherNameIndex - 1}.timeUsed.isPresent`, e.target.checked)}
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700">Present (still using)</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Reason for Change */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Reason for Name Change
+                  </label>
+                  <textarea
+                    value={getFieldValueSafe(relative, 'section18_1', `otherNames.${otherNameIndex - 1}.reasonForChange`) || ''}
+                    onChange={(e) => handleFieldUpdate(relative, 'section18_1', `otherNames.${otherNameIndex - 1}.reasonForChange`, e.target.value)}
+                    rows={2}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                    placeholder="Provide the reason(s) why the name changed"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Not Applicable Message */}
+        {getFieldValueSafe(relative, 'section18_1', 'otherNames.0.isApplicable') && (
+          <div className="p-4 bg-blue-50 rounded-lg">
+            <p className="text-sm text-blue-700">
+              No other names have been used by this relative.
+            </p>
           </div>
         )}
       </div>
-
-      {/* Current Address */}
-      <div className="mb-4">
-        <h5 className="font-medium text-gray-900 mb-3">Current Address</h5>
-        <div className="grid grid-cols-1 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Street Address
-            </label>
-            <input
-              type="text"
-              value={getFieldValueSafe(entry, 'currentAddress.street')}
-              onChange={(e) => updateField('currentAddress.street.value', e.target.value, index, 'immediateFamily')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                City
-              </label>
-              <input
-                type="text"
-                value={getFieldValueSafe(entry, 'currentAddress.city')}
-                onChange={(e) => updateField('currentAddress.city.value', e.target.value, index, 'immediateFamily')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                State/Province
-              </label>
-              <input
-                type="text"
-                value={getFieldValueSafe(entry, 'currentAddress.state')}
-                onChange={(e) => updateField('currentAddress.state.value', e.target.value, index, 'immediateFamily')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Country
-              </label>
-              <input
-                type="text"
-                value={getFieldValueSafe(entry, 'currentAddress.country')}
-                onChange={(e) => updateField('currentAddress.country.value', e.target.value, index, 'immediateFamily')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Contact Information */}
-      <div className="mb-4">
-        <h5 className="font-medium text-gray-900 mb-3">Contact Information</h5>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Home Phone
-            </label>
-            <input
-              type="tel"
-              value={getFieldValueSafe(entry, 'contactInfo.homePhone')}
-              onChange={(e) => updateField('contactInfo.homePhone.value', e.target.value, index, 'immediateFamily')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Work Phone
-            </label>
-            <input
-              type="tel"
-              value={getFieldValueSafe(entry, 'contactInfo.workPhone')}
-              onChange={(e) => updateField('contactInfo.workPhone.value', e.target.value, index, 'immediateFamily')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Cell Phone
-            </label>
-            <input
-              type="tel"
-              value={getFieldValueSafe(entry, 'contactInfo.cellPhone')}
-              onChange={(e) => updateField('contactInfo.cellPhone.value', e.target.value, index, 'immediateFamily')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email
-            </label>
-            <input
-              type="email"
-              value={getFieldValueSafe(entry, 'contactInfo.email')}
-              onChange={(e) => updateField('contactInfo.email.value', e.target.value, index, 'immediateFamily')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Government Affiliation */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Does this person have any government affiliation?
-        </label>
-        <div className="flex space-x-4">
-          {YES_NO_OPTIONS.map(option => (
-            <label key={option} className="flex items-center">
-              <input
-                type="radio"
-                name={`govAffiliation_${index}`}
-                value={option}
-                checked={getFieldValueSafe(entry, 'hasGovernmentAffiliation') === option}
-                onChange={(e) => updateField('hasGovernmentAffiliation.value', e.target.value, index, 'immediateFamily')}
-                className="mr-2"
-              />
-              {option}
-            </label>
-          ))}
-        </div>
-      </div>
     </div>
   );
 
-  // Extended Family Form Component
-  const ExtendedFamilyForm: React.FC<{ entry: ExtendedFamilyEntry; index: number }> = ({ entry, index }) => (
-    <div className="bg-gray-50 p-6 rounded-lg mb-6" data-testid={`extended-family-${index}`}>
-      <div className="flex justify-between items-center mb-4">
-        <h4 className="font-semibold text-lg">Extended Family Member #{index + 1}</h4>
-        <div className="flex space-x-2">
-          <button
-            type="button"
-            onClick={() => duplicateExtendedFamilyMember(index)}
-            className="text-blue-600 hover:text-blue-800 font-medium text-sm"
-          >
-            Duplicate
-          </button>
-          <button
-            type="button"
-            onClick={() => removeExtendedFamilyMember(index)}
-            className="text-red-600 hover:text-red-800 font-medium text-sm"
-          >
-            Remove
-          </button>
-        </div>
-      </div>
-
-      {/* Relationship */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Relationship <span className="text-red-500">*</span>
-        </label>
-        <select
-          value={getFieldValueSafe(entry, 'relationship')}
-          onChange={(e) => updateField('relationship.value', e.target.value, index, 'extendedFamily')}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-          required
-        >
-          <option value="">Select relationship</option>
-          {EXTENDED_FAMILY_RELATIONSHIP_OPTIONS.map(option => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
-      </div>
-
-      {/* Full Name */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Last Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={getFieldValueSafe(entry, 'fullName.lastName')}
-            onChange={(e) => updateField('fullName.lastName.value', e.target.value, index, 'extendedFamily')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            First Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={getFieldValueSafe(entry, 'fullName.firstName')}
-            onChange={(e) => updateField('fullName.firstName.value', e.target.value, index, 'extendedFamily')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Middle Name
-          </label>
-          <input
-            type="text"
-            value={getFieldValueSafe(entry, 'fullName.middleName')}
-            onChange={(e) => updateField('fullName.middleName.value', e.target.value, index, 'extendedFamily')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      </div>
-
-      {/* Contact Frequency */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          How often do you contact this person?
-        </label>
-        <select
-          value={getFieldValueSafe(entry, 'contactFrequency')}
-          onChange={(e) => updateField('contactFrequency.value', e.target.value, index, 'extendedFamily')}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">Select frequency</option>
-          {CONTACT_FREQUENCY_OPTIONS.map(option => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
-      </div>
-    </div>
-  );
-
-  // Associate Form Component
-  const AssociateForm: React.FC<{ entry: AssociateEntry; index: number }> = ({ entry, index }) => (
-    <div className="bg-gray-50 p-6 rounded-lg mb-6" data-testid={`associate-${index}`}>
-      <div className="flex justify-between items-center mb-4">
-        <h4 className="font-semibold text-lg">Associate #{index + 1}</h4>
-        <div className="flex space-x-2">
-          <button
-            type="button"
-            onClick={() => duplicateAssociate(index)}
-            className="text-blue-600 hover:text-blue-800 font-medium text-sm"
-          >
-            Duplicate
-          </button>
-          <button
-            type="button"
-            onClick={() => removeAssociate(index)}
-            className="text-red-600 hover:text-red-800 font-medium text-sm"
-          >
-            Remove
-          </button>
-        </div>
-      </div>
-
-      {/* Associate Type */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Associate Type <span className="text-red-500">*</span>
-        </label>
-        <select
-          value={getFieldValueSafe(entry, 'associateType')}
-          onChange={(e) => updateField('associateType.value', e.target.value, index, 'associates')}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-          required
-        >
-          <option value="">Select associate type</option>
-          {ASSOCIATE_TYPE_OPTIONS.map(option => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
-      </div>
-
-      {/* Relationship Description */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Describe your relationship with this person
-        </label>
-        <textarea
-          value={getFieldValueSafe(entry, 'relationshipDescription')}
-          onChange={(e) => updateField('relationshipDescription.value', e.target.value, index, 'associates')}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-          rows={3}
-        />
-      </div>
-
-      {/* Full Name */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Last Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={getFieldValueSafe(entry, 'fullName.lastName')}
-            onChange={(e) => updateField('fullName.lastName.value', e.target.value, index, 'associates')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            First Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={getFieldValueSafe(entry, 'fullName.firstName')}
-            onChange={(e) => updateField('fullName.firstName.value', e.target.value, index, 'associates')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Middle Name
-          </label>
-          <input
-            type="text"
-            value={getFieldValueSafe(entry, 'fullName.middleName')}
-            onChange={(e) => updateField('fullName.middleName.value', e.target.value, index, 'associates')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-      </div>
-
-      {/* How Met */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          How did you meet this person? <span className="text-red-500">*</span>
-        </label>
-        <textarea
-          value={getFieldValueSafe(entry, 'howMet')}
-          onChange={(e) => updateField('howMet.value', e.target.value, index, 'associates')}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-          rows={2}
-          required
-        />
-      </div>
-
-      {/* When Met */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            When did you meet? (Month) <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            placeholder="MM"
-            value={getFieldValueSafe(entry, 'whenMet.month')}
-            onChange={(e) => updateField('whenMet.month.value', e.target.value, index, 'associates')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            When did you meet? (Year) <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            placeholder="YYYY"
-            value={getFieldValueSafe(entry, 'whenMet.year')}
-            onChange={(e) => updateField('whenMet.year.value', e.target.value, index, 'associates')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-            required
-          />
-        </div>
-      </div>
-
-      {/* Frequency of Contact */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          How often do you contact this person?
-        </label>
-        <select
-          value={getFieldValueSafe(entry, 'frequencyOfContact')}
-          onChange={(e) => updateField('frequencyOfContact.value', e.target.value, index, 'associates')}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-        >
-          <option value="">Select frequency</option>
-          {CONTACT_FREQUENCY_OPTIONS.map(option => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
-      </div>
-
-      {/* Nature of Relationship Checkboxes */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Nature of relationship (check all that apply):
-        </label>
-        <div className="space-y-2">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={getFieldValueSafe(entry, 'personalRelationship') === 'true'}
-              onChange={(e) => updateField('personalRelationship.value', e.target.checked, index, 'associates')}
-              className="mr-2"
-            />
-            Personal friendship
-          </label>
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={getFieldValueSafe(entry, 'businessRelationship') === 'true'}
-              onChange={(e) => updateField('businessRelationship.value', e.target.checked, index, 'associates')}
-              className="mr-2"
-            />
-            Business relationship
-          </label>
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={getFieldValueSafe(entry, 'professionalRelationship') === 'true'}
-              onChange={(e) => updateField('professionalRelationship.value', e.target.checked, index, 'associates')}
-              className="mr-2"
-            />
-            Professional relationship
-          </label>
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={getFieldValueSafe(entry, 'otherRelationship') === 'true'}
-              onChange={(e) => updateField('otherRelationship.value', e.target.checked, index, 'associates')}
-              className="mr-2"
-            />
-            Other
-          </label>
-        </div>
-
-        {/* Other Relationship Description */}
-        {getFieldValueSafe(entry, 'otherRelationship') === 'true' && (
-          <div className="mt-2">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Describe other relationship type:
-            </label>
-            <textarea
-              value={getFieldValueSafe(entry, 'otherRelationshipDescription')}
-              onChange={(e) => updateField('otherRelationshipDescription.value', e.target.value, index, 'associates')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-              rows={2}
-            />
-          </div>
-        )}
-      </div>
-
-      {/* Foreign Connections */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Does this person have foreign connections?
-        </label>
-        <div className="flex space-x-4">
-          {YES_NO_OPTIONS.map(option => (
-            <label key={option} className="flex items-center">
-              <input
-                type="radio"
-                name={`foreignConnections_${index}`}
-                value={option}
-                checked={getFieldValueSafe(entry, 'hasForeignConnections') === option}
-                onChange={(e) => updateField('hasForeignConnections.value', e.target.value, index, 'associates')}
-                className="mr-2"
-              />
-              {option}
-            </label>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className={`bg-white rounded-lg shadow-lg p-6 ${className}`} data-testid="section18-form">
-      {/* Section Header */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Section 18: Relatives and Associates
-        </h2>
+  // Render placeholder for other subsections
+  const renderOtherSubsections = (_relative: RelativeEntry, subsection: Section18SubsectionKey) => (
+    <div className="space-y-4">
+      <h4 className="text-md font-semibold">
+        {subsection.replace('section18_', '18.')} - {
+          subsection === 'section18_2' ? 'Current Address' :
+          subsection === 'section18_3' ? 'Citizenship Documentation' :
+          subsection === 'section18_4' ? 'Non-US Citizen Documentation' :
+          subsection === 'section18_5' ? 'Contact Information' : 'Unknown'
+        }
+      </h4>
+      <div className="p-4 bg-gray-50 rounded-lg">
         <p className="text-gray-600">
-          Provide information about your relatives and close associates, including immediate family,
-          extended family, and close friends or business associates.
+          This subsection will be implemented with the specific fields for {subsection}.
+          The structure is now in place to support all 964 fields from the PDF form.
         </p>
       </div>
+    </div>
+  );
 
-      {/* Tab Navigation */}
-      <div className="border-b border-gray-200 mb-6">
-        <nav className="flex space-x-8">
-          {[
-            { id: 'immediateFamily', label: 'Immediate Family', count: immediateFamily.length },
-            { id: 'extendedFamily', label: 'Extended Family', count: extendedFamily.length },
-            { id: 'associates', label: 'Associates', count: associates.length }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as Section18SubsectionKey)}
-              className={`pb-2 px-1 border-b-2 font-medium text-sm ${
-                activeTab === tab.id
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              {tab.label} {tab.count > 0 && `(${tab.count})`}
-            </button>
-          ))}
-        </nav>
-      </div>
+  // Get current relative
+  const currentRelative = relatives[activeRelativeIndex];
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Immediate Family Tab */}
-        {activeTab === 'immediateFamily' && (
-          <div>
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-2">Immediate Family Members</h3>
-              <p className="text-sm text-gray-600">
-                List your parents, stepparents, foster parents, children, stepchildren, brothers, and sisters.
-              </p>
-            </div>
-
-            {immediateFamily.map((entry, index) => (
-              <ImmediateFamilyForm key={index} entry={entry} index={index} />
-            ))}
-
-            <button
-              type="button"
-              onClick={addImmediateFamilyMember}
-              className="w-full py-3 px-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-700"
-            >
-              + Add Immediate Family Member
-            </button>
-          </div>
-        )}
-
-        {/* Extended Family Tab */}
-        {activeTab === 'extendedFamily' && (
-          <div>
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-2">Extended Family Members</h3>
-              <p className="text-sm text-gray-600">
-                List grandparents, aunts, uncles, cousins, in-laws, and other relatives.
-              </p>
-            </div>
-
-            {extendedFamily.map((entry, index) => (
-              <ExtendedFamilyForm key={index} entry={entry} index={index} />
-            ))}
-
-            <button
-              type="button"
-              onClick={addExtendedFamilyMember}
-              className="w-full py-3 px-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-700"
-            >
-              + Add Extended Family Member
-            </button>
-          </div>
-        )}
-
-        {/* Associates Tab */}
-        {activeTab === 'associates' && (
-          <div>
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-2">Associates and Close Friends</h3>
-              <p className="text-sm text-gray-600">
-                List close friends, business associates, professional colleagues, and other significant relationships.
-              </p>
-            </div>
-
-            {associates.map((entry, index) => (
-              <AssociateForm key={index} entry={entry} index={index} />
-            ))}
-
-            <button
-              type="button"
-              onClick={addAssociate}
-              className="w-full py-3 px-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-700"
-            >
-              + Add Associate
-            </button>
-          </div>
-        )}
-
-        {/* Validation Errors Summary */}
-        {showValidationErrors && !isValid && validationErrors.length > 0 && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-4">
-            <h4 className="text-sm font-medium text-red-800 mb-2">Please correct the following errors:</h4>
-            <ul className="text-sm text-red-700 list-disc list-inside">
-              {validationErrors.map((error, index) => (
-                <li key={index}>{error}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {/* Form Actions */}
-        <div className="flex justify-between items-center pt-6 border-t border-gray-200">
-          <button
-            type="button"
-            onClick={resetSection}
-            className="px-4 py-2 text-gray-600 hover:text-gray-800 font-medium"
-          >
-            Reset Section
-          </button>
-
-          <div className="flex space-x-4">
-            <span className={`text-sm ${isDirty ? 'text-orange-600' : 'text-green-600'}`}>
-              {isDirty ? 'Unsaved changes' : 'All changes saved'}
-            </span>
-
-            <button
-              type="submit"
-              className={`px-6 py-2 rounded-md font-medium ${
-                isValid
-                  ? 'bg-blue-600 text-white hover:bg-blue-700'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
-              disabled={!isValid}
-            >
-              Save & Continue
-            </button>
-          </div>
+  return (
+    <div className={`section18-component ${className}`}>
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Section 18: Relatives
+          </h2>
+          <p className="text-gray-600">
+            Provide information about your relatives. You can add up to 6 relatives with detailed information for each.
+          </p>
         </div>
-      </form>
+
+        {/* Relative Type Selection - Now handled per entry in Section 18.1 */}
+
+        {/* Relative Navigation */}
+        {relatives.length > 0 && renderRelativeNavigation()}
+
+        {/* Current Relative Form */}
+        {currentRelative && (
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">
+                Entry #{currentRelative.entryNumber}
+              </h3>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => duplicateRelative(currentRelative.entryNumber)}
+                  className="px-3 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                >
+                  Duplicate
+                </button>
+                <button
+                  onClick={() => removeRelative(currentRelative.entryNumber)}
+                  className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200"
+                >
+                  Remove
+                </button>
+              </div>
+            </div>
+
+            {/* Subsection Navigation */}
+            {renderSubsectionNavigation()}
+
+            {/* Subsection Content */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {activeSubsection === 'section18_1' && renderSection18_1(currentRelative)}
+              {activeSubsection === 'section18_2' && (
+                <Section18_2Component
+                  relative={currentRelative}
+                  onFieldUpdate={(fieldPath, value) => handleFieldUpdate(currentRelative, 'section18_2', fieldPath, value)}
+                />
+              )}
+              {activeSubsection === 'section18_3' && (
+                <Section18_3Component
+                  relative={currentRelative}
+                  onFieldUpdate={(fieldPath, value) => handleFieldUpdate(currentRelative, 'section18_3', fieldPath, value)}
+                />
+              )}
+              {activeSubsection === 'section18_5' && (
+                <Section18_5Component
+                  relative={currentRelative}
+                  onFieldUpdate={(fieldPath, value) => handleFieldUpdate(currentRelative, 'section18_5', fieldPath, value)}
+                />
+              )}
+              {activeSubsection === 'section18_4' && renderOtherSubsections(currentRelative, activeSubsection)}
+
+              {/* Validation Errors */}
+              {showValidationErrors && validationErrors.length > 0 && (
+                <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                  <h4 className="text-sm font-medium text-red-800 mb-2">Please fix the following errors:</h4>
+                  <ul className="text-sm text-red-700 space-y-1">
+                    {validationErrors.map((error, index) => (
+                      <li key={index}>• {error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Form Actions */}
+              <div className="flex justify-between pt-6 border-t border-gray-200">
+                <button
+                  type="button"
+                  onClick={resetSection}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                >
+                  Reset Section
+                </button>
+                <div className="flex space-x-3">
+                  <span className={`text-sm ${isComplete ? 'text-green-600' : 'text-gray-500'}`}>
+                    {isComplete ? '✓ Section Complete' : 'Section Incomplete'}
+                  </span>
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500"
+                  >
+                    Continue
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {/* No Relatives Message */}
+        {relatives.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-500 mb-4">No relatives added yet. You can add up to {MAX_RELATIVES} relatives.</p>
+            <button
+              onClick={addRelative}
+              className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              Add First Relative
+            </button>
+          </div>
+        )}
+
+        {/* Maximum Entries Warning */}
+        {relatives.length >= MAX_RELATIVES && (
+          <div className="text-center py-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-yellow-800">
+              Maximum number of relatives ({MAX_RELATIVES}) reached. Remove an existing relative to add a new one.
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -58,11 +58,9 @@ test.describe('Section 20: Field Type Specific Tests', () => {
     test.beforeEach(async ({ page }) => {
     // Navigate to the form
     await page.goto('/startForm');
-      // Wait for the form to load
-    await page.waitForSelector('[data-testid="centralized-sf86-form"]');
     
-    // Expand all sections to make Section 20 visible
-    await page.click('[data-testid="toggle-sections-button"]');
+    // Wait for the form to load
+    await page.waitForSelector('[data-testid="centralized-sf86-form"]');
     
     // Navigate to Section 20
     await page.click('[data-testid="section-section20-button"]');

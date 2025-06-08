@@ -1,212 +1,58 @@
 /**
- * Section 18 Field Generator - Generate Field<T> objects from sections-reference data
- *
- * This module generates properly typed Field<T> objects for Section 18 using the
- * actual PDF field data from section-18.json reference file.
- *
- * FIXED: Now uses correct field names from sections-references JSON
- * Section 18 has 3 subsections with 964 total fields:
- * - Section18_1[0] - Immediate family (323 fields)
- * - Section18_2[0] - Extended family (321 fields)
- * - Section18_3[0] - Associates (320 fields)
+ * Section 18 Field Generator (REDESIGNED)
+ * 
+ * Generates Field<T> objects for Section 18 based on the actual PDF form structure.
+ * The form has 6 relative entries with subsections 18.1-18.5, totaling 964 fields.
+ * 
+ * STRUCTURE:
+ * - 6 Relative Entries (Entry #1-6)
+ * - Section 18.1: Basic relative information
+ * - Section 18.2: Current address for living relatives
+ * - Section 18.3: Citizenship documentation for US citizens
+ * - Section 18.4: Documentation for non-US citizens with US address
+ * - Section 18.5: Contact info for non-US citizens with foreign address
  */
 
 import { createFieldFromReference } from '../../../../api/utils/sections-references-loader';
+import { generateAdvancedField, generateSection18FieldPattern } from '../../../../api/utils/advanced-field-generators';
+import { resolveFieldPathFromConfig, debugFieldMapping } from '../../../../api/utils/enhanced-pdf-field-mapping';
 import type { Field, FieldWithOptions } from '../../../../api/interfaces/formDefinition2.0';
+import type {
+  RelativeEntry,
+  Section18_1,
+  Section18_2,
+  Section18_3,
+  Section18_4,
+  Section18_5,
+  DateField,
+  FullNameField,
+  AddressField,
+  APOFPOAddressField,
+  ContactMethodsField,
+  ContactFrequencyField,
+  EmploymentInfoField,
+  ForeignGovernmentRelationsField,
+  ContactDatesField,
+  DocumentationTypesField,
+  OtherNameField,
+  EmploymentField
+} from '../../../../api/interfaces/sections2.0/Section18';
 
 // ============================================================================
-// SUBSECTION MAPPING
+// FIELD OPTIONS
 // ============================================================================
 
-export type Section18SubsectionKey = 'immediateFamily' | 'extendedFamily' | 'associates';
-
-const SUBSECTION_PDF_MAP: Record<Section18SubsectionKey, string> = {
-  immediateFamily: 'Section18_1[0]',    // All fields are under Section18_1[0]
-  extendedFamily: 'Section18_1[0]',     // All fields are under Section18_1[0]
-  associates: 'Section18_1[0]'          // All fields are under Section18_1[0]
-};
-
-// ============================================================================
-// ACTUAL FIELD MAPPINGS FROM SECTIONS-REFERENCES
-// ============================================================================
-
-/**
- * Maps field types to their actual PDF field names from sections-references
- * FIXED: All fields are under Section18_1[0] according to sections-references
- * Using actual field names found in api/sections-references/section-18.json
- */
-const ACTUAL_FIELD_MAPPINGS = {
-  // All subsections use the same Section18_1[0] prefix since that's what exists in the PDF
-  immediateFamily: {
-    'relationship': 'form1[0].Section18_1[0].DropDownList5[0]',
-    'fullName.firstName': 'form1[0].Section18_1[0].TextField11[3]',
-    'fullName.lastName': 'form1[0].Section18_1[0].TextField11[2]',
-    'fullName.middleName': 'form1[0].Section18_1[0].TextField11[1]',
-    'fullName.suffix': 'form1[0].Section18_1[0].suffix[0]',
-    'placeOfBirth.city': 'form1[0].Section18_1[0].TextField11[0]',
-    'placeOfBirth.state': 'form1[0].Section18_1[0].School6_State[0]',
-    'placeOfBirth.country': 'form1[0].Section18_1[0].DropDownList24[0]',
-    'citizenship': 'form1[0].Section18_1[0].DropDownList12[0]',
-    'citizenshipCountry': 'form1[0].Section18_1[0].DropDownList12[1]',
-    'otherNames.hasOtherNames': 'form1[0].Section18_1[0].RadioButtonList[0]',
-    // Employment fields - using Section18_3[0] for employment data
-    'currentEmployment.isEmployed': 'form1[0].Section18_3[0].RadioButtonList[0]',
-    'currentEmployment.employerName': 'form1[0].Section18_3[0].TextField11[1]',
-    'currentEmployment.position': 'form1[0].Section18_3[0].TextField11[6]',
-    'currentEmployment.address.street': 'form1[0].Section18_3[0].#area[0].TextField11[2]',
-    'currentEmployment.address.city': 'form1[0].Section18_3[0].TextField11[14]',
-    'currentEmployment.address.state': 'form1[0].Section18_3[0].#area[0].School6_State[0]',
-    'currentEmployment.address.country': 'form1[0].Section18_3[0].#area[0].DropDownList28[0]',
-    'currentEmployment.address.zipCode': 'form1[0].Section18_3[0].TextField11[15]',
-    'currentEmployment.phone': 'form1[0].Section18_3[0].TextField11[13]',
-    'hasGovernmentAffiliation': 'form1[0].Section18_3[0].RadioButtonList[1]'
-  },
-
-  // Extended family uses same field structure but different indices
-  extendedFamily: {
-    'relationship': 'form1[0].Section18_1[0].DropDownList5[0]',
-    'fullName.firstName': 'form1[0].Section18_1[0].TextField11[8]',
-    'fullName.lastName': 'form1[0].Section18_1[0].TextField11[5]',
-    'fullName.middleName': 'form1[0].Section18_1[0].TextField11[7]',
-    'fullName.suffix': 'form1[0].Section18_1[0].suffix[1]',
-    'placeOfBirth.city': 'form1[0].Section18_1[0].TextField11[0]',
-    'placeOfBirth.state': 'form1[0].Section18_1[0].School6_State[0]',
-    'placeOfBirth.country': 'form1[0].Section18_1[0].DropDownList24[0]',
-    'citizenship': 'form1[0].Section18_1[0].DropDownList12[0]',
-    'citizenshipCountry': 'form1[0].Section18_1[0].DropDownList12[1]',
-    'otherNames.hasOtherNames': 'form1[0].Section18_1[0].RadioButtonList[1]',
-    // Employment fields for extended family
-    'currentEmployment.isEmployed': 'form1[0].Section18_3[1].RadioButtonList[0]',
-    'currentEmployment.employerName': 'form1[0].Section18_3[1].TextField11[1]',
-    'currentEmployment.position': 'form1[0].Section18_3[1].TextField11[6]',
-    'currentEmployment.address.street': 'form1[0].Section18_3[1].#area[0].TextField11[2]',
-    'currentEmployment.address.city': 'form1[0].Section18_3[1].TextField11[14]',
-    'currentEmployment.address.state': 'form1[0].Section18_3[1].#area[0].School6_State[0]',
-    'currentEmployment.address.country': 'form1[0].Section18_3[1].#area[0].DropDownList28[0]',
-    'currentEmployment.address.zipCode': 'form1[0].Section18_3[1].TextField11[15]',
-    'currentEmployment.phone': 'form1[0].Section18_3[1].TextField11[13]',
-    'hasGovernmentAffiliation': 'form1[0].Section18_3[1].RadioButtonList[1]'
-  },
-
-  // Associates use same field structure but different indices
-  associates: {
-    'associateType': 'form1[0].Section18_1[0].DropDownList5[0]',
-    'fullName.firstName': 'form1[0].Section18_1[0].TextField11[6]',
-    'fullName.lastName': 'form1[0].Section18_1[0].TextField11[5]',
-    'fullName.middleName': 'form1[0].Section18_1[0].TextField11[4]',
-    'fullName.suffix': 'form1[0].Section18_1[0].suffix[2]',
-    'placeOfBirth.city': 'form1[0].Section18_1[0].TextField11[0]',
-    'placeOfBirth.state': 'form1[0].Section18_1[0].School6_State[0]',
-    'placeOfBirth.country': 'form1[0].Section18_1[0].DropDownList24[0]',
-    'citizenship': 'form1[0].Section18_1[0].DropDownList12[0]',
-    'citizenshipCountry': 'form1[0].Section18_1[0].DropDownList12[1]',
-    'otherNames.hasOtherNames': 'form1[0].Section18_1[0].RadioButtonList[2]',
-    // Employment fields for associates
-    'currentEmployment.isEmployed': 'form1[0].Section18_3[2].RadioButtonList[0]',
-    'currentEmployment.employerName': 'form1[0].Section18_3[2].TextField11[1]',
-    'currentEmployment.position': 'form1[0].Section18_3[2].TextField11[6]',
-    'currentEmployment.address.street': 'form1[0].Section18_3[2].#area[0].TextField11[2]',
-    'currentEmployment.address.city': 'form1[0].Section18_3[2].TextField11[14]',
-    'currentEmployment.address.state': 'form1[0].Section18_3[2].#area[0].School6_State[0]',
-    'currentEmployment.address.country': 'form1[0].Section18_3[2].#area[0].DropDownList28[0]',
-    'currentEmployment.address.zipCode': 'form1[0].Section18_3[2].TextField11[15]',
-    'currentEmployment.phone': 'form1[0].Section18_3[2].TextField11[13]',
-    'hasGovernmentAffiliation': 'form1[0].Section18_3[2].RadioButtonList[1]'
-  }
-};
-
-/**
- * Generate a Field<T> object using actual field names from sections-references
- * FIXED: Now uses correct field names that exist in the PDF
- */
-export function generateField<T = any>(
-  subsectionKey: Section18SubsectionKey,
-  fieldType: string,
-  defaultValue: T,
-  options?: readonly string[]
-): Field<T> | FieldWithOptions<T> {
-  // Get the actual PDF field name from our corrected mappings
-  const fieldMapping = ACTUAL_FIELD_MAPPINGS[subsectionKey];
-  const pdfFieldName = fieldMapping?.[fieldType];
-
-  if (!pdfFieldName) {
-    // console.warn(`No field mapping found for ${subsectionKey}.${fieldType}`);
-    // Return a fallback field
-    return {
-      id: '0000',
-      name: `form1[0].${SUBSECTION_PDF_MAP[subsectionKey]}.unknown`,
-      type: 'PDFTextField',
-      label: `${subsectionKey} ${fieldType}`,
-      value: defaultValue,
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    } as Field<T>;
-  }
-
-  try {
-    // console.log(`🔍 Generating field for ${subsectionKey}.${fieldType} using PDF field: ${pdfFieldName}`);
-    const field = createFieldFromReference(18, pdfFieldName, defaultValue);
-
-    if (options && options.length > 0) {
-      return {
-        ...field,
-        options
-      } as FieldWithOptions<T>;
-    }
-
-    return field as Field<T>;
-  } catch (error) {
-    console.warn(`Failed to generate field for ${subsectionKey}.${fieldType} with PDF field ${pdfFieldName}:`, error);
-
-    // Fallback field structure
-    const fallbackField: Field<T> = {
-      id: '0000',
-      name: pdfFieldName,
-      type: 'PDFTextField',
-      label: `${subsectionKey} ${fieldType}`,
-      value: defaultValue,
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    };
-
-    if (options && options.length > 0) {
-      return {
-        ...fallbackField,
-        options
-      } as FieldWithOptions<T>;
-    }
-
-    return fallbackField;
-  }
-}
-
-/**
- * Generate multiple fields for a subsection
- */
-export function generateFieldsForSubsection<T = any>(
-  subsectionKey: Section18SubsectionKey,
-  fieldConfigs: Record<string, { defaultValue: T; options?: readonly string[] }>
-): Record<string, Field<T> | FieldWithOptions<T>> {
-  const fields: Record<string, Field<T> | FieldWithOptions<T>> = {};
-
-  Object.entries(fieldConfigs).forEach(([fieldType, config]) => {
-    const fieldKey = fieldType.split('.').pop() || fieldType;
-    fields[fieldKey] = generateField(subsectionKey, fieldType, config.defaultValue, config.options);
-  });
-
-  return fields;
-}
-
-/**
- * Common field options for Section 18
- */
 export const SECTION18_OPTIONS = {
   YES_NO: ['YES', 'NO'] as const,
+  YES_NO_DONT_KNOW: ['YES', 'NO', "I don't know"] as const,
   SUFFIX: ['Jr', 'Sr', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII', 'IX', 'X', 'Other'] as const,
-  IMMEDIATE_FAMILY_RELATIONSHIP: [
+
+  RELATIVE_TYPES: [
     'Mother',
     'Father',
     'Stepmother',
     'Stepfather',
-    'Foster Parent',
+    'Foster parent',
     'Child (including adopted/foster)',
     'Stepchild',
     'Brother',
@@ -219,38 +65,22 @@ export const SECTION18_OPTIONS = {
     'Mother-in-law',
     'Guardian'
   ] as const,
-  EXTENDED_FAMILY_RELATIONSHIP: [
-    'Aunt',
-    'Uncle',
-    'Niece',
-    'Nephew',
-    'Cousin',
-    'Grandparent',
-    'Grandchild',
-    'Other relative'
-  ] as const,
-  ASSOCIATE_TYPE: [
-    'Adult who lived in your household',
-    'Business associate',
-    'Friend',
-    'Neighbor',
-    'School associate',
+
+  CITIZENSHIP_DOCUMENTATION: [
+    'FS 240 or 545',
+    'Certificate of Naturalization',
+    'Certificate of Citizenship',
+    'U.S. Passport',
     'Other'
   ] as const,
-  CITIZENSHIP: [
-    'United States',
-    'Afghanistan',
-    'Albania',
-    'Algeria'
-    // ... (truncated for brevity, full list available in sections-reference)
+
+  NON_US_DOCUMENTATION: [
+    'I-551 Permanent Resident',
+    'I-94 Arrival/Departure Record',
+    'Visa',
+    'Other'
   ] as const,
-  STATES: [
-    'AK', 'AL', 'AR', 'AS', 'AZ', 'CA', 'CO', 'CT', 'DC', 'DE', 'FL', 'FM',
-    'GA', 'GU', 'HI', 'IA', 'ID', 'IL', 'IN', 'KS', 'KY', 'LA', 'MA', 'MD',
-    'ME', 'MH', 'MI', 'MN', 'MO', 'MP', 'MS', 'MT', 'NC', 'ND', 'NE', 'NH',
-    'NJ', 'NM', 'NV', 'NY', 'OH', 'OK', 'OR', 'PA', 'PR', 'PW', 'RI', 'SC',
-    'SD', 'TN', 'TX', 'UT', 'VA', 'VI', 'VT', 'WA', 'WI', 'WV', 'WY'
-  ] as const,
+
   CONTACT_FREQUENCY: [
     'Daily',
     'Weekly',
@@ -258,271 +88,557 @@ export const SECTION18_OPTIONS = {
     'Quarterly',
     'Annually',
     'Other'
+  ] as const,
+
+  STATES: [
+    'AK', 'AL', 'AR', 'AS', 'AZ', 'CA', 'CO', 'CT', 'DC', 'DE', 'FL', 'FM',
+    'GA', 'GU', 'HI', 'IA', 'ID', 'IL', 'IN', 'KS', 'KY', 'LA', 'MA', 'MD',
+    'ME', 'MH', 'MI', 'MN', 'MO', 'MP', 'MS', 'MT', 'NC', 'ND', 'NE', 'NH',
+    'NJ', 'NM', 'NV', 'NY', 'OH', 'OK', 'OR', 'PA', 'PR', 'PW', 'RI', 'SC',
+    'SD', 'TN', 'TX', 'UT', 'VA', 'VI', 'VT', 'WA', 'WI', 'WV', 'WY'
+  ] as const,
+
+  COUNTRIES: [
+    'United States',
+    'Afghanistan',
+    'Albania',
+    'Algeria',
+    'Andorra',
+    'Angola',
+    // ... (full list would be expanded from reference data)
   ] as const
 };
 
+// ============================================================================
+// FIELD GENERATION UTILITIES
+// ============================================================================
+
 /**
- * Generate a complete immediate family entry with proper field mappings
- * FIXED: Now uses correct subsection key and field types
+ * Generate a basic field with enhanced mapping and fallback
  */
-export function generateImmediateFamilyEntry(entryIndex: number = 0) {
+function generateField<T = any>(
+  fieldName: string,
+  defaultValue: T,
+  options?: readonly string[]
+): FieldWithOptions<T> {
+  console.log(`🔄 Section18: Generating field for: ${fieldName}`);
+
+  // Try enhanced field generation first
+  try {
+    const enhancedField = generateAdvancedField(18, fieldName, defaultValue, options);
+    console.log(`✅ Section18: Enhanced field generation successful for: ${fieldName}`);
+
+    // Ensure the field has options property
+    return {
+      ...enhancedField,
+      options: options || []
+    } as FieldWithOptions<T>;
+  } catch (enhancedError) {
+    console.warn(`⚠️ Section18: Enhanced field generation failed for ${fieldName}:`, enhancedError);
+  }
+
+  // Fallback to original method
+  try {
+    const field = createFieldFromReference(18, fieldName, defaultValue);
+    console.log(`✅ Section18: Original field generation successful for: ${fieldName}`);
+
+    return {
+      ...field,
+      options: options || []
+    } as FieldWithOptions<T>;
+  } catch (error) {
+    console.warn(`❌ Section18: All field generation methods failed for ${fieldName}:`, error);
+
+    // Debug the field mapping issue
+    const debugInfo = debugFieldMapping(18, fieldName);
+    console.warn(`🔍 Section18: Debug info for ${fieldName}:`, debugInfo);
+
+    // Enhanced fallback field with better metadata
+    const fallbackField: FieldWithOptions<T> = {
+      id: generateFallbackId(fieldName),
+      name: fieldName,
+      type: inferFieldType(fieldName, defaultValue),
+      label: generateFieldLabel(fieldName),
+      value: defaultValue,
+      rect: { x: 0, y: 0, width: 0, height: 0 },
+      options: options || []
+    };
+
+    console.log(`🔄 Section18: Using enhanced fallback field for ${fieldName}:`, fallbackField);
+
+    return fallbackField;
+  }
+}
+
+/**
+ * Generate fallback ID for fields not found in PDF
+ */
+function generateFallbackId(fieldPath: string): string {
+  let hash = 0;
+  for (let i = 0; i < fieldPath.length; i++) {
+    const char = fieldPath.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return Math.abs(hash).toString().padStart(4, '0');
+}
+
+/**
+ * Infer field type from path and default value
+ */
+function inferFieldType(fieldPath: string, defaultValue: any): string {
+  if (typeof defaultValue === 'boolean') return 'PDFCheckBox';
+  if (fieldPath.includes('Date') || fieldPath.includes('date')) return 'PDFTextField';
+  if (fieldPath.includes('DropDown') || fieldPath.includes('dropdown')) return 'PDFDropdown';
+  if (fieldPath.includes('RadioButton') || fieldPath.includes('radio')) return 'PDFRadioGroup';
+  return 'PDFTextField';
+}
+
+/**
+ * Generate human-readable label from field path
+ */
+function generateFieldLabel(fieldPath: string): string {
+  const pathParts = fieldPath.split(/[.\[\]]/);
+  const meaningfulParts = pathParts.filter(part =>
+    part &&
+    !part.match(/^\d+$/) &&
+    !part.includes('form1') &&
+    !part.includes('#field') &&
+    !part.includes('#area')
+  );
+
+  if (meaningfulParts.length > 0) {
+    const lastPart = meaningfulParts[meaningfulParts.length - 1];
+    return lastPart.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+  }
+
+  return `Field ${fieldPath}`;
+}
+
+/**
+ * Generate a date field
+ */
+function generateDateField(baseName: string): DateField {
   return {
-    relationship: generateField('immediateFamily', 'relationship', '', SECTION18_OPTIONS.IMMEDIATE_FAMILY_RELATIONSHIP),
-    isDeceased: generateField('immediateFamily', 'isDeceased', '', SECTION18_OPTIONS.YES_NO),
-    dateOfDeath: {
-      month: generateField('immediateFamily', 'dateOfDeath.month', ''),
-      year: generateField('immediateFamily', 'dateOfDeath.year', '')
-    },
-    dateOfDeathEstimated: generateField('immediateFamily', 'dateOfDeathEstimated', false),
-    fullName: {
-      lastName: generateField('immediateFamily', 'fullName.lastName', ''),
-      firstName: generateField('immediateFamily', 'fullName.firstName', ''),
-      middleName: generateField('immediateFamily', 'fullName.middleName', ''),
-      suffix: generateField('immediateFamily', 'fullName.suffix', '', SECTION18_OPTIONS.SUFFIX)
-    },
-    dateOfBirth: {
-      month: generateField('immediateFamily', 'dateOfBirth.month', ''),
-      year: generateField('immediateFamily', 'dateOfBirth.year', '')
-    },
-    dateOfBirthEstimated: generateField('immediateFamily', 'dateOfBirthEstimated', false),
-    placeOfBirth: {
-      city: generateField('immediateFamily', 'placeOfBirth.city', ''),
-      state: generateField('immediateFamily', 'placeOfBirth.state', '', SECTION18_OPTIONS.STATES),
-      country: generateField('immediateFamily', 'placeOfBirth.country', '', SECTION18_OPTIONS.CITIZENSHIP)
-    },
-    citizenship: generateField('immediateFamily', 'citizenship', '', SECTION18_OPTIONS.CITIZENSHIP),
-    citizenshipCountry: generateField('immediateFamily', 'citizenshipCountry', '', SECTION18_OPTIONS.CITIZENSHIP),
-    currentAddress: {
-      street: generateField('immediateFamily', 'currentAddress.street', ''),
-      city: generateField('immediateFamily', 'currentAddress.city', ''),
-      state: generateField('immediateFamily', 'currentAddress.state', '', SECTION18_OPTIONS.STATES),
-      country: generateField('immediateFamily', 'currentAddress.country', '', SECTION18_OPTIONS.CITIZENSHIP),
-      zipCode: generateField('immediateFamily', 'currentAddress.zipCode', '')
-    },
-    contactInfo: {
-      homePhone: generateField('immediateFamily', 'contactInfo.homePhone', ''),
-      workPhone: generateField('immediateFamily', 'contactInfo.workPhone', ''),
-      cellPhone: generateField('immediateFamily', 'contactInfo.cellPhone', ''),
-      email: generateField('immediateFamily', 'contactInfo.email', '')
-    },
-    otherNames: {
-      hasOtherNames: generateField('immediateFamily', 'otherNames.hasOtherNames', '', SECTION18_OPTIONS.YES_NO),
-      names: [] // Will be populated separately if needed
-    },
-    foreignTravelFrequency: generateField('immediateFamily', 'foreignTravelFrequency', ''),
-    lastContactDate: {
-      month: generateField('immediateFamily', 'lastContactDate.month', ''),
-      year: generateField('immediateFamily', 'lastContactDate.year', '')
-    },
-    lastContactDateEstimated: generateField('immediateFamily', 'lastContactDateEstimated', false),
-    natureOfContact: generateField('immediateFamily', 'natureOfContact', ''),
-    currentEmployment: {
-      isEmployed: generateField('immediateFamily', 'currentEmployment.isEmployed', '', SECTION18_OPTIONS.YES_NO),
-      employerName: generateField('immediateFamily', 'currentEmployment.employerName', ''),
-      position: generateField('immediateFamily', 'currentEmployment.position', ''),
-      address: {
-        street: generateField('immediateFamily', 'currentEmployment.address.street', ''),
-        city: generateField('immediateFamily', 'currentEmployment.address.city', ''),
-        state: generateField('immediateFamily', 'currentEmployment.address.state', '', SECTION18_OPTIONS.STATES),
-        country: generateField('immediateFamily', 'currentEmployment.address.country', '', SECTION18_OPTIONS.CITIZENSHIP),
-        zipCode: generateField('immediateFamily', 'currentEmployment.address.zipCode', '')
-      },
-      phone: generateField('immediateFamily', 'currentEmployment.phone', '')
-    },
-    hasGovernmentAffiliation: generateField('immediateFamily', 'hasGovernmentAffiliation', '', SECTION18_OPTIONS.YES_NO),
-    governmentAffiliation: [] // Will be populated separately if needed
+    month: generateField(`${baseName}_month`, ''),
+    year: generateField(`${baseName}_year`, '')
   };
 }
 
 /**
- * Generate a complete extended family entry with proper field mappings
+ * Generate a full name field
  */
-export function generateExtendedFamilyEntry(entryIndex: number = 0) {
+function generateFullNameField(baseName: string): FullNameField {
   return {
-    relationship: generateField('extendedFamily', 'relationship', '', SECTION18_OPTIONS.EXTENDED_FAMILY_RELATIONSHIP),
-    isDeceased: generateField('extendedFamily', 'isDeceased', '', SECTION18_OPTIONS.YES_NO),
-    dateOfDeath: {
-      month: generateField('extendedFamily', 'dateOfDeath.month', ''),
-      year: generateField('extendedFamily', 'dateOfDeath.year', '')
-    },
-    dateOfDeathEstimated: generateField('extendedFamily', 'dateOfDeathEstimated', false),
-    fullName: {
-      lastName: generateField('extendedFamily', 'fullName.lastName', ''),
-      firstName: generateField('extendedFamily', 'fullName.firstName', ''),
-      middleName: generateField('extendedFamily', 'fullName.middleName', ''),
-      suffix: generateField('extendedFamily', 'fullName.suffix', '', SECTION18_OPTIONS.SUFFIX)
-    },
-    dateOfBirth: {
-      month: generateField('extendedFamily', 'dateOfBirth.month', ''),
-      year: generateField('extendedFamily', 'dateOfBirth.year', '')
-    },
-    dateOfBirthEstimated: generateField('extendedFamily', 'dateOfBirthEstimated', false),
-    placeOfBirth: {
-      city: generateField('extendedFamily', 'placeOfBirth.city', ''),
-      state: generateField('extendedFamily', 'placeOfBirth.state', '', SECTION18_OPTIONS.STATES),
-      country: generateField('extendedFamily', 'placeOfBirth.country', '', SECTION18_OPTIONS.CITIZENSHIP)
-    },
-    citizenship: generateField('extendedFamily', 'citizenship', '', SECTION18_OPTIONS.CITIZENSHIP),
-    citizenshipCountry: generateField('extendedFamily', 'citizenshipCountry', '', SECTION18_OPTIONS.CITIZENSHIP),
-    currentAddress: {
-      street: generateField('extendedFamily', 'currentAddress.street', ''),
-      city: generateField('extendedFamily', 'currentAddress.city', ''),
-      state: generateField('extendedFamily', 'currentAddress.state', '', SECTION18_OPTIONS.STATES),
-      country: generateField('extendedFamily', 'currentAddress.country', '', SECTION18_OPTIONS.CITIZENSHIP),
-      zipCode: generateField('extendedFamily', 'currentAddress.zipCode', '')
-    },
-    contactInfo: {
-      homePhone: generateField('extendedFamily', 'contactInfo.homePhone', ''),
-      workPhone: generateField('extendedFamily', 'contactInfo.workPhone', ''),
-      cellPhone: generateField('extendedFamily', 'contactInfo.cellPhone', ''),
-      email: generateField('extendedFamily', 'contactInfo.email', '')
-    },
-    otherNames: {
-      hasOtherNames: generateField('extendedFamily', 'otherNames.hasOtherNames', '', SECTION18_OPTIONS.YES_NO),
-      names: [] // Will be populated separately if needed
-    },
-    contactFrequency: generateField('extendedFamily', 'contactFrequency', '', SECTION18_OPTIONS.CONTACT_FREQUENCY),
-    lastContactDate: {
-      month: generateField('extendedFamily', 'lastContactDate.month', ''),
-      year: generateField('extendedFamily', 'lastContactDate.year', '')
-    },
-    lastContactDateEstimated: generateField('extendedFamily', 'lastContactDateEstimated', false),
-    foreignTravelFrequency: generateField('extendedFamily', 'foreignTravelFrequency', ''),
-    natureOfContact: generateField('extendedFamily', 'natureOfContact', ''),
-    hasGovernmentAffiliation: generateField('extendedFamily', 'hasGovernmentAffiliation', '', SECTION18_OPTIONS.YES_NO),
-    governmentAffiliation: [] // Will be populated separately if needed
+    lastName: generateField(`${baseName}_lastName`, ''),
+    firstName: generateField(`${baseName}_firstName`, ''),
+    middleName: generateField(`${baseName}_middleName`, ''),
+    suffix: generateField(`${baseName}_suffix`, '', SECTION18_OPTIONS.SUFFIX)
   };
 }
 
 /**
- * Generate a complete associate entry with proper field mappings
+ * Generate an address field
  */
-export function generateAssociateEntry(entryIndex: number = 0) {
+function generateAddressField(baseName: string): AddressField {
   return {
-    associateType: generateField('associates', 'associateType', '', SECTION18_OPTIONS.ASSOCIATE_TYPE),
-    relationshipDescription: generateField('associates', 'relationshipDescription', ''),
-    fullName: {
-      lastName: generateField('associates', 'fullName.lastName', ''),
-      firstName: generateField('associates', 'fullName.firstName', ''),
-      middleName: generateField('associates', 'fullName.middleName', ''),
-      suffix: generateField('associates', 'fullName.suffix', '', SECTION18_OPTIONS.SUFFIX)
-    },
-    dateOfBirth: {
-      month: generateField('associates', 'dateOfBirth.month', ''),
-      year: generateField('associates', 'dateOfBirth.year', '')
-    },
-    dateOfBirthEstimated: generateField('associates', 'dateOfBirthEstimated', false),
-    placeOfBirth: {
-      city: generateField('associates', 'placeOfBirth.city', ''),
-      state: generateField('associates', 'placeOfBirth.state', '', SECTION18_OPTIONS.STATES),
-      country: generateField('associates', 'placeOfBirth.country', '', SECTION18_OPTIONS.CITIZENSHIP)
-    },
-    citizenship: generateField('associates', 'citizenship', '', SECTION18_OPTIONS.CITIZENSHIP),
-    citizenshipCountry: generateField('associates', 'citizenshipCountry', '', SECTION18_OPTIONS.CITIZENSHIP),
-    currentAddress: {
-      street: generateField('associates', 'currentAddress.street', ''),
-      city: generateField('associates', 'currentAddress.city', ''),
-      state: generateField('associates', 'currentAddress.state', '', SECTION18_OPTIONS.STATES),
-      country: generateField('associates', 'currentAddress.country', '', SECTION18_OPTIONS.CITIZENSHIP),
-      zipCode: generateField('associates', 'currentAddress.zipCode', '')
-    },
-    contactInfo: {
-      homePhone: generateField('associates', 'contactInfo.homePhone', ''),
-      workPhone: generateField('associates', 'contactInfo.workPhone', ''),
-      cellPhone: generateField('associates', 'contactInfo.cellPhone', ''),
-      email: generateField('associates', 'contactInfo.email', '')
-    },
-    otherNames: {
-      hasOtherNames: generateField('associates', 'otherNames.hasOtherNames', '', SECTION18_OPTIONS.YES_NO),
-      names: [] // Will be populated separately if needed
-    },
-    howMet: generateField('associates', 'howMet', ''),
-    whenMet: {
-      month: generateField('associates', 'whenMet.month', ''),
-      year: generateField('associates', 'whenMet.year', '')
-    },
-    whenMetEstimated: generateField('associates', 'whenMetEstimated', false),
-    frequencyOfContact: generateField('associates', 'frequencyOfContact', '', SECTION18_OPTIONS.CONTACT_FREQUENCY),
-    lastContactDate: {
-      month: generateField('associates', 'lastContactDate.month', ''),
-      year: generateField('associates', 'lastContactDate.year', '')
-    },
-    lastContactDateEstimated: generateField('associates', 'lastContactDateEstimated', false),
-    personalRelationship: generateField('associates', 'personalRelationship', false),
-    businessRelationship: generateField('associates', 'businessRelationship', false),
-    professionalRelationship: generateField('associates', 'professionalRelationship', false),
-    otherRelationship: generateField('associates', 'otherRelationship', false),
-    otherRelationshipDescription: generateField('associates', 'otherRelationshipDescription', ''),
-    currentEmployment: {
-      isEmployed: generateField('associates', 'currentEmployment.isEmployed', '', SECTION18_OPTIONS.YES_NO),
-      employerName: generateField('associates', 'currentEmployment.employerName', ''),
-      position: generateField('associates', 'currentEmployment.position', ''),
-      address: {
-        street: generateField('associates', 'currentEmployment.address.street', ''),
-        city: generateField('associates', 'currentEmployment.address.city', ''),
-        state: generateField('associates', 'currentEmployment.address.state', '', SECTION18_OPTIONS.STATES),
-        country: generateField('associates', 'currentEmployment.address.country', '', SECTION18_OPTIONS.CITIZENSHIP),
-        zipCode: generateField('associates', 'currentEmployment.address.zipCode', '')
-      },
-      phone: generateField('associates', 'currentEmployment.phone', '')
-    },
-    hasGovernmentAffiliation: generateField('associates', 'hasGovernmentAffiliation', '', SECTION18_OPTIONS.YES_NO),
-    governmentAffiliation: [], // Will be populated separately if needed
-    hasForeignConnections: generateField('associates', 'hasForeignConnections', '', SECTION18_OPTIONS.YES_NO),
-    foreignConnections: [] // Will be populated separately if needed
+    street: generateField(`${baseName}_street`, ''),
+    city: generateField(`${baseName}_city`, ''),
+    state: generateField(`${baseName}_state`, '', SECTION18_OPTIONS.STATES),
+    zipCode: generateField(`${baseName}_zipCode`, ''),
+    country: generateField(`${baseName}_country`, '', SECTION18_OPTIONS.COUNTRIES)
   };
 }
 
 /**
- * Validate that all expected fields are mapped correctly
+ * Generate other name field (4 entries per relative)
+ * Based on actual PDF field structure analysis
  */
-export function validateSection18FieldMappings(): { isValid: boolean; errors: string[] } {
-  const errors: string[] = [];
+function generateOtherNameField(entryNumber: number, otherNameIndex: number): OtherNameField {
+  // Entry numbers in PDF are 0-based: Entry #1 = [0], Entry #2 = [1], etc.
+  const pdfEntryIndex = entryNumber - 1;
 
-  // Check that all subsections have field mappings
-  const subsections: Section18SubsectionKey[] = ['immediateFamily', 'extendedFamily', 'associates'];
+  // Other name indices: #1 = index 0, #2 = index 1, #3 = index 2, #4 = index 3
+  const otherNamePdfIndex = otherNameIndex - 1;
 
-  subsections.forEach(subsection => {
-    const mapping = ACTUAL_FIELD_MAPPINGS[subsection];
-    if (!mapping) {
-      errors.push(`Missing field mapping for subsection: ${subsection}`);
-      return;
+  // PDF field mapping based on section-18.json analysis:
+  // Other Name #1: TextField11[6,4,9], suffix[1], #area[0], #field[22,23,24]
+  // Other Name #2: TextField11[11,10,12], suffix[3], #area[1], #field[31,32,33]
+  // Other Name #3: TextField11[14,13,15], suffix[4], #area[2], #field[40,41,42]
+  // Other Name #4: TextField11[17,16,18], suffix[5], #area[3], #field[49,50,51]
+
+  const fieldMappings = [
+    // Other Name #1
+    {
+      firstName: 6, middleName: 4, lastName: 9, suffix: 1, area: 0,
+      fromEstimate: 22, toEstimate: 23, present: 24, reasonIndex: 19
+    },
+    // Other Name #2
+    {
+      firstName: 11, middleName: 10, lastName: 12, suffix: 3, area: 1,
+      fromEstimate: 31, toEstimate: 32, present: 33, reasonIndex: 20
+    },
+    // Other Name #3
+    {
+      firstName: 14, middleName: 13, lastName: 15, suffix: 4, area: 2,
+      fromEstimate: 40, toEstimate: 41, present: 42, reasonIndex: 21
+    },
+    // Other Name #4
+    {
+      firstName: 17, middleName: 16, lastName: 18, suffix: 5, area: 3,
+      fromEstimate: 49, toEstimate: 50, present: 51, reasonIndex: 22
     }
+  ];
 
-    // Check that essential fields are mapped
-    let essentialFields = ['fullName.firstName', 'fullName.lastName'];
-
-    // Different subsections have different relationship field names
-    if (subsection === 'associates') {
-      essentialFields.push('associateType');
-    } else {
-      essentialFields.push('relationship');
-    }
-
-    essentialFields.forEach(field => {
-      if (!mapping[field]) {
-        errors.push(`Missing essential field mapping: ${subsection}.${field}`);
-      }
-    });
-
-    // Check that employment fields are mapped (these were causing the console errors)
-    const employmentFields = [
-      'currentEmployment.isEmployed',
-      'currentEmployment.employerName',
-      'currentEmployment.position',
-      'currentEmployment.address.street',
-      'currentEmployment.phone',
-      'hasGovernmentAffiliation'
-    ];
-    employmentFields.forEach(field => {
-      if (!mapping[field]) {
-        errors.push(`Missing employment field mapping: ${subsection}.${field}`);
-      }
-    });
-  });
+  const mapping = fieldMappings[otherNamePdfIndex];
 
   return {
-    isValid: errors.length === 0,
-    errors
+    fullName: {
+      firstName: generateField(`form1[0].Section18_1[${pdfEntryIndex}].TextField11[${mapping.firstName}]`, ''),
+      middleName: generateField(`form1[0].Section18_1[${pdfEntryIndex}].TextField11[${mapping.middleName}]`, ''),
+      lastName: generateField(`form1[0].Section18_1[${pdfEntryIndex}].TextField11[${mapping.lastName}]`, ''),
+      suffix: generateField(`form1[0].Section18_1[${pdfEntryIndex}].suffix[${mapping.suffix}]`, '', SECTION18_OPTIONS.SUFFIX)
+    },
+    timeUsed: {
+      from: {
+        month: generateField(`form1[0].Section18_1[${pdfEntryIndex}].#area[${mapping.area}].From_Datefield_Name_2[${otherNamePdfIndex}]`, ''),
+        year: generateField(`form1[0].Section18_1[${pdfEntryIndex}].#area[${mapping.area}].From_Datefield_Name_2[${otherNamePdfIndex}]`, ''),
+        isEstimated: generateField(`form1[0].Section18_1[${pdfEntryIndex}].#field[${mapping.fromEstimate}]`, false)
+      },
+      to: {
+        month: generateField(`form1[0].Section18_1[${pdfEntryIndex}].#area[${mapping.area}].To_Datefield_Name_2[${otherNamePdfIndex}]`, ''),
+        year: generateField(`form1[0].Section18_1[${pdfEntryIndex}].#area[${mapping.area}].To_Datefield_Name_2[${otherNamePdfIndex}]`, ''),
+        isEstimated: generateField(`form1[0].Section18_1[${pdfEntryIndex}].#field[${mapping.toEstimate}]`, false)
+      },
+      isPresent: generateField(`form1[0].Section18_1[${pdfEntryIndex}].#field[${mapping.present}]`, false),
+      isEstimated: generateField(`form1[0].Section18_1[${pdfEntryIndex}].#field[${mapping.fromEstimate}]`, false) // Use from estimate as general estimate
+    },
+    reasonForChange: generateField(`form1[0].Section18_1[${pdfEntryIndex}].TextField11[${mapping.reasonIndex}]`, ''),
+    isApplicable: generateField(`form1[0].Section18_1[${pdfEntryIndex}].#field[2]`, false) // "Not applicable" checkbox
   };
 }
+
+/**
+ * Generate employment field
+ */
+function generateEmploymentField(baseName: string): EmploymentField {
+  return {
+    employer: generateField(`${baseName}_employer`, ''),
+    position: generateField(`${baseName}_position`, ''),
+    address: generateAddressField(`${baseName}_address`),
+    phone: generateField(`${baseName}_phone`, ''),
+    isCurrentlyEmployed: generateField(`${baseName}_isCurrentlyEmployed`, '', SECTION18_OPTIONS.YES_NO),
+    dontKnow: generateField(`${baseName}_dontKnow`, false)
+  };
+}
+
+// ============================================================================
+// SUBSECTION GENERATORS
+// ============================================================================
+
+/**
+ * Generate Section 18.1 fields (Basic relative information)
+ */
+function generateSection18_1(entryNumber: number): Section18_1 {
+  // Use actual PDF field names from section-18.json
+  // Entry numbers in PDF are 0-based: Entry #1 = [0], Entry #2 = [1], etc.
+  const pdfEntryIndex = entryNumber - 1;
+
+  // Determine the correct section path based on entry number
+  let relativeTypeFieldPath: string;
+  if (entryNumber === 1) {
+    relativeTypeFieldPath = `form1[0].Section18_1[0].DropDownList5[0]`;
+  } else {
+    // Entries 2-6 use Section18_1_1[x] pattern
+    relativeTypeFieldPath = `form1[0].Section18_1_1[${pdfEntryIndex - 1}].DropDownList5[0]`;
+  }
+
+  return {
+    relativeType: generateField(relativeTypeFieldPath, '', SECTION18_OPTIONS.RELATIVE_TYPES),
+    fullName: {
+      firstName: generateField(`form1[0].Section18_1[${pdfEntryIndex}].TextField11[3]`, ''),
+      middleName: generateField(`form1[0].Section18_1[${pdfEntryIndex}].TextField11[1]`, ''),
+      lastName: generateField(`form1[0].Section18_1[${pdfEntryIndex}].TextField11[2]`, ''),
+      suffix: generateField(`form1[0].Section18_1[${pdfEntryIndex}].suffix[0]`, '', ['Jr', 'Sr', 'II', 'III', 'IV', 'V'])
+    },
+    mothersMaidenName: {
+      sameAsListed: generateField(`form1[0].Section18_1[${pdfEntryIndex}].#field[3]`, false),
+      dontKnow: generateField(`form1[0].Section18_1[${pdfEntryIndex}].#field[4]`, false),
+      maidenName: {
+        firstName: generateField(`form1[0].Section18_1[${pdfEntryIndex}].TextField11[4]`, ''),
+        middleName: generateField(`form1[0].Section18_1[${pdfEntryIndex}].TextField11[5]`, ''),
+        lastName: generateField(`form1[0].Section18_1[${pdfEntryIndex}].TextField11[6]`, ''),
+        suffix: generateField(`form1[0].Section18_1[${pdfEntryIndex}].suffix[1]`, '', ['Jr', 'Sr', 'II', 'III', 'IV', 'V'])
+      }
+    },
+    otherNames: [
+      generateOtherNameField(entryNumber, 1),
+      generateOtherNameField(entryNumber, 2),
+      generateOtherNameField(entryNumber, 3),
+      generateOtherNameField(entryNumber, 4)
+    ],
+    dateOfBirth: {
+      month: generateField(`form1[0].Section18_1[${pdfEntryIndex}].From_Datefield_Name_2[0]`, ''),
+      year: generateField(`form1[0].Section18_1[${pdfEntryIndex}].From_Datefield_Name_2[1]`, '')
+    },
+    dateOfBirthEstimated: generateField(`form1[0].Section18_1[${pdfEntryIndex}].#field[1]`, false),
+    placeOfBirth: {
+      city: generateField(`form1[0].Section18_1[${pdfEntryIndex}].TextField11[0]`, ''),
+      state: generateField(`form1[0].Section18_1[${pdfEntryIndex}].School6_State[0]`, '', SECTION18_OPTIONS.STATES),
+      country: generateField(`form1[0].Section18_1[${pdfEntryIndex}].DropDownList24[0]`, '', SECTION18_OPTIONS.COUNTRIES)
+    },
+    citizenship: {
+      countries: [
+        generateField(`form1[0].Section18_1[${pdfEntryIndex}].DropDownList24[0]`, '', SECTION18_OPTIONS.COUNTRIES),
+        generateField(`form1[0].Section18_1[${pdfEntryIndex}].DropDownList24[1]`, '', SECTION18_OPTIONS.COUNTRIES)
+      ]
+    }
+  };
+}
+
+/**
+ * Generate Section 18.2 fields (Current address for living relatives)
+ */
+function generateSection18_2(entryNumber: number): Section18_2 {
+  // Use actual PDF field names from section-18.json
+  // Entry numbers in PDF are 0-based: Entry #1 = [0], Entry #2 = [1], etc.
+  const pdfEntryIndex = entryNumber - 1;
+
+  return {
+    isApplicable: generateField(`form1[0].Section18_2[${pdfEntryIndex}].RadioButtonList[0]`, false),
+    currentAddress: {
+      street: generateField(`form1[0].Section18_2[${pdfEntryIndex}].TextField11[6]`, ''),
+      city: generateField(`form1[0].Section18_2[${pdfEntryIndex}].TextField11[7]`, ''),
+      state: generateField(`form1[0].Section18_2[${pdfEntryIndex}].School6_State[2]`, '', SECTION18_OPTIONS.STATES),
+      zipCode: generateField(`form1[0].Section18_2[${pdfEntryIndex}].TextField11[8]`, ''),
+      country: generateField(`form1[0].Section18_2[${pdfEntryIndex}].DropDownList26[0]`, '', SECTION18_OPTIONS.COUNTRIES)
+    },
+    hasAPOFPOAddress: generateField(`form1[0].Section18_2[${pdfEntryIndex}].RadioButtonList[1]`, '', SECTION18_OPTIONS.YES_NO),
+    apoFpoAddress: {
+      address: generateField(`form1[0].Section18_2[${pdfEntryIndex}].TextField11[4]`, ''),
+      apoFpo: generateField(`form1[0].Section18_2[${pdfEntryIndex}].TextField11[5]`, ''),
+      stateCode: generateField(`form1[0].Section18_2[${pdfEntryIndex}].School6_State[1]`, '', SECTION18_OPTIONS.STATES),
+      zipCode: generateField(`form1[0].Section18_2[${pdfEntryIndex}].TextField11[3]`, '')
+    }
+  };
+}
+
+/**
+ * Generate Section 18.3 fields (Contact Information and Foreign Relations)
+ */
+function generateSection18_3(entryNumber: number): Section18_3 {
+  // Use actual PDF field names from section-18.json
+  // Entry numbers in PDF are 0-based: Entry #1 = [0], Entry #2 = [1], etc.
+  const pdfEntryIndex = entryNumber - 1;
+
+  return {
+    isApplicable: generateField(`form1[0].Section18_3[${pdfEntryIndex}].RadioButtonList[0]`, false),
+    contactMethods: {
+      inPerson: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[4]`, false),
+      telephone: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[2]`, false),
+      electronic: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[3]`, false),
+      writtenCorrespondence: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[5]`, false),
+      other: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[6]`, false),
+      otherExplanation: generateField(`form1[0].Section18_3[${pdfEntryIndex}].TextField11[5]`, '')
+    },
+    contactFrequency: {
+      daily: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[9]`, false),
+      weekly: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[10]`, false),
+      monthly: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[7]`, false),
+      quarterly: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[13]`, false),
+      annually: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[8]`, false),
+      other: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[12]`, false),
+      otherExplanation: generateField(`form1[0].Section18_3[${pdfEntryIndex}].TextField11[0]`, '')
+    },
+    employmentInfo: {
+      employerName: generateField(`form1[0].Section18_3[${pdfEntryIndex}].TextField11[1]`, ''),
+      dontKnowEmployer: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[15]`, false),
+      employerAddress: {
+        street: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#area[0].TextField11[2]`, ''),
+        city: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#area[0].TextField11[3]`, ''),
+        state: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#area[0].School6_State[0]`, '', SECTION18_OPTIONS.STATES),
+        country: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#area[0].DropDownList28[0]`, '', SECTION18_OPTIONS.COUNTRIES),
+        zipCode: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#area[0].TextField11[4]`, ''),
+        dontKnowAddress: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#area[0].#field[21]`, false)
+      }
+    },
+    foreignGovernmentRelations: {
+      hasRelations: generateField(`form1[0].Section18_3[${pdfEntryIndex}].RadioButtonList[0]`, '', ['YES', 'NO', "I don't know"]),
+      description: generateField(`form1[0].Section18_3[${pdfEntryIndex}].TextField11[6]`, '')
+    },
+    contactDates: {
+      firstContact: {
+        date: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#area[1].From_Datefield_Name_2[0]`, ''),
+        isEstimate: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#area[1].#field[25]`, false)
+      },
+      lastContact: {
+        date: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#area[1].From_Datefield_Name_2[1]`, ''),
+        isEstimate: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#area[1].#field[28]`, false),
+        isPresent: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#area[1].#field[27]`, false)
+      }
+    },
+    documentationTypes: {
+      i551PermanentResident: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[30]`, false),
+      i766EmploymentAuth: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[29]`, false),
+      usVisa: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[32]`, false),
+      i94ArrivalDeparture: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[35]`, false),
+      i20StudentCertificate: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[33]`, false),
+      ds2019ExchangeVisitor: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[34]`, false),
+      other: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[31]`, false),
+      otherExplanation: generateField(`form1[0].Section18_3[${pdfEntryIndex}].TextField11[14]`, ''),
+      documentNumber: generateField(`form1[0].Section18_3[${pdfEntryIndex}].TextField11[7]`, ''),
+      expirationDate: generateField(`form1[0].Section18_3[${pdfEntryIndex}].From_Datefield_Name_2[4]`, ''),
+      expirationIsEstimate: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[65]`, false)
+    }
+  };
+}
+
+/**
+ * Generate Section 18.4 fields (Documentation for non-US citizens with US address)
+ */
+function generateSection18_4(entryNumber: number): Section18_4 {
+  // Use actual PDF field names from section-18.json
+  const pdfEntryIndex = entryNumber - 1;
+
+  return {
+    isApplicable: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[30]`, false),
+    documentationType: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[20]`, '', SECTION18_OPTIONS.NON_US_DOCUMENTATION),
+    documentNumber: generateField(`form1[0].Section18_3[${pdfEntryIndex}].TextField11[10]`, '')
+  };
+}
+
+/**
+ * Generate Section 18.5 fields (Contact info for non-US citizens with foreign address)
+ * Based on actual PDF field structure from section-18.json
+ */
+function generateSection18_5(entryNumber: number): Section18_5 {
+  // Use actual PDF field names from section-18.json
+  const pdfEntryIndex = entryNumber - 1;
+
+  return {
+    // Contact dates
+    firstContactDate: {
+      month: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#area[1].From_Datefield_Name_2[0]`, ''),
+      year: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#area[1].From_Datefield_Name_2[1]`, '')
+    },
+    firstContactDateEstimated: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[25]`, false),
+    lastContactDate: {
+      month: generateField(`form1[0].Section18_3[${pdfEntryIndex}].From_Datefield_Name_2[3]`, ''),
+      year: generateField(`form1[0].Section18_3[${pdfEntryIndex}].From_Datefield_Name_2[3]`, '')
+    },
+    lastContactDateEstimated: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[26]`, false),
+    lastContactDatePresent: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[27]`, false),
+
+    // Contact methods (Check all that apply)
+    contactMethods: {
+      inPerson: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[4]`, false),
+      telephone: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[5]`, false),
+      electronic: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[6]`, false),
+      writtenCorrespondence: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[7]`, false),
+      other: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[8]`, false),
+      otherExplanation: generateField(`form1[0].Section18_3[${pdfEntryIndex}].TextField11[0]`, '')
+    },
+
+    // Contact frequency
+    contactFrequency: {
+      daily: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[9]`, false),
+      weekly: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[10]`, false),
+      monthly: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[11]`, false),
+      quarterly: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[12]`, false),
+      annually: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[13]`, false),
+      other: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[14]`, false),
+      otherExplanation: generateField(`form1[0].Section18_3[${pdfEntryIndex}].TextField11[1]`, '')
+    },
+
+    // Employment information
+    employerName: generateField(`form1[0].Section18_3[${pdfEntryIndex}].TextField11[1]`, ''),
+    employerNameDontKnow: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#field[15]`, false),
+
+    // Employer address
+    employerAddress: {
+      street: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#area[0].TextField11[2]`, ''),
+      city: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#area[0].TextField11[3]`, ''),
+      state: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#area[0].DropDownList11[0]`, '', SECTION18_OPTIONS.STATES),
+      zipCode: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#area[0].TextField11[4]`, ''),
+      country: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#area[0].DropDownList11[1]`, '', SECTION18_OPTIONS.COUNTRIES),
+      dontKnow: generateField(`form1[0].Section18_3[${pdfEntryIndex}].#area[0].#field[21]`, false)
+    },
+
+    // Foreign government affiliation
+    foreignGovernmentAffiliation: generateField(`form1[0].Section18_3[${pdfEntryIndex}].DropDownList11[0]`, '', SECTION18_OPTIONS.YES_NO_DONT_KNOW),
+    foreignGovernmentDescription: generateField(`form1[0].Section18_3[${pdfEntryIndex}].TextField11[6]`, '')
+  };
+}
+
+// ============================================================================
+// MAIN ENTRY GENERATOR
+// ============================================================================
+
+/**
+ * Generate a complete relative entry (Entry #1-6)
+ */
+export function generateRelativeEntry(entryNumber: number): RelativeEntry {
+  return {
+    entryNumber,
+    section18_1: generateSection18_1(entryNumber),
+    section18_2: generateSection18_2(entryNumber),
+    section18_3: generateSection18_3(entryNumber),
+    section18_4: generateSection18_4(entryNumber),
+    section18_5: generateSection18_5(entryNumber)
+  };
+}
+
+/**
+ * Generate all 6 relative entries for Section 18
+ */
+export function generateAllRelativeEntries(): RelativeEntry[] {
+  return [
+    generateRelativeEntry(1),
+    generateRelativeEntry(2),
+    generateRelativeEntry(3),
+    generateRelativeEntry(4),
+    generateRelativeEntry(5),
+    generateRelativeEntry(6)
+  ];
+}
+
+/**
+ * Generate relative type selection dropdown for a specific entry
+ * Based on actual PDF field structure: form1[0].Section18_1[x].DropDownList5[0]
+ *
+ * @param entryNumber - The relative entry number (1-6)
+ * @returns A dropdown field with relative type options
+ */
+export function generateRelativeTypeSelection(entryNumber: number = 1) {
+  // Entry numbers in PDF are 0-based: Entry #1 = [0], Entry #2 = [1], etc.
+  const pdfEntryIndex = entryNumber - 1;
+
+  // Determine the correct section path based on entry number
+  let sectionPath: string;
+  if (entryNumber === 1) {
+    sectionPath = `form1[0].Section18_1[0].DropDownList5[0]`;
+  } else {
+    // Entries 2-6 use Section18_1_1[x] pattern
+    sectionPath = `form1[0].Section18_1_1[${pdfEntryIndex - 1}].DropDownList5[0]`;
+  }
+
+  console.log(`🎯 Section18: Generating relative type dropdown for Entry #${entryNumber} using field: ${sectionPath}`);
+
+  return generateField(sectionPath, '', SECTION18_OPTIONS.RELATIVE_TYPES);
+}
+
+/**
+ * Generate all relative type selections for all 6 entries
+ * Returns an array of dropdown fields for each relative entry
+ */
+export function generateAllRelativeTypeSelections() {
+  return {
+    entry1: generateRelativeTypeSelection(1),
+    entry2: generateRelativeTypeSelection(2),
+    entry3: generateRelativeTypeSelection(3),
+    entry4: generateRelativeTypeSelection(4),
+    entry5: generateRelativeTypeSelection(5),
+    entry6: generateRelativeTypeSelection(6)
+  };
+}
+

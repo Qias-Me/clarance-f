@@ -29,6 +29,14 @@ import type {
 // POLICE RECORD SUBSECTION COMPONENT
 // ============================================================================
 
+// Maximum number of entries allowed per subsection based on PDF field structure
+const MAX_ENTRIES_PER_SUBSECTION = {
+  domesticViolenceOrders: 4, // PDF supports 4 domestic violence order entries in Section22_3_1
+  criminalHistory: 10, // Reasonable limit for criminal history entries
+  militaryCourtProceedings: 5, // Reasonable limit for military court proceedings
+  foreignCourtProceedings: 5 // Reasonable limit for foreign court proceedings
+} as const;
+
 interface PoliceRecordSubsectionProps {
   subsectionKey: Section22SubsectionKey;
   title: string;
@@ -48,7 +56,7 @@ const PoliceRecordSubsection: React.FC<PoliceRecordSubsectionProps> = ({
   const sf86Form = useSF86Form();
 
   // Get subsection data
-  const subsectionData = section22.sectionData?.section22?.[subsectionKey];
+  const subsectionData = section22.section22Data?.section22?.[subsectionKey];
   const entries = subsectionData?.entries || [];
 
   // Get all flag values for this subsection
@@ -66,32 +74,39 @@ const PoliceRecordSubsection: React.FC<PoliceRecordSubsectionProps> = ({
     section22.updateSubsectionFlag(subsectionKey, flagType, value);
 
     // Update in global form context
-    sf86Form.updateSectionData('section22', section22.sectionData);
+    sf86Form.updateSectionData('section22', section22.section22Data);
   }, [section22, subsectionKey, sf86Form]);
 
   // Handle field changes in entries
   const handleFieldChange = useCallback((entryIndex: number, fieldPath: string, newValue: any) => {
     // Follow the data flow pattern
-    section22.updateEntryField(subsectionKey, entryIndex, fieldPath, newValue);
+    section22.updateFieldValue(subsectionKey, entryIndex, fieldPath, newValue);
 
     // Update in global form context
-    sf86Form.updateSectionData('section22', section22.sectionData);
+    sf86Form.updateSectionData('section22', section22.section22Data);
   }, [section22, subsectionKey, sf86Form]);
 
   // Add new entry
   const handleAddEntry = useCallback(() => {
+    // Check entry limit before adding
+    const maxEntries = MAX_ENTRIES_PER_SUBSECTION[subsectionKey] || 10;
+    if (entries.length >= maxEntries) {
+      alert(`Maximum of ${maxEntries} entries allowed for ${title.toLowerCase()}.`);
+      return;
+    }
+
     section22.addEntry(subsectionKey);
 
     // Update in global form context
-    sf86Form.updateSectionData('section22', section22.sectionData);
-  }, [section22, subsectionKey, sf86Form]);
+    sf86Form.updateSectionData('section22', section22.section22Data);
+  }, [section22, subsectionKey, sf86Form, entries.length, title]);
 
   // Remove entry
   const handleRemoveEntry = useCallback((entryIndex: number) => {
     section22.removeEntry(subsectionKey, entryIndex);
 
     // Update in global form context
-    sf86Form.updateSectionData('section22', section22.sectionData);
+    sf86Form.updateSectionData('section22', section22.section22Data);
   }, [section22, subsectionKey, sf86Form]);
 
   return (
@@ -150,14 +165,42 @@ const PoliceRecordSubsection: React.FC<PoliceRecordSubsectionProps> = ({
             <h4 className="text-md font-medium text-gray-800">
               {title} Details ({entries.length} {entries.length === 1 ? 'entry' : 'entries'})
             </h4>
-            <button
-              type="button"
-              onClick={handleAddEntry}
-              className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              Add {isDomesticViolence ? 'Order' : 'Record'}
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                type="button"
+                onClick={handleAddEntry}
+                disabled={entries.length >= (MAX_ENTRIES_PER_SUBSECTION[subsectionKey] || 10)}
+                className={`px-3 py-1 text-sm rounded focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  entries.length >= (MAX_ENTRIES_PER_SUBSECTION[subsectionKey] || 10)
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
+              >
+                Add {isDomesticViolence ? 'Order' : 'Record'}
+                {entries.length >= (MAX_ENTRIES_PER_SUBSECTION[subsectionKey] || 10) && (
+                  <span className="ml-1 text-xs">(Max: {MAX_ENTRIES_PER_SUBSECTION[subsectionKey] || 10})</span>
+                )}
+              </button>
+            </div>
           </div>
+
+          {/* Entry limit information */}
+          {entries.length >= (MAX_ENTRIES_PER_SUBSECTION[subsectionKey] || 10) && (
+            <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-blue-700">
+                    You have reached the maximum of {MAX_ENTRIES_PER_SUBSECTION[subsectionKey] || 10} entries allowed for {title.toLowerCase()}.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Entry List */}
           {entries.length === 0 ? (

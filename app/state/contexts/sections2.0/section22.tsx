@@ -120,21 +120,37 @@ export const Section22Provider: React.FC<{ children: ReactNode }> = ({ children 
 
   const addEntry = useCallback((subsectionKey: Section22SubsectionKey) => {
     console.log(`🔧 Section22: addEntry called for subsection: ${subsectionKey}`);
-    
+
     setSection22Data(prev => {
       const updated = cloneDeep(prev);
       const subsection = updated.section22[subsectionKey];
-      
+
+      // Define maximum entry limits based on PDF field structure
+      const MAX_ENTRIES = {
+        domesticViolenceOrders: 4, // PDF supports 4 domestic violence order entries in Section22_3_1
+        criminalHistory: 10, // Reasonable limit for criminal history entries
+        militaryCourtProceedings: 5, // Reasonable limit for military court proceedings
+        foreignCourtProceedings: 5 // Reasonable limit for foreign court proceedings
+      };
+
+      const maxEntries = MAX_ENTRIES[subsectionKey] || 10;
+
+      // Enforce maximum entry limit
+      if (subsection.entries.length >= maxEntries) {
+        console.warn(`Cannot add more than ${maxEntries} entries to ${subsectionKey}`);
+        return prev; // Return unchanged data
+      }
+
       let newEntry: any;
       if (subsectionKey === 'domesticViolenceOrders') {
         newEntry = createDefaultDomesticViolenceEntry();
       } else {
         newEntry = createDefaultPoliceRecordEntry();
       }
-      
+
       subsection.entries.push(newEntry);
       subsection.entriesCount = subsection.entries.length;
-      
+
       console.log(`✅ Section22: addEntry - added entry to ${subsectionKey}, new count: ${subsection.entriesCount}`);
       setIsDirty(true);
       return updated;
@@ -166,17 +182,21 @@ export const Section22Provider: React.FC<{ children: ReactNode }> = ({ children 
     newValue: any
   ) => {
     console.log(`🔧 Section22: updateFieldValue called:`, { subsectionKey, entryIndex, fieldPath, newValue });
-    
+
     setSection22Data(prev => {
       const updated = cloneDeep(prev);
       const subsection = updated.section22[subsectionKey];
-      
+
       if (subsection?.entries && entryIndex >= 0 && entryIndex < subsection.entries.length) {
         const entry = subsection.entries[entryIndex];
-        
+
         try {
-          set(entry, `${fieldPath}.value`, newValue);
-          console.log(`✅ Section22: updateFieldValue - field updated successfully`);
+          // FIXED: Don't add extra '.value' - the fieldPath already includes it when needed
+          // Component calls: onFieldChange('offenseDescription.value', newValue)
+          // So we should set: entry['offenseDescription.value'] = newValue
+          // NOT: entry['offenseDescription.value.value'] = newValue
+          set(entry, fieldPath, newValue);
+          console.log(`✅ Section22: updateFieldValue - field updated successfully at path: ${fieldPath}`);
           setIsDirty(true);
         } catch (error) {
           console.error(`❌ Section22: updateFieldValue - failed:`, error);
@@ -189,7 +209,7 @@ export const Section22Provider: React.FC<{ children: ReactNode }> = ({ children 
           entryIndex
         });
       }
-      
+
       return updated;
     });
   }, []);
