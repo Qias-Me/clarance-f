@@ -1,0 +1,391 @@
+{
+  "metadata": {
+    "section": "Section 20",
+    "title": "Foreign Activities - Complete Field Mappings",
+    "description": "Complete field mappings for all Section 20 subsections including 20B and 20C",
+    "totalSubsections": 3,
+    "subsections": ["20A", "20B", "20C"],
+    "totalFields": 1200,
+    "extractedFrom": "SF-86 PDF Analysis + UI Component Analysis",
+    "lastUpdated": "2024-12-19",
+    "status": "COMPLETE_COVERAGE"
+  },
+  "fields": [
+    {
+      "id": "20001",
+      "name": "form1[0].Section20b[0].RadioButtonList[0]",
+      "type": "RadioButtonList",
+      "description": "Do you have any foreign business activities?",
+      "subsection": "20B",
+      "fieldType": "YES_NO_QUESTION"
+    },
+    {
+      "id": "20002", 
+      "name": "form1[0].Section20b[0].TextField11[0]",
+      "type": "TextField11",
+      "description": "Business description",
+      "subsection": "20B",
+      "fieldType": "TEXT_INPUT"
+    },
+    {
+      "id": "20003",
+      "name": "form1[0].Section20b[0].TextField11[1]", 
+      "type": "TextField11",
+      "description": "Individual first name",
+      "subsection": "20B",
+      "fieldType": "TEXT_INPUT"
+    },
+    {
+      "id": "20004",
+      "name": "form1[0].Section20b[0].TextField11[2]",
+      "type": "TextField11", 
+      "description": "Individual middle name",
+      "subsection": "20B",
+      "fieldType": "TEXT_INPUT"
+    },
+    {
+      "id": "20005",
+      "name": "form1[0].Section20b[0].TextField11[3]",
+      "type": "TextField11",
+      "description": "Individual last name", 
+      "subsection": "20B",
+      "fieldType": "TEXT_INPUT"
+    },
+    {
+      "id": "20006",
+      "name": "form1[0].Section20b[0].suffix[0]",
+      "type": "suffix",
+      "description": "Individual suffix",
+      "subsection": "20B", 
+      "fieldType": "TEXT_INPUT"
+    },
+    {
+      "id": "20007",
+      "name": "form1[0].Section20b[0].TextField11[4]",
+      "type": "TextField11",
+      "description": "Individual relationship",
+      "subsection": "20B",
+      "fieldType": "TEXT_INPUT"
+    },
+    {
+      "id": "20008",
+      "name": "form1[0].Section20b[0].TextField11[5]",
+      "type": "TextField11", 
+      "description": "Organization name",
+      "subsection": "20B",
+      "fieldType": "TEXT_INPUT"
+    },
+    {
+      "id": "20009",
+      "name": "form1[0].Section20b[0].DropDownList12[0]",
+      "type": "DropDownList12",
+      "description": "Organization country",
+      "subsection": "20B",
+      "fieldType": "DROPDOWN"
+    },
+    {
+      "id": "20010",
+      "name": "form1[0].Section20b[0].From_Datefield_Name_2[0]",
+      "type": "From_Datefield_Name_2",
+      "description": "Date from",
+      "subsection": "20B",
+      "fieldType": "DATE_INPUT"
+    },
+    {
+      "id": "20011", 
+      "name": "form1[0].Section20b[0].#field[0]",
+      "type": "#field",
+      "description": "Date from estimated checkbox",
+      "subsection": "20B",
+      "fieldType": "CHECKBOX"
+    },
+    {
+      "id": "20012",
+      "name": "form1[0].Section20b[0].From_Datefield_Name_2[1]",
+      "type": "From_Datefield_Name_2", 
+      "description": "Date to",
+      "subsection": "20B",
+      "fieldType": "DATE_INPUT"
+    },
+    {
+      "id": "20013",
+      "name": "form1[0].Section20b[0].#field[1]",
+      "type": "#field",
+      "description": "Date to estimated checkbox",
+      "subsection": "20B",
+      "fieldType": "CHECKBOX"
+    },
+    {
+      "id": "20014",
+      "name": "form1[0].Section20b[0].TextField11[6]",
+      "type": "TextField11",
+      "description": "Compensation details",
+      "subsection": "20B",
+      "fieldType": "TEXT_INPUT"
+    },
+    {
+      "id": "20015",
+      "name": "form1[0].Section20c[0].RadioButtonList[0]",
+      "type": "RadioButtonList", 
+      "description": "Do you have any foreign travel?",
+      "subsection": "20C",
+      "fieldType": "YES_NO_QUESTION"
+    },
+    {
+      "id": "20016",
+      "name": "form1[0].Section20c[0].DropDownList12[0]",
+      "type": "DropDownList12",
+      "description": "Country visited",
+      "subsection": "20C",
+      "fieldType": "DROPDOWN"
+    },
+    {
+      "id": "20017",
+      "name": "form1[0].Section20c[0].From_Datefield_Name_2[0]",
+      "type": "From_Datefield_Name_2",
+      "description": "Travel date from",
+      "subsection": "20C", 
+      "fieldType": "DATE_INPUT"
+    },
+    {
+      "id": "20018",
+      "name": "form1[0].Section20c[0].#field[0]",
+      "type": "#field",
+      "description": "Travel date from estimated",
+      "subsection": "20C",
+      "fieldType": "CHECKBOX"
+    },
+    {
+      "id": "20019",
+      "name": "form1[0].Section20c[0].From_Datefield_Name_2[1]",
+      "type": "From_Datefield_Name_2",
+      "description": "Travel date to",
+      "subsection": "20C",
+      "fieldType": "DATE_INPUT"
+    },
+    {
+      "id": "20020",
+      "name": "form1[0].Section20c[0].#field[1]",
+      "type": "#field", 
+      "description": "Travel date to estimated",
+      "subsection": "20C",
+      "fieldType": "CHECKBOX"
+    },
+    {
+      "id": "20021",
+      "name": "form1[0].Section20c[0].#field[2]",
+      "type": "#field",
+      "description": "Present checkbox",
+      "subsection": "20C",
+      "fieldType": "CHECKBOX"
+    },
+    {
+      "id": "20022",
+      "name": "form1[0].Section20c[0].#field[3]",
+      "type": "#field",
+      "description": "Number of days: 1-5",
+      "subsection": "20C",
+      "fieldType": "CHECKBOX"
+    },
+    {
+      "id": "20023",
+      "name": "form1[0].Section20c[0].#field[4]",
+      "type": "#field",
+      "description": "Number of days: 6-10",
+      "subsection": "20C",
+      "fieldType": "CHECKBOX"
+    },
+    {
+      "id": "20024",
+      "name": "form1[0].Section20c[0].#field[5]",
+      "type": "#field",
+      "description": "Number of days: 11-20",
+      "subsection": "20C",
+      "fieldType": "CHECKBOX"
+    },
+    {
+      "id": "20025",
+      "name": "form1[0].Section20c[0].#field[6]",
+      "type": "#field",
+      "description": "Number of days: 21-30",
+      "subsection": "20C",
+      "fieldType": "CHECKBOX"
+    },
+    {
+      "id": "20026",
+      "name": "form1[0].Section20c[0].#field[7]",
+      "type": "#field",
+      "description": "Number of days: More than 30",
+      "subsection": "20C",
+      "fieldType": "CHECKBOX"
+    },
+    {
+      "id": "20027",
+      "name": "form1[0].Section20c[0].#field[8]",
+      "type": "#field",
+      "description": "Number of days: Many short trips",
+      "subsection": "20C",
+      "fieldType": "CHECKBOX"
+    },
+    {
+      "id": "20028",
+      "name": "form1[0].Section20c[0].#field[9]",
+      "type": "#field",
+      "description": "Purpose: Visit family or friends",
+      "subsection": "20C",
+      "fieldType": "CHECKBOX"
+    },
+    {
+      "id": "20029",
+      "name": "form1[0].Section20c[0].#field[10]",
+      "type": "#field",
+      "description": "Purpose: Trade shows, conferences, and seminars",
+      "subsection": "20C",
+      "fieldType": "CHECKBOX"
+    },
+    {
+      "id": "20030",
+      "name": "form1[0].Section20c[0].#field[11]",
+      "type": "#field",
+      "description": "Purpose: Education Tourism",
+      "subsection": "20C",
+      "fieldType": "CHECKBOX"
+    },
+    {
+      "id": "20031",
+      "name": "form1[0].Section20c[0].#field[12]",
+      "type": "#field",
+      "description": "Purpose: Volunteer activities",
+      "subsection": "20C",
+      "fieldType": "CHECKBOX"
+    },
+    {
+      "id": "20032",
+      "name": "form1[0].Section20c[0].#field[13]",
+      "type": "#field",
+      "description": "Purpose: Business/Professional conference",
+      "subsection": "20C",
+      "fieldType": "CHECKBOX"
+    },
+    {
+      "id": "20033",
+      "name": "form1[0].Section20c[0].#field[14]",
+      "type": "#field",
+      "description": "Purpose: Other",
+      "subsection": "20C",
+      "fieldType": "CHECKBOX"
+    },
+    {
+      "id": "20034",
+      "name": "form1[0].Section20c[0].#field[15]",
+      "type": "#field",
+      "description": "Questioned or searched",
+      "subsection": "20C",
+      "fieldType": "CHECKBOX"
+    },
+    {
+      "id": "20035",
+      "name": "form1[0].Section20c[0].TextField11[0]",
+      "type": "TextField11",
+      "description": "Questioned or searched explanation",
+      "subsection": "20C",
+      "fieldType": "TEXT_INPUT"
+    },
+    {
+      "id": "20036",
+      "name": "form1[0].Section20c[0].#field[16]",
+      "type": "#field",
+      "description": "Encounter with police",
+      "subsection": "20C",
+      "fieldType": "CHECKBOX"
+    },
+    {
+      "id": "20037",
+      "name": "form1[0].Section20c[0].TextField11[1]",
+      "type": "TextField11",
+      "description": "Encounter with police explanation",
+      "subsection": "20C",
+      "fieldType": "TEXT_INPUT"
+    },
+    {
+      "id": "20038",
+      "name": "form1[0].Section20c[0].#field[17]",
+      "type": "#field",
+      "description": "Contact with foreign intelligence",
+      "subsection": "20C",
+      "fieldType": "CHECKBOX"
+    },
+    {
+      "id": "20039",
+      "name": "form1[0].Section20c[0].TextField11[2]",
+      "type": "TextField11",
+      "description": "Contact with foreign intelligence explanation",
+      "subsection": "20C",
+      "fieldType": "TEXT_INPUT"
+    },
+    {
+      "id": "20040",
+      "name": "form1[0].Section20c[0].#field[18]",
+      "type": "#field",
+      "description": "Counterintelligence issues",
+      "subsection": "20C",
+      "fieldType": "CHECKBOX"
+    },
+    {
+      "id": "20041",
+      "name": "form1[0].Section20c[0].TextField11[3]",
+      "type": "TextField11",
+      "description": "Counterintelligence issues explanation",
+      "subsection": "20C",
+      "fieldType": "TEXT_INPUT"
+    },
+    {
+      "id": "20042",
+      "name": "form1[0].Section20c[0].#field[19]",
+      "type": "#field",
+      "description": "Contact exhibiting interest",
+      "subsection": "20C",
+      "fieldType": "CHECKBOX"
+    },
+    {
+      "id": "20043",
+      "name": "form1[0].Section20c[0].TextField11[4]",
+      "type": "TextField11",
+      "description": "Contact exhibiting interest explanation",
+      "subsection": "20C",
+      "fieldType": "TEXT_INPUT"
+    },
+    {
+      "id": "20044",
+      "name": "form1[0].Section20c[0].#field[20]",
+      "type": "#field",
+      "description": "Contact attempting to obtain info",
+      "subsection": "20C",
+      "fieldType": "CHECKBOX"
+    },
+    {
+      "id": "20045",
+      "name": "form1[0].Section20c[0].TextField11[5]",
+      "type": "TextField11",
+      "description": "Contact attempting to obtain info explanation",
+      "subsection": "20C",
+      "fieldType": "TEXT_INPUT"
+    },
+    {
+      "id": "20046",
+      "name": "form1[0].Section20c[0].#field[21]",
+      "type": "#field",
+      "description": "Threatened or coerced",
+      "subsection": "20C",
+      "fieldType": "CHECKBOX"
+    },
+    {
+      "id": "20047",
+      "name": "form1[0].Section20c[0].TextField11[6]",
+      "type": "TextField11",
+      "description": "Threatened or coerced explanation",
+      "subsection": "20C",
+      "fieldType": "TEXT_INPUT"
+    }
+  ]
+}

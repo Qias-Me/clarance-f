@@ -292,19 +292,23 @@ export const Section20Provider: React.FC<Section20ProviderProps> = ({ children }
           break;
 
         case 'foreignBusinessActivities':
-          const businessEntry = createDefaultForeignBusinessEntry();
-          console.log(`🔍 Section20: Created business entry structure:`, businessEntry);
+          // CRITICAL FIX: Pass entry index to map to correct subform (74, 76, 77, 78, 79, 80)
+          const currentBusinessCount = newData.section20.foreignBusinessActivities.entries.length;
+          const businessEntry = createDefaultForeignBusinessEntry(currentBusinessCount);
+          console.log(`🔍 Section20: Created business entry structure for subform ${businessEntry.subformId}:`, businessEntry);
           newData.section20.foreignBusinessActivities.entries.push(businessEntry);
           newData.section20.foreignBusinessActivities.entriesCount = newData.section20.foreignBusinessActivities.entries.length;
-          console.log(`✅ Section20: Added foreign business activity entry #${newData.section20.foreignBusinessActivities.entries.length}`);
+          console.log(`✅ Section20: Added foreign business activity entry #${newData.section20.foreignBusinessActivities.entries.length} (subform ${businessEntry.subformId}, page ${businessEntry.pageNumber})`);
           break;
 
         case 'foreignTravel':
-          const travelEntry = createDefaultForeignTravelEntry();
-          console.log(`🔍 Section20: Created travel entry structure:`, travelEntry);
+          // CRITICAL FIX: Pass entry index to map to correct subform (68, 69, 70, 71, 72)
+          const currentTravelCount = newData.section20.foreignTravel.entries.length;
+          const travelEntry = createDefaultForeignTravelEntry(currentTravelCount);
+          console.log(`🔍 Section20: Created travel entry structure for subform ${travelEntry.subformId}:`, travelEntry);
           newData.section20.foreignTravel.entries.push(travelEntry);
           newData.section20.foreignTravel.entriesCount = newData.section20.foreignTravel.entries.length;
-          console.log(`✅ Section20: Added foreign travel entry #${newData.section20.foreignTravel.entries.length}`);
+          console.log(`✅ Section20: Added foreign travel entry #${newData.section20.foreignTravel.entries.length} (subform ${travelEntry.subformId}, page ${travelEntry.pageNumber})`);
           break;
 
         default:

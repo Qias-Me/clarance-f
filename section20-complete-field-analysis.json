@@ -1,0 +1,112 @@
+{
+  "analysis": {
+    "totalFields": 790,
+    "section20aFields": 83,
+    "subformFields": 707,
+    "subforms": {
+      "68": {
+        "page": 69,
+        "fieldCount": 45,
+        "purpose": "Foreign Travel Entry 1",
+        "keyFields": [
+          "form1[0].#subform[68].RadioButtonList[0]",
+          "form1[0].#subform[68].DropDownList12[0]",
+          "form1[0].#subform[68].From_Datefield_Name_2[0]",
+          "form1[0].#subform[68].TextField11[0]"
+        ]
+      },
+      "69": {
+        "page": 70,
+        "fieldCount": 44,
+        "purpose": "Foreign Travel Entry 2",
+        "keyFields": [
+          "form1[0].#subform[69].RadioButtonList[2]",
+          "form1[0].#subform[69].DropDownList12[4]",
+          "form1[0].#subform[69].From_Datefield_Name_2[2]"
+        ]
+      },
+      "70": {
+        "page": 71,
+        "fieldCount": 41,
+        "purpose": "Foreign Travel Entry 3",
+        "keyFields": [
+          "form1[0].#subform[70].RadioButtonList[3]",
+          "form1[0].#subform[70].DropDownList12[8]",
+          "form1[0].#subform[70].From_Datefield_Name_2[4]"
+        ]
+      },
+      "71": {
+        "page": 72,
+        "fieldCount": 40,
+        "purpose": "Foreign Travel Entry 4",
+        "keyFields": [
+          "form1[0].#subform[71].RadioButtonList[4]",
+          "form1[0].#subform[71].DropDownList12[12]",
+          "form1[0].#subform[71].From_Datefield_Name_2[6]"
+        ]
+      },
+      "72": {
+        "page": 73,
+        "fieldCount": 39,
+        "purpose": "Foreign Travel Entry 5",
+        "keyFields": [
+          "form1[0].#subform[72].RadioButtonList[6]",
+          "form1[0].#subform[72].RadioButtonList[7]",
+          "form1[0].#subform[72].From_Datefield_Name_2[10]"
+        ]
+      },
+      "74": {
+        "page": 74,
+        "fieldCount": 38,
+        "purpose": "Foreign Business Activities Entry 1",
+        "keyFields": []
+      },
+      "76": {
+        "page": 75,
+        "fieldCount": 31,
+        "purpose": "Foreign Business Activities Entry 2",
+        "keyFields": []
+      },
+      "77": {
+        "page": 76,
+        "fieldCount": 46,
+        "purpose": "Foreign Business Activities Entry 3",
+        "keyFields": []
+      },
+      "78": {
+        "page": 77,
+        "fieldCount": 29,
+        "purpose": "Foreign Business Activities Entry 4",
+        "keyFields": []
+      },
+      "79": {
+        "page": 78,
+        "fieldCount": 47,
+        "purpose": "Foreign Business Activities Entry 5",
+        "keyFields": []
+      },
+      "80": {
+        "page": 79,
+        "fieldCount": 31,
+        "purpose": "Foreign Business Activities Entry 6",
+        "keyFields": []
+      }
+    }
+  },
+  "criticalFindings": {
+    "missingMappings": [
+      "All 707 subform fields are not mapped in current interface",
+      "Current interface only maps 83 Section20a fields",
+      "Subforms 68-72 contain foreign travel data (5 entries)",
+      "Subforms 74-80 contain foreign business activity data (6 entries)",
+      "Each subform represents a complete entry with 29-47 fields"
+    ],
+    "requiredActions": [
+      "Map all 707 subform fields to proper interface structures",
+      "Create entry-specific field mappings for each subform",
+      "Update context to handle multiple entries per subsection",
+      "Implement proper field ID mappings for all subforms",
+      "Update component to render all entry fields"
+    ]
+  }
+}
