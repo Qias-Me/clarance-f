@@ -40,6 +40,23 @@ import type {
 } from "../../../../api/interfaces/sections2.0/section26";
 import {
   createDefaultBankruptcyEntry,
+  createDefaultGamblingEntry,
+  createDefaultTaxDelinquencyEntry,
+  createDefaultCreditCardViolationEntry,
+  createDefaultCreditCounselingEntry,
+  createDefaultAlimonyChildSupportEntry,
+  createDefaultJudgmentEntry,
+  createDefaultLienEntry,
+  createDefaultFederalDebtEntry,
+  createDefaultForeclosureRepossessionEntry,
+  createDefaultDefaultEntry,
+  createDefaultCollectionEntry,
+  createDefaultSuspendedAccountEntry,
+  createDefaultEvictionEntry,
+  createDefaultGarnishmentEntry,
+  createDefaultDelinquencyEntry,
+  createDefaultFinancialProblemsContinuation1Subsection,
+  createDefaultFinancialProblemsContinuation2Subsection,
   createDefaultSection26,
   validateSection26,
   hasAnyFinancialIssues,
@@ -89,6 +106,7 @@ interface Section26ContextType {
   addTaxDelinquencyEntry: () => void;
   addCreditCardViolationEntry: () => void;
   addCreditCounselingEntry: () => void;
+  addCreditCounselingActualEntry: () => void;
   addAlimonyChildSupportEntry: () => void;
   addJudgmentEntry: () => void;
   addLienEntry: () => void;
@@ -100,6 +118,10 @@ interface Section26ContextType {
   addEvictionEntry: () => void;
   addGarnishmentEntry: () => void;
   addDelinquencyEntry: (type: 'past' | 'current') => void;
+
+  // Continuation entry methods
+  addContinuation1Entry: (entryType: string) => void;
+  addContinuation2Entry: (entryType: string) => void;
   
   // Field updates
   updateEntryField: (
@@ -209,11 +231,9 @@ export const Section26Provider: React.FC<{ children: ReactNode }> = ({
         case 'bankruptcy':
           newData.section26.bankruptcy.hasBankruptcyFilings.value = hasValue;
           break;
-        case 'gambling':
-          newData.section26.gambling.hasGamblingProblems.value = hasValue;
-          break;
-        case 'taxDelinquency':
-          newData.section26.taxDelinquency.hasTaxDelinquencies.value = hasValue;
+        case 'gamblingAndTax':
+          newData.section26.gamblingAndTax.hasGamblingProblems.value = hasValue;
+          newData.section26.gamblingAndTax.hasTaxDelinquencies.value = hasValue;
           break;
         case 'creditCardViolations':
           newData.section26.creditCardViolations.hasCreditCardViolations.value = hasValue;
@@ -221,11 +241,48 @@ export const Section26Provider: React.FC<{ children: ReactNode }> = ({
         case 'creditCounseling':
           newData.section26.creditCounseling.isUtilizingCreditCounseling.value = hasValue;
           break;
+        case 'creditCounselingActual':
+          newData.section26.creditCounselingActual.isUtilizingCreditCounseling.value = hasValue;
+          break;
         case 'financialObligations':
-          // Note: financialObligations has multiple sub-flags
+          // financialObligations has multiple sub-flags - handle the main ones
+          newData.section26.financialObligations.hasAlimonyChildSupportDelinquencies.value = hasValue;
+          newData.section26.financialObligations.hasJudgments.value = hasValue;
+          newData.section26.financialObligations.hasLiens.value = hasValue;
+          newData.section26.financialObligations.hasFederalDebt.value = hasValue;
           break;
         case 'financialProblems':
-          // Note: financialProblems has multiple sub-flags
+          // financialProblems has multiple sub-flags - handle the main ones
+          newData.section26.financialProblems.hasForeclosuresRepossessions.value = hasValue;
+          newData.section26.financialProblems.hasDefaults.value = hasValue;
+          newData.section26.financialProblems.hasCollections.value = hasValue;
+          newData.section26.financialProblems.hasSuspendedAccounts.value = hasValue;
+          newData.section26.financialProblems.hasEvictions.value = hasValue;
+          newData.section26.financialProblems.hasGarnishments.value = hasValue;
+          newData.section26.financialProblems.hasPastDelinquencies.value = hasValue;
+          newData.section26.financialProblems.hasCurrentDelinquencies.value = hasValue;
+          break;
+        case 'financialProblemsContinuation1':
+          // Update all continuation flags for 26.8
+          newData.section26.financialProblemsContinuation1.continuesForeclosuresRepossessions.value = hasValue;
+          newData.section26.financialProblemsContinuation1.continuesDefaults.value = hasValue;
+          newData.section26.financialProblemsContinuation1.continuesCollections.value = hasValue;
+          newData.section26.financialProblemsContinuation1.continuesSuspendedAccounts.value = hasValue;
+          newData.section26.financialProblemsContinuation1.continuesEvictions.value = hasValue;
+          newData.section26.financialProblemsContinuation1.continuesGarnishments.value = hasValue;
+          newData.section26.financialProblemsContinuation1.continuesPastDelinquencies.value = hasValue;
+          newData.section26.financialProblemsContinuation1.continuesCurrentDelinquencies.value = hasValue;
+          break;
+        case 'financialProblemsContinuation2':
+          // Update all continuation flags for 26.9
+          newData.section26.financialProblemsContinuation2.continuesForeclosuresRepossessions.value = hasValue;
+          newData.section26.financialProblemsContinuation2.continuesDefaults.value = hasValue;
+          newData.section26.financialProblemsContinuation2.continuesCollections.value = hasValue;
+          newData.section26.financialProblemsContinuation2.continuesSuspendedAccounts.value = hasValue;
+          newData.section26.financialProblemsContinuation2.continuesEvictions.value = hasValue;
+          newData.section26.financialProblemsContinuation2.continuesGarnishments.value = hasValue;
+          newData.section26.financialProblemsContinuation2.continuesPastDelinquencies.value = hasValue;
+          newData.section26.financialProblemsContinuation2.continuesCurrentDelinquencies.value = hasValue;
           break;
         default:
           console.warn(`Unknown subsection key: ${subsectionKey}`);
@@ -238,13 +295,12 @@ export const Section26Provider: React.FC<{ children: ReactNode }> = ({
             newData.section26.bankruptcy.entries = [];
             newData.section26.bankruptcy.entriesCount = 0;
             break;
-          case 'gambling':
-            newData.section26.gambling.entries = [];
-            newData.section26.gambling.entriesCount = 0;
-            break;
-          case 'taxDelinquency':
-            newData.section26.taxDelinquency.entries = [];
-            newData.section26.taxDelinquency.entriesCount = 0;
+          case 'gamblingAndTax':
+            newData.section26.gamblingAndTax.gamblingEntries = [];
+            newData.section26.gamblingAndTax.gamblingEntriesCount = 0;
+            newData.section26.gamblingAndTax.taxDelinquencyEntries = [];
+            newData.section26.gamblingAndTax.taxDelinquencyEntriesCount = 0;
+            newData.section26.gamblingAndTax.totalEntriesCount = 0;
             break;
           case 'creditCardViolations':
             newData.section26.creditCardViolations.entries = [];
@@ -253,6 +309,50 @@ export const Section26Provider: React.FC<{ children: ReactNode }> = ({
           case 'creditCounseling':
             newData.section26.creditCounseling.entries = [];
             newData.section26.creditCounseling.entriesCount = 0;
+            break;
+          case 'creditCounselingActual':
+            newData.section26.creditCounselingActual.entries = [];
+            newData.section26.creditCounselingActual.entriesCount = 0;
+            break;
+          case 'financialObligations':
+            newData.section26.financialObligations.alimonyChildSupportEntries = [];
+            newData.section26.financialObligations.judgmentEntries = [];
+            newData.section26.financialObligations.lienEntries = [];
+            newData.section26.financialObligations.federalDebtEntries = [];
+            newData.section26.financialObligations.totalEntriesCount = 0;
+            break;
+          case 'financialProblems':
+            newData.section26.financialProblems.foreclosureRepossessionEntries = [];
+            newData.section26.financialProblems.defaultEntries = [];
+            newData.section26.financialProblems.collectionEntries = [];
+            newData.section26.financialProblems.suspendedAccountEntries = [];
+            newData.section26.financialProblems.evictionEntries = [];
+            newData.section26.financialProblems.garnishmentEntries = [];
+            newData.section26.financialProblems.pastDelinquencyEntries = [];
+            newData.section26.financialProblems.currentDelinquencyEntries = [];
+            newData.section26.financialProblems.totalEntriesCount = 0;
+            break;
+          case 'financialProblemsContinuation1':
+            newData.section26.financialProblemsContinuation1.additionalForeclosureRepossessionEntries = [];
+            newData.section26.financialProblemsContinuation1.additionalDefaultEntries = [];
+            newData.section26.financialProblemsContinuation1.additionalCollectionEntries = [];
+            newData.section26.financialProblemsContinuation1.additionalSuspendedAccountEntries = [];
+            newData.section26.financialProblemsContinuation1.additionalEvictionEntries = [];
+            newData.section26.financialProblemsContinuation1.additionalGarnishmentEntries = [];
+            newData.section26.financialProblemsContinuation1.additionalPastDelinquencyEntries = [];
+            newData.section26.financialProblemsContinuation1.additionalCurrentDelinquencyEntries = [];
+            newData.section26.financialProblemsContinuation1.totalEntriesCount = 0;
+            break;
+          case 'financialProblemsContinuation2':
+            newData.section26.financialProblemsContinuation2.additionalForeclosureRepossessionEntries = [];
+            newData.section26.financialProblemsContinuation2.additionalDefaultEntries = [];
+            newData.section26.financialProblemsContinuation2.additionalCollectionEntries = [];
+            newData.section26.financialProblemsContinuation2.additionalSuspendedAccountEntries = [];
+            newData.section26.financialProblemsContinuation2.additionalEvictionEntries = [];
+            newData.section26.financialProblemsContinuation2.additionalGarnishmentEntries = [];
+            newData.section26.financialProblemsContinuation2.additionalPastDelinquencyEntries = [];
+            newData.section26.financialProblemsContinuation2.additionalCurrentDelinquencyEntries = [];
+            newData.section26.financialProblemsContinuation2.totalEntriesCount = 0;
             break;
         }
       }
@@ -275,14 +375,14 @@ export const Section26Provider: React.FC<{ children: ReactNode }> = ({
     switch (subsectionKey) {
       case 'bankruptcy':
         return sectionData.section26.bankruptcy.entriesCount;
-      case 'gambling':
-        return sectionData.section26.gambling.entriesCount;
-      case 'taxDelinquency':
-        return sectionData.section26.taxDelinquency.entriesCount;
+      case 'gamblingAndTax':
+        return sectionData.section26.gamblingAndTax.totalEntriesCount;
       case 'creditCardViolations':
         return sectionData.section26.creditCardViolations.entriesCount;
       case 'creditCounseling':
         return sectionData.section26.creditCounseling.entriesCount;
+      case 'creditCounselingActual':
+        return sectionData.section26.creditCounselingActual.entriesCount;
       case 'alimonyChildSupport':
         return sectionData.section26.financialObligations.alimonyChildSupportEntries.length;
       case 'judgments':
@@ -307,6 +407,10 @@ export const Section26Provider: React.FC<{ children: ReactNode }> = ({
         return sectionData.section26.financialProblems.pastDelinquencyEntries.length;
       case 'currentDelinquencies':
         return sectionData.section26.financialProblems.currentDelinquencyEntries.length;
+      case 'financialProblemsContinuation1':
+        return sectionData.section26.financialProblemsContinuation1.totalEntriesCount;
+      case 'financialProblemsContinuation2':
+        return sectionData.section26.financialProblemsContinuation2.totalEntriesCount;
       default:
         return 0;
     }
@@ -378,8 +482,12 @@ export const Section26Provider: React.FC<{ children: ReactNode }> = ({
   const addGamblingEntry = useCallback(() => {
     setSectionData((prevData) => {
       const newData = cloneDeep(prevData);
-      // Implementation would create default gambling entry
-      console.log("Adding gambling entry");
+      const newEntry = createDefaultGamblingEntry();
+      newData.section26.gamblingAndTax.gamblingEntries.push(newEntry);
+      newData.section26.gamblingAndTax.gamblingEntriesCount = newData.section26.gamblingAndTax.gamblingEntries.length;
+      newData.section26.gamblingAndTax.totalEntriesCount =
+        newData.section26.gamblingAndTax.gamblingEntriesCount +
+        newData.section26.gamblingAndTax.taxDelinquencyEntriesCount;
       return newData;
     });
   }, []);
@@ -387,8 +495,12 @@ export const Section26Provider: React.FC<{ children: ReactNode }> = ({
   const addTaxDelinquencyEntry = useCallback(() => {
     setSectionData((prevData) => {
       const newData = cloneDeep(prevData);
-      // Implementation would create default tax delinquency entry
-      console.log("Adding tax delinquency entry");
+      const newEntry = createDefaultTaxDelinquencyEntry();
+      newData.section26.gamblingAndTax.taxDelinquencyEntries.push(newEntry);
+      newData.section26.gamblingAndTax.taxDelinquencyEntriesCount = newData.section26.gamblingAndTax.taxDelinquencyEntries.length;
+      newData.section26.gamblingAndTax.totalEntriesCount =
+        newData.section26.gamblingAndTax.gamblingEntriesCount +
+        newData.section26.gamblingAndTax.taxDelinquencyEntriesCount;
       return newData;
     });
   }, []);
@@ -396,8 +508,9 @@ export const Section26Provider: React.FC<{ children: ReactNode }> = ({
   const addCreditCardViolationEntry = useCallback(() => {
     setSectionData((prevData) => {
       const newData = cloneDeep(prevData);
-      // Implementation would create default credit card violation entry
-      console.log("Adding credit card violation entry");
+      const newEntry = createDefaultCreditCardViolationEntry();
+      newData.section26.creditCardViolations.entries.push(newEntry);
+      newData.section26.creditCardViolations.entriesCount = newData.section26.creditCardViolations.entries.length;
       return newData;
     });
   }, []);
@@ -405,8 +518,19 @@ export const Section26Provider: React.FC<{ children: ReactNode }> = ({
   const addCreditCounselingEntry = useCallback(() => {
     setSectionData((prevData) => {
       const newData = cloneDeep(prevData);
-      // Implementation would create default credit counseling entry
-      console.log("Adding credit counseling entry");
+      const newEntry = createDefaultCreditCounselingEntry();
+      newData.section26.creditCounseling.entries.push(newEntry);
+      newData.section26.creditCounseling.entriesCount = newData.section26.creditCounseling.entries.length;
+      return newData;
+    });
+  }, []);
+
+  const addCreditCounselingActualEntry = useCallback(() => {
+    setSectionData((prevData) => {
+      const newData = cloneDeep(prevData);
+      const newEntry = createDefaultCreditCounselingEntry();
+      newData.section26.creditCounselingActual.entries.push(newEntry);
+      newData.section26.creditCounselingActual.entriesCount = newData.section26.creditCounselingActual.entries.length;
       return newData;
     });
   }, []);
@@ -414,8 +538,13 @@ export const Section26Provider: React.FC<{ children: ReactNode }> = ({
   const addAlimonyChildSupportEntry = useCallback(() => {
     setSectionData((prevData) => {
       const newData = cloneDeep(prevData);
-      // Implementation would create default alimony/child support entry
-      console.log("Adding alimony/child support entry");
+      const newEntry = createDefaultAlimonyChildSupportEntry();
+      newData.section26.financialObligations.alimonyChildSupportEntries.push(newEntry);
+      newData.section26.financialObligations.totalEntriesCount =
+        newData.section26.financialObligations.alimonyChildSupportEntries.length +
+        newData.section26.financialObligations.judgmentEntries.length +
+        newData.section26.financialObligations.lienEntries.length +
+        newData.section26.financialObligations.federalDebtEntries.length;
       return newData;
     });
   }, []);
@@ -423,8 +552,13 @@ export const Section26Provider: React.FC<{ children: ReactNode }> = ({
   const addJudgmentEntry = useCallback(() => {
     setSectionData((prevData) => {
       const newData = cloneDeep(prevData);
-      // Implementation would create default judgment entry
-      console.log("Adding judgment entry");
+      const newEntry = createDefaultJudgmentEntry();
+      newData.section26.financialObligations.judgmentEntries.push(newEntry);
+      newData.section26.financialObligations.totalEntriesCount =
+        newData.section26.financialObligations.alimonyChildSupportEntries.length +
+        newData.section26.financialObligations.judgmentEntries.length +
+        newData.section26.financialObligations.lienEntries.length +
+        newData.section26.financialObligations.federalDebtEntries.length;
       return newData;
     });
   }, []);
@@ -432,8 +566,13 @@ export const Section26Provider: React.FC<{ children: ReactNode }> = ({
   const addLienEntry = useCallback(() => {
     setSectionData((prevData) => {
       const newData = cloneDeep(prevData);
-      // Implementation would create default lien entry
-      console.log("Adding lien entry");
+      const newEntry = createDefaultLienEntry();
+      newData.section26.financialObligations.lienEntries.push(newEntry);
+      newData.section26.financialObligations.totalEntriesCount =
+        newData.section26.financialObligations.alimonyChildSupportEntries.length +
+        newData.section26.financialObligations.judgmentEntries.length +
+        newData.section26.financialObligations.lienEntries.length +
+        newData.section26.financialObligations.federalDebtEntries.length;
       return newData;
     });
   }, []);
@@ -441,8 +580,13 @@ export const Section26Provider: React.FC<{ children: ReactNode }> = ({
   const addFederalDebtEntry = useCallback(() => {
     setSectionData((prevData) => {
       const newData = cloneDeep(prevData);
-      // Implementation would create default federal debt entry
-      console.log("Adding federal debt entry");
+      const newEntry = createDefaultFederalDebtEntry();
+      newData.section26.financialObligations.federalDebtEntries.push(newEntry);
+      newData.section26.financialObligations.totalEntriesCount =
+        newData.section26.financialObligations.alimonyChildSupportEntries.length +
+        newData.section26.financialObligations.judgmentEntries.length +
+        newData.section26.financialObligations.lienEntries.length +
+        newData.section26.financialObligations.federalDebtEntries.length;
       return newData;
     });
   }, []);
@@ -450,8 +594,17 @@ export const Section26Provider: React.FC<{ children: ReactNode }> = ({
   const addForeclosureRepossessionEntry = useCallback(() => {
     setSectionData((prevData) => {
       const newData = cloneDeep(prevData);
-      // Implementation would create default foreclosure/repossession entry
-      console.log("Adding foreclosure/repossession entry");
+      const newEntry = createDefaultForeclosureRepossessionEntry();
+      newData.section26.financialProblems.foreclosureRepossessionEntries.push(newEntry);
+      newData.section26.financialProblems.totalEntriesCount =
+        newData.section26.financialProblems.foreclosureRepossessionEntries.length +
+        newData.section26.financialProblems.defaultEntries.length +
+        newData.section26.financialProblems.collectionEntries.length +
+        newData.section26.financialProblems.suspendedAccountEntries.length +
+        newData.section26.financialProblems.evictionEntries.length +
+        newData.section26.financialProblems.garnishmentEntries.length +
+        newData.section26.financialProblems.pastDelinquencyEntries.length +
+        newData.section26.financialProblems.currentDelinquencyEntries.length;
       return newData;
     });
   }, []);
@@ -459,8 +612,17 @@ export const Section26Provider: React.FC<{ children: ReactNode }> = ({
   const addDefaultEntry = useCallback(() => {
     setSectionData((prevData) => {
       const newData = cloneDeep(prevData);
-      // Implementation would create default default entry
-      console.log("Adding default entry");
+      const newEntry = createDefaultDefaultEntry();
+      newData.section26.financialProblems.defaultEntries.push(newEntry);
+      newData.section26.financialProblems.totalEntriesCount =
+        newData.section26.financialProblems.foreclosureRepossessionEntries.length +
+        newData.section26.financialProblems.defaultEntries.length +
+        newData.section26.financialProblems.collectionEntries.length +
+        newData.section26.financialProblems.suspendedAccountEntries.length +
+        newData.section26.financialProblems.evictionEntries.length +
+        newData.section26.financialProblems.garnishmentEntries.length +
+        newData.section26.financialProblems.pastDelinquencyEntries.length +
+        newData.section26.financialProblems.currentDelinquencyEntries.length;
       return newData;
     });
   }, []);
@@ -468,8 +630,17 @@ export const Section26Provider: React.FC<{ children: ReactNode }> = ({
   const addCollectionEntry = useCallback(() => {
     setSectionData((prevData) => {
       const newData = cloneDeep(prevData);
-      // Implementation would create default collection entry
-      console.log("Adding collection entry");
+      const newEntry = createDefaultCollectionEntry();
+      newData.section26.financialProblems.collectionEntries.push(newEntry);
+      newData.section26.financialProblems.totalEntriesCount =
+        newData.section26.financialProblems.foreclosureRepossessionEntries.length +
+        newData.section26.financialProblems.defaultEntries.length +
+        newData.section26.financialProblems.collectionEntries.length +
+        newData.section26.financialProblems.suspendedAccountEntries.length +
+        newData.section26.financialProblems.evictionEntries.length +
+        newData.section26.financialProblems.garnishmentEntries.length +
+        newData.section26.financialProblems.pastDelinquencyEntries.length +
+        newData.section26.financialProblems.currentDelinquencyEntries.length;
       return newData;
     });
   }, []);
@@ -477,8 +648,17 @@ export const Section26Provider: React.FC<{ children: ReactNode }> = ({
   const addSuspendedAccountEntry = useCallback(() => {
     setSectionData((prevData) => {
       const newData = cloneDeep(prevData);
-      // Implementation would create default suspended account entry
-      console.log("Adding suspended account entry");
+      const newEntry = createDefaultSuspendedAccountEntry();
+      newData.section26.financialProblems.suspendedAccountEntries.push(newEntry);
+      newData.section26.financialProblems.totalEntriesCount =
+        newData.section26.financialProblems.foreclosureRepossessionEntries.length +
+        newData.section26.financialProblems.defaultEntries.length +
+        newData.section26.financialProblems.collectionEntries.length +
+        newData.section26.financialProblems.suspendedAccountEntries.length +
+        newData.section26.financialProblems.evictionEntries.length +
+        newData.section26.financialProblems.garnishmentEntries.length +
+        newData.section26.financialProblems.pastDelinquencyEntries.length +
+        newData.section26.financialProblems.currentDelinquencyEntries.length;
       return newData;
     });
   }, []);
@@ -486,8 +666,17 @@ export const Section26Provider: React.FC<{ children: ReactNode }> = ({
   const addEvictionEntry = useCallback(() => {
     setSectionData((prevData) => {
       const newData = cloneDeep(prevData);
-      // Implementation would create default eviction entry
-      console.log("Adding eviction entry");
+      const newEntry = createDefaultEvictionEntry();
+      newData.section26.financialProblems.evictionEntries.push(newEntry);
+      newData.section26.financialProblems.totalEntriesCount =
+        newData.section26.financialProblems.foreclosureRepossessionEntries.length +
+        newData.section26.financialProblems.defaultEntries.length +
+        newData.section26.financialProblems.collectionEntries.length +
+        newData.section26.financialProblems.suspendedAccountEntries.length +
+        newData.section26.financialProblems.evictionEntries.length +
+        newData.section26.financialProblems.garnishmentEntries.length +
+        newData.section26.financialProblems.pastDelinquencyEntries.length +
+        newData.section26.financialProblems.currentDelinquencyEntries.length;
       return newData;
     });
   }, []);
@@ -495,8 +684,17 @@ export const Section26Provider: React.FC<{ children: ReactNode }> = ({
   const addGarnishmentEntry = useCallback(() => {
     setSectionData((prevData) => {
       const newData = cloneDeep(prevData);
-      // Implementation would create default garnishment entry
-      console.log("Adding garnishment entry");
+      const newEntry = createDefaultGarnishmentEntry();
+      newData.section26.financialProblems.garnishmentEntries.push(newEntry);
+      newData.section26.financialProblems.totalEntriesCount =
+        newData.section26.financialProblems.foreclosureRepossessionEntries.length +
+        newData.section26.financialProblems.defaultEntries.length +
+        newData.section26.financialProblems.collectionEntries.length +
+        newData.section26.financialProblems.suspendedAccountEntries.length +
+        newData.section26.financialProblems.evictionEntries.length +
+        newData.section26.financialProblems.garnishmentEntries.length +
+        newData.section26.financialProblems.pastDelinquencyEntries.length +
+        newData.section26.financialProblems.currentDelinquencyEntries.length;
       return newData;
     });
   }, []);
@@ -694,7 +892,123 @@ export const Section26Provider: React.FC<{ children: ReactNode }> = ({
   }, [sectionData]);
 
   const addDelinquencyEntry = useCallback((type: 'past' | 'current') => {
-    // Implementation for adding delinquency entries
+    setSectionData((prevData) => {
+      const newData = cloneDeep(prevData);
+      const newEntry = createDefaultDelinquencyEntry();
+
+      if (type === 'past') {
+        newData.section26.financialProblems.pastDelinquencyEntries.push(newEntry);
+      } else {
+        newData.section26.financialProblems.currentDelinquencyEntries.push(newEntry);
+      }
+
+      newData.section26.financialProblems.totalEntriesCount =
+        newData.section26.financialProblems.foreclosureRepossessionEntries.length +
+        newData.section26.financialProblems.defaultEntries.length +
+        newData.section26.financialProblems.collectionEntries.length +
+        newData.section26.financialProblems.suspendedAccountEntries.length +
+        newData.section26.financialProblems.evictionEntries.length +
+        newData.section26.financialProblems.garnishmentEntries.length +
+        newData.section26.financialProblems.pastDelinquencyEntries.length +
+        newData.section26.financialProblems.currentDelinquencyEntries.length;
+      return newData;
+    });
+  }, []);
+
+  const addContinuation1Entry = useCallback((entryType: string) => {
+    setSectionData((prevData) => {
+      const newData = cloneDeep(prevData);
+      const continuation = newData.section26.financialProblemsContinuation1;
+
+      // Add entry to the appropriate array based on type
+      switch (entryType) {
+        case 'foreclosure':
+          continuation.additionalForeclosureRepossessionEntries.push(createDefaultForeclosureRepossessionEntry());
+          break;
+        case 'default':
+          continuation.additionalDefaultEntries.push(createDefaultDefaultEntry());
+          break;
+        case 'collection':
+          continuation.additionalCollectionEntries.push(createDefaultCollectionEntry());
+          break;
+        case 'suspended':
+          continuation.additionalSuspendedAccountEntries.push(createDefaultSuspendedAccountEntry());
+          break;
+        case 'eviction':
+          continuation.additionalEvictionEntries.push(createDefaultEvictionEntry());
+          break;
+        case 'garnishment':
+          continuation.additionalGarnishmentEntries.push(createDefaultGarnishmentEntry());
+          break;
+        case 'pastDelinquency':
+          continuation.additionalPastDelinquencyEntries.push(createDefaultDelinquencyEntry());
+          break;
+        case 'currentDelinquency':
+          continuation.additionalCurrentDelinquencyEntries.push(createDefaultDelinquencyEntry());
+          break;
+      }
+
+      // Update total count
+      continuation.totalEntriesCount =
+        continuation.additionalForeclosureRepossessionEntries.length +
+        continuation.additionalDefaultEntries.length +
+        continuation.additionalCollectionEntries.length +
+        continuation.additionalSuspendedAccountEntries.length +
+        continuation.additionalEvictionEntries.length +
+        continuation.additionalGarnishmentEntries.length +
+        continuation.additionalPastDelinquencyEntries.length +
+        continuation.additionalCurrentDelinquencyEntries.length;
+
+      return newData;
+    });
+  }, []);
+
+  const addContinuation2Entry = useCallback((entryType: string) => {
+    setSectionData((prevData) => {
+      const newData = cloneDeep(prevData);
+      const continuation = newData.section26.financialProblemsContinuation2;
+
+      // Add entry to the appropriate array based on type
+      switch (entryType) {
+        case 'foreclosure':
+          continuation.additionalForeclosureRepossessionEntries.push(createDefaultForeclosureRepossessionEntry());
+          break;
+        case 'default':
+          continuation.additionalDefaultEntries.push(createDefaultDefaultEntry());
+          break;
+        case 'collection':
+          continuation.additionalCollectionEntries.push(createDefaultCollectionEntry());
+          break;
+        case 'suspended':
+          continuation.additionalSuspendedAccountEntries.push(createDefaultSuspendedAccountEntry());
+          break;
+        case 'eviction':
+          continuation.additionalEvictionEntries.push(createDefaultEvictionEntry());
+          break;
+        case 'garnishment':
+          continuation.additionalGarnishmentEntries.push(createDefaultGarnishmentEntry());
+          break;
+        case 'pastDelinquency':
+          continuation.additionalPastDelinquencyEntries.push(createDefaultDelinquencyEntry());
+          break;
+        case 'currentDelinquency':
+          continuation.additionalCurrentDelinquencyEntries.push(createDefaultDelinquencyEntry());
+          break;
+      }
+
+      // Update total count
+      continuation.totalEntriesCount =
+        continuation.additionalForeclosureRepossessionEntries.length +
+        continuation.additionalDefaultEntries.length +
+        continuation.additionalCollectionEntries.length +
+        continuation.additionalSuspendedAccountEntries.length +
+        continuation.additionalEvictionEntries.length +
+        continuation.additionalGarnishmentEntries.length +
+        continuation.additionalPastDelinquencyEntries.length +
+        continuation.additionalCurrentDelinquencyEntries.length;
+
+      return newData;
+    });
   }, []);
 
   // ============================================================================
@@ -734,6 +1048,7 @@ export const Section26Provider: React.FC<{ children: ReactNode }> = ({
     addTaxDelinquencyEntry,
     addCreditCardViolationEntry,
     addCreditCounselingEntry,
+    addCreditCounselingActualEntry,
     addAlimonyChildSupportEntry,
     addJudgmentEntry,
     addLienEntry,
@@ -745,6 +1060,8 @@ export const Section26Provider: React.FC<{ children: ReactNode }> = ({
     addEvictionEntry,
     addGarnishmentEntry,
     addDelinquencyEntry,
+    addContinuation1Entry,
+    addContinuation2Entry,
     
     // Field updates
     updateEntryField,
