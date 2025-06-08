@@ -31,6 +31,10 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
     addForeignPassport,
     removeForeignPassport,
     updateForeignPassport,
+    addTravelCountry,        // NEW: Travel country management
+    removeTravelCountry,     // NEW: Travel country management
+    updateTravelCountry,     // NEW: Travel country management
+    canAddTravelCountry,     // NEW: Travel country management
     validateSection,
     resetSection,
     canAddDualCitizenship,
@@ -104,10 +108,10 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
     return section10Data.section10.foreignPassport?.entries || [];
   };
 
-  // Render a dual citizenship entry
+  // Render a dual citizenship entry with ALL FIELDS (corrected mappings)
   const renderDualCitizenshipEntry = (citizenship: any, index: number) => {
     return (
-      <div key={`citizenship-${index}`} className="border rounded-lg p-4 mb-4 bg-gray-50">
+      <div key={`citizenship-${index}`} className="border rounded-lg p-4 mb-4 bg-gray-50" data-entry={index}>
         <div className="flex justify-between items-center mb-4">
           <h4 className="text-lg font-medium text-gray-900">Dual Citizenship #{index + 1}</h4>
           <button
@@ -123,7 +127,7 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
         </div>
 
         <div className="grid grid-cols-1 gap-4 mb-4">
-          {/* Country */}
+          {/* Country - DropDownList13[0/1] */}
           <div>
             <label
               htmlFor={`citizenship-country-${index}`}
@@ -131,22 +135,30 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
             >
               Country <span className="text-red-500">*</span>
             </label>
-            <input
-              type="text"
+            <select
               id={`citizenship-country-${index}`}
               data-testid={`citizenship-country-${index}`}
               value={citizenship.country?.value || ''}
               onChange={(e) => updateDualCitizenship(index, 'country', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter country name"
               required
-            />
+            >
+              <option value="">Select Country</option>
+              <option value="Canada">Canada</option>
+              <option value="United Kingdom">United Kingdom</option>
+              <option value="Germany">Germany</option>
+              <option value="France">France</option>
+              <option value="Italy">Italy</option>
+              <option value="Spain">Spain</option>
+              <option value="Mexico">Mexico</option>
+              <option value="Other">Other</option>
+            </select>
             {errors[`dualCitizenship.entries[${index}].country`] && (
               <p className="mt-1 text-sm text-red-600">{errors[`dualCitizenship.entries[${index}].country`]}</p>
             )}
           </div>
 
-          {/* How Acquired - Fixed field name to match interface */}
+          {/* How Acquired - TextField11[0/3] */}
           <div>
             <label
               htmlFor={`citizenship-how-acquired-${index}`}
@@ -154,14 +166,14 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
             >
               How Citizenship Was Acquired <span className="text-red-500">*</span>
             </label>
-            <input
-              type="text"
+            <textarea
               id={`citizenship-how-acquired-${index}`}
               data-testid={`citizenship-how-acquired-${index}`}
               value={citizenship.howAcquired?.value || ''}
               onChange={(e) => updateDualCitizenship(index, 'howAcquired', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Describe how citizenship was acquired"
+              placeholder="Describe how citizenship was acquired (e.g., birth, naturalization, marriage)"
+              rows={3}
               required
             />
             {errors[`dualCitizenship.entries[${index}].howAcquired`] && (
@@ -169,62 +181,325 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
             )}
           </div>
 
-          {/* From Date - Fixed field name to match interface */}
-          <div>
-            <label
-              htmlFor={`citizenship-from-date-${index}`}
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              From Date <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              id={`citizenship-from-date-${index}`}
-              data-testid={`citizenship-from-date-${index}`}
-              value={citizenship.fromDate?.value || ''}
-              onChange={(e) => updateDualCitizenship(index, 'fromDate', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="MM/DD/YYYY"
-              required
-            />
-            {errors[`dualCitizenship.entries[${index}].fromDate`] && (
-              <p className="mt-1 text-sm text-red-600">{errors[`dualCitizenship.entries[${index}].fromDate`]}</p>
-            )}
+          {/* Date Range with Estimate Checkboxes */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* From Date - From_Datefield_Name_2[0/2] */}
+            <div>
+              <label
+                htmlFor={`citizenship-from-date-${index}`}
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                From Date <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                id={`citizenship-from-date-${index}`}
+                data-testid={`citizenship-from-date-${index}`}
+                value={citizenship.fromDate?.value || ''}
+                onChange={(e) => updateDualCitizenship(index, 'fromDate', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
+              <label className="flex items-center mt-2">
+                <input
+                  type="checkbox"
+                  checked={citizenship.isFromEstimated?.value || false}
+                  onChange={(e) => updateDualCitizenship(index, 'isFromEstimated', e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-600">From date is estimated</span>
+              </label>
+              {errors[`dualCitizenship.entries[${index}].fromDate`] && (
+                <p className="mt-1 text-sm text-red-600">{errors[`dualCitizenship.entries[${index}].fromDate`]}</p>
+              )}
+            </div>
+
+            {/* To Date - From_Datefield_Name_2[1/3] */}
+            <div>
+              <label
+                htmlFor={`citizenship-to-date-${index}`}
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                To Date <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                id={`citizenship-to-date-${index}`}
+                data-testid={`citizenship-to-date-${index}`}
+                value={citizenship.isPresent?.value ? '' : citizenship.toDate?.value || ''}
+                onChange={(e) => updateDualCitizenship(index, 'toDate', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                disabled={citizenship.isPresent?.value}
+                required={!citizenship.isPresent?.value}
+              />
+              <div className="mt-2 space-y-2">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={citizenship.isToEstimated?.value || false}
+                    onChange={(e) => updateDualCitizenship(index, 'isToEstimated', e.target.checked)}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    disabled={citizenship.isPresent?.value}
+                  />
+                  <span className="ml-2 text-sm text-gray-600">To date is estimated</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={citizenship.isPresent?.value || false}
+                    onChange={(e) => {
+                      updateDualCitizenship(index, 'isPresent', e.target.checked);
+                      if (e.target.checked) {
+                        updateDualCitizenship(index, 'toDate', 'Present');
+                      }
+                    }}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                  <span className="ml-2 text-sm text-gray-600">Present (still have citizenship)</span>
+                </label>
+              </div>
+              {errors[`dualCitizenship.entries[${index}].toDate`] && (
+                <p className="mt-1 text-sm text-red-600">{errors[`dualCitizenship.entries[${index}].toDate`]}</p>
+              )}
+            </div>
           </div>
 
-          {/* To Date - Fixed field name to match interface */}
+          {/* Has Renounced - RadioButtonList[1/3] - CORRECTED FIELD */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Have you renounced this citizenship? <span className="text-red-500">*</span>
+            </label>
+            <div className="flex space-x-4">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name={`citizenship-has-renounced-${index}`}
+                  value="YES"
+                  checked={citizenship.hasRenounced?.value === 'YES'}
+                  onChange={(e) => updateDualCitizenship(index, 'hasRenounced', e.target.value)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span className="ml-2 text-sm text-gray-700">Yes</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name={`citizenship-has-renounced-${index}`}
+                  value="NO"
+                  checked={citizenship.hasRenounced?.value === 'NO'}
+                  onChange={(e) => updateDualCitizenship(index, 'hasRenounced', e.target.value)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span className="ml-2 text-sm text-gray-700">No</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Renounce Explanation - TextField11[1/4] - CORRECTED FIELD */}
           <div>
             <label
-              htmlFor={`citizenship-to-date-${index}`}
+              htmlFor={`citizenship-renounce-explanation-${index}`}
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              To Date <span className="text-red-500">*</span>
+              Explanation of Renunciation Status
             </label>
-            <input
-              type="text"
-              id={`citizenship-to-date-${index}`}
-              data-testid={`citizenship-to-date-${index}`}
-              value={citizenship.toDate?.value || ''}
-              onChange={(e) => updateDualCitizenship(index, 'toDate', e.target.value)}
+            <textarea
+              id={`citizenship-renounce-explanation-${index}`}
+              data-testid={`citizenship-renounce-explanation-${index}`}
+              value={citizenship.renounceExplanation?.value || ''}
+              onChange={(e) => updateDualCitizenship(index, 'renounceExplanation', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="MM/DD/YYYY or 'Present'"
-              required
+              placeholder="Explain your renunciation status or plans"
+              rows={3}
             />
-            {errors[`dualCitizenship.entries[${index}].toDate`] && (
-              <p className="mt-1 text-sm text-red-600">{errors[`dualCitizenship.entries[${index}].toDate`]}</p>
-            )}
+          </div>
+
+          {/* Has Taken Action - RadioButtonList[2/4] */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Have you taken any action to renounce this citizenship?
+            </label>
+            <div className="flex space-x-4">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name={`citizenship-has-taken-action-${index}`}
+                  value="YES"
+                  checked={citizenship.hasTakenAction?.value === 'YES'}
+                  onChange={(e) => updateDualCitizenship(index, 'hasTakenAction', e.target.value)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span className="ml-2 text-sm text-gray-700">Yes</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name={`citizenship-has-taken-action-${index}`}
+                  value="NO"
+                  checked={citizenship.hasTakenAction?.value === 'NO'}
+                  onChange={(e) => updateDualCitizenship(index, 'hasTakenAction', e.target.value)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span className="ml-2 text-sm text-gray-700">No</span>
+              </label>
+            </div>
+          </div>
+
+          {/* Action Explanation - TextField11[2/5] */}
+          <div>
+            <label
+              htmlFor={`citizenship-action-explanation-${index}`}
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Explanation of Actions Taken
+            </label>
+            <textarea
+              id={`citizenship-action-explanation-${index}`}
+              data-testid={`citizenship-action-explanation-${index}`}
+              value={citizenship.actionExplanation?.value || ''}
+              onChange={(e) => updateDualCitizenship(index, 'actionExplanation', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Describe any actions taken regarding renunciation"
+              rows={3}
+            />
           </div>
         </div>
-
-
       </div>
     );
   };
 
-  // Render a foreign passport entry
+  // Render travel countries table for a passport
+  const renderTravelCountriesTable = (passport: any, passportIndex: number) => {
+    const travelCountries = passport.travelCountries || [];
+
+    return (
+      <div className="mt-6">
+        <div className="flex justify-between items-center mb-4">
+          <h5 className="text-md font-medium text-gray-900">Countries Visited with this Passport</h5>
+          <button
+            type="button"
+            onClick={() => addTravelCountry(passportIndex)}
+            disabled={!canAddTravelCountry(passportIndex)}
+            className={`inline-flex items-center px-2 py-1 border text-xs font-medium rounded ${
+              canAddTravelCountry(passportIndex)
+                ? 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
+                : 'border-gray-200 text-gray-400 bg-gray-100 cursor-not-allowed'
+            }`}
+          >
+            Add Country {!canAddTravelCountry(passportIndex) && '(Max 6)'}
+          </button>
+        </div>
+
+        {travelCountries.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 border border-gray-300">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Country</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">From Date</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">To Date</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Options</th>
+                  <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {travelCountries.map((travel: any, travelIndex: number) => (
+                  <tr key={`travel-${passportIndex}-${travelIndex}`} data-row={travelIndex}>
+                    <td className="px-3 py-2">
+                      <select
+                        value={travel.country?.value || ''}
+                        onChange={(e) => updateTravelCountry(passportIndex, travelIndex, 'country', e.target.value)}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="">Select Country</option>
+                        <option value="France">France</option>
+                        <option value="Germany">Germany</option>
+                        <option value="Italy">Italy</option>
+                        <option value="Spain">Spain</option>
+                        <option value="Netherlands">Netherlands</option>
+                        <option value="Belgium">Belgium</option>
+                        <option value="Australia">Australia</option>
+                        <option value="Japan">Japan</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </td>
+                    <td className="px-3 py-2">
+                      <input
+                        type="date"
+                        value={travel.fromDate?.value || ''}
+                        onChange={(e) => updateTravelCountry(passportIndex, travelIndex, 'fromDate', e.target.value)}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      />
+                      <label className="flex items-center mt-1">
+                        <input
+                          type="checkbox"
+                          checked={travel.isFromDateEstimated?.value || false}
+                          onChange={(e) => updateTravelCountry(passportIndex, travelIndex, 'isFromDateEstimated', e.target.checked)}
+                          className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <span className="ml-1 text-xs text-gray-600">Est.</span>
+                      </label>
+                    </td>
+                    <td className="px-3 py-2">
+                      <input
+                        type="date"
+                        value={travel.isPresent?.value ? '' : travel.toDate?.value || ''}
+                        onChange={(e) => updateTravelCountry(passportIndex, travelIndex, 'toDate', e.target.value)}
+                        disabled={travel.isPresent?.value}
+                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100"
+                      />
+                      <label className="flex items-center mt-1">
+                        <input
+                          type="checkbox"
+                          checked={travel.isToDateEstimated?.value || false}
+                          onChange={(e) => updateTravelCountry(passportIndex, travelIndex, 'isToDateEstimated', e.target.checked)}
+                          disabled={travel.isPresent?.value}
+                          className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:bg-gray-100"
+                        />
+                        <span className="ml-1 text-xs text-gray-600">Est.</span>
+                      </label>
+                    </td>
+                    <td className="px-3 py-2">
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={travel.isPresent?.value || false}
+                          onChange={(e) => {
+                            updateTravelCountry(passportIndex, travelIndex, 'isPresent', e.target.checked);
+                            if (e.target.checked) {
+                              updateTravelCountry(passportIndex, travelIndex, 'toDate', 'Present');
+                            }
+                          }}
+                          className="h-3 w-3 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <span className="ml-1 text-xs text-gray-600">Present</span>
+                      </label>
+                    </td>
+                    <td className="px-3 py-2">
+                      <button
+                        type="button"
+                        onClick={() => removeTravelCountry(passportIndex, travelIndex)}
+                        className="text-red-500 hover:text-red-700 text-xs"
+                      >
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500 italic">No travel countries added yet.</p>
+        )}
+      </div>
+    );
+  };
+
+  // Render a foreign passport entry with ALL FIELDS including travel countries table
   const renderForeignPassportEntry = (passport: any, index: number) => {
     return (
-      <div key={`passport-${index}`} className="border rounded-lg p-4 mb-4 bg-gray-50">
+      <div key={`passport-${index}`} className="border rounded-lg p-4 mb-4 bg-gray-50" data-entry={index}>
         <div className="flex justify-between items-center mb-4">
           <h4 className="text-lg font-medium text-gray-900">Foreign Passport #{index + 1}</h4>
           <button
@@ -240,36 +515,108 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
         </div>
 
         <div className="grid grid-cols-1 gap-4 mb-4">
-          {/* Country */}
+          {/* Passport Country - DropDownList14[0] */}
           <div>
             <label
               htmlFor={`passport-country-${index}`}
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              Country <span className="text-red-500">*</span>
+              Passport Country <span className="text-red-500">*</span>
             </label>
-            <input
-              type="text"
+            <select
               id={`passport-country-${index}`}
               data-testid={`passport-country-${index}`}
               value={passport.country?.value || ''}
               onChange={(e) => updateForeignPassport(index, 'country', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter country name"
               required
-            />
+            >
+              <option value="">Select Country</option>
+              <option value="Canada">Canada</option>
+              <option value="United Kingdom">United Kingdom</option>
+              <option value="Germany">Germany</option>
+              <option value="France">France</option>
+              <option value="Italy">Italy</option>
+              <option value="Spain">Spain</option>
+              <option value="Mexico">Mexico</option>
+              <option value="Other">Other</option>
+            </select>
             {errors[`foreignPassport.entries[${index}].country`] && (
               <p className="mt-1 text-sm text-red-600">{errors[`foreignPassport.entries[${index}].country`]}</p>
             )}
           </div>
 
-          {/* City */}
+          {/* Issue Date with Estimate - From_Datefield_Name_2[4/0] + #field[20/4] */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label
+                htmlFor={`passport-issue-date-${index}`}
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Issue Date <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                id={`passport-issue-date-${index}`}
+                data-testid={`passport-issue-date-${index}`}
+                value={passport.issueDate?.value || ''}
+                onChange={(e) => updateForeignPassport(index, 'issueDate', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
+              <label className="flex items-center mt-2">
+                <input
+                  type="checkbox"
+                  checked={passport.isIssueDateEstimated?.value || false}
+                  onChange={(e) => updateForeignPassport(index, 'isIssueDateEstimated', e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-600">Issue date is estimated</span>
+              </label>
+              {errors[`foreignPassport.entries[${index}].issueDate`] && (
+                <p className="mt-1 text-sm text-red-600">{errors[`foreignPassport.entries[${index}].issueDate`]}</p>
+              )}
+            </div>
+
+            {/* Expiration Date with Estimate - From_Datefield_Name_2[5/1] + #field[29/13] */}
+            <div>
+              <label
+                htmlFor={`passport-expiration-date-${index}`}
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Expiration Date <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                id={`passport-expiration-date-${index}`}
+                data-testid={`passport-expiration-date-${index}`}
+                value={passport.expirationDate?.value || ''}
+                onChange={(e) => updateForeignPassport(index, 'expirationDate', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              />
+              <label className="flex items-center mt-2">
+                <input
+                  type="checkbox"
+                  checked={passport.isExpirationDateEstimated?.value || false}
+                  onChange={(e) => updateForeignPassport(index, 'isExpirationDateEstimated', e.target.checked)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-600">Expiration date is estimated</span>
+              </label>
+              {errors[`foreignPassport.entries[${index}].expirationDate`] && (
+                <p className="mt-1 text-sm text-red-600">{errors[`foreignPassport.entries[${index}].expirationDate`]}</p>
+              )}
+            </div>
+          </div>
+
+          {/* City - TextField11[6/0] */}
           <div>
             <label
               htmlFor={`passport-city-${index}`}
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              City <span className="text-red-500">*</span>
+              City of Issue <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -278,7 +625,7 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
               value={passport.city?.value || ''}
               onChange={(e) => updateForeignPassport(index, 'city', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Enter city"
+              placeholder="Enter city where passport was issued"
               required
             />
             {errors[`foreignPassport.entries[${index}].city`] && (
@@ -286,8 +633,58 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
             )}
           </div>
 
-          {/* Name Fields */}
-          <div className="grid grid-cols-3 gap-4">
+          {/* Issuing Country - DropDownList11[0] */}
+          <div>
+            <label
+              htmlFor={`passport-country2-${index}`}
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Issuing Country <span className="text-red-500">*</span>
+            </label>
+            <select
+              id={`passport-country2-${index}`}
+              data-testid={`passport-country2-${index}`}
+              value={passport.country2?.value || ''}
+              onChange={(e) => updateForeignPassport(index, 'country2', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              required
+            >
+              <option value="">Select Issuing Country</option>
+              <option value="Canada">Canada</option>
+              <option value="United Kingdom">United Kingdom</option>
+              <option value="Germany">Germany</option>
+              <option value="France">France</option>
+              <option value="Italy">Italy</option>
+              <option value="Spain">Spain</option>
+              <option value="Mexico">Mexico</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          {/* Name Fields - TextField11[7,8,9/1,2,3] */}
+          <div className="grid grid-cols-4 gap-4">
+            <div>
+              <label
+                htmlFor={`passport-last-name-${index}`}
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Last Name <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                id={`passport-last-name-${index}`}
+                data-testid={`passport-last-name-${index}`}
+                value={passport.lastName?.value || ''}
+                onChange={(e) => updateForeignPassport(index, 'lastName', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Last name"
+                required
+              />
+              {errors[`foreignPassport.entries[${index}].lastName`] && (
+                <p className="mt-1 text-sm text-red-600">{errors[`foreignPassport.entries[${index}].lastName`]}</p>
+              )}
+            </div>
+
             <div>
               <label
                 htmlFor={`passport-first-name-${index}`}
@@ -331,30 +728,32 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
               )}
             </div>
 
+            {/* Suffix - suffix[0] - NEW FIELD */}
             <div>
               <label
-                htmlFor={`passport-last-name-${index}`}
+                htmlFor={`passport-suffix-${index}`}
                 className="block text-sm font-medium text-gray-700 mb-2"
               >
-                Last Name <span className="text-red-500">*</span>
+                Suffix
               </label>
-              <input
-                type="text"
-                id={`passport-last-name-${index}`}
-                data-testid={`passport-last-name-${index}`}
-                value={passport.lastName?.value || ''}
-                onChange={(e) => updateForeignPassport(index, 'lastName', e.target.value)}
+              <select
+                id={`passport-suffix-${index}`}
+                data-testid={`passport-suffix-${index}`}
+                value={passport.suffix?.value || ''}
+                onChange={(e) => updateForeignPassport(index, 'suffix', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Last name"
-                required
-              />
-              {errors[`foreignPassport.entries[${index}].lastName`] && (
-                <p className="mt-1 text-sm text-red-600">{errors[`foreignPassport.entries[${index}].lastName`]}</p>
-              )}
+              >
+                <option value="">Select Suffix</option>
+                <option value="Jr.">Jr.</option>
+                <option value="Sr.">Sr.</option>
+                <option value="II">II</option>
+                <option value="III">III</option>
+                <option value="IV">IV</option>
+              </select>
             </div>
           </div>
 
-          {/* Passport Number */}
+          {/* Passport Number - TextField11[10/4] */}
           <div>
             <label
               htmlFor={`passport-number-${index}`}
@@ -377,70 +776,40 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            {/* Issue Date */}
-            <div>
-              <label
-                htmlFor={`passport-issue-date-${index}`}
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Issue Date <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id={`passport-issue-date-${index}`}
-                data-testid={`passport-issue-date-${index}`}
-                value={passport.issueDate?.value || ''}
-                onChange={(e) => updateForeignPassport(index, 'issueDate', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="MM/DD/YYYY"
-                required
-              />
-              {errors[`foreignPassport.entries[${index}].issueDate`] && (
-                <p className="mt-1 text-sm text-red-600">{errors[`foreignPassport.entries[${index}].issueDate`]}</p>
-              )}
-            </div>
-
-            {/* Expiration Date */}
-            <div>
-              <label
-                htmlFor={`passport-expiration-date-${index}`}
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Expiration Date <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                id={`passport-expiration-date-${index}`}
-                data-testid={`passport-expiration-date-${index}`}
-                value={passport.expirationDate?.value || ''}
-                onChange={(e) => updateForeignPassport(index, 'expirationDate', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="MM/DD/YYYY"
-                required
-              />
-              {errors[`foreignPassport.entries[${index}].expirationDate`] && (
-                <p className="mt-1 text-sm text-red-600">{errors[`foreignPassport.entries[${index}].expirationDate`]}</p>
-              )}
-            </div>
-          </div>
-
-          {/* Used for Entry to US */}
+          {/* Used for Entry to US - RadioButtonList[6/0] */}
           <div>
-            <label className="flex items-center space-x-3">
-              <input
-                type="checkbox"
-                checked={passport.usedForUSEntry?.value || false}
-                onChange={(e) => updateForeignPassport(index, 'usedForUSEntry', e.target.checked)}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                data-testid={`passport-used-for-us-entry-${index}`}
-              />
-              <span className="text-sm text-gray-700">
-                I have used this passport to enter the United States
-              </span>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Have you used this passport to enter the United States? <span className="text-red-500">*</span>
             </label>
+            <div className="flex space-x-4">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name={`passport-used-for-us-entry-${index}`}
+                  value="YES"
+                  checked={passport.usedForUSEntry?.value === true || passport.usedForUSEntry?.value === 'YES'}
+                  onChange={(e) => updateForeignPassport(index, 'usedForUSEntry', true)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span className="ml-2 text-sm text-gray-700">Yes</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name={`passport-used-for-us-entry-${index}`}
+                  value="NO"
+                  checked={passport.usedForUSEntry?.value === false || passport.usedForUSEntry?.value === 'NO'}
+                  onChange={(e) => updateForeignPassport(index, 'usedForUSEntry', false)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span className="ml-2 text-sm text-gray-700">No</span>
+              </label>
+            </div>
           </div>
         </div>
+
+        {/* Travel Countries Table - Table1[0] - NEW SECTION */}
+        {renderTravelCountriesTable(passport, index)}
       </div>
     );
   };
