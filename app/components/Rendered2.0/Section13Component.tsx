@@ -11,8 +11,20 @@ import { useSection13 } from "~/state/contexts/sections2.0/section13";
 
 import type { EmploymentEntry } from "../../../api/interfaces/sections2.0/section13";
 
+// Import enhanced components
+import {
+  EnhancedSection13Component,
+  EmploymentTypeSelector,
+  MilitaryEmploymentForm,
+  NonFederalEmploymentForm,
+  SelfEmploymentForm,
+  UnemploymentForm
+} from "./Section13";
+
 interface Section13ComponentProps {
   onValidationChange?: (isValid: boolean) => void;
+  useEnhancedMode?: boolean; // Toggle between legacy and enhanced modes
+  enableEmploymentTypeRouting?: boolean; // Enable subsection-specific forms
 }
 
 // US States and territories for dropdown
@@ -78,7 +90,19 @@ const US_STATES = [
 
 export const Section13Component: React.FC<Section13ComponentProps> = ({
   onValidationChange,
+  useEnhancedMode = false,
+  enableEmploymentTypeRouting = false,
 }) => {
+  // Enhanced mode routing - use new enhanced component if enabled
+  if (useEnhancedMode) {
+    console.log('🔄 Section13Component: Using enhanced mode with subsection-specific forms');
+    return (
+      <EnhancedSection13Component
+        onValidationChange={onValidationChange}
+      />
+    );
+  }
+
   const {
     sectionData,
     updateEmploymentFlag,
@@ -98,6 +122,13 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
     getReasonForLeavingOptions,
     formatEmploymentDate,
     calculateEmploymentDuration,
+    // Enhanced mode functions (available but not used in legacy mode)
+    getActiveEmploymentType,
+    updateEmploymentType,
+    addMilitaryEmploymentEntry,
+    addNonFederalEmploymentEntry,
+    addSelfEmploymentEntry,
+    addUnemploymentEntry,
   } = useSection13();
 
   // Note: SF86 Form Context updates now handled by Section 13 context's saveToMainContext function
@@ -297,6 +328,21 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
   // Helper function to get local form value
   const getLocalValue = (index: number, fieldPath: string) => {
     return localFormData[index]?.[fieldPath] || '';
+  };
+
+  // Helper function to get employment type hints for enhanced mode
+  const getEmploymentTypeHint = (employmentType: string) => {
+    const hints: Record<string, string> = {
+      'Active Military Duty': 'Military form (13A.1) includes duty station, rank/title, APO/FPO addresses, and DSN phone numbers.',
+      'Federal Civilian': 'Federal form (13A.1) includes specialized federal employment fields and supervisor contact restrictions.',
+      'State Government': 'Non-Federal form (13A.2) includes additional employment periods and physical work addresses.',
+      'Private Company': 'Non-Federal form (13A.2) includes enhanced employer information and multiple employment periods.',
+      'Self-Employment': 'Self-Employment form (13A.3) includes business information, verifier contacts, and business addresses.',
+      'Unemployment': 'Unemployment form (13A.4) includes reference contacts and unemployment period verification.',
+      'Other': 'Enhanced forms available for specialized employment types with additional relevant fields.'
+    };
+
+    return hints[employmentType] || 'Enhanced forms provide specialized fields for this employment type.';
   };
 
 
@@ -548,6 +594,21 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
                       <option key={type} value={type}>{type}</option>
                     ))}
                   </select>
+
+                  {/* Enhanced Mode Hint for Specific Employment Types */}
+                  {enableEmploymentTypeRouting && getLocalValue(index, "employmentType") && (
+                    <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
+                      <div className="flex items-center space-x-1">
+                        <svg className="h-3 w-3 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span className="text-yellow-700 font-medium">Enhanced Form Available:</span>
+                      </div>
+                      <p className="text-yellow-600 mt-1">
+                        {getEmploymentTypeHint(getLocalValue(index, "employmentType"))}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -806,8 +867,8 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
           Fields marked with <span className="text-red-500">*</span> are required.
         </div>
 
-        {/* Debug Toggle */}
-        <div className="mt-4">
+        {/* Debug Toggle and Mode Information */}
+        <div className="mt-4 space-y-2">
           <label className="flex items-center">
             <input
               type="checkbox"
@@ -817,6 +878,26 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
             />
             <span className="text-sm text-gray-600">Enable debug mode (check console)</span>
           </label>
+
+          {/* Mode Information */}
+          <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
+            <div className="flex items-center space-x-4">
+              <span>
+                <strong>Mode:</strong> {useEnhancedMode ? 'Enhanced' : 'Legacy'}
+              </span>
+              <span>
+                <strong>Type Routing:</strong> {enableEmploymentTypeRouting ? 'Enabled' : 'Disabled'}
+              </span>
+              <span>
+                <strong>Entries:</strong> {getEmploymentEntryCount()}
+              </span>
+            </div>
+            {enableEmploymentTypeRouting && (
+              <div className="mt-1 text-blue-600">
+                Enhanced subsection-specific forms available for specialized employment types
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -898,12 +979,49 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
         </div>
       </div>
 
+      {/* Enhanced Mode Notification */}
+      {enableEmploymentTypeRouting && sectionData?.section13?.hasEmployment?.value === "YES" && (
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
+          <div className="flex items-center space-x-2 mb-3">
+            <svg className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <h4 className="text-sm font-medium text-blue-800">Enhanced Employment Forms Available</h4>
+          </div>
+          <p className="text-sm text-blue-700 mb-3">
+            For specialized forms tailored to different employment types (Military/Federal, Self-Employment, etc.),
+            consider using the enhanced mode with subsection-specific forms.
+          </p>
+          <div className="flex space-x-3">
+            <button
+              type="button"
+              onClick={() => {
+                console.log('🔄 User requested enhanced mode switch');
+                // This would typically trigger a parent component state change
+                alert('Enhanced mode would be activated here. In a real implementation, this would switch to the EnhancedSection13Component.');
+              }}
+              className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors"
+            >
+              Switch to Enhanced Mode
+            </button>
+            <span className="text-xs text-blue-600 self-center">
+              Includes: Military (13A.1), Non-Federal (13A.2), Self-Employment (13A.3), Unemployment (13A.4)
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Employment Entries */}
       {sectionData?.section13?.hasEmployment?.value === "YES" && (
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <h3 className="text-lg font-medium text-gray-900">
               Employment History
+              {enableEmploymentTypeRouting && (
+                <span className="ml-2 text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                  Legacy Mode
+                </span>
+              )}
             </h3>
             <button
               type="button"
