@@ -28,6 +28,9 @@ import {
   removeTravelCountryEntry  // NEW: Added travel country management
 } from '../../../../api/interfaces/sections2.0/section10';
 import { useSection86FormIntegration } from '../shared/section-context-integration';
+// NEW: Import field mapping and generation systems
+import { validateSection10FieldMappings } from './section10-field-mapping';
+import { initializeSection10FieldMapping, validateFieldGeneration } from './section10-field-generator';
 
 // ============================================================================
 // CONTEXT INTERFACE FOLLOWING SECTION 1 GOLD STANDARD
@@ -77,6 +80,38 @@ interface Section10ContextType {
 const Section10Context = createContext<Section10ContextType | undefined>(undefined);
 
 export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // ============================================================================
+  // FIELD MAPPING INITIALIZATION (Following Section 29 pattern)
+  // ============================================================================
+
+  // Initialize field mapping system on component mount
+  useEffect(() => {
+    // console.log('🔄 Section10: Initializing section data with complete field mapping verification');
+
+    // Validate field mappings
+    const validation = validateSection10FieldMappings();
+    // console.log(`🎯 Section10: Field mapping verification - ${validation.coverage.toFixed(1)}% coverage (${validation.mappedFields}/${validation.totalFields} fields)`);
+
+    if (validation.coverage >= 98) {
+      // console.log(`✅ Section10: All ${validation.totalFields} PDF form fields are properly mapped`);
+    } else {
+      console.warn(`⚠️ Section10: ${validation.missingFields.length} fields are not mapped`);
+      validation.missingFields.slice(0, 5).forEach(field => {
+        console.warn(`  - ${field}`);
+      });
+    }
+
+    // Validate field generation
+    const generationValid = validateFieldGeneration();
+    if (generationValid) {
+      console.log('✅ Section10: Field generation system validated successfully');
+    } else {
+      console.error('❌ Section10: Field generation system validation failed');
+    }
+
+    console.log('🔧 Section10: Section initialization complete');
+  }, []);
+
   // ============================================================================
   // STATE MANAGEMENT
   // ============================================================================
@@ -328,11 +363,33 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
   // DUAL CITIZENSHIP ACTIONS FOLLOWING SECTION 29 PATTERN
   // ============================================================================
 
+  // Use refs to track the last operation to prevent React Strict Mode duplicates
+  const lastDualCitizenshipOpRef = useRef<{ count: number; timestamp: number }>({ count: 0, timestamp: 0 });
+  const lastForeignPassportOpRef = useRef<{ count: number; timestamp: number }>({ count: 0, timestamp: 0 });
+  const lastTravelCountryOpRef = useRef<{ passportIndex: number; count: number; timestamp: number }>({ passportIndex: -1, count: 0, timestamp: 0 });
+
   const addDualCitizenship = useCallback(() => {
     setSection10Data(prev => {
       if (prev.section10.dualCitizenship.entries.length >= 2) {
         return prev; // Don't add if already at limit
       }
+
+      // IMPORTANT: Prevent React Strict Mode double execution
+      // Use a combination of count and timestamp to detect rapid duplicate calls
+      const currentCount = prev.section10.dualCitizenship.entries.length;
+      const now = Date.now();
+      const lastOp = lastDualCitizenshipOpRef.current;
+
+      // If this is a duplicate call within 50ms with the same count, skip it
+      if (now - lastOp.timestamp < 50 && currentCount === lastOp.count) {
+        console.log('🚫 Section10: Preventing duplicate dual citizenship add (React Strict Mode)');
+        return prev;
+      }
+
+      // Update the last operation tracking
+      lastDualCitizenshipOpRef.current = { count: currentCount + 1, timestamp: now };
+
+      console.log(`✅ Section10: Adding dual citizenship entry ${currentCount + 1}`);
       return addDualCitizenshipEntry(prev);
     });
   }, []);
@@ -358,6 +415,23 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (prev.section10.foreignPassport.entries.length >= 2) {
         return prev; // Don't add if already at limit
       }
+
+      // IMPORTANT: Prevent React Strict Mode double execution
+      // Use a combination of count and timestamp to detect rapid duplicate calls
+      const currentCount = prev.section10.foreignPassport.entries.length;
+      const now = Date.now();
+      const lastOp = lastForeignPassportOpRef.current;
+
+      // If this is a duplicate call within 50ms with the same count, skip it
+      if (now - lastOp.timestamp < 50 && currentCount === lastOp.count) {
+        console.log('🚫 Section10: Preventing duplicate foreign passport add (React Strict Mode)');
+        return prev;
+      }
+
+      // Update the last operation tracking
+      lastForeignPassportOpRef.current = { count: currentCount + 1, timestamp: now };
+
+      console.log(`✅ Section10: Adding foreign passport entry ${currentCount + 1}`);
       return addForeignPassportEntry(prev);
     });
   }, []);
@@ -384,6 +458,23 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
       if (!passport || passport.travelCountries.length >= 6) {
         return prev; // Don't add if passport doesn't exist or already at limit
       }
+
+      // IMPORTANT: Prevent React Strict Mode double execution
+      // Use a combination of passportIndex, count and timestamp to detect rapid duplicate calls
+      const currentCount = passport.travelCountries.length;
+      const now = Date.now();
+      const lastOp = lastTravelCountryOpRef.current;
+
+      // If this is a duplicate call within 50ms with the same passport and count, skip it
+      if (now - lastOp.timestamp < 50 && passportIndex === lastOp.passportIndex && currentCount === lastOp.count) {
+        console.log(`🚫 Section10: Preventing duplicate travel country add for passport ${passportIndex} (React Strict Mode)`);
+        return prev;
+      }
+
+      // Update the last operation tracking
+      lastTravelCountryOpRef.current = { passportIndex, count: currentCount + 1, timestamp: now };
+
+      console.log(`✅ Section10: Adding travel country ${currentCount + 1} to passport ${passportIndex + 1}`);
       return addTravelCountryEntry(prev, passportIndex);
     });
   }, []);

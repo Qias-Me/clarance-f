@@ -213,11 +213,8 @@ export const createDualCitizenshipEntry = (index: number = 0): DualCitizenshipEn
 export const createForeignPassportEntry = (index: number = 0): ForeignPassportEntry => {
   // For first entry, use exact field names from sections-reference
   if (index === 0) {
-    // Create travel countries table (6 rows)
+    // Start with empty travel countries table - user must click "Add Country" to add entries
     const travelCountries: TravelCountryEntry[] = [];
-    for (let i = 0; i < 6; i++) {
-      travelCountries.push(createTravelCountryEntry(0, i));
-    }
 
     return {
       country: createFieldFromReference(10, 'form1[0].Section10\\.1-10\\.2[0].DropDownList14[0]', ''),
@@ -239,11 +236,8 @@ export const createForeignPassportEntry = (index: number = 0): ForeignPassportEn
 
   // For second entry, use Section10-2 pattern from sections-reference
   if (index === 1) {
-    // Create travel countries table (6 rows) for second passport
+    // Start with empty travel countries table - user must click "Add Country" to add entries
     const travelCountries: TravelCountryEntry[] = [];
-    for (let i = 0; i < 6; i++) {
-      travelCountries.push(createTravelCountryEntry(1, i));
-    }
 
     return {
       country: createFieldFromReference(10, 'form1[0].Section10-2[0].DropDownList14[0]', ''),
@@ -264,10 +258,8 @@ export const createForeignPassportEntry = (index: number = 0): ForeignPassportEn
   }
 
   // For additional entries beyond 2, use pattern-based field names (fallback)
+  // Start with empty travel countries table - user must click "Add Country" to add entries
   const travelCountries: TravelCountryEntry[] = [];
-  for (let i = 0; i < 6; i++) {
-    travelCountries.push(createTravelCountryEntry(index, i));
-  }
 
   return {
     country: createFieldFromReference(10, `form1[0].Section10\\.1-10\\.2[${index}].DropDownList14[0]`, ''),
@@ -296,11 +288,11 @@ export const createDefaultSection10 = (): Section10 => ({
   section10: {
     dualCitizenship: {
       hasDualCitizenship: hasDualCitizenshipField(),
-      entries: [createDualCitizenshipEntry(0)],
+      entries: [], // Start with no entries - user must click "Add" button to add entries
     },
     foreignPassport: {
       hasForeignPassport: hasForeignPassportField(),
-      entries: [createForeignPassportEntry(0)],
+      entries: [], // Start with no entries - user must click "Add" button to add entries
     },
   },
 });

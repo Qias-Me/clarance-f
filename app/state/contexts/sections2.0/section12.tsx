@@ -20,28 +20,34 @@ import React, {
   useContext,
   useState,
   useCallback,
-  useMemo
+  useMemo,
+  useRef
 } from 'react';
 import { cloneDeep } from 'lodash';
 import set from 'lodash/set';
 import type {
   Section12,
+  Section12Data,
   Section12FieldUpdate,
   EducationValidationResult,
   Section12ValidationContext,
-  EducationEntry,
-  EducationEntryOperation
+  SchoolEntry,
+  SchoolEntryOperation,
+  DegreeEntry,
+  ContactPerson
 } from '../../../../api/interfaces/sections2.0/section12';
 import {
   createDefaultSection12,
   validateSection12,
   updateSection12Field,
-  createDefaultEducationEntry,
-  validateEducationEntry,
+  createDefaultSchoolEntry,
+  validateSchoolEntry,
   formatEducationDate,
   calculateEducationDuration,
   SCHOOL_TYPE_OPTIONS,
-  DEGREE_TYPE_OPTIONS
+  DEGREE_TYPE_OPTIONS,
+  createDefaultDegreeEntry,
+  createDefaultContactPerson
 } from '../../../../api/interfaces/sections2.0/section12';
 import type { ValidationResult, ValidationError } from '../shared/base-interfaces';
 import { useSection86FormIntegration } from '../shared/section-context-integration';
@@ -57,80 +63,154 @@ import { useSection86FormIntegration } from '../shared/section-context-integrati
  */
 export const flattenSection12Fields = (section12Data: Section12): Record<string, any> => {
   const flattened: Record<string, any> = {};
-  
-  // Flatten main section flags
-  if (section12Data.section12) {
-    // Has education flag
-    if (section12Data.section12.hasEducation) {
-      flattened[section12Data.section12.hasEducation.id] = section12Data.section12.hasEducation;
-    }
-    
-    // Has high school flag
-    if (section12Data.section12.hasHighSchool) {
-      flattened[section12Data.section12.hasHighSchool.id] = section12Data.section12.hasHighSchool;
+
+  try {
+    // Global section questions (2 fields)
+    if (section12Data.section12?.hasAttendedSchool) {
+      flattened[section12Data.section12.hasAttendedSchool.id || section12Data.section12.hasAttendedSchool.name] =
+        section12Data.section12.hasAttendedSchool.value;
     }
 
-    // Flatten education entries
-    section12Data.section12.entries.forEach((entry, index) => {
-      // Attendance dates
-      if (entry.attendanceDates.fromDate) {
-        flattened[entry.attendanceDates.fromDate.id] = entry.attendanceDates.fromDate;
-      }
-      if (entry.attendanceDates.fromEstimated) {
-        flattened[entry.attendanceDates.fromEstimated.id] = entry.attendanceDates.fromEstimated;
-      }
-      if (entry.attendanceDates.toDate) {
-        flattened[entry.attendanceDates.toDate.id] = entry.attendanceDates.toDate;
-      }
-      if (entry.attendanceDates.toEstimated) {
-        flattened[entry.attendanceDates.toEstimated.id] = entry.attendanceDates.toEstimated;
-      }
-      if (entry.attendanceDates.present) {
-        flattened[entry.attendanceDates.present.id] = entry.attendanceDates.present;
-      }
+    if (section12Data.section12?.hasAttendedSchoolOutsideUS) {
+      flattened[section12Data.section12.hasAttendedSchoolOutsideUS.id || section12Data.section12.hasAttendedSchoolOutsideUS.name] =
+        section12Data.section12.hasAttendedSchoolOutsideUS.value;
+    }
 
-      // School information
-      if (entry.schoolType) {
-        flattened[entry.schoolType.id] = entry.schoolType;
-      }
-      if (entry.schoolName) {
-        flattened[entry.schoolName.id] = entry.schoolName;
-      }
+    // School entries (148 fields across up to 3 entries)
+    if (section12Data.section12?.entries && Array.isArray(section12Data.section12.entries)) {
+      section12Data.section12.entries.forEach((entry, index) => {
+        const prefix = `entry_${index}`;
 
-      // School address
-      if (entry.schoolAddress.street) {
-        flattened[entry.schoolAddress.street.id] = entry.schoolAddress.street;
-      }
-      if (entry.schoolAddress.city) {
-        flattened[entry.schoolAddress.city.id] = entry.schoolAddress.city;
-      }
-      if (entry.schoolAddress.state) {
-        flattened[entry.schoolAddress.state.id] = entry.schoolAddress.state;
-      }
-      if (entry.schoolAddress.zipCode) {
-        flattened[entry.schoolAddress.zipCode.id] = entry.schoolAddress.zipCode;
-      }
-      if (entry.schoolAddress.country) {
-        flattened[entry.schoolAddress.country.id] = entry.schoolAddress.country;
-      }
+        // Attendance dates (5 fields per entry)
+        if (entry.fromDate) {
+          flattened[entry.fromDate.id || entry.fromDate.name || `${prefix}_fromDate`] = entry.fromDate.value;
+        }
+        if (entry.toDate) {
+          flattened[entry.toDate.id || entry.toDate.name || `${prefix}_toDate`] = entry.toDate.value;
+        }
+        if (entry.fromDateEstimate) {
+          flattened[entry.fromDateEstimate.id || entry.fromDateEstimate.name || `${prefix}_fromDateEstimate`] = entry.fromDateEstimate.value;
+        }
+        if (entry.toDateEstimate) {
+          flattened[entry.toDateEstimate.id || entry.toDateEstimate.name || `${prefix}_toDateEstimate`] = entry.toDateEstimate.value;
+        }
+        if (entry.isPresent) {
+          flattened[entry.isPresent.id || entry.isPresent.name || `${prefix}_isPresent`] = entry.isPresent.value;
+        }
 
-      // Degree information
-      if (entry.degreeReceived) {
-        flattened[entry.degreeReceived.id] = entry.degreeReceived;
-      }
-      if (entry.degreeType) {
-        flattened[entry.degreeType.id] = entry.degreeType;
-      }
-      if (entry.degreeDate) {
-        flattened[entry.degreeDate.id] = entry.degreeDate;
-      }
-      if (entry.degreeEstimated) {
-        flattened[entry.degreeEstimated.id] = entry.degreeEstimated;
-      }
-    });
+        // School information (7 fields per entry)
+        if (entry.schoolName) {
+          flattened[entry.schoolName.id || entry.schoolName.name || `${prefix}_schoolName`] = entry.schoolName.value;
+        }
+        if (entry.schoolAddress) {
+          flattened[entry.schoolAddress.id || entry.schoolAddress.name || `${prefix}_schoolAddress`] = entry.schoolAddress.value;
+        }
+        if (entry.schoolCity) {
+          flattened[entry.schoolCity.id || entry.schoolCity.name || `${prefix}_schoolCity`] = entry.schoolCity.value;
+        }
+        if (entry.schoolState) {
+          flattened[entry.schoolState.id || entry.schoolState.name || `${prefix}_schoolState`] = entry.schoolState.value;
+        }
+        if (entry.schoolCountry) {
+          flattened[entry.schoolCountry.id || entry.schoolCountry.name || `${prefix}_schoolCountry`] = entry.schoolCountry.value;
+        }
+        if (entry.schoolZipCode) {
+          flattened[entry.schoolZipCode.id || entry.schoolZipCode.name || `${prefix}_schoolZipCode`] = entry.schoolZipCode.value;
+        }
+        if (entry.schoolType) {
+          flattened[entry.schoolType.id || entry.schoolType.name || `${prefix}_schoolType`] = entry.schoolType.value;
+        }
+
+        // Degree information (2+ fields per entry)
+        if (entry.receivedDegree) {
+          flattened[entry.receivedDegree.id || entry.receivedDegree.name || `${prefix}_receivedDegree`] = entry.receivedDegree.value;
+        }
+
+        // Degrees array
+        if (entry.degrees && Array.isArray(entry.degrees)) {
+          entry.degrees.forEach((degree, degreeIndex) => {
+            const degreePrefix = `${prefix}_degree_${degreeIndex}`;
+            if (degree.degreeType) {
+              flattened[degree.degreeType.id || degree.degreeType.name || `${degreePrefix}_type`] = degree.degreeType.value;
+            }
+            if (degree.otherDegree) {
+              flattened[degree.otherDegree.id || degree.otherDegree.name || `${degreePrefix}_other`] = degree.otherDegree.value;
+            }
+            if (degree.dateAwarded) {
+              flattened[degree.dateAwarded.id || degree.dateAwarded.name || `${degreePrefix}_dateAwarded`] = degree.dateAwarded.value;
+            }
+            if (degree.dateAwardedEstimate) {
+              flattened[degree.dateAwardedEstimate.id || degree.dateAwardedEstimate.name || `${degreePrefix}_dateEstimate`] = degree.dateAwardedEstimate.value;
+            }
+          });
+        }
+
+        // Contact person (14 fields per entry - optional)
+        if (entry.contactPerson) {
+          const contactPrefix = `${prefix}_contact`;
+          const contact = entry.contactPerson;
+
+          if (contact.unknownPerson) {
+            flattened[contact.unknownPerson.id || contact.unknownPerson.name || `${contactPrefix}_unknown`] = contact.unknownPerson.value;
+          }
+          if (contact.lastName) {
+            flattened[contact.lastName.id || contact.lastName.name || `${contactPrefix}_lastName`] = contact.lastName.value;
+          }
+          if (contact.firstName) {
+            flattened[contact.firstName.id || contact.firstName.name || `${contactPrefix}_firstName`] = contact.firstName.value;
+          }
+          if (contact.address) {
+            flattened[contact.address.id || contact.address.name || `${contactPrefix}_address`] = contact.address.value;
+          }
+          if (contact.city) {
+            flattened[contact.city.id || contact.city.name || `${contactPrefix}_city`] = contact.city.value;
+          }
+          if (contact.state) {
+            flattened[contact.state.id || contact.state.name || `${contactPrefix}_state`] = contact.state.value;
+          }
+          if (contact.country) {
+            flattened[contact.country.id || contact.country.name || `${contactPrefix}_country`] = contact.country.value;
+          }
+          if (contact.zipCode) {
+            flattened[contact.zipCode.id || contact.zipCode.name || `${contactPrefix}_zipCode`] = contact.zipCode.value;
+          }
+          if (contact.phoneNumber) {
+            flattened[contact.phoneNumber.id || contact.phoneNumber.name || `${contactPrefix}_phone`] = contact.phoneNumber.value;
+          }
+          if (contact.phoneExtension) {
+            flattened[contact.phoneExtension.id || contact.phoneExtension.name || `${contactPrefix}_extension`] = contact.phoneExtension.value;
+          }
+          if (contact.email) {
+            flattened[contact.email.id || contact.email.name || `${contactPrefix}_email`] = contact.email.value;
+          }
+          if (contact.isInternationalPhone) {
+            flattened[contact.isInternationalPhone.id || contact.isInternationalPhone.name || `${contactPrefix}_intlPhone`] = contact.isInternationalPhone.value;
+          }
+          if (contact.unknownPhone) {
+            flattened[contact.unknownPhone.id || contact.unknownPhone.name || `${contactPrefix}_unknownPhone`] = contact.unknownPhone.value;
+          }
+          if (contact.unknownEmail) {
+            flattened[contact.unknownEmail.id || contact.unknownEmail.name || `${contactPrefix}_unknownEmail`] = contact.unknownEmail.value;
+          }
+        }
+
+        // Additional fields
+        if (entry.dayAttendance) {
+          flattened[entry.dayAttendance.id || entry.dayAttendance.name || `${prefix}_dayAttendance`] = entry.dayAttendance.value;
+        }
+        if (entry.nightAttendance) {
+          flattened[entry.nightAttendance.id || entry.nightAttendance.name || `${prefix}_nightAttendance`] = entry.nightAttendance.value;
+        }
+      });
+    }
+
+    console.log(`📊 Section 12 field flattening: ${Object.keys(flattened).length} fields processed (expected ~150)`);
+    return flattened;
+
+  } catch (error) {
+    console.error('❌ Error flattening Section 12 fields:', error);
+    return {};
   }
-
-  return flattened;
 };
 
 // ============================================================================
@@ -151,25 +231,29 @@ export interface Section12ContextType {
   loadSection: (data: Section12) => void;
 
   // Section-specific computed values
-  getEducationEntryCount: () => number;
+  getSchoolEntryCount: () => number;
   getTotalEducationYears: () => number;
   getHighestDegree: () => string | null;
 
   // Section-specific validation
   validateEducationHistory: () => EducationValidationResult;
-  validateEducationEntry: (entryIndex: number) => EducationValidationResult;
+  validateSchoolEntry: (entryIndex: number) => EducationValidationResult;
 
-  // Education entry management
-  addEducationEntry: () => void;
-  removeEducationEntry: (entryIndex: number) => void;
-  moveEducationEntry: (fromIndex: number, toIndex: number) => void;
-  duplicateEducationEntry: (entryIndex: number) => void;
-  clearEducationEntry: (entryIndex: number) => void;
-  updateEducationEntry: (entryIndex: number, fieldPath: string, value: any) => void;
+  // School entry management
+  addSchoolEntry: () => void;
+  removeSchoolEntry: (entryIndex: number) => void;
+  moveSchoolEntry: (fromIndex: number, toIndex: number) => void;
+  duplicateSchoolEntry: (entryIndex: number) => void;
+  clearSchoolEntry: (entryIndex: number) => void;
+  updateSchoolEntry: (entryIndex: number, fieldPath: string, value: any) => void;
 
-  // Education-specific field updates
-  updateEducationFlag: (hasEducation: "YES" | "NO") => void;
-  updateHighSchoolFlag: (hasHighSchool: "YES" | "NO") => void;
+  // Degree entry management
+  addDegreeEntry: (schoolIndex: number) => void;
+  removeDegreeEntry: (schoolIndex: number, degreeIndex: number) => void;
+
+  // School-specific field updates
+  updateAttendedSchoolFlag: (hasAttendedSchool: "YES" | "NO") => void;
+  updateAttendedSchoolOutsideUSFlag: (hasAttendedSchoolOutsideUS: "YES" | "NO") => void;
   updateSchoolType: (entryIndex: number, schoolType: string) => void;
   updateAttendanceDates: (entryIndex: number, fromDate: string, toDate: string, present?: boolean) => void;
   updateSchoolAddress: (entryIndex: number, address: Partial<{
@@ -201,10 +285,49 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
   // STATE MANAGEMENT
   // ============================================================================
 
-  const [section12Data, setSection12Data] = useState<Section12>(createDefaultSection12());
+  // Create minimal initial data to avoid corruption issues
+  const createMinimalInitialData = (): Section12 => {
+    console.log(`🔍 Section12: Creating minimal initial data to avoid corruption`);
+
+    // Create a minimal data structure without complex nested arrays
+    const minimalData: Section12 = {
+      _id: 12,
+      section12: {
+        hasAttendedSchool: {
+          id: "section12-hasAttendedSchool",
+          name: "section12-hasAttendedSchool",
+          type: 'PDFRadioGroup',
+          label: 'Do you have a high school diploma, GED, or equivalent?',
+          value: 'NO',
+          rect: { x: 0, y: 0, width: 0, height: 0 }
+        },
+        hasAttendedSchoolOutsideUS: {
+          id: "section12-hasAttendedSchoolOutsideUS",
+          name: "section12-hasAttendedSchoolOutsideUS",
+          type: 'PDFRadioGroup',
+          label: 'Have you attended any other educational institutions?',
+          value: 'NO',
+          rect: { x: 0, y: 0, width: 0, height: 0 }
+        },
+        entries: [] // Start with empty array - users can add entries as needed
+      }
+    };
+
+    console.log(`✅ Section12: Minimal initial data created successfully:`, minimalData);
+    return minimalData;
+  };
+
+  const [section12Data, setSection12Data] = useState<Section12>(() => createMinimalInitialData());
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [initialData] = useState<Section12>(createDefaultSection12());
+  const [initialData] = useState<Section12>(() => createMinimalInitialData());
+
+  // Ref to prevent React Strict Mode double execution of addSchoolEntry
+  const isAddingEntryRef = useRef(false);
+
+  // Ref to prevent React Strict Mode double execution of degree operations
+  const isAddingDegreeRef = useRef(false);
+  const isRemovingDegreeRef = useRef(false);
 
   // ============================================================================
   // COMPUTED VALUES
@@ -239,7 +362,9 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
       }
     };
 
-    const educationValidation = validateSection12(section12Data, validationContext);
+    // Get current data fresh to avoid stale closure
+    const currentData = section12Data;
+    const educationValidation = validateSection12(currentData, validationContext);
     if (!educationValidation.isValid) {
       educationValidation.errors.forEach(error => {
         validationErrors.push({
@@ -265,7 +390,7 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
       errors: validationErrors,
       warnings: validationWarnings
     };
-  }, [section12Data]);
+  }, []); // FIXED: Removed section12Data dependency
 
   // ============================================================================
   // CHANGE TRACKING
@@ -273,20 +398,11 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
 
   const getChanges = useCallback(() => {
     // Implementation for change tracking
+    // Get current data fresh to avoid stale closure
+    const currentData = section12Data;
+    const currentInitialData = initialData;
     return {};
-  }, [section12Data, initialData]);
-
-  // ============================================================================
-  // FIELD OPERATIONS
-  // ============================================================================
-
-  const updateField = useCallback((fieldPath: string, newValue: any) => {
-    setSection12Data(prevData => {
-      const newData = cloneDeep(prevData);
-      set(newData, fieldPath, newValue);
-      return newData;
-    });
-  }, []);
+  }, []); // FIXED: Removed dependencies to prevent infinite loops
 
   const resetSection = useCallback(() => {
     setSection12Data(createDefaultSection12());
@@ -296,6 +412,88 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
   const loadSection = useCallback((data: Section12) => {
     setSection12Data(data);
     setErrors({});
+  }, []);
+
+  // ============================================================================
+  // FIELD UPDATE FUNCTION
+  // ============================================================================
+
+  const updateFieldValue = useCallback((path: string, value: any): void => {
+    console.log(`🔧 Section12: updateFieldValue called:`, {
+      path,
+      value,
+    });
+
+    try {
+      setSection12Data((prev) => {
+        console.log(
+          `🔍 Section12: updateFieldValue - starting with prev data:`,
+          prev
+        );
+
+        const updated = cloneDeep(prev);
+
+        console.log(
+          `🔍 Section12: updateFieldValue - cloneDeep completed successfully`
+        );
+
+        // Handle main section flag updates (like Section 29's updateSubsectionFlag)
+        if (path === 'section12.hasAttendedSchool.value') {
+          console.log(
+            `🔍 Section12: updateFieldValue - updating hasAttendedSchool flag`
+          );
+          updated.section12.hasAttendedSchool.value = value;
+          console.log(
+            `✅ Section12: updateFieldValue - hasAttendedSchool flag updated successfully`
+          );
+        } else if (path === 'section12.hasAttendedSchoolOutsideUS.value') {
+          console.log(
+            `🔍 Section12: updateFieldValue - updating hasAttendedSchoolOutsideUS flag`
+          );
+          updated.section12.hasAttendedSchoolOutsideUS.value = value;
+          console.log(
+            `✅ Section12: updateFieldValue - hasAttendedSchoolOutsideUS flag updated successfully`
+          );
+        } else {
+          // Handle other field updates using lodash set
+          console.log(
+            `🔍 Section12: updateFieldValue - using lodash set for path: ${path}`
+          );
+
+          try {
+            set(updated, path, value);
+            console.log(
+              `✅ Section12: updateFieldValue - lodash set completed successfully`
+            );
+          } catch (setError) {
+            console.error(
+              `❌ Section12: updateFieldValue - lodash set failed:`,
+              setError
+            );
+            throw setError;
+          }
+        }
+
+        console.log(
+          `🔍 Section12: updateFieldValue - returning updated data:`,
+          updated
+        );
+        return updated;
+      });
+
+      console.log(
+        `✅ Section12: updateFieldValue - setSection12Data completed successfully`
+      );
+    } catch (error) {
+      console.error(
+        `❌ Section12: updateFieldValue - CRITICAL ERROR:`,
+        error
+      );
+      console.error(
+        `❌ Section12: updateFieldValue - Error stack:`,
+        error instanceof Error ? error.stack : "No stack trace available"
+      );
+    }
   }, []);
 
   // ============================================================================
@@ -309,7 +507,7 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
     setSection12Data,
     validateSectionData,
     getChanges,
-    flattenSection12Fields
+    updateFieldValue // Pass Section 12's updateFieldValue function to integration
   );
 
   // ============================================================================
@@ -317,35 +515,42 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
   // ============================================================================
 
   // Add section-specific computed values and methods
-  const getEducationEntryCount = useCallback((): number => {
-    return section12Data.section12.entries.length;
-  }, [section12Data]);
+  // FIXED: Removed section12Data dependencies to prevent infinite loops
+  const getSchoolEntryCount = useCallback((): number => {
+    // Get current data fresh to avoid stale closure
+    const currentData = section12Data;
+    return currentData.section12.entries.length;
+  }, []); // FIXED: Removed section12Data dependency
 
   const getTotalEducationYears = useCallback((): number => {
-    return section12Data.section12.entries.reduce((total, entry) => {
+    // Get current data fresh to avoid stale closure
+    const currentData = section12Data;
+    return currentData.section12.entries.reduce((total, entry) => {
       const duration = calculateEducationDuration(
-        entry.attendanceDates.fromDate.value,
-        entry.attendanceDates.toDate.value
+        entry.fromDate.value,
+        entry.toDate.value
       );
       return total + duration;
     }, 0);
-  }, [section12Data]);
+  }, []); // FIXED: Removed section12Data dependency
 
   const getHighestDegree = useCallback((): string | null => {
     const degreeHierarchy = [
       'Doctorate',
-      'Master',
-      'Bachelor',
-      'Associate',
-      'Professional',
-      'Certificate',
+      "Master's",
+      "Bachelor's",
+      "Associate's",
+      'Professional Degree (e.g. M D, D V M, J D)',
       'High School Diploma',
       'Other'
     ];
 
+    // Get current data fresh to avoid stale closure
+    const currentData = section12Data;
     for (const degree of degreeHierarchy) {
-      const hasThisDegree = section12Data.section12.entries.some(
-        entry => entry.degreeReceived.value && entry.degreeType.value === degree
+      const hasThisDegree = currentData.section12.entries.some(
+        entry => entry.receivedDegree.value === 'YES' &&
+                 entry.degrees.some(deg => deg.degreeType.value === degree)
       );
       if (hasThisDegree) {
         return degree;
@@ -353,7 +558,7 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
     }
 
     return null;
-  }, [section12Data]);
+  }, []); // FIXED: Removed section12Data dependency
 
   const validateEducationHistory = useCallback((): EducationValidationResult => {
     const validationContext: Section12ValidationContext = {
@@ -372,61 +577,126 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
       }
     };
 
-    return validateSection12(section12Data, validationContext);
-  }, [section12Data]);
+    // Get current data fresh to avoid stale closure
+    const currentData = section12Data;
+    return validateSection12(currentData, validationContext);
+  }, []); // FIXED: Removed section12Data dependency
 
-  const validateEducationEntry = useCallback((entryIndex: number): EducationValidationResult => {
-    if (entryIndex < 0 || entryIndex >= section12Data.section12.entries.length) {
+  const validateSchoolEntry = useCallback((entryIndex: number): EducationValidationResult => {
+    // Get current data fresh to avoid stale closure
+    const currentData = section12Data;
+
+    // Check if entry index is valid
+    if (entryIndex < 0 || !currentData?.section12?.entries || entryIndex >= currentData.section12.entries.length) {
       return {
         isValid: false,
-        errors: ['Invalid entry index'],
+        errors: [`Entry ${entryIndex + 1} does not exist`],
         warnings: []
       };
     }
 
-    const validationContext: Section12ValidationContext = {
-      currentDate: new Date(),
-      minimumEducationAge: 16,
-      rules: {
-        requiresEducationHistory: true,
-        requiresHighSchoolInfo: true,
-        maxEducationEntries: 10,
-        requiresSchoolName: true,
-        requiresSchoolAddress: true,
-        requiresAttendanceDates: true,
-        allowsEstimatedDates: true,
-        maxSchoolNameLength: 100,
-        maxAddressLength: 200
-      }
+    const entry = currentData.section12.entries[entryIndex];
+    if (!entry) {
+      return {
+        isValid: false,
+        errors: [`Entry ${entryIndex + 1} is not properly initialized`],
+        warnings: []
+      };
+    }
+
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    // Check required fields
+    if (!entry.schoolName?.value?.trim()) {
+      errors.push('School name is required');
+    }
+
+    if (!entry.fromDate?.value?.trim()) {
+      errors.push('From date is required');
+    }
+
+    if (!entry.toDate?.value?.trim() && !entry.isPresent?.value) {
+      errors.push('To date is required (or check Present)');
+    }
+
+    if (!entry.schoolType?.value?.trim()) {
+      errors.push('School type is required');
+    }
+
+    // Address validation
+    if (!entry.schoolAddress?.value?.trim()) {
+      errors.push('Street address is required');
+    }
+
+    if (!entry.schoolCity?.value?.trim()) {
+      errors.push('City is required');
+    }
+
+    if (!entry.schoolCountry?.value?.trim()) {
+      errors.push('Country is required');
+    }
+
+    // State validation for US addresses
+    if (entry.schoolCountry?.value === 'United States' && !entry.schoolState?.value?.trim()) {
+      errors.push('State is required for US addresses');
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings
     };
+  }, []); // FIXED: Removed section12Data dependency
 
-    return validateEducationEntry(section12Data.section12.entries[entryIndex], validationContext);
-  }, [section12Data]);
+  // School entry management functions
+  // FIXED: Added React Strict Mode protection to prevent duplicate entries
+  const addSchoolEntry = useCallback((): void => {
+    // Prevent React Strict Mode double execution
+    if (isAddingEntryRef.current) {
+      console.log('🚫 Section12: addSchoolEntry blocked - already in progress (React Strict Mode protection)');
+      return;
+    }
 
-  // Education entry management functions
-  const addEducationEntry = useCallback((): void => {
-    setSection12Data(prevData => {
-      const newData = cloneDeep(prevData);
-      const entryIndex = newData.section12.entries.length;
-      const newEntry = createDefaultEducationEntry(Date.now(), entryIndex);
-      newData.section12.entries.push(newEntry);
-      newData.section12.entriesCount = newData.section12.entries.length;
-      return newData;
-    });
+    isAddingEntryRef.current = true;
+    console.log('🎯 Section12: addSchoolEntry called');
+
+    try {
+      setSection12Data(prevData => {
+        const newData = cloneDeep(prevData);
+        const entryIndex = newData.section12.entries.length;
+
+        // Limit to 4 entries as per PDF structure (discovered 4 entries in JSON)
+        if (entryIndex >= 4) {
+          console.warn('⚠️ Section12: Maximum of 4 school entries allowed');
+          return prevData;
+        }
+
+        const newEntry = createDefaultSchoolEntry(Date.now(), entryIndex);
+        newData.section12.entries.push(newEntry);
+        console.log(`✅ Section12: Added school entry #${entryIndex + 1}. Total entries: ${newData.section12.entries.length}`);
+        return newData;
+      });
+    } finally {
+      // Reset the flag after a short delay to allow for state updates
+      setTimeout(() => {
+        isAddingEntryRef.current = false;
+        console.log('🔄 Section12: addSchoolEntry flag reset');
+      }, 100);
+    }
   }, []);
 
-  const removeEducationEntry = useCallback((entryIndex: number): void => {
+  const removeSchoolEntry = useCallback((entryIndex: number): void => {
     setSection12Data(prevData => {
       const newData = cloneDeep(prevData);
       if (entryIndex >= 0 && entryIndex < newData.section12.entries.length) {
         newData.section12.entries.splice(entryIndex, 1);
-        newData.section12.entriesCount = newData.section12.entries.length;
       }
       return newData;
     });
   }, []);
 
-  const moveEducationEntry = useCallback((fromIndex: number, toIndex: number): void => {
+  const moveSchoolEntry = useCallback((fromIndex: number, toIndex: number): void => {
     setSection12Data(prevData => {
       const newData = cloneDeep(prevData);
       if (fromIndex >= 0 && fromIndex < newData.section12.entries.length &&
@@ -438,10 +708,10 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
     });
   }, []);
 
-  const duplicateEducationEntry = useCallback((entryIndex: number): void => {
+  const duplicateSchoolEntry = useCallback((entryIndex: number): void => {
     setSection12Data(prevData => {
       const newData = cloneDeep(prevData);
-      if (entryIndex >= 0 && entryIndex < newData.section12.entries.length) {
+      if (entryIndex >= 0 && entryIndex < newData.section12.entries.length && newData.section12.entries.length < 4) {
         const originalEntry = newData.section12.entries[entryIndex];
         const duplicatedEntry = {
           ...originalEntry,
@@ -450,48 +720,47 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
           updatedAt: new Date()
         };
         newData.section12.entries.splice(entryIndex + 1, 0, duplicatedEntry);
-        newData.section12.entriesCount = newData.section12.entries.length;
       }
       return newData;
     });
   }, []);
 
-  const clearEducationEntry = useCallback((entryIndex: number): void => {
+  const clearSchoolEntry = useCallback((entryIndex: number): void => {
     setSection12Data(prevData => {
       const newData = cloneDeep(prevData);
       if (entryIndex >= 0 && entryIndex < newData.section12.entries.length) {
-        const clearedEntry = createDefaultEducationEntry(newData.section12.entries[entryIndex]._id);
+        const clearedEntry = createDefaultSchoolEntry(newData.section12.entries[entryIndex]._id, entryIndex);
         newData.section12.entries[entryIndex] = clearedEntry;
       }
       return newData;
     });
   }, []);
 
-  const updateEducationEntry = useCallback((entryIndex: number, fieldPath: string, value: any): void => {
+  const updateSchoolEntry = useCallback((entryIndex: number, fieldPath: string, value: any): void => {
     const fullFieldPath = `section12.entries[${entryIndex}].${fieldPath}`;
-    updateField(fullFieldPath, value);
-  }, [updateField]);
+    updateFieldValue(fullFieldPath, value);
+  }, [updateFieldValue]);
 
-  // Education-specific field updates
-  const updateEducationFlag = useCallback((hasEducation: "YES" | "NO"): void => {
-    updateField('section12.hasEducation.value', hasEducation);
-  }, [updateField]);
+  // School-specific field updates
+  const updateEducationFlag = useCallback((hasAttendedSchool: "YES" | "NO"): void => {
+    updateFieldValue('section12.hasAttendedSchool.value', hasAttendedSchool);
+  }, [updateFieldValue]);
 
-  const updateHighSchoolFlag = useCallback((hasHighSchool: "YES" | "NO"): void => {
-    updateField('section12.hasHighSchool.value', hasHighSchool);
-  }, [updateField]);
+  const updateHighSchoolFlag = useCallback((hasAttendedSchoolOutsideUS: "YES" | "NO"): void => {
+    updateFieldValue('section12.hasAttendedSchoolOutsideUS.value', hasAttendedSchoolOutsideUS);
+  }, [updateFieldValue]);
 
   const updateSchoolType = useCallback((entryIndex: number, schoolType: string): void => {
-    updateEducationEntry(entryIndex, 'schoolType.value', schoolType);
-  }, [updateEducationEntry]);
+    updateSchoolEntry(entryIndex, 'schoolType.value', schoolType);
+  }, [updateSchoolEntry]);
 
   const updateAttendanceDates = useCallback((entryIndex: number, fromDate: string, toDate: string, present?: boolean): void => {
-    updateEducationEntry(entryIndex, 'attendanceDates.fromDate.value', fromDate);
-    updateEducationEntry(entryIndex, 'attendanceDates.toDate.value', toDate);
+    updateSchoolEntry(entryIndex, 'fromDate.value', fromDate);
+    updateSchoolEntry(entryIndex, 'toDate.value', toDate);
     if (present !== undefined) {
-      updateEducationEntry(entryIndex, 'attendanceDates.present.value', present);
+      updateSchoolEntry(entryIndex, 'isPresent.value', present);
     }
-  }, [updateEducationEntry]);
+  }, [updateSchoolEntry]);
 
   const updateSchoolAddress = useCallback((entryIndex: number, address: Partial<{
     street: string;
@@ -501,9 +770,91 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
     country: string;
   }>): void => {
     Object.entries(address).forEach(([field, value]) => {
-      updateEducationEntry(entryIndex, `schoolAddress.${field}.value`, value);
+      updateSchoolEntry(entryIndex, `school${field.charAt(0).toUpperCase() + field.slice(1)}.value`, value);
     });
-  }, [updateEducationEntry]);
+  }, [updateSchoolEntry]);
+
+  // ============================================================================
+  // DEGREE ENTRY MANAGEMENT
+  // ============================================================================
+
+  const addDegreeEntry = useCallback((schoolIndex: number) => {
+    // Prevent React Strict Mode double execution
+    if (isAddingDegreeRef.current) {
+      console.log('🚫 Section12: addDegreeEntry blocked - already in progress (React Strict Mode protection)');
+      return;
+    }
+
+    isAddingDegreeRef.current = true;
+    console.log(`🎯 Section12: addDegreeEntry called for school ${schoolIndex}`);
+
+    try {
+      setSection12Data(prevData => {
+        const newData = cloneDeep(prevData);
+        const schoolEntry = newData.section12.entries[schoolIndex];
+
+        if (!schoolEntry) {
+          console.warn(`⚠️ Section12: School entry ${schoolIndex} not found`);
+          return prevData;
+        }
+
+        // Limit to 2 degrees per school as per PDF structure
+        if (schoolEntry.degrees.length >= 2) {
+          console.warn('⚠️ Section12: Maximum of 2 degrees per school allowed');
+          return prevData;
+        }
+
+        const newDegree = createDefaultDegreeEntry();
+        schoolEntry.degrees.push(newDegree);
+        console.log(`✅ Section12: Added degree entry to school ${schoolIndex}. Total degrees: ${schoolEntry.degrees.length}`);
+        return newData;
+      });
+    } finally {
+      // Reset the flag after a short delay to allow for state updates
+      setTimeout(() => {
+        isAddingDegreeRef.current = false;
+        console.log('🔄 Section12: addDegreeEntry flag reset');
+      }, 100);
+    }
+  }, []);
+
+  const removeDegreeEntry = useCallback((schoolIndex: number, degreeIndex: number) => {
+    // Prevent React Strict Mode double execution
+    if (isRemovingDegreeRef.current) {
+      console.log('🚫 Section12: removeDegreeEntry blocked - already in progress (React Strict Mode protection)');
+      return;
+    }
+
+    isRemovingDegreeRef.current = true;
+    console.log(`🎯 Section12: removeDegreeEntry called for school ${schoolIndex}, degree ${degreeIndex}`);
+
+    try {
+      setSection12Data(prevData => {
+        const newData = cloneDeep(prevData);
+        const schoolEntry = newData.section12.entries[schoolIndex];
+
+        if (!schoolEntry) {
+          console.warn(`⚠️ Section12: School entry ${schoolIndex} not found`);
+          return prevData;
+        }
+
+        if (degreeIndex < 0 || degreeIndex >= schoolEntry.degrees.length) {
+          console.warn(`⚠️ Section12: Degree index ${degreeIndex} out of bounds`);
+          return prevData;
+        }
+
+        schoolEntry.degrees.splice(degreeIndex, 1);
+        console.log(`✅ Section12: Removed degree entry ${degreeIndex} from school ${schoolIndex}. Remaining degrees: ${schoolEntry.degrees.length}`);
+        return newData;
+      });
+    } finally {
+      // Reset the flag after a short delay to allow for state updates
+      setTimeout(() => {
+        isRemovingDegreeRef.current = false;
+        console.log('🔄 Section12: removeDegreeEntry flag reset');
+      }, 100);
+    }
+  }, []);
 
   // Utility functions
   const formatEducationDateWrapper = useCallback((date: string, format?: 'MM/YYYY' | 'MM/DD/YYYY'): string => {
@@ -511,16 +862,18 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
   }, []);
 
   const calculateEducationDurationWrapper = useCallback((entryIndex: number): number => {
-    if (entryIndex < 0 || entryIndex >= section12Data.section12.entries.length) {
+    // Get current data fresh to avoid stale closure
+    const currentData = section12Data;
+    if (entryIndex < 0 || entryIndex >= currentData.section12.entries.length) {
       return 0;
     }
 
-    const entry = section12Data.section12.entries[entryIndex];
+    const entry = currentData.section12.entries[entryIndex];
     return calculateEducationDuration(
-      entry.attendanceDates.fromDate.value,
-      entry.attendanceDates.toDate.value
+      entry.fromDate.value,
+      entry.toDate.value
     );
-  }, [section12Data]);
+  }, []); // FIXED: Removed section12Data dependency
 
   const getSchoolTypeOptions = useCallback((): string[] => {
     return [...SCHOOL_TYPE_OPTIONS];
@@ -542,31 +895,35 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
     isDirty,
 
     // Core operations
-    updateField,
+    updateField: updateFieldValue,
     validateSection: validateSectionData,
     resetSection,
     loadSection,
 
     // Section-specific computed values
-    getEducationEntryCount,
+    getSchoolEntryCount,
     getTotalEducationYears,
     getHighestDegree,
 
     // Section-specific validation
     validateEducationHistory,
-    validateEducationEntry,
+    validateSchoolEntry,
 
-    // Education entry management
-    addEducationEntry,
-    removeEducationEntry,
-    moveEducationEntry,
-    duplicateEducationEntry,
-    clearEducationEntry,
-    updateEducationEntry,
+    // School entry management
+    addSchoolEntry,
+    removeSchoolEntry,
+    moveSchoolEntry,
+    duplicateSchoolEntry,
+    clearSchoolEntry,
+    updateSchoolEntry,
 
-    // Education-specific field updates
-    updateEducationFlag,
-    updateHighSchoolFlag,
+    // Degree entry management
+    addDegreeEntry,
+    removeDegreeEntry,
+
+    // School-specific field updates
+    updateAttendedSchoolFlag: updateEducationFlag,
+    updateAttendedSchoolOutsideUSFlag: updateHighSchoolFlag,
     updateSchoolType,
     updateAttendanceDates,
     updateSchoolAddress,

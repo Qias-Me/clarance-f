@@ -29,22 +29,16 @@ import type {
 } from '../../../../api/interfaces/sections2.0/section13';
 import {
   createDefaultSection13,
-  validateSection13,
   updateSection13Field,
   createDefaultMilitaryEmploymentEntry,
   createDefaultNonFederalEmploymentEntry,
   createDefaultSelfEmploymentEntry,
   createDefaultUnemploymentEntry,
-  validateEmploymentEntry,
   formatEmploymentDate,
   calculateEmploymentDuration,
   EMPLOYMENT_TYPE_OPTIONS,
   EMPLOYMENT_STATUS_OPTIONS,
-  REASON_FOR_LEAVING_OPTIONS,
-  SECTION13_COMPLETE_FIELD_MAPPINGS,
-  SECTION13_FIELD_COUNTS,
-  SECTION13_VERIFICATION,
-  verifySection13FieldMapping
+  REASON_FOR_LEAVING_OPTIONS
 } from '../../../../api/interfaces/sections2.0/section13';
 import type { ValidationResult, ValidationError } from '../shared/base-interfaces';
 import type { Field } from '../../../../api/interfaces/formDefinition2.0';
@@ -57,434 +51,7 @@ import { cloneDeep } from 'lodash';
 // FIELD FLATTENING FOR PDF GENERATION
 // ============================================================================
 
-/**
- * Flattens Section 13 fields for PDF generation
- * Converts nested Field<T> objects to a flat Record<string, any> structure
- * Expected fields: main flags, multiple employment entries with dates, addresses, supervisors, etc.
- */
-export const flattenSection13Fields = (section13Data: Section13): Record<string, any> => {
-  const flattened: Record<string, any> = {};
-  
-  // Flatten main section flags
-  if (section13Data.section13) {
-    // Has employment flag
-    if (section13Data.section13.hasEmployment) {
-      flattened[section13Data.section13.hasEmployment.id] = section13Data.section13.hasEmployment;
-    }
-    
-    // Has gaps flag
-    if (section13Data.section13.hasGaps) {
-      flattened[section13Data.section13.hasGaps.id] = section13Data.section13.hasGaps;
-    }
 
-    // Gap explanation
-    if (section13Data.section13.gapExplanation) {
-      flattened[section13Data.section13.gapExplanation.id] = section13Data.section13.gapExplanation;
-    }
-
-    // Flatten legacy employment entries (for backward compatibility)
-    section13Data.section13.entries.forEach((entry) => {
-      // Employment dates
-      if (entry.employmentDates.fromDate) {
-        flattened[entry.employmentDates.fromDate.id] = entry.employmentDates.fromDate;
-      }
-      if (entry.employmentDates.fromEstimated) {
-        flattened[entry.employmentDates.fromEstimated.id] = entry.employmentDates.fromEstimated;
-      }
-      if (entry.employmentDates.toDate) {
-        flattened[entry.employmentDates.toDate.id] = entry.employmentDates.toDate;
-      }
-      if (entry.employmentDates.toEstimated) {
-        flattened[entry.employmentDates.toEstimated.id] = entry.employmentDates.toEstimated;
-      }
-      if (entry.employmentDates.present) {
-        flattened[entry.employmentDates.present.id] = entry.employmentDates.present;
-      }
-
-      // Employment information
-      if (entry.employmentType) {
-        flattened[entry.employmentType.id] = entry.employmentType;
-      }
-      if (entry.employmentStatus) {
-        flattened[entry.employmentStatus.id] = entry.employmentStatus;
-      }
-      if (entry.employerName) {
-        flattened[entry.employerName.id] = entry.employerName;
-      }
-      if (entry.positionTitle) {
-        flattened[entry.positionTitle.id] = entry.positionTitle;
-      }
-      if (entry.positionDescription) {
-        flattened[entry.positionDescription.id] = entry.positionDescription;
-      }
-      if (entry.businessType) {
-        flattened[entry.businessType.id] = entry.businessType;
-      }
-      if (entry.salary) {
-        flattened[entry.salary.id] = entry.salary;
-      }
-      if (entry.reasonForLeaving) {
-        flattened[entry.reasonForLeaving.id] = entry.reasonForLeaving;
-      }
-      if (entry.additionalComments) {
-        flattened[entry.additionalComments.id] = entry.additionalComments;
-      }
-
-      // Employer address
-      if (entry.employerAddress.street) {
-        flattened[entry.employerAddress.street.id] = entry.employerAddress.street;
-      }
-      if (entry.employerAddress.city) {
-        flattened[entry.employerAddress.city.id] = entry.employerAddress.city;
-      }
-      if (entry.employerAddress.state) {
-        flattened[entry.employerAddress.state.id] = entry.employerAddress.state;
-      }
-      if (entry.employerAddress.zipCode) {
-        flattened[entry.employerAddress.zipCode.id] = entry.employerAddress.zipCode;
-      }
-      if (entry.employerAddress.country) {
-        flattened[entry.employerAddress.country.id] = entry.employerAddress.country;
-      }
-
-      // Supervisor information
-      if (entry.supervisor.name) {
-        flattened[entry.supervisor.name.id] = entry.supervisor.name;
-      }
-      if (entry.supervisor.title) {
-        flattened[entry.supervisor.title.id] = entry.supervisor.title;
-      }
-      if (entry.supervisor.email) {
-        flattened[entry.supervisor.email.id] = entry.supervisor.email;
-      }
-      if (entry.supervisor.phone) {
-        flattened[entry.supervisor.phone.id] = entry.supervisor.phone;
-      }
-      if (entry.supervisor.canContact) {
-        flattened[entry.supervisor.canContact.id] = entry.supervisor.canContact;
-      }
-      if (entry.supervisor.contactRestrictions) {
-        flattened[entry.supervisor.contactRestrictions.id] = entry.supervisor.contactRestrictions;
-      }
-
-      // Verification information
-      if (entry.verification.verified) {
-        flattened[entry.verification.verified.id] = entry.verification.verified;
-      }
-      if (entry.verification.verificationDate) {
-        flattened[entry.verification.verificationDate.id] = entry.verification.verificationDate;
-      }
-      if (entry.verification.verificationMethod) {
-        flattened[entry.verification.verificationMethod.id] = entry.verification.verificationMethod;
-      }
-      if (entry.verification.notes) {
-        flattened[entry.verification.notes.id] = entry.verification.notes;
-      }
-    });
-
-    // Flatten subsection-specific entries (Section 13A.1-13A.6)
-
-    // Section 13A.1 - Military/Federal Employment
-    section13Data.section13.militaryEmployment?.entries?.forEach((entry, index) => {
-      const prefix = `militaryEmployment.entries[${index}]`;
-
-      // Employment dates
-      if (entry.employmentDates.fromDate) {
-        flattened[entry.employmentDates.fromDate.id] = entry.employmentDates.fromDate;
-      }
-      if (entry.employmentDates.toDate) {
-        flattened[entry.employmentDates.toDate.id] = entry.employmentDates.toDate;
-      }
-      if (entry.employmentDates.present) {
-        flattened[entry.employmentDates.present.id] = entry.employmentDates.present;
-      }
-
-      // Military-specific fields
-      if (entry.rankTitle) {
-        flattened[entry.rankTitle.id] = entry.rankTitle;
-      }
-      if (entry.dutyStation?.dutyStation) {
-        flattened[entry.dutyStation.dutyStation.id] = entry.dutyStation.dutyStation;
-      }
-      if (entry.dutyStation?.street) {
-        flattened[entry.dutyStation.street.id] = entry.dutyStation.street;
-      }
-      if (entry.dutyStation?.city) {
-        flattened[entry.dutyStation.city.id] = entry.dutyStation.city;
-      }
-      if (entry.dutyStation?.zipCode) {
-        flattened[entry.dutyStation.zipCode.id] = entry.dutyStation.zipCode;
-      }
-
-      // Phone information with military-specific flags
-      if (entry.phone?.number) {
-        flattened[entry.phone.number.id] = entry.phone.number;
-      }
-      if (entry.phone?.extension) {
-        flattened[entry.phone.extension.id] = entry.phone.extension;
-      }
-      if (entry.phone?.isDSN) {
-        flattened[entry.phone.isDSN.id] = entry.phone.isDSN;
-      }
-      if (entry.phone?.isDay) {
-        flattened[entry.phone.isDay.id] = entry.phone.isDay;
-      }
-      if (entry.phone?.isNight) {
-        flattened[entry.phone.isNight.id] = entry.phone.isNight;
-      }
-
-      // Supervisor information
-      if (entry.supervisor?.name) {
-        flattened[entry.supervisor.name.id] = entry.supervisor.name;
-      }
-      if (entry.supervisor?.title) {
-        flattened[entry.supervisor.title.id] = entry.supervisor.title;
-      }
-      if (entry.supervisor?.email) {
-        flattened[entry.supervisor.email.id] = entry.supervisor.email;
-      }
-    });
-
-    // Section 13A.2 - Non-Federal Employment
-    section13Data.section13.nonFederalEmployment?.entries?.forEach((entry, index) => {
-      // Basic employment information
-      if (entry.employmentDates.fromDate) {
-        flattened[entry.employmentDates.fromDate.id] = entry.employmentDates.fromDate;
-      }
-      if (entry.employmentDates.toDate) {
-        flattened[entry.employmentDates.toDate.id] = entry.employmentDates.toDate;
-      }
-      if (entry.employerName) {
-        flattened[entry.employerName.id] = entry.employerName;
-      }
-      if (entry.positionTitle) {
-        flattened[entry.positionTitle.id] = entry.positionTitle;
-      }
-      if (entry.employmentStatus) {
-        flattened[entry.employmentStatus.id] = entry.employmentStatus;
-      }
-
-      // Address information
-      if (entry.employerAddress?.street) {
-        flattened[entry.employerAddress.street.id] = entry.employerAddress.street;
-      }
-      if (entry.employerAddress?.city) {
-        flattened[entry.employerAddress.city.id] = entry.employerAddress.city;
-      }
-      if (entry.employerAddress?.zipCode) {
-        flattened[entry.employerAddress.zipCode.id] = entry.employerAddress.zipCode;
-      }
-
-      // Contact information
-      if (entry.phone?.number) {
-        flattened[entry.phone.number.id] = entry.phone.number;
-      }
-      if (entry.phone?.extension) {
-        flattened[entry.phone.extension.id] = entry.phone.extension;
-      }
-
-      // Multiple employment periods (1-4)
-      if (entry.multipleEmploymentPeriods?.period1?.fromDate) {
-        flattened[entry.multipleEmploymentPeriods.period1.fromDate.id] = entry.multipleEmploymentPeriods.period1.fromDate;
-      }
-      if (entry.multipleEmploymentPeriods?.period1?.toDate) {
-        flattened[entry.multipleEmploymentPeriods.period1.toDate.id] = entry.multipleEmploymentPeriods.period1.toDate;
-      }
-      if (entry.multipleEmploymentPeriods?.period2?.fromDate) {
-        flattened[entry.multipleEmploymentPeriods.period2.fromDate.id] = entry.multipleEmploymentPeriods.period2.fromDate;
-      }
-      if (entry.multipleEmploymentPeriods?.period2?.toDate) {
-        flattened[entry.multipleEmploymentPeriods.period2.toDate.id] = entry.multipleEmploymentPeriods.period2.toDate;
-      }
-      // Continue for periods 3 and 4...
-    });
-
-    // Section 13A.3 - Self-Employment
-    section13Data.section13.selfEmployment?.entries?.forEach((entry, index) => {
-      if (entry.employmentDates.fromDate) {
-        flattened[entry.employmentDates.fromDate.id] = entry.employmentDates.fromDate;
-      }
-      if (entry.employmentDates.toDate) {
-        flattened[entry.employmentDates.toDate.id] = entry.employmentDates.toDate;
-      }
-      if (entry.businessName) {
-        flattened[entry.businessName.id] = entry.businessName;
-      }
-      if (entry.businessType) {
-        flattened[entry.businessType.id] = entry.businessType;
-      }
-      if (entry.positionTitle) {
-        flattened[entry.positionTitle.id] = entry.positionTitle;
-      }
-
-      // Business address
-      if (entry.businessAddress?.street) {
-        flattened[entry.businessAddress.street.id] = entry.businessAddress.street;
-      }
-      if (entry.businessAddress?.city) {
-        flattened[entry.businessAddress.city.id] = entry.businessAddress.city;
-      }
-      if (entry.businessAddress?.zipCode) {
-        flattened[entry.businessAddress.zipCode.id] = entry.businessAddress.zipCode;
-      }
-
-      // Verifier information
-      if (entry.verifier?.firstName) {
-        flattened[entry.verifier.firstName.id] = entry.verifier.firstName;
-      }
-      if (entry.verifier?.lastName) {
-        flattened[entry.verifier.lastName.id] = entry.verifier.lastName;
-      }
-      if (entry.verifier?.phone) {
-        flattened[entry.verifier.phone.id] = entry.verifier.phone;
-      }
-    });
-
-    // Section 13A.4 - Unemployment
-    section13Data.section13.unemployment?.entries?.forEach((entry, index) => {
-      if (entry.unemploymentDates.fromDate) {
-        flattened[entry.unemploymentDates.fromDate.id] = entry.unemploymentDates.fromDate;
-      }
-      if (entry.unemploymentDates.toDate) {
-        flattened[entry.unemploymentDates.toDate.id] = entry.unemploymentDates.toDate;
-      }
-      if (entry.unemploymentDates.present) {
-        flattened[entry.unemploymentDates.present.id] = entry.unemploymentDates.present;
-      }
-
-      // Reference contact
-      if (entry.referenceContact?.firstName) {
-        flattened[entry.referenceContact.firstName.id] = entry.referenceContact.firstName;
-      }
-      if (entry.referenceContact?.lastName) {
-        flattened[entry.referenceContact.lastName.id] = entry.referenceContact.lastName;
-      }
-      if (entry.referenceContact?.phone) {
-        flattened[entry.referenceContact.phone.id] = entry.referenceContact.phone;
-      }
-    });
-
-    // Section 13A.5 - Employment Record Issues
-    if (section13Data.section13.employmentIssues) {
-      const issues = section13Data.section13.employmentIssues;
-      if (issues.wasFired) {
-        flattened[issues.wasFired.id] = issues.wasFired;
-      }
-      if (issues.dateFired) {
-        flattened[issues.dateFired.id] = issues.dateFired;
-      }
-      if (issues.reasonForFiring) {
-        flattened[issues.reasonForFiring.id] = issues.reasonForFiring;
-      }
-      if (issues.quitAfterBeingTold) {
-        flattened[issues.quitAfterBeingTold.id] = issues.quitAfterBeingTold;
-      }
-      if (issues.dateQuit) {
-        flattened[issues.dateQuit.id] = issues.dateQuit;
-      }
-      if (issues.reasonForQuitting) {
-        flattened[issues.reasonForQuitting.id] = issues.reasonForQuitting;
-      }
-      if (issues.leftByMutualAgreement) {
-        flattened[issues.leftByMutualAgreement.id] = issues.leftByMutualAgreement;
-      }
-      if (issues.dateLeftMutual) {
-        flattened[issues.dateLeftMutual.id] = issues.dateLeftMutual;
-      }
-      if (issues.reasonForLeaving) {
-        flattened[issues.reasonForLeaving.id] = issues.reasonForLeaving;
-      }
-    }
-
-    // Section 13A.6 - Disciplinary Actions
-    if (section13Data.section13.disciplinaryActions) {
-      const disciplinary = section13Data.section13.disciplinaryActions;
-      if (disciplinary.receivedWrittenWarning) {
-        flattened[disciplinary.receivedWrittenWarning.id] = disciplinary.receivedWrittenWarning;
-      }
-      if (disciplinary.warningDate1) {
-        flattened[disciplinary.warningDate1.id] = disciplinary.warningDate1;
-      }
-      if (disciplinary.warningDate2) {
-        flattened[disciplinary.warningDate2.id] = disciplinary.warningDate2;
-      }
-      if (disciplinary.warningDate3) {
-        flattened[disciplinary.warningDate3.id] = disciplinary.warningDate3;
-      }
-      if (disciplinary.warningReason1) {
-        flattened[disciplinary.warningReason1.id] = disciplinary.warningReason1;
-      }
-      if (disciplinary.warningReason2) {
-        flattened[disciplinary.warningReason2.id] = disciplinary.warningReason2;
-      }
-      if (disciplinary.warningReason3) {
-        flattened[disciplinary.warningReason3.id] = disciplinary.warningReason3;
-      }
-      if (disciplinary.warningReason4) {
-        flattened[disciplinary.warningReason4.id] = disciplinary.warningReason4;
-      }
-    }
-
-    // Flatten federal employment info
-    if (section13Data.section13.federalInfo) {
-      const federal = section13Data.section13.federalInfo;
-      if (federal.hasFederalEmployment) {
-        flattened[federal.hasFederalEmployment.id] = federal.hasFederalEmployment;
-      }
-      if (federal.securityClearance) {
-        flattened[federal.securityClearance.id] = federal.securityClearance;
-      }
-      if (federal.clearanceLevel) {
-        flattened[federal.clearanceLevel.id] = federal.clearanceLevel;
-      }
-      if (federal.clearanceDate) {
-        flattened[federal.clearanceDate.id] = federal.clearanceDate;
-      }
-      if (federal.investigationDate) {
-        flattened[federal.investigationDate.id] = federal.investigationDate;
-      }
-      if (federal.polygraphDate) {
-        flattened[federal.polygraphDate.id] = federal.polygraphDate;
-      }
-      if (federal.accessToClassified) {
-        flattened[federal.accessToClassified.id] = federal.accessToClassified;
-      }
-      if (federal.classificationLevel) {
-        flattened[federal.classificationLevel.id] = federal.classificationLevel;
-      }
-    }
-  }
-
-  return flattened;
-};
-
-/**
- * Enhanced flattening function that handles all 1,086 PDF form fields
- * Uses the complete field mappings to ensure every field is properly mapped
- */
-const flattenSection13DataComplete = (section13Data: Section13): Record<string, Field<any>> => {
-  console.log('🔄 Section13Context: Flattening all 1,086 fields using complete field mappings');
-
-  // Start with the existing flattening
-  const flattened = flattenSection13Fields(section13Data);
-
-  // Add comprehensive field mapping verification
-  const mappingStats = SECTION13_VERIFICATION;
-  console.log(`📊 Section13Context: Field mapping coverage: ${mappingStats.COVERAGE_PERCENTAGE.toFixed(1)}%`);
-  console.log(`📊 Section13Context: Total mapped fields: ${mappingStats.ACTUAL_MAPPED_FIELDS}/1086`);
-
-  // Log field type breakdown
-  console.log(`📋 Section13Context: Field types - Text: ${mappingStats.TEXT_FIELDS}, Checkbox: ${mappingStats.CHECKBOX_FIELDS}, Radio: ${mappingStats.RADIO_FIELDS}, Dropdown: ${mappingStats.DROPDOWN_FIELDS}`);
-
-  // Verify complete field mapping
-  if (mappingStats.IS_COMPLETE) {
-    console.log('✅ Section13Context: All 1,086 fields are properly mapped');
-  } else {
-    console.warn(`⚠️ Section13Context: Missing ${1086 - mappingStats.ACTUAL_MAPPED_FIELDS} field mappings`);
-  }
-
-  return flattened;
-};
 
 // Enhanced Template configuration removed - now using direct integration approach
 
@@ -511,7 +78,6 @@ export interface Section13ContextType {
   getEmploymentGaps: () => Array<{ start: string; end: string; duration: number }>;
 
   // Section-specific validation
-  validateEmploymentHistory: () => EmploymentValidationResult;
   validateEmploymentEntry: (entryIndex: number) => EmploymentValidationResult;
 
   // Employment type management (removed duplicate)
@@ -589,10 +155,6 @@ export interface Section13ContextType {
   getEmploymentStatusOptions: () => string[];
   getReasonForLeavingOptions: () => string[];
 
-  // Field mapping verification (1,086 fields)
-  verifyCompleteFieldMapping: () => boolean;
-  getFieldMappingStats: () => typeof SECTION13_VERIFICATION;
-  getCompleteFieldMappings: () => typeof SECTION13_COMPLETE_FIELD_MAPPINGS;
 }
 
 // ============================================================================
@@ -610,17 +172,23 @@ export const Section13Provider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Initialize section data with complete field mapping verification
   const [sectionData, setSectionData] = useState<Section13>(() => {
-    console.log('🔄 Section13: Initializing section data with complete field mapping verification');
+    console.log('🔄 Section13: Initializing section data');
 
-    // Verify complete field mapping on initialization
-    const mappingStats = SECTION13_VERIFICATION;
-    console.log(`🎯 Section13: Field mapping verification - ${mappingStats.COVERAGE_PERCENTAGE.toFixed(1)}% coverage (${mappingStats.ACTUAL_MAPPED_FIELDS}/1086 fields)`);
+    // Import and run field mapping verification
+    import('./section13-field-mapping').then(({ verifySection13FieldMapping }) => {
+      const verification = verifySection13FieldMapping();
+      console.log('📊 Section13: Field mapping verification results:', verification);
 
-    if (mappingStats.IS_COMPLETE) {
-      console.log('✅ Section13: All 1,086 PDF form fields are properly mapped');
-    } else {
-      console.warn(`⚠️ Section13: Missing ${1086 - mappingStats.ACTUAL_MAPPED_FIELDS} field mappings`);
-    }
+      if (verification.success) {
+        console.log('✅ Section13: All field mappings verified successfully');
+      } else {
+        console.warn('⚠️ Section13: Field mapping verification issues detected');
+        console.warn(`   Missing fields: ${verification.missingFields.length}`);
+        console.warn(`   Total fields: ${verification.totalFields}/1086`);
+      }
+    }).catch(error => {
+      console.warn('❌ Section13: Failed to load field mapping verification:', error);
+    });
 
     return createDefaultSection13(true);
   });
@@ -630,50 +198,7 @@ export const Section13Provider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Get SF86 form context for save operations only
   const sf86Form = useSF86Form();
 
-  // Validation function
-  const validateSection = useCallback((): ValidationResult => {
-    const validationErrors: ValidationError[] = [];
-    const validationWarnings: ValidationError[] = [];
 
-    // Validate employment history
-    const validationContext: Section13ValidationContext = {
-      currentDate: new Date(),
-      minimumAge: 16,
-      investigationTimeFrame: 10,
-      rules: {
-        requiresEmploymentHistory: true,
-        requiresGapExplanation: true,
-        maxEmploymentEntries: 15,
-        requiresEmployerName: true,
-        requiresPositionTitle: true,
-        requiresEmploymentDates: true,
-        requiresSupervisorInfo: true,
-        allowsEstimatedDates: true,
-        maxEmployerNameLength: 100,
-        maxPositionDescriptionLength: 500,
-        maxCommentLength: 1000,
-        timeFrameYears: 10
-      }
-    };
-
-    const employmentValidation = validateSection13(sectionData, validationContext);
-    if (!employmentValidation.isValid) {
-      employmentValidation.errors.forEach(error => {
-        validationErrors.push({
-          field: 'section13.employmentHistory',
-          message: error,
-          code: 'EMPLOYMENT_VALIDATION_ERROR',
-          severity: 'error'
-        });
-      });
-    }
-
-    return {
-      isValid: validationErrors.length === 0,
-      errors: validationErrors,
-      warnings: validationWarnings
-    };
-  }, [sectionData]);
 
   // Field update function
   const updateFieldValue = useCallback((fieldPath: string, newValue: any) => {
@@ -733,8 +258,24 @@ export const Section13Provider: React.FC<{ children: React.ReactNode }> = ({ chi
   // ============================================================================
 
   const getEmploymentEntryCount = useCallback((): number => {
-    return sectionData.section13.entries.length;
-  }, [sectionData.section13.entries.length]);
+    // Count all employment entries across all subsections for comprehensive total
+    const militaryCount = sectionData.section13?.militaryEmployment?.entries?.length || 0;
+    const nonFederalCount = sectionData.section13?.nonFederalEmployment?.entries?.length || 0;
+    const selfEmploymentCount = sectionData.section13?.selfEmployment?.entries?.length || 0;
+    const unemploymentCount = sectionData.section13?.unemployment?.entries?.length || 0;
+    const genericCount = sectionData.section13?.entries?.length || 0;
+
+    const totalCount = militaryCount + nonFederalCount + selfEmploymentCount + unemploymentCount + genericCount;
+    console.log(`📊 Section13: Total employment entries: ${totalCount} (Military: ${militaryCount}, Non-Federal: ${nonFederalCount}, Self: ${selfEmploymentCount}, Unemployment: ${unemploymentCount}, Generic: ${genericCount})`);
+
+    return totalCount;
+  }, [
+    sectionData.section13?.militaryEmployment?.entries?.length,
+    sectionData.section13?.nonFederalEmployment?.entries?.length,
+    sectionData.section13?.selfEmployment?.entries?.length,
+    sectionData.section13?.unemployment?.entries?.length,
+    sectionData.section13?.entries?.length
+  ]);
 
   const getTotalEmploymentYears = useCallback((): number => {
     return sectionData.section13.entries.reduce((total: number, entry: EmploymentEntry) => {
@@ -903,9 +444,25 @@ export const Section13Provider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   // Legacy employment entry management (for backward compatibility)
   const addEmploymentEntry = useCallback(() => {
-    console.log('🔄 Section13: Adding new employment entry (legacy - deprecated)');
-    // TODO: Implement createDefaultEmploymentEntry or use specific employment type functions
-    console.warn('⚠️ Section13: Legacy addEmploymentEntry called - use specific employment type functions instead');
+    console.log('🔄 Section13: Adding new employment entry (legacy - using non-federal as default)');
+    console.log('💡 Section13: Consider using specific employment type functions for better type safety');
+
+    // Create a default non-federal employment entry (most common type)
+    // This provides backward compatibility while maintaining functionality
+    setSectionData(prevData => {
+      const newEntry = createDefaultNonFederalEmploymentEntry(Date.now());
+      const updated = cloneDeep(prevData);
+
+      // Add to both the specific non-federal entries and generic entries for compatibility
+      updated.section13.nonFederalEmployment.entries = [...updated.section13.nonFederalEmployment.entries, newEntry];
+
+      // Also add to generic entries array for legacy compatibility
+      updated.section13.entries = [...updated.section13.entries, newEntry as any];
+
+      setIsDirty(true);
+      console.log('✅ Section13: Successfully added new employment entry (non-federal type)');
+      return updated;
+    });
   }, []);
 
   const removeEmploymentEntry = useCallback((entryIndex: number) => {
@@ -950,77 +507,14 @@ export const Section13Provider: React.FC<{ children: React.ReactNode }> = ({ chi
     return currentType || null;
   }, [sectionData.section13.employmentType]);
 
-  // Validation functions
-  const validateEmploymentHistory = useCallback((): EmploymentValidationResult => {
-    const validationContext: Section13ValidationContext = {
-      currentDate: new Date(),
-      minimumAge: 16,
-      investigationTimeFrame: 10,
-      rules: {
-        requiresEmploymentHistory: true,
-        requiresGapExplanation: true,
-        maxEmploymentEntries: 15,
-        requiresEmployerName: true,
-        requiresPositionTitle: true,
-        requiresEmploymentDates: true,
-        requiresSupervisorInfo: true,
-        allowsEstimatedDates: true,
-        maxEmployerNameLength: 100,
-        maxPositionDescriptionLength: 500,
-        maxCommentLength: 1000,
-        timeFrameYears: 10
-      }
-    };
-    return validateSection13(sectionData, validationContext);
-  }, [sectionData]);
-
-  const validateEmploymentEntryFunc = useCallback((entryIndex: number): EmploymentValidationResult => {
-    if (entryIndex >= 0 && entryIndex < sectionData.section13.entries.length) {
-      const entry = sectionData.section13.entries[entryIndex];
-      const validationContext: Section13ValidationContext = {
-        currentDate: new Date(),
-        minimumAge: 16,
-        investigationTimeFrame: 10,
-        rules: {
-          requiresEmploymentHistory: true,
-          requiresGapExplanation: true,
-          maxEmploymentEntries: 15,
-          requiresEmployerName: true,
-          requiresPositionTitle: true,
-          requiresEmploymentDates: true,
-          requiresSupervisorInfo: true,
-          allowsEstimatedDates: true,
-          maxEmployerNameLength: 100,
-          maxPositionDescriptionLength: 500,
-          maxCommentLength: 1000,
-          timeFrameYears: 10
-        }
-      };
-      return validateEmploymentEntry(entry, validationContext);
-    }
-    return { isValid: false, errors: ['Invalid entry index'], warnings: [] };
-  }, [sectionData.section13.entries]);
 
   // Utility functions
   const getEmploymentTypeOptions = useCallback(() => EMPLOYMENT_TYPE_OPTIONS, []);
   const getEmploymentStatusOptions = useCallback(() => EMPLOYMENT_STATUS_OPTIONS, []);
   const getReasonForLeavingOptions = useCallback(() => REASON_FOR_LEAVING_OPTIONS, []);
 
-  // Field mapping verification functions (1,086 fields)
-  const verifyCompleteFieldMapping = useCallback((): boolean => {
-    console.log('🔍 Section13Context: Verifying complete field mapping (1,086 fields)');
-    return verifySection13FieldMapping();
-  }, []);
-
-  const getFieldMappingStats = useCallback(() => {
-    console.log('📊 Section13Context: Getting field mapping statistics');
-    return SECTION13_VERIFICATION;
-  }, []);
-
-  const getCompleteFieldMappings = useCallback(() => {
-    console.log('📋 Section13Context: Getting complete field mappings');
-    return SECTION13_COMPLETE_FIELD_MAPPINGS;
-  }, []);
+  // TODO: Field mapping verification functions (1,086 fields) will be implemented later
+  // when SECTION13_VERIFICATION and SECTION13_COMPLETE_FIELD_MAPPINGS are available
 
   // Utility function for date formatting
   const formatEmploymentDate = useCallback((date: string, format: 'MM/YYYY' | 'MM/DD/YYYY' = 'MM/YYYY'): string => {
@@ -1039,6 +533,28 @@ export const Section13Provider: React.FC<{ children: React.ReactNode }> = ({ chi
       return date; // Return original if parsing fails
     }
   }, []);
+
+  // Validation function
+  const validateSection = useCallback((): ValidationResult => {
+    const errors: ValidationError[] = [];
+    const warnings: ValidationError[] = [];
+
+    // Basic validation - can be expanded later
+    if (sectionData.section13.hasEmployment.value === "YES" && sectionData.section13.entries.length === 0) {
+      errors.push({
+        field: 'section13.entries',
+        message: "At least one employment entry is required when employment is indicated",
+        code: 'REQUIRED_FIELD',
+        severity: 'error'
+      });
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings
+    };
+  }, [sectionData]);
 
   // Placeholder functions for interface compliance
   const moveEmploymentEntry = useCallback((fromIndex: number, toIndex: number) => {
@@ -1105,6 +621,93 @@ export const Section13Provider: React.FC<{ children: React.ReactNode }> = ({ chi
     return 0;
   }, [sectionData.section13.entries]);
 
+  // Section-specific validation function
+  const validateEmploymentEntry = useCallback((entryIndex: number): EmploymentValidationResult => {
+    // Get current data fresh to avoid stale closure
+    const currentData = sectionData;
+
+    // Check if entry index is valid
+    if (entryIndex < 0 || !currentData?.section13?.entries || entryIndex >= currentData.section13.entries.length) {
+      return {
+        isValid: false,
+        errors: [`Entry ${entryIndex + 1} does not exist`],
+        warnings: []
+      };
+    }
+
+    const entry = currentData.section13.entries[entryIndex];
+    if (!entry) {
+      return {
+        isValid: false,
+        errors: [`Entry ${entryIndex + 1} is not properly initialized`],
+        warnings: []
+      };
+    }
+
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    // Check required fields
+    if (!entry.employerName?.value?.trim()) {
+      errors.push('Employer name is required');
+    }
+
+    if (!entry.positionTitle?.value?.trim()) {
+      errors.push('Position title is required');
+    }
+
+    // Validate employment dates
+    if (!entry.employmentDates?.fromDate?.value?.trim()) {
+      errors.push('Employment start date is required');
+    }
+
+    if (!entry.employmentDates?.present?.value && !entry.employmentDates?.toDate?.value?.trim()) {
+      errors.push('Employment end date is required when not currently employed');
+    }
+
+    // Validate date format and logic
+    if (entry.employmentDates?.fromDate?.value && entry.employmentDates?.toDate?.value) {
+      const fromDate = new Date(entry.employmentDates.fromDate.value);
+      const toDate = new Date(entry.employmentDates.toDate.value);
+
+      if (fromDate > toDate) {
+        errors.push('Employment start date cannot be after end date');
+      }
+
+      if (toDate > new Date()) {
+        warnings.push('Employment end date is in the future');
+      }
+    }
+
+    // Validate supervisor information if required
+    if (!entry.supervisor?.name?.value?.trim()) {
+      errors.push('Supervisor name is required');
+    }
+
+    if (!entry.supervisor?.title?.value?.trim()) {
+      errors.push('Supervisor title is required');
+    }
+
+    // Validate address information
+    if (!entry.employerAddress?.street?.value?.trim()) {
+      errors.push('Employer street address is required');
+    }
+
+    if (!entry.employerAddress?.city?.value?.trim()) {
+      errors.push('Employer city is required');
+    }
+
+    if (!entry.employerAddress?.state?.value?.trim()) {
+      errors.push('Employer state is required');
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings
+    };
+  }, [sectionData]);
+
   // Context value
   const contextValue: Section13ContextType = {
     sectionData,
@@ -1113,12 +716,11 @@ export const Section13Provider: React.FC<{ children: React.ReactNode }> = ({ chi
     isDirty,
     saveToMainContext,
     validateSection,
+    validateEmploymentEntry,
     getEmploymentEntryCount,
     getTotalEmploymentYears,
     getCurrentEmployer,
     getEmploymentGaps,
-    validateEmploymentHistory,
-    validateEmploymentEntry: validateEmploymentEntryFunc,
 
     // Employment type management
     updateEmploymentType,
@@ -1148,13 +750,15 @@ export const Section13Provider: React.FC<{ children: React.ReactNode }> = ({ chi
     updateUnemploymentEntry,
     getUnemploymentEntryCount,
 
-    // Legacy employment entry management
+    // Employment entry management
     addEmploymentEntry,
     removeEmploymentEntry,
     moveEmploymentEntry,
     duplicateEmploymentEntry,
     clearEmploymentEntry,
     updateEmploymentEntry,
+
+    // Employment-specific field updates
     updateEmploymentFlag,
     updateGapsFlag,
     updateGapExplanation,
@@ -1162,19 +766,18 @@ export const Section13Provider: React.FC<{ children: React.ReactNode }> = ({ chi
     updateEmploymentDates,
     updateEmployerAddress,
     updateSupervisorInfo,
+
+    // Federal employment management
     updateFederalEmploymentFlag,
     updateSecurityClearance,
     updateClearanceInfo,
+
+    // Utility functions
     formatEmploymentDate,
     calculateEmploymentDuration: calculateEmploymentDurationFunc,
     getEmploymentTypeOptions,
     getEmploymentStatusOptions,
-    getReasonForLeavingOptions,
-
-    // Field mapping verification (1,086 fields)
-    verifyCompleteFieldMapping,
-    getFieldMappingStats,
-    getCompleteFieldMappings
+    getReasonForLeavingOptions
   };
 
   return (

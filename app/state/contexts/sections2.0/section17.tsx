@@ -21,15 +21,21 @@ import type {
   Section17SubsectionKey,
   Section17FieldUpdate,
   Section17ValidationResult,
-  CurrentSpouseEntry,
-  FormerSpouseEntry,
-  CohabitantEntry
+  Section17_1_CurrentSpouse,
+  Section17_1_2_FormerSpouse,
+  Section17_2_AdditionalFormerSpouse,
+  Section17_2_2_FormerSpouseContinuation,
+  Section17_3_Cohabitant,
+  Section17_3_2_CohabitantContinuation
 } from '../../../../api/interfaces/sections2.0/section17';
 import {
   createDefaultSection17,
-  createDefaultCurrentSpouseEntry,
-  createDefaultFormerSpouseEntry,
-  createDefaultCohabitantEntry,
+  createDefaultCurrentSpouse,
+  createDefaultFormerSpouse,
+  createDefaultAdditionalFormerSpouse,
+  createDefaultFormerSpouseContinuation,
+  createDefaultCohabitant,
+  createDefaultCohabitantContinuation,
   validateSection17,
   isSection17Complete
 } from '../../../../api/interfaces/sections2.0/section17';
@@ -49,24 +55,17 @@ export interface Section17ContextType {
   errors: Record<string, string>;
   isDirty: boolean;
 
-  // Current Spouse Actions
+  // Subsection Update Actions - UPDATED for 6 subsections
   updateCurrentSpouse: (fieldPath: string, value: any) => void;
-  addCurrentSpouse: () => void;
-  removeCurrentSpouse: (index: number) => void;
-
-  // Former Spouse Actions
-  updateFormerSpouse: (index: number, fieldPath: string, value: any) => void;
-  addFormerSpouse: () => void;
-  removeFormerSpouse: (index: number) => void;
-
-  // Cohabitant Actions
-  updateCohabitant: (index: number, fieldPath: string, value: any) => void;
-  addCohabitant: () => void;
-  removeCohabitant: (index: number) => void;
+  updateFormerSpouse: (fieldPath: string, value: any) => void;
+  updateAdditionalFormerSpouse: (fieldPath: string, value: any) => void;
+  updateFormerSpouseContinuation: (fieldPath: string, value: any) => void;
+  updateCohabitant: (fieldPath: string, value: any) => void;
+  updateCohabitantContinuation: (fieldPath: string, value: any) => void;
 
   // Generic Field Updates
   updateFieldValue: (path: string, value: any) => void;
-  updateEntry: (subsection: Section17SubsectionKey, index: number, fieldPath: string, value: any) => void;
+  updateSubsection: (subsection: Section17SubsectionKey, fieldPath: string, value: any) => void;
 
   // Validation
   validateSection: () => ValidationResult;
@@ -195,24 +194,18 @@ export const Section17Provider: React.FC<Section17ProviderProps> = ({ children }
   // ============================================================================
 
   /**
-   * Update current spouse information
-   * Handles Field<T> structures - expects full field paths including .value
-   * Following Section 29 gold standard pattern with proper isDirty tracking
+   * Update current spouse information (Section17_1[0])
+   * UPDATED for new single-subsection structure
    */
   const updateCurrentSpouse = useCallback((fieldPath: string, value: any) => {
     setSection17Data(prevData => {
       const newData = cloneDeep(prevData);
 
-      // Ensure current spouse array exists and has at least one entry
-      if (!newData.section17.currentSpouse.length) {
-        newData.section17.currentSpouse.push(createDefaultCurrentSpouseEntry());
-      }
-
-      // Use full path as provided (component now includes .value)
-      const fullPath = `section17.currentSpouse.0.${fieldPath}`;
+      // Use full path for the single currentSpouse object
+      const fullPath = `section17.currentSpouse.${fieldPath}`;
       set(newData, fullPath, value);
 
-      // Set dirty flag like Section 29
+      // Set dirty flag
       setIsDirty(true);
 
       return newData;
@@ -220,159 +213,143 @@ export const Section17Provider: React.FC<Section17ProviderProps> = ({ children }
   }, []);
 
   /**
-   * Add a new current spouse entry (though typically only one exists)
-   * Following Section 29 gold standard pattern with proper isDirty tracking
+   * Update former spouse information (Section17_1_2[0])
    */
-  const addCurrentSpouse = useCallback(() => {
-    console.log('🔄 Section17Context: addCurrentSpouse called');
-    setSection17Data(prevData => {
-      const newData = cloneDeep(prevData);
-      const newEntry = createDefaultCurrentSpouseEntry();
-      newData.section17.currentSpouse.push(newEntry);
-      console.log('✅ Section17Context: Current spouse entry added', newEntry);
-      console.log('📊 Section17Context: Updated data', newData);
-
-      // Set dirty flag like Section 29
-      setIsDirty(true);
-
-      return newData;
-    });
-  }, []);
-
-  /**
-   * Remove current spouse entry
-   */
-  const removeCurrentSpouse = useCallback((index: number) => {
-    setSection17Data(prevData => {
-      const newData = cloneDeep(prevData);
-      newData.section17.currentSpouse.splice(index, 1);
-      setIsDirty(true);
-      return newData;
-    });
-  }, []);
-
-  /**
-   * Update former spouse information
-   * Handles Field<T> structures - expects full field paths including .value
-   * Following Section 29 gold standard pattern with proper isDirty tracking
-   */
-  const updateFormerSpouse = useCallback((index: number, fieldPath: string, value: any) => {
+  const updateFormerSpouse = useCallback((fieldPath: string, value: any) => {
     setSection17Data(prevData => {
       const newData = cloneDeep(prevData);
 
-      // Ensure the array has enough entries
-      while (newData.section17.formerSpouses.length <= index) {
-        newData.section17.formerSpouses.push(createDefaultFormerSpouseEntry());
-      }
-
-      // Use full path as provided (component now includes .value)
-      const fullPath = `section17.formerSpouses.${index}.${fieldPath}`;
+      const fullPath = `section17.formerSpouse.${fieldPath}`;
       set(newData, fullPath, value);
 
-      // Set dirty flag like Section 29
-      setIsDirty(true);
-
-      return newData;
-    });
-  }, []);
-
-  /**
-   * Add a new former spouse entry
-   */
-  const addFormerSpouse = useCallback(() => {
-    setSection17Data(prevData => {
-      const newData = cloneDeep(prevData);
-      newData.section17.formerSpouses.push(createDefaultFormerSpouseEntry());
       setIsDirty(true);
       return newData;
     });
   }, []);
 
   /**
-   * Remove former spouse entry
+   * Update additional former spouse information (Section17_2[0])
    */
-  const removeFormerSpouse = useCallback((index: number) => {
-    setSection17Data(prevData => {
-      const newData = cloneDeep(prevData);
-      newData.section17.formerSpouses.splice(index, 1);
-      setIsDirty(true);
-      return newData;
-    });
-  }, []);
-
-  /**
-   * Update cohabitant information
-   * Handles Field<T> structures - expects full field paths including .value
-   * Following Section 29 gold standard pattern with proper isDirty tracking
-   */
-  const updateCohabitant = useCallback((index: number, fieldPath: string, value: any) => {
+  const updateAdditionalFormerSpouse = useCallback((fieldPath: string, value: any) => {
     setSection17Data(prevData => {
       const newData = cloneDeep(prevData);
 
-      // Ensure the array has enough entries
-      while (newData.section17.cohabitants.length <= index) {
-        newData.section17.cohabitants.push(createDefaultCohabitantEntry());
-      }
-
-      // Use full path as provided (component now includes .value)
-      const fullPath = `section17.cohabitants.${index}.${fieldPath}`;
+      const fullPath = `section17.additionalFormerSpouse.${fieldPath}`;
       set(newData, fullPath, value);
 
-      // Set dirty flag like Section 29
-      setIsDirty(true);
-
-      return newData;
-    });
-  }, []);
-
-  /**
-   * Add a new cohabitant entry
-   */
-  const addCohabitant = useCallback(() => {
-    setSection17Data(prevData => {
-      const newData = cloneDeep(prevData);
-      newData.section17.cohabitants.push(createDefaultCohabitantEntry());
       setIsDirty(true);
       return newData;
     });
   }, []);
 
   /**
-   * Remove cohabitant entry
+   * Update former spouse continuation information (Section17_2_2[0])
    */
-  const removeCohabitant = useCallback((index: number) => {
+  const updateFormerSpouseContinuation = useCallback((fieldPath: string, value: any) => {
     setSection17Data(prevData => {
       const newData = cloneDeep(prevData);
-      newData.section17.cohabitants.splice(index, 1);
+
+      const fullPath = `section17.formerSpouseContinuation.${fieldPath}`;
+      set(newData, fullPath, value);
+
       setIsDirty(true);
       return newData;
     });
   }, []);
+
+  /**
+   * Update cohabitant information (Section17_3[0])
+   */
+  const updateCohabitant = useCallback((fieldPath: string, value: any) => {
+    setSection17Data(prevData => {
+      const newData = cloneDeep(prevData);
+
+      const fullPath = `section17.cohabitant.${fieldPath}`;
+      set(newData, fullPath, value);
+
+      setIsDirty(true);
+      return newData;
+    });
+  }, []);
+
+  /**
+   * Update cohabitant continuation information (Section17_3_2[0])
+   */
+  const updateCohabitantContinuation = useCallback((fieldPath: string, value: any) => {
+    setSection17Data(prevData => {
+      const newData = cloneDeep(prevData);
+
+      const fullPath = `section17.cohabitantContinuation.${fieldPath}`;
+      set(newData, fullPath, value);
+
+      setIsDirty(true);
+      return newData;
+    });
+  }, []);
+
+  /**
+   * Generic subsection update function
+   */
+  const updateSubsection = useCallback((
+    subsection: Section17SubsectionKey,
+    fieldPath: string,
+    value: any
+  ) => {
+    switch (subsection) {
+      case 'currentSpouse':
+        updateCurrentSpouse(fieldPath, value);
+        break;
+      case 'formerSpouse':
+        updateFormerSpouse(fieldPath, value);
+        break;
+      case 'additionalFormerSpouse':
+        updateAdditionalFormerSpouse(fieldPath, value);
+        break;
+      case 'formerSpouseContinuation':
+        updateFormerSpouseContinuation(fieldPath, value);
+        break;
+      case 'cohabitant':
+        updateCohabitant(fieldPath, value);
+        break;
+      case 'cohabitantContinuation':
+        updateCohabitantContinuation(fieldPath, value);
+        break;
+      default:
+        console.warn(`Unknown subsection: ${subsection}`);
+    }
+  }, [
+    updateCurrentSpouse,
+    updateFormerSpouse,
+    updateAdditionalFormerSpouse,
+    updateFormerSpouseContinuation,
+    updateCohabitant,
+    updateCohabitantContinuation
+  ]);
 
   /**
    * Generic field update function for integration compatibility
-   * Maps generic field paths to Section 17 specific update functions
-   * Following Section 29 gold standard pattern with proper isDirty tracking
+   * UPDATED for new 6-subsection structure
    */
   const updateFieldValue = useCallback((path: string, value: any) => {
-    // Parse path to update the correct field using specific update functions
-    if (path.startsWith('section17.currentSpouse.0.')) {
-      const fieldPath = path.replace('section17.currentSpouse.0.', '');
+    // Parse path to update the correct subsection
+    if (path.startsWith('section17.currentSpouse.')) {
+      const fieldPath = path.replace('section17.currentSpouse.', '');
       updateCurrentSpouse(fieldPath, value);
-    } else if (path.match(/^section17\.formerSpouses\.(\d+)\./)) {
-      const match = path.match(/^section17\.formerSpouses\.(\d+)\.(.+)$/);
-      if (match) {
-        const index = parseInt(match[1], 10);
-        const fieldPath = match[2];
-        updateFormerSpouse(index, fieldPath, value);
-      }
-    } else if (path.match(/^section17\.cohabitants\.(\d+)\./)) {
-      const match = path.match(/^section17\.cohabitants\.(\d+)\.(.+)$/);
-      if (match) {
-        const index = parseInt(match[1], 10);
-        const fieldPath = match[2];
-        updateCohabitant(index, fieldPath, value);
-      }
+    } else if (path.startsWith('section17.formerSpouse.')) {
+      const fieldPath = path.replace('section17.formerSpouse.', '');
+      updateFormerSpouse(fieldPath, value);
+    } else if (path.startsWith('section17.additionalFormerSpouse.')) {
+      const fieldPath = path.replace('section17.additionalFormerSpouse.', '');
+      updateAdditionalFormerSpouse(fieldPath, value);
+    } else if (path.startsWith('section17.formerSpouseContinuation.')) {
+      const fieldPath = path.replace('section17.formerSpouseContinuation.', '');
+      updateFormerSpouseContinuation(fieldPath, value);
+    } else if (path.startsWith('section17.cohabitant.')) {
+      const fieldPath = path.replace('section17.cohabitant.', '');
+      updateCohabitant(fieldPath, value);
+    } else if (path.startsWith('section17.cohabitantContinuation.')) {
+      const fieldPath = path.replace('section17.cohabitantContinuation.', '');
+      updateCohabitantContinuation(fieldPath, value);
     } else {
       // Fallback to direct path setting for other fields
       setSection17Data(prevData => {
@@ -382,32 +359,14 @@ export const Section17Provider: React.FC<Section17ProviderProps> = ({ children }
         return newData;
       });
     }
-  }, [updateCurrentSpouse, updateFormerSpouse, updateCohabitant]);
-
-  /**
-   * Update entry in a specific subsection
-   */
-  const updateEntry = useCallback((
-    subsection: Section17SubsectionKey,
-    index: number,
-    fieldPath: string,
-    value: any
-  ) => {
-    // Use the specific update functions based on subsection
-    switch (subsection) {
-      case 'currentSpouse':
-        updateCurrentSpouse(fieldPath, value);
-        break;
-      case 'formerSpouses':
-        updateFormerSpouse(index, fieldPath, value);
-        break;
-      case 'cohabitants':
-        updateCohabitant(index, fieldPath, value);
-        break;
-      default:
-        console.warn(`Unknown subsection: ${subsection}`);
-    }
-  }, [updateCurrentSpouse, updateFormerSpouse, updateCohabitant]);
+  }, [
+    updateCurrentSpouse,
+    updateFormerSpouse,
+    updateAdditionalFormerSpouse,
+    updateFormerSpouseContinuation,
+    updateCohabitant,
+    updateCohabitantContinuation
+  ]);
 
   /**
    * Load section data from external source
@@ -463,8 +422,7 @@ export const Section17Provider: React.FC<Section17ProviderProps> = ({ children }
 
   /**
    * Flatten Section17 data structure into Field objects for PDF generation
-   * This converts the nested Section17 structure into a flat object with Field<T> objects
-   * Following the Section 29 pattern for consistency
+   * UPDATED for new 6-subsection structure
    */
   const flattenSection17Fields = useCallback((): Record<string, any> => {
     const flatFields: Record<string, any> = {};
@@ -480,83 +438,34 @@ export const Section17Provider: React.FC<Section17ProviderProps> = ({ children }
       }
     };
 
-    // Flatten current spouse entries
-    section17Data.section17.currentSpouse.forEach((entry: CurrentSpouseEntry, entryIndex: number) => {
-      const flattenEntry = (obj: any, prefix: string) => {
-        Object.entries(obj).forEach(([key, value]) => {
-          if (key === "_id") return;
+    const flattenEntry = (obj: any, prefix: string) => {
+      Object.entries(obj).forEach(([key, value]) => {
+        if (key === "_id") return;
 
-          const currentPath = `${prefix}.${key}`;
+        const currentPath = `${prefix}.${key}`;
 
-          if (
-            value &&
-            typeof value === "object" &&
-            "id" in value &&
-            "value" in value
-          ) {
-            // This is a Field object
-            addField(value, currentPath);
-          } else if (value && typeof value === "object") {
-            // This is a nested object, recurse
-            flattenEntry(value, currentPath);
-          }
-        });
-      };
+        if (
+          value &&
+          typeof value === "object" &&
+          "id" in value &&
+          "value" in value
+        ) {
+          // This is a Field object
+          addField(value, currentPath);
+        } else if (value && typeof value === "object") {
+          // This is a nested object, recurse
+          flattenEntry(value, currentPath);
+        }
+      });
+    };
 
-      flattenEntry(entry, `currentSpouse.entries.${entryIndex}`);
-    });
-
-    // Flatten former spouse entries
-    section17Data.section17.formerSpouses.forEach((entry: FormerSpouseEntry, entryIndex: number) => {
-      const flattenEntry = (obj: any, prefix: string) => {
-        Object.entries(obj).forEach(([key, value]) => {
-          if (key === "_id") return;
-
-          const currentPath = `${prefix}.${key}`;
-
-          if (
-            value &&
-            typeof value === "object" &&
-            "id" in value &&
-            "value" in value
-          ) {
-            // This is a Field object
-            addField(value, currentPath);
-          } else if (value && typeof value === "object") {
-            // This is a nested object, recurse
-            flattenEntry(value, currentPath);
-          }
-        });
-      };
-
-      flattenEntry(entry, `formerSpouses.entries.${entryIndex}`);
-    });
-
-    // Flatten cohabitant entries
-    section17Data.section17.cohabitants.forEach((entry: CohabitantEntry, entryIndex: number) => {
-      const flattenEntry = (obj: any, prefix: string) => {
-        Object.entries(obj).forEach(([key, value]) => {
-          if (key === "_id") return;
-
-          const currentPath = `${prefix}.${key}`;
-
-          if (
-            value &&
-            typeof value === "object" &&
-            "id" in value &&
-            "value" in value
-          ) {
-            // This is a Field object
-            addField(value, currentPath);
-          } else if (value && typeof value === "object") {
-            // This is a nested object, recurse
-            flattenEntry(value, currentPath);
-          }
-        });
-      };
-
-      flattenEntry(entry, `cohabitants.entries.${entryIndex}`);
-    });
+    // Flatten all 6 subsections
+    flattenEntry(section17Data.section17.currentSpouse, 'currentSpouse');
+    flattenEntry(section17Data.section17.formerSpouse, 'formerSpouse');
+    flattenEntry(section17Data.section17.additionalFormerSpouse, 'additionalFormerSpouse');
+    flattenEntry(section17Data.section17.formerSpouseContinuation, 'formerSpouseContinuation');
+    flattenEntry(section17Data.section17.cohabitant, 'cohabitant');
+    flattenEntry(section17Data.section17.cohabitantContinuation, 'cohabitantContinuation');
 
     return flatFields;
   }, [section17Data]);
@@ -621,24 +530,17 @@ export const Section17Provider: React.FC<Section17ProviderProps> = ({ children }
     errors,
     isDirty,
 
-    // Current Spouse Actions
+    // Subsection Update Actions - UPDATED for 6 subsections
     updateCurrentSpouse,
-    addCurrentSpouse,
-    removeCurrentSpouse,
-
-    // Former Spouse Actions
     updateFormerSpouse,
-    addFormerSpouse,
-    removeFormerSpouse,
-
-    // Cohabitant Actions
+    updateAdditionalFormerSpouse,
+    updateFormerSpouseContinuation,
     updateCohabitant,
-    addCohabitant,
-    removeCohabitant,
+    updateCohabitantContinuation,
 
     // Generic Field Updates
     updateFieldValue,
-    updateEntry,
+    updateSubsection,
 
     // Validation
     validateSection,

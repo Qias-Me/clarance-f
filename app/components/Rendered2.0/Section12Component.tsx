@@ -6,10 +6,10 @@
  * college, vocational schools, and correspondence/online education.
  */
 
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useSection12 } from "~/state/contexts/sections2.0/section12";
 import { useSF86Form } from "~/state/contexts/SF86FormContext";
-import type { EducationEntry } from "../../../api/interfaces/sections2.0/section12";
+import type { SchoolEntry } from "../../../api/interfaces/sections2.0/section12";
 
 interface Section12ComponentProps {
   onValidationChange?: (isValid: boolean) => void;
@@ -97,15 +97,17 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
   onValidationChange,
 }) => {
   const {
-    sectionData,
-    updateEducationFlag,
-    updateHighSchoolFlag,
-    addEducationEntry,
-    removeEducationEntry,
-    updateEducationEntry,
+    section12Data: sectionData,
+    updateAttendedSchoolFlag,
+    updateAttendedSchoolOutsideUSFlag,
+    addSchoolEntry,
+    removeSchoolEntry,
+    updateSchoolEntry,
+    addDegreeEntry,
+    removeDegreeEntry,
     validateSection,
-    validateEducationEntry,
-    getEducationEntryCount,
+    validateSchoolEntry,
+    getSchoolEntryCount,
     getTotalEducationYears,
     getHighestDegree,
     getSchoolTypeOptions,
@@ -125,19 +127,23 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
     console.log(`🔍 Section 12 validation result:`, result);
 
     try {
-      // Update the central form context with Section 12 data
-      sf86Form.updateSectionData('section12', sectionData);
+      // Get current data fresh to avoid stale closure
+      const currentData = sectionData;
+      if (currentData) {
+        // Update the central form context with Section 12 data
+        sf86Form.updateSectionData('section12', currentData);
 
-      // Save the form data to persistence layer
-      await sf86Form.saveForm();
+        // Save the form data to persistence layer
+        await sf86Form.saveForm();
 
-      console.log('✅ Section 12 data saved successfully');
+        console.log('✅ Section 12 data saved successfully');
+      }
     } catch (error) {
       console.error('❌ Failed to save Section 12 data:', error);
     } finally {
       setIsLoading(false);
     }
-  }, [validateSection, sf86Form, sectionData]);
+  }, [validateSection, sf86Form]); // Removed sectionData dependency
 
 
   // Get direct access to SF86Form context for debugging
@@ -150,15 +156,27 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
 
+  // Refs to prevent infinite recursion in useEffect hooks
+  const lastEducationFlagRef = useRef<string | undefined>(undefined);
+  const lastHighSchoolFlagRef = useRef<string | undefined>(undefined);
+  const isProcessingFlagChangeRef = useRef(false);
+
+  // Ref to prevent React Strict Mode double execution of addSchoolEntry
+  const isAddingEntryRef = useRef(false);
+
+  // Refs to prevent React Strict Mode double execution of degree operations
+  const isAddingDegreeRef = useRef(false);
+  const isRemovingDegreeRef = useRef(false);
+
   // Enhanced debug logging to help identify the radio button issue
   useEffect(() => {
     if (isDebugMode) {
       console.log('🔍 Section12 Debug State:', {
         sectionData,
-        hasEducationValue: sectionData?.section12?.hasEducation?.value,
-        hasEducationField: sectionData?.section12?.hasEducation,
-        hasHighSchoolValue: sectionData?.section12?.hasHighSchool?.value,
-        hasHighSchoolField: sectionData?.section12?.hasHighSchool,
+        hasEducationValue: sectionData?.section12?.hasAttendedSchool?.value,
+        hasEducationField: sectionData?.section12?.hasAttendedSchool,
+        hasHighSchoolValue: sectionData?.section12?.hasAttendedSchoolOutsideUS?.value,
+        hasHighSchoolField: sectionData?.section12?.hasAttendedSchoolOutsideUS,
         entries: sectionData?.section12?.entries,
         entriesCount: sectionData?.section12?.entries?.length || 0,
         expandedEntries: Array.from(expandedEntries),
@@ -168,35 +186,58 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
   }, [sectionData, expandedEntries, validationErrors, isDebugMode]);
 
   // Initialize with default entry if needed and clear entries when both flags are NO
+  // FIXED: Use refs to prevent infinite recursion
   useEffect(() => {
-    const hasEducationFlag = sectionData?.section12?.hasEducation?.value === "YES";
-    const hasHighSchoolFlag = sectionData?.section12?.hasHighSchool?.value === "YES";
-    const entriesCount = getEducationEntryCount();
+    const hasEducationFlag = sectionData?.section12?.hasAttendedSchool?.value === "YES";
+    const hasHighSchoolFlag = sectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "YES";
+    const entriesCount = getSchoolEntryCount();
 
-    // If both flags are NO, clear all entries
-    if (!hasEducationFlag && !hasHighSchoolFlag && entriesCount > 0) {
-      // Clear all entries when both flags are NO
-      while (getEducationEntryCount() > 0) {
-        removeEducationEntry(0);
+    // Check if flags have actually changed to prevent infinite loops
+    const educationFlagChanged = lastEducationFlagRef.current !== sectionData?.section12?.hasAttendedSchool?.value;
+    const highSchoolFlagChanged = lastHighSchoolFlagRef.current !== sectionData?.section12?.hasAttendedSchoolOutsideUS?.value;
+
+    if (!educationFlagChanged && !highSchoolFlagChanged) {
+      return; // No flag changes, skip processing
+    }
+
+    // Prevent recursive calls
+    if (isProcessingFlagChangeRef.current) {
+      return;
+    }
+
+    isProcessingFlagChangeRef.current = true;
+
+    try {
+      // Update refs to track current values
+      lastEducationFlagRef.current = sectionData?.section12?.hasAttendedSchool?.value;
+      lastHighSchoolFlagRef.current = sectionData?.section12?.hasAttendedSchoolOutsideUS?.value;
+
+      // If both flags are NO, clear all entries
+      if (!hasEducationFlag && !hasHighSchoolFlag && entriesCount > 0) {
+        // Clear all entries when both flags are NO
+        while (getSchoolEntryCount() > 0) {
+          removeSchoolEntry(0);
+        }
+        setExpandedEntries(new Set());
       }
-      setExpandedEntries(new Set());
+      // Note: Removed automatic entry addition - users can now add entries manually with the "Add School Entry" button
+    } finally {
+      // Reset processing flag after a delay to allow state updates to complete
+      setTimeout(() => {
+        isProcessingFlagChangeRef.current = false;
+      }, 100);
     }
-    // If either education flag is YES but no entries exist, add a default entry
-    else if ((hasEducationFlag || hasHighSchoolFlag) && entriesCount === 0) {
-      addEducationEntry();
-      setExpandedEntries(new Set([0])); // Expand the first entry
-    }
-  }, [sectionData?.section12?.hasEducation?.value, sectionData?.section12?.hasHighSchool?.value]);
+  }, [sectionData?.section12?.hasAttendedSchool?.value, sectionData?.section12?.hasAttendedSchoolOutsideUS?.value, getSchoolEntryCount, addSchoolEntry, removeSchoolEntry]);
 
   // Enhanced validation with real-time feedback
-  // FIXED: Removed function dependencies to prevent excessive re-renders
+  // FIXED: Use more specific dependencies to prevent excessive re-renders
   useEffect(() => {
     const validation = validateSection();
     const newErrors: Record<number, string[]> = {};
 
     // Validate each entry individually
-    sectionData?.section12?.entries?.forEach((entry, index) => {
-      const entryValidation = validateEducationEntry(index);
+    sectionData?.section12?.entries?.forEach((_, index) => {
+      const entryValidation = validateSchoolEntry(index);
       if (!entryValidation.isValid) {
         newErrors[index] = entryValidation.errors;
       }
@@ -211,7 +252,17 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
 
     setGlobalErrors(globalErrorMessages);
     onValidationChange?.(validation.isValid);
-  }, [sectionData]); // Only depend on sectionData changes
+  }, [
+    // More specific dependencies to prevent infinite loops
+    sectionData?.section12?.hasAttendedSchool?.value,
+    sectionData?.section12?.hasAttendedSchoolOutsideUS?.value,
+    sectionData?.section12?.entries?.length,
+    // Serialize entries to detect changes without causing infinite loops
+    JSON.stringify(sectionData?.section12?.entries),
+    validateSection,
+    validateSchoolEntry,
+    onValidationChange
+  ]);
 
   // Date validation helper
   const validateDate = (dateString: string, fieldName: string): string | null => {
@@ -238,7 +289,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
       console.log('🔧 Updating field:', { index, fieldPath, value });
     }
 
-    updateEducationEntry(index, fieldPath, value);
+    updateSchoolEntry(index, fieldPath, value);
 
     // Real-time validation for date fields
     if (fieldPath.includes('Date') && typeof value === 'string') {
@@ -261,7 +312,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
         }));
       }
     }
-  }, [updateEducationEntry, isDebugMode]);
+  }, [updateSchoolEntry, isDebugMode]);
 
   const toggleEntryExpansion = useCallback((index: number) => {
     setExpandedEntries(prev => {
@@ -276,19 +327,37 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
   }, []);
 
   const handleAddEntry = useCallback(() => {
-    addEducationEntry();
-    const newIndex = getEducationEntryCount();
-    setExpandedEntries(prev => new Set([...prev, newIndex]));
-  }, [addEducationEntry, getEducationEntryCount]);
+    // Prevent React Strict Mode double execution
+    if (isAddingEntryRef.current) {
+      console.log('🚫 Section12Component: handleAddEntry blocked - already in progress (React Strict Mode protection)');
+      return;
+    }
+
+    isAddingEntryRef.current = true;
+    console.log('🎯 Section12Component: handleAddEntry called');
+
+    try {
+      addSchoolEntry();
+      const newIndex = getSchoolEntryCount();
+      setExpandedEntries(prev => new Set([...prev, newIndex]));
+      console.log(`✅ Section12Component: Added entry, expanded entry #${newIndex}`);
+    } finally {
+      // Reset the flag after a short delay to allow for state updates
+      setTimeout(() => {
+        isAddingEntryRef.current = false;
+        console.log('🔄 Section12Component: handleAddEntry flag reset');
+      }, 100);
+    }
+  }, [addSchoolEntry, getSchoolEntryCount]);
 
   const handleRemoveEntry = useCallback((index: number) => {
-    const hasEducationFlag = sectionData?.section12?.hasEducation?.value === "YES";
-    const hasHighSchoolFlag = sectionData?.section12?.hasHighSchool?.value === "YES";
+    const hasEducationFlag = sectionData?.section12?.hasAttendedSchool?.value === "YES";
+    const hasHighSchoolFlag = sectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "YES";
 
     // Allow removal if both flags are NO, or if there are multiple entries
-    if ((!hasEducationFlag && !hasHighSchoolFlag) || getEducationEntryCount() > 1) {
+    if ((!hasEducationFlag && !hasHighSchoolFlag) || getSchoolEntryCount() > 1) {
       if (window.confirm("Are you sure you want to remove this education entry?")) {
-        removeEducationEntry(index);
+        removeSchoolEntry(index);
         setExpandedEntries(prev => {
           const newSet = new Set(prev);
           newSet.delete(index);
@@ -307,100 +376,149 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
     } else {
       alert("You must have at least one education entry when either education flag is YES.");
     }
-  }, [removeEducationEntry, getEducationEntryCount, sectionData]);
+  }, [removeSchoolEntry, getSchoolEntryCount, sectionData]);
+
+  // Degree management handlers with React Strict Mode protection
+  const handleAddDegree = useCallback((schoolIndex: number) => {
+    // Prevent React Strict Mode double execution
+    if (isAddingDegreeRef.current) {
+      console.log('🚫 Section12Component: handleAddDegree blocked - already in progress (React Strict Mode protection)');
+      return;
+    }
+
+    isAddingDegreeRef.current = true;
+    console.log(`🎯 Section12Component: handleAddDegree called for school ${schoolIndex}`);
+
+    try {
+      addDegreeEntry(schoolIndex);
+      console.log(`✅ Section12Component: Added degree to school ${schoolIndex}`);
+    } finally {
+      // Reset the flag after a short delay to allow for state updates
+      setTimeout(() => {
+        isAddingDegreeRef.current = false;
+        console.log('🔄 Section12Component: handleAddDegree flag reset');
+      }, 100);
+    }
+  }, [addDegreeEntry]);
+
+  const handleRemoveDegree = useCallback((schoolIndex: number, degreeIndex: number) => {
+    // Prevent React Strict Mode double execution
+    if (isRemovingDegreeRef.current) {
+      console.log('🚫 Section12Component: handleRemoveDegree blocked - already in progress (React Strict Mode protection)');
+      return;
+    }
+
+    isRemovingDegreeRef.current = true;
+    console.log(`🎯 Section12Component: handleRemoveDegree called for school ${schoolIndex}, degree ${degreeIndex}`);
+
+    try {
+      if (window.confirm("Are you sure you want to remove this degree?")) {
+        removeDegreeEntry(schoolIndex, degreeIndex);
+        console.log(`✅ Section12Component: Removed degree ${degreeIndex} from school ${schoolIndex}`);
+      }
+    } finally {
+      // Reset the flag after a short delay to allow for state updates
+      setTimeout(() => {
+        isRemovingDegreeRef.current = false;
+        console.log('🔄 Section12Component: handleRemoveDegree flag reset');
+      }, 100);
+    }
+  }, [removeDegreeEntry]);
 
   // Enhanced education flag change handler with debugging and fallback
+  // FIXED: Removed sectionData dependency to prevent infinite loops
   const handleEducationFlagChange = useCallback((value: "YES" | "NO") => {
     if (isDebugMode) {
-      console.log('🎯 handleEducationFlagChange called:', { value, currentValue: sectionData?.section12?.hasEducation?.value });
+      console.log('🎯 handleEducationFlagChange called:', { value, currentValue: sectionData?.section12?.hasAttendedSchool?.value });
     }
 
     try {
       // Primary method: use the context hook
-      updateEducationFlag(value);
+      updateAttendedSchoolFlag(value);
 
       if (isDebugMode) {
-        console.log('✅ updateEducationFlag called successfully');
+        console.log('✅ updateAttendedSchoolFlag called successfully');
       }
     } catch (error) {
-      console.error('❌ updateEducationFlag failed, trying fallback:', error);
+      console.error('❌ updateAttendedSchoolFlag failed, trying fallback:', error);
 
       // Fallback method: direct update through SF86Form context
-      if (sectionData && updateSectionData) {
-        const updatedSection = {
-          ...sectionData,
-          section12: {
-            ...sectionData.section12,
-            hasEducation: {
-              ...sectionData.section12.hasEducation,
-              value: value
+      if (updateSectionData) {
+        // Get current data fresh to avoid stale closure
+        const currentData = sectionData;
+        if (currentData) {
+          const updatedSection = {
+            ...currentData,
+            section12: {
+              ...currentData.section12,
+              hasAttendedSchool: {
+                ...currentData.section12.hasAttendedSchool,
+                value: value
+              }
             }
-          }
-        };
+          };
 
-        updateSectionData('section12', updatedSection);
-        console.log('🔄 Used fallback updateSectionData method');
+          updateSectionData('section12', updatedSection);
+          console.log('🔄 Used fallback updateSectionData method');
+        }
       }
     }
 
-    // If setting to YES and no entries exist, add a default entry
-    if (value === "YES" && getEducationEntryCount() === 0) {
-      setTimeout(() => {
-        addEducationEntry();
-        setExpandedEntries(new Set([0]));
-      }, 100); // Small delay to allow flag update to process
-    }
-  }, [updateEducationFlag, getEducationEntryCount, addEducationEntry, sectionData, updateSectionData, isDebugMode]);
+    // Note: Removed automatic entry addition - users can now add entries manually with the "Add School Entry" button
+  }, [updateAttendedSchoolFlag, getSchoolEntryCount, addSchoolEntry, updateSectionData, isDebugMode]); // Removed sectionData dependency
 
   const handleHighSchoolFlagChange = useCallback((value: "YES" | "NO") => {
     if (isDebugMode) {
-      console.log('🎯 handleHighSchoolFlagChange called:', { value, currentValue: sectionData?.section12?.hasHighSchool?.value });
+      console.log('🎯 handleHighSchoolFlagChange called:', { value, currentValue: sectionData?.section12?.hasAttendedSchoolOutsideUS?.value });
     }
 
     try {
       // Primary method: use the context hook
-      updateHighSchoolFlag(value);
+      updateAttendedSchoolOutsideUSFlag(value);
 
       if (isDebugMode) {
-        console.log('✅ updateHighSchoolFlag called successfully');
+        console.log('✅ updateAttendedSchoolOutsideUSFlag called successfully');
       }
     } catch (error) {
-      console.error('❌ updateHighSchoolFlag failed, trying fallback:', error);
+      console.error('❌ updateAttendedSchoolOutsideUSFlag failed, trying fallback:', error);
 
       // Fallback method: direct update through SF86Form context
-      if (sectionData && updateSectionData) {
-        const updatedSection = {
-          ...sectionData,
-          section12: {
-            ...sectionData.section12,
-            hasHighSchool: {
-              ...sectionData.section12.hasHighSchool,
-              value: value
+      if (updateSectionData) {
+        // Get current data fresh to avoid stale closure
+        const currentData = sectionData;
+        if (currentData) {
+          const updatedSection = {
+            ...currentData,
+            section12: {
+              ...currentData.section12,
+              hasAttendedSchoolOutsideUS: {
+                ...currentData.section12.hasAttendedSchoolOutsideUS,
+                value: value
+              }
             }
-          }
-        };
+          };
 
-        updateSectionData('section12', updatedSection);
-        console.log('🔄 Used fallback updateSectionData method');
+          updateSectionData('section12', updatedSection);
+          console.log('🔄 Used fallback updateSectionData method');
+        }
       }
     }
 
-    // If setting to YES and no entries exist, add a default entry
-    if (value === "YES" && getEducationEntryCount() === 0) {
-      setTimeout(() => {
-        addEducationEntry();
-        setExpandedEntries(new Set([0]));
-      }, 100); // Small delay to allow flag update to process
-    }
-  }, [updateHighSchoolFlag, getEducationEntryCount, addEducationEntry, sectionData, updateSectionData, isDebugMode]);
+    // Note: Removed automatic entry addition - users can now add entries manually with the "Add School Entry" button
+  }, [updateAttendedSchoolOutsideUSFlag, getSchoolEntryCount, addSchoolEntry, updateSectionData, isDebugMode]); // Removed sectionData dependency
 
   // Save function to update SF86 context
+  // FIXED: Removed sectionData dependency to prevent infinite loops
   const handleSaveSection = useCallback(() => {
-    if (sectionData && updateSectionData) {
-      updateSectionData('section12', sectionData);
-      console.log('💾 Section 12 data saved to SF86 context');
+    if (updateSectionData) {
+      // Get current data fresh to avoid stale closure
+      const currentData = sectionData;
+      if (currentData) {
+        updateSectionData('section12', currentData);
+        console.log('💾 Section 12 data saved to SF86 context');
+      }
     }
-  }, [sectionData, updateSectionData]);
+  }, [updateSectionData]); // Removed sectionData dependency
 
   const renderValidationErrors = (errors: any[]) => {
     if (errors.length === 0) return null;
@@ -430,7 +548,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
     );
   };
 
-  const renderEducationEntry = (entry: EducationEntry, index: number) => {
+  const renderSchoolEntry = (entry: SchoolEntry, index: number) => {
     const isExpanded = expandedEntries.has(index);
     const entryErrors = validationErrors[index] || [];
 
@@ -458,7 +576,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
             >
               {isExpanded ? "Collapse" : "Expand"}
             </button>
-            {getEducationEntryCount() > 1 && (
+            {getSchoolEntryCount() > 1 && (
               <button
                 type="button"
                 onClick={() => handleRemoveEntry(index)}
@@ -484,9 +602,9 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                 <input
                   type="text"
                   placeholder="MM/YYYY"
-                  value={entry.attendanceDates.fromDate.value || ""}
+                  value={entry.fromDate.value || ""}
                   onChange={(e) =>
-                    handleFieldUpdate(index, "attendanceDates.fromDate", e.target.value)
+                    handleFieldUpdate(index, "fromDate.value", e.target.value)
                   }
                   className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('fromDate')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
                     }`}
@@ -494,9 +612,9 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                 <label className="flex items-center mt-2">
                   <input
                     type="checkbox"
-                    checked={entry.attendanceDates.fromEstimated.value || false}
+                    checked={entry.fromDateEstimate.value || false}
                     onChange={(e) =>
-                      handleFieldUpdate(index, "attendanceDates.fromEstimated", e.target.checked)
+                      handleFieldUpdate(index, "fromDateEstimate.value", e.target.checked)
                     }
                     className="mr-2"
                   />
@@ -507,16 +625,16 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   To Date (Month/Year)
-                  {!entry.attendanceDates.present.value && <span className="text-red-500">*</span>}
+                  {!entry.isPresent.value && <span className="text-red-500">*</span>}
                 </label>
                 <input
                   type="text"
                   placeholder="MM/YYYY"
-                  value={entry.attendanceDates.toDate.value || ""}
+                  value={entry.toDate.value || ""}
                   onChange={(e) =>
-                    handleFieldUpdate(index, "attendanceDates.toDate", e.target.value)
+                    handleFieldUpdate(index, "toDate.value", e.target.value)
                   }
-                  disabled={entry.attendanceDates.present.value}
+                  disabled={entry.isPresent.value}
                   className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed ${entryErrors.some(e => e.includes('toDate')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
                     }`}
                 />
@@ -524,11 +642,11 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                   <label className="flex items-center">
                     <input
                       type="checkbox"
-                      checked={entry.attendanceDates.present.value || false}
+                      checked={entry.isPresent.value || false}
                       onChange={(e) => {
-                        handleFieldUpdate(index, "attendanceDates.present", e.target.checked);
+                        handleFieldUpdate(index, "isPresent.value", e.target.checked);
                         if (e.target.checked) {
-                          handleFieldUpdate(index, "attendanceDates.toDate", "");
+                          handleFieldUpdate(index, "toDate.value", "");
                         }
                       }}
                       className="mr-2"
@@ -538,11 +656,11 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                   <label className="flex items-center">
                     <input
                       type="checkbox"
-                      checked={entry.attendanceDates.toEstimated.value || false}
+                      checked={entry.toDateEstimate.value || false}
                       onChange={(e) =>
-                        handleFieldUpdate(index, "attendanceDates.toEstimated", e.target.checked)
+                        handleFieldUpdate(index, "toDateEstimate.value", e.target.checked)
                       }
-                      disabled={entry.attendanceDates.present.value}
+                      disabled={entry.isPresent.value}
                       className="mr-2 disabled:cursor-not-allowed"
                     />
                     <span className="text-sm text-gray-600">Estimated</span>
@@ -559,7 +677,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
               <select
                 value={entry.schoolType.value || ""}
                 onChange={(e) =>
-                  handleFieldUpdate(index, "schoolType", e.target.value)
+                  handleFieldUpdate(index, "schoolType.value", e.target.value)
                 }
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('schoolType')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
                   }`}
@@ -582,7 +700,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                 type="text"
                 value={entry.schoolName.value || ""}
                 onChange={(e) =>
-                  handleFieldUpdate(index, "schoolName", e.target.value)
+                  handleFieldUpdate(index, "schoolName.value", e.target.value)
                 }
                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('schoolName')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
                   }`}
@@ -601,9 +719,9 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                 </label>
                 <input
                   type="text"
-                  value={entry.schoolAddress.street.value || ""}
+                  value={entry.schoolAddress.value || ""}
                   onChange={(e) =>
-                    handleFieldUpdate(index, "schoolAddress.street", e.target.value)
+                    handleFieldUpdate(index, "schoolAddress.value", e.target.value)
                   }
                   className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('street')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
                     }`}
@@ -619,9 +737,9 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                   </label>
                   <input
                     type="text"
-                    value={entry.schoolAddress.city.value || ""}
+                    value={entry.schoolCity.value || ""}
                     onChange={(e) =>
-                      handleFieldUpdate(index, "schoolAddress.city", e.target.value)
+                      handleFieldUpdate(index, "schoolCity.value", e.target.value)
                     }
                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('city')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
@@ -634,9 +752,9 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                     State <span className="text-red-500">*</span>
                   </label>
                   <select
-                    value={entry.schoolAddress.state.value || ""}
+                    value={entry.schoolState.value || ""}
                     onChange={(e) =>
-                      handleFieldUpdate(index, "schoolAddress.state", e.target.value)
+                      handleFieldUpdate(index, "schoolState.value", e.target.value)
                     }
                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('state')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
@@ -655,9 +773,9 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                   </label>
                   <input
                     type="text"
-                    value={entry.schoolAddress.zipCode.value || ""}
+                    value={entry.schoolZipCode.value || ""}
                     onChange={(e) =>
-                      handleFieldUpdate(index, "schoolAddress.zipCode", e.target.value)
+                      handleFieldUpdate(index, "schoolZipCode.value", e.target.value)
                     }
                     className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('zipCode')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
                       }`}
@@ -671,9 +789,9 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                   Country <span className="text-red-500">*</span>
                 </label>
                 <select
-                  value={entry.schoolAddress.country.value || ""}
+                  value={entry.schoolCountry.value || ""}
                   onChange={(e) =>
-                    handleFieldUpdate(index, "schoolAddress.country", e.target.value)
+                    handleFieldUpdate(index, "schoolCountry.value", e.target.value)
                   }
                   className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('country')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
                     }`}
@@ -700,8 +818,8 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                     <input
                       type="radio"
                       name={`degree-received-${index}`}
-                      checked={entry.degreeReceived.value === true}
-                      onChange={() => handleFieldUpdate(index, "degreeReceived", true)}
+                      checked={entry.receivedDegree.value === "YES"}
+                      onChange={() => handleFieldUpdate(index, "receivedDegree.value", "YES")}
                       className="mr-2"
                     />
                     <span className="text-sm">Yes</span>
@@ -710,8 +828,8 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                     <input
                       type="radio"
                       name={`degree-received-${index}`}
-                      checked={entry.degreeReceived.value === false}
-                      onChange={() => handleFieldUpdate(index, "degreeReceived", false)}
+                      checked={entry.receivedDegree.value === "NO"}
+                      onChange={() => handleFieldUpdate(index, "receivedDegree.value", "NO")}
                       className="mr-2"
                     />
                     <span className="text-sm">No</span>
@@ -719,55 +837,106 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                 </div>
               </div>
 
-              {entry.degreeReceived.value && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Degree Type <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      value={entry.degreeType.value || ""}
-                      onChange={(e) =>
-                        handleFieldUpdate(index, "degreeType", e.target.value)
-                      }
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('degreeType')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                        }`}
-                    >
-                      <option value="">Select degree type...</option>
-                      {getDegreeTypeOptions().map((type) => (
-                        <option key={type} value={type}>
-                          {type}
-                        </option>
-                      ))}
-                    </select>
+              {entry.receivedDegree.value === "YES" && (
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-md font-semibold text-gray-800">
+                      Degree Information (up to 2 degrees per school)
+                    </h4>
+                    {entry.degrees.length < 2 && (
+                      <button
+                        type="button"
+                        onClick={() => handleAddDegree(index)}
+                        className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
+                      >
+                        Add Degree
+                      </button>
+                    )}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Degree Date (Month/Year) <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="MM/YYYY"
-                      value={entry.degreeDate.value || ""}
-                      onChange={(e) =>
-                        handleFieldUpdate(index, "degreeDate", e.target.value)
-                      }
-                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('degreeDate')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                        }`}
-                    />
-                    <label className="flex items-center mt-2">
-                      <input
-                        type="checkbox"
-                        checked={entry.degreeEstimated.value || false}
-                        onChange={(e) =>
-                          handleFieldUpdate(index, "degreeEstimated", e.target.checked)
-                        }
-                        className="mr-2"
-                      />
-                      <span className="text-sm text-gray-600">Estimated</span>
-                    </label>
-                  </div>
+                  {/* Render degrees dynamically */}
+                  {entry.degrees.length > 0 ? (
+                    entry.degrees.map((degree, degreeIndex) => (
+                      <div key={degreeIndex} className="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                        <div className="flex justify-between items-center mb-3">
+                          <h5 className="text-sm font-semibold text-gray-700">
+                            Degree #{degreeIndex + 1}
+                          </h5>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveDegree(index, degreeIndex)}
+                            className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Degree Type <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                              value={degree?.degreeType?.value || ""}
+                              onChange={(e) =>
+                                handleFieldUpdate(index, `degrees[${degreeIndex}].degreeType.value`, e.target.value)
+                              }
+                              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes(`degreeType${degreeIndex + 1}`)) ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                }`}
+                            >
+                              <option value="">Select degree type...</option>
+                              {getDegreeTypeOptions().map((type) => (
+                                <option key={type} value={type}>
+                                  {type}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              Degree Date (Month/Year) <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              placeholder="MM/YYYY"
+                              value={degree?.dateAwarded?.value || ""}
+                              onChange={(e) =>
+                                handleFieldUpdate(index, `degrees[${degreeIndex}].dateAwarded.value`, e.target.value)
+                              }
+                              className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes(`degreeDate${degreeIndex + 1}`)) ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                }`}
+                            />
+                            <label className="flex items-center mt-2">
+                              <input
+                                type="checkbox"
+                                checked={degree?.dateAwardedEstimate?.value || false}
+                                onChange={(e) =>
+                                  handleFieldUpdate(index, `degrees[${degreeIndex}].dateAwardedEstimate.value`, e.target.checked)
+                                }
+                                className="mr-2"
+                              />
+                              <span className="text-sm text-gray-600">Estimated</span>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-6 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                      <p className="text-gray-500 mb-2">
+                        No degrees added yet.
+                      </p>
+                      <p className="text-sm text-gray-400 mb-3">
+                        Click "Add Degree" to add degree information for this school.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => handleAddDegree(index)}
+                        className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition-colors"
+                      >
+                        Add First Degree
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -819,7 +988,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
               <input
                 type="radio"
                 name="hasEducation"
-                checked={sectionData?.section12?.hasEducation?.value === "YES"}
+                checked={sectionData?.section12?.hasAttendedSchool?.value === "YES"}
                 onChange={() => handleEducationFlagChange("YES")}
                 className="mr-2"
               />
@@ -829,7 +998,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
               <input
                 type="radio"
                 name="hasEducation"
-                checked={sectionData?.section12?.hasEducation?.value === "NO"}
+                checked={sectionData?.section12?.hasAttendedSchool?.value === "NO"}
                 onChange={() => handleEducationFlagChange("NO")}
                 className="mr-2"
               />
@@ -847,7 +1016,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
               <input
                 type="radio"
                 name="hasHighSchool"
-                checked={sectionData?.section12?.hasHighSchool?.value === "YES"}
+                checked={sectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "YES"}
                 onChange={() => handleHighSchoolFlagChange("YES")}
                 className="mr-2"
               />
@@ -857,7 +1026,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
               <input
                 type="radio"
                 name="hasHighSchool"
-                checked={sectionData?.section12?.hasHighSchool?.value === "NO"}
+                checked={sectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "NO"}
                 onChange={() => handleHighSchoolFlagChange("NO")}
                 className="mr-2"
               />
@@ -868,8 +1037,8 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
       </div>
 
       {/* Education Entries - Only show when at least one flag is YES */}
-      {(sectionData?.section12?.hasEducation?.value === "YES" ||
-        sectionData?.section12?.hasHighSchool?.value === "YES") && (
+      {(sectionData?.section12?.hasAttendedSchool?.value === "YES" ||
+        sectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "YES") && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-medium text-gray-900">
@@ -878,13 +1047,13 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
               <button
                 type="button"
                 onClick={handleAddEntry}
-                disabled={getEducationEntryCount() >= 10}
+                disabled={getSchoolEntryCount() >= 3}
                 className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                title={getEducationEntryCount() >= 10 ? "Maximum of 10 education entries allowed" : "Add new education entry"}
+                title={getSchoolEntryCount() >= 3 ? "Maximum of 3 school entries allowed" : "Add new school entry"}
               >
-                Add Education Entry
-                {getEducationEntryCount() >= 10 && (
-                  <span className="ml-1 text-xs">(Max: 10)</span>
+                Add School Entry
+                {getSchoolEntryCount() >= 3 && (
+                  <span className="ml-1 text-xs">(Max: 3)</span>
                 )}
               </button>
             </div>
@@ -892,7 +1061,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
             {/* Show entries or helpful message */}
             {sectionData?.section12?.entries && sectionData.section12.entries.length > 0 ? (
               sectionData.section12.entries.map((entry, index) =>
-                renderEducationEntry(entry, index)
+                renderSchoolEntry(entry, index)
               )
             ) : (
               <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
@@ -906,12 +1075,12 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
             )}
 
             {/* Summary Statistics */}
-            {getEducationEntryCount() > 0 && (
+            {getSchoolEntryCount() > 0 && (
               <div className="bg-gray-50 p-4 rounded-lg">
                 <h4 className="text-md font-medium text-gray-800 mb-2">Education Summary</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
                   <div>
-                    <span className="font-medium">Total Entries:</span> {getEducationEntryCount()}
+                    <span className="font-medium">Total Entries:</span> {getSchoolEntryCount()}
                   </div>
                   <div>
                     <span className="font-medium">Total Years:</span> {getTotalEducationYears()}
@@ -959,8 +1128,8 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
       </button>
 
       {/* Show instruction when no education flags are selected */}
-      {sectionData?.section12?.hasEducation?.value === "NO" &&
-        sectionData?.section12?.hasHighSchool?.value === "NO" && (
+      {sectionData?.section12?.hasAttendedSchool?.value === "NO" &&
+        sectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "NO" && (
           <div className="text-center py-8 bg-green-50 rounded-lg border border-green-200 mt-6">
             <div className="flex justify-center mb-3">
               <svg className="h-8 w-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

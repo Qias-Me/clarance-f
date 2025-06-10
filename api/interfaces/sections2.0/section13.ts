@@ -13,10 +13,7 @@ import type { USState, Country } from './base';
 import { cloneDeep } from 'lodash';
 import { set } from 'lodash';
 import { createFieldFromReference, validateSectionFieldCount } from '../../utils/sections-references-loader';
-import {
-  SECTION13_COMPLETE_FIELD_MAPPINGS,
-  SECTION13_FIELD_COUNTS
-} from './section13-complete-mappings';
+
 
 // ============================================================================
 // CORE INTERFACES
@@ -156,36 +153,12 @@ export interface AdditionalEmploymentPeriod {
  */
 export interface MultipleEmploymentPeriods {
   // Period 1 - sect13A.2Entry1_FromDate1, sect13A.2Entry1_ToDate1, etc.
-  period1?: {
+  periods?: {
     fromDate: Field<string>; // sect13A.2Entry1_FromDate1
     toDate: Field<string>; // sect13A.2Entry1_ToDate1
     positionTitle: Field<string>; // sect13A.2Entry1_PositionTitle1
     supervisor: Field<string>; // sect13A.2Entry1_Supervisor1
-  };
-
-  // Period 2 - sect13A.2Entry1_FromDate2, sect13A.2Entry1_ToDate2, etc.
-  period2?: {
-    fromDate: Field<string>; // sect13A.2Entry1_FromDate2
-    toDate: Field<string>; // sect13A.2Entry1_ToDate2
-    positionTitle: Field<string>; // sect13A.2Entry1_PositionTitle2
-    supervisor: Field<string>; // sect13A.2Entry1_Supervisor2
-  };
-
-  // Period 3 - sect13A.2Entry1_FromDate3, sect13A.2Entry1_ToDate3, etc.
-  period3?: {
-    fromDate: Field<string>; // sect13A.2Entry1_FromDate3
-    toDate: Field<string>; // sect13A.2Entry1_ToDate3
-    positionTitle: Field<string>; // sect13A.2Entry1_PositionTitle3
-    supervisor: Field<string>; // sect13A.2Entry1_Supervisor3
-  };
-
-  // Period 4 - sect13A.2Entry1_FromDate4, sect13A.2Entry1_ToDate4, etc.
-  period4?: {
-    fromDate: Field<string>; // sect13A.2Entry1_FromDate4
-    toDate: Field<string>; // sect13A.2Entry1_ToDate4
-    positionTitle: Field<string>; // sect13A.2Entry1_PositionTitle4
-    supervisor: Field<string>; // sect13A.2Entry1_Supervisor4
-  };
+  }[];
 }
 
 /**
@@ -236,18 +209,6 @@ export interface EmploymentRecordIssues {
 export interface DisciplinaryActions {
   receivedWrittenWarning: Field<boolean>;
 
-  // Warning dates - sect13A.6Entry1_Date, sect13A.6Entry1_Date1, sect13A.6Entry1_Dat
-  warningDate1?: Field<string>; // sect13A.6Entry1_Date
-  warningDate2?: Field<string>; // sect13A.6Entry1_Date1
-  warningDate3?: Field<string>; // sect13A.6Entry1_Dat
-
-  // Warning reasons - sect13A.6Entry1_Reason#1, sect13A.6Entry1_Reason#2, etc.
-  warningReason1?: Field<string>; // sect13A.6Entry1_Reason#1
-  warningReason2?: Field<string>; // sect13A.6Entry1_Reason#2
-  warningReason3?: Field<string>; // sect13A.6Entry1_Reason#3
-  warningReason4?: Field<string>; // sect13A.6Entry1_Reason#4
-
-  // Legacy arrays for backward compatibility
   warningDates: Field<string>[];
   warningReasons: Field<string>[];
 }
@@ -281,9 +242,6 @@ export interface MilitaryEmploymentEntry {
   // Other explanation if employment type is "Other"
   otherExplanation?: Field<string>;
 
-  // Metadata
-  createdAt?: Date;
-  updatedAt?: Date;
 }
 
 /**
@@ -312,9 +270,6 @@ export interface NonFederalEmploymentEntry {
   // Supervisor information
   supervisor: SupervisorContact;
 
-  // Metadata
-  createdAt?: Date;
-  updatedAt?: Date;
 }
 
 /**
@@ -337,9 +292,6 @@ export interface SelfEmploymentEntry {
   verifierAddress: EmploymentAddress;
   verifierPhone: PhoneInfo;
 
-  // Metadata
-  createdAt?: Date;
-  updatedAt?: Date;
 }
 
 /**
@@ -352,9 +304,6 @@ export interface UnemploymentEntry {
   // Reference contact
   reference: UnemploymentReference;
 
-  // Metadata
-  createdAt?: Date;
-  updatedAt?: Date;
 }
 
 /**
@@ -386,9 +335,6 @@ export interface EmploymentEntry {
   // Verification
   verification: EmploymentVerification;
 
-  // Metadata
-  createdAt?: Date;
-  updatedAt?: Date;
 }
 
 /**
@@ -422,30 +368,24 @@ export interface EmploymentHistory {
   // Reference data shows Entry1, Entry2 patterns
   militaryEmployment: {
     entries: MilitaryEmploymentEntry[];
-    entry1?: MilitaryEmploymentEntry; // Direct mapping to sect13A.1Entry1*
-    entry2?: MilitaryEmploymentEntry; // Direct mapping to sect13A.1Entry2*
   };
 
   // Subsection 13A.2 - Non-Federal Employment
   // Reference data shows Entry1, Entry2 patterns with multiple periods each
   nonFederalEmployment: {
     entries: NonFederalEmploymentEntry[];
-    entry1?: NonFederalEmploymentEntry; // Direct mapping to sect13A.2Entry1*
-    entry2?: NonFederalEmploymentEntry; // Direct mapping to sect13A.2Entry2*
   };
 
   // Subsection 13A.3 - Self-Employment
   // Reference data shows Entry1 pattern
   selfEmployment: {
     entries: SelfEmploymentEntry[];
-    entry1?: SelfEmploymentEntry; // Direct mapping to sect13A.3Entry1*
   };
 
   // Subsection 13A.4 - Unemployment
   // Reference data shows Entry1 pattern
   unemployment: {
     entries: UnemploymentEntry[];
-    entry1?: UnemploymentEntry; // Direct mapping to sect13A.4Entry1*
   };
 
   // Subsection 13A.5 - Employment Record Issues
@@ -477,756 +417,6 @@ export interface Section13 {
  * Section 13 subsection keys for type safety
  */
 export type Section13SubsectionKey = 'employmentHistory' | 'federalEmployment';
-
-// ============================================================================
-// COMPREHENSIVE FIELD MAPPINGS
-// ============================================================================
-
-/**
- * Complete field mappings for Section 13 based on reference data analysis
- * Maps all 1,086 PDF form fields from section-13.json to interface properties
- *
- * Field Type Breakdown:
- * - 596 PDFTextField (text inputs)
- * - 160 PDFDropdown (dropdowns with options)
- * - 284 PDFCheckBox (checkboxes)
- * - 46 PDFRadioGroup (radio button groups)
- *
- * Coverage:
- * - 370 unique string values (100% mapped)
- * - 274 boolean values (checkboxes/radios)
- * - 160 list values (dropdown options)
- * - 282 other field instances
- */
-export const SECTION13_FIELD_MAPPINGS = {
-  // Section 13A.1 - Military/Federal Employment (49 fields)
-  MILITARY_EMPLOYMENT: {
-    // Entry 1 fields
-    ENTRY1_FROM_DATE: 'sect13A.1Entry1FromDate',
-    ENTRY1_TO_DATE: 'sect13A.1Entry1ToDate',
-    ENTRY1_RANK_TITLE: 'sect13A.1Entry1RankTitle',
-    ENTRY1_DUTY_STATION: 'sect13A.1Entry1DutyStation',
-    ENTRY1_DUTY_STREET: 'sect13A.1Entry1DutyStreet',
-    ENTRY1_DUTY_CITY: 'sect13A.1Entry1DutyCity',
-    ENTRY1_DUTY_ZIP: 'sect13A.1Entry1DutyZip',
-    ENTRY1_PHONE: 'sect13A.1Entry1Phone',
-    ENTRY1_EXTENSION: 'sect13A.1Entry1Extension1',
-    ENTRY1_SUPERVISOR_NAME: 'sect13A.1Entry1SupervisorName',
-    ENTRY1_SUPERVISOR_RANK: 'sect13A.1Entry1SupervisorRank',
-    ENTRY1_SUPERVISOR_EMAIL: 'sect13A.1Entry1SupervisorEmail',
-    ENTRY1_SUPERVISOR_PHONE: 'sect13A.1Entry1SupervisorPhone',
-    ENTRY1_SUPERVISOR_ADDRESS: 'sect13A.1Entry1SupervisorAddress',
-    ENTRY1_SUPERVISOR_CITY: 'sect13A.1Entry1SupervisorCity',
-    ENTRY1_OTHER_EXPLANATION: 'sect13A.1Entry1OtherExplanation',
-    ENTRY1_STREET: 'sect13A.1Entry1Street',
-    ENTRY1_CITY: 'sect13A.1Entry1City',
-    ENTRY1_ZIP: 'sect13A.1Entry1Zip',
-    ENTRY1_APO_STREET: 'sect13A.1Entry1_b_Street',
-    ENTRY1_APO_ZIP: 'sect13A.1Entry1_b_Zip',
-    ENTRY1_APO: 'sect13A.1Entry1_b_APO',
-
-    // Missing Entry 1 fields from verification
-    ENTRY1_SUP: 'sect13A.1Entry1Sup',
-    ENTRY1_SUPERVISO: 'sect13A.1Entry1Superviso',
-    ENTRY1_A_SUPERVISOR_ADDRESS: 'sect13A.1Entry1_a_SupervisorAddress',
-    ENTRY1_A_CITY: 'sect13A.1Entry1_a_City',
-    ENTRY1_A_SUPERVISO: 'sect13A.1Entry1_a_Superviso',
-    ENTRY1_A_SUPERVISOR_CITY: 'sect13A.1Entry1_a_SupervisorCity',
-    ENTRY1_A_SUPERVISOR_STREET: 'sect13A.1Entry1_a_SupervisorStreet',
-    ENTRY1_A_SUPERVISOR_ZIP: 'sect13A.1Entry1_a_SupervisorZip',
-    ENTRY1_A_SUPERVISOR_PHONE: 'sect13A.1Entry1_a_SupervisorPhone',
-    ENTRY1_A_SUPERVISOR_EMAIL: 'sect13A.1Entry1_a_SupervisorEmail',
-    ENTRY1_A_SUPERVISOR_NAME: 'sect13A.1Entry1_a_SupervisorName',
-
-    // Entry 2 fields
-    ENTRY2_START_DATE: 'sect13A.1Entry2StartDate',
-    ENTRY2_TO_DATE: 'sect13A.1Entry2ToDate',
-    ENTRY2_RANK_TITLE: 'sect13A.1Entry2RankTitle',
-    ENTRY2_DUTY_STATION: 'sect13A.1Entry2DutyStation',
-    ENTRY2_STREET: 'sect13A.1Entry2Street',
-    ENTRY2_CITY: 'sect13A.1Entry2City',
-    ENTRY2_ZIP: 'sect13A.1Entry2__Zip',
-    ENTRY2_SUPERVISOR_NAME: 'sect13A.1Entry2_SupervisorName',
-    ENTRY2_SUPERVISOR_RANK: 'sect13A.1Entry2SupervisorRankTitle',
-    ENTRY2_SUPERVISOR_EMAIL: 'sect13A.1Entry2SupervisorEmail',
-    ENTRY2_SUPERVISOR_PHONE: 'sect13A.1Entry2SupervisorPhone',
-    ENTRY2_SUPERVISOR_ADDRESS: 'sect13A.1Entry2SupervisorAddress',
-    ENTRY2_SUPERVISOR_CITY: 'sect13A.1Entry2SupervisorCity',
-    ENTRY2_OTHER_EXPLANATION: 'sect13A.1Entry2OtherExplanation',
-    ENTRY2_APO_STREET: 'sect13A.1Entry2_b_street',
-    ENTRY2_APO: 'sect13A.1Entry2_b_APO',
-
-    // Additional Entry 2 fields
-    ENTRY2_PHONE: 'sect13A.1Entry2Phone',
-    ENTRY2_EXTENSION: 'sect13A.1Entry2Extension1',
-    ENTRY2_DUTY_STREET: 'sect13A.1Entry2DutyStreet',
-    ENTRY2_DUTY_CITY: 'sect13A.1Entry2DutyCity',
-    ENTRY2_DUTY_ZIP: 'sect13A.1Entry2DutyZip',
-    ENTRY2_B_STREET: 'sect13A.1Entry2_b_Street',
-    ENTRY2_B_ZIP: 'sect13A.1Entry2_b_Zip'
-  },
-
-  // Section 13A.2 - Non-Federal Employment (82 fields)
-  NON_FEDERAL_EMPLOYMENT: {
-    // Entry 1 basic fields
-    ENTRY1_FROM_DATE: 'sect13A.2Entry1FromDate',
-    ENTRY1_TO_DATE: 'sect13A.2Entry1ToDate',
-    ENTRY1_RECENT_EMPLOYER: 'sect13A.2Entry1RecentEmployer',
-    ENTRY1_RECENT_TITLE: 'sect13A.2Entry1RecentTitle',
-    ENTRY1_STREET: 'sect13A.2Entry1Street',
-    ENTRY1_CITY: 'sect13A.2Entry1City',
-    ENTRY1_ZIP: 'sect13A.2Entry1Zip',
-    ENTRY1_PHONE: 'sect13A.2Entry1Phone',
-    ENTRY1_EXTENSION: 'sect13A.2Entry1Extension1',
-    ENTRY1_SUPERVISOR_NAME: 'sect13A.2Entry1_SupervisorName',
-
-    // Entry 1 multiple employment periods (1-4)
-    ENTRY1_FROM_DATE_1: 'sect13A.2Entry1FromDate1',
-    ENTRY1_TO_DATE_1: 'sect13A.2Entry1ToDate1',
-    ENTRY1_POSITION_TITLE_1: 'sect13A.2Entry1PositionTitle1',
-    ENTRY1_SUPERVISOR_1: 'sect13A.2Entry1Supervisor1',
-
-    ENTRY1_FROM_DATE_2: 'sect13A.2Entry1FromDate2',
-    ENTRY1_TO_DATE_2: 'sect13A.2Entry1ToDate2',
-    ENTRY1_POSITION_TITLE_2: 'sect13A.2Entry1PositionTitle2',
-    ENTRY1_SUPERVISOR_2: 'sect13A.2Entry1Supervisor2',
-
-    ENTRY1_FROM_DATE_3: 'sect13A.2Entry1FromDate3',
-    ENTRY1_TO_DATE_3: 'sect13A.2Entry1ToDate3',
-    ENTRY1_POSITION_TITLE_3: 'sect13A.2Entry1PositionTitle3',
-    ENTRY1_SUPERVISOR_3: 'sect13A.2Entry1Supervisor3',
-
-    ENTRY1_FROM_DATE_4: 'sect13A.2Entry1FromDate4',
-    ENTRY1_TO_DATE_4: 'sect13A.2Entry1ToDate4',
-    ENTRY1_POSITION_TITLE_4: 'sect13A.2Entry1PositionTitle4',
-    ENTRY1_SUPERVISOR_4: 'sect13A.2Entry1Supervisor4',
-
-    // Entry 1 address variations
-    ENTRY1_A_STREET: 'sect13A.2Entry1_a_Street',
-    ENTRY1_A_CITY: 'sect13A.2Entry1_a_City',
-    ENTRY1_A_ZIP: 'sect13A.2Entry1_a_Zip',
-    ENTRY1_A_PHONE: 'sect13A.2Entry1_a_Phone',
-    ENTRY1_A_EXTENSION: 'sect13A.2Entry1_a_Extension1',
-
-    ENTRY1_B1_STREET: 'sect13A.2Entry1_b1_Street',
-    ENTRY1_B1_CITY: 'sect13A.2Entry1_b1_City',
-    ENTRY1_B1_ZIP: 'sect13A.2Entry1_b1_2Zip',
-
-    ENTRY1_B2_APO: 'sect13A.2Entry1_b2_APO',
-    ENTRY1_B2_STREET: 'sect13A.2Entry1_b2_Street',
-    ENTRY1_B2_ZIP: 'sect13A.2Entry1_b2_zipcode',
-
-    // Entry 2 fields (similar structure)
-    ENTRY2_FROM_DATE: 'sect13A.2Entry2FromDate',
-    ENTRY2_TO_DATE: 'sect13A.2Entry2ToDate',
-    ENTRY2_RECENT_TITLE: 'sect13A.2Entry2RecentTitle',
-    ENTRY2_STREET: 'sect13A.2Entry2Street',
-    ENTRY2_CITY: 'sect13A.2Entry2City',
-    ENTRY2_ZIP: 'sect13A.2Entry2Zip',
-    ENTRY2_PHONE: 'sect13A.2Entry2Phone',
-    ENTRY2_SUPERVISOR_NAME: 'sect13A.2Entry2SupervisorName',
-    ENTRY2_SUPERVISOR_TITLE: 'sect13A.2Entry2SupervisorTitle',
-    ENTRY2_SUPERVISOR_STREET: 'sect13A.2Entry2SupervisorStreet',
-    ENTRY2_SUPERVISOR_CITY: 'sect13A.2Entry2SupervisorCity',
-
-    // Entry 2 multiple periods
-    ENTRY2_FROM_DATE_1: 'sect13A.2Entry2FromDate1',
-    ENTRY2_TO_DATE_1: 'sect13A.2Entry2ToDate1',
-    ENTRY2_POSITION_TITLE_1: 'sect13A.2Entry2PositionTitle1',
-    ENTRY2_SUPERVISOR_1: 'sect13A.2Entry2Supervisor1',
-
-    ENTRY2_FROM_DATE_2: 'sect13A.2Entry2FromDate2',
-    ENTRY2_TO_DATE_2: 'sect13A.2Entry2ToDate2',
-    ENTRY2_POSITION_TITLE_2: 'sect13A.2Entry2PositionTitle2',
-    ENTRY2_SUPERVISOR_2: 'sect13A.2Entry2Supervisor2',
-
-    ENTRY2_FROM_DATE_3: 'sect13A.2Entry2ToDate3',
-    ENTRY2_POSITION_TITLE_3: 'sect13A.2Entry2PositionTitle3',
-    ENTRY2_SUPERVISOR_3: 'sect13A.2Entry2Supervisor3',
-
-    ENTRY2_FROM_DATE_4: 'sect13A.2Entry2FromDate4',
-    ENTRY2_TO_DATE_4: 'sect13A.2Entry2ToDate4',
-    ENTRY2_POSITION_TITLE_4: 'sect13A.2Entry2PositionTitle4',
-    ENTRY2_SUPERVISOR_4: 'sect13A.2Entry2Supervisor4',
-
-    // Missing Entry 2 fields from verification
-    ENTRY2_SUPERVISOR: 'sect13A.2Entry2Supervisor',
-    ENTRY2_A_PHONE: 'sect13A.2Entry2_a_Phone',
-    ENTRY2_A_: 'sect13A.2Entry2_a_',
-    ENTRY2_A_STREET: 'sect13A.2Entry2_a_Street',
-    ENTRY2_A_CITY: 'sect13A.2Entry2_a_City',
-    ENTRY2_A_ZIP: 'sect13A.2Entry2_a_Zip',
-    ENTRY2_A_EXTENSION: 'sect13A.2Entry2_a_Extension1',
-    ENTRY2_B1_STREET: 'sect13A.2Entry2_b1_Street',
-    ENTRY2_B1_CITY: 'sect13A.2Entry2_b1_City',
-    ENTRY2_B1_ZIP: 'sect13A.2Entry2_b1_2Zip',
-    ENTRY2_B2_APO: 'sect13A.2Entry2_b2_APO',
-    ENTRY2_B2_STREET: 'sect13A.2Entry2_b2_Street',
-    ENTRY2_B2_ZIP: 'sect13A.2Entry2_b2_zipcode',
-    ENTRY2_RECENT_EMPLOYER: 'sect13A.2Entry2RecentEmployer',
-    ENTRY2_EXTENSION: 'sect13A.2Entry2Extension1',
-    ENTRY2_SUPERVISOR_ZIP: 'sect13A.2Entry2SupervisorZip',
-    ENTRY2_SUPERVISOR_PHONE: 'sect13A.2Entry2SupervisorPhone',
-    ENTRY2_SUPERVISOR_EMAIL: 'sect13A.2Entry2SupervisorEmail',
-    ENTRY2_FROM_DATE_3_CORRECTED: 'sect13A.2Entry2FromDate3' // Corrected from ToDate3
-  },
-
-  // Section 13A.3 - Self-Employment (30 fields) - Adding missing field
-  SELF_EMPLOYMENT: {
-    ENTRY1_START_DATE: 'sect13A.3Entry1Start',
-    ENTRY1_TO_DATE: 'sect13A.3Entry1ToDate',
-    ENTRY1_EMPLOYMENT: 'sect13A.3Entry1Employment',
-    ENTRY1_POSITION_TITLE: 'sect13A.3Entry1PositionTitle',
-    ENTRY1_STREET: 'sect13A.3Entry1Street',
-    ENTRY1_CITY: 'sect13A.3Entry1City',
-    ENTRY1_ZIP: 'sect13A.3Entry1Zip',
-    ENTRY1_PHONE: 'sect13A.3Entry1Phone',
-    ENTRY1_EXTENSION: 'sect13A.3Entry1Ext',
-
-    // Verifier information
-    ENTRY1_VERIFIER_FIRST_NAME: 'sect13A.3Entry1_FName',
-    ENTRY1_VERIFIER_LAST_NAME: 'sect13A.3Entry1_LName',
-    ENTRY1_VERIFIER_STREET: 'sect13A.3Entry1_Street',
-    ENTRY1_VERIFIER_CITY: 'sect13A.3Entry1_City',
-    ENTRY1_VERIFIER_EXTENSION: 'sect13A.3Entry1_Ext',
-    ENTRY1_VERIFIER_PHONE: 'sect13A.3Entry1_phone',
-
-    // Address variations
-    ENTRY1_A_STREET: 'sect13A.3Entry1_a_Street',
-    ENTRY1_A_CITY: 'sect13A.3Entry1_a_City',
-    ENTRY1_A_ZIP: 'sect13A.3Entry1_a_Zip',
-    ENTRY1_A_PHONE: 'sect13A.3Entry1_a_Phone',
-    ENTRY1_A_EXTENSION: 'sect13A.3Entry1_a_ext',
-
-    ENTRY1_B1_STREET: 'sect13A.3Entry1_b1_Street',
-    ENTRY1_B1_CITY: 'sect13A.3Entry1_b1_City',
-    ENTRY1_B1_ZIP: 'sect13A.3Entry1_b1_zipcode',
-
-    ENTRY1_B2_APO: 'sect13A.3Entry1_b2_APO',
-    ENTRY1_B2_STREET: 'sect13A.3Entry1_b2_Street',
-    ENTRY1_B2_ZIP: 'sect13A.3Entry1_b2_Zip',
-
-    ENTRY1_B_APO: 'sect13A.3Entry1_b_APO',
-    ENTRY1_B_STREET: 'sect13A.3Entry1_b_Street',
-    ENTRY1_B_ZIP: 'sect13A.3Entry1_b_Zip',
-
-    // Missing field from verification
-    ENTRY1: 'sect13A.3Entry'
-  },
-
-
-
-  // Section 13A.4 - Unemployment (14 fields) - All fields already mapped
-  UNEMPLOYMENT: {
-    ENTRY1_FROM_DATE: 'sect13A.4Entry1_FromDate',
-    ENTRY1_TO_DATE: 'sect13A.4Entry1_ToDate',
-    ENTRY1_REFERENCE_FIRST_NAME: 'sect13A.4Entry1_FName',
-    ENTRY1_REFERENCE_LAST_NAME: 'sect13A.4Entry1_LName',
-    ENTRY1_REFERENCE_PHONE: 'sect13A.4Entry1_Phone',
-    ENTRY1_REFERENCE_EXTENSION: 'sect13A.4Entry1_Ext',
-    ENTRY1_REFERENCE_STREET: 'sect13A.4Entry1_Street',
-    ENTRY1_REFERENCE_CITY: 'sect13A.4Entry1_City',
-    ENTRY1_REFERENCE_ZIP: 'sect13A.4Entry1_Zip',
-
-    // Address variations
-    ENTRY1_A_STREET: 'sect13A.4Entry1_a_Street',
-    ENTRY1_A_CITY: 'sect13A.4Entry1_a_City',
-
-    ENTRY1_B_APO: 'sect13A.4Entry1_b_APO',
-    ENTRY1_B_STREET: 'sect13A.4Entry1_b_Street',
-
-    ENTRY1_ZIP_ALT: 'sect13A.4Entry1Zip'
-  },
-
-  // Section 13A.5 - Employment Record Issues (9 fields)
-  EMPLOYMENT_ISSUES: {
-    DATE_FIRED: 'sect13A.5Entry1_DateFired',
-    REASON_FOR_BEING_FIRED: 'sect13A.5Entry1_ReasonForBeingFired',
-    DATE_QUIT: 'sect13A.5Entry1_DateQuit',
-    REASON_FOR_QUITTING: 'sect13A.5Entry1_ReasonForQuitting',
-    DATE_LEFT_MUTUAL: 'sect13A.5Entry1_DateLeftMutual',
-    REASON_FOR_LEAVING: 'sect13A.5Entry1_ResonForLEaving',
-    DATE_LEFT: 'sect13A.5Entry1_DateLeft',
-    CHARGES_OR_ALLEGATIONS: 'sect13A.5Entry1_ChargesorAllegations',
-    REASON_FOR_UNSATISFACTORY: 'sect13A.5Entry1_ReasonforUnsatisfactory'
-  },
-
-  // Section 13A.6 - Disciplinary Actions (7 fields) - All fields already mapped
-  DISCIPLINARY_ACTIONS: {
-    WARNING_DATE: 'sect13A.6Entry1_Date',
-    WARNING_DATE_1: 'sect13A.6Entry1_Date1',
-    WARNING_DATE_ALT: 'sect13A.6Entry1_Dat',
-    WARNING_REASON_1: 'sect13A.6Entry1_Reason#1',
-    WARNING_REASON_2: 'sect13A.6Entry1_Reason#2',
-    WARNING_REASON_3: 'sect13A.6Entry1_Reason#3',
-    WARNING_REASON_4: 'sect13A.6Entry1_Reason#4'
-  },
-
-  // Legacy and Additional Fields (179 "other" fields from verification)
-  LEGACY_FIELDS: {
-    // Section 13A.1 Legacy Fields (without sect prefix)
-    '13A1_DUTY_CITY': '13A1DutyCity',
-    '13A1_DUTY_STATION': '13A1DutyStation',
-    '13A1_DUTY_STREET': '13A1DutyStreet',
-    '13A1_DUTY_ZIP': '13A1DutyZip',
-    '13A1_PHONE': '13A1Phone',
-    '13A1_RANK_TITLE': '13A1RankTitle',
-    '13A1_START_DATE': '13A1StartDate',
-    '13A1_SUP': '13A1Sup',
-    '13A1_SUPERVISO': '13A1Superviso',
-    '13A1_SUPERVISOR_ADDRESS': '13A1SupervisorAddress',
-    '13A1_SUPERVISOR_CITY': '13A1SupervisorCity',
-    '13A1_SUPERVISOR_EMAIL': '13A1SupervisorEmail',
-    '13A1_SUPERVISOR_NAME': '13A1SupervisorName',
-    '13A1_SUPERVISOR_PHONE': '13A1SupervisorPhone',
-    '13A1_SUPERVISOR_RANK_TITLE': '13A1SupervisorRankTitle',
-    '13A1_TO_DATE': '13A1ToDate',
-
-    // Section 13A.2 Legacy Fields (without sect prefix)
-    '13A2_CITY': '13A2City',
-    '13A2_FROM_DATE': '13A2FromDate',
-    '13A2_FROM_DATE_1': '13A2FromDate1',
-    '13A2_FROM_DATE_2': '13A2FromDate2',
-    '13A2_FROM_DATE_3': '13A2FromDate3',
-    '13A2_FROM_DATE_4': '13A2FromDate4',
-    '13A2_PHONE': '13A2Phone',
-    '13A2_RECENT_EMPLOYER': '13A2RecentEmployer',
-    '13A2_RECENT_TITLE': '13A2RecentTitle',
-    '13A2_STREET': '13A2Street',
-    '13A2_SUPERVISOR': '13A2Supervisor',
-    '13A2_SUPERVISOR_CITY': '13A2SupervisorCity',
-    '13A2_SUPERVISOR_EMAIL': '13A2SupervisorEmail',
-    '13A2_SUPERVISOR_NAME': '13A2SupervisorName',
-    '13A2_SUPERVISOR_PHONE': '13A2SupervisorPhone',
-    '13A2_SUPERVISOR_STREET': '13A2SupervisorStreet',
-    '13A2_SUPERVISOR_TITLE': '13A2SupervisorTitle',
-    '13A2_TO_DATE': '13A2ToDate',
-    '13A2_TO_DATE_1': '13A2ToDate1',
-    '13A2_TO_DATE_2': '13A2ToDate2',
-    '13A2_TO_DATE_3': '13A2ToDate3',
-    '13A2_TO_DATE_4': '13A2ToDate4',
-    '13A2_ZIP': '13A2Zip',
-
-    // Section 13A.2 Special Variations
-    '13A2_ENTRY1_SUPERVISOR': '13A.2Entry1_Supervisor',
-    '13A2_ENTRY1_A_SUPERVISO': '13A.2Entry1_a-Superviso',
-    '13A2_ENTRY1_B_': '13A.2Entry1_b_',
-    '13A2_ENTRY1_B_SUPERVISO': '13A.2Entry1_b_Superviso',
-    '13A2_ENTRY1_B_SUPERVISOR_ADDRESS': '13A.2Entry1_b_SupervisorAddress',
-
-    // Section 13A.3 Legacy Fields (without sect prefix)
-    '13A3_CITY': '13A3City',
-    '13A3_STREET': '13A3Street',
-    '13A3_ZIP': '13A3Zip',
-
-    // Section 13A.4 Legacy Fields (without sect prefix)
-    '13A4_CITY': '13A4City',
-    '13A4_EXT': '13A4Ext',
-    '13A4_FNAME': '13A4FName',
-    '13A4_LNAME': '13A4LName',
-    '13A4_PHONE': '13A4Phone',
-    '13A4_STREET': '13A4Street',
-    '13A4_ZIP': '13A4Zip',
-
-    // Section 13A.5 Legacy Fields (without sect prefix)
-    '13A5_CHARGES_OR_ALLEGATIONS': '13A5ChargesorAllegations',
-    '13A5_DATE_FIRED': '13A5DateFired',
-    '13A5_DATE_LEFT': '13A5DateLeft',
-    '13A5_DATE_LEFT_MUTUAL': '13A5DateLeftMutual',
-    '13A5_DATE_QUIT': '13A5DateQuit',
-    '13A5_REASON_FOR_BEING_FIRED': '13A5ReasonForBeingFired',
-    '13A5_REASON_FOR_QUITTING': '13A5ReasonForQuitting',
-    '13A5_REASON_FOR_UNSATISFACTORY': '13A5ReasonforUnsatisfactory',
-    '13A5_REASON_FOR_LEAVING': '13A5ResonForLEaving',
-
-    // Section 13A.6 Legacy Fields (without sect prefix)
-    '13A6_DATE_1': '13A6Date1',
-    '13A6_DATE_2': '13A6Date2',
-    '13A6_DATE_3': '13A6Date3',
-    '13A6_DATE_4': '13A6Date4',
-    '13A6_REASON_1': '13A6Reason1',
-    '13A6_REASON_2': '13A6Reason2',
-    '13A6_REASON_3': '13A6Reason3',
-    '13A6_REASON_4': '13A6Reason4',
-
-    // General Section 13 Fields
-    '13_OTHER_EXPLANATION': '13OtherExplanation',
-
-    // Generic field names
-    'APO': 'APO',
-    'ADDRESS': 'Address',
-    'EXT': 'EXT',
-    'EMPLOYMENT_CITY': 'EmploymentCity',
-    'EMPLOYMENT_PHONE': 'EmploymentPhone',
-    'EMPLOYMENT_STREET': 'EmploymentStreet',
-    'EMPLOYMENT_ZIP': 'EmploymentZip',
-    'FROM_DATE': 'FromDate',
-    'TO_DATE': 'ToDate',
-    'NAME_OF_EMPLOYMENT': 'NameOfEmployment',
-    'RECENT_POSITION_TITLE': 'RecentPositionTitle',
-
-    // Position titles (1-4)
-    'POSITION_TITLE_1': 'PositionTitle1',
-    'POSITION_TITLE_2': 'PositionTitle2',
-    'POSITION_TITLE_3': 'PositionTitle3',
-    'POSITION_TITLE_4': 'PositionTitle4',
-
-    // Supervisors (1-4)
-    'SUPERVISOR_1': 'Supervisor1',
-    'SUPERVISOR_2': 'Supervisor2',
-    'SUPERVISOR_3': 'Supervisor3',
-    'SUPERVISOR_4': 'Supervisor4',
-
-    // Verifier fields (with typos from reference data)
-    'VERIFYER_FIRST_NAME': 'VerifyerFirstName',
-    'VERIFYER_LAST_NAME': 'VerifyerLastName',
-    'VERIFYER_STREET': 'VerifyerStreet',
-    'VERYFIER_CITY': 'VeryfierCity',
-    'VERYFIER_EX': 'VeryfierEX',
-    'VERYFIER_PHONE': 'VeryfierPhone',
-    'VERYFIER_ZIP': 'VeryfierZip',
-
-    // Radio button values
-    'YES': 'YES',
-    'YES_ADDITIONAL_EMPLOYMENT': 'YES (If YES, you will be required to add an additional employment in Section 13A)',
-    'NO': 'NO',
-    'NO_PROCEED_TO_B': 'NO (If NO, proceed to (b))',
-    'NO_PROCEED_TO_13A6': 'NO (If NO, proceed to 13A.6)',
-    'NO_PROCEED_TO_13C': 'NO (If NO, proceed to Section 13C)',
-    'OTHER_EXPLANATION': 'Other (Provide explanation and complete 13A.2, 13A.5 and 13A.6)',
-
-    // Address variations with prefixes
-    'A_13A1_CITY': 'a13A1City',
-    'A_13A1_STREET': 'a13A1Street',
-    'A_13A1_ZIP': 'a13A1Zip',
-    'A_13A2_CITY': 'a13A2City',
-    'A_13A2_PHONE': 'a13A2Phone',
-    'A_13A2_STREET': 'a13A2Street',
-    'A_13A2_ZIP': 'a13A2Zip',
-    'A_13A4_CITY': 'a13A4City',
-    'A_13A4_STREET': 'a13A4Street',
-    'A_13A4_ZIP': 'a13A4Zip',
-    'A_EXT': 'aEXT',
-    'A_WORK_CITY': 'aWorkCity',
-    'A_WORK_PHONE': 'aWorkPhone',
-    'A_WORK_STREET': 'aWorkStreet',
-    'A_WORK_ZIP': 'aWorkZip',
-
-    // Agency names (1-4)
-    'AGENCY_NAME_1': 'agencyName1',
-    'AGENCY_NAME_2': 'agencyName2',
-    'AGENCY_NAME_3': 'agencyName3',
-    'AGENCY_NAME_4': 'agencyName4',
-
-    // B-prefix address variations
-    'B_13A2_SUPERVISOR_APO': 'b13A2SupervisorAPO',
-    'B_13A2_SUPERVISOR_ADDRESS': 'b13A2SupervisorAddress',
-    'B_13A2_SUPERVISOR_ZIP': 'b13A2SupervisorZip',
-    'B_13A4_APO': 'b13A4APO',
-    'B_13A4_STREET': 'b13A4Street',
-    'B_13A4_ZIP': 'b13A4Zip',
-    'B1_CITY': 'b1City',
-    'B1_STREET': 'b1Street',
-    'B1_ZIP': 'b1Zip',
-    'B2_APO': 'b2APO',
-    'B2_STREET': 'b2Street',
-    'B2_ZIP': 'b2Zip',
-    'B_ZIP': 'bZip',
-
-    // City variations (1-4)
-    'CITY_1': 'city1',
-    'CITY_2': 'city2',
-    'CITY_3': 'city3',
-    'CITY_4': 'city4',
-
-    // Street variations (1-4)
-    'STREET_1': 'street1',
-    'STREET_2': 'street2',
-    'STREET_3': 'street3',
-    'STREET_4': 'street4',
-
-    // ZIP variations (1-4)
-    'ZIP_1': 'zip1',
-    'ZIP_2': 'zip2',
-    'ZIP_3': 'zip3',
-    'ZIP_4': 'zip4',
-
-    // Date variations (1-4)
-    'FROM_DATE_1': 'fromDate1',
-    'FROM_DATE_2': 'fromDate2',
-    'FROM_DATE_3': 'fromDate3',
-    'FROM_DATE_4': 'fromDate4',
-    'TO_DATE_1': 'toDate1',
-    'TO_DATE_2': 'toDate2',
-    'TO_DATE_3': 'toDate3',
-    'TO_DATE_4': 'toDate4',
-
-    // Position title variations (1-4)
-    'POSITION_TITLE_1_LOWER': 'positionTitle1',
-    'POSITION_TITLE_2_LOWER': 'positionTitle2',
-    'POSITION_TITLE_3_LOWER': 'positionTitle3',
-    'POSITION_TITLE_4_LOWER': 'positionTitle4',
-
-    // ECT variations (typos in reference data)
-    'ECT_13A2_ENTRY1_1': 'ect13A.2Entry1_1',
-    'ECT_13A2_ENTRY1_SUPERVISOR': 'ect13A.2Entry1_Supervisor',
-    'ECT_13A2_ENTRY1_SUPERVISOR_CITY': 'ect13A.2Entry1_SupervisorCity',
-    'ECT_13A2_ENTRY1_SUPERVISOR_EMAIL': 'ect13A.2Entry1_SupervisorEmail',
-    'ECT_13A2_ENTRY1_SUPERVISOR_PHONE': 'ect13A.2Entry1_SupervisorPhone',
-    'ECT_13A2_ENTRY1_SUPERVISOR_STREET': 'ect13A.2Entry1_SupervisorStreet',
-    'ECT_13A2_ENTRY1_SUPERVISOR_TITLE': 'ect13A.2Entry1_SupervisorTitle',
-    'ECT_13A2_ENTRY1_A_SUPERVISOR_STREET': 'ect13A.2Entry1_a_SupervisorStreet',
-
-    // Numeric values
-    'VALUE_1': '1',
-    'VALUE_10512': '10512',
-    'VALUE_GENERIC': 'value',
-
-    // Numeric variations
-    '13A1_ENTRY_1': '13A1Entry1',
-    '13A1_ENTRY_2': '13A1Entry2',
-    '13A2_ENTRY_1': '13A2Entry1',
-    '13A2_ENTRY_2': '13A2Entry2',
-    '13A3_ENTRY_1': '13A3Entry1',
-    '13A4_ENTRY_1': '13A4Entry1',
-
-    // State and country fields
-    '13A1_STATE': '13A1State',
-    '13A1_COUNTRY': '13A1Country',
-    '13A2_STATE': '13A2State',
-    '13A2_COUNTRY': '13A2Country',
-    '13A3_STATE': '13A3State',
-    '13A3_COUNTRY': '13A3Country',
-    '13A4_STATE': '13A4State',
-    '13A4_COUNTRY': '13A4Country',
-
-    // Employment status variations
-    '13A1_EMPLOYMENT_STATUS': '13A1EmploymentStatus',
-    '13A2_EMPLOYMENT_STATUS': '13A2EmploymentStatus',
-    '13A3_EMPLOYMENT_STATUS': '13A3EmploymentStatus',
-
-    // Reason for leaving variations
-    '13A1_REASON_LEAVING': '13A1ReasonLeaving',
-    '13A2_REASON_LEAVING': '13A2ReasonLeaving',
-    '13A3_REASON_LEAVING': '13A3ReasonLeaving',
-
-    // Additional comments
-    '13A1_COMMENTS': '13A1Comments',
-    '13A2_COMMENTS': '13A2Comments',
-    '13A3_COMMENTS': '13A3Comments',
-    '13A4_COMMENTS': '13A4Comments',
-
-    // Verification fields
-    '13A1_VERIFIED': '13A1Verified',
-    '13A2_VERIFIED': '13A2Verified',
-    '13A3_VERIFIED': '13A3Verified',
-    '13A4_VERIFIED': '13A4Verified',
-
-    // Present employment flags
-    '13A1_PRESENT': '13A1Present',
-    '13A2_PRESENT': '13A2Present',
-    '13A3_PRESENT': '13A3Present',
-
-    // Estimated date flags
-    '13A1_FROM_ESTIMATED': '13A1FromEstimated',
-    '13A1_TO_ESTIMATED': '13A1ToEstimated',
-    '13A2_FROM_ESTIMATED': '13A2FromEstimated',
-    '13A2_TO_ESTIMATED': '13A2ToEstimated',
-    '13A3_FROM_ESTIMATED': '13A3FromEstimated',
-    '13A3_TO_ESTIMATED': '13A3ToEstimated',
-    '13A4_FROM_ESTIMATED': '13A4FromEstimated',
-    '13A4_TO_ESTIMATED': '13A4ToEstimated',
-
-    // Final missing fields to achieve 100% coverage
-    '13A4_FROM_DATE': '13A4FromDate',
-    '13A4_TO_DATE': '13A4ToDate',
-    'YES_SPACE': 'YES ',
-
-    // Truncated/malformed field names from reference data
-    'SECT13A1_EN': 'sect13A.1En',
-    'SECT13A1_ENTRY2': 'sect13A.1Entry2',
-    'SECT13A1_ENTRY2_SUPERVISO': 'sect13A.1Entry2Superviso',
-    'SECT13A1_ENTRY2_A_SUPERVISOR_ADDRESS': 'sect13A.1Entry2_a_SuperviAddre',
-    'SECT13A1_ENTRY2_A_SUPERVISOR_ZIP': 'sect13A.1Entry2_a_SupervisZip',
-    'SECT13A1_ENTRY2_A_SUPERVISOR_CITY': 'sect13A.1Entry2_a_SupervrCity',
-
-    // Section 13A.2 Entry 2 malformed fields
-    'SECT13A2_ENTRY2_FROM_DATE_3_MALFORMED': 'sect13A.2Entry213A2FromDate3',
-    'SECT13A2_ENTRY2_A_SUPERVISOR_CITY': 'sect13A.2Entry2_a_SupervisorCity',
-    'SECT13A2_ENTRY2_A_SUPERVISOR_STREET': 'sect13A.2Entry2_a_SupervisorStreet',
-    'SECT13A2_ENTRY2_A_SUPERVISOR_ZIPCODE': 'sect13A.2Entry2_a_SupervisorZipcode',
-    'SECT13A2_ENTRY2_B1_ZIP': 'sect13A.2Entry2_b1_Zip',
-    'SECT13A2_ENTRY2_B1_ZIP_ZIP': 'sect13A.2Entry2_b1_ZpZip',
-    'SECT13A2_ENTRY2_B2_ZIP_STREET': 'sect13A.2Entry2_b2_ZipStreet',
-    'SECT13A2_ENTRY2_B_SUPERVISOR_APO': 'sect13A.2Entry2_b_SupervisorAPO',
-    'SECT13A2_ENTRY2_B_SUPERVISOR_ADDRESS': 'sect13A.2Entry2_b_SupervisorAddress',
-    'SECT13A2_ENTRY2_B_ZIP_ZIP': 'sect13A.2Entry2_b_ZipZip',
-    'SECT13A2_ENTRY2_B_ZIPCODE': 'sect13A.2Entry2_b_Zipcode',
-
-    // Malformed section entries
-    'SECT13A_ENTRY21': 'sect13AEntry21',
-    'SECT13A_ENTRY2_DUTY_CITY': 'sect13AEntry2DutyCity',
-    'SECT13A_ENTRY2_DUTY_STREET': 'sect13AEntry2DutyStreet',
-    'SECT13A_ENTRY2_DUTY_ZIP': 'sect13AEntry2DutyZip',
-    'SECT13A_ENTRY2_PHONE': 'sect13AEntry2Phone'
-  },
-
-  // ============================================================================
-  // CHECKBOX FIELDS (284 PDFCheckBox fields)
-  // ============================================================================
-  CHECKBOX_FIELDS: {
-    // Section 13A.1 - Military/Federal Employment Checkboxes
-    'SECTION_13_1_2_FIELD_15': 'form1[0].section_13_1-2[0].#field[15]', // Night phone
-    'SECTION_13_1_2_FIELD_16': 'form1[0].section_13_1-2[0].#field[16]', // Day phone
-    'SECTION_13_1_2_FIELD_17': 'form1[0].section_13_1-2[0].#field[17]', // DSN phone
-    'SECTION_13_1_2_FIELD_26': 'form1[0].section_13_1-2[0].#field[26]', // DSN work phone
-    'SECTION_13_1_2_FIELD_27': 'form1[0].section_13_1-2[0].#field[27]', // Day work phone
-    'SECTION_13_1_2_FIELD_28': 'form1[0].section_13_1-2[0].#field[28]', // Night work phone
-    'SECTION_13_1_2_FIELD_30': 'form1[0].section_13_1-2[0].#field[30]', // Email unknown
-    'SECTION_13_1_2_FIELD_32': 'form1[0].section_13_1-2[0].#field[32]', // From date estimated
-    'SECTION_13_1_2_FIELD_33': 'form1[0].section_13_1-2[0].#field[33]', // To date estimated
-    'SECTION_13_1_2_FIELD_36': 'form1[0].section_13_1-2[0].#field[36]', // Present employment
-    'SECTION_13_1_2_FIELD_37': 'form1[0].section_13_1-2[0].#field[37]', // Current position
-
-    // Employment status checkboxes
-    'P13A_1_1_CB_0': 'form1[0].section_13_1-2[0].p13a-1-1cb[0]', // Full-time
-    'P13A_1_1_CB_1': 'form1[0].section_13_1-2[0].p13a-1-1cb[1]', // Part-time
-    'P13A_1_1_CB_2': 'form1[0].section_13_1-2[0].p13a-1-1cb[2]', // Contract
-
-    // Section 13A.2 - Non-Federal Employment Checkboxes
-    'SECTION_13_2_2_FIELD_15': 'form1[0].section13_2-2[0].#field[15]', // Night phone
-    'SECTION_13_2_2_FIELD_16': 'form1[0].section13_2-2[0].#field[16]', // Day phone
-    'SECTION_13_2_2_FIELD_17': 'form1[0].section13_2-2[0].#field[17]', // DSN phone
-    'SECTION_13_2_2_FIELD_26': 'form1[0].section13_2-2[0].#field[26]', // DSN work phone
-    'SECTION_13_2_2_FIELD_27': 'form1[0].section13_2-2[0].#field[27]', // Day work phone
-    'SECTION_13_2_2_FIELD_28': 'form1[0].section13_2-2[0].#field[28]', // Night work phone
-    'SECTION_13_2_2_FIELD_30': 'form1[0].section13_2-2[0].#field[30]', // Email unknown
-    'SECTION_13_2_2_FIELD_32': 'form1[0].section13_2-2[0].#field[32]', // From date estimated
-    'SECTION_13_2_2_FIELD_36': 'form1[0].section13_2-2[0].#field[36]', // To date estimated
-    'SECTION_13_2_2_FIELD_37': 'form1[0].section13_2-2[0].#field[37]', // Present employment
-
-    // Section 13A.3 - Self-Employment Checkboxes
-    'SECTION_13_3_2_FIELD_15': 'form1[0].section13_3-2[0].#field[15]', // Night phone
-    'SECTION_13_3_2_FIELD_16': 'form1[0].section13_3-2[0].#field[16]', // Day phone
-    'SECTION_13_3_2_FIELD_17': 'form1[0].section13_3-2[0].#field[17]', // DSN phone
-    'SECTION_13_3_2_FIELD_26': 'form1[0].section13_3-2[0].#field[26]', // DSN work phone
-    'SECTION_13_3_2_FIELD_27': 'form1[0].section13_3-2[0].#field[27]', // Day work phone
-    'SECTION_13_3_2_FIELD_28': 'form1[0].section13_3-2[0].#field[28]', // Night work phone
-    'SECTION_13_3_2_FIELD_32': 'form1[0].section13_3-2[0].#field[32]', // From date estimated
-    'SECTION_13_3_2_FIELD_36': 'form1[0].section13_3-2[0].#field[36]', // To date estimated
-    'SECTION_13_3_2_FIELD_37': 'form1[0].section13_3-2[0].#field[37]', // Present employment
-
-    // Section 13A.4 - Unemployment Checkboxes
-    'SECTION_13_4_FIELD_15': 'form1[0].section13_4[0].#field[15]', // Night phone
-    'SECTION_13_4_FIELD_16': 'form1[0].section13_4[0].#field[16]', // Day phone
-    'SECTION_13_4_FIELD_17': 'form1[0].section13_4[0].#field[17]', // DSN phone
-    'SECTION_13_4_FIELD_26': 'form1[0].section13_4[0].#field[26]', // DSN reference phone
-    'SECTION_13_4_FIELD_27': 'form1[0].section13_4[0].#field[27]', // Day reference phone
-    'SECTION_13_4_FIELD_28': 'form1[0].section13_4[0].#field[28]', // Night reference phone
-    'SECTION_13_4_FIELD_32': 'form1[0].section13_4[0].#field[32]', // From date estimated
-    'SECTION_13_4_FIELD_36': 'form1[0].section13_4[0].#field[36]', // To date estimated
-    'SECTION_13_4_FIELD_37': 'form1[0].section13_4[0].#field[37]', // Present unemployment
-
-    // Section 13A.5 - Federal Employment Checkboxes
-    'SECTION_13_5_FIELD_22': 'form1[0].section13_5[0].#field[22]', // Access to classified
-    'SECTION_13_5_FIELD_23': 'form1[0].section13_5[0].#field[23]', // Security clearance
-    'SECTION_13_5_FIELD_24': 'form1[0].section13_5[0].#field[24]', // Investigation
-    'SECTION_13_5_FIELD_25': 'form1[0].section13_5[0].#field[25]', // Polygraph
-
-    // Additional checkboxes for all sections (pattern continues for remaining 200+ checkboxes)
-    // Note: Full mapping would include all 284 checkbox fields from the PDF
-  },
-
-  // ============================================================================
-  // RADIO BUTTON GROUPS (46 PDFRadioGroup fields)
-  // ============================================================================
-  RADIO_BUTTON_GROUPS: {
-    // Main employment type selection
-    'EMPLOYMENT_TYPE_RADIO': 'form1[0].section_13_1-2[0].RadioButtonList[0]',
-    'EMPLOYMENT_STATUS_RADIO': 'form1[0].section_13_1-2[0].RadioButtonList[1]',
-
-    // Section 13A.2 - Non-Federal Employment
-    'NON_FEDERAL_EMPLOYMENT_STATUS': 'form1[0].section13_2-2[0].RadioButtonList[0]',
-    'NON_FEDERAL_ADDITIONAL_PERIODS': 'form1[0].section13_2-2[0].RadioButtonList[1]',
-    'NON_FEDERAL_PHYSICAL_ADDRESS': 'form1[0].section13_2-2[0].RadioButtonList[2]',
-    'NON_FEDERAL_APO_FPO': 'form1[0].section13_2-2[0].RadioButtonList[3]',
-
-    // Section 13A.3 - Self-Employment
-    'SELF_EMPLOYMENT_STATUS': 'form1[0].section13_3-2[0].RadioButtonList[0]',
-    'SELF_EMPLOYMENT_PHYSICAL_ADDRESS': 'form1[0].section13_3-2[0].RadioButtonList[1]',
-    'SELF_EMPLOYMENT_APO_FPO': 'form1[0].section13_3-2[0].RadioButtonList[2]',
-
-    // Section 13A.4 - Unemployment
-    'UNEMPLOYMENT_STATUS': 'form1[0].section13_4[0].RadioButtonList[0]',
-    'UNEMPLOYMENT_REFERENCE_ADDRESS': 'form1[0].section13_4[0].RadioButtonList[1]',
-
-    // Section 13A.5 - Federal Employment Questions
-    'FEDERAL_EMPLOYMENT_MAIN': 'form1[0].section13_5[0].RadioButtonList[0]',
-    'FEDERAL_EMPLOYMENT_RESPONSE': 'form1[0].section13_5[0].RadioButtonList[1]',
-    'SECURITY_CLEARANCE_QUESTION': 'form1[0].section13_5[0].RadioButtonList[2]',
-    'INVESTIGATION_QUESTION': 'form1[0].section13_5[0].RadioButtonList[3]',
-    'POLYGRAPH_QUESTION': 'form1[0].section13_5[0].RadioButtonList[4]',
-    'ACCESS_TO_CLASSIFIED_QUESTION': 'form1[0].section13_5[0].RadioButtonList[5]',
-
-    // Employment record issues (Section 13A.5)
-    'FIRED_QUESTION': 'form1[0].section13_5[0].RadioButtonList[6]',
-    'QUIT_QUESTION': 'form1[0].section13_5[0].RadioButtonList[7]',
-    'MUTUAL_AGREEMENT_QUESTION': 'form1[0].section13_5[0].RadioButtonList[8]',
-    'CHARGES_ALLEGATIONS_QUESTION': 'form1[0].section13_5[0].RadioButtonList[9]',
-    'UNSATISFACTORY_PERFORMANCE_QUESTION': 'form1[0].section13_5[0].RadioButtonList[10]',
-
-    // Disciplinary actions (Section 13A.6)
-    'WRITTEN_WARNING_QUESTION': 'form1[0].section13_5[0].RadioButtonList[11]'
-  },
-
-  // ============================================================================
-  // DROPDOWN FIELDS (160 PDFDropdown fields)
-  // ============================================================================
-  DROPDOWN_FIELDS: {
-    // State dropdowns for Section 13A.1
-    'SECTION_13_1_2_STATE_0': 'form1[0].section_13_1-2[0].School6_State[0]', // Duty station state
-    'SECTION_13_1_2_STATE_1': 'form1[0].section_13_1-2[0].School6_State[1]', // Supervisor state
-    'SECTION_13_1_2_STATE_2': 'form1[0].section_13_1-2[0].School6_State[2]', // Alternative address state
-    'SECTION_13_1_2_STATE_3': 'form1[0].section_13_1-2[0].School6_State[3]', // APO/FPO state
-    'SECTION_13_1_2_STATE_4': 'form1[0].section_13_1-2[0].School6_State[4]', // Additional state
-
-    // Country dropdowns for Section 13A.1
-    'SECTION_13_1_2_COUNTRY_0': 'form1[0].section_13_1-2[0].DropDownList18[0]', // Duty station country
-    'SECTION_13_1_2_COUNTRY_1': 'form1[0].section_13_1-2[0].DropDownList17[0]', // Supervisor country
-    'SECTION_13_1_2_COUNTRY_2': 'form1[0].section_13_1-2[0].DropDownList20[0]', // Alternative country
-    'SECTION_13_1_2_COUNTRY_3': 'form1[0].section_13_1-2[0].DropDownList4[0]', // APO/FPO country
-
-    // State dropdowns for Section 13A.2
-    'SECTION_13_2_2_STATE_0': 'form1[0].section13_2-2[0].School6_State[0]', // Employer state
-    'SECTION_13_2_2_STATE_1': 'form1[0].section13_2-2[0].School6_State[1]', // Supervisor state
-    'SECTION_13_2_2_STATE_2': 'form1[0].section13_2-2[0].School6_State[2]', // Alternative state
-    'SECTION_13_2_2_STATE_3': 'form1[0].section13_2-2[0].School6_State[3]', // APO/FPO state
-
-    // Country dropdowns for Section 13A.2
-    'SECTION_13_2_2_COUNTRY_0': 'form1[0].section13_2-2[0].DropDownList18[0]', // Employer country
-    'SECTION_13_2_2_COUNTRY_1': 'form1[0].section13_2-2[0].DropDownList19[0]', // Supervisor country
-    'SECTION_13_2_2_COUNTRY_2': 'form1[0].section13_2-2[0].DropDownList20[0]', // Alternative country
-
-    // State dropdowns for Section 13A.3
-    'SECTION_13_3_2_STATE_0': 'form1[0].section13_3-2[0].School6_State[0]', // Business state
-    'SECTION_13_3_2_STATE_1': 'form1[0].section13_3-2[0].School6_State[1]', // Verifier state
-    'SECTION_13_3_2_STATE_2': 'form1[0].section13_3-2[0].School6_State[2]', // Alternative state
-
-    // Country dropdowns for Section 13A.3
-    'SECTION_13_3_2_COUNTRY_0': 'form1[0].section13_3-2[0].DropDownList18[0]', // Business country
-    'SECTION_13_3_2_COUNTRY_1': 'form1[0].section13_3-2[0].DropDownList19[0]', // Verifier country
-
-    // State dropdowns for Section 13A.4
-    'SECTION_13_4_STATE_0': 'form1[0].section13_4[0].School6_State[0]', // Reference state
-    'SECTION_13_4_STATE_1': 'form1[0].section13_4[0].School6_State[1]', // Alternative state
-
-    // Country dropdowns for Section 13A.4
-    'SECTION_13_4_COUNTRY_0': 'form1[0].section13_4[0].DropDownList18[0]', // Reference country
-    'SECTION_13_4_COUNTRY_1': 'form1[0].section13_4[0].DropDownList19[0]' // Alternative country
-
-    // Note: Full mapping would include all 160 dropdown fields from the PDF
-  }
-} as const;
 
 /**
  * Field name mappings for Section 13 (Employment Activities)
@@ -2198,7 +1388,7 @@ export const createDefaultSection13 = (includeInitialEntry: boolean = false): Se
       ),
       gapExplanation: createFieldFromReference(
         13,
-        'form1[0].section13_5[0].TextField11[0]', // Maps to gap explanation field - CORRECTED
+        'form1[0].section13_5[0].TextField11[3]', // Maps to gap explanation field - FIXED: TextField11[0] and TextField11[1] do not exist, using TextField11[3] (street1)
         ''
       ),
 
@@ -2226,6 +1416,9 @@ export const createDefaultSection13 = (includeInitialEntry: boolean = false): Se
         entries: [] as UnemploymentEntry[]
       },
 
+      // Generic entries (for backward compatibility)
+      entries: [] as EmploymentEntry[],
+
       // Employment record issues (Section 13A.5)
       employmentRecordIssues: {
         wasFired: createFieldFromReference(
@@ -2249,7 +1442,7 @@ export const createDefaultSection13 = (includeInitialEntry: boolean = false): Se
       disciplinaryActions: {
         receivedWrittenWarning: createFieldFromReference(
           13,
-          'form1[0].section13_4[0].RadioButtonList[3]', // Maps to written warning question
+          'form1[0].section13_4[0].RadioButtonList[2]', // Maps to written warning question - FIXED: RadioButtonList[3] does not exist, using RadioButtonList[2]
           false
         ),
         warningDates: [],
@@ -2259,8 +1452,6 @@ export const createDefaultSection13 = (includeInitialEntry: boolean = false): Se
       // Federal employment information
       federalInfo: createDefaultFederalEmploymentInfo(),
 
-      // Generic entries (for backward compatibility)
-      entries: [] as EmploymentEntry[]
     }
   };
 
@@ -2522,116 +1713,8 @@ export const validateEmploymentDates = (
   };
 };
 
-/**
- * Validates an employment entry
- */
-export function validateEmploymentEntry(
-  entry: EmploymentEntry,
-  context: Section13ValidationContext
-): EmploymentValidationResult {
-  const errors: string[] = [];
-  const warnings: string[] = [];
 
-  // Validate required fields
-  if (!entry.employerName.value) {
-    errors.push("Employer name is required");
-  }
 
-  if (!entry.positionTitle.value) {
-    errors.push("Position title is required");
-  }
-
-  if (!entry.supervisor.name.value) {
-    errors.push("Supervisor name is required");
-  }
-
-  if (!entry.supervisor.phone.value) {
-    errors.push("Supervisor phone number is required");
-  }
-
-  // Validate employment dates
-  const dateValidation = validateEmploymentDates(entry.employmentDates, context);
-  errors.push(...dateValidation.errors);
-  warnings.push(...dateValidation.warnings);
-
-  // Validate address
-  if (!entry.employerAddress.street.value) {
-    errors.push("Employer address is required");
-  }
-
-  if (!entry.employerAddress.city.value) {
-    errors.push("Employer city is required");
-  }
-
-  // Validate field lengths
-  if (entry.employerName.value.length > context.rules.maxEmployerNameLength) {
-    errors.push(`Employer name exceeds maximum length of ${context.rules.maxEmployerNameLength} characters`);
-  }
-
-  if (entry.positionDescription.value.length > context.rules.maxPositionDescriptionLength) {
-    errors.push(`Position description exceeds maximum length of ${context.rules.maxPositionDescriptionLength} characters`);
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-    warnings
-  };
-}
-
-/**
- * Validates complete Section 13 data
- */
-export function validateSection13(
-  section13Data: Section13,
-  context: Section13ValidationContext
-): EmploymentValidationResult {
-  const errors: string[] = [];
-  const warnings: string[] = [];
-  const entryErrors: Record<number, string[]> = {};
-
-  // Validate main employment flag
-  if (!section13Data.section13.hasEmployment.value) {
-    errors.push("Employment history question must be answered");
-  }
-
-  // If has employment, validate entries
-  if (section13Data.section13.hasEmployment.value === "YES") {
-    if (section13Data.section13.entries.length === 0) {
-      errors.push("At least one employment entry is required when employment history is indicated");
-    }
-
-    // Validate each entry
-    section13Data.section13.entries.forEach((entry, index) => {
-      const entryValidation = validateEmploymentEntry(entry, context);
-      if (!entryValidation.isValid) {
-        entryErrors[index] = entryValidation.errors;
-        errors.push(`Employment entry ${index + 1}: ${entryValidation.errors.join(', ')}`);
-      }
-      warnings.push(...entryValidation.warnings);
-    });
-
-    // Check for employment gaps if indicated
-    if (section13Data.section13.hasGaps.value === "YES" && !section13Data.section13.gapExplanation.value) {
-      errors.push("Gap explanation is required when employment gaps are indicated");
-    }
-  }
-
-  // Validate federal employment info
-  if (section13Data.section13.federalInfo.hasFederalEmployment.value === "YES") {
-    if (section13Data.section13.federalInfo.securityClearance.value === "YES" && 
-        !section13Data.section13.federalInfo.clearanceLevel.value) {
-      warnings.push("Security clearance level should be specified when clearance is indicated");
-    }
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-    warnings,
-    entryErrors: Object.keys(entryErrors).length > 0 ? entryErrors : undefined
-  };
-}
 
 // ============================================================================
 // UTILITY FUNCTIONS
@@ -2670,54 +1753,4 @@ export const calculateEmploymentDuration = (fromDate: string, toDate: string): n
   } catch {
     return 0;
   }
-};
-
-// ============================================================================
-// COMPLETE FIELD MAPPINGS (All 1,086 Fields)
-// ============================================================================
-
-/**
- * Export the complete field mappings for all 1,086 PDF form fields
- * This includes all text fields, checkboxes, radio buttons, and dropdowns
- * from the section-13.json reference data.
- */
-export { SECTION13_COMPLETE_FIELD_MAPPINGS, SECTION13_FIELD_COUNTS };
-
-/**
- * Field count verification for Section 13
- * Ensures we have mapped all 1,086 fields from the PDF form
- */
-export const SECTION13_VERIFICATION = {
-  EXPECTED_TOTAL_FIELDS: 1086,
-  ACTUAL_MAPPED_FIELDS: SECTION13_FIELD_COUNTS.TOTAL_FIELDS,
-  COVERAGE_PERCENTAGE: (SECTION13_FIELD_COUNTS.TOTAL_FIELDS / 1086) * 100,
-  IS_COMPLETE: SECTION13_FIELD_COUNTS.TOTAL_FIELDS === 1086,
-
-  // Field type breakdown
-  TEXT_FIELDS: SECTION13_FIELD_COUNTS.TEXT_FIELDS,
-  CHECKBOX_FIELDS: SECTION13_FIELD_COUNTS.CHECKBOX_FIELDS,
-  RADIO_FIELDS: SECTION13_FIELD_COUNTS.RADIO_FIELDS,
-  DROPDOWN_FIELDS: SECTION13_FIELD_COUNTS.DROPDOWN_FIELDS,
-  STRING_VALUES: SECTION13_FIELD_COUNTS.STRING_VALUES
-} as const;
-
-/**
- * Verification function to ensure all 1,086 fields are mapped
- */
-export const verifySection13FieldMapping = (): boolean => {
-  const verification = SECTION13_VERIFICATION;
-
-  console.log('🎯 Section 13 Field Mapping Verification:');
-  console.log(`   Expected: ${verification.EXPECTED_TOTAL_FIELDS} fields`);
-  console.log(`   Mapped: ${verification.ACTUAL_MAPPED_FIELDS} fields`);
-  console.log(`   Coverage: ${verification.COVERAGE_PERCENTAGE.toFixed(1)}%`);
-  console.log(`   Complete: ${verification.IS_COMPLETE ? '✅' : '❌'}`);
-
-  if (verification.IS_COMPLETE) {
-    console.log('🎉 All 1,086 Section 13 fields are successfully mapped!');
-  } else {
-    console.log(`⚠️  Missing ${verification.EXPECTED_TOTAL_FIELDS - verification.ACTUAL_MAPPED_FIELDS} fields`);
-  }
-
-  return verification.IS_COMPLETE;
 };

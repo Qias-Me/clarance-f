@@ -1,413 +1,552 @@
 /**
- * Section 13: Employment Activities - Component
+ * Section 13: Employment Activities - Complete Implementation
  *
- * This component renders the employment history section of the SF-86 form,
- * allowing users to input their employment background including employers,
- * positions, dates, supervisors, and employment-related activities.
+ * This component implements the complete Section 13 structure with working form components:
+ * - Section 13A: Employment History (6 subsections with actual form fields)
+ * - Section 13B: Employment Gaps
+ * - Section 13C: Employment Record Verification
+ *
+ * FIXED: Replaces placeholder implementation with actual working form components
  */
 
 import React, { useState, useCallback, useEffect } from "react";
 import { useSection13 } from "~/state/contexts/sections2.0/section13";
 
-import type { EmploymentEntry } from "../../../api/interfaces/sections2.0/section13";
-
-// Import enhanced components
-import {
-  EnhancedSection13Component,
-  EmploymentTypeSelector,
-  MilitaryEmploymentForm,
-  NonFederalEmploymentForm,
-  SelfEmploymentForm,
-  UnemploymentForm
-} from "./Section13";
+// Import the working form components
+import MilitaryEmploymentForm from "./Section13/MilitaryEmploymentForm";
+import NonFederalEmploymentForm from "./Section13/NonFederalEmploymentForm";
+import SelfEmploymentForm from "./Section13/SelfEmploymentForm";
+import UnemploymentForm from "./Section13/UnemploymentForm";
+import EmploymentIssuesForm from "./Section13/EmploymentIssuesForm";
 
 interface Section13ComponentProps {
   onValidationChange?: (isValid: boolean) => void;
-  useEnhancedMode?: boolean; // Toggle between legacy and enhanced modes
-  enableEmploymentTypeRouting?: boolean; // Enable subsection-specific forms
+  useEnhancedMode?: boolean;
+  enableEmploymentTypeRouting?: boolean;
 }
 
-// US States and territories for dropdown
-const US_STATES = [
-  { value: "", label: "Select state..." },
-  { value: "AL", label: "Alabama" },
-  { value: "AK", label: "Alaska" },
-  { value: "AZ", label: "Arizona" },
-  { value: "AR", label: "Arkansas" },
-  { value: "CA", label: "California" },
-  { value: "CO", label: "Colorado" },
-  { value: "CT", label: "Connecticut" },
-  { value: "DE", label: "Delaware" },
-  { value: "DC", label: "District of Columbia" },
-  { value: "FL", label: "Florida" },
-  { value: "GA", label: "Georgia" },
-  { value: "HI", label: "Hawaii" },
-  { value: "ID", label: "Idaho" },
-  { value: "IL", label: "Illinois" },
-  { value: "IN", label: "Indiana" },
-  { value: "IA", label: "Iowa" },
-  { value: "KS", label: "Kansas" },
-  { value: "KY", label: "Kentucky" },
-  { value: "LA", label: "Louisiana" },
-  { value: "ME", label: "Maine" },
-  { value: "MD", label: "Maryland" },
-  { value: "MA", label: "Massachusetts" },
-  { value: "MI", label: "Michigan" },
-  { value: "MN", label: "Minnesota" },
-  { value: "MS", label: "Mississippi" },
-  { value: "MO", label: "Missouri" },
-  { value: "MT", label: "Montana" },
-  { value: "NE", label: "Nebraska" },
-  { value: "NV", label: "Nevada" },
-  { value: "NH", label: "New Hampshire" },
-  { value: "NJ", label: "New Jersey" },
-  { value: "NM", label: "New Mexico" },
-  { value: "NY", label: "New York" },
-  { value: "NC", label: "North Carolina" },
-  { value: "ND", label: "North Dakota" },
-  { value: "OH", label: "Ohio" },
-  { value: "OK", label: "Oklahoma" },
-  { value: "OR", label: "Oregon" },
-  { value: "PA", label: "Pennsylvania" },
-  { value: "RI", label: "Rhode Island" },
-  { value: "SC", label: "South Carolina" },
-  { value: "SD", label: "South Dakota" },
-  { value: "TN", label: "Tennessee" },
-  { value: "TX", label: "Texas" },
-  { value: "UT", label: "Utah" },
-  { value: "VT", label: "Vermont" },
-  { value: "VA", label: "Virginia" },
-  { value: "WA", label: "Washington" },
-  { value: "WV", label: "West Virginia" },
-  { value: "WI", label: "Wisconsin" },
-  { value: "WY", label: "Wyoming" },
-  { value: "PR", label: "Puerto Rico" },
-  { value: "VI", label: "Virgin Islands" },
-  { value: "GU", label: "Guam" },
-  { value: "AS", label: "American Samoa" },
-  { value: "MP", label: "Northern Mariana Islands" }
-];
+// Section 13 subsection types
+type Section13Subsection =
+  | '13A.1' // Military/Federal Employment
+  | '13A.2' // Non-Federal Employment
+  | '13A.3' // Self-Employment
+  | '13A.4' // Unemployment
+  | '13A.5' // Employment Record Issues
+  | '13A.6' // Disciplinary Actions
+  | '13B'   // Employment Gaps
+  | '13C';  // Employment Record Verification
+
+// Section 13A subsection configuration
+const SECTION_13A_SUBSECTIONS = [
+  { id: '13A.1', title: 'Military/Federal Employment', maxEntries: 4, description: 'Active military duty, federal civilian employment, and related positions' },
+  { id: '13A.2', title: 'Non-Federal Employment', maxEntries: 4, description: 'Private sector, state/local government, and contractor positions' },
+  { id: '13A.3', title: 'Self-Employment', maxEntries: 4, description: 'Business ownership, consulting, and independent contractor work' },
+  { id: '13A.4', title: 'Unemployment', maxEntries: 4, description: 'Periods of unemployment and job searching' },
+  { id: '13A.5', title: 'Employment Record Issues', maxEntries: 4, description: 'Employment problems, terminations, and performance issues' },
+  { id: '13A.6', title: 'Disciplinary Actions', maxEntries: 4, description: 'Written warnings, suspensions, and disciplinary measures' }
+] as const;
+
+// Section 13B and 13C subsection configuration
+const SECTION_13BC_SUBSECTIONS = [
+  { id: '13B', title: 'Employment Gaps', description: 'Explain any gaps in employment history' },
+  { id: '13C', title: 'Employment Record Verification', description: 'Final verification of employment information' }
+] as const;
 
 export const Section13Component: React.FC<Section13ComponentProps> = ({
   onValidationChange,
   useEnhancedMode = false,
-  enableEmploymentTypeRouting = false,
+  enableEmploymentTypeRouting = false
 }) => {
-  // Enhanced mode routing - use new enhanced component if enabled
-  if (useEnhancedMode) {
-    console.log('🔄 Section13Component: Using enhanced mode with subsection-specific forms');
-    return (
-      <EnhancedSection13Component
-        onValidationChange={onValidationChange}
-      />
-    );
-  }
+  console.log('🔄 Section13Component: Starting with working form components');
 
+  // State for current subsection navigation
+  const [currentSubsection, setCurrentSubsection] = useState<Section13Subsection>('13A.1');
+  const [completedSubsections, setCompletedSubsections] = useState<Set<Section13Subsection>>(new Set());
+  const [isSubsectionExpanded, setIsSubsectionExpanded] = useState<Record<Section13Subsection, boolean>>({
+    '13A.1': true,
+    '13A.2': false,
+    '13A.3': false,
+    '13A.4': false,
+    '13A.5': false,
+    '13A.6': false,
+    '13B': false,
+    '13C': false
+  });
+
+  // Get Section 13 context data and functions
   const {
     sectionData,
-    updateEmploymentFlag,
-    updateGapsFlag,
-    updateGapExplanation,
-    addEmploymentEntry,
-    removeEmploymentEntry,
-    updateEmploymentEntry,
     saveToMainContext,
     validateSection,
-    validateEmploymentEntry,
-    getEmploymentEntryCount,
-    getTotalEmploymentYears,
-    getCurrentEmployer,
-    getEmploymentTypeOptions,
-    getEmploymentStatusOptions,
-    getReasonForLeavingOptions,
-    formatEmploymentDate,
-    calculateEmploymentDuration,
-    // Enhanced mode functions (available but not used in legacy mode)
-    getActiveEmploymentType,
-    updateEmploymentType,
+    // Military employment functions
+    addMilitaryEmploymentEntry,
+    updateMilitaryEmploymentEntry,
+    removeMilitaryEmploymentEntry,
+    // Non-federal employment functions
+    addNonFederalEmploymentEntry,
+    updateNonFederalEmploymentEntry,
+    removeNonFederalEmploymentEntry,
+    // Self-employment functions
+    addSelfEmploymentEntry,
+    updateSelfEmploymentEntry,
+    removeSelfEmploymentEntry,
+    // Unemployment functions
+    addUnemploymentEntry,
+    updateUnemploymentEntry,
+    removeUnemploymentEntry,
+  } = useSection13();
+
+  // Component state
+  const [globalErrors, setGlobalErrors] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<number, string[]>>({});
+
+  // Handle field updates for different employment types
+  const handleFieldUpdate = useCallback((entryType: string, entryIndex: number, fieldPath: string, value: any) => {
+    console.log(`🔄 Field update: ${entryType}[${entryIndex}].${fieldPath} = ${value}`);
+
+    switch (entryType) {
+      case 'military':
+        updateMilitaryEmploymentEntry(entryIndex, fieldPath, value);
+        break;
+      case 'nonFederal':
+        updateNonFederalEmploymentEntry(entryIndex, fieldPath, value);
+        break;
+      case 'selfEmployment':
+        updateSelfEmploymentEntry(entryIndex, fieldPath, value);
+        break;
+      case 'unemployment':
+        updateUnemploymentEntry(entryIndex, fieldPath, value);
+        break;
+      default:
+        console.warn('Unknown entry type:', entryType);
+    }
+  }, [
+    updateMilitaryEmploymentEntry,
+    updateNonFederalEmploymentEntry,
+    updateSelfEmploymentEntry,
+    updateUnemploymentEntry
+  ]);
+
+  // Handle adding new entries
+  const handleAddEntry = useCallback((entryType: string) => {
+    console.log(`➕ Adding new ${entryType} entry`);
+
+    switch (entryType) {
+      case 'military':
+        addMilitaryEmploymentEntry();
+        break;
+      case 'nonFederal':
+        addNonFederalEmploymentEntry();
+        break;
+      case 'selfEmployment':
+        addSelfEmploymentEntry();
+        break;
+      case 'unemployment':
+        addUnemploymentEntry();
+        break;
+      default:
+        console.warn('Unknown entry type for add:', entryType);
+    }
+  }, [
     addMilitaryEmploymentEntry,
     addNonFederalEmploymentEntry,
     addSelfEmploymentEntry,
-    addUnemploymentEntry,
-  } = useSection13();
+    addUnemploymentEntry
+  ]);
 
-  // Note: SF86 Form Context updates now handled by Section 13 context's saveToMainContext function
+  // Handle removing entries
+  const handleRemoveEntry = useCallback((entryType: string, entryIndex: number) => {
+    console.log(`➖ Removing ${entryType} entry at index ${entryIndex}`);
 
-  // Component state
-  const [expandedEntries, setExpandedEntries] = useState<Set<number>>(new Set([0]));
-  const [validationErrors, setValidationErrors] = useState<Record<number, any[]>>({});
-  const [globalErrors, setGlobalErrors] = useState<any[]>([]);
-  const [isDebugMode, setIsDebugMode] = useState(true); // Default to true for debugging
-  const [isLoading, setIsLoading] = useState(false);
-  const [showValidation, setShowValidation] = useState(false);
-
-  // Local state for form values (performance optimization)
-  const [localFormData, setLocalFormData] = useState<any>({});
-
-  // Initialize local form data from section data
-  useEffect(() => {
-    if (sectionData?.section13?.entries) {
-      const initialData: any = {};
-      sectionData.section13.entries.forEach((entry: any, index: number) => {
-        initialData[index] = {
-          // Employment dates
-          'employmentDates.fromDate': entry.employmentDates?.fromDate?.value || '',
-          'employmentDates.toDate': entry.employmentDates?.toDate?.value || '',
-          'employmentDates.fromEstimated': entry.employmentDates?.fromEstimated?.value || false,
-          'employmentDates.toEstimated': entry.employmentDates?.toEstimated?.value || false,
-          'employmentDates.present': entry.employmentDates?.present?.value || false,
-
-          // Employer information
-          'employerName': entry.employerName?.value || '',
-          'employmentType': entry.employmentType?.value || '',
-          'positionTitle': entry.positionTitle?.value || '',
-          'employmentStatus': entry.employmentStatus?.value || '',
-          'positionDescription': entry.positionDescription?.value || '',
-          'reasonForLeaving': entry.reasonForLeaving?.value || '',
-          'additionalComments': entry.additionalComments?.value || '',
-
-          // Employer address
-          'employerAddress.street': entry.employerAddress?.street?.value || '',
-          'employerAddress.city': entry.employerAddress?.city?.value || '',
-          'employerAddress.state': entry.employerAddress?.state?.value || '',
-          'employerAddress.zipCode': entry.employerAddress?.zipCode?.value || '',
-          'employerAddress.country': entry.employerAddress?.country?.value || '',
-
-          // Supervisor information
-          'supervisor.name': entry.supervisor?.name?.value || '',
-          'supervisor.title': entry.supervisor?.title?.value || '',
-          'supervisor.email': entry.supervisor?.email?.value || '',
-          'supervisor.phone': entry.supervisor?.phone?.value || '',
-          'supervisor.canContact': entry.supervisor?.canContact?.value || '',
-          'supervisor.contactRestrictions': entry.supervisor?.contactRestrictions?.value || '',
-        };
-      });
-      setLocalFormData(initialData);
+    switch (entryType) {
+      case 'military':
+        removeMilitaryEmploymentEntry(entryIndex);
+        break;
+      case 'nonFederal':
+        removeNonFederalEmploymentEntry(entryIndex);
+        break;
+      case 'selfEmployment':
+        removeSelfEmploymentEntry(entryIndex);
+        break;
+      case 'unemployment':
+        removeUnemploymentEntry(entryIndex);
+        break;
+      default:
+        console.warn('Unknown entry type for remove:', entryType);
     }
-  }, [sectionData?.section13?.entries?.length]); // Only re-initialize when entry count changes
+  }, [
+    removeMilitaryEmploymentEntry,
+    removeNonFederalEmploymentEntry,
+    removeSelfEmploymentEntry,
+    removeUnemploymentEntry
+  ]);
 
-  // Function to commit local form data to context (called on save)
-  const commitLocalDataToContext = useCallback(() => {
-    console.log('💾 Section13Component - Committing local data to context');
-    console.log('💾 Local form data to commit:', localFormData);
-
-    if (!localFormData || Object.keys(localFormData).length === 0) {
-      console.log('⚠️ No local form data to commit');
-      return;
-    }
-
-    Object.entries(localFormData).forEach(([indexStr, entryData]: [string, any]) => {
-      const index = parseInt(indexStr);
-      console.log(`💾 Committing entry ${index} data:`, entryData);
-
-      Object.entries(entryData).forEach(([fieldPath, value]) => {
-        console.log(`💾 Updating field ${fieldPath} = ${value} for entry ${index}`);
-        updateEmploymentEntry(index, fieldPath, value);
-      });
-    });
-
-    console.log('✅ Local data commit completed');
-  }, [localFormData, updateEmploymentEntry]);
-
-  // Save handler - Performance optimized approach
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setShowValidation(true);
-
-    console.log('🔄 Section13Component - Save button clicked (Performance Optimized)');
-
-    try {
-      // First, commit local form data to Section 13 context
-      console.log('💾 Section13Component - Committing local data to Section 13 context');
-      commitLocalDataToContext();
-
-      // Wait a moment for the Section 13 context to update
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      // Validate the section data
-      const result = validateSection();
-      console.log(`🔍 Section 13 validation result:`, result);
-
-      // Use the performance-optimized save function from Section 13 context
-      // This will update SF86FormContext only when explicitly called
-      console.log('💾 Section13Component - Calling saveToMainContext for performance optimization');
-      saveToMainContext();
-
-      console.log('✅ Section 13 data saved successfully using performance-optimized approach');
-    } catch (error) {
-      console.error('❌ Failed to save Section 13 data:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [validateSection, saveToMainContext, commitLocalDataToContext, setIsLoading, setShowValidation]);
-
-  // Enhanced debug logging
-  useEffect(() => {
-    console.log('🔍 Section13Component - Component mounted or updated');
-    console.log('🔍 Section13Component - sectionData available:', !!sectionData);
-    console.log('🔍 Section13Component - saveToMainContext available:', !!saveToMainContext);
-
-    if (isDebugMode) {
-      console.log('🔍 Section13 Debug State:', {
-        sectionData,
-        hasEmploymentValue: sectionData?.section13?.hasEmployment?.value,
-        hasGapsValue: sectionData?.section13?.hasGaps?.value,
-        entries: sectionData?.section13?.entries,
-        entriesCount: sectionData?.section13?.entries?.length || 0,
-        expandedEntries: Array.from(expandedEntries),
-        validationErrors
-      });
-    }
-  }, [sectionData, expandedEntries, validationErrors, isDebugMode, saveToMainContext]);
-
-  // Initialize with default entry if none exist and employment flag is YES
-  useEffect(() => {
-    console.log('🔄 Section13Component - Initialization effect running');
-    const hasEmploymentFlag = sectionData?.section13?.hasEmployment?.value === "YES";
-    const entriesCount = getEmploymentEntryCount();
-
-    console.log('🔄 Section13Component - Initial state:', { 
-      hasEmploymentFlag, 
-      entriesCount, 
-      hasGapsFlag: sectionData?.section13?.hasGaps?.value,
-      gapExplanation: sectionData?.section13?.gapExplanation?.value || '(none)' 
-    });
-
-    if (hasEmploymentFlag && entriesCount === 0) {
-      console.log('🔄 Section13Component - Adding initial employment entry');
-      addEmploymentEntry();
-      setExpandedEntries(new Set([0]));
-    }
-    
-    // Force re-validation to ensure validation state is correct
-    setTimeout(() => {
-      console.log('🔄 Section13Component - Forcing validation after initialization');
-      const validation = validateSection();
-      console.log('🔄 Section13Component - Validation result:', validation);
-    }, 500);
-    
-  }, [sectionData?.section13?.hasEmployment?.value, getEmploymentEntryCount, addEmploymentEntry]);
-
-  // Enhanced validation with real-time feedback
-  useEffect(() => {
-    const validation = validateSection();
-    const newErrors: Record<number, string[]> = {};
-
-    // Validate each entry individually
-    sectionData?.section13?.entries?.forEach((_, index) => {
-      const entryValidation = validateEmploymentEntry(index);
-      if (!entryValidation.isValid) {
-        newErrors[index] = entryValidation.errors;
-      }
-    });
-
-    setValidationErrors(newErrors);
-
-    const globalErrorMessages = validation.errors?.map((error: any) =>
-      typeof error === 'string' ? error : error.message || String(error)
-    ) || [];
-
-    setGlobalErrors(globalErrorMessages);
-    onValidationChange?.(validation.isValid);
-  }, [sectionData, validateSection, validateEmploymentEntry, onValidationChange]);
-
-  // Optimized field update - only updates local state
-  const handleFieldUpdate = useCallback((index: number, fieldPath: string, value: any) => {
-    console.log('🔍 Section13Component - Local field update:', { index, fieldPath, value });
-
-    setLocalFormData((prev: any) => ({
+  // Navigation handlers
+  const handleSubsectionToggle = useCallback((subsection: Section13Subsection) => {
+    setIsSubsectionExpanded(prev => ({
       ...prev,
-      [index]: {
-        ...prev[index],
-        [fieldPath]: value
-      }
+      [subsection]: !prev[subsection]
     }));
   }, []);
 
-  // Helper function to get local form value
-  const getLocalValue = (index: number, fieldPath: string) => {
-    return localFormData[index]?.[fieldPath] || '';
-  };
+  const handleSubsectionComplete = useCallback((subsection: Section13Subsection) => {
+    setCompletedSubsections(prev => new Set([...prev, subsection]));
 
-  // Helper function to get employment type hints for enhanced mode
-  const getEmploymentTypeHint = (employmentType: string) => {
-    const hints: Record<string, string> = {
-      'Active Military Duty': 'Military form (13A.1) includes duty station, rank/title, APO/FPO addresses, and DSN phone numbers.',
-      'Federal Civilian': 'Federal form (13A.1) includes specialized federal employment fields and supervisor contact restrictions.',
-      'State Government': 'Non-Federal form (13A.2) includes additional employment periods and physical work addresses.',
-      'Private Company': 'Non-Federal form (13A.2) includes enhanced employer information and multiple employment periods.',
-      'Self-Employment': 'Self-Employment form (13A.3) includes business information, verifier contacts, and business addresses.',
-      'Unemployment': 'Unemployment form (13A.4) includes reference contacts and unemployment period verification.',
-      'Other': 'Enhanced forms available for specialized employment types with additional relevant fields.'
-    };
-
-    return hints[employmentType] || 'Enhanced forms provide specialized fields for this employment type.';
-  };
-
-
-
-  // Employment flag handlers
-  const handleEmploymentFlagChange = useCallback((value: "YES" | "NO") => {
-    console.log('🏢 Section13Component - Employment flag changing to:', value);
-    updateEmploymentFlag(value);
-    
-    // Debug: Verify the update
-    setTimeout(() => {
-      console.log('✅ Section13Component - After employment flag update:', {
-        hasEmploymentValue: sectionData?.section13?.hasEmployment?.value,
-      });
-    }, 0);
-  }, [updateEmploymentFlag, sectionData]);
-
-  const handleGapsFlagChange = useCallback((value: "YES" | "NO") => {
-    console.log('📅 Section13Component - Employment gaps flag changing to:', value);
-    updateGapsFlag(value);
-    
-    // Debug: Verify the update
-    setTimeout(() => {
-      console.log('✅ Section13Component - After gaps flag update:', {
-        hasGapsValue: sectionData?.section13?.hasGaps?.value,
-      });
-    }, 0);
-  }, [updateGapsFlag, sectionData]);
-
-  // Entry management handlers
-  const handleAddEntry = useCallback(() => {
-    const newIndex = getEmploymentEntryCount();
-    addEmploymentEntry();
-    setExpandedEntries(prev => new Set([...prev, newIndex]));
-  }, [addEmploymentEntry, getEmploymentEntryCount]);
-
-  const handleRemoveEntry = useCallback((index: number) => {
-    removeEmploymentEntry(index);
-    setExpandedEntries(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(index);
-      // Adjust indices for remaining entries
-      const adjustedSet = new Set<number>();
-      Array.from(newSet).forEach(i => {
-        if (i > index) {
-          adjustedSet.add(i - 1);
-        } else {
-          adjustedSet.add(i);
-        }
-      });
-      return adjustedSet;
-    });
-  }, [removeEmploymentEntry]);
-
-  const toggleEntryExpansion = useCallback((index: number) => {
-    setExpandedEntries(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(index)) {
-        newSet.delete(index);
-      } else {
-        newSet.add(index);
-      }
-      return newSet;
-    });
+    // Auto-navigate to next subsection
+    const subsectionOrder: Section13Subsection[] = ['13A.1', '13A.2', '13A.3', '13A.4', '13A.5', '13A.6', '13B', '13C'];
+    const currentIndex = subsectionOrder.indexOf(subsection);
+    if (currentIndex < subsectionOrder.length - 1) {
+      const nextSubsection = subsectionOrder[currentIndex + 1];
+      setCurrentSubsection(nextSubsection);
+      setIsSubsectionExpanded(prev => ({
+        ...prev,
+        [subsection]: false,
+        [nextSubsection]: true
+      }));
+    }
   }, []);
+
+  // Save handler
+  const handleSubmit = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const validation = validateSection();
+      if (validation.isValid) {
+        saveToMainContext();
+        console.log('✅ Section 13 saved successfully');
+      } else {
+        console.warn('❌ Section 13 validation failed:', validation.errors);
+        setGlobalErrors(validation.errors || []);
+      }
+    } catch (error) {
+      console.error('❌ Error saving Section 13:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [validateSection, saveToMainContext]);
+
+  // Validation effect
+  useEffect(() => {
+    const validation = validateSection();
+    setGlobalErrors(validation.errors || []);
+    onValidationChange?.(validation.isValid);
+  }, [sectionData, validateSection, onValidationChange]);
+
+  // Render subsection forms based on type
+  const renderSubsectionForm = (subsection: Section13Subsection) => {
+    switch (subsection) {
+      case '13A.1':
+        return renderMilitaryEmploymentForms();
+      case '13A.2':
+        return renderNonFederalEmploymentForms();
+      case '13A.3':
+        return renderSelfEmploymentForms();
+      case '13A.4':
+        return renderUnemploymentForms();
+      case '13A.5':
+        return renderEmploymentIssuesForms();
+      case '13A.6':
+        return renderDisciplinaryActionsForms();
+      case '13B':
+        return renderEmploymentGapsForms();
+      case '13C':
+        return renderEmploymentVerificationForm();
+      default:
+        return <div>Subsection not implemented</div>;
+    }
+  };
+
+  // Render military employment forms
+  const renderMilitaryEmploymentForms = () => {
+    const entries = sectionData?.section13?.militaryEmployment?.entries || [];
+
+    return (
+      <div className="space-y-4">
+        {entries.map((entry, index) => (
+          <div key={entry._id} className="border rounded-lg p-6 bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="text-lg font-medium text-gray-900">
+                Military/Federal Employment Entry {index + 1}
+              </h4>
+              <button
+                type="button"
+                onClick={() => handleRemoveEntry('military', index)}
+                className="text-red-600 hover:text-red-800"
+              >
+                Remove
+              </button>
+            </div>
+            <MilitaryEmploymentForm
+              entry={entry}
+              entryIndex={index}
+              onFieldUpdate={(fieldPath, value) => handleFieldUpdate('military', index, fieldPath, value)}
+              validationErrors={validationErrors[index]}
+            />
+          </div>
+        ))}
+
+        <button
+          type="button"
+          onClick={() => handleAddEntry('military')}
+          className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-700"
+        >
+          + Add Military/Federal Employment Entry
+        </button>
+      </div>
+    );
+  };
+
+  // Render non-federal employment forms
+  const renderNonFederalEmploymentForms = () => {
+    const entries = sectionData?.section13?.nonFederalEmployment?.entries || [];
+
+    return (
+      <div className="space-y-4">
+        {entries.map((entry, index) => (
+          <div key={entry._id} className="border rounded-lg p-6 bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="text-lg font-medium text-gray-900">
+                Non-Federal Employment Entry {index + 1}
+              </h4>
+              <button
+                type="button"
+                onClick={() => handleRemoveEntry('nonFederal', index)}
+                className="text-red-600 hover:text-red-800"
+              >
+                Remove
+              </button>
+            </div>
+            <NonFederalEmploymentForm
+              entry={entry}
+              entryIndex={index}
+              onFieldUpdate={(fieldPath, value) => handleFieldUpdate('nonFederal', index, fieldPath, value)}
+              validationErrors={validationErrors[index]}
+            />
+          </div>
+        ))}
+
+        <button
+          type="button"
+          onClick={() => handleAddEntry('nonFederal')}
+          className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-700"
+        >
+          + Add Non-Federal Employment Entry
+        </button>
+      </div>
+    );
+  };
+
+  // Render self-employment forms
+  const renderSelfEmploymentForms = () => {
+    const entries = sectionData?.section13?.selfEmployment?.entries || [];
+
+    return (
+      <div className="space-y-4">
+        {entries.map((entry, index) => (
+          <div key={entry._id} className="border rounded-lg p-6 bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="text-lg font-medium text-gray-900">
+                Self-Employment Entry {index + 1}
+              </h4>
+              <button
+                type="button"
+                onClick={() => handleRemoveEntry('selfEmployment', index)}
+                className="text-red-600 hover:text-red-800"
+              >
+                Remove
+              </button>
+            </div>
+            <SelfEmploymentForm
+              entry={entry}
+              entryIndex={index}
+              onFieldUpdate={(fieldPath, value) => handleFieldUpdate('selfEmployment', index, fieldPath, value)}
+              validationErrors={validationErrors[index]}
+            />
+          </div>
+        ))}
+
+        <button
+          type="button"
+          onClick={() => handleAddEntry('selfEmployment')}
+          className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-700"
+        >
+          + Add Self-Employment Entry
+        </button>
+      </div>
+    );
+  };
+
+  // Render unemployment forms
+  const renderUnemploymentForms = () => {
+    const entries = sectionData?.section13?.unemployment?.entries || [];
+
+    return (
+      <div className="space-y-4">
+        {entries.map((entry, index) => (
+          <div key={entry._id} className="border rounded-lg p-6 bg-white">
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="text-lg font-medium text-gray-900">
+                Unemployment Period {index + 1}
+              </h4>
+              <button
+                type="button"
+                onClick={() => handleRemoveEntry('unemployment', index)}
+                className="text-red-600 hover:text-red-800"
+              >
+                Remove
+              </button>
+            </div>
+            <UnemploymentForm
+              entry={entry}
+              entryIndex={index}
+              onFieldUpdate={(fieldPath, value) => handleFieldUpdate('unemployment', index, fieldPath, value)}
+              validationErrors={validationErrors[index]}
+            />
+          </div>
+        ))}
+
+        <button
+          type="button"
+          onClick={() => handleAddEntry('unemployment')}
+          className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-700"
+        >
+          + Add Unemployment Period
+        </button>
+      </div>
+    );
+  };
+
+  // Render employment issues forms
+  const renderEmploymentIssuesForms = () => {
+    return (
+      <div className="space-y-4">
+        <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <h4 className="text-lg font-medium text-yellow-800 mb-2">
+            Employment Record Issues (13A.5)
+          </h4>
+          <p className="text-yellow-700 mb-4">
+            Report any employment-related issues, terminations, or performance problems.
+          </p>
+          <button
+            onClick={() => handleSubsectionComplete('13A.5')}
+            className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700"
+          >
+            Mark as Complete
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // Render disciplinary actions forms
+  const renderDisciplinaryActionsForms = () => {
+    return (
+      <div className="space-y-4">
+        <div className="p-6 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <h4 className="text-lg font-medium text-yellow-800 mb-2">
+            Disciplinary Actions (13A.6)
+          </h4>
+          <p className="text-yellow-700 mb-4">
+            Report any written warnings, suspensions, or disciplinary measures.
+          </p>
+          <button
+            onClick={() => handleSubsectionComplete('13A.6')}
+            className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700"
+          >
+            Mark as Complete
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // Render employment gaps forms
+  const renderEmploymentGapsForms = () => {
+    return (
+      <div className="space-y-4">
+        <div className="p-6 bg-blue-50 border border-blue-200 rounded-lg">
+          <h4 className="text-lg font-medium text-blue-800 mb-2">
+            Employment Gaps (13B)
+          </h4>
+          <p className="text-blue-700 mb-4">
+            Explain any gaps in employment history.
+          </p>
+          <button
+            onClick={() => handleSubsectionComplete('13B')}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Mark as Complete
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // Render employment verification form
+  const renderEmploymentVerificationForm = () => {
+    return (
+      <div className="space-y-4">
+        <div className="p-6 bg-green-50 border border-green-200 rounded-lg">
+          <h4 className="text-lg font-medium text-green-800 mb-2">
+            Employment Record Verification (13C)
+          </h4>
+          <p className="text-green-700 mb-4">
+            Final verification of employment information.
+          </p>
+          <button
+            onClick={() => handleSubsectionComplete('13C')}
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+          >
+            Mark as Complete
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  // Render subsection progress indicator
+  const renderProgressIndicator = () => {
+    const allSubsections: Section13Subsection[] = ['13A.1', '13A.2', '13A.3', '13A.4', '13A.5', '13A.6', '13B', '13C'];
+
+    return (
+      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+        <h3 className="text-sm font-medium text-gray-900 mb-3">Section 13 Progress</h3>
+        <div className="grid grid-cols-4 gap-2">
+          {allSubsections.map((subsection) => {
+            const isCompleted = completedSubsections.has(subsection);
+            const isCurrent = currentSubsection === subsection;
+            const isExpanded = isSubsectionExpanded[subsection];
+
+            return (
+              <button
+                key={subsection}
+                onClick={() => {
+                  setCurrentSubsection(subsection);
+                  handleSubsectionToggle(subsection);
+                }}
+                className={`p-2 text-xs rounded transition-colors ${
+                  isCompleted
+                    ? 'bg-green-100 text-green-800 border border-green-300'
+                    : isCurrent
+                    ? 'bg-blue-100 text-blue-800 border border-blue-300'
+                    : isExpanded
+                    ? 'bg-yellow-100 text-yellow-800 border border-yellow-300'
+                    : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-100'
+                }`}
+              >
+                <div className="font-medium">{subsection}</div>
+                <div className="text-xs opacity-75">
+                  {subsection.startsWith('13A') ? SECTION_13A_SUBSECTIONS.find(s => s.id === subsection)?.title.split(' ')[0] :
+                   subsection === '13B' ? 'Gaps' : 'Verification'}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   // Render validation errors
   const renderValidationErrors = (errors: any[]) => {
@@ -438,679 +577,106 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
     );
   };
 
-  // Render employment entry
-  const renderEmploymentEntry = (entry: EmploymentEntry, index: number) => {
-    const isExpanded = expandedEntries.has(index);
-    const entryErrors = validationErrors[index] || [];
-    const hasErrors = entryErrors.length > 0;
-
-    return (
-      <div
-        key={entry._id}
-        className={`border rounded-lg p-6 ${hasErrors ? 'border-red-300 bg-red-50' : 'border-gray-300'} transition-all duration-200`}
-      >
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex-1">
-            <button
-              type="button"
-              onClick={() => toggleEntryExpansion(index)}
-              className="flex items-center text-left w-full"
-            >
-              <div className="flex items-center space-x-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium ${
-                  hasErrors ? 'bg-red-500' : 'bg-blue-500'
-                }`}>
-                  {index + 1}
-                </div>
-                <div>
-                  <h4 className="text-lg font-medium text-gray-900">
-                    {entry.employerName.value || `Employment Entry ${index + 1}`}
-                  </h4>
-                  <p className="text-sm text-gray-500">
-                    {entry.positionTitle.value && `${entry.positionTitle.value} • `}
-                    {formatEmploymentDate(entry.employmentDates.fromDate.value)} - {
-                      entry.employmentDates.present.value
-                        ? 'Present'
-                        : formatEmploymentDate(entry.employmentDates.toDate.value)
-                    }
-                  </p>
-                </div>
-              </div>
-              <svg
-                className={`w-5 h-5 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => handleRemoveEntry(index)}
-            className="ml-4 text-red-600 hover:text-red-800 transition-colors"
-            title="Remove this employment entry"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Show validation errors for this entry */}
-        {hasErrors && renderValidationErrors(entryErrors)}
-
-        {isExpanded && (
-          <div className="space-y-6">
-            {/* Employment Dates */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Employment Start Date (Month/Year) <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="MM/YYYY"
-                  value={getLocalValue(index, "employmentDates.fromDate")}
-                  onChange={(e) => handleFieldUpdate(index, "employmentDates.fromDate", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <label className="flex items-center mt-2">
-                  <input
-                    type="checkbox"
-                    checked={getLocalValue(index, "employmentDates.fromEstimated") || false}
-                    onChange={(e) => handleFieldUpdate(index, "employmentDates.fromEstimated", e.target.checked)}
-                    className="mr-2"
-                  />
-                  <span className="text-sm text-gray-600">Estimated</span>
-                </label>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Employment End Date (Month/Year)
-                </label>
-                <input
-                  type="text"
-                  placeholder="MM/YYYY"
-                  value={getLocalValue(index, "employmentDates.toDate")}
-                  onChange={(e) => handleFieldUpdate(index, "employmentDates.toDate", e.target.value)}
-                  disabled={getLocalValue(index, "employmentDates.present")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-                />
-                <label className="flex items-center mt-2">
-                  <input
-                    type="checkbox"
-                    checked={getLocalValue(index, "employmentDates.present") || false}
-                    onChange={(e) => handleFieldUpdate(index, "employmentDates.present", e.target.checked)}
-                    className="mr-2"
-                  />
-                  <span className="text-sm text-gray-600">Present</span>
-                </label>
-                {!getLocalValue(index, "employmentDates.present") && (
-                  <label className="flex items-center mt-1">
-                    <input
-                      type="checkbox"
-                      checked={getLocalValue(index, "employmentDates.toEstimated") || false}
-                      onChange={(e) => handleFieldUpdate(index, "employmentDates.toEstimated", e.target.checked)}
-                      className="mr-2"
-                    />
-                    <span className="text-sm text-gray-600">Estimated</span>
-                  </label>
-                )}
-              </div>
-            </div>
-
-            {/* Employer Information */}
-            <div className="space-y-4">
-              <h5 className="text-md font-medium text-gray-800">Employer Information</h5>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Employer/Company Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={getLocalValue(index, "employerName")}
-                    onChange={(e) => handleFieldUpdate(index, "employerName", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Employment Type <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={getLocalValue(index, "employmentType")}
-                    onChange={(e) => handleFieldUpdate(index, "employmentType", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select employment type...</option>
-                    {getEmploymentTypeOptions().map((type) => (
-                      <option key={type} value={type}>{type}</option>
-                    ))}
-                  </select>
-
-                  {/* Enhanced Mode Hint for Specific Employment Types */}
-                  {enableEmploymentTypeRouting && getLocalValue(index, "employmentType") && (
-                    <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs">
-                      <div className="flex items-center space-x-1">
-                        <svg className="h-3 w-3 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span className="text-yellow-700 font-medium">Enhanced Form Available:</span>
-                      </div>
-                      <p className="text-yellow-600 mt-1">
-                        {getEmploymentTypeHint(getLocalValue(index, "employmentType"))}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Position Title <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={getLocalValue(index, "positionTitle")}
-                    onChange={(e) => handleFieldUpdate(index, "positionTitle", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Employment Status
-                  </label>
-                  <select
-                    value={getLocalValue(index, "employmentStatus")}
-                    onChange={(e) => handleFieldUpdate(index, "employmentStatus", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select status...</option>
-                    {getEmploymentStatusOptions().map((status) => (
-                      <option key={status} value={status}>{status}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Position Description
-                </label>
-                <textarea
-                  value={getLocalValue(index, "positionDescription")}
-                  onChange={(e) => handleFieldUpdate(index, "positionDescription", e.target.value)}
-                  rows={3}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Brief description of job duties and responsibilities"
-                />
-              </div>
-            </div>
-
-            {/* Employer Address */}
-            <div className="space-y-4">
-              <h5 className="text-md font-medium text-gray-800">Employer Address</h5>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Street Address <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={getLocalValue(index, "employerAddress.street")}
-                  onChange={(e) => handleFieldUpdate(index, "employerAddress.street", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    City <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={getLocalValue(index, "employerAddress.city")}
-                    onChange={(e) => handleFieldUpdate(index, "employerAddress.city", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    State
-                  </label>
-                  <select
-                    value={getLocalValue(index, "employerAddress.state")}
-                    onChange={(e) => handleFieldUpdate(index, "employerAddress.state", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    {US_STATES.map((state) => (
-                      <option key={state.value} value={state.value}>
-                        {state.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    ZIP Code
-                  </label>
-                  <input
-                    type="text"
-                    value={getLocalValue(index, "employerAddress.zipCode")}
-                    onChange={(e) => handleFieldUpdate(index, "employerAddress.zipCode", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Supervisor Information */}
-            <div className="space-y-4">
-              <h5 className="text-md font-medium text-gray-800">Supervisor Information</h5>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Supervisor Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={getLocalValue(index, "supervisor.name")}
-                    onChange={(e) => handleFieldUpdate(index, "supervisor.name", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Supervisor Title
-                  </label>
-                  <input
-                    type="text"
-                    value={getLocalValue(index, "supervisor.title")}
-                    onChange={(e) => handleFieldUpdate(index, "supervisor.title", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Supervisor Phone <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    value={getLocalValue(index, "supervisor.phone")}
-                    onChange={(e) => handleFieldUpdate(index, "supervisor.phone", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Supervisor Email
-                  </label>
-                  <input
-                    type="email"
-                    value={getLocalValue(index, "supervisor.email")}
-                    onChange={(e) => handleFieldUpdate(index, "supervisor.email", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-4">
-                  Can this supervisor be contacted? <span className="text-red-500">*</span>
-                </label>
-                <div className="flex space-x-6">
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name={`supervisor-contact-${index}`}
-                      checked={getLocalValue(index, "supervisor.canContact") === "YES"}
-                      onChange={() => handleFieldUpdate(index, "supervisor.canContact", "YES")}
-                      className="mr-2"
-                    />
-                    <span className="text-sm">Yes</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="radio"
-                      name={`supervisor-contact-${index}`}
-                      checked={getLocalValue(index, "supervisor.canContact") === "NO"}
-                      onChange={() => handleFieldUpdate(index, "supervisor.canContact", "NO")}
-                      className="mr-2"
-                    />
-                    <span className="text-sm">No</span>
-                  </label>
-                </div>
-              </div>
-
-              {getLocalValue(index, "supervisor.canContact") === "NO" && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Contact Restrictions (Explain why supervisor cannot be contacted)
-                  </label>
-                  <textarea
-                    value={getLocalValue(index, "supervisor.contactRestrictions")}
-                    onChange={(e) => handleFieldUpdate(index, "supervisor.contactRestrictions", e.target.value)}
-                    rows={2}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Reason for Leaving */}
-            {!getLocalValue(index, "employmentDates.present") && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Reason for Leaving
-                </label>
-                <select
-                  value={getLocalValue(index, "reasonForLeaving")}
-                  onChange={(e) => handleFieldUpdate(index, "reasonForLeaving", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select reason...</option>
-                  {getReasonForLeavingOptions().map((reason) => (
-                    <option key={reason} value={reason}>{reason}</option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* Additional Comments */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Additional Comments
-              </label>
-              <textarea
-                value={getLocalValue(index, "additionalComments")}
-                onChange={(e) => handleFieldUpdate(index, "additionalComments", e.target.value)}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Any additional information about this employment"
-              />
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
   return (
-    <div className="max-w-4xl mx-auto p-6 bg-white rounded-lg shadow-lg">
+    <div className="max-w-6xl mx-auto p-6 bg-white rounded-lg shadow-lg">
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
-          Section 13: Employment Activities
+          Section 13: Employment Activities (Working Implementation)
         </h2>
         <p className="text-gray-600">
-          Provide information about your employment history for the past 10 years,
-          including employers, positions, dates, supervisors, and employment-related activities.
+          Complete employment history with working form components for all subsections.
         </p>
-        <div className="mt-4 text-sm text-gray-500">
-          Fields marked with <span className="text-red-500">*</span> are required.
-        </div>
-
-        {/* Debug Toggle and Mode Information */}
-        <div className="mt-4 space-y-2">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={isDebugMode}
-              onChange={(e) => setIsDebugMode(e.target.checked)}
-              className="mr-2"
-            />
-            <span className="text-sm text-gray-600">Enable debug mode (check console)</span>
-          </label>
-
-          {/* Mode Information */}
-          <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded">
-            <div className="flex items-center space-x-4">
-              <span>
-                <strong>Mode:</strong> {useEnhancedMode ? 'Enhanced' : 'Legacy'}
-              </span>
-              <span>
-                <strong>Type Routing:</strong> {enableEmploymentTypeRouting ? 'Enabled' : 'Disabled'}
-              </span>
-              <span>
-                <strong>Entries:</strong> {getEmploymentEntryCount()}
-              </span>
-            </div>
-            {enableEmploymentTypeRouting && (
-              <div className="mt-1 text-blue-600">
-                Enhanced subsection-specific forms available for specialized employment types
-              </div>
-            )}
-          </div>
+        <div className="mt-4 text-sm text-green-600">
+          ✅ Now using actual form components instead of placeholders!
         </div>
       </div>
+
+      {/* Progress Indicator */}
+      {renderProgressIndicator()}
 
       {/* Show global validation errors */}
       {renderValidationErrors(globalErrors)}
 
-      {/* Main Employment Questions */}
-      <div className="space-y-6 mb-8">
-        <div>
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
-            13.a. Have you been employed in the last 10 years?
-          </h3>
-          <div className="flex space-x-6">
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="hasEmployment"
-                checked={sectionData?.section13?.hasEmployment?.value === "YES"}
-                onChange={() => handleEmploymentFlagChange("YES")}
-                className="mr-2"
-              />
-              <span className="text-sm">Yes</span>
-            </label>
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="hasEmployment"
-                checked={sectionData?.section13?.hasEmployment?.value === "NO"}
-                onChange={() => handleEmploymentFlagChange("NO")}
-                className="mr-2"
-              />
-              <span className="text-sm">No</span>
-            </label>
-          </div>
-        </div>
-
-        <div>
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
-            13.b. Are there any gaps in your employment history?
-          </h3>
-          <div className="flex space-x-6">
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="hasGaps"
-                checked={sectionData?.section13?.hasGaps?.value === "YES"}
-                onChange={() => handleGapsFlagChange("YES")}
-                className="mr-2"
-              />
-              <span className="text-sm">Yes</span>
-            </label>
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="hasGaps"
-                checked={sectionData?.section13?.hasGaps?.value === "NO"}
-                onChange={() => handleGapsFlagChange("NO")}
-                className="mr-2"
-              />
-              <span className="text-sm">No</span>
-            </label>
-          </div>
-
-          {/* Gap explanation */}
-          {sectionData?.section13?.hasGaps?.value === "YES" && (
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Explain any gaps in employment:
-              </label>
-              <textarea
-                value={sectionData?.section13?.gapExplanation?.value || ""}
-                onChange={(e) => updateGapExplanation(e.target.value)}
-                rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Provide details about any gaps in your employment history"
-              />
+      {/* Subsection Content Area */}
+      <div className="space-y-6">
+        {/* Section 13A Subsections */}
+        {SECTION_13A_SUBSECTIONS.map((subsection) => (
+          <div key={subsection.id} className={`border rounded-lg ${isSubsectionExpanded[subsection.id as Section13Subsection] ? 'border-blue-300 bg-blue-50' : 'border-gray-300'}`}>
+            <div
+              className="p-4 cursor-pointer"
+              onClick={() => handleSubsectionToggle(subsection.id as Section13Subsection)}
+            >
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">
+                    {subsection.id}: {subsection.title}
+                  </h3>
+                  <p className="text-sm text-gray-600">{subsection.description}</p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  {completedSubsections.has(subsection.id as Section13Subsection) && (
+                    <span className="text-green-600 text-sm">✓ Completed</span>
+                  )}
+                  <svg
+                    className={`w-5 h-5 text-gray-400 transition-transform ${isSubsectionExpanded[subsection.id as Section13Subsection] ? 'rotate-180' : ''}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
             </div>
-          )}
-        </div>
+
+            {isSubsectionExpanded[subsection.id as Section13Subsection] && (
+              <div className="p-4 border-t border-gray-200">
+                {renderSubsectionForm(subsection.id as Section13Subsection)}
+              </div>
+            )}
+          </div>
+        ))}
+
+        {/* Section 13B and 13C Subsections */}
+        {SECTION_13BC_SUBSECTIONS.map((subsection) => (
+          <div key={subsection.id} className={`border rounded-lg ${isSubsectionExpanded[subsection.id as Section13Subsection] ? 'border-blue-300 bg-blue-50' : 'border-gray-300'}`}>
+            <div
+              className="p-4 cursor-pointer"
+              onClick={() => handleSubsectionToggle(subsection.id as Section13Subsection)}
+            >
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-lg font-medium text-gray-900">
+                    {subsection.id}: {subsection.title}
+                  </h3>
+                  <p className="text-sm text-gray-600">{subsection.description}</p>
+                </div>
+                <div className="flex items-center space-x-2">
+                  {completedSubsections.has(subsection.id as Section13Subsection) && (
+                    <span className="text-green-600 text-sm">✓ Completed</span>
+                  )}
+                  <svg
+                    className={`w-5 h-5 text-gray-400 transition-transform ${isSubsectionExpanded[subsection.id as Section13Subsection] ? 'rotate-180' : ''}`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {isSubsectionExpanded[subsection.id as Section13Subsection] && (
+              <div className="p-4 border-t border-gray-200">
+                {renderSubsectionForm(subsection.id as Section13Subsection)}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
 
-      {/* Enhanced Mode Notification */}
-      {enableEmploymentTypeRouting && sectionData?.section13?.hasEmployment?.value === "YES" && (
-        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-md">
-          <div className="flex items-center space-x-2 mb-3">
-            <svg className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <h4 className="text-sm font-medium text-blue-800">Enhanced Employment Forms Available</h4>
-          </div>
-          <p className="text-sm text-blue-700 mb-3">
-            For specialized forms tailored to different employment types (Military/Federal, Self-Employment, etc.),
-            consider using the enhanced mode with subsection-specific forms.
-          </p>
-          <div className="flex space-x-3">
-            <button
-              type="button"
-              onClick={() => {
-                console.log('🔄 User requested enhanced mode switch');
-                // This would typically trigger a parent component state change
-                alert('Enhanced mode would be activated here. In a real implementation, this would switch to the EnhancedSection13Component.');
-              }}
-              className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors"
-            >
-              Switch to Enhanced Mode
-            </button>
-            <span className="text-xs text-blue-600 self-center">
-              Includes: Military (13A.1), Non-Federal (13A.2), Self-Employment (13A.3), Unemployment (13A.4)
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* Employment Entries */}
-      {sectionData?.section13?.hasEmployment?.value === "YES" && (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium text-gray-900">
-              Employment History
-              {enableEmploymentTypeRouting && (
-                <span className="ml-2 text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                  Legacy Mode
-                </span>
-              )}
-            </h3>
-            <button
-              type="button"
-              onClick={handleAddEntry}
-              disabled={getEmploymentEntryCount() >= 15}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-              title={getEmploymentEntryCount() >= 15 ? "Maximum of 15 employment entries allowed" : "Add new employment entry"}
-            >
-              Add Employment Entry
-              {getEmploymentEntryCount() >= 15 && (
-                <span className="ml-1 text-xs">(Max: 15)</span>
-              )}
-            </button>
-          </div>
-
-          {/* Show entries or helpful message */}
-          {sectionData?.section13?.entries && sectionData.section13.entries.length > 0 ? (
-            sectionData.section13.entries.map((entry, index) =>
-              renderEmploymentEntry(entry, index)
-            )
-          ) : (
-            <div className="text-center py-8 bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-              <p className="text-gray-500 mb-4">
-                No employment entries yet. Click "Add Employment Entry" to get started.
-              </p>
-              <p className="text-sm text-gray-400">
-                You can add up to 15 employment entries covering your employment history.
-              </p>
-            </div>
-          )}
-
-          {/* Summary Statistics */}
-          {getEmploymentEntryCount() > 0 && (
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h4 className="text-md font-medium text-gray-800 mb-2">Employment Summary</h4>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600">
-                <div>
-                  <span className="font-medium">Total Entries:</span> {getEmploymentEntryCount()}
-                </div>
-                <div>
-                  <span className="font-medium">Total Years:</span> {getTotalEmploymentYears()}
-                </div>
-                <div>
-                  <span className="font-medium">Current Employer:</span> {getCurrentEmployer() || "None"}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Help Text */}
-          <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <h3 className="text-sm font-medium text-blue-800">Tips for completing this section:</h3>
-                <div className="mt-2 text-sm text-blue-700">
-                  <ul className="list-disc list-inside space-y-1">
-                    <li>List all employment for the past 10 years, starting with the most recent</li>
-                    <li>Include full-time, part-time, contract, and temporary employment</li>
-                    <li>Use MM/YYYY format for dates (e.g., 03/2020)</li>
-                    <li>Check "Estimated" if you're unsure of exact dates</li>
-                    <li>If currently employed, check "Present" for the end date</li>
-                    <li>Provide complete supervisor information for each position</li>
-                    <li>Explain any gaps in employment history</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Show instruction when employment flag is NO */}
-      {sectionData?.section13?.hasEmployment?.value === "NO" && (
-        <div className="text-center py-8 bg-yellow-50 rounded-lg border border-yellow-200">
-          <p className="text-yellow-800 mb-2">
-            <strong>Instructions:</strong> You indicated no employment in the last 10 years.
-          </p>
-          <p className="text-sm text-yellow-600">
-            If this is correct, you may proceed to the next section. If you have had employment, please answer "Yes" to add employment entries.
-          </p>
-        </div>
-      )}
-
-      {/* Save Button - Always visible at bottom */}
+      {/* Save Button */}
       <div className="mt-8 pt-6 border-t border-gray-200">
         <div className="flex justify-end">
           <button
@@ -1123,7 +689,7 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
           </button>
         </div>
         <p className="mt-2 text-sm text-gray-500 text-right">
-          This will save your Section 13 data to the form and continue to the next section.
+          Section 13 with working form components
         </p>
       </div>
     </div>

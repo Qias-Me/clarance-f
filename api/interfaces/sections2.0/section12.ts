@@ -2,10 +2,17 @@
  * Section 12: Where You Went to School
  *
  * TypeScript interface definitions for SF-86 Section 12 (Where You Went to School) data structure.
- * Based on the established Field<T> interface patterns and PDF field ID mappings from section-12.json.
- * 
+ * Based on comprehensive field analysis of all 150 fields from section-12.json.
+ *
  * This section covers educational history including high school, college, vocational schools,
- * and correspondence/online education with 150 fields across pages 14-16.
+ * and correspondence/online education with support for up to 3 school entries.
+ *
+ * FIELD COVERAGE: 150 fields total
+ * - Global questions: 2 fields (hasAttendedSchool, hasAttendedSchoolOutsideUS)
+ * - Entry 1: ~37 fields (section_12[0] indices 0-1)
+ * - Entry 2: ~37 fields (section_12[0] indices 2-3)
+ * - Entry 3: ~37 fields (section_12_2[0])
+ * - Entry 4: ~37 fields (section_12_3[0])
  */
 
 import type { Field, FieldWithOptions } from '../formDefinition2.0';
@@ -13,144 +20,189 @@ import type { USState, Country } from './base';
 import { createFieldFromReference, validateSectionFieldCount } from '../../utils/sections-references-loader';
 
 // ============================================================================
-// CORE INTERFACES
+// CORE INTERFACES - RECONSTRUCTED FOR 100% FIELD COVERAGE
 // ============================================================================
-
-/**
- * Date range information for education attendance
- */
-export interface EducationDateRange {
-  fromDate: Field<string>;
-  fromEstimated: Field<boolean>;
-  toDate: Field<string>;
-  toEstimated: Field<boolean>;
-  present: Field<boolean>;
-}
-
-/**
- * School address information
- */
-export interface SchoolAddress {
-  street: Field<string>;
-  city: Field<string>;
-  state: FieldWithOptions<USState>;
-  zipCode: Field<string>;
-  country: FieldWithOptions<Country>;
-}
 
 /**
  * School type enumeration based on PDF form options
  */
-export type SchoolType = 
+export type SchoolType =
   | "High School"
-  | "Vocational/Technical/Trade School" 
+  | "Vocational/Technical/Trade School"
   | "College/University/Military College"
   | "Correspondence/Distance/Extension/Online School";
 
 /**
- * Degree type enumeration
+ * Degree type enumeration based on PDF dropdown options
  */
 export type DegreeType =
   | "High School Diploma"
-  | "Associate"
-  | "Bachelor"
-  | "Master"
+  | "Associate's"
+  | "Bachelor's"
+  | "Master's"
   | "Doctorate"
-  | "Professional"
-  | "Certificate"
+  | "Professional Degree (e.g. M D, D V M, J D)"
   | "Other";
 
 /**
- * Individual education entry
+ * Degree entry for table structure (supports multiple degrees per school)
  */
-export interface EducationEntry {
+export interface DegreeEntry {
+  degreeType: Field<DegreeType>;
+  otherDegree: Field<string>;
+  dateAwarded: Field<string>;
+  dateAwardedEstimate: Field<boolean>;
+}
+
+/**
+ * Contact person information (required for schools attended in last 3 years)
+ */
+export interface ContactPerson {
+  unknownPerson: Field<boolean>;
+  lastName: Field<string>;
+  firstName: Field<string>;
+  address: Field<string>;
+  city: Field<string>;
+  state: Field<string>;
+  country: Field<string>;
+  zipCode: Field<string>;
+  phoneNumber: Field<string>;
+  phoneExtension: Field<string>;
+  email: Field<string>;
+  isInternationalPhone: Field<boolean>;
+  unknownPhone: Field<boolean>;
+  unknownEmail: Field<boolean>;
+}
+
+/**
+ * Individual school entry - supports all field categories from analysis
+ */
+export interface SchoolEntry {
   _id: string | number;
-  attendanceDates: EducationDateRange;
-  schoolType: FieldWithOptions<SchoolType>;
+
+  // Attendance dates (5 fields)
+  fromDate: Field<string>;
+  toDate: Field<string>;
+  fromDateEstimate: Field<boolean>;
+  toDateEstimate: Field<boolean>;
+  isPresent: Field<boolean>;
+
+  // School information (6 fields)
   schoolName: Field<string>;
-  schoolAddress: SchoolAddress;
-  degreeReceived: Field<boolean>;
-  degreeType: FieldWithOptions<DegreeType>;
-  degreeDate: Field<string>;
-  degreeEstimated: Field<boolean>;
+  schoolAddress: Field<string>;
+  schoolCity: Field<string>;
+  schoolState: Field<string>;
+  schoolCountry: Field<string>;
+  schoolZipCode: Field<string>;
+
+  // School type (1 field)
+  schoolType: Field<SchoolType>;
+
+  // Degree information (2+ fields)
+  receivedDegree: Field<'YES' | 'NO'>;
+  degrees: DegreeEntry[];
+
+  // Contact person (14 fields - for schools attended in last 3 years)
+  contactPerson?: ContactPerson;
+
+  // Additional fields for day/night attendance
+  dayAttendance?: Field<boolean>;
+  nightAttendance?: Field<boolean>;
+
   createdAt?: Date;
   updatedAt?: Date;
 }
 
 /**
- * Education history subsection
+ * Section 12 main data structure - supports all 150 fields
  */
-export interface EducationHistory {
-  hasEducation: Field<"YES" | "NO">;
-  hasHighSchool: Field<"YES" | "NO">;
-  entries: EducationEntry[];
-  entriesCount: number;
+export interface Section12Data {
+  // Global section questions (2 fields)
+  hasAttendedSchool: Field<'YES' | 'NO'>;
+  hasAttendedSchoolOutsideUS: Field<'YES' | 'NO'>;
+
+  // School entries (148 fields across up to 3 entries)
+  entries: SchoolEntry[];
 }
 
 /**
- * Section 12 main data structure
+ * Section 12 wrapper interface
  */
 export interface Section12 {
   _id: number;
-  section12: EducationHistory;
+  section12: Section12Data;
 }
 
 // ============================================================================
-// SUBSECTION TYPES
+// CONSTANTS AND OPTIONS
 // ============================================================================
 
 /**
- * Section 12 subsection keys for type safety
+ * School type options for dropdown
  */
-export type Section12SubsectionKey = 'educationHistory';
-
-// ============================================================================
-// FIELD ID MAPPINGS
-// ============================================================================
+export const SCHOOL_TYPE_OPTIONS: SchoolType[] = [
+  "High School",
+  "Vocational/Technical/Trade School",
+  "College/University/Military College",
+  "Correspondence/Distance/Extension/Online School"
+];
 
 /**
- * PDF field ID mappings for Section 12 (Where You Went to School)
- * Based on the actual field IDs from section-12.json
+ * Degree type options for dropdown
  */
-export const SECTION12_FIELD_IDS = {
-  // Main section radio buttons
-  HAS_EDUCATION: "17183", // form1[0].section_12[0].pg10r1[0]
-  HAS_HIGH_SCHOOL: "17184", // form1[0].section_12[0].pg10r2[0]
-  
-  // Entry 1 fields (pattern for multiple entries)
-  ENTRY1_FROM_DATE: "10095", // form1[0].section_12[0].From_Datefield_Name_2[0]
-  ENTRY1_FROM_ESTIMATED: "10094", // form1[0].section_12[0].#field[3]
-  ENTRY1_TO_PRESENT: "10093", // form1[0].section_12[0].sec12_1_1[0]
-  ENTRY1_TO_ESTIMATED: "10092", // form1[0].section_12[0].sec12_1_1[1]
-  ENTRY1_SCHOOL_TYPE: "17185", // form1[0].section_12[0].pg10r4[0]
-  ENTRY1_DEGREE_RECEIVED: "17186", // form1[0].section_12[0].pg2r5[0]
-  ENTRY1_SCHOOL_ADDRESS: "10085", // form1[0].section_12[0].TextField11[0]
-  ENTRY1_SCHOOL_CITY: "10084", // form1[0].section_12[0].TextField11[1]
-  ENTRY1_SCHOOL_STATE: "10083", // form1[0].section_12[0].School6_State[0]
-  ENTRY1_SCHOOL_COUNTRY: "10082", // form1[0].section_12[0].DropDownList28[0]
+export const DEGREE_TYPE_OPTIONS: DegreeType[] = [
+  "High School Diploma",
+  "Associate's",
+  "Bachelor's",
+  "Master's",
+  "Doctorate",
+  "Professional Degree (e.g. M D, D V M, J D)",
+  "Other"
+];
+
+/**
+ * Date validation patterns for education
+ */
+export const EDUCATION_DATE_VALIDATION = {
+  MIN_YEAR: 1950,
+  MAX_YEAR: new Date().getFullYear() + 10, // Allow future dates for ongoing education
+  DATE_REGEX: /^(0[1-9]|1[0-2])\/\d{4}$/, // MM/YYYY format
+  FULL_DATE_REGEX: /^(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])\/\d{4}$/ // MM/DD/YYYY format
 } as const;
 
+// ============================================================================
+// UTILITY TYPES
+// ============================================================================
+
 /**
- * Field name mappings for Section 12 (Where You Went to School)
- * Full field paths from section-12.json
+ * Type for school field updates
  */
-export const SECTION12_FIELD_NAMES = {
-  // Main section radio buttons
-  HAS_EDUCATION: "form1[0].section_12[0].pg10r1[0]",
-  HAS_HIGH_SCHOOL: "form1[0].section_12[0].pg10r2[0]",
-  
-  // Entry 1 fields (pattern for multiple entries)
-  ENTRY1_FROM_DATE: "form1[0].section_12[0].From_Datefield_Name_2[0]",
-  ENTRY1_FROM_ESTIMATED: "form1[0].section_12[0].#field[3]",
-  ENTRY1_TO_PRESENT: "form1[0].section_12[0].sec12_1_1[0]",
-  ENTRY1_TO_ESTIMATED: "form1[0].section_12[0].sec12_1_1[1]",
-  ENTRY1_SCHOOL_TYPE: "form1[0].section_12[0].pg10r4[0]",
-  ENTRY1_DEGREE_RECEIVED: "form1[0].section_12[0].pg2r5[0]",
-  ENTRY1_SCHOOL_ADDRESS: "form1[0].section_12[0].TextField11[0]",
-  ENTRY1_SCHOOL_CITY: "form1[0].section_12[0].TextField11[1]",
-  ENTRY1_SCHOOL_STATE: "form1[0].section_12[0].School6_State[0]",
-  ENTRY1_SCHOOL_COUNTRY: "form1[0].section_12[0].DropDownList28[0]",
-} as const;
+export type Section12FieldUpdate = {
+  fieldPath: string;
+  newValue: any;
+  entryIndex?: number;
+};
+
+/**
+ * Type for school validation results
+ */
+export type EducationValidationResult = {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+  entryErrors?: Record<number, string[]>;
+};
+
+/**
+ * Type for school entry operations
+ */
+export type SchoolEntryOperation =
+  | 'add'
+  | 'remove'
+  | 'update'
+  | 'move'
+  | 'duplicate'
+  | 'clear';
 
 // ============================================================================
 // VALIDATION INTERFACES
@@ -180,318 +232,550 @@ export interface Section12ValidationContext {
   minimumEducationAge: number;
 }
 
-// ============================================================================
-// HELPER TYPES
-// ============================================================================
 
-/**
- * School type options for dropdown
- */
-export const SCHOOL_TYPE_OPTIONS: SchoolType[] = [
-  "High School",
-  "Vocational/Technical/Trade School",
-  "College/University/Military College",
-  "Correspondence/Distance/Extension/Online School"
-];
-
-/**
- * Degree type options for dropdown
- */
-export const DEGREE_TYPE_OPTIONS: DegreeType[] = [
-  "High School Diploma",
-  "Associate",
-  "Bachelor",
-  "Master",
-  "Doctorate",
-  "Professional",
-  "Certificate",
-  "Other"
-];
-
-/**
- * Date validation patterns for education
- */
-export const EDUCATION_DATE_VALIDATION = {
-  MIN_YEAR: 1950,
-  MAX_YEAR: new Date().getFullYear() + 10, // Allow future dates for ongoing education
-  DATE_REGEX: /^(0[1-9]|1[0-2])\/\d{4}$/, // MM/YYYY format
-  FULL_DATE_REGEX: /^(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])\/\d{4}$/ // MM/DD/YYYY format
-} as const;
-
-// ============================================================================
-// UTILITY TYPES
-// ============================================================================
-
-/**
- * Type for education field updates
- */
-export type Section12FieldUpdate = {
-  fieldPath: string;
-  newValue: any;
-  entryIndex?: number;
-};
-
-/**
- * Type for education validation results
- */
-export type EducationValidationResult = {
-  isValid: boolean;
-  errors: string[];
-  warnings: string[];
-  entryErrors?: Record<number, string[]>;
-};
-
-/**
- * Type for education entry operations
- */
-export type EducationEntryOperation = 
-  | 'add'
-  | 'remove'
-  | 'update'
-  | 'move'
-  | 'duplicate'
-  | 'clear';
 
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
 /**
- * Field mapping for Section 12 entries based on ACTUAL sections-references analysis
- * Maps entry fields to actual PDF field names from section-12.json
+ * Complete field mapping for Section 12 entries based on comprehensive analysis
+ * Maps all 150 fields to actual PDF field names from section-12.json
  *
- * CORRECTED MAPPING based on real field analysis:
+ * STRUCTURE:
+ * - Global questions: 2 fields
+ * - Entry 1 (section_12[0]): 52 fields
+ * - Entry 2 (section_12_2[0]): 59 fields
+ * - Entry 3 (section_12_3[0]): 37 fields
  */
 const SECTION12_FIELD_MAPPING = {
-  // Entry 1 fields (index 0) - section_12[0]
-  entry1: {
-    fromDate: "form1[0].section_12[0].From_Datefield_Name_2[0]",
-    toDate: "form1[0].section_12[0].To_Datefield_Name_2[0]", // Need to find actual to date field
-    schoolName: "form1[0].section_12[0].TextField11[3]", // sect12Entry1NameOfSchool
-    schoolStreet: "form1[0].section_12[0].TextField11[0]", // sect12Entry1SchoolAddress
-    schoolCity: "form1[0].section_12[0].TextField11[1]", // sect12Entry1schoolCity
-    schoolState: "form1[0].section_12[0].School6_State[0]", // sect12Entry1State
-    schoolZip: "form1[0].section_12[0].TextField11[2]", // sect12Entry1schoolZip
-    schoolCountry: "form1[0].section_12[0].DropDownList28[0]", // Country dropdown
-    knownPersonLast: "form1[0].section_12[0].TextField11[4]", // sect12Entry1knownPersonLastName
-    knownPersonFirst: "form1[0].section_12[0].TextField11[5]", // sect12Entry1knownPersonFirstName
-    knownPersonStreet: "form1[0].section_12[0].TextField11[6]", // sect12Entry1knownPersonStreet
-    knownPersonCity: "form1[0].section_12[0].TextField11[7]", // sect12Entry1knownPersonCity
-    knownPersonZip: "form1[0].section_12[0].TextField11[8]", // sect12Entry1knownPersonZ
-    extension: "form1[0].section_12[0].TextField11[9]" // sect12Entry1Extension1
+  // Global section questions (2 fields)
+  global: {
+    hasAttendedSchool: "form1[0].section_12[0].pg10r1[0]",
+    hasAttendedSchoolOutsideUS: "form1[0].section_12[0].pg10r2[0]"
   },
-  // Entry 2 fields (index 1) - section_12[0]
+
+  // Entry 1 fields (52 fields) - section_12[0]
+  entry1: {
+    // Attendance dates (5 fields)
+    fromDate: "form1[0].section_12[0].From_Datefield_Name_2[0]",
+    toDate: "form1[0].section_12[0].From_Datefield_Name_2[1]",
+    fromDateEstimate: "form1[0].section_12[0].#field[3]",
+    toDateEstimate: "form1[0].section_12[0].sec12_1_1[1]",
+    isPresent: "form1[0].section_12[0].sec12_1_1[0]",
+
+    // School information (6 fields)
+    schoolType: "form1[0].section_12[0].pg10r4[0]",
+    schoolName: "form1[0].section_12[0].TextField11[3]",
+    schoolAddress: "form1[0].section_12[0].TextField11[0]",
+    schoolCity: "form1[0].section_12[0].TextField11[1]",
+    schoolState: "form1[0].section_12[0].School6_State[0]",
+    schoolZipCode: "form1[0].section_12[0].TextField11[2]",
+    schoolCountry: "form1[0].section_12[0].DropDownList28[0]",
+
+    // Degree information (7 fields - 2 degrees per school)
+    receivedDegree: "form1[0].section_12[0].pg2r5[0]",
+    // Degree 1
+    degreeType1: "form1[0].section_12[0].Table1[0].Row1[0].Cell1[0]",
+    otherDegree1: "form1[0].section_12[0].Table1[0].Row1[0].Cell2[0]",
+    dateAwarded1: "form1[0].section_12[0].Table1[0].Row1[0].Cell4[0]",
+    dateAwardedEstimate1: "form1[0].section_12[0].Table1[0].Row1[0].Cell5[0]",
+    // Degree 2
+    degreeType2: "form1[0].section_12[0].Table1[0].Row2[0].Cell1[0]",
+    otherDegree2: "form1[0].section_12[0].Table1[0].Row2[0].Cell2[0]",
+    dateAwarded2: "form1[0].section_12[0].Table1[0].Row2[0].Cell4[0]",
+    dateAwardedEstimate2: "form1[0].section_12[0].Table1[0].Row2[0].Cell5[0]",
+
+    // Contact person information (14 fields)
+    unknownPerson: "form1[0].section_12[0].#field[14]",
+    contactLastName: "form1[0].section_12[0].TextField11[4]",
+    contactFirstName: "form1[0].section_12[0].TextField11[5]",
+    contactAddress: "form1[0].section_12[0].TextField11[6]",
+    contactCity: "form1[0].section_12[0].TextField11[7]",
+    contactState: "form1[0].section_12[0].School6_State[1]",
+    contactZipCode: "form1[0].section_12[0].TextField11[8]",
+    contactCountry: "form1[0].section_12[0].DropDownList27[0]",
+    contactPhone: "form1[0].section_12[0].p3-t68[0]",
+    contactExtension: "form1[0].section_12[0].TextField11[9]",
+    contactEmail: "form1[0].section_12[0].p3-t68[1]",
+    isInternationalPhone: "form1[0].section_12[0].#field[22]",
+    unknownPhone: "form1[0].section_12[0].#field[23]",
+    unknownEmail: "form1[0].section_12[0].#field[25]"
+  },
+
+  // Entry 2 fields (section_12[0] with different indices)
   entry2: {
-    fromDate: "form1[0].section_12[0].From_Datefield_Name_2[2]", // Need to find actual field
-    toDate: "form1[0].section_12[0].To_Datefield_Name_2[2]", // Need to find actual field
-    schoolName: "form1[0].section_12[0].TextField11[13]", // sect12Entry2SchoolName
-    schoolStreet: "form1[0].section_12[0].TextField11[10]", // sect12Entry2Street
-    schoolCity: "form1[0].section_12[0].TextField11[11]", // sect12Entry2City
-    schoolState: "", // Need to find state field for entry 2
-    schoolZip: "form1[0].section_12[0].TextField11[12]", // sect12Entry2Zip
-    schoolCountry: "", // Need to find country field for entry 2
-    knownPersonLast: "form1[0].section_12[0].TextField11[14]", // sect12Entry2KnownPersonLName
-    knownPersonFirst: "form1[0].section_12[0].TextField11[15]", // sect12Entry2KnownPersonFName
-    knownPersonStreet: "", // Need to find in section_12_2
-    knownPersonCity: "form1[0].section_12_2[0].TextField11[0]", // sect12Entry2KnownPersonCity
-    knownPersonZip: "form1[0].section_12_2[0].TextField11[2]", // sect12Entry2KnownPerso
-    extension: "" // Need to find extension field
+    // Attendance dates (5 fields)
+    fromDate: "form1[0].section_12[0].From_Datefield_Name_2[2]",
+    toDate: "form1[0].section_12[0].From_Datefield_Name_2[3]",
+    fromDateEstimate: "form1[0].section_12[0].#field[28]",
+    toDateEstimate: "form1[0].section_12[0].#field[30]",
+    isPresent: "form1[0].section_12[0].#field[29]",
+
+    // School information (6 fields)
+    schoolType: "form1[0].section_12_2[0].pg10r4[0]",
+    schoolName: "form1[0].section_12_2[0].TextField11[6]",
+    schoolAddress: "form1[0].section_12_2[0].TextField11[3]",
+    schoolCity: "form1[0].section_12_2[0].TextField11[4]",
+    schoolState: "form1[0].section_12_2[0].School6_State[0]",
+    schoolZipCode: "form1[0].section_12_2[0].TextField11[5]",
+    schoolCountry: "form1[0].section_12_2[0].DropDownList25[0]",
+
+    // Degree information (8 fields - 2 degrees per school)
+    receivedDegree: "form1[0].section_12_2[0].pg2r5[0]",
+    // Degree 1
+    degreeType1: "form1[0].section_12_2[0].Table1[0].Row1[0].Cell1[0]",
+    otherDegree1: "form1[0].section_12_2[0].Table1[0].Row1[0].Cell2[0]",
+    dateAwarded1: "form1[0].section_12_2[0].Table1[0].Row1[0].Cell4[0]",
+    dateAwardedEstimate1: "form1[0].section_12_2[0].Table1[0].Row1[0].Cell5[0]",
+    // Degree 2
+    degreeType2: "form1[0].section_12_2[0].Table1[0].Row2[0].Cell1[0]",
+    otherDegree2: "form1[0].section_12_2[0].Table1[0].Row2[0].Cell2[0]",
+    dateAwarded2: "form1[0].section_12_2[0].Table1[0].Row2[0].Cell4[0]",
+    dateAwardedEstimate2: "form1[0].section_12_2[0].Table1[0].Row2[0].Cell5[0]",
+
+    // Contact person information (14 fields)
+    unknownPerson: "form1[0].section_12_2[0].#field[6]",
+    contactLastName: "form1[0].section_12_2[0].TextField11[7]",
+    contactFirstName: "form1[0].section_12_2[0].TextField11[8]",
+    contactAddress: "form1[0].section_12_2[0].TextField11[0]",
+    contactCity: "form1[0].section_12_2[0].TextField11[1]",
+    contactState: "form1[0].section_12_2[0].School6_State[1]",
+    contactZipCode: "form1[0].section_12_2[0].TextField11[2]",
+    contactCountry: "form1[0].section_12_2[0].DropDownList27[0]",
+    contactPhone: "form1[0].section_12_2[0].p3-t68[2]",
+    contactExtension: "form1[0].section_12_2[0].TextField11[12]",
+    contactEmail: "form1[0].section_12_2[0].p3-t68[0]",
+    isInternationalPhone: "form1[0].section_12_2[0].#field[7]",
+    unknownPhone: "form1[0].section_12_2[0].#field[9]",
+    unknownEmail: "form1[0].section_12_2[0].#field[8]"
+  },
+
+  // Entry 3 fields (section_12_2[0])
+  entry3: {
+    // Attendance dates (5 fields)
+    fromDate: "form1[0].section_12_2[0].From_Datefield_Name_2[0]",
+    toDate: "form1[0].section_12_2[0].From_Datefield_Name_2[1]",
+    fromDateEstimate: "form1[0].section_12_2[0].#field[10]",
+    toDateEstimate: "form1[0].section_12_2[0].#field[12]",
+    isPresent: "form1[0].section_12_2[0].#field[11]",
+
+    // School information (6 fields)
+    schoolType: "form1[0].section_12_3[0].pg10r4[0]",
+    schoolName: "form1[0].section_12_3[0].TextField11[3]",
+    schoolAddress: "form1[0].section_12_3[0].TextField11[0]",
+    schoolCity: "form1[0].section_12_3[0].TextField11[1]",
+    schoolState: "form1[0].section_12_3[0].School6_State[0]",
+    schoolZipCode: "form1[0].section_12_3[0].TextField11[2]",
+    schoolCountry: "form1[0].section_12_3[0].DropDownList28[0]",
+
+    // Degree information (9 fields - 2 degrees per school)
+    receivedDegree: "form1[0].section_12_3[0].pg2r5[0]",
+    // Degree 1
+    degreeType1: "form1[0].section_12_3[0].Table1[0].Row1[0].Cell1[0]",
+    otherDegree1: "form1[0].section_12_3[0].Table1[0].Row1[0].Cell2[0]",
+    dateAwarded1: "form1[0].section_12_3[0].Table1[0].Row1[0].Cell4[0]",
+    dateAwardedEstimate1: "form1[0].section_12_3[0].Table1[0].Row1[0].Cell5[0]",
+    // Degree 2
+    degreeType2: "form1[0].section_12_3[0].Table1[0].Row2[0].Cell1[0]",
+    otherDegree2: "form1[0].section_12_3[0].Table1[0].Row2[0].Cell2[0]",
+    dateAwarded2: "form1[0].section_12_3[0].Table1[0].Row2[0].Cell4[0]",
+    dateAwardedEstimate2: "form1[0].section_12_3[0].Table1[0].Row2[0].Cell5[0]",
+
+    // Contact person information (14 fields)
+    unknownPerson: "form1[0].section_12_2[0].#field[21]",
+    contactLastName: "form1[0].section_12_2[0].TextField11[7]",
+    contactFirstName: "form1[0].section_12_2[0].TextField11[8]",
+    contactAddress: "form1[0].section_12_2[0].TextField11[0]",
+    contactCity: "form1[0].section_12_2[0].TextField11[1]",
+    contactState: "form1[0].section_12_2[0].School6_State[1]",
+    contactZipCode: "form1[0].section_12_2[0].TextField11[2]",
+    contactCountry: "form1[0].section_12_2[0].DropDownList27[0]",
+    contactPhone: "form1[0].section_12_2[0].p3-t68[2]",
+    contactExtension: "form1[0].section_12_2[0].TextField11[12]",
+    contactEmail: "form1[0].section_12_2[0].p3-t68[0]",
+    isInternationalPhone: "form1[0].section_12_2[0].#field[31]",
+    unknownPhone: "form1[0].section_12_2[0].#field[30]",
+    unknownEmail: "form1[0].section_12_2[0].#field[28]"
+  },
+
+  // Entry 4 fields (section_12_3[0])
+  entry4: {
+    // Attendance dates (5 fields)
+    fromDate: "form1[0].section_12_3[0].From_Datefield_Name_2[0]",
+    toDate: "form1[0].section_12_3[0].From_Datefield_Name_2[1]",
+    fromDateEstimate: "form1[0].section_12_3[0].#field[3]",
+    toDateEstimate: "form1[0].section_12_3[0].#field[5]",
+    isPresent: "form1[0].section_12_3[0].#field[4]",
+
+    // School information (6 fields)
+    schoolType: "form1[0].section_12_3[0].pg10r4[0]",
+    schoolName: "form1[0].section_12_3[0].TextField11[3]",
+    schoolAddress: "form1[0].section_12_3[0].TextField11[0]",
+    schoolCity: "form1[0].section_12_3[0].TextField11[1]",
+    schoolState: "form1[0].section_12_3[0].School6_State[0]",
+    schoolZipCode: "form1[0].section_12_3[0].TextField11[2]",
+    schoolCountry: "form1[0].section_12_3[0].DropDownList28[0]",
+
+    // Degree information (9 fields - 2 degrees per school)
+    receivedDegree: "form1[0].section_12_3[0].pg2r5[0]",
+    // Degree 1
+    degreeType1: "form1[0].section_12_3[0].Table1[0].Row1[0].Cell1[0]",
+    otherDegree1: "form1[0].section_12_3[0].Table1[0].Row1[0].Cell2[0]",
+    dateAwarded1: "form1[0].section_12_3[0].Table1[0].Row1[0].Cell4[0]",
+    dateAwardedEstimate1: "form1[0].section_12_3[0].Table1[0].Row1[0].Cell5[0]",
+    // Degree 2
+    degreeType2: "form1[0].section_12_3[0].Table1[0].Row2[0].Cell1[0]",
+    otherDegree2: "form1[0].section_12_3[0].Table1[0].Row2[0].Cell2[0]",
+    dateAwarded2: "form1[0].section_12_3[0].Table1[0].Row2[0].Cell4[0]",
+    dateAwardedEstimate2: "form1[0].section_12_3[0].Table1[0].Row2[0].Cell5[0]",
+
+    // Contact person information (8 fields - fewer than other entries)
+    contactLastName: "form1[0].section_12_3[0].TextField11[4]",
+    contactFirstName: "form1[0].section_12_3[0].TextField11[5]",
+    contactPhone: "form1[0].section_12_3[0].p3-t68[1]",
+    contactExtension: "form1[0].section_12_3[0].TextField11[9]",
+    contactState: "form1[0].section_12_3[0].School6_State[1]",
+    contactCountry: "form1[0].section_12_3[0].DropDownList27[0]"
+  }
+};
+
+/**
+ * Helper function to get field mapping based on entry index
+ */
+const getFieldMapping = (entryIndex: number): any => {
+  switch (entryIndex) {
+    case 0: return SECTION12_FIELD_MAPPING.entry1;
+    case 1: return SECTION12_FIELD_MAPPING.entry2;
+    case 2: return SECTION12_FIELD_MAPPING.entry3;
+    case 3: return SECTION12_FIELD_MAPPING.entry4;
+    default: return SECTION12_FIELD_MAPPING.entry1; // Fallback
   }
 };
 
 /**
  * Helper function to generate field ID based on entry index and field name
  */
-const generateEducationFieldId = (entryIndex: number, fieldName: string): string => {
-  const entryKey = entryIndex === 0 ? 'entry1' : 'entry2';
-  const mapping = SECTION12_FIELD_MAPPING[entryKey];
-  return mapping?.[fieldName as keyof typeof mapping] || "";
+const generateFieldId = (entryIndex: number, fieldName: string): string => {
+  const mapping = getFieldMapping(entryIndex);
+  return mapping?.[fieldName] || "";
 };
 
 /**
- * Helper function to generate field name (same as ID for Section 12)
+ * Creates a default degree entry
  */
-const generateEducationFieldName = (entryIndex: number, fieldName: string): string => {
-  return generateEducationFieldId(entryIndex, fieldName);
-};
-
-/**
- * Creates a default education entry with proper field mapping from sections-references
- */
-export const createDefaultEducationEntry = (entryId: string | number, entryIndex: number = 0): EducationEntry => {
-  // Removed console.log to prevent spam - function being called in render loop
-
+export const createDefaultDegreeEntry = (): DegreeEntry => {
   return {
-    _id: entryId,
-    attendanceDates: {
-      fromDate: {
-        id: generateEducationFieldId(entryIndex, "fromDate"),
-        name: generateEducationFieldName(entryIndex, "fromDate"),
-        type: 'PDFTextField',
-        label: `From Date (Month/Year) - Entry ${entryIndex + 1}`,
-        value: '',
-        rect: { x: 0, y: 0, width: 0, height: 0 }
-      },
-      fromEstimated: {
-        id: "", // No specific mapping for estimated checkboxes in sections-references
-        name: "",
-        type: 'PDFCheckBox',
-        label: 'Estimate',
-        value: false,
-        rect: { x: 0, y: 0, width: 0, height: 0 }
-      },
-      toDate: {
-        id: generateEducationFieldId(entryIndex, "toDate"),
-        name: generateEducationFieldName(entryIndex, "toDate"),
-        type: 'PDFTextField',
-        label: `To Date (Month/Year) - Entry ${entryIndex + 1}`,
-        value: '',
-        rect: { x: 0, y: 0, width: 0, height: 0 }
-      },
-      toEstimated: {
-        id: "", // No specific mapping for estimated checkboxes in sections-references
-        name: "",
-        type: 'PDFCheckBox',
-        label: 'Estimate',
-        value: false,
-        rect: { x: 0, y: 0, width: 0, height: 0 }
-      },
-      present: {
-        id: "", // No specific mapping for present checkbox in sections-references
-        name: "",
-        type: 'PDFCheckBox',
-        label: 'Present',
-        value: false,
-        rect: { x: 0, y: 0, width: 0, height: 0 }
-      }
-    },
-  schoolType: {
-    id: "", // No specific mapping for school type radio in sections-references
-    name: "",
-    type: 'PDFRadioGroup',
-    label: `School Type - Entry ${entryIndex + 1}`,
-    value: 'High School' as SchoolType,
-    options: SCHOOL_TYPE_OPTIONS,
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  schoolName: {
-    id: generateEducationFieldId(entryIndex, "schoolName"),
-    name: generateEducationFieldName(entryIndex, "schoolName"),
-    type: 'PDFTextField',
-    label: `School Name - Entry ${entryIndex + 1}`,
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  schoolAddress: {
-    street: {
-      id: generateEducationFieldId(entryIndex, "schoolStreet"),
-      name: generateEducationFieldName(entryIndex, "schoolStreet"),
-      type: 'PDFTextField',
-      label: `Street Address - Entry ${entryIndex + 1}`,
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    city: {
-      id: generateEducationFieldId(entryIndex, "schoolCity"),
-      name: generateEducationFieldName(entryIndex, "schoolCity"),
-      type: 'PDFTextField',
-      label: `City - Entry ${entryIndex + 1}`,
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    state: {
-      id: generateEducationFieldId(entryIndex, "schoolState"),
-      name: generateEducationFieldName(entryIndex, "schoolState"),
+    degreeType: {
+      id: "",
+      name: "",
       type: 'PDFDropdown',
-      label: `State - Entry ${entryIndex + 1}`,
-      value: '',
-      options: [], // Will be populated with USState options
+      label: 'Degree Type',
+      value: "High School Diploma",
+      options: ["High School Diploma", "Associate's", "Bachelor's", "Master's", "Doctorate", "Professional Degree (e.g. M D, D V M, J D)", "Other"],
       rect: { x: 0, y: 0, width: 0, height: 0 }
     },
-    zipCode: {
-      id: generateEducationFieldId(entryIndex, "schoolZip"),
-      name: generateEducationFieldName(entryIndex, "schoolZip"),
+    otherDegree: {
+      id: "",
+      name: "",
       type: 'PDFTextField',
-      label: `Zip Code - Entry ${entryIndex + 1}`,
+      label: 'Other Degree',
       value: '',
       rect: { x: 0, y: 0, width: 0, height: 0 }
     },
-    country: {
-      id: generateEducationFieldId(entryIndex, "schoolCountry"),
-      name: generateEducationFieldName(entryIndex, "schoolCountry"),
-      type: 'PDFDropdown',
-      label: `Country - Entry ${entryIndex + 1}`,
+    dateAwarded: {
+      id: "",
+      name: "",
+      type: 'PDFTextField',
+      label: 'Date Awarded',
       value: '',
-      options: [], // Will be populated with Country options
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    dateAwardedEstimate: {
+      id: "",
+      name: "",
+      type: 'PDFCheckBox',
+      label: 'Estimate',
+      value: false,
       rect: { x: 0, y: 0, width: 0, height: 0 }
     }
-  },
-  degreeReceived: {
-    id: "", // No specific mapping for degree received radio in sections-references
-    name: "",
-    type: 'PDFRadioGroup',
-    label: `Did you receive a degree? - Entry ${entryIndex + 1}`,
-    value: false,
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  degreeType: {
-    id: generateEducationFieldId(entryIndex, "degreeType"),
-    name: generateEducationFieldName(entryIndex, "degreeType"),
-    type: 'PDFDropdown',
-    label: `Degree Type - Entry ${entryIndex + 1}`,
-    value: 'High School Diploma' as DegreeType,
-    options: DEGREE_TYPE_OPTIONS,
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  degreeDate: {
-    id: generateEducationFieldId(entryIndex, "degreeDate"),
-    name: generateEducationFieldName(entryIndex, "degreeDate"),
-    type: 'PDFTextField',
-    label: `Degree Date - Entry ${entryIndex + 1}`,
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  degreeEstimated: {
-    id: "", // No specific mapping for degree estimated checkbox in sections-references
-    name: "",
-    type: 'PDFCheckBox',
-    label: 'Estimate',
-    value: false,
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  createdAt: new Date(),
-  updatedAt: new Date()
   };
 };
 
 /**
- * Creates a default Section 12 data structure using DRY approach with sections-references
- * This eliminates hardcoded values and uses the single source of truth
- * 
- * Updated to include a default education entry to improve user experience
+ * Creates a default contact person entry
+ */
+export const createDefaultContactPerson = (): ContactPerson => {
+  return {
+    unknownPerson: {
+      id: "",
+      name: "",
+      type: 'PDFCheckBox',
+      label: 'I don\'t know',
+      value: false,
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    lastName: {
+      id: "",
+      name: "",
+      type: 'PDFTextField',
+      label: 'Last Name',
+      value: '',
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    firstName: {
+      id: "",
+      name: "",
+      type: 'PDFTextField',
+      label: 'First Name',
+      value: '',
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    address: {
+      id: "",
+      name: "",
+      type: 'PDFTextField',
+      label: 'Address',
+      value: '',
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    city: {
+      id: "",
+      name: "",
+      type: 'PDFTextField',
+      label: 'City',
+      value: '',
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    state: {
+      id: "",
+      name: "",
+      type: 'PDFTextField',
+      label: 'State',
+      value: '',
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    country: {
+      id: "",
+      name: "",
+      type: 'PDFTextField',
+      label: 'Country',
+      value: '',
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    zipCode: {
+      id: "",
+      name: "",
+      type: 'PDFTextField',
+      label: 'Zip Code',
+      value: '',
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    phoneNumber: {
+      id: "",
+      name: "",
+      type: 'PDFTextField',
+      label: 'Phone Number',
+      value: '',
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    phoneExtension: {
+      id: "",
+      name: "",
+      type: 'PDFTextField',
+      label: 'Extension',
+      value: '',
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    email: {
+      id: "",
+      name: "",
+      type: 'PDFTextField',
+      label: 'Email',
+      value: '',
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    isInternationalPhone: {
+      id: "",
+      name: "",
+      type: 'PDFCheckBox',
+      label: 'International Phone',
+      value: false,
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    unknownPhone: {
+      id: "",
+      name: "",
+      type: 'PDFCheckBox',
+      label: 'Unknown Phone',
+      value: false,
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    unknownEmail: {
+      id: "",
+      name: "",
+      type: 'PDFCheckBox',
+      label: 'Unknown Email',
+      value: false,
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    }
+  };
+};
+
+/**
+ * Creates a default school entry with comprehensive field mapping
+ */
+export const createDefaultSchoolEntry = (entryId: string | number, entryIndex: number = 0): SchoolEntry => {
+  const mapping = getFieldMapping(entryIndex);
+
+  return {
+    _id: entryId,
+
+    // Attendance dates (5 fields)
+    fromDate: {
+      id: generateFieldId(entryIndex, "fromDate"),
+      name: generateFieldId(entryIndex, "fromDate"),
+      type: 'PDFTextField',
+      label: `From Date (Month/Year) - Entry ${entryIndex + 1}`,
+      value: '',
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    toDate: {
+      id: generateFieldId(entryIndex, "toDate"),
+      name: generateFieldId(entryIndex, "toDate"),
+      type: 'PDFTextField',
+      label: `To Date (Month/Year) - Entry ${entryIndex + 1}`,
+      value: '',
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    fromDateEstimate: {
+      id: generateFieldId(entryIndex, "fromDateEstimate"),
+      name: generateFieldId(entryIndex, "fromDateEstimate"),
+      type: 'PDFCheckBox',
+      label: 'From Date Estimate',
+      value: false,
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    toDateEstimate: {
+      id: generateFieldId(entryIndex, "toDateEstimate"),
+      name: generateFieldId(entryIndex, "toDateEstimate"),
+      type: 'PDFCheckBox',
+      label: 'To Date Estimate',
+      value: false,
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    isPresent: {
+      id: generateFieldId(entryIndex, "isPresent"),
+      name: generateFieldId(entryIndex, "isPresent"),
+      type: 'PDFCheckBox',
+      label: 'Present',
+      value: false,
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+
+    // School information (7 fields)
+    schoolName: {
+      id: generateFieldId(entryIndex, "schoolName"),
+      name: generateFieldId(entryIndex, "schoolName"),
+      type: 'PDFTextField',
+      label: `School Name - Entry ${entryIndex + 1}`,
+      value: '',
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    schoolAddress: {
+      id: generateFieldId(entryIndex, "schoolAddress"),
+      name: generateFieldId(entryIndex, "schoolAddress"),
+      type: 'PDFTextField',
+      label: `School Address - Entry ${entryIndex + 1}`,
+      value: '',
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    schoolCity: {
+      id: generateFieldId(entryIndex, "schoolCity"),
+      name: generateFieldId(entryIndex, "schoolCity"),
+      type: 'PDFTextField',
+      label: `School City - Entry ${entryIndex + 1}`,
+      value: '',
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    schoolState: {
+      id: generateFieldId(entryIndex, "schoolState"),
+      name: generateFieldId(entryIndex, "schoolState"),
+      type: 'PDFDropdown',
+      label: `School State - Entry ${entryIndex + 1}`,
+      value: '',
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    schoolCountry: {
+      id: generateFieldId(entryIndex, "schoolCountry"),
+      name: generateFieldId(entryIndex, "schoolCountry"),
+      type: 'PDFDropdown',
+      label: `School Country - Entry ${entryIndex + 1}`,
+      value: '',
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    schoolZipCode: {
+      id: generateFieldId(entryIndex, "schoolZipCode"),
+      name: generateFieldId(entryIndex, "schoolZipCode"),
+      type: 'PDFTextField',
+      label: `School Zip Code - Entry ${entryIndex + 1}`,
+      value: '',
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+
+    // School type (1 field)
+    schoolType: {
+      id: generateFieldId(entryIndex, "schoolType"),
+      name: generateFieldId(entryIndex, "schoolType"),
+      type: 'PDFRadioGroup',
+      label: `School Type - Entry ${entryIndex + 1}`,
+      value: "High School",
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+
+    // Degree information (2+ fields)
+    receivedDegree: {
+      id: generateFieldId(entryIndex, "receivedDegree"),
+      name: generateFieldId(entryIndex, "receivedDegree"),
+      type: 'PDFRadioGroup',
+      label: `Received Degree - Entry ${entryIndex + 1}`,
+      value: 'NO',
+      rect: { x: 0, y: 0, width: 0, height: 0 }
+    },
+    degrees: [], // Start with empty degrees array - user can add as needed
+
+    // Contact person (optional - for schools attended in last 3 years)
+    contactPerson: createDefaultContactPerson(),
+
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+};
+
+/**
+ * Creates a default Section 12 data structure with comprehensive field coverage
  */
 export const createDefaultSection12 = (): Section12 => {
   // Validate field count against sections-references
   validateSectionFieldCount(12);
 
-  // Create default entry for better UX - user can remove it if not needed
-  const defaultEntry = createDefaultEducationEntry(Date.now(), 0); // Pass entry index 0
-
   return {
     _id: 12,
     section12: {
-      hasEducation: createFieldFromReference(
+      // Global section questions (2 fields)
+      hasAttendedSchool: createFieldFromReference(
         12,
-        'form1[0].section_12[0].pg10r1[0]',
-        'YES'  // Default to YES for better UX - most people have education
-      ),
-      hasHighSchool: createFieldFromReference(
-        12,
-        'form1[0].section_12[0].pg10r2[0]',
+        SECTION12_FIELD_MAPPING.global.hasAttendedSchool,
         'NO'
       ),
-      entries: [defaultEntry],  // Start with one default entry
-      entriesCount: 1
+      hasAttendedSchoolOutsideUS: createFieldFromReference(
+        12,
+        SECTION12_FIELD_MAPPING.global.hasAttendedSchoolOutsideUS,
+        'NO'
+      ),
+
+      // Start with empty entries array - users can add entries as needed
+      entries: []
     }
   };
 };
@@ -506,11 +790,11 @@ export const updateSection12Field = (
   const { fieldPath, newValue, entryIndex } = update;
   const newData = { ...section12Data };
 
-  // Handle main section fields
-  if (fieldPath === 'section12.hasEducation') {
-    newData.section12.hasEducation.value = newValue;
-  } else if (fieldPath === 'section12.hasHighSchool') {
-    newData.section12.hasHighSchool.value = newValue;
+  // Handle global section fields
+  if (fieldPath === 'section12.hasAttendedSchool') {
+    newData.section12.hasAttendedSchool.value = newValue;
+  } else if (fieldPath === 'section12.hasAttendedSchoolOutsideUS') {
+    newData.section12.hasAttendedSchoolOutsideUS.value = newValue;
   }
   // Handle entry-specific fields
   else if (fieldPath.startsWith('section12.entries') && entryIndex !== undefined) {
@@ -518,25 +802,24 @@ export const updateSection12Field = (
       const entry = { ...newData.section12.entries[entryIndex] };
 
       // Parse the field path to update the correct nested field
-      // Expected format: "section12.entries.fieldName" or "section12.entries.parentField.childField"
       const pathParts = fieldPath.split('.');
       if (pathParts.length >= 3) {
         // Remove "section12.entries" prefix to get the actual field path
         const actualFieldPath = pathParts.slice(2).join('.');
 
-        // Handle nested field updates (e.g., "attendanceDates.fromDate")
+        // Handle nested field updates (e.g., "contactPerson.lastName")
         if (actualFieldPath.includes('.')) {
           const [parentField, childField] = actualFieldPath.split('.');
-          if (entry[parentField as keyof EducationEntry]) {
-            const parentObj = entry[parentField as keyof EducationEntry] as any;
-            if (parentObj[childField]) {
+          if (entry[parentField as keyof SchoolEntry]) {
+            const parentObj = entry[parentField as keyof SchoolEntry] as any;
+            if (parentObj && parentObj[childField]) {
               parentObj[childField].value = newValue;
             }
           }
         } else {
           // Handle direct field updates (e.g., "schoolName")
-          if (entry[actualFieldPath as keyof EducationEntry]) {
-            (entry[actualFieldPath as keyof EducationEntry] as any).value = newValue;
+          if (entry[actualFieldPath as keyof SchoolEntry]) {
+            (entry[actualFieldPath as keyof SchoolEntry] as any).value = newValue;
           }
         }
       }
@@ -550,20 +833,20 @@ export const updateSection12Field = (
 };
 
 /**
- * Validates education date range
+ * Validates school entry dates
  */
-export const validateEducationDates = (
-  dateRange: EducationDateRange,
+export const validateSchoolDates = (
+  entry: SchoolEntry,
   context: Section12ValidationContext
 ): EducationValidationResult => {
   const errors: string[] = [];
   const warnings: string[] = [];
 
   // Validate from date
-  if (!dateRange.fromDate.value) {
+  if (!entry.fromDate.value) {
     errors.push('From date is required');
   } else {
-    const fromDate = new Date(dateRange.fromDate.value);
+    const fromDate = new Date(entry.fromDate.value);
     if (isNaN(fromDate.getTime())) {
       errors.push('From date is not a valid date');
     } else if (fromDate.getFullYear() < EDUCATION_DATE_VALIDATION.MIN_YEAR) {
@@ -574,14 +857,14 @@ export const validateEducationDates = (
   }
 
   // Validate to date (if not present)
-  if (!dateRange.present.value && !dateRange.toDate.value) {
+  if (!entry.isPresent.value && !entry.toDate.value) {
     errors.push('To date is required when not currently attending');
-  } else if (!dateRange.present.value && dateRange.toDate.value) {
-    const toDate = new Date(dateRange.toDate.value);
+  } else if (!entry.isPresent.value && entry.toDate.value) {
+    const toDate = new Date(entry.toDate.value);
     if (isNaN(toDate.getTime())) {
       errors.push('To date is not a valid date');
-    } else if (dateRange.fromDate.value) {
-      const fromDate = new Date(dateRange.fromDate.value);
+    } else if (entry.fromDate.value) {
+      const fromDate = new Date(entry.fromDate.value);
       if (toDate < fromDate) {
         errors.push('To date cannot be before from date');
       }
@@ -596,17 +879,17 @@ export const validateEducationDates = (
 };
 
 /**
- * Validates a complete education entry
+ * Validates a complete school entry
  */
-export function validateEducationEntry(
-  entry: EducationEntry,
+export function validateSchoolEntry(
+  entry: SchoolEntry,
   context: Section12ValidationContext
 ): EducationValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
   // Validate attendance dates
-  const dateValidation = validateEducationDates(entry.attendanceDates, context);
+  const dateValidation = validateSchoolDates(entry, context);
   errors.push(...dateValidation.errors);
   warnings.push(...dateValidation.warnings);
 
@@ -624,24 +907,24 @@ export function validateEducationEntry(
 
   // Validate school address
   if (context.rules.requiresSchoolAddress) {
-    if (!entry.schoolAddress.street.value) {
+    if (!entry.schoolAddress.value) {
       errors.push('School street address is required');
     }
-    if (!entry.schoolAddress.city.value) {
+    if (!entry.schoolCity.value) {
       errors.push('School city is required');
     }
-    if (!entry.schoolAddress.country.value) {
+    if (!entry.schoolCountry.value) {
       errors.push('School country is required');
     }
     // State is required for US addresses
-    if (entry.schoolAddress.country.value === 'United States' as Country && !entry.schoolAddress.state.value) {
+    if (entry.schoolCountry.value === 'United States' && !entry.schoolState.value) {
       errors.push('State is required for US addresses');
     }
   }
 
   // Validate degree information
-  if (entry.degreeReceived.value && !entry.degreeType.value) {
-    errors.push('Degree type is required when degree was received');
+  if (entry.receivedDegree.value === 'YES' && entry.degrees.length === 0) {
+    errors.push('At least one degree is required when degree was received');
   }
 
   return {
@@ -663,21 +946,21 @@ export function validateSection12(
   const entryErrors: Record<number, string[]> = {};
 
   // Validate main section flags
-  if (context.rules.requiresEducationHistory && !section12Data.section12.hasEducation.value) {
+  if (context.rules.requiresEducationHistory && !section12Data.section12.hasAttendedSchool.value) {
     errors.push('Education history information is required');
   }
 
   // Validate entries if education history is provided
-  if (section12Data.section12.hasEducation.value === 'YES') {
+  if (section12Data.section12.hasAttendedSchool.value === 'YES') {
     if (section12Data.section12.entries.length === 0) {
-      errors.push('At least one education entry is required');
+      errors.push('At least one school entry is required');
     } else if (section12Data.section12.entries.length > context.rules.maxEducationEntries) {
-      errors.push(`Cannot exceed ${context.rules.maxEducationEntries} education entries`);
+      errors.push(`Cannot exceed ${context.rules.maxEducationEntries} school entries`);
     }
 
     // Validate each entry
     section12Data.section12.entries.forEach((entry, index) => {
-      const entryValidation = validateEducationEntry(entry, context);
+      const entryValidation = validateSchoolEntry(entry, context);
       if (!entryValidation.isValid) {
         entryErrors[index] = entryValidation.errors;
         errors.push(`Entry ${index + 1}: ${entryValidation.errors.join(', ')}`);

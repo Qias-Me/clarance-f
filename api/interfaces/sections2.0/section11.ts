@@ -162,7 +162,133 @@ export const SECTION11_FIELD_IDS = {
   // Entry 1 - Contact availability
   DONT_KNOW_CONTACT_1: "9823", // form1[0].Section11[0].#field[5]
   EMAIL_1: "9786", // Email field for contact person
-  
+
+  // ============================================================================
+  // ENTRY 2 FIELD IDS (Section11-2[0])
+  // ============================================================================
+
+  // Entry 2 - Main address fields
+  STREET_ADDRESS_2: "9741", // form1[0].Section11-2[0].TextField11[3]
+  CITY_2: "9740", // form1[0].Section11-2[0].TextField11[4]
+  STATE_2: "9739", // form1[0].Section11-2[0].School6_State[0]
+  COUNTRY_2: "9738", // form1[0].Section11-2[0].DropDownList5[0]
+  ZIP_CODE_2: "9737", // form1[0].Section11-2[0].TextField11[5]
+
+  // Entry 2 - Date fields
+  FROM_DATE_2: "9751", // form1[0].Section11-2[0].From_Datefield_Name_2[0]
+  FROM_DATE_ESTIMATE_2: "9750", // form1[0].Section11-2[0].#field[15]
+  TO_DATE_2: "9749", // form1[0].Section11-2[0].From_Datefield_Name_2[1]
+  TO_DATE_ESTIMATE_2: "9747", // form1[0].Section11-2[0].#field[18]
+  PRESENT_2: "9748", // form1[0].Section11-2[0].#field[17]
+
+  // Entry 2 - Residence type
+  RESIDENCE_TYPE_2: "17201", // form1[0].Section11-2[0].RadioButtonList[0]
+  RESIDENCE_TYPE_OTHER_2: "9742", // form1[0].Section11-2[0].TextField12[0]
+
+  // Entry 2 - Contact person
+  CONTACT_LAST_NAME_2: "9726", // form1[0].Section11-2[0].TextField11[6]
+  CONTACT_FIRST_NAME_2: "9725", // form1[0].Section11-2[0].TextField11[7]
+  CONTACT_MIDDLE_NAME_2: "9724", // form1[0].Section11-2[0].TextField11[8]
+
+  // Entry 2 - Contact phone numbers
+  EVENING_PHONE_2: "9763", // form1[0].Section11-2[0].p3-t68[0]
+  EVENING_PHONE_EXT_2: "9762", // form1[0].Section11-2[0].TextField11[0]
+  EVENING_PHONE_INTL_2: "9761", // form1[0].Section11-2[0].#field[4]
+  DAYTIME_PHONE_2: "9759", // form1[0].Section11-2[0].p3-t68[1]
+  DAYTIME_PHONE_EXT_2: "9758", // form1[0].Section11-2[0].TextField11[1]
+  DAYTIME_PHONE_INTL_2: "9755", // form1[0].Section11-2[0].#field[10]
+  MOBILE_PHONE_2: "9757", // form1[0].Section11-2[0].p3-t68[2]
+  MOBILE_PHONE_EXT_2: "9756", // form1[0].Section11-2[0].TextField11[2]
+  MOBILE_PHONE_INTL_2: "9753", // form1[0].Section11-2[0].#field[12]
+
+  // Entry 2 - Contact availability
+  DONT_KNOW_CONTACT_2: "9760", // form1[0].Section11-2[0].#field[5]
+  EMAIL_2: "9723", // form1[0].Section11-2[0].p3-t68[3]
+
+  // ============================================================================
+  // ENTRY 3 FIELD IDS (Section11-3[0])
+  // ============================================================================
+
+  // Entry 3 - Main address fields
+  STREET_ADDRESS_3: "9678", // form1[0].Section11-3[0].TextField11[3]
+  CITY_3: "9677", // form1[0].Section11-3[0].TextField11[4]
+  STATE_3: "9676", // form1[0].Section11-3[0].School6_State[0]
+  COUNTRY_3: "9675", // form1[0].Section11-3[0].DropDownList5[0]
+  ZIP_CODE_3: "9674", // form1[0].Section11-3[0].TextField11[5]
+
+  // Entry 3 - Date fields
+  FROM_DATE_3: "9688", // form1[0].Section11-3[0].From_Datefield_Name_2[0]
+  FROM_DATE_ESTIMATE_3: "9687", // form1[0].Section11-3[0].#field[15]
+  TO_DATE_3: "9686", // form1[0].Section11-3[0].From_Datefield_Name_2[1]
+  TO_DATE_ESTIMATE_3: "9684", // form1[0].Section11-3[0].#field[18]
+  PRESENT_3: "9685", // form1[0].Section11-3[0].#field[17]
+
+  // Entry 3 - Residence type
+  RESIDENCE_TYPE_3: "17202", // form1[0].Section11-3[0].RadioButtonList[0]
+  RESIDENCE_TYPE_OTHER_3: "9679", // form1[0].Section11-3[0].TextField12[0]
+
+  // Entry 3 - Contact person
+  CONTACT_LAST_NAME_3: "9663", // form1[0].Section11-3[0].TextField11[6]
+  CONTACT_FIRST_NAME_3: "9662", // form1[0].Section11-3[0].TextField11[7]
+  CONTACT_MIDDLE_NAME_3: "9661", // form1[0].Section11-3[0].TextField11[8]
+
+  // Entry 3 - Contact phone numbers
+  EVENING_PHONE_3: "9700", // form1[0].Section11-3[0].p3-t68[0]
+  EVENING_PHONE_EXT_3: "9699", // form1[0].Section11-3[0].TextField11[0]
+  EVENING_PHONE_INTL_3: "9698", // form1[0].Section11-3[0].#field[4]
+  DAYTIME_PHONE_3: "9696", // form1[0].Section11-3[0].p3-t68[1]
+  DAYTIME_PHONE_EXT_3: "9695", // form1[0].Section11-3[0].TextField11[1]
+  DAYTIME_PHONE_INTL_3: "9692", // form1[0].Section11-3[0].#field[10]
+  MOBILE_PHONE_3: "9694", // form1[0].Section11-3[0].p3-t68[2]
+  MOBILE_PHONE_EXT_3: "9693", // form1[0].Section11-3[0].TextField11[2]
+  MOBILE_PHONE_INTL_3: "9690", // form1[0].Section11-3[0].#field[12]
+
+  // Entry 3 - Contact availability
+  DONT_KNOW_CONTACT_3: "9697", // form1[0].Section11-3[0].#field[5]
+  EMAIL_3: "9660", // form1[0].Section11-3[0].p3-t68[3]
+
+  // ============================================================================
+  // ENTRY 4 FIELD IDS (Section11-4[0])
+  // ============================================================================
+
+  // Entry 4 - Main address fields
+  STREET_ADDRESS_4: "9615", // form1[0].Section11-4[0].TextField11[3]
+  CITY_4: "9614", // form1[0].Section11-4[0].TextField11[4]
+  STATE_4: "9613", // form1[0].Section11-4[0].School6_State[0]
+  COUNTRY_4: "9612", // form1[0].Section11-4[0].DropDownList5[0]
+  ZIP_CODE_4: "9611", // form1[0].Section11-4[0].TextField11[5]
+
+  // Entry 4 - Date fields
+  FROM_DATE_4: "9625", // form1[0].Section11-4[0].From_Datefield_Name_2[0]
+  FROM_DATE_ESTIMATE_4: "9624", // form1[0].Section11-4[0].#field[15]
+  TO_DATE_4: "9623", // form1[0].Section11-4[0].From_Datefield_Name_2[1]
+  TO_DATE_ESTIMATE_4: "9621", // form1[0].Section11-4[0].#field[18]
+  PRESENT_4: "9622", // form1[0].Section11-4[0].#field[17]
+
+  // Entry 4 - Residence type
+  RESIDENCE_TYPE_4: "17203", // form1[0].Section11-4[0].RadioButtonList[0]
+  RESIDENCE_TYPE_OTHER_4: "9616", // form1[0].Section11-4[0].TextField12[0]
+
+  // Entry 4 - Contact person
+  CONTACT_LAST_NAME_4: "9600", // form1[0].Section11-4[0].TextField11[6]
+  CONTACT_FIRST_NAME_4: "9599", // form1[0].Section11-4[0].TextField11[7]
+  CONTACT_MIDDLE_NAME_4: "9598", // form1[0].Section11-4[0].TextField11[8]
+
+  // Entry 4 - Contact phone numbers
+  EVENING_PHONE_4: "9637", // form1[0].Section11-4[0].p3-t68[0]
+  EVENING_PHONE_EXT_4: "9636", // form1[0].Section11-4[0].TextField11[0]
+  EVENING_PHONE_INTL_4: "9635", // form1[0].Section11-4[0].#field[4]
+  DAYTIME_PHONE_4: "9633", // form1[0].Section11-4[0].p3-t68[1]
+  DAYTIME_PHONE_EXT_4: "9632", // form1[0].Section11-4[0].TextField11[1]
+  DAYTIME_PHONE_INTL_4: "9629", // form1[0].Section11-4[0].#field[10]
+  MOBILE_PHONE_4: "9631", // form1[0].Section11-4[0].p3-t68[2]
+  MOBILE_PHONE_EXT_4: "9630", // form1[0].Section11-4[0].TextField11[2]
+  MOBILE_PHONE_INTL_4: "9627", // form1[0].Section11-4[0].#field[12]
+
+  // Entry 4 - Contact availability
+  DONT_KNOW_CONTACT_4: "9634", // form1[0].Section11-4[0].#field[5]
+  EMAIL_4: "9597", // form1[0].Section11-4[0].p3-t68[3]
+
 } as const;
 
 /**
@@ -207,7 +333,133 @@ export const SECTION11_FIELD_NAMES = {
   // Entry 1 - Contact availability
   DONT_KNOW_CONTACT_1: "form1[0].Section11[0].#field[5]",
   EMAIL_1: "form1[0].Section11[0].p3-t68[3]", // Email field for contact person
-  
+
+  // ============================================================================
+  // ENTRY 2 FIELD NAMES (Section11-2[0])
+  // ============================================================================
+
+  // Entry 2 - Main address fields
+  STREET_ADDRESS_2: "form1[0].Section11-2[0].TextField11[3]",
+  CITY_2: "form1[0].Section11-2[0].TextField11[4]",
+  STATE_2: "form1[0].Section11-2[0].School6_State[0]",
+  COUNTRY_2: "form1[0].Section11-2[0].DropDownList5[0]",
+  ZIP_CODE_2: "form1[0].Section11-2[0].TextField11[5]",
+
+  // Entry 2 - Date fields
+  FROM_DATE_2: "form1[0].Section11-2[0].From_Datefield_Name_2[0]",
+  FROM_DATE_ESTIMATE_2: "form1[0].Section11-2[0].#field[15]",
+  TO_DATE_2: "form1[0].Section11-2[0].From_Datefield_Name_2[1]",
+  TO_DATE_ESTIMATE_2: "form1[0].Section11-2[0].#field[18]",
+  PRESENT_2: "form1[0].Section11-2[0].#field[17]",
+
+  // Entry 2 - Residence type
+  RESIDENCE_TYPE_2: "form1[0].Section11-2[0].RadioButtonList[0]",
+  RESIDENCE_TYPE_OTHER_2: "form1[0].Section11-2[0].TextField12[0]",
+
+  // Entry 2 - Contact person
+  CONTACT_LAST_NAME_2: "form1[0].Section11-2[0].TextField11[6]",
+  CONTACT_FIRST_NAME_2: "form1[0].Section11-2[0].TextField11[7]",
+  CONTACT_MIDDLE_NAME_2: "form1[0].Section11-2[0].TextField11[8]",
+
+  // Entry 2 - Contact phone numbers
+  EVENING_PHONE_2: "form1[0].Section11-2[0].p3-t68[0]",
+  EVENING_PHONE_EXT_2: "form1[0].Section11-2[0].TextField11[0]",
+  EVENING_PHONE_INTL_2: "form1[0].Section11-2[0].#field[4]",
+  DAYTIME_PHONE_2: "form1[0].Section11-2[0].p3-t68[1]",
+  DAYTIME_PHONE_EXT_2: "form1[0].Section11-2[0].TextField11[1]",
+  DAYTIME_PHONE_INTL_2: "form1[0].Section11-2[0].#field[10]",
+  MOBILE_PHONE_2: "form1[0].Section11-2[0].p3-t68[2]",
+  MOBILE_PHONE_EXT_2: "form1[0].Section11-2[0].TextField11[2]",
+  MOBILE_PHONE_INTL_2: "form1[0].Section11-2[0].#field[12]",
+
+  // Entry 2 - Contact availability
+  DONT_KNOW_CONTACT_2: "form1[0].Section11-2[0].#field[5]",
+  EMAIL_2: "form1[0].Section11-2[0].p3-t68[3]",
+
+  // ============================================================================
+  // ENTRY 3 FIELD NAMES (Section11-3[0])
+  // ============================================================================
+
+  // Entry 3 - Main address fields
+  STREET_ADDRESS_3: "form1[0].Section11-3[0].TextField11[3]",
+  CITY_3: "form1[0].Section11-3[0].TextField11[4]",
+  STATE_3: "form1[0].Section11-3[0].School6_State[0]",
+  COUNTRY_3: "form1[0].Section11-3[0].DropDownList5[0]",
+  ZIP_CODE_3: "form1[0].Section11-3[0].TextField11[5]",
+
+  // Entry 3 - Date fields
+  FROM_DATE_3: "form1[0].Section11-3[0].From_Datefield_Name_2[0]",
+  FROM_DATE_ESTIMATE_3: "form1[0].Section11-3[0].#field[15]",
+  TO_DATE_3: "form1[0].Section11-3[0].From_Datefield_Name_2[1]",
+  TO_DATE_ESTIMATE_3: "form1[0].Section11-3[0].#field[18]",
+  PRESENT_3: "form1[0].Section11-3[0].#field[17]",
+
+  // Entry 3 - Residence type
+  RESIDENCE_TYPE_3: "form1[0].Section11-3[0].RadioButtonList[0]",
+  RESIDENCE_TYPE_OTHER_3: "form1[0].Section11-3[0].TextField12[0]",
+
+  // Entry 3 - Contact person
+  CONTACT_LAST_NAME_3: "form1[0].Section11-3[0].TextField11[6]",
+  CONTACT_FIRST_NAME_3: "form1[0].Section11-3[0].TextField11[7]",
+  CONTACT_MIDDLE_NAME_3: "form1[0].Section11-3[0].TextField11[8]",
+
+  // Entry 3 - Contact phone numbers
+  EVENING_PHONE_3: "form1[0].Section11-3[0].p3-t68[0]",
+  EVENING_PHONE_EXT_3: "form1[0].Section11-3[0].TextField11[0]",
+  EVENING_PHONE_INTL_3: "form1[0].Section11-3[0].#field[4]",
+  DAYTIME_PHONE_3: "form1[0].Section11-3[0].p3-t68[1]",
+  DAYTIME_PHONE_EXT_3: "form1[0].Section11-3[0].TextField11[1]",
+  DAYTIME_PHONE_INTL_3: "form1[0].Section11-3[0].#field[10]",
+  MOBILE_PHONE_3: "form1[0].Section11-3[0].p3-t68[2]",
+  MOBILE_PHONE_EXT_3: "form1[0].Section11-3[0].TextField11[2]",
+  MOBILE_PHONE_INTL_3: "form1[0].Section11-3[0].#field[12]",
+
+  // Entry 3 - Contact availability
+  DONT_KNOW_CONTACT_3: "form1[0].Section11-3[0].#field[5]",
+  EMAIL_3: "form1[0].Section11-3[0].p3-t68[3]",
+
+  // ============================================================================
+  // ENTRY 4 FIELD NAMES (Section11-4[0])
+  // ============================================================================
+
+  // Entry 4 - Main address fields
+  STREET_ADDRESS_4: "form1[0].Section11-4[0].TextField11[3]",
+  CITY_4: "form1[0].Section11-4[0].TextField11[4]",
+  STATE_4: "form1[0].Section11-4[0].School6_State[0]",
+  COUNTRY_4: "form1[0].Section11-4[0].DropDownList5[0]",
+  ZIP_CODE_4: "form1[0].Section11-4[0].TextField11[5]",
+
+  // Entry 4 - Date fields
+  FROM_DATE_4: "form1[0].Section11-4[0].From_Datefield_Name_2[0]",
+  FROM_DATE_ESTIMATE_4: "form1[0].Section11-4[0].#field[15]",
+  TO_DATE_4: "form1[0].Section11-4[0].From_Datefield_Name_2[1]",
+  TO_DATE_ESTIMATE_4: "form1[0].Section11-4[0].#field[18]",
+  PRESENT_4: "form1[0].Section11-4[0].#field[17]",
+
+  // Entry 4 - Residence type
+  RESIDENCE_TYPE_4: "form1[0].Section11-4[0].RadioButtonList[0]",
+  RESIDENCE_TYPE_OTHER_4: "form1[0].Section11-4[0].TextField12[0]",
+
+  // Entry 4 - Contact person
+  CONTACT_LAST_NAME_4: "form1[0].Section11-4[0].TextField11[6]",
+  CONTACT_FIRST_NAME_4: "form1[0].Section11-4[0].TextField11[7]",
+  CONTACT_MIDDLE_NAME_4: "form1[0].Section11-4[0].TextField11[8]",
+
+  // Entry 4 - Contact phone numbers
+  EVENING_PHONE_4: "form1[0].Section11-4[0].p3-t68[0]",
+  EVENING_PHONE_EXT_4: "form1[0].Section11-4[0].TextField11[0]",
+  EVENING_PHONE_INTL_4: "form1[0].Section11-4[0].#field[4]",
+  DAYTIME_PHONE_4: "form1[0].Section11-4[0].p3-t68[1]",
+  DAYTIME_PHONE_EXT_4: "form1[0].Section11-4[0].TextField11[1]",
+  DAYTIME_PHONE_INTL_4: "form1[0].Section11-4[0].#field[10]",
+  MOBILE_PHONE_4: "form1[0].Section11-4[0].p3-t68[2]",
+  MOBILE_PHONE_EXT_4: "form1[0].Section11-4[0].TextField11[2]",
+  MOBILE_PHONE_INTL_4: "form1[0].Section11-4[0].#field[12]",
+
+  // Entry 4 - Contact availability
+  DONT_KNOW_CONTACT_4: "form1[0].Section11-4[0].#field[5]",
+  EMAIL_4: "form1[0].Section11-4[0].p3-t68[3]",
+
 } as const;
 
 // ============================================================================
@@ -852,6 +1104,9 @@ export const createDefaultResidenceEntry = (index: number): ResidenceEntry => {
 /**
  * Creates a default Section 11 data structure using DRY approach with sections-references
  * This eliminates hardcoded values and uses the single source of truth
+ *
+ * Note: Section 11 supports up to 4 residence entries, but we start with just 1
+ * Additional entries can be added via addResidenceEntry()
  */
 export const createDefaultSection11 = (): Section11 => {
   // Validate field count against sections-references

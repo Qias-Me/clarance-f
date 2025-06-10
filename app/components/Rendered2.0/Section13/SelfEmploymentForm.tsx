@@ -41,16 +41,41 @@ export const SelfEmploymentForm: React.FC<SelfEmploymentFormProps> = ({
   const getFieldValue = useCallback((fieldPath: string) => {
     const keys = fieldPath.split('.');
     let value = localFormData[fieldPath];
-    
+
     if (value === undefined) {
       // Get from entry data
       let current: any = entry;
       for (const key of keys) {
         current = current?.[key];
       }
-      value = current?.value || current || '';
+
+      // Handle Field<T> objects properly
+      if (current && typeof current === 'object') {
+        // If it's a Field<T> object with a value property, extract the value
+        if ('value' in current) {
+          value = current.value;
+        }
+        // If it's an object without a value property, it might be malformed data
+        else if (typeof current === 'object' && !Array.isArray(current)) {
+          console.warn(`Field ${fieldPath} is an object without a value property:`, current);
+          value = '';
+        }
+        // Otherwise use the current value
+        else {
+          value = current;
+        }
+      } else {
+        // For primitive values, use as-is
+        value = current || '';
+      }
     }
-    
+
+    // Ensure we never return an object to the input field
+    if (typeof value === 'object' && value !== null) {
+      console.warn(`Field ${fieldPath} is still an object after processing:`, value);
+      return '';
+    }
+
     return value;
   }, [localFormData, entry]);
 

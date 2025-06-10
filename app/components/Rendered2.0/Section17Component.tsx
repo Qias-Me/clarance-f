@@ -9,11 +9,16 @@
 import React, { useEffect, useState } from 'react';
 import { useSection17 } from '~/state/contexts/sections2.0/section17';
 import { useSF86Form } from '~/state/contexts/SF86FormContext';
-import type { CurrentSpouseEntry, FormerSpouseEntry, CohabitantEntry } from '../../../api/interfaces/sections2.0/section17';
+import type {
+  Section17_1_CurrentSpouse,
+  Section17_1_2_FormerSpouse,
+  Section17_3_Cohabitant
+} from '../../../api/interfaces/sections2.0/section17';
 import {
   MARITAL_STATUS_OPTIONS,
   YES_NO_OPTIONS,
-  DOCUMENT_TYPE_OPTIONS
+  DOCUMENT_TYPE_OPTIONS,
+  COUNTRY_OPTIONS
 } from '../../../api/interfaces/sections2.0/section17';
 
 // Additional options not in the simplified interface
@@ -41,18 +46,15 @@ export const Section17Component: React.FC<Section17ComponentProps> = ({
   onValidationChange,
   onNext
 }) => {
-  // Section 17 Context
+  // Section 17 Context - UPDATED for new 6-subsection structure
   const {
     section17Data,
     updateCurrentSpouse,
-    addCurrentSpouse,
-    removeCurrentSpouse,
     updateFormerSpouse,
-    addFormerSpouse,
-    removeFormerSpouse,
+    updateAdditionalFormerSpouse,
+    updateFormerSpouseContinuation,
     updateCohabitant,
-    addCohabitant,
-    removeCohabitant,
+    updateCohabitantContinuation,
     validateSection,
     resetSection,
     isDirty,
@@ -62,9 +64,9 @@ export const Section17Component: React.FC<Section17ComponentProps> = ({
   // SF86 Form Context for data persistence
   const sf86Form = useSF86Form();
 
-  // Component state
+  // Component state - UPDATED for 6 subsections
   const [isValid, setIsValid] = useState(false);
-  const [activeTab, setActiveTab] = useState<'current' | 'former' | 'cohabitant'>('current');
+  const [activeTab, setActiveTab] = useState<'current' | 'former' | 'additional' | 'continuation' | 'cohabitant' | 'cohabitantContinuation'>('current');
   const [showValidationErrors, setShowValidationErrors] = useState(false);
 
   // Handle validation on component mount and when data changes
@@ -112,257 +114,25 @@ export const Section17Component: React.FC<Section17ComponentProps> = ({
     return errors[fieldPath] || '';
   };
 
-  // Current Spouse Form Component
-  const CurrentSpouseForm: React.FC<{ entry: CurrentSpouseEntry; index: number }> = ({ entry, index }) => (
+  // Current Spouse Form Component - UPDATED for new structure
+  const CurrentSpouseForm: React.FC<{ entry: Section17_1_CurrentSpouse }> = ({ entry }) => (
     <div className="bg-gray-50 p-6 rounded-lg mb-6">
       <h4 className="font-semibold text-lg mb-4">Current Spouse/Partner Information</h4>
 
-      {/* Marital Status */}
+      {/* Has Spouse/Partner - Primary Question */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-2">
-          Current Marital Status <span className="text-red-500">*</span>
-        </label>
-        <select
-          value={getFieldValue(entry, 'maritalStatus')}
-          onChange={(e) => updateCurrentSpouse(`maritalStatus.value`, e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-          required
-        >
-          <option value="">Select marital status</option>
-          {MARITAL_STATUS_OPTIONS.map(option => (
-            <option key={option} value={option}>{option}</option>
-          ))}
-        </select>
-        {hasFieldError('maritalStatus') && (
-          <p className="mt-1 text-sm text-red-600">{getFieldError('maritalStatus')}</p>
-        )}
-      </div>
-
-      {/* Show spouse fields only if married, separated, etc. */}
-      {entry.maritalStatus.value && entry.maritalStatus.value !== 'Never married' && (
-        <>
-          {/* Has Spouse/Partner */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Do you have a spouse or legally recognized civil union/domestic partner?
-            </label>
-            <div className="flex space-x-4">
-              {YES_NO_OPTIONS.map(option => (
-                <label key={option} className="flex items-center">
-                  <input
-                    type="radio"
-                    name={`hasSpousePartner_${index}`}
-                    value={option}
-                    checked={getFieldValue(entry, 'hasSpousePartner') === option}
-                    onChange={(e) => updateCurrentSpouse(`hasSpousePartner.value`, e.target.value)}
-                    className="mr-2"
-                  />
-                  {option}
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Show detailed spouse information if YES */}
-          {getFieldValue(entry, 'hasSpousePartner') === 'YES' && (
-            <>
-              {/* Full Name */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Last Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={getFieldValue(entry, 'fullName.lastName')}
-                    onChange={(e) => updateCurrentSpouse(`fullName.lastName.value`, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    First Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={getFieldValue(entry, 'fullName.firstName')}
-                    onChange={(e) => updateCurrentSpouse(`fullName.firstName.value`, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Middle Name
-                  </label>
-                  <input
-                    type="text"
-                    value={getFieldValue(entry, 'fullName.middleName')}
-                    onChange={(e) => updateCurrentSpouse(`fullName.middleName.value`, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Suffix
-                  </label>
-                  <input
-                    type="text"
-                    value={getFieldValue(entry, 'fullName.suffix')}
-                    onChange={(e) => updateCurrentSpouse(`fullName.suffix.value`, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                    placeholder="Jr., Sr., III, etc."
-                  />
-                </div>
-              </div>
-
-              {/* Date of Birth */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Birth Month <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={getFieldValue(entry, 'dateOfBirth.month')}
-                    onChange={(e) => updateCurrentSpouse(`dateOfBirth.month.value`, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                    required
-                  >
-                    <option value="">Month</option>
-                    {Array.from({length: 12}, (_, i) => (
-                      <option key={i+1} value={i+1}>{new Date(0, i).toLocaleString('default', { month: 'long' })}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Birth Year <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min="1900"
-                    max={new Date().getFullYear()}
-                    value={getFieldValue(entry, 'dateOfBirth.year')}
-                    onChange={(e) => updateCurrentSpouse(`dateOfBirth.year.value`, e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                    placeholder="YYYY"
-                    required
-                  />
-                </div>
-                <div className="flex items-center">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={getFieldValue(entry, 'dateOfBirth.estimated') === 'true'}
-                      onChange={(e) => updateCurrentSpouse(`dateOfBirth.estimated.value`, e.target.checked)}
-                      className="mr-2"
-                    />
-                    Estimated
-                  </label>
-                </div>
-              </div>
-
-              {/* Citizenship */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Citizenship <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={getFieldValue(entry, 'citizenship')}
-                  onChange={(e) => updateCurrentSpouse(`citizenship.value`, e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                  required
-                >
-                  <option value="">Select citizenship</option>
-                  {CITIZENSHIP_OPTIONS.map(option => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* SSN */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Social Security Number
-                </label>
-                <input
-                  type="text"
-                  value={getFieldValue(entry, 'ssn')}
-                  onChange={(e) => updateCurrentSpouse(`ssn.value`, e.target.value.replace(/\D/g, ''))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                  placeholder="123-45-6789"
-                  maxLength={9}
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  Enter 9 digits only (no dashes or spaces)
-                </p>
-              </div>
-
-              {/* Marriage Date (if married) */}
-              {entry.maritalStatus.value === 'Married' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Marriage Date <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={getFieldValue(entry, 'marriageDate')}
-                      onChange={(e) => updateCurrentSpouse(`marriageDate.value`, e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
-                      placeholder="MM/DD/YYYY"
-                      required
-                    />
-                  </div>
-                  <div className="flex items-center">
-                    <label className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={getFieldValue(entry, 'marriageEstimated') === 'true'}
-                        onChange={(e) => updateCurrentSpouse(`marriageEstimated.value`, e.target.checked)}
-                        className="mr-2"
-                      />
-                      Estimated
-                    </label>
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </>
-      )}
-    </div>
-  );
-
-  // Former Spouse Form Component (simplified for brevity)
-  const FormerSpouseForm: React.FC<{ entry: FormerSpouseEntry; index: number }> = ({ entry, index }) => (
-    <div className="bg-gray-50 p-6 rounded-lg mb-6">
-      <div className="flex justify-between items-center mb-4">
-        <h4 className="font-semibold text-lg">Former Spouse #{index + 1}</h4>
-        <button
-          type="button"
-          onClick={() => removeFormerSpouse(index)}
-          className="text-red-600 hover:text-red-800 font-medium"
-        >
-          Remove
-        </button>
-      </div>
-
-      {/* Has Former Spouse */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Have you been married before?
+          Do you have a spouse or legally recognized civil union/domestic partner? <span className="text-red-500">*</span>
         </label>
         <div className="flex space-x-4">
           {YES_NO_OPTIONS.map(option => (
             <label key={option} className="flex items-center">
               <input
                 type="radio"
-                name={`hasFormerSpouse_${index}`}
+                name="hasSpousePartner"
                 value={option}
-                checked={getFieldValue(entry, 'hasFormerSpouse') === option}
-                onChange={(e) => updateFormerSpouse(index, `hasFormerSpouse.value`, e.target.value)}
+                checked={entry.hasSpousePartner.value === option}
+                onChange={(e) => updateCurrentSpouse(`hasSpousePartner.value`, e.target.value)}
                 className="mr-2"
               />
               {option}
@@ -371,8 +141,74 @@ export const Section17Component: React.FC<Section17ComponentProps> = ({
         </div>
       </div>
 
-      {/* Show former spouse details if YES */}
-      {getFieldValue(entry, 'hasFormerSpouse') === 'YES' && (
+      {/* Marriage Type Questions */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Are you married?
+          </label>
+          <div className="flex space-x-4">
+            {YES_NO_OPTIONS.map(option => (
+              <label key={option} className="flex items-center">
+                <input
+                  type="radio"
+                  name="isMarried"
+                  value={option}
+                  checked={entry.isMarried.value === option}
+                  onChange={(e) => updateCurrentSpouse(`isMarried.value`, e.target.value)}
+                  className="mr-2"
+                />
+                {option}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Are you in a civil union?
+          </label>
+          <div className="flex space-x-4">
+            {YES_NO_OPTIONS.map(option => (
+              <label key={option} className="flex items-center">
+                <input
+                  type="radio"
+                  name="isCivilUnion"
+                  value={option}
+                  checked={entry.isCivilUnion.value === option}
+                  onChange={(e) => updateCurrentSpouse(`isCivilUnion.value`, e.target.value)}
+                  className="mr-2"
+                />
+                {option}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Other relationship?
+          </label>
+          <div className="flex space-x-4">
+            {YES_NO_OPTIONS.map(option => (
+              <label key={option} className="flex items-center">
+                <input
+                  type="radio"
+                  name="hasOtherRelationship"
+                  value={option}
+                  checked={entry.hasOtherRelationship.value === option}
+                  onChange={(e) => updateCurrentSpouse(`hasOtherRelationship.value`, e.target.value)}
+                  className="mr-2"
+                />
+                {option}
+              </label>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Show detailed spouse information if YES */}
+      {entry.hasSpousePartner.value === 'YES' && (
         <>
           {/* Full Name */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
@@ -382,8 +218,8 @@ export const Section17Component: React.FC<Section17ComponentProps> = ({
               </label>
               <input
                 type="text"
-                value={getFieldValue(entry, 'fullName.lastName')}
-                onChange={(e) => updateFormerSpouse(index, `fullName.lastName.value`, e.target.value)}
+                value={entry.fullName.lastName.value || ''}
+                onChange={(e) => updateCurrentSpouse(`fullName.lastName.value`, e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                 required
               />
@@ -394,33 +230,185 @@ export const Section17Component: React.FC<Section17ComponentProps> = ({
               </label>
               <input
                 type="text"
-                value={getFieldValue(entry, 'fullName.firstName')}
-                onChange={(e) => updateFormerSpouse(index, `fullName.firstName.value`, e.target.value)}
+                value={entry.fullName.firstName.value || ''}
+                onChange={(e) => updateCurrentSpouse(`fullName.firstName.value`, e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                 required
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Middle Name
+              </label>
+              <input
+                type="text"
+                value={entry.fullName.middleName.value || ''}
+                onChange={(e) => updateCurrentSpouse(`fullName.middleName.value`, e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Suffix
+              </label>
+              <select
+                value={entry.fullName.suffix.value || ''}
+                onChange={(e) => updateCurrentSpouse(`fullName.suffix.value`, e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select suffix</option>
+                {entry.fullName.suffix.options?.map(option => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          {/* End of Marriage */}
+          {/* Date of Birth */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Date of Birth <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                value={entry.dateOfBirth.value.value || ''}
+                onChange={(e) => updateCurrentSpouse(`dateOfBirth.value.value`, e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                required
+              />
+            </div>
+            <div className="flex items-center">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={entry.dateOfBirth.estimated.value || false}
+                  onChange={(e) => updateCurrentSpouse(`dateOfBirth.estimated.value`, e.target.checked)}
+                  className="mr-2"
+                />
+                Estimated
+              </label>
+            </div>
+          </div>
+
+          {/* Place of Birth */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Birth City
+              </label>
+              <input
+                type="text"
+                value={entry.placeOfBirth.city.value || ''}
+                onChange={(e) => updateCurrentSpouse(`placeOfBirth.city.value`, e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Birth State
+              </label>
+              <input
+                type="text"
+                value={entry.placeOfBirth.state.value || ''}
+                onChange={(e) => updateCurrentSpouse(`placeOfBirth.state.value`, e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Birth Country <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={entry.placeOfBirth.country.value || ''}
+                onChange={(e) => updateCurrentSpouse(`placeOfBirth.country.value`, e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                required
+              >
+                <option value="">Select country</option>
+                {COUNTRY_OPTIONS.map(option => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Citizenship */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Reason for end of marriage <span className="text-red-500">*</span>
+              Citizenship <span className="text-red-500">*</span>
             </label>
             <select
-              value={getFieldValue(entry, 'reasonForEnd')}
-              onChange={(e) => updateFormerSpouse(index, `reasonForEnd.value`, e.target.value)}
+              value={entry.citizenship.value || ''}
+              onChange={(e) => updateCurrentSpouse(`citizenship.value`, e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
               required
             >
-              <option value="">Select reason</option>
-              {END_OF_MARRIAGE_OPTIONS.map(option => (
+              <option value="">Select citizenship</option>
+              {COUNTRY_OPTIONS.map(option => (
                 <option key={option} value={option}>{option}</option>
               ))}
             </select>
           </div>
+
+          {/* SSN */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Social Security Number
+            </label>
+            <input
+              type="text"
+              value={entry.ssn.value || ''}
+              onChange={(e) => updateCurrentSpouse(`ssn.value`, e.target.value.replace(/\D/g, ''))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              placeholder="123-45-6789"
+              maxLength={9}
+            />
+            <p className="mt-1 text-xs text-gray-500">
+              Enter 9 digits only (no dashes or spaces)
+            </p>
+          </div>
+
+          {/* Marriage Date */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Marriage Date
+              </label>
+              <input
+                type="date"
+                value={entry.marriageDate.value.value || ''}
+                onChange={(e) => updateCurrentSpouse(`marriageDate.value.value`, e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <div className="flex items-center">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={entry.marriageDate.estimated.value || false}
+                  onChange={(e) => updateCurrentSpouse(`marriageDate.estimated.value`, e.target.checked)}
+                  className="mr-2"
+                />
+                Estimated
+              </label>
+            </div>
+          </div>
         </>
       )}
+    </div>
+  );
+
+  // Simplified placeholder for other subsections
+  const PlaceholderForm: React.FC<{ title: string; description: string }> = ({ title, description }) => (
+    <div className="bg-gray-50 p-6 rounded-lg mb-6">
+      <h4 className="font-semibold text-lg mb-2">{title}</h4>
+      <p className="text-gray-600 mb-4">{description}</p>
+      <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+        <p className="text-blue-800 text-sm">
+          This subsection is part of the new 6-subsection architecture and will be implemented in the next phase.
+        </p>
+      </div>
     </div>
   );
 
@@ -436,128 +424,123 @@ export const Section17Component: React.FC<Section17ComponentProps> = ({
         </p>
       </div>
 
-      {/* Tab Navigation */}
+      {/* Tab Navigation - UPDATED for 6 subsections */}
       <div className="border-b border-gray-200 mb-6">
-        <nav className="flex space-x-8">
+        <nav className="flex space-x-4 overflow-x-auto">
           {[
-            { id: 'current', label: 'Current Status', count: section17Data.section17.currentSpouse.length },
-            { id: 'former', label: 'Former Spouses', count: section17Data.section17.formerSpouses.length },
-            { id: 'cohabitant', label: 'Cohabitants', count: section17Data.section17.cohabitants.length }
+            { id: 'current', label: 'Current Spouse', page: 39 },
+            { id: 'former', label: 'Former Spouse', page: 40 },
+            { id: 'additional', label: 'Additional Former', page: 41 },
+            { id: 'continuation', label: 'Former Continuation', page: 42 },
+            { id: 'cohabitant', label: 'Cohabitant', page: 43 },
+            { id: 'cohabitantContinuation', label: 'Cohabitant Cont.', page: 44 }
           ].map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`pb-2 px-1 border-b-2 font-medium text-sm ${
+              className={`pb-2 px-3 border-b-2 font-medium text-sm whitespace-nowrap ${
                 activeTab === tab.id
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              {tab.label} {tab.count > 0 && `(${tab.count})`}
+              {tab.label} <span className="text-xs text-gray-400">(p{tab.page})</span>
             </button>
           ))}
         </nav>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Current Spouse Tab */}
+        {/* Current Spouse Tab - Section17_1[0] */}
         {activeTab === 'current' && (
           <div>
             <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-2">Current Marital Status</h3>
+              <h3 className="text-lg font-semibold mb-2">Current Spouse/Partner (Page 39)</h3>
               <p className="text-sm text-gray-600">
-                Provide information about your current marital status and spouse/partner if applicable.
+                Section17_1[0] - Provide information about your current marital status and spouse/partner.
               </p>
             </div>
-
-            {section17Data.section17.currentSpouse.map((entry, index) => (
-              <CurrentSpouseForm key={index} entry={entry} index={index} />
-            ))}
-
-            {section17Data.section17.currentSpouse.length === 0 && (
-              <button
-                type="button"
-                onClick={addCurrentSpouse}
-                className="w-full py-3 px-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-700"
-              >
-                + Add Current Marital Status Information
-              </button>
-            )}
+            <CurrentSpouseForm entry={section17Data.section17.currentSpouse} />
           </div>
         )}
 
-        {/* Former Spouses Tab */}
+        {/* Former Spouse Tab - Section17_1_2[0] */}
         {activeTab === 'former' && (
           <div>
             <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-2">Former Spouses</h3>
+              <h3 className="text-lg font-semibold mb-2">Former Spouse (Page 40)</h3>
               <p className="text-sm text-gray-600">
-                List all former spouses, including information about marriages that ended in divorce, annulment, or death.
+                Section17_1_2[0] - Information about former spouses.
               </p>
             </div>
-
-            {section17Data.section17.formerSpouses.map((entry, index: number) => (
-              <FormerSpouseForm key={index} entry={entry} index={index} />
-            ))}
-
-            <button
-              type="button"
-              onClick={addFormerSpouse}
-              className="w-full py-3 px-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-700"
-            >
-              + Add Former Spouse
-            </button>
+            <PlaceholderForm
+              title="Former Spouse Information"
+              description="This subsection handles former spouse details including marriage and divorce information."
+            />
           </div>
         )}
 
-        {/* Cohabitants Tab */}
+        {/* Additional Former Spouse Tab - Section17_2[0] */}
+        {activeTab === 'additional' && (
+          <div>
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-2">Additional Former Spouse (Page 41)</h3>
+              <p className="text-sm text-gray-600">
+                Section17_2[0] - Additional former spouse information.
+              </p>
+            </div>
+            <PlaceholderForm
+              title="Additional Former Spouse"
+              description="This subsection handles additional former spouse entries."
+            />
+          </div>
+        )}
+
+        {/* Former Spouse Continuation Tab - Section17_2_2[0] */}
+        {activeTab === 'continuation' && (
+          <div>
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-2">Former Spouse Continuation (Page 42)</h3>
+              <p className="text-sm text-gray-600">
+                Section17_2_2[0] - Continuation of former spouse information.
+              </p>
+            </div>
+            <PlaceholderForm
+              title="Former Spouse Continuation"
+              description="This subsection provides additional space for former spouse information."
+            />
+          </div>
+        )}
+
+        {/* Cohabitant Tab - Section17_3[0] */}
         {activeTab === 'cohabitant' && (
           <div>
             <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-2">Cohabitants</h3>
+              <h3 className="text-lg font-semibold mb-2">Cohabitant (Page 43)</h3>
               <p className="text-sm text-gray-600">
-                List any persons with whom you have cohabited in a relationship similar to marriage.
+                Section17_3[0] - Cohabitation relationship information.
               </p>
             </div>
+            <PlaceholderForm
+              title="Cohabitant Information"
+              description="This subsection handles cohabitation relationship details."
+            />
+          </div>
+        )}
 
-            {section17Data.section17.cohabitants.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-500 mb-4">No cohabitants added yet.</p>
-                <button
-                  type="button"
-                  onClick={addCohabitant}
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                >
-                  + Add Cohabitant
-                </button>
-              </div>
-            ) : (
-              <>
-                {section17Data.section17.cohabitants.map((entry, index: number) => (
-                  <div key={index} className="bg-gray-50 p-6 rounded-lg mb-6">
-                    <div className="flex justify-between items-center mb-4">
-                      <h4 className="font-semibold text-lg">Cohabitant #{index + 1}</h4>
-                      <button
-                        type="button"
-                        onClick={() => removeCohabitant(index)}
-                        className="text-red-600 hover:text-red-800 font-medium"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                    {/* Simplified cohabitant form for brevity */}
-                    <p className="text-sm text-gray-600">Cohabitant form fields would go here...</p>
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={addCohabitant}
-                  className="w-full py-3 px-4 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-gray-400 hover:text-gray-700"
-                >
-                  + Add Another Cohabitant
-                </button>
-              </>
-            )}
+        {/* Cohabitant Continuation Tab - Section17_3_2[0] */}
+        {activeTab === 'cohabitantContinuation' && (
+          <div>
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-2">Cohabitant Continuation (Page 44)</h3>
+              <p className="text-sm text-gray-600">
+                Section17_3_2[0] - Continuation of cohabitant information.
+              </p>
+            </div>
+            <PlaceholderForm
+              title="Cohabitant Continuation"
+              description="This subsection provides additional space for cohabitant information."
+            />
           </div>
         )}
 

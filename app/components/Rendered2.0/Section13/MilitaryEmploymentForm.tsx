@@ -49,16 +49,41 @@ export const MilitaryEmploymentForm: React.FC<MilitaryEmploymentFormProps> = ({
   const getFieldValue = useCallback((fieldPath: string) => {
     const keys = fieldPath.split('.');
     let value = localFormData[fieldPath];
-    
+
     if (value === undefined) {
       // Get from entry data
       let current: any = entry;
       for (const key of keys) {
         current = current?.[key];
       }
-      value = current?.value || current || '';
+
+      // Handle Field<T> objects properly
+      if (current && typeof current === 'object') {
+        // If it's a Field<T> object with a value property, extract the value
+        if ('value' in current) {
+          value = current.value;
+        }
+        // If it's an object without a value property, it might be malformed data
+        else if (typeof current === 'object' && !Array.isArray(current)) {
+          console.warn(`Field ${fieldPath} is an object without a value property:`, current);
+          value = '';
+        }
+        // Otherwise use the current value
+        else {
+          value = current;
+        }
+      } else {
+        // For primitive values, use as-is
+        value = current || '';
+      }
     }
-    
+
+    // Ensure we never return an object to the input field
+    if (typeof value === 'object' && value !== null) {
+      console.warn(`Field ${fieldPath} is still an object after processing:`, value);
+      return '';
+    }
+
     return value;
   }, [localFormData, entry]);
 
@@ -68,8 +93,42 @@ export const MilitaryEmploymentForm: React.FC<MilitaryEmploymentFormProps> = ({
       ...prev,
       [fieldPath]: value
     }));
+
+    // Also update the entry data structure to maintain consistency
+    const keys = fieldPath.split('.');
+    const updatedEntry = { ...entry };
+    let current: any = updatedEntry;
+
+    // Navigate to the parent object
+    for (let i = 0; i < keys.length - 1; i++) {
+      if (!current[keys[i]]) {
+        current[keys[i]] = {};
+      }
+      current = current[keys[i]];
+    }
+
+    // Update the final field
+    const finalKey = keys[keys.length - 1];
+    if (current[finalKey] && typeof current[finalKey] === 'object' && 'value' in current[finalKey]) {
+      // Update the value property of the Field<T> object
+      current[finalKey] = {
+        ...current[finalKey],
+        value: value
+      };
+    } else {
+      // Create a new field structure if it doesn't exist
+      current[finalKey] = {
+        id: fieldPath,
+        name: fieldPath,
+        type: 'PDFTextField',
+        label: `Field ${fieldPath}`,
+        value: value,
+        rect: { x: 0, y: 0, width: 0, height: 0 }
+      };
+    }
+
     onFieldUpdate(fieldPath, value);
-  }, [onFieldUpdate]);
+  }, [entry, onFieldUpdate]);
 
   return (
     <div className="space-y-6">
