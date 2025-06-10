@@ -7,7 +7,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { useSection18 } from '~/state/contexts/sections2.0/Section18';
+import { useSection18 } from '~/state/contexts/sections2.0/section18';
 import { useSF86Form } from '~/state/contexts/SF86FormContext';
 import type {
   RelativeEntry,

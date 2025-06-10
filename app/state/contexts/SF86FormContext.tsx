@@ -47,7 +47,7 @@ import { Section28Provider } from "./sections2.0/section28";
 import { Section29Provider } from "./sections2.0/section29";
 import { Section30Provider } from "./sections2.0/section30";
 import { Section16Provider } from "./sections2.0/section16";
-import { Section18Provider } from "./sections2.0/Section18";
+import { Section18Provider } from "./sections2.0/section18";
 import { Section19Provider } from "./sections2.0/section19";
 import { Section20Provider } from "./sections2.0/section20";
 import { Section21Provider } from "./sections2.0/section21";
