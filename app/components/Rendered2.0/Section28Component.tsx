@@ -62,6 +62,9 @@ const Section28Component: React.FC<Section28ComponentProps> = memo(({
         // Save the form data to persistence layer
         await sf86Form.saveForm();
 
+        // Mark section as complete after successful save
+        sf86Form.markSectionComplete('section28');
+
         console.log('✅ Section 28 data saved successfully:', sectionData);
 
         // Proceed to next section if callback provided

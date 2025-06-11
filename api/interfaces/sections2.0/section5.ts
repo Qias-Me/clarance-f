@@ -6,6 +6,7 @@
  */
 
 import type { Field, FieldWithOptions } from '../formDefinition2.0';
+import { SUFFIX_OPTIONS } from './base';
 import {
   generateFieldRect
 } from '../../../app/state/contexts/sections2.0/section5-field-generator';
@@ -194,12 +195,7 @@ export const SECTION5_FIELD_NAMES = {
 // DROPDOWN OPTIONS
 // ============================================================================
 
-/**
- * Suffix options for dropdown
- */
-export const SUFFIX_OPTIONS = [
-  "Jr", "Sr", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "Other"
-] as const;
+// SUFFIX_OPTIONS imported from base.ts to avoid duplication
 
 // ============================================================================
 // UTILITY TYPES

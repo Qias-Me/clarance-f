@@ -61,6 +61,9 @@ export const Section27Component: React.FC<Section27ComponentProps> = ({
         // Save the form data to persistence layer
         await sf86Form.saveForm();
 
+        // Mark section as complete after successful save
+        sf86Form.markSectionComplete('section27');
+
         console.log('✅ Section 27 data saved successfully:', section27Data);
 
         // Proceed to next section if callback provided
@@ -290,18 +293,7 @@ export const Section27Component: React.FC<Section27ComponentProps> = ({
         </div>
 
         {/* Validation Status */}
-        <div className="mt-4" data-testid="validation-status">
-          <div className="text-sm text-gray-600">
-            Section Status: <span className={`font-medium ${isDirty ? 'text-orange-500' : 'text-green-500'}`}>
-              {isDirty ? 'Modified, needs validation' : 'Ready for input'}
-            </span>
-          </div>
-          <div className="text-sm text-gray-600">
-            Validation: <span className={`font-medium ${isValid ? 'text-green-500' : 'text-red-500'}`}>
-              {isValid ? 'Valid' : 'Has errors'}
-            </span>
-          </div>
-        </div>
+     
       </form>
 
       {/* Debug Information (Development Only) */}

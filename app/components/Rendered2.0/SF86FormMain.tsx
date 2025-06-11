@@ -17,7 +17,7 @@ interface SF86FormMainProps {
 }
 
 const SF86FormMain: React.FC<SF86FormMainProps> = ({ className = "" }) => {
-  const { generatePdf, validateForm, saveForm, formData, exportForm, downloadJsonData } =
+  const { generatePdf, validateForm, saveForm, formData, exportForm, downloadJsonData, completedSections } =
     useSF86Form();
   const [currentSection, setCurrentSection] = useState<string>("section1");
   const [sectionValidation, setSectionValidation] = useState<
@@ -308,13 +308,13 @@ const SF86FormMain: React.FC<SF86FormMainProps> = ({ className = "" }) => {
               <div className="px-6 py-3 bg-gray-50 border-b border-gray-100">
                 <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
                   <span>Progress</span>
-                  <span>{Math.round((Object.values(sectionValidation).filter(Boolean).length / availableSections.length) * 100)}%</span>
+                  <span>{Math.round((completedSections.length / availableSections.length) * 100)}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
+                  <div
                     className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full transition-all duration-300 ease-out"
                     style={{
-                      width: `${(Object.values(sectionValidation).filter(Boolean).length / availableSections.length) * 100}%`
+                      width: `${(completedSections.length / availableSections.length) * 100}%`
                     }}
                   ></div>
                 </div>
@@ -325,7 +325,7 @@ const SF86FormMain: React.FC<SF86FormMainProps> = ({ className = "" }) => {
                 <div className="space-y-1">
                   {availableSections.map((section, index) => {
                     const isActive = currentSection === section.id;
-                    const isCompleted = sectionValidation[section.id];
+                    const isCompleted = completedSections.includes(section.id);
                     
                     return (
                       <button
@@ -468,7 +468,7 @@ const SF86FormMain: React.FC<SF86FormMainProps> = ({ className = "" }) => {
                   
                   <div className="bg-white rounded-lg p-3 text-center">
                     <div className="text-lg font-bold text-green-600">
-                      {Object.values(sectionValidation).filter(Boolean).length}
+                      {completedSections.length}
                     </div>
                     <div className="text-xs text-gray-600">Completed</div>
                   </div>
@@ -482,7 +482,7 @@ const SF86FormMain: React.FC<SF86FormMainProps> = ({ className = "" }) => {
                   <div className="flex items-center justify-between text-xs text-gray-600">
                     <span>Completion Rate</span>
                     <span className="font-medium text-gray-800">
-                      {Math.round((Object.values(sectionValidation).filter(Boolean).length / availableSections.length) * 100)}%
+                      {Math.round((completedSections.length / availableSections.length) * 100)}%
                     </span>
                   </div>
                 </div>

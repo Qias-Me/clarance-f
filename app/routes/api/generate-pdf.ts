@@ -6,23 +6,28 @@
  * The client handles all form data application locally.
  */
 
+const LOCAL_SF86_PDF_URL = '/clean.pdf'; // Using clean.pdf as it exists in public directory
 
-const SF86_PDF_URL = 'https://www.opm.gov/forms/pdf_fill/sf86.pdf';
-
-export async function loader() {
+export async function loader({ request }: { request: Request }) {
   try {
-    console.log("Fetching base SF-86 PDF template...");
+    console.log("Loading local SF-86 PDF template...");
 
-    // Fetch the base PDF from the government website
-    const response = await fetch(SF86_PDF_URL);
+    // Get the origin from the request to construct the full URL
+    const url = new URL(request.url);
+    const fullPdfUrl = new URL(LOCAL_SF86_PDF_URL, url.origin).href;
+
+    console.log(`Fetching PDF from: ${fullPdfUrl}`);
+
+    // Fetch the local PDF file from the public directory
+    const response = await fetch(fullPdfUrl);
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch PDF: ${response.status} ${response.statusText}`);
+      throw new Error(`Failed to load local PDF: ${response.status} ${response.statusText}`);
     }
 
     const pdfBytes = await response.arrayBuffer();
 
-    console.log(`Successfully fetched SF-86 PDF template. Size: ${pdfBytes.byteLength} bytes`);
+    console.log(`Successfully loaded local SF-86 PDF template. Size: ${pdfBytes.byteLength} bytes`);
 
     // Return the base PDF template
     return new Response(pdfBytes, {
@@ -35,12 +40,12 @@ export async function loader() {
       },
     });
   } catch (error) {
-    console.error("Error fetching PDF template:", error);
+    console.error("Error loading local PDF template:", error);
 
     return new Response(
       JSON.stringify({
         success: false,
-        error: `Failed to fetch PDF template: ${
+        error: `Failed to load local PDF template: ${
           error instanceof Error ? error.message : String(error)
         }`,
       }),

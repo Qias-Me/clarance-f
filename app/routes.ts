@@ -12,17 +12,7 @@ export default [
       }
     ]
   },
-  {
-    path: "test",
-    file: "routes/test.tsx",
-    children: [
-      {
-        index: true,
-        file: "routes/test._index.tsx"
-      }
-    ]
-  },
-  route("test/section5", "routes/test.section5.tsx"),
+
   // API Routes for PDF operations
   route("api/pdf-proxy", "routes/api/pdf-proxy.ts"),
   route("api/generate-pdf", "routes/api/generate-pdf.ts"),

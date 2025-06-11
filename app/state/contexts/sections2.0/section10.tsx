@@ -95,21 +95,21 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (validation.coverage >= 98) {
       // console.log(`✅ Section10: All ${validation.totalFields} PDF form fields are properly mapped`);
     } else {
-      console.warn(`⚠️ Section10: ${validation.missingFields.length} fields are not mapped`);
+      // console.warn(`⚠️ Section10: ${validation.missingFields.length} fields are not mapped`);
       validation.missingFields.slice(0, 5).forEach(field => {
-        console.warn(`  - ${field}`);
+        // console.warn(`  - ${field}`);
       });
     }
 
     // Validate field generation
     const generationValid = validateFieldGeneration();
     if (generationValid) {
-      console.log('✅ Section10: Field generation system validated successfully');
+      // console.log('✅ Section10: Field generation system validated successfully');
     } else {
-      console.error('❌ Section10: Field generation system validation failed');
+      // console.error('❌ Section10: Field generation system validation failed');
     }
 
-    console.log('🔧 Section10: Section initialization complete');
+    // console.log('🔧 Section10: Section initialization complete');
   }, []);
 
   // ============================================================================

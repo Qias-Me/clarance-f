@@ -33,7 +33,7 @@ import type {
   ChangeSet,
   BaseSectionContext
 } from '../shared/base-interfaces';
-import { useSectionIntegration } from '../shared/section-integration';
+import { useSection86FormIntegration } from '../shared/section-context-integration';
 import DynamicService from '../../../../api/service/dynamicService';
 
 // ============================================================================
@@ -86,6 +86,7 @@ interface Section5ContextType {
   hasUnsavedChanges: () => boolean;
   getFieldValue: (fieldPath: string, index?: number) => any;
   setFieldValue: (fieldPath: string, value: any, index?: number) => void;
+  setValidationErrors: (errors: Record<string, string>) => void;
 }
 
 // ============================================================================
@@ -118,6 +119,15 @@ export const Section5Provider: React.FC<Section5ProviderProps> = ({ children }) 
 
   const validateSection = useCallback((): ValidationResult => {
     const validationErrors: ValidationError[] = [];
+
+    // Skip validation if data is not loaded yet
+    if (!section5Data?.section5?.hasOtherNames) {
+      return {
+        isValid: true, // Consider unloaded data as valid to prevent blocking
+        errors: [],
+        warnings: []
+      };
+    }
 
     // Validate has other names flag
     if (section5Data.section5.hasOtherNames.value === "YES") {
@@ -217,7 +227,7 @@ export const Section5Provider: React.FC<Section5ProviderProps> = ({ children }) 
   const flattenSection5Fields = useCallback((): Record<string, any> => {
     const flatFields: Record<string, any> = {};
 
-    console.log('🔄 Section5: Flattening fields for PDF generation');
+    // console.log('🔄 Section5: Flattening fields for PDF generation');
 
     // Helper function to add field with proper validation
     const addField = (field: any, logicalPath: string, debugInfo?: string) => {
@@ -225,17 +235,17 @@ export const Section5Provider: React.FC<Section5ProviderProps> = ({ children }) 
         // Ensure the field has a valid ID
         if (field.id && field.id !== '0000') {
           flatFields[field.id] = field;
-          console.log(`✅ Section5: Added field ${field.id} (${logicalPath}) = "${field.value}"${debugInfo ? ` - ${debugInfo}` : ''}`);
+          // console.log(`✅ Section5: Added field ${field.id} (${logicalPath}) = "${field.value}"${debugInfo ? ` - ${debugInfo}` : ''}`);
         } else {
-          console.warn(`⚠️ Section5: Skipping field with invalid ID: ${field.id} (${logicalPath})`);
+          // console.warn(`⚠️ Section5: Skipping field with invalid ID: ${field.id} (${logicalPath})`);
         }
       } else {
-        console.warn(`⚠️ Section5: Invalid field structure for ${logicalPath}:`, field);
+        // console.warn(`⚠️ Section5: Invalid field structure for ${logicalPath}:`, field);
       }
     };
 
-    // Flatten main flag field (hasOtherNames)
-    if (section5Data.section5.hasOtherNames) {
+    // Flatten main flag field (hasOtherNames) with defensive programming
+    if (section5Data?.section5?.hasOtherNames) {
       addField(
         section5Data.section5.hasOtherNames,
         'section5.hasOtherNames',
@@ -243,9 +253,10 @@ export const Section5Provider: React.FC<Section5ProviderProps> = ({ children }) 
       );
     }
 
-    // Flatten all other name entries
-    section5Data.section5.otherNames.forEach((entry, entryIndex) => {
-      console.log(`🔄 Section5: Processing entry ${entryIndex}:`, entry);
+    // Flatten all other name entries with defensive programming
+    if (section5Data?.section5?.otherNames && Array.isArray(section5Data.section5.otherNames)) {
+      section5Data.section5.otherNames.forEach((entry, entryIndex) => {
+      // console.log(`🔄 Section5: Processing entry ${entryIndex}:`, entry);
 
       // Process each field in the entry (including estimate checkboxes and maiden name)
       const fieldTypes = ['lastName', 'firstName', 'middleName', 'suffix', 'from', 'fromEstimate', 'to', 'toEstimate', 'reasonChanged', 'present', 'isMaidenName'];
@@ -256,14 +267,15 @@ export const Section5Provider: React.FC<Section5ProviderProps> = ({ children }) 
           const logicalPath = `section5.otherNames.${entryIndex}.${fieldType}`;
           addField(field, logicalPath, `Entry ${entryIndex + 1} ${fieldType}`);
         } else {
-          console.warn(`⚠️ Section5: Missing field ${fieldType} in entry ${entryIndex}`);
+          // console.warn(`⚠️ Section5: Missing field ${fieldType} in entry ${entryIndex}`);
         }
       });
-    });
+      });
+    }
 
     const fieldCount = Object.keys(flatFields).length;
-    console.log(`✅ Section5: Flattened ${fieldCount} fields for PDF generation`);
-    console.log('📊 Section5: Field summary:', Object.keys(flatFields).map(id => `${id}: "${flatFields[id].value}"`));
+    // console.log(`✅ Section5: Flattened ${fieldCount} fields for PDF generation`);
+    // console.log('📊 Section5: Field summary:', Object.keys(flatFields).map(id => `${id}: "${flatFields[id].value}"`));
 
     return flatFields;
   }, [section5Data]);
@@ -286,18 +298,40 @@ export const Section5Provider: React.FC<Section5ProviderProps> = ({ children }) 
     setSection5Data(prevData => {
       const newData = cloneDeep(prevData);
 
-      if(value) {
-        newData.section5.hasOtherNames.value = "YES";
-      } else {
-        newData.section5.hasOtherNames.value = "NO";
-      }
+      // Handle different data structures - defensive programming
+      if (newData?.section5?.hasOtherNames) {
+        // Standard structure
+        if(value) {
+          newData.section5.hasOtherNames.value = "YES";
+        } else {
+          newData.section5.hasOtherNames.value = "NO";
+        }
 
-      // If setting to false, clear all entries
-      if (!value) {
-        newData.section5.otherNames = [];
+        // If setting to false, clear all entries
+        if (!value && newData.section5.otherNames) {
+          newData.section5.otherNames = [];
+        }
+      } else {
+        // Handle flattened structure or create new structure
+        if (!newData.section5) {
+          newData.section5 = createDefaultSection5Impl().section5;
+        }
+
+        if (!newData.section5.hasOtherNames) {
+          newData.section5.hasOtherNames = createDefaultSection5Impl().section5.hasOtherNames;
+        }
+
+        if(value) {
+          newData.section5.hasOtherNames.value = "YES";
+        } else {
+          newData.section5.hasOtherNames.value = "NO";
+        }
+
+        // If setting to false, clear all entries
+        if (!value) {
+          newData.section5.otherNames = [];
+        }
       }
-      // Note: We no longer automatically add an entry when setting to YES
-      // This will be handled by the component to ensure only 1 initial entry
 
       return newData;
     });
@@ -315,7 +349,7 @@ export const Section5Provider: React.FC<Section5ProviderProps> = ({ children }) 
     setSection5Data(prevData => {
       // Check if we're at the maximum limit
       if (prevData.section5.otherNames.length >= MAX_OTHER_NAME_ENTRIES) {
-        console.warn(`Cannot add more entries. Maximum of ${MAX_OTHER_NAME_ENTRIES} other names allowed.`);
+        // console.warn(`Cannot add more entries. Maximum of ${MAX_OTHER_NAME_ENTRIES} other names allowed.`);
         return prevData;
       }
 
@@ -352,11 +386,11 @@ export const Section5Provider: React.FC<Section5ProviderProps> = ({ children }) 
   // ============================================================================
 
   const getEntryCount = useCallback(() => {
-    return section5Data.section5.otherNames.length;
+    return section5Data?.section5?.otherNames?.length || 0;
   }, [section5Data]);
 
   const getEntry = useCallback((index: number): OtherNameEntry | null => {
-    return section5Data.section5.otherNames[index] || null;
+    return section5Data?.section5?.otherNames?.[index] || null;
   }, [section5Data]);
 
   const moveEntry = useCallback((fromIndex: number, toIndex: number) => {
@@ -439,7 +473,7 @@ export const Section5Provider: React.FC<Section5ProviderProps> = ({ children }) 
       await dynamicService.saveUserFormData('section5', formData as any);
       initialData.current = cloneDeep(section5Data);
     } catch (error) {
-      console.error('Failed to save Section 5:', error);
+      // console.error('Failed to save Section 5:', error);
       setErrors(prev => ({ ...prev, save: 'Failed to save section data' }));
     } finally {
       setIsLoading(false);
@@ -450,7 +484,7 @@ export const Section5Provider: React.FC<Section5ProviderProps> = ({ children }) 
   const loadSection = useCallback(async (data?: Section5) => {
     if (data) {
       // Direct data loading (from SF86FormContext)
-      console.log(`🔄 Section5: Loading section data directly`);
+      // console.log(`🔄 Section5: Loading section data directly`);
       setSection5Data(data);
       initialData.current = cloneDeep(data);
     } else {
@@ -464,7 +498,7 @@ export const Section5Provider: React.FC<Section5ProviderProps> = ({ children }) 
           initialData.current = cloneDeep(response.formData.section5);
         }
       } catch (error) {
-        console.error('Failed to load Section 5:', error);
+        // console.error('Failed to load Section 5:', error);
         setErrors(prev => ({ ...prev, load: 'Failed to load section data' }));
       } finally {
         setIsLoading(false);
@@ -511,6 +545,10 @@ export const Section5Provider: React.FC<Section5ProviderProps> = ({ children }) 
     updateFieldValue(fieldPath, value, index);
   }, [updateFieldValue]);
 
+  const setValidationErrors = useCallback((validationErrors: Record<string, string>) => {
+    setErrors(validationErrors);
+  }, []);
+
   // ============================================================================
   // SECTION INTEGRATION
   // ============================================================================
@@ -543,23 +581,17 @@ export const Section5Provider: React.FC<Section5ProviderProps> = ({ children }) 
     };
   }, [section5Data, isLoading, errors, isDirty, updateFieldValue, validateSection, resetSection, loadSection, flattenSection5Fields]);
 
-  // Integration with SF86FormContext
-  const integration = useSectionIntegration();
-
-  // Register section with SF86FormContext
-  useEffect(() => {
-    integration.registerSection({
-      sectionId: 'section5',
-      sectionName: 'Other Names Used',
-      context: baseSectionContext,
-      isActive: true,
-      lastUpdated: new Date()
-    });
-
-    return () => {
-      integration.unregisterSection('section5');
-    };
-  }, [integration]);
+  // Integration with SF86FormContext using the enhanced integration hook
+  // Only initialize integration after section5Data is properly set up
+  const integration = useSection86FormIntegration(
+    'section5',
+    'Other Names Used',
+    section5Data || createDefaultSection5Impl(), // Provide fallback
+    setSection5Data,
+    validateSection,
+    getChanges,
+    updateFieldValue
+  );
 
   // ============================================================================
   // CONTEXT VALUE
@@ -597,7 +629,8 @@ export const Section5Provider: React.FC<Section5ProviderProps> = ({ children }) 
     getChanges,
     hasUnsavedChanges,
     getFieldValue,
-    setFieldValue
+    setFieldValue,
+    setValidationErrors
   };
 
   return (

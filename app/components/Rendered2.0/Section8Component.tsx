@@ -9,6 +9,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSection8 } from '~/state/contexts/sections2.0/section8';
 import { useSF86Form } from '~/state/contexts/SF86FormContext';
+import { getSuffixOptions } from '../../../api/interfaces/sections2.0/base';
 
 interface Section8ComponentProps {
   className?: string;
@@ -63,6 +64,9 @@ export const Section8Component: React.FC<Section8ComponentProps> = ({
         // Save the form data to persistence layer
         await sf86Form.saveForm();
 
+        // Mark section as complete after successful save
+        sf86Form.markSectionComplete('section8');
+
         console.log('✅ Section 8 data saved successfully:', section8Data);
 
         // Proceed to next section if callback provided
@@ -76,10 +80,9 @@ export const Section8Component: React.FC<Section8ComponentProps> = ({
     }
   };
 
-  // Handle passport flag change
-  const handlePassportFlagChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.checked ? 'YES' : 'NO';
-    updatePassportFlag(value as 'YES' | 'NO');
+  // Handle passport flag change (radio button)
+  const handlePassportFlagChange = (value: 'YES' | 'NO') => {
+    updatePassportFlag(value);
   };
 
   return (
@@ -96,20 +99,46 @@ export const Section8Component: React.FC<Section8ComponentProps> = ({
 
       {/* Passport Information Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Passport Flag */}
+        {/* Passport Flag - Radio Buttons */}
         <div className="mb-6">
-          <label className="flex items-center space-x-3">
-            <input
-              type="checkbox"
-              checked={section8Data.section8.hasPassport.value === 'YES'}
-              onChange={handlePassportFlagChange}
-              className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-              data-testid="passport-flag-checkbox"
-            />
-            <span className="text-base font-medium text-gray-700">
-              I have a U.S. passport
-            </span>
+          <label className="block text-sm font-medium text-gray-700 mb-3">
+            Do you have a U.S. passport (current or expired)? <span className="text-red-500">*</span>
           </label>
+          <div className="flex space-x-6">
+            <div className="flex items-center">
+              <input
+                type="radio"
+                id="hasPassport-yes"
+                name="hasPassport"
+                value="YES"
+                checked={section8Data.section8.hasPassport.value === 'YES'}
+                onChange={() => handlePassportFlagChange('YES')}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                data-testid="passport-flag-yes"
+              />
+              <label htmlFor="hasPassport-yes" className="ml-2 block text-sm text-gray-700">
+                Yes
+              </label>
+            </div>
+            <div className="flex items-center">
+              <input
+                type="radio"
+                id="hasPassport-no"
+                name="hasPassport"
+                value="NO"
+                checked={section8Data.section8.hasPassport.value === 'NO'}
+                onChange={() => handlePassportFlagChange('NO')}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                data-testid="passport-flag-no"
+              />
+              <label htmlFor="hasPassport-no" className="ml-2 block text-sm text-gray-700">
+                No
+              </label>
+            </div>
+          </div>
+          <p className="mt-2 text-sm text-gray-500">
+            If you don't have a passport, proceed to Section 9
+          </p>
         </div>
 
         {/* Passport Details (conditionally shown) */}
@@ -219,15 +248,19 @@ export const Section8Component: React.FC<Section8ComponentProps> = ({
                 >
                   Suffix (as shown on passport)
                 </label>
-                <input
-                  type="text"
+                <select
                   id="passport-suffix"
-                  data-testid="passport-suffix-input"
+                  data-testid="passport-suffix-select"
                   value={section8Data.section8.nameOnPassport.suffix.value || ''}
                   onChange={(e) => updatePassportName('suffix', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Jr., Sr., III, etc. (if applicable)"
-                />
+                >
+                  {getSuffixOptions().map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
                 {errors['section8.nameOnPassport.suffix'] && (
                   <p className="mt-1 text-sm text-red-600">{errors['section8.nameOnPassport.suffix']}</p>
                 )}
@@ -310,50 +343,10 @@ export const Section8Component: React.FC<Section8ComponentProps> = ({
           </div>
         </div>
 
-        {/* Validation Status */}
-        <div className="mt-4" data-testid="validation-status">
-          <div className="text-sm text-gray-600">
-            Section Status: <span className={`font-medium ${isDirty ? 'text-orange-500' : 'text-green-500'}`}>
-              {isDirty ? 'Modified, needs validation' : 'Ready for input'}
-            </span>
-          </div>
-          <div className="text-sm text-gray-600">
-            Validation: <span className={`font-medium ${isValid ? 'text-green-500' : 'text-red-500'}`}>
-              {isValid ? 'Valid' : 'Has errors'}
-            </span>
-          </div>
-          {section8Data.section8.hasPassport.value === 'YES' && (
-            <div className="text-sm text-gray-600">
-              Passport Validation: <span className={`font-medium ${validatePassport().isValid ? 'text-green-500' : 'text-red-500'}`}>
-                {validatePassport().isValid ? 'Valid' : 'Has errors'}
-              </span>
-            </div>
-          )}
-        </div>
+    
       </form>
 
-      {/* Debug Information (Development Only) */}
-      {typeof window !== 'undefined' && window.location.search.includes('debug=true') && (
-        <details className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <summary className="cursor-pointer text-sm font-medium text-gray-700">
-            Debug Information
-          </summary>
-          <div className="mt-2">
-            <h4 className="text-xs font-medium text-gray-600 mb-2">Section 8 Data:</h4>
-            <pre className="text-xs bg-white p-2 rounded border overflow-auto max-h-40">
-              {JSON.stringify(section8Data, null, 2)}
-            </pre>
-            <h4 className="text-xs font-medium text-gray-600 mt-4 mb-2">Validation Errors:</h4>
-            <pre className="text-xs bg-white p-2 rounded border overflow-auto max-h-40">
-              {JSON.stringify(errors, null, 2)}
-            </pre>
-            <h4 className="text-xs font-medium text-gray-600 mt-4 mb-2">Passport Validation Result:</h4>
-            <pre className="text-xs bg-white p-2 rounded border overflow-auto max-h-40">
-              {JSON.stringify(validatePassport(), null, 2)}
-            </pre>
-          </div>
-        </details>
-      )}
+
     </div>
   );
 };

@@ -17,6 +17,7 @@ import {
   getNumericFieldId
 } from './section5-field-mapping';
 import { SECTION5_FIELD_IDS, SECTION5_FIELD_NAMES } from '../../../../api/interfaces/sections2.0/section5';
+import type { Field } from 'api/interfaces/formDefinition2.0';
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -128,16 +129,16 @@ export const generateFieldId = (
   entryIndex: number,
   fieldType: Section5FieldType
 ): string => {
-  console.log(`🔍 generateFieldId called: entryIndex=${entryIndex}, fieldType="${fieldType}"`);
+  // console.log(`🔍 generateFieldId called: entryIndex=${entryIndex}, fieldType="${fieldType}"`);
 
   // For main questions, use exact field ID
   if (fieldType === 'hasOtherNames') {
-    console.log(`🎯 Using exact field ID for hasOtherNames: ${SECTION5_FIELD_IDS.HAS_OTHER_NAMES}`);
+    // console.log(`🎯 Using exact field ID for hasOtherNames: ${SECTION5_FIELD_IDS.HAS_OTHER_NAMES}`);
     return SECTION5_FIELD_IDS.HAS_OTHER_NAMES;
   }
 
   if (fieldType === 'hasMaidenNames') {
-    console.log(`🎯 Using exact field ID for hasMaidenNames: ${SECTION5_FIELD_IDS.HAS_MAIDEN_NAMES}`);
+    // console.log(`🎯 Using exact field ID for hasMaidenNames: ${SECTION5_FIELD_IDS.HAS_MAIDEN_NAMES}`);
     return SECTION5_FIELD_IDS.HAS_MAIDEN_NAMES;
   }
 
@@ -145,28 +146,28 @@ export const generateFieldId = (
   const logicalPath = `section5.otherNames.${entryIndex}.${fieldType}.value`;
   const pdfFieldName = mapLogicalFieldToPdfField(logicalPath);
 
-  console.log(`📋 Logical path: "${logicalPath}" → PDF field: "${pdfFieldName}"`);
+  // console.log(`📋 Logical path: "${logicalPath}" → PDF field: "${pdfFieldName}"`);
 
   // Try to get the actual field from PDF mapping
   const field = getPdfFieldByName(pdfFieldName);
 
   if (field) {
-    console.log(`✅ Found actual PDF field for ${fieldType}[${entryIndex}]: ${field.name}`);
+    // console.log(`✅ Found actual PDF field for ${fieldType}[${entryIndex}]: ${field.name}`);
 
     // Try to get numeric ID first (preferred for ID-based mapping)
     const numericId = field.id.replace(' 0 R', '');
     if (numericId) {
-      console.log(`🔢 Using numeric ID: ${numericId} (from field name: ${field.name})`);
+      // console.log(`🔢 Using numeric ID: ${numericId} (from field name: ${field.name})`);
       return numericId;
     } else {
-      console.log(`📛 No numeric ID available, using field name: ${field.name}`);
+      // console.log(`📛 No numeric ID available, using field name: ${field.name}`);
       return field.name;
     }
   }
 
   // Fallback to pattern-based approach
-  console.warn(`⚠️ No PDF field found for ${fieldType}[${entryIndex}]`);
-  console.warn(`Available suggestions:`, findSimilarFieldNames(pdfFieldName, 3));
+  // console.warn(`⚠️ No PDF field found for ${fieldType}[${entryIndex}]`);
+  // console.warn(`Available suggestions:`, findSimilarFieldNames(pdfFieldName, 3));
 
   // Use pattern as fallback
   const fieldPattern = FIELD_PATTERN_MAP[fieldType];
@@ -177,12 +178,12 @@ export const generateFieldId = (
   const fieldSuffix = fieldPattern(entryIndex);
   const fallbackFieldName = `form1[0].Sections1-6[0].section5[0].${fieldSuffix}`;
 
-  console.warn(`Using fallback pattern: ${fallbackFieldName}`);
+  // console.warn(`Using fallback pattern: ${fallbackFieldName}`);
 
   // Try to get numeric ID for the fallback field name
   const numericId = getNumericFieldId(fallbackFieldName);
   if (numericId) {
-    console.log(`🔢 Using numeric ID: ${numericId} (from fallback field name: ${fallbackFieldName})`);
+    // console.log(`🔢 Using numeric ID: ${numericId} (from fallback field name: ${fallbackFieldName})`);
     return numericId;
   }
 
@@ -238,19 +239,19 @@ export const generateFieldRect = (
     : `section5.otherNames.${entryIndex}.${fieldType}.value`;
 
   const pdfFieldName = mapLogicalFieldToPdfField(logicalPath);
-  console.log(`📋 Getting rect for: "${logicalPath}" → PDF field: "${pdfFieldName}"`);
+  // console.log(`📋 Getting rect for: "${logicalPath}" → PDF field: "${pdfFieldName}"`);
 
   // Try to get the actual field data from the PDF mapping
   const field = getPdfFieldByName(pdfFieldName);
 
   // If field data with rect is available, use it
   if (field && field.rect) {
-    console.log(`📐 Using actual PDF rect for ${fieldType}[${entryIndex}]:`, field.rect);
+    // console.log(`📐 Using actual PDF rect for ${fieldType}[${entryIndex}]:`, field.rect);
     return field.rect;
   }
 
   // Return default rectangle if no field data is available
-  console.warn(`⚠️ No rect data found for ${fieldType}[${entryIndex}], using default`);
+  // console.warn(`⚠️ No rect data found for ${fieldType}[${entryIndex}], using default`);
   return { x: 0, y: 0, width: 0, height: 0 };
 };
 
@@ -380,17 +381,17 @@ export function validateEntryFieldGeneration(entryIndex: number): boolean {
     const pdfFieldName = mapLogicalFieldToPdfField(logicalPath);
 
     if (!pdfFieldName) {
-      console.error(`❌ Section5: No PDF field mapping for ${logicalPath}`);
+      // console.error(`❌ Section5: No PDF field mapping for ${logicalPath}`);
       return false;
     }
 
     if (!validateFieldExists(pdfFieldName)) {
-      console.error(`❌ Section5: PDF field does not exist: ${pdfFieldName}`);
+      // console.error(`❌ Section5: PDF field does not exist: ${pdfFieldName}`);
       return false;
     }
   }
 
-  console.log(`✅ Section5: All fields validated for entry ${entryIndex}`);
+  // console.log(`✅ Section5: All fields validated for entry ${entryIndex}`);
   return true;
 }
 
@@ -398,12 +399,12 @@ export function validateEntryFieldGeneration(entryIndex: number): boolean {
  * Validate all Section 5 field generation
  */
 export function validateAllSection5FieldGeneration(): boolean {
-  console.log(`🔍 Section5: Validating all Section 5 field generation`);
+  // console.log(`🔍 Section5: Validating all Section 5 field generation`);
 
   // Validate main field
   const mainFieldName = mapLogicalFieldToPdfField('section5.hasOtherNames.value');
   if (!validateFieldExists(mainFieldName)) {
-    console.error(`❌ Section5: Main field does not exist: ${mainFieldName}`);
+    // console.error(`❌ Section5: Main field does not exist: ${mainFieldName}`);
     return false;
   }
 
@@ -414,6 +415,6 @@ export function validateAllSection5FieldGeneration(): boolean {
     }
   }
 
-  console.log(`✅ Section5: All Section 5 field generation validated`);
+  // console.log(`✅ Section5: All Section 5 field generation validated`);
   return true;
 }

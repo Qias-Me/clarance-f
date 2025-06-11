@@ -61,6 +61,9 @@ export const Section4Component: React.FC<Section4ComponentProps> = ({
         // Save the form data to persistence layer
         await sf86Form.saveForm();
 
+        // Mark section as complete after successful save
+        sf86Form.markSectionComplete('section4');
+
         console.log('✅ Section 4 data saved successfully:', section4Data);
 
         // Proceed to next section if callback provided
@@ -106,7 +109,9 @@ export const Section4Component: React.FC<Section4ComponentProps> = ({
 
              {/* 3. Acknowledgement Radio Buttons */}
         <div className="border rounded-lg p-4 bg-blue-50">
-          <h3 className="text-lg font-semibold mb-3">Acknowledgement</h3>
+          <h3 className="text-lg font-semibold mb-3">
+            Acknowledgement <span className="text-red-500">*</span>
+          </h3>
           <p className="text-sm text-gray-700 mb-3">
             I understand that providing false information may result in criminal penalties.
           </p>
@@ -136,28 +141,46 @@ export const Section4Component: React.FC<Section4ComponentProps> = ({
               <span className="text-sm text-gray-700">No, I do not acknowledge</span>
             </label>
           </div>
+          {errors['acknowledgement'] && (
+            <p className="mt-2 text-sm text-red-600">{errors['acknowledgement']}</p>
+          )}
         </div>
 
         {/* 1. SSN Field */}
         <div>
           <label
             htmlFor="ssn-input"
-            className="block text-sm font-medium text-gray-700 mb-2"
+            className={`block text-sm font-medium mb-2 ${
+              section4Data.section4.notApplicable.value
+                ? 'text-gray-400'
+                : 'text-gray-700'
+            }`}
           >
-            Social Security Number <span className="text-red-500">*</span>
+            Social Security Number
           </label>
           <input
             type="text"
             id="ssn-input"
             data-testid="ssn-input"
-            value={section4Data.section4.ssn[0]?.value?.value}
+            value={section4Data.section4.notApplicable.value ? '' : (section4Data.section4.ssn[0]?.value?.value || '')}
             onChange={handleSSNChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="XXXXXXXXX"
+            disabled={section4Data.section4.notApplicable.value}
+            readOnly={section4Data.section4.notApplicable.value}
+            className={`w-full px-3 py-2 border rounded-md shadow-sm transition-colors ${
+              section4Data.section4.notApplicable.value
+                ? 'border-gray-200 bg-gray-50 text-gray-400 cursor-not-allowed'
+                : 'border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+            }`}
+            placeholder={section4Data.section4.notApplicable.value ? 'Not Applicable' : 'XXXXXXXXX'}
             maxLength={9}
             required={!section4Data.section4.notApplicable.value}
           />
-          {errors['section4.ssn'] && (
+          {section4Data.section4.notApplicable.value && (
+            <p className="mt-1 text-sm text-gray-500">
+              SSN field is disabled because "Not Applicable" is selected
+            </p>
+          )}
+          {errors['section4.ssn'] && !section4Data.section4.notApplicable.value && (
             <p className="mt-1 text-sm text-red-600">{errors['section4.ssn']}</p>
           )}
         </div>
@@ -207,18 +230,7 @@ export const Section4Component: React.FC<Section4ComponentProps> = ({
         </div>
 
         {/* Validation Status */}
-        <div className="mt-4" data-testid="validation-status">
-          <div className="text-sm text-gray-600">
-            Section Status: <span className={`font-medium ${isDirty ? 'text-orange-500' : 'text-green-500'}`}>
-              {isDirty ? 'Modified, needs validation' : 'Ready for input'}
-            </span>
-          </div>
-          <div className="text-sm text-gray-600">
-            Validation: <span className={`font-medium ${isValid ? 'text-green-500' : 'text-red-500'}`}>
-              {isValid ? 'Valid' : 'Has errors'}
-            </span>
-          </div>
-        </div>
+     
       </form>
 
       {/* Debug Information (Development Only) */}

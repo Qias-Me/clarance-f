@@ -96,11 +96,11 @@ export function validateSection3FieldMappings(): boolean {
   const missingFields = requiredFields.filter(field => !availableFields.includes(field));
   
   if (missingFields.length > 0) {
-    console.error('❌ Section 3 field mapping validation failed. Missing fields:', missingFields);
+    // console.error('❌ Section 3 field mapping validation failed. Missing fields:', missingFields);
     return false;
   }
   
-  console.log('✅ Section 3 field mappings validated successfully');
+  // console.log('✅ Section 3 field mappings validated successfully');
   return true;
 }
 
@@ -120,27 +120,27 @@ export function getSection3FieldMetadata(fieldName: keyof typeof SECTION3_FIELD_
  * Debug Section 3 field generation
  */
 export function debugSection3Fields() {
-  console.log('🔍 Section 3 Field Generation Debug');
-  console.log('=====================================');
+  // console.log('🔍 Section 3 Field Generation Debug');
+  // console.log('=====================================');
   
   const fields = generateSection3Fields();
   
   Object.entries(fields).forEach(([key, field]) => {
-    console.log(`${key}:`, {
-      id: field.id,
-      name: field.name,
-      type: field.type,
-      label: field.label,
-      value: field.value
-    });
+    // console.log(`${key}:`, {
+  //     id: field.id,
+  //     name: field.name,
+  //     type: field.type,
+  //     label: field.label,
+  //     value: field.value
+  //   });
   });
   
-  console.log('\n📊 Field Mapping Validation:');
+  // console.log('\n📊 Field Mapping Validation:');
   validateSection3FieldMappings();
   
-  console.log('\n📋 Available Fields in section-3.json:');
+  // console.log('\n📋 Available Fields in section-3.json:');
   section3References.fields.forEach(field => {
-    console.log(`- ${field.name} (ID: ${field.id})`);
+    // console.log(`- ${field.name} (ID: ${field.id})`);
   });
 }
 

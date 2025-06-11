@@ -183,6 +183,9 @@ const Section2Component: React.FC<Section2ComponentProps> = ({
         // Save the form data to persistence layer
         await sf86Form.saveForm();
 
+        // Mark section as complete after successful save
+        sf86Form.markSectionComplete('section2');
+
         console.log('✅ Section 2 data saved successfully');
 
         // Proceed to next section if callback provided
@@ -355,27 +358,6 @@ const Section2Component: React.FC<Section2ComponentProps> = ({
           </div>
         </div>
 
-        {/* Calculated Age (Read-only) */}
-        <div>
-          <label
-            htmlFor="age"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Current Age
-          </label>
-          <input
-            type="text"
-            id="age"
-            data-testid="age-field"
-            value={getAge() || ''}
-            readOnly
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-50 text-gray-600"
-            placeholder="Age will be calculated automatically"
-          />
-          <p className="mt-1 text-xs text-gray-500">
-            Your age is calculated automatically based on your date of birth.
-          </p>
-        </div>
 
         {/* Age Display */}
         {getDateValue() && (
@@ -428,18 +410,7 @@ const Section2Component: React.FC<Section2ComponentProps> = ({
         </div>
 
         {/* Validation Status */}
-        <div className="mt-4" data-testid="validation-status">
-          <div className="text-sm text-gray-600">
-            Section Status: <span className={`font-medium ${isDirty ? 'text-orange-500' : 'text-green-500'}`}>
-              {isDirty ? 'Modified, needs validation' : 'Ready for input'}
-            </span>
-          </div>
-          <div className="text-sm text-gray-600">
-            Validation: <span className={`font-medium ${isValid ? 'text-green-500' : 'text-red-500'}`}>
-              {isValid ? 'Valid' : 'Has errors'}
-            </span>
-          </div>
-        </div>
+     
       </form>
 
       {/* Debug Information (Development Only) */}

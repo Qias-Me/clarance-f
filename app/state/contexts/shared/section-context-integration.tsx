@@ -39,6 +39,8 @@ export function useSection86FormIntegration<T>(
   const integration = useSectionIntegration();
   const lastRegistrationRef = useRef<Date>(new Date());
   const isInitializedRef = useRef(false);
+  const lastSyncedDataRef = useRef<any>(null);
+  const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('debug=true');
 
@@ -59,20 +61,26 @@ export function useSection86FormIntegration<T>(
 
       switch (payload.action) {
         case 'loaded':
-          // FIXED: Only sync on initial load from storage, and never override if section has local changes
-          if (payload.formData && payload.formData[sectionId] && !isInitializedRef.current) {
+          // FIXED: Allow data loading from storage, but track if data has been loaded
+          if (payload.formData && payload.formData[sectionId]) {
             const newSectionData = payload.formData[sectionId];
-            if (isDebugMode) {
-              console.log(`🔄 ${sectionId}: Synchronizing with loaded data (initial load only)`);
-              console.log(`   📊 Data type: ${typeof newSectionData}`);
-              console.log(`   📊 Data keys: ${newSectionData ? Object.keys(newSectionData) : 'N/A'}`);
-            }
-            setSectionData(cloneDeep(newSectionData));
-            isInitializedRef.current = true; // Mark as initialized to prevent future overwrites
-          } else if (payload.formData && payload.formData[sectionId] && isInitializedRef.current) {
-            // FIXED: Don't override if section is already initialized - this prevents race conditions
-            if (isDebugMode) {
-              console.log(`🛡️ ${sectionId}: Skipping data sync - section already initialized (prevents override of user changes)`);
+
+            // Check if this is the first data load or if section has no user changes
+            const hasUserChanges = lastSyncedDataRef.current &&
+              JSON.stringify(sectionData) !== JSON.stringify(lastSyncedDataRef.current);
+
+            if (!hasUserChanges) {
+              if (isDebugMode) {
+                console.log(`🔄 ${sectionId}: Loading data from storage`);
+                console.log(`   📊 Data type: ${typeof newSectionData}`);
+                console.log(`   📊 Data keys: ${newSectionData ? Object.keys(newSectionData) : 'N/A'}`);
+              }
+              setSectionData(cloneDeep(newSectionData));
+              lastSyncedDataRef.current = cloneDeep(newSectionData); // Track loaded data
+            } else {
+              if (isDebugMode) {
+                console.log(`🛡️ ${sectionId}: Skipping data sync - section has user changes`);
+              }
             }
           }
           break;
@@ -86,15 +94,15 @@ export function useSection86FormIntegration<T>(
           break;
 
         case 'data_loaded':
-          // FIXED: Only accept individual section data updates if they're explicitly from storage
-          // and not from other section contexts to prevent circular updates
-          if (event.sectionId === sectionId && payload.data && payload.fromStorage === true) {
+          // Accept individual section data updates from storage or global context
+          if (event.sectionId === sectionId && payload.data &&
+              (payload.fromStorage === true || payload.source === "global_context")) {
             if (isDebugMode) {
-              console.log(`🔄 ${sectionId}: Updating with individual section data from storage`);
+              console.log(`🔄 ${sectionId}: Updating with individual section data from ${payload.source || 'storage'}`);
             }
             setSectionData(cloneDeep(payload.data));
           } else if (isDebugMode) {
-            console.log(`🔄 ${sectionId}: Ignoring data_loaded event (not from storage or wrong section)`);
+            console.log(`🔄 ${sectionId}: Ignoring data_loaded event (not from storage/global_context or wrong section)`);
           }
           break;
 
@@ -112,7 +120,7 @@ export function useSection86FormIntegration<T>(
           break;
       }
     }
-  }, [sectionId, setSectionData, isDebugMode]);
+  }, [sectionId, setSectionData, isDebugMode, sectionData]);
 
   /**
    * Handle section update events
@@ -127,15 +135,32 @@ export function useSection86FormIntegration<T>(
 
       switch (payload.action) {
         case 'data_loaded':
-          // FIXED: Only load data if section is not initialized to prevent overriding user changes
-          if (payload.data && !isInitializedRef.current) {
+          // Handle different data loading scenarios
+          let sectionDataToLoad = null;
+
+          // First, check if data is provided directly (from distributeDataToSections)
+          if (payload.data && event.sectionId === sectionId) {
+            sectionDataToLoad = payload.data;
             if (isDebugMode) {
-              console.log(`🔄 ${sectionId}: Loading data from section update (initial load only)`);
+              console.log(`🔄 ${sectionId}: Loading data directly from section update event`);
             }
-            setSectionData(cloneDeep(payload.data));
+          }
+          // Fallback: check global form data structure
+          else if (payload.formData?.[sectionId]) {
+            sectionDataToLoad = payload.formData[sectionId];
+            if (isDebugMode) {
+              console.log(`🔄 ${sectionId}: Loading data from global form data`);
+            }
+          }
+
+          if (sectionDataToLoad) {
+            setSectionData(cloneDeep(sectionDataToLoad));
             isInitializedRef.current = true;
+            if (isDebugMode) {
+              console.log(`✅ ${sectionId}: Successfully loaded section data`);
+            }
           } else if (isDebugMode) {
-            console.log(`🛡️ ${sectionId}: Skipping data_loaded - section already initialized (prevents override of user changes)`);
+            console.log(`🔄 ${sectionId}: No data found for this section`);
           }
           break;
 
@@ -221,8 +246,6 @@ export function useSection86FormIntegration<T>(
    * This ensures SF86FormContext can get current data via syncSectionData
    * FIXED: Added debounce and deep equality check to prevent infinite loops
    */
-  const lastSyncedDataRef = useRef<any>(null);
-  const syncTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (isInitializedRef.current) {
@@ -231,20 +254,20 @@ export function useSection86FormIntegration<T>(
         clearTimeout(syncTimeoutRef.current);
       }
 
-      // Debounce the sync to prevent rapid-fire updates
-      syncTimeoutRef.current = setTimeout(() => {
-        // Only sync if data has actually changed (deep comparison)
-        if (JSON.stringify(sectionData) !== JSON.stringify(lastSyncedDataRef.current)) {
-          integration.syncSectionData(sectionId, sectionData);
-          lastSyncedDataRef.current = cloneDeep(sectionData);
+      // Immediate sync for critical field changes, debounced for others
+      const hasChanged = JSON.stringify(sectionData) !== JSON.stringify(lastSyncedDataRef.current);
 
-          if (isDebugMode) {
-            console.log(`🔄 ${sectionId}: Synced current data to integration cache (debounced)`);
-          }
-        } else if (isDebugMode) {
-          console.log(`🔄 ${sectionId}: Skipping sync - data unchanged`);
+      if (hasChanged) {
+        // Immediate sync to ensure data is always current
+        integration.syncSectionData(sectionId, sectionData);
+        lastSyncedDataRef.current = cloneDeep(sectionData);
+
+        if (isDebugMode) {
+          console.log(`🔄 ${sectionId}: Synced current data to integration cache (immediate)`);
         }
-      }, 100); // 100ms debounce
+      } else if (isDebugMode) {
+        console.log(`🔄 ${sectionId}: Skipping sync - data unchanged`);
+      }
     }
 
     // Cleanup timeout on unmount

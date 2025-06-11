@@ -204,11 +204,11 @@ export const flattenSection12Fields = (section12Data: Section12): Record<string,
       });
     }
 
-    console.log(`📊 Section 12 field flattening: ${Object.keys(flattened).length} fields processed (expected ~150)`);
+    // console.log(`📊 Section 12 field flattening: ${Object.keys(flattened).length} fields processed (expected ~150)`);
     return flattened;
 
   } catch (error) {
-    console.error('❌ Error flattening Section 12 fields:', error);
+    // console.error('❌ Error flattening Section 12 fields:', error);
     return {};
   }
 };
@@ -287,7 +287,7 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
 
   // Create minimal initial data to avoid corruption issues
   const createMinimalInitialData = (): Section12 => {
-    console.log(`🔍 Section12: Creating minimal initial data to avoid corruption`);
+    // console.log(`🔍 Section12: Creating minimal initial data to avoid corruption`);
 
     // Create a minimal data structure without complex nested arrays
     const minimalData: Section12 = {
@@ -313,7 +313,7 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
       }
     };
 
-    console.log(`✅ Section12: Minimal initial data created successfully:`, minimalData);
+    // console.log(`✅ Section12: Minimal initial data created successfully:`, minimalData);
     return minimalData;
   };
 
@@ -419,80 +419,80 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
   // ============================================================================
 
   const updateFieldValue = useCallback((path: string, value: any): void => {
-    console.log(`🔧 Section12: updateFieldValue called:`, {
-      path,
-      value,
-    });
+    // console.log(`🔧 Section12: updateFieldValue called:`, {
+    //   path,
+    //   value,
+    // });
 
     try {
       setSection12Data((prev) => {
-        console.log(
-          `🔍 Section12: updateFieldValue - starting with prev data:`,
-          prev
-        );
+        // console.log(
+        //   `🔍 Section12: updateFieldValue - starting with prev data:`,
+        //   prev
+        // );
 
         const updated = cloneDeep(prev);
 
-        console.log(
-          `🔍 Section12: updateFieldValue - cloneDeep completed successfully`
-        );
+        // console.log(
+        //   `🔍 Section12: updateFieldValue - cloneDeep completed successfully`
+        // );
 
         // Handle main section flag updates (like Section 29's updateSubsectionFlag)
         if (path === 'section12.hasAttendedSchool.value') {
-          console.log(
-            `🔍 Section12: updateFieldValue - updating hasAttendedSchool flag`
-          );
+          // console.log(
+          //   `🔍 Section12: updateFieldValue - updating hasAttendedSchool flag`
+          // );
           updated.section12.hasAttendedSchool.value = value;
-          console.log(
-            `✅ Section12: updateFieldValue - hasAttendedSchool flag updated successfully`
-          );
+          // console.log(
+          //   `✅ Section12: updateFieldValue - hasAttendedSchool flag updated successfully`
+          // );
         } else if (path === 'section12.hasAttendedSchoolOutsideUS.value') {
-          console.log(
-            `🔍 Section12: updateFieldValue - updating hasAttendedSchoolOutsideUS flag`
-          );
+          // console.log(
+          //   `🔍 Section12: updateFieldValue - updating hasAttendedSchoolOutsideUS flag`
+          // );
           updated.section12.hasAttendedSchoolOutsideUS.value = value;
-          console.log(
-            `✅ Section12: updateFieldValue - hasAttendedSchoolOutsideUS flag updated successfully`
-          );
+          // console.log(
+          //   `✅ Section12: updateFieldValue - hasAttendedSchoolOutsideUS flag updated successfully`
+          // );
         } else {
-          // Handle other field updates using lodash set
-          console.log(
-            `🔍 Section12: updateFieldValue - using lodash set for path: ${path}`
-          );
+          // // Handle other field updates using lodash set
+          // console.log(
+          //   `🔍 Section12: updateFieldValue - using lodash set for path: ${path}`
+          // );
 
           try {
             set(updated, path, value);
-            console.log(
-              `✅ Section12: updateFieldValue - lodash set completed successfully`
-            );
+            // console.log(
+            //   `✅ Section12: updateFieldValue - lodash set completed successfully`
+            // );
           } catch (setError) {
-            console.error(
-              `❌ Section12: updateFieldValue - lodash set failed:`,
-              setError
-            );
+            // console.error(
+            //   `❌ Section12: updateFieldValue - lodash set failed:`,
+            //   setError
+            // );
             throw setError;
           }
         }
 
-        console.log(
-          `🔍 Section12: updateFieldValue - returning updated data:`,
-          updated
-        );
+      //   console.log(
+      //     `🔍 Section12: updateFieldValue - returning updated data:`,
+      //     updated
+      //   );
         return updated;
       });
 
-      console.log(
-        `✅ Section12: updateFieldValue - setSection12Data completed successfully`
-      );
+      // console.log(
+      //   `✅ Section12: updateFieldValue - setSection12Data completed successfully`
+      // );
     } catch (error) {
-      console.error(
-        `❌ Section12: updateFieldValue - CRITICAL ERROR:`,
-        error
-      );
-      console.error(
-        `❌ Section12: updateFieldValue - Error stack:`,
-        error instanceof Error ? error.stack : "No stack trace available"
-      );
+      // console.error(
+      //   `❌ Section12: updateFieldValue - CRITICAL ERROR:`,
+      //   error
+      // );
+      // console.error(
+      //   `❌ Section12: updateFieldValue - Error stack:`,
+      //   error instanceof Error ? error.stack : "No stack trace available"
+      // );
     }
   }, []);
 
@@ -654,12 +654,12 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
   const addSchoolEntry = useCallback((): void => {
     // Prevent React Strict Mode double execution
     if (isAddingEntryRef.current) {
-      console.log('🚫 Section12: addSchoolEntry blocked - already in progress (React Strict Mode protection)');
+      // console.log('🚫 Section12: addSchoolEntry blocked - already in progress (React Strict Mode protection)');
       return;
     }
 
     isAddingEntryRef.current = true;
-    console.log('🎯 Section12: addSchoolEntry called');
+    // console.log('🎯 Section12: addSchoolEntry called');
 
     try {
       setSection12Data(prevData => {
@@ -668,20 +668,20 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
 
         // Limit to 4 entries as per PDF structure (discovered 4 entries in JSON)
         if (entryIndex >= 4) {
-          console.warn('⚠️ Section12: Maximum of 4 school entries allowed');
+          // console.warn('⚠️ Section12: Maximum of 4 school entries allowed');
           return prevData;
         }
 
         const newEntry = createDefaultSchoolEntry(Date.now(), entryIndex);
         newData.section12.entries.push(newEntry);
-        console.log(`✅ Section12: Added school entry #${entryIndex + 1}. Total entries: ${newData.section12.entries.length}`);
+        // console.log(`✅ Section12: Added school entry #${entryIndex + 1}. Total entries: ${newData.section12.entries.length}`);
         return newData;
       });
     } finally {
       // Reset the flag after a short delay to allow for state updates
       setTimeout(() => {
         isAddingEntryRef.current = false;
-        console.log('🔄 Section12: addSchoolEntry flag reset');
+        // console.log('🔄 Section12: addSchoolEntry flag reset');
       }, 100);
     }
   }, []);
@@ -781,12 +781,12 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
   const addDegreeEntry = useCallback((schoolIndex: number) => {
     // Prevent React Strict Mode double execution
     if (isAddingDegreeRef.current) {
-      console.log('🚫 Section12: addDegreeEntry blocked - already in progress (React Strict Mode protection)');
+      // console.log('🚫 Section12: addDegreeEntry blocked - already in progress (React Strict Mode protection)');
       return;
     }
 
     isAddingDegreeRef.current = true;
-    console.log(`🎯 Section12: addDegreeEntry called for school ${schoolIndex}`);
+    // console.log(`🎯 Section12: addDegreeEntry called for school ${schoolIndex}`);
 
     try {
       setSection12Data(prevData => {
@@ -794,26 +794,26 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
         const schoolEntry = newData.section12.entries[schoolIndex];
 
         if (!schoolEntry) {
-          console.warn(`⚠️ Section12: School entry ${schoolIndex} not found`);
+          // console.warn(`⚠️ Section12: School entry ${schoolIndex} not found`);
           return prevData;
         }
 
         // Limit to 2 degrees per school as per PDF structure
         if (schoolEntry.degrees.length >= 2) {
-          console.warn('⚠️ Section12: Maximum of 2 degrees per school allowed');
+          // console.warn('⚠️ Section12: Maximum of 2 degrees per school allowed');
           return prevData;
         }
 
         const newDegree = createDefaultDegreeEntry();
         schoolEntry.degrees.push(newDegree);
-        console.log(`✅ Section12: Added degree entry to school ${schoolIndex}. Total degrees: ${schoolEntry.degrees.length}`);
+        // console.log(`✅ Section12: Added degree entry to school ${schoolIndex}. Total degrees: ${schoolEntry.degrees.length}`);
         return newData;
       });
     } finally {
       // Reset the flag after a short delay to allow for state updates
       setTimeout(() => {
         isAddingDegreeRef.current = false;
-        console.log('🔄 Section12: addDegreeEntry flag reset');
+        // console.log('🔄 Section12: addDegreeEntry flag reset');
       }, 100);
     }
   }, []);
@@ -821,12 +821,12 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
   const removeDegreeEntry = useCallback((schoolIndex: number, degreeIndex: number) => {
     // Prevent React Strict Mode double execution
     if (isRemovingDegreeRef.current) {
-      console.log('🚫 Section12: removeDegreeEntry blocked - already in progress (React Strict Mode protection)');
+      // console.log('🚫 Section12: removeDegreeEntry blocked - already in progress (React Strict Mode protection)');
       return;
     }
 
     isRemovingDegreeRef.current = true;
-    console.log(`🎯 Section12: removeDegreeEntry called for school ${schoolIndex}, degree ${degreeIndex}`);
+    // console.log(`🎯 Section12: removeDegreeEntry called for school ${schoolIndex}, degree ${degreeIndex}`);
 
     try {
       setSection12Data(prevData => {
@@ -834,24 +834,24 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
         const schoolEntry = newData.section12.entries[schoolIndex];
 
         if (!schoolEntry) {
-          console.warn(`⚠️ Section12: School entry ${schoolIndex} not found`);
+          // console.warn(`⚠️ Section12: School entry ${schoolIndex} not found`);
           return prevData;
         }
 
         if (degreeIndex < 0 || degreeIndex >= schoolEntry.degrees.length) {
-          console.warn(`⚠️ Section12: Degree index ${degreeIndex} out of bounds`);
+          // console.warn(`⚠️ Section12: Degree index ${degreeIndex} out of bounds`);
           return prevData;
         }
 
         schoolEntry.degrees.splice(degreeIndex, 1);
-        console.log(`✅ Section12: Removed degree entry ${degreeIndex} from school ${schoolIndex}. Remaining degrees: ${schoolEntry.degrees.length}`);
+        // console.log(`✅ Section12: Removed degree entry ${degreeIndex} from school ${schoolIndex}. Remaining degrees: ${schoolEntry.degrees.length}`);
         return newData;
       });
     } finally {
       // Reset the flag after a short delay to allow for state updates
       setTimeout(() => {
         isRemovingDegreeRef.current = false;
-        console.log('🔄 Section12: removeDegreeEntry flag reset');
+        // console.log('🔄 Section12: removeDegreeEntry flag reset');
       }, 100);
     }
   }, []);

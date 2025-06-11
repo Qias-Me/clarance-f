@@ -140,17 +140,17 @@ export interface Section12 {
 /**
  * School type options for dropdown
  */
-export const SCHOOL_TYPE_OPTIONS: SchoolType[] = [
+export const SCHOOL_TYPE_OPTIONS = [
   "High School",
   "Vocational/Technical/Trade School",
   "College/University/Military College",
   "Correspondence/Distance/Extension/Online School"
-];
+] as const;
 
 /**
  * Degree type options for dropdown
  */
-export const DEGREE_TYPE_OPTIONS: DegreeType[] = [
+export const DEGREE_TYPE_OPTIONS = [
   "High School Diploma",
   "Associate's",
   "Bachelor's",
@@ -158,7 +158,7 @@ export const DEGREE_TYPE_OPTIONS: DegreeType[] = [
   "Doctorate",
   "Professional Degree (e.g. M D, D V M, J D)",
   "Other"
-];
+] as const;
 
 /**
  * Date validation patterns for education

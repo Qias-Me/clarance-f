@@ -38,24 +38,13 @@ import { Section9Provider } from "./sections2.0/section9";
 import { Section10Provider } from "./sections2.0/section10";
 import { Section11Provider } from "./sections2.0/section11";
 import { Section12Provider } from "./sections2.0/section12";
-import { Section13Provider } from "./sections2.0/section13";
 import { Section14Provider } from "./sections2.0/section14";
 import { Section15Provider } from "./sections2.0/section15";
 
-import { Section17Provider } from "./sections2.0/section17";
 import { Section28Provider } from "./sections2.0/section28";
 import { Section29Provider } from "./sections2.0/section29";
 import { Section30Provider } from "./sections2.0/section30";
-import { Section16Provider } from "./sections2.0/section16";
-import { Section18Provider } from "./sections2.0/section18";
-import { Section19Provider } from "./sections2.0/section19";
-import { Section20Provider } from "./sections2.0/section20";
-import { Section21Provider } from "./sections2.0/section21";
-import { Section22Provider } from "./sections2.0/section22";
-import { Section23Provider } from "./sections2.0/section23";
-import { Section24Provider } from "./sections2.0/section24";
-import { Section25Provider } from "./sections2.0/section25";
-import { Section26Provider } from "./sections2.0/section26";
+
 import { Section27Provider } from "./sections2.0/section27";
 
 // ============================================================================
@@ -362,6 +351,10 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
    */
   const updateSectionData = useCallback(
     (sectionId: string, data: any) => {
+      const isDebugMode =
+        typeof window !== "undefined" &&
+        window.location.search.includes("debug=true");
+
       // Special debugging for Section 2
       if (sectionId === "section2") {
         console.log(
@@ -532,6 +525,26 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 
   /**
+   * Sync section data from integration cache to main formData
+   * This ensures the main formData stays current with section changes
+   */
+  const syncSectionDataToFormData = useCallback((sectionId: string, sectionData: any) => {
+    const isDebugMode =
+      typeof window !== "undefined" &&
+      window.location.search.includes("debug=true");
+
+    if (isDebugMode) {
+      console.log(`🔄 SF86FormContext: Syncing section data to formData for ${sectionId}`);
+    }
+
+    setFormData(prevData => {
+      const newData = cloneDeep(prevData);
+      set(newData, sectionId, sectionData);
+      return newData;
+    });
+  }, []);
+
+  /**
    * Get specific section data
    */
   const getSectionData = useCallback(
@@ -692,27 +705,29 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
         );
       }
 
-      // PRIORITY FIX: Check for manually updated data first, then synced data, then registration data
-      const manuallyUpdatedData = get(collectedData, registration.sectionId);
-      const syncedData = integration.requestSectionData(registration.sectionId);
+      // FIXED PRIORITY: Use current section context data first (most up-to-date), then synced data, then cached data
       const registrationData = registration.context?.sectionData;
+      const syncedData = integration.requestSectionData(registration.sectionId);
+      const cachedData = get(collectedData, registration.sectionId);
 
-      // Use manually updated data if available, otherwise use synced data, otherwise use registration data
-      const sectionData = manuallyUpdatedData || syncedData || registrationData;
+      // Prioritize current section context data over cached data to capture real-time changes
+      const sectionData = registrationData || syncedData || cachedData;
 
       if (isDebugMode) {
         console.log(`   🔧 Data source priority check:`);
         console.log(
-          `     📊 Manually updated data exists: ${!!manuallyUpdatedData}`
+          `     📊 Registration data exists: ${!!registrationData}`
         );
         console.log(`     📊 Synced data exists: ${!!syncedData}`);
-        console.log(`     📊 Registration data exists: ${!!registrationData}`);
+        console.log(`     📊 Cached data exists: ${!!cachedData}`);
         console.log(
-          `     📊 Using data source: ${manuallyUpdatedData
-            ? "manual"
+          `     📊 Using data source: ${registrationData
+            ? "registration"
             : syncedData
               ? "synced"
-              : "registration"
+              : cachedData
+                ? "cached"
+                : "none"
           }`
         );
       }
@@ -767,11 +782,11 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
             sectionData?.section2?.isEstimated?.value
           );
           console.log(
-            `     📊 Data source used: ${manuallyUpdatedData
-              ? "MANUAL UPDATE"
+            `     📊 Data source used: ${registrationData
+              ? "REGISTRATION"
               : syncedData
                 ? "SYNCED"
-                : "REGISTRATION"
+                : "CACHED"
             }`
           );
         }
@@ -1042,11 +1057,14 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
             type: "SECTION_UPDATE",
             sectionId: "global",
             payload: {
-              action: "data_synchronized",
+              action: "data_loaded",
               formData: formDataToLoad,
               source: "indexeddb",
             },
           });
+
+          // Distribute data to currently registered sections
+          distributeDataToSections(formDataToLoad);
 
           if (isDebugMode) {
             console.log(
@@ -1212,12 +1230,27 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
    */
   const markSectionComplete = useCallback((sectionId: string) => {
     setCompletedSections((prev) => {
-      if (!prev.includes(sectionId)) {
-        return [...prev, sectionId];
-      }
-      return prev;
+      const newCompletedSections = prev.includes(sectionId) ? prev : [...prev, sectionId];
+
+      // Save completion tracking to persistence immediately
+      const saveCompletionTracking = async () => {
+        try {
+          const completedSectionsData = { completedSections: newCompletedSections };
+          await dynamicService.saveUserFormData(
+            "completed-sections",
+            completedSectionsData as any
+          );
+        } catch (error) {
+          console.error("❌ Failed to save completion tracking:", error);
+        }
+      };
+
+      // Use setTimeout to ensure the save happens after the state update
+      setTimeout(saveCompletionTracking, 0);
+
+      return newCompletedSections;
     });
-  }, []);
+  }, [dynamicService]);
 
   /**
    * Mark section as incomplete
@@ -1997,6 +2030,33 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
   // ============================================================================
 
   /**
+   * Listen for section data sync events and update main formData
+   */
+  useEffect(() => {
+    const handleDataSyncEvent = (event: any) => {
+      if (event.type === 'DATA_SYNC' && event.payload?.data && event.sectionId !== 'global') {
+        const isDebugMode =
+          typeof window !== "undefined" &&
+          window.location.search.includes("debug=true");
+
+        if (isDebugMode) {
+          console.log(`🔄 SF86FormContext: Received section data sync for ${event.sectionId}`);
+        }
+
+        // Update main formData with the synced section data
+        syncSectionDataToFormData(event.sectionId, event.payload.data);
+      }
+    };
+
+    // Subscribe to section data sync events
+    const unsubscribe = integration.subscribeToEvents('DATA_SYNC', handleDataSyncEvent);
+
+    return () => {
+      unsubscribe();
+    };
+  }, [integration, syncSectionDataToFormData]);
+
+  /**
    * Initialize form data on component mount
    */
   useEffect(() => {
@@ -2256,43 +2316,22 @@ export const CompleteSF86FormProvider: React.FC<{
                           <Section10Provider>
                             <Section11Provider>
                               <Section12Provider>
-                                <Section13Provider>
-                                  <Section14Provider>
-                                    <Section15Provider>
-                                      <Section16Provider>
-                                        <Section17Provider>
-                                          <Section18Provider>
-                                            <Section19Provider>
-                                              <Section20Provider>
-                                                <Section21Provider>
-                                                  <Section22Provider>
-                                                    <Section23Provider>
-                                                      <Section24Provider>
-                                                        <Section25Provider>
-                                                          <Section26Provider>
-                                                            <Section27Provider>
-                                                              <Section28Provider>
-                                                                <Section29Provider>
-                                                                  <Section30Provider>
-                                                                    {children}
-                                                                  </Section30Provider>
-                                                                </Section29Provider>
-                                                              </Section28Provider>
-                                                            </Section27Provider>
-                                                          </Section26Provider>
-                                                        </Section25Provider>
-                                                      </Section24Provider>
-                                                    </Section23Provider>
-                                                  </Section22Provider>
-                                                </Section21Provider>
-                                              </Section20Provider>
-                                            </Section19Provider>
-                                          </Section18Provider>
-                                        </Section17Provider>
-                                      </Section16Provider>
-                                    </Section15Provider>
-                                  </Section14Provider>
-                                </Section13Provider>
+                                <Section14Provider>
+                                  <Section15Provider>
+
+                                    <Section27Provider>
+                                      <Section28Provider>
+                                        <Section29Provider>
+                                          <Section30Provider>
+                                            {children}
+                                          </Section30Provider>
+                                        </Section29Provider>
+                                      </Section28Provider>
+                                    </Section27Provider>
+
+                                  </Section15Provider>
+                                </Section14Provider>
+
                               </Section12Provider>
                             </Section11Provider>
                           </Section10Provider>

@@ -72,32 +72,32 @@ export function generateSection10Field<T = any>(
   logicalPath: string,
   defaultValue: T
 ): Field<T> {
-  console.log(`🔄 Section10: Generating field for logical path: ${logicalPath}`);
+  // console.log(`🔄 Section10: Generating field for logical path: ${logicalPath}`);
 
   const pdfFieldName = mapLogicalFieldToPdfField(logicalPath);
   const fieldMetadata = getFieldMetadata(pdfFieldName);
 
-  console.log(`🔍 Section10: Mapped to PDF field: ${pdfFieldName}`);
+  // console.log(`🔍 Section10: Mapped to PDF field: ${pdfFieldName}`);
 
   // Validate that the field exists
   if (!validateFieldExists(pdfFieldName)) {
-    console.warn(`⚠️ Section10: PDF field not found: ${pdfFieldName}`);
-    console.warn(`🔍 Section10: Similar fields:`, findSimilarFieldNames(pdfFieldName, 3));
+    // console.warn(`⚠️ Section10: PDF field not found: ${pdfFieldName}`);
+    // console.warn(`🔍 Section10: Similar fields:`, findSimilarFieldNames(pdfFieldName, 3));
   }
 
   // Get numeric ID if available
   const numericId = getNumericFieldId(pdfFieldName);
   if (numericId) {
-    console.log(`🔢 Section10: Using numeric ID: ${numericId} for field: ${pdfFieldName}`);
+    // console.log(`🔢 Section10: Using numeric ID: ${numericId} for field: ${pdfFieldName}`);
   }
 
   // Create field using the reference system
   try {
     const field = createFieldFromReference(10, pdfFieldName, defaultValue);
-    console.log(`✅ Section10: Field generation successful for: ${logicalPath}`);
+    // console.log(`✅ Section10: Field generation successful for: ${logicalPath}`);
     return field;
   } catch (error) {
-    console.error(`❌ Section10: Field generation failed for ${logicalPath}:`, error);
+    // console.error(`❌ Section10: Field generation failed for ${logicalPath}:`, error);
 
     // Fallback to basic field creation
     return {
@@ -173,10 +173,10 @@ export function initializeSection10FieldMapping(): void {
   } else {
     // console.warn(`⚠️ Section10: ${validation.missingFields.length} fields are not mapped:`);
     validation.missingFields.slice(0, 10).forEach(field => {
-      console.warn(`  - ${field}`);
+      // console.warn(`  - ${field}`);
     });
     if (validation.missingFields.length > 10) {
-      console.warn(`  ... and ${validation.missingFields.length - 10} more`);
+      // console.warn(`  ... and ${validation.missingFields.length - 10} more`);
     }
   }
 
@@ -212,7 +212,7 @@ export function generateFieldId(
   const pdfFieldName = mapLogicalFieldToPdfField(logicalPath);
   const numericId = getNumericFieldId(pdfFieldName);
 
-  console.log(`🔄 Section10: Generated field ID for ${logicalPath}: ${numericId || pdfFieldName}`);
+  // console.log(`🔄 Section10: Generated field ID for ${logicalPath}: ${numericId || pdfFieldName}`);
 
   return numericId || pdfFieldName;
 }
@@ -221,7 +221,7 @@ export function generateFieldId(
  * Validate that all required fields can be generated
  */
 export function validateFieldGeneration(): boolean {
-  console.log('🔍 Section10: Validating field generation capabilities');
+  // console.log('🔍 Section10: Validating field generation capabilities');
 
   const testFields = [
     'dualCitizenship.hasDualCitizenship',
@@ -240,17 +240,17 @@ export function validateFieldGeneration(): boolean {
     const exists = validateFieldExists(pdfFieldName);
 
     if (!exists) {
-      console.error(`❌ Section10: Field generation validation failed for: ${logicalPath} → ${pdfFieldName}`);
+      // console.error(`❌ Section10: Field generation validation failed for: ${logicalPath} → ${pdfFieldName}`);
       allValid = false;
     } else {
-      console.log(`✅ Section10: Field generation validated for: ${logicalPath} → ${pdfFieldName}`);
+      // console.log(`✅ Section10: Field generation validated for: ${logicalPath} → ${pdfFieldName}`);
     }
   });
 
   if (allValid) {
-    console.log('✅ Section10: All field generation validation tests passed');
+    // console.log('✅ Section10: All field generation validation tests passed');
   } else {
-    console.error('❌ Section10: Field generation validation failed');
+    // console.error('❌ Section10: Field generation validation failed');
   }
 
   return allValid;

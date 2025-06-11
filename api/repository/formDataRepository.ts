@@ -1,4 +1,4 @@
-import type { ApplicantFormValues } from "../interfaces/formDefinition";
+import type { ApplicantFormValues } from "../interfaces/formDefinition2.0";
 
 class DynamicRepository {
   private dbName: string;

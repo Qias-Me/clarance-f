@@ -85,7 +85,7 @@ const Section9Component: React.FC<Section9ComponentProps> = ({
     }
   };
 
-  // SF86 Form Context for data persistence
+  // SF86 Form Context for data persistence6
   const sf86Form = useSF86Form();
 
   // Track validation state internally
@@ -125,6 +125,9 @@ const Section9Component: React.FC<Section9ComponentProps> = ({
 
         // Save the form data to persistence layer
         await sf86Form.saveForm();
+
+        // Mark section as complete after successful save
+        sf86Form.markSectionComplete('section9');
 
         console.log('✅ Section 9 data saved successfully:', section9Data);
 
@@ -906,18 +909,7 @@ const Section9Component: React.FC<Section9ComponentProps> = ({
         </div>
 
         {/* Validation Status */}
-        <div className="mt-4" data-testid="validation-status">
-          <div className="text-sm text-gray-600">
-            Section Status: <span className={`font-medium ${isDirty ? 'text-orange-500' : 'text-green-500'}`}>
-              {isDirty ? 'Modified, needs validation' : 'Ready for input'}
-            </span>
-          </div>
-          <div className="text-sm text-gray-600">
-            Validation: <span className={`font-medium ${isValid ? 'text-green-500' : 'text-red-500'}`}>
-              {isValid ? 'Valid' : 'Has errors'}
-            </span>
-          </div>
-        </div>
+     
       </form>
 
       {/* Debug Information (Development Only) */}

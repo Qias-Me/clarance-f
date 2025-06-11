@@ -70,6 +70,9 @@ export const Section7Component: React.FC<Section7ComponentProps> = ({
         // Save the form data to persistence layer
         await sf86Form.saveForm();
 
+        // Mark section as complete after successful save
+        sf86Form.markSectionComplete('section7');
+
         console.log('✅ Section 7 data saved successfully:', section7Data);
 
         // Proceed to next section if callback provided
@@ -83,61 +86,64 @@ export const Section7Component: React.FC<Section7ComponentProps> = ({
     }
   };
 
-  // Phone type options
-  const phoneTypes = [
-    { value: 'MOBILE', label: 'Mobile' },
-    { value: 'HOME', label: 'Home' },
-    { value: 'WORK', label: 'Work' },
-    { value: 'OTHER', label: 'Other' }
-  ];
 
 
-  // Render a fixed phone number entry (from section7Data.entries)
-  const renderFixedPhoneEntry = (phone: any, index: number, phoneType: string) => {
+  // Render a general phone number entry (dynamic)
+  const renderPhoneEntry = (phone: any, index: number) => {
     return (
-      <div key={`fixed-phone-${index}`} className="border rounded-lg p-4 mb-4 bg-blue-50">
+      <div key={`phone-${index}`} className="border rounded-lg p-4 mb-4 bg-gray-50">
         <div className="flex justify-between items-center mb-4">
-          <h4 className="text-lg font-medium text-gray-900">
-            {phoneType.charAt(0).toUpperCase() + phoneType.slice(1)} Phone
-          </h4>
-          <span className="text-sm text-blue-600">Fixed Field</span>
+          <h4 className="text-lg font-medium text-gray-900">Phone #{index + 1}</h4>
+          {phoneNumbers.length > 1 && (
+            <button
+              type="button"
+              onClick={() => removePhoneNumber(index)}
+              className="text-red-500 hover:text-red-700"
+              aria-label={`Remove phone ${index + 1}`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-4">
           {/* Phone Number */}
           <div>
             <label
-              htmlFor={`fixed-phone-number-${index}`}
+              htmlFor={`phone-number-${index}`}
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              Phone Number
+              Phone Number <span className="text-red-500">*</span>
             </label>
             <input
               type="tel"
-              id={`fixed-phone-number-${index}`}
-              data-testid={`fixed-phone-number-${index}`}
+              id={`phone-number-${index}`}
+              data-testid={`phone-number-${index}`}
               value={phone.number?.value || ''}
               onChange={(e) => updatePhoneNumber(index, 'number', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               placeholder="(123) 456-7890"
+              required
             />
-            {errors[`section7.entries[${index}].number`] && (
-              <p className="mt-1 text-sm text-red-600">{errors[`section7.entries[${index}].number`]}</p>
+            {errors[`phoneNumbers[${index}].number`] && (
+              <p className="mt-1 text-sm text-red-600">{errors[`phoneNumbers[${index}].number`]}</p>
             )}
           </div>
 
           {/* Extension */}
           <div>
             <label
-              htmlFor={`fixed-phone-extension-${index}`}
+              htmlFor={`phone-extension-${index}`}
               className="block text-sm font-medium text-gray-700 mb-2"
             >
               Extension
             </label>
             <input
               type="text"
-              id={`fixed-phone-extension-${index}`}
-              data-testid={`fixed-phone-extension-${index}`}
+              id={`phone-extension-${index}`}
+              data-testid={`phone-extension-${index}`}
               value={phone.extension?.value || ''}
               onChange={(e) => updatePhoneNumber(index, 'extension', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -180,126 +186,7 @@ export const Section7Component: React.FC<Section7ComponentProps> = ({
     );
   };
 
-  // Render a dynamic phone number entry
-  const renderPhoneEntry = (phone: any, index: number) => {
-    return (
-      <div key={`phone-${index}`} className="border rounded-lg p-4 mb-4 bg-gray-50">
-        <div className="flex justify-between items-center mb-4">
-          <h4 className="text-lg font-medium text-gray-900">Phone #{index + 1}</h4>
-          <button
-            type="button"
-            onClick={() => removePhoneNumber(index)}
-            className="text-red-500 hover:text-red-700"
-            aria-label={`Remove phone ${index + 1}`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-          </button>
-        </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          {/* Phone Type */}
-          <div>
-            <label
-              htmlFor={`phone-type-${index}`}
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Phone Type <span className="text-red-500">*</span>
-            </label>
-            <select
-              id={`phone-type-${index}`}
-              data-testid={`phone-type-${index}`}
-              value={phone.type?.value || ''}
-              onChange={(e) => updatePhoneNumber(index, 'type', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              required
-            >
-              <option value="">Select type</option>
-              {phoneTypes.map((type) => (
-                <option key={type.value} value={type.value}>
-                  {type.label}
-                </option>
-              ))}
-            </select>
-            {errors[`phoneNumbers[${index}].type`] && (
-              <p className="mt-1 text-sm text-red-600">{errors[`phoneNumbers[${index}].type`]}</p>
-            )}
-          </div>
-
-          {/* Phone Number */}
-          <div>
-            <label
-              htmlFor={`phone-number-${index}`}
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Phone Number <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="tel"
-              id={`phone-number-${index}`}
-              data-testid={`phone-number-${index}`}
-              value={phone.number?.value || ''}
-              onChange={(e) => updatePhoneNumber(index, 'number', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="(123) 456-7890"
-              required
-            />
-            {errors[`phoneNumbers[${index}].number`] && (
-              <p className="mt-1 text-sm text-red-600">{errors[`phoneNumbers[${index}].number`]}</p>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Render an email address entry
-  const renderEmailEntry = (email: any, index: number) => {
-    return (
-      <div key={`email-${index}`} className="border rounded-lg p-4 mb-4 bg-gray-50">
-        <div className="flex justify-between items-center mb-4">
-          <h4 className="text-lg font-medium text-gray-900">Email #{index + 1}</h4>
-          <button
-            type="button"
-            onClick={() => removeEmailAddress(index)}
-            className="text-red-500 hover:text-red-700"
-            aria-label={`Remove email ${index + 1}`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Email Address */}
-        <div>
-          <label
-            htmlFor={`email-address-${index}`}
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
-            Email Address <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="email"
-            id={`email-address-${index}`}
-            data-testid={`email-address-${index}`}
-            value={email.address?.value || ''}
-            onChange={(e) => {
-              // For simplicity, update the dynamic email addresses directly
-              // This could be enhanced to sync with section7Data if needed
-            }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="example@email.com"
-            required
-          />
-          {errors[`emailAddresses[${index}].address`] && (
-            <p className="mt-1 text-sm text-red-600">{errors[`emailAddresses[${index}].address`]}</p>
-          )}
-        </div>
-      </div>
-    );
-  };
 
 
   return (
@@ -319,7 +206,7 @@ export const Section7Component: React.FC<Section7ComponentProps> = ({
 
         {/* Fixed Email Fields Section */}
         <div className="border rounded-lg p-5 bg-blue-50">
-          <h3 className="text-lg font-semibold mb-4">Primary Email Addresses (PDF Fields)</h3>
+          <h3 className="text-lg font-semibold mb-4">Primary Email Addresses</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -354,24 +241,30 @@ export const Section7Component: React.FC<Section7ComponentProps> = ({
           </div>
         </div>
 
-        {/* Fixed Phone Numbers Section */}
-        <div className="border rounded-lg p-5 bg-blue-50">
-          <h3 className="text-lg font-semibold mb-4">Phone Numbers (PDF Fields)</h3>
-          <p className="text-sm text-blue-600 mb-4">These are the fixed phone fields that map to the PDF form</p>
+        {/* Phone Numbers Section */}
+        <div className="border rounded-lg p-5 bg-gray-50">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">Phone Numbers</h3>
+            <button
+              type="button"
+              onClick={addPhoneNumber}
+              className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm"
+              data-testid="add-phone-button"
+            >
+              Add Phone
+            </button>
+          </div>
 
-          {section7Data.section7.entries && section7Data.section7.entries.length > 0 ? (
+          {phoneNumbers && phoneNumbers.length > 0 ? (
             <div className="space-y-4">
-              {section7Data.section7.entries.map((phone, index) => {
-                const phoneType = index === 0 ? 'home' : index === 1 ? 'work' : 'mobile';
-                return renderFixedPhoneEntry(phone, index, phoneType);
-              })}
+              {phoneNumbers.map((phone, index) => renderPhoneEntry(phone, index))}
             </div>
           ) : (
             <p className="italic text-gray-500 mb-4">No phone numbers available.</p>
           )}
         </div>
 
-  
+
 
         {/* Form Actions */}
         <div className="mt-8 flex justify-between items-center pt-6 border-t border-gray-200">
@@ -400,57 +293,10 @@ export const Section7Component: React.FC<Section7ComponentProps> = ({
         </div>
 
         {/* Validation Status */}
-        <div className="mt-4" data-testid="validation-status">
-          <div className="text-sm text-gray-600">
-            Section Status: <span className={`font-medium ${isDirty ? 'text-orange-500' : 'text-green-500'}`}>
-              {isDirty ? 'Modified, needs validation' : 'Ready for input'}
-            </span>
-          </div>
-          <div className="text-sm text-gray-600">
-            Validation: <span className={`font-medium ${isValid ? 'text-green-500' : 'text-red-500'}`}>
-              {isValid ? 'Valid' : 'Has errors'}
-            </span>
-          </div>
-        </div>
+
       </form>
 
-      {/* Section Summary */}
-      <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-        <h4 className="text-sm font-medium text-gray-900 mb-2">Section 7 Data Summary</h4>
-        <div className="text-xs text-gray-600 space-y-1">
-          <p><strong>Fixed Email Fields:</strong> Home: {section7Data.section7.homeEmail.value ? '✓' : '○'}, Work: {section7Data.section7.workEmail.value ? '✓' : '○'}</p>
-          <p><strong>Fixed Phone Fields:</strong> {section7Data.section7.entries?.length || 0} entries configured</p>
-          <p><strong>Additional Phone Numbers:</strong> {phoneNumbers.length} added</p>
-          <p><strong>Additional Email Addresses:</strong> {emailAddresses.length} added</p>
-          <p><strong>Social Media Accounts:</strong> {socialMedia.length} added</p>
-          <p className="mt-2 pt-2 border-t border-blue-200">
-            <strong>PDF Integration:</strong> Fixed fields map to section-7.json (17 total fields). Additional fields are for supplementary information.
-          </p>
-        </div>
-      </div>
 
-      {/* Debug Information (Development Only) */}
-      {typeof window !== 'undefined' && window.location.search.includes('debug=true') && (
-        <details className="mt-6 p-4 bg-gray-50 rounded-lg">
-          <summary className="cursor-pointer text-sm font-medium text-gray-700">
-            Debug Information
-          </summary>
-          <div className="mt-2">
-            <h4 className="text-xs font-medium text-gray-600 mb-2">Section 7 Data:</h4>
-            <pre className="text-xs bg-white p-2 rounded border overflow-auto max-h-40">
-              {JSON.stringify(section7Data, null, 2)}
-            </pre>
-            <h4 className="text-xs font-medium text-gray-600 mt-4 mb-2">Dynamic Arrays:</h4>
-            <pre className="text-xs bg-white p-2 rounded border overflow-auto max-h-40">
-              {JSON.stringify({phoneNumbers, emailAddresses, socialMedia}, null, 2)}
-            </pre>
-            <h4 className="text-xs font-medium text-gray-600 mt-4 mb-2">Validation Errors:</h4>
-            <pre className="text-xs bg-white p-2 rounded border overflow-auto max-h-40">
-              {JSON.stringify(errors, null, 2)}
-            </pre>
-          </div>
-        </details>
-      )}
     </div>
   );
 };

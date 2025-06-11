@@ -71,6 +71,9 @@ export const Section30Component: React.FC<Section30ComponentProps> = ({
         // Save the form data to persistence layer
         await sf86Form.saveForm();
 
+        // Mark section as complete after successful save
+        sf86Form.markSectionComplete('section30');
+
         console.log('✅ Section 30 data saved successfully:', section30Data);
 
         // Proceed to next section if callback provided

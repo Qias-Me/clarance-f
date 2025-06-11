@@ -9,6 +9,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSection1 } from '~/state/contexts/sections2.0/section1';
 import { useSF86Form } from '~/state/contexts/SF86FormContext';
+import { getSuffixOptions } from '../../../api/interfaces/sections2.0/base';
 
 interface Section1ComponentProps {
   className?: string;
@@ -63,6 +64,9 @@ export const Section1Component: React.FC<Section1ComponentProps> = ({
 
         // Save the form data to persistence layer
         await sf86Form.saveForm();
+
+        // Mark section as complete after successful save
+        sf86Form.markSectionComplete('section1');
 
         console.log('✅ Section 1 data saved successfully:', section1Data);
 
@@ -200,13 +204,11 @@ export const Section1Component: React.FC<Section1ComponentProps> = ({
             onChange={(e) => handleFieldChange('suffix', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="">Select suffix (if applicable)</option>
-            <option value="Jr">Jr.</option>
-            <option value="Sr">Sr.</option>
-            <option value="II">II</option>
-            <option value="III">III</option>
-            <option value="IV">IV</option>
-            <option value="V">V</option>
+            {getSuffixOptions().map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
           <p className="mt-1 text-xs text-gray-500">
             Select your name suffix if applicable (Jr., Sr., II, III, etc.).
@@ -241,19 +243,7 @@ export const Section1Component: React.FC<Section1ComponentProps> = ({
           </div>
         </div>
 
-        {/* Validation Status */}
-        <div className="mt-4" data-testid="validation-status">
-          <div className="text-sm text-gray-600">
-            Section Status: <span className={`font-medium ${isDirty ? 'text-orange-500' : 'text-green-500'}`}>
-              {isDirty ? 'Modified, needs validation' : 'Ready for input'}
-            </span>
-          </div>
-          <div className="text-sm text-gray-600">
-            Validation: <span className={`font-medium ${isValid ? 'text-green-500' : 'text-red-500'}`}>
-              {isValid ? 'Valid' : 'Has errors'}
-            </span>
-          </div>
-        </div>
+   
       </form>
 
       {/* Debug Information (Development Only) */}

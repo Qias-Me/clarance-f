@@ -1,16 +1,15 @@
 
 /**
- * Supported US States and territories (from the dropdown options in the form)
+ * Supported US States and territories (all 50 states + DC + territories + military)
  */
-type USState = 
-  | "AK" | "AL" | "AR" | "AS" | "AZ" | "CA" | "CO" | "CT" | "DC" | "DE" 
-  | "FL" | "FM" | "GA" | "GU" | "HI" | "IA" | "ID" | "IL" | "IN" | "KS" 
-  | "KY" | "LA" | "MA" | "MD" | "ME" | "MH" | "MI" | "MN" | "MO" | "MP" 
-  | "MS" | "MT" | "NC" | "ND" | "NE" | "NH" | "NJ" | "NM" | "NV" | "NY" 
-  | "OH" | "OK" | "OR" | "PA" | "PR" | "PW" | "RI" | "SC" | "SD" | "TN" 
-  | "TX" | "UT" | "VA" | "VI" | "VT" | "WA" | "WI" | "WV" | "WY" | "AS" 
-  | "FQ" | "GU" | "HQ" | "DQ" | "JQ" | "KQ" | "MH" | "FM" | "MQ" | "BQ" 
-  | "MP" | "PW" | "LQ" | "PR" | "VI" | "WQ" | "AA" | "AE" | "AP" | "";
+type USState =
+  | "AL" | "AK" | "AZ" | "AR" | "CA" | "CO" | "CT" | "DE" | "DC" | "FL"
+  | "GA" | "HI" | "ID" | "IL" | "IN" | "IA" | "KS" | "KY" | "LA" | "ME"
+  | "MD" | "MA" | "MI" | "MN" | "MS" | "MO" | "MT" | "NE" | "NV" | "NH"
+  | "NJ" | "NM" | "NY" | "NC" | "ND" | "OH" | "OK" | "OR" | "PA" | "RI"
+  | "SC" | "SD" | "TN" | "TX" | "UT" | "VT" | "VA" | "WA" | "WV" | "WI"
+  | "WY" | "AS" | "GU" | "MP" | "PR" | "VI" | "FM" | "MH" | "PW"
+  | "AA" | "AE" | "AP" | "";
 
 /**
  * Supported countries (extensive list from the form's country dropdown)
@@ -68,17 +67,372 @@ type Country =
   | "South Georgia and the South Sandwich Islands" | "South Korea" 
   | "Spain" | "Spratly Islands" | "Sri Lanka" | "Sudan" | "Suriname" 
   | "Svalbard" | "Swaziland" | "Sweden" | "Switzerland" | "Syria" 
-  | "Taiwan" | "Tajikistan" | "Tanzania" | "Thailand" | "Togo" 
-  | "Tokelau" | "Tonga" | "Trinidad and Tobago" | "Tromelin Island" 
-  | "Tunisia" | "Turkey" | "Turkmenistan" | "Turks and Caicos Islands" 
-  | "Tuvalu" | "Uganda" | "Ukraine" | "United Arab Emirates" 
-  | "United Kingdom" | "Uruguay" | "Uzbekistan" | "Vanuatu" 
-  | "Vatican City" | "Venezuela" | "Vietnam" | "Wallis and Futuna" 
+  | "Taiwan" | "Tajikistan" | "Tanzania" | "Thailand" | "Togo"
+  | "Tokelau" | "Tonga" | "Trinidad and Tobago" | "Tromelin Island"
+  | "Tunisia" | "Turkey" | "Turkmenistan" | "Turks and Caicos Islands"
+  | "Tuvalu" | "Uganda" | "Ukraine" | "United Arab Emirates"
+  | "United Kingdom" | "Uruguay" | "Uzbekistan" | "Vanuatu"
+  | "Vatican City" | "Venezuela" | "Vietnam" | "Wallis and Futuna"
   | "West Bank" | "Western Sahara" | "Yemen" | "Zambia" | "Zimbabwe" | "";
 
+/**
+ * Common suffix options used across multiple SF-86 sections
+ * Used in: Section 1 (Full Name), Section 5 (Other Names), Section 18 (Relatives)
+ */
+export const SUFFIX_OPTIONS = [
+  "Jr", "Sr", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "Other"
+] as const;
 
+/**
+ * Type for suffix values
+ */
+type Suffix = typeof SUFFIX_OPTIONS[number];
+
+/**
+ * Utility functions to convert centralized types to dropdown format
+ */
+
+/**
+ * Convert USState type to dropdown options format (all states and territories)
+ */
+export const getUSStateOptions = () => [
+  { value: "", label: "Select state..." },
+  { value: "AL", label: "Alabama" },
+  { value: "AK", label: "Alaska" },
+  { value: "AZ", label: "Arizona" },
+  { value: "AR", label: "Arkansas" },
+  { value: "AS", label: "American Samoa" },
+  { value: "CA", label: "California" },
+  { value: "CO", label: "Colorado" },
+  { value: "CT", label: "Connecticut" },
+  { value: "DE", label: "Delaware" },
+  { value: "DC", label: "District of Columbia" },
+  { value: "FL", label: "Florida" },
+  { value: "GA", label: "Georgia" },
+  { value: "GU", label: "Guam" },
+  { value: "HI", label: "Hawaii" },
+  { value: "ID", label: "Idaho" },
+  { value: "IL", label: "Illinois" },
+  { value: "IN", label: "Indiana" },
+  { value: "IA", label: "Iowa" },
+  { value: "KS", label: "Kansas" },
+  { value: "KY", label: "Kentucky" },
+  { value: "LA", label: "Louisiana" },
+  { value: "ME", label: "Maine" },
+  { value: "MD", label: "Maryland" },
+  { value: "MA", label: "Massachusetts" },
+  { value: "MI", label: "Michigan" },
+  { value: "MN", label: "Minnesota" },
+  { value: "MS", label: "Mississippi" },
+  { value: "MO", label: "Missouri" },
+  { value: "MT", label: "Montana" },
+  { value: "NE", label: "Nebraska" },
+  { value: "NV", label: "Nevada" },
+  { value: "NH", label: "New Hampshire" },
+  { value: "NJ", label: "New Jersey" },
+  { value: "NM", label: "New Mexico" },
+  { value: "NY", label: "New York" },
+  { value: "NC", label: "North Carolina" },
+  { value: "ND", label: "North Dakota" },
+  { value: "MP", label: "Northern Mariana Islands" },
+  { value: "OH", label: "Ohio" },
+  { value: "OK", label: "Oklahoma" },
+  { value: "OR", label: "Oregon" },
+  { value: "PA", label: "Pennsylvania" },
+  { value: "PR", label: "Puerto Rico" },
+  { value: "RI", label: "Rhode Island" },
+  { value: "SC", label: "South Carolina" },
+  { value: "SD", label: "South Dakota" },
+  { value: "TN", label: "Tennessee" },
+  { value: "TX", label: "Texas" },
+  { value: "UT", label: "Utah" },
+  { value: "VT", label: "Vermont" },
+  { value: "VI", label: "Virgin Islands" },
+  { value: "VA", label: "Virginia" },
+  { value: "WA", label: "Washington" },
+  { value: "WV", label: "West Virginia" },
+  { value: "WI", label: "Wisconsin" },
+  { value: "WY", label: "Wyoming" },
+  { value: "AA", label: "Armed Forces Americas" },
+  { value: "AE", label: "Armed Forces Europe" },
+  { value: "AP", label: "Armed Forces Pacific" },
+  { value: "FM", label: "Federated States of Micronesia" },
+  { value: "MH", label: "Marshall Islands" },
+  { value: "PW", label: "Palau" }
+];
+
+/**
+ * Convert Country type to dropdown options format (all countries)
+ */
+export const getCountryOptions = () => [
+  { value: "", label: "Select country..." },
+  { value: "Afghanistan", label: "Afghanistan" },
+  { value: "Akrotiri Sovereign Base Area", label: "Akrotiri Sovereign Base Area" },
+  { value: "Albania", label: "Albania" },
+  { value: "Algeria", label: "Algeria" },
+  { value: "Andorra", label: "Andorra" },
+  { value: "Angola", label: "Angola" },
+  { value: "Anguilla", label: "Anguilla" },
+  { value: "Antarctica", label: "Antarctica" },
+  { value: "Antigua and Barbuda", label: "Antigua and Barbuda" },
+  { value: "Argentina", label: "Argentina" },
+  { value: "Armenia", label: "Armenia" },
+  { value: "Aruba", label: "Aruba" },
+  { value: "Ashmore and Cartier Islands", label: "Ashmore and Cartier Islands" },
+  { value: "Australia", label: "Australia" },
+  { value: "Austria", label: "Austria" },
+  { value: "Azerbaijan", label: "Azerbaijan" },
+  { value: "Bahamas, The", label: "Bahamas, The" },
+  { value: "Bahrain", label: "Bahrain" },
+  { value: "Bangladesh", label: "Bangladesh" },
+  { value: "Barbados", label: "Barbados" },
+  { value: "Bassas da India", label: "Bassas da India" },
+  { value: "Belarus", label: "Belarus" },
+  { value: "Belgium", label: "Belgium" },
+  { value: "Belize", label: "Belize" },
+  { value: "Benin", label: "Benin" },
+  { value: "Bermuda", label: "Bermuda" },
+  { value: "Bhutan", label: "Bhutan" },
+  { value: "Bolivia", label: "Bolivia" },
+  { value: "Bosnia and Herzegovina", label: "Bosnia and Herzegovina" },
+  { value: "Botswana", label: "Botswana" },
+  { value: "Bouvet Island", label: "Bouvet Island" },
+  { value: "Brazil", label: "Brazil" },
+  { value: "British Indian Ocean Territory", label: "British Indian Ocean Territory" },
+  { value: "British Virgin Islands", label: "British Virgin Islands" },
+  { value: "Brunei", label: "Brunei" },
+  { value: "Bulgaria", label: "Bulgaria" },
+  { value: "Burkina Faso", label: "Burkina Faso" },
+  { value: "Burma", label: "Burma" },
+  { value: "Burundi", label: "Burundi" },
+  { value: "Cambodia", label: "Cambodia" },
+  { value: "Cameroon", label: "Cameroon" },
+  { value: "Canada", label: "Canada" },
+  { value: "Cape Verde", label: "Cape Verde" },
+  { value: "Cayman Islands", label: "Cayman Islands" },
+  { value: "Central African Republic", label: "Central African Republic" },
+  { value: "Chad", label: "Chad" },
+  { value: "Chile", label: "Chile" },
+  { value: "China", label: "China" },
+  { value: "Christmas Island", label: "Christmas Island" },
+  { value: "Clipperton Island", label: "Clipperton Island" },
+  { value: "Cocos Keeling Islands", label: "Cocos Keeling Islands" },
+  { value: "Colombia", label: "Colombia" },
+  { value: "Comoros", label: "Comoros" },
+  { value: "Congo", label: "Congo" },
+  { value: "Congo, Democratic Republic of the", label: "Congo, Democratic Republic of the" },
+  { value: "Cook Islands", label: "Cook Islands" },
+  { value: "Coral Sea Islands", label: "Coral Sea Islands" },
+  { value: "Costa Rica", label: "Costa Rica" },
+  { value: "Cote d'Ivoire", label: "Cote d'Ivoire" },
+  { value: "Croatia", label: "Croatia" },
+  { value: "Cuba", label: "Cuba" },
+  { value: "Cyprus", label: "Cyprus" },
+  { value: "Czech Republic", label: "Czech Republic" },
+  { value: "Denmark", label: "Denmark" },
+  { value: "Dhekelia Sovereign Base Area", label: "Dhekelia Sovereign Base Area" },
+  { value: "Djibouti", label: "Djibouti" },
+  { value: "Dominica", label: "Dominica" },
+  { value: "Dominican Republic", label: "Dominican Republic" },
+  { value: "East Timor", label: "East Timor" },
+  { value: "Ecuador", label: "Ecuador" },
+  { value: "Egypt", label: "Egypt" },
+  { value: "El Salvador", label: "El Salvador" },
+  { value: "Equatorial Guinea", label: "Equatorial Guinea" },
+  { value: "Eritrea", label: "Eritrea" },
+  { value: "Estonia", label: "Estonia" },
+  { value: "Ethiopia", label: "Ethiopia" },
+  { value: "Etorofu, Habomai, Kunashiri And Shikotan Islands", label: "Etorofu, Habomai, Kunashiri And Shikotan Islands" },
+  { value: "Europa Island", label: "Europa Island" },
+  { value: "Falkland Islands Islas Malvinas", label: "Falkland Islands Islas Malvinas" },
+  { value: "Faroe Islands", label: "Faroe Islands" },
+  { value: "Fiji", label: "Fiji" },
+  { value: "Finland", label: "Finland" },
+  { value: "France", label: "France" },
+  { value: "French Guiana", label: "French Guiana" },
+  { value: "French Polynesia", label: "French Polynesia" },
+  { value: "French Southern and Antarctic Lands", label: "French Southern and Antarctic Lands" },
+  { value: "Gabon", label: "Gabon" },
+  { value: "Gambia, The", label: "Gambia, The" },
+  { value: "Gaza Strip", label: "Gaza Strip" },
+  { value: "Georgia", label: "Georgia" },
+  { value: "Germany", label: "Germany" },
+  { value: "Ghana", label: "Ghana" },
+  { value: "Gibraltar", label: "Gibraltar" },
+  { value: "Glorioso Islands", label: "Glorioso Islands" },
+  { value: "Greece", label: "Greece" },
+  { value: "Greenland", label: "Greenland" },
+  { value: "Grenada", label: "Grenada" },
+  { value: "Guadeloupe", label: "Guadeloupe" },
+  { value: "Guatemala", label: "Guatemala" },
+  { value: "Guernsey", label: "Guernsey" },
+  { value: "Guinea", label: "Guinea" },
+  { value: "Guinea-Bissau", label: "Guinea-Bissau" },
+  { value: "Guyana", label: "Guyana" },
+  { value: "Haiti", label: "Haiti" },
+  { value: "Heard Island and McDonald Islands", label: "Heard Island and McDonald Islands" },
+  { value: "Honduras", label: "Honduras" },
+  { value: "Hong Kong", label: "Hong Kong" },
+  { value: "Hungary", label: "Hungary" },
+  { value: "Iceland", label: "Iceland" },
+  { value: "India", label: "India" },
+  { value: "Indonesia", label: "Indonesia" },
+  { value: "Iran", label: "Iran" },
+  { value: "Iraq", label: "Iraq" },
+  { value: "Ireland", label: "Ireland" },
+  { value: "Isle of Man", label: "Isle of Man" },
+  { value: "Israel", label: "Israel" },
+  { value: "Italy", label: "Italy" },
+  { value: "Jamaica", label: "Jamaica" },
+  { value: "Jan Mayen", label: "Jan Mayen" },
+  { value: "Japan", label: "Japan" },
+  { value: "Jersey", label: "Jersey" },
+  { value: "Jordan", label: "Jordan" },
+  { value: "Juan de Nova Island", label: "Juan de Nova Island" },
+  { value: "Kazakhstan", label: "Kazakhstan" },
+  { value: "Kenya", label: "Kenya" },
+  { value: "Kiribati", label: "Kiribati" },
+  { value: "Kosovo", label: "Kosovo" },
+  { value: "Kuwait", label: "Kuwait" },
+  { value: "Kyrgyzstan", label: "Kyrgyzstan" },
+  { value: "Laos", label: "Laos" },
+  { value: "Latvia", label: "Latvia" },
+  { value: "Lebanon", label: "Lebanon" },
+  { value: "Lesotho", label: "Lesotho" },
+  { value: "Liberia", label: "Liberia" },
+  { value: "Libya", label: "Libya" },
+  { value: "Liechtenstein", label: "Liechtenstein" },
+  { value: "Lithuania", label: "Lithuania" },
+  { value: "Luxembourg", label: "Luxembourg" },
+  { value: "Macau", label: "Macau" },
+  { value: "Macedonia", label: "Macedonia" },
+  { value: "Madagascar", label: "Madagascar" },
+  { value: "Malawi", label: "Malawi" },
+  { value: "Malaysia", label: "Malaysia" },
+  { value: "Maldives", label: "Maldives" },
+  { value: "Mali", label: "Mali" },
+  { value: "Malta", label: "Malta" },
+  { value: "Marshall Islands", label: "Marshall Islands" },
+  { value: "Martinique", label: "Martinique" },
+  { value: "Mauritania", label: "Mauritania" },
+  { value: "Mauritius", label: "Mauritius" },
+  { value: "Mayotte", label: "Mayotte" },
+  { value: "Mexico", label: "Mexico" },
+  { value: "Micronesia, Federated States of", label: "Micronesia, Federated States of" },
+  { value: "Moldova", label: "Moldova" },
+  { value: "Monaco", label: "Monaco" },
+  { value: "Mongolia", label: "Mongolia" },
+  { value: "Montenegro", label: "Montenegro" },
+  { value: "Montserrat", label: "Montserrat" },
+  { value: "Morocco", label: "Morocco" },
+  { value: "Mozambique", label: "Mozambique" },
+  { value: "Namibia", label: "Namibia" },
+  { value: "Nauru", label: "Nauru" },
+  { value: "Nepal", label: "Nepal" },
+  { value: "Netherlands", label: "Netherlands" },
+  { value: "Netherlands Antilles", label: "Netherlands Antilles" },
+  { value: "New Caledonia", label: "New Caledonia" },
+  { value: "New Zealand", label: "New Zealand" },
+  { value: "Nicaragua", label: "Nicaragua" },
+  { value: "Niger", label: "Niger" },
+  { value: "Nigeria", label: "Nigeria" },
+  { value: "Niue", label: "Niue" },
+  { value: "Norfolk Island", label: "Norfolk Island" },
+  { value: "North Korea", label: "North Korea" },
+  { value: "Norway", label: "Norway" },
+  { value: "Oman", label: "Oman" },
+  { value: "Pakistan", label: "Pakistan" },
+  { value: "Palau", label: "Palau" },
+  { value: "Panama", label: "Panama" },
+  { value: "Papua New Guinea", label: "Papua New Guinea" },
+  { value: "Paracel Islands", label: "Paracel Islands" },
+  { value: "Paraguay", label: "Paraguay" },
+  { value: "Peru", label: "Peru" },
+  { value: "Philippines", label: "Philippines" },
+  { value: "Pitcairn Islands", label: "Pitcairn Islands" },
+  { value: "Poland", label: "Poland" },
+  { value: "Portugal", label: "Portugal" },
+  { value: "Qatar", label: "Qatar" },
+  { value: "Reunion", label: "Reunion" },
+  { value: "Romania", label: "Romania" },
+  { value: "Russia", label: "Russia" },
+  { value: "Rwanda", label: "Rwanda" },
+  { value: "Saint Barthelemy", label: "Saint Barthelemy" },
+  { value: "Saint Helena", label: "Saint Helena" },
+  { value: "Saint Kitts and Nevis", label: "Saint Kitts and Nevis" },
+  { value: "Saint Lucia", label: "Saint Lucia" },
+  { value: "Saint Martin", label: "Saint Martin" },
+  { value: "Saint Pierre and Miquelon", label: "Saint Pierre and Miquelon" },
+  { value: "Saint Vincent and the Grenadines", label: "Saint Vincent and the Grenadines" },
+  { value: "Samoa", label: "Samoa" },
+  { value: "San Marino", label: "San Marino" },
+  { value: "Sao Tome and Principe", label: "Sao Tome and Principe" },
+  { value: "Saudi Arabia", label: "Saudi Arabia" },
+  { value: "Senegal", label: "Senegal" },
+  { value: "Serbia", label: "Serbia" },
+  { value: "Seychelles", label: "Seychelles" },
+  { value: "Sierra Leone", label: "Sierra Leone" },
+  { value: "Singapore", label: "Singapore" },
+  { value: "Slovakia", label: "Slovakia" },
+  { value: "Slovenia", label: "Slovenia" },
+  { value: "Solomon Islands", label: "Solomon Islands" },
+  { value: "Somalia", label: "Somalia" },
+  { value: "South Africa", label: "South Africa" },
+  { value: "South Georgia and the South Sandwich Islands", label: "South Georgia and the South Sandwich Islands" },
+  { value: "South Korea", label: "South Korea" },
+  { value: "Spain", label: "Spain" },
+  { value: "Spratly Islands", label: "Spratly Islands" },
+  { value: "Sri Lanka", label: "Sri Lanka" },
+  { value: "Sudan", label: "Sudan" },
+  { value: "Suriname", label: "Suriname" },
+  { value: "Svalbard", label: "Svalbard" },
+  { value: "Swaziland", label: "Swaziland" },
+  { value: "Sweden", label: "Sweden" },
+  { value: "Switzerland", label: "Switzerland" },
+  { value: "Syria", label: "Syria" },
+  { value: "Taiwan", label: "Taiwan" },
+  { value: "Tajikistan", label: "Tajikistan" },
+  { value: "Tanzania", label: "Tanzania" },
+  { value: "Thailand", label: "Thailand" },
+  { value: "Togo", label: "Togo" },
+  { value: "Tokelau", label: "Tokelau" },
+  { value: "Tonga", label: "Tonga" },
+  { value: "Trinidad and Tobago", label: "Trinidad and Tobago" },
+  { value: "Tromelin Island", label: "Tromelin Island" },
+  { value: "Tunisia", label: "Tunisia" },
+  { value: "Turkey", label: "Turkey" },
+  { value: "Turkmenistan", label: "Turkmenistan" },
+  { value: "Turks and Caicos Islands", label: "Turks and Caicos Islands" },
+  { value: "Tuvalu", label: "Tuvalu" },
+  { value: "Uganda", label: "Uganda" },
+  { value: "Ukraine", label: "Ukraine" },
+  { value: "United Arab Emirates", label: "United Arab Emirates" },
+  { value: "United Kingdom", label: "United Kingdom" },
+  { value: "United States", label: "United States" },
+  { value: "Uruguay", label: "Uruguay" },
+  { value: "Uzbekistan", label: "Uzbekistan" },
+  { value: "Vanuatu", label: "Vanuatu" },
+  { value: "Vatican City", label: "Vatican City" },
+  { value: "Venezuela", label: "Venezuela" },
+  { value: "Vietnam", label: "Vietnam" },
+  { value: "Wallis and Futuna", label: "Wallis and Futuna" },
+  { value: "West Bank", label: "West Bank" },
+  { value: "Western Sahara", label: "Western Sahara" },
+  { value: "Yemen", label: "Yemen" },
+  { value: "Zambia", label: "Zambia" },
+  { value: "Zimbabwe", label: "Zimbabwe" }
+];
+
+/**
+ * Convert SUFFIX_OPTIONS to dropdown options format
+ */
+export const getSuffixOptions = () => [
+  { value: "", label: "Select suffix..." },
+  ...SUFFIX_OPTIONS.map(suffix => ({ value: suffix, label: suffix }))
+];
 
   export type {
     USState,
-    Country
+    Country,
+    Suffix
   };

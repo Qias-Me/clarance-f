@@ -18,6 +18,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useSection29 } from '~/state/contexts/sections2.0/section29';
 import { useSF86Form } from '~/state/contexts/SF86FormContext';
+import { getUSStateOptions, getCountryOptions } from '../../../api/interfaces/sections2.0/base';
 import type {
   SubsectionKey,
   OrganizationSubsectionKey,
@@ -34,39 +35,11 @@ interface Section29ComponentProps {
 // Maximum number of entries allowed per subsection
 const MAX_ENTRIES_PER_SUBSECTION = 2;
 
-// US States for dropdown
-const US_STATES = [
-  { value: "", label: "Select state..." },
-  { value: "AL", label: "Alabama" }, { value: "AK", label: "Alaska" }, { value: "AZ", label: "Arizona" },
-  { value: "AR", label: "Arkansas" }, { value: "CA", label: "California" }, { value: "CO", label: "Colorado" },
-  { value: "CT", label: "Connecticut" }, { value: "DE", label: "Delaware" }, { value: "DC", label: "District of Columbia" },
-  { value: "FL", label: "Florida" }, { value: "GA", label: "Georgia" }, { value: "HI", label: "Hawaii" },
-  { value: "ID", label: "Idaho" }, { value: "IL", label: "Illinois" }, { value: "IN", label: "Indiana" },
-  { value: "IA", label: "Iowa" }, { value: "KS", label: "Kansas" }, { value: "KY", label: "Kentucky" },
-  { value: "LA", label: "Louisiana" }, { value: "ME", label: "Maine" }, { value: "MD", label: "Maryland" },
-  { value: "MA", label: "Massachusetts" }, { value: "MI", label: "Michigan" }, { value: "MN", label: "Minnesota" },
-  { value: "MS", label: "Mississippi" }, { value: "MO", label: "Missouri" }, { value: "MT", label: "Montana" },
-  { value: "NE", label: "Nebraska" }, { value: "NV", label: "Nevada" }, { value: "NH", label: "New Hampshire" },
-  { value: "NJ", label: "New Jersey" }, { value: "NM", label: "New Mexico" }, { value: "NY", label: "New York" },
-  { value: "NC", label: "North Carolina" }, { value: "ND", label: "North Dakota" }, { value: "OH", label: "Ohio" },
-  { value: "OK", label: "Oklahoma" }, { value: "OR", label: "Oregon" }, { value: "PA", label: "Pennsylvania" },
-  { value: "RI", label: "Rhode Island" }, { value: "SC", label: "South Carolina" }, { value: "SD", label: "South Dakota" },
-  { value: "TN", label: "Tennessee" }, { value: "TX", label: "Texas" }, { value: "UT", label: "Utah" },
-  { value: "VT", label: "Vermont" }, { value: "VA", label: "Virginia" }, { value: "WA", label: "Washington" },
-  { value: "WV", label: "West Virginia" }, { value: "WI", label: "Wisconsin" }, { value: "WY", label: "Wyoming" }
-];
+// Use centralized US States from base.ts
+const US_STATES = getUSStateOptions();
 
-// Common countries for dropdown
-const COUNTRIES = [
-  { value: "", label: "Select country..." },
-  { value: "United States", label: "United States" },
-  { value: "Canada", label: "Canada" },
-  { value: "Mexico", label: "Mexico" },
-  { value: "United Kingdom", label: "United Kingdom" },
-  { value: "Germany", label: "Germany" },
-  { value: "France", label: "France" },
-  { value: "Other", label: "Other" }
-];
+// Use centralized countries from base.ts
+const COUNTRIES = getCountryOptions();
 
 export const Section29Component: React.FC<Section29ComponentProps> = ({
   className = '',
@@ -270,10 +243,15 @@ export const Section29Component: React.FC<Section29ComponentProps> = ({
         // Save the form data to persistence layer
         await sf86Form.saveForm();
 
+        // Mark section as complete after successful save
+        sf86Form.markSectionComplete('section29');
+
         console.log('✅ Section 29 data saved successfully:', section29Data);
 
         // Proceed to next section if callback provided
         if (onNext) {
+                    sf86Form.markSectionComplete('section29');
+
           onNext();
         }
       } catch (error) {

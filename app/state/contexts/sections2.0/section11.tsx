@@ -601,13 +601,8 @@ export const Section11Provider: React.FC<Section11ProviderProps> = ({ children }
   const loadSection = useCallback(async () => {
     setIsLoading(true);
     try {
-      const dynamicService = new DynamicService();
-      const data = await dynamicService.loadSectionData('section11');
-      if (data) {
-        const sectionData = data as Section11;
-        setSection11Data(sectionData);
-        initialData.current = cloneDeep(sectionData);
-      }
+
+   
     } catch (error) {
       console.error("Error loading Section 11:", error);
       setErrors(prev => ({ ...prev, load: 'Failed to load section data.' }));

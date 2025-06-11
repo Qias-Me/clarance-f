@@ -19,20 +19,9 @@ import section9Data from '../sections-references/section-9.json';
 import section10Data from '../sections-references/section-10.json';
 import section11Data from '../sections-references/section-11.json';
 import section12Data from '../sections-references/section-12.json';
-import section13Data from '../sections-references/section-13.json';
 import section14Data from '../sections-references/section-14.json';
 import section15Data from '../sections-references/section-15.json';
-import section16Data from '../sections-references/section-16.json';
-import section17Data from '../sections-references/section-17.json';
-import section18Data from '../sections-references/section-18.json';
-import section19Data from '../sections-references/section-19.json';
-import section20Data from '../sections-references/section-20.json';
-import section21Data from '../sections-references/section-21.json';
-import section22Data from '../sections-references/section-22.json';
-import section23Data from '../sections-references/section-23.json';
-import section24Data from '../sections-references/section-24.json';
-import section25Data from '../sections-references/section-25.json';
-import section26Data from '../sections-references/section-26.json';
+
 import section27Data from '../sections-references/section-27.json';
 import section28Data from '../sections-references/section-28.json';
 import section29Data from '../sections-references/section-29.json';
@@ -92,20 +81,20 @@ const sectionsRegistry: Record<number, SectionReference> = {
   10: section10Data as SectionReference,
   11: section11Data as SectionReference,
   12: section12Data as SectionReference,
-  13: section13Data as SectionReference,
+  // 13: section13Data as SectionReference,
   14: section14Data as SectionReference,
   15: section15Data as SectionReference,
-  16: section16Data as SectionReference,
-  17: section17Data as SectionReference,
-  18: section18Data as SectionReference,
-  19: section19Data as SectionReference,
-  20: section20Data as SectionReference,
-  21: section21Data as SectionReference,
-  22: section22Data as SectionReference,
-  23: section23Data as SectionReference,
-  24: section24Data as SectionReference,
-  25: section25Data as SectionReference,
-  26: section26Data as SectionReference,
+  // 16: section16Data as SectionReference,
+  // 17: section17Data as SectionReference,
+  // 18: section18Data as SectionReference,
+  // 19: section19Data as SectionReference,
+  // 20: section20Data as SectionReference,
+  // 21: section21Data as SectionReference,
+  // 22: section22Data as SectionReference,
+  // 23: section23Data as SectionReference,
+  // 24: section24Data as SectionReference,
+  // 25: section25Data as SectionReference,
+  // 26: section26Data as SectionReference,
   27: section27Data as SectionReference,
   28: section28Data as SectionReference,
   29: section29Data as SectionReference,

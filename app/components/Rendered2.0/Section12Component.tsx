@@ -9,89 +9,18 @@
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useSection12 } from "~/state/contexts/sections2.0/section12";
 import { useSF86Form } from "~/state/contexts/SF86FormContext";
+import { getUSStateOptions, getCountryOptions } from "../../../api/interfaces/sections2.0/base";
 import type { SchoolEntry } from "../../../api/interfaces/sections2.0/section12";
 
 interface Section12ComponentProps {
   onValidationChange?: (isValid: boolean) => void;
 }
 
-// US States and territories for dropdown
-const US_STATES = [
-  { value: "", label: "Select state..." },
-  { value: "AL", label: "Alabama" },
-  { value: "AK", label: "Alaska" },
-  { value: "AZ", label: "Arizona" },
-  { value: "AR", label: "Arkansas" },
-  { value: "CA", label: "California" },
-  { value: "CO", label: "Colorado" },
-  { value: "CT", label: "Connecticut" },
-  { value: "DE", label: "Delaware" },
-  { value: "DC", label: "District of Columbia" },
-  { value: "FL", label: "Florida" },
-  { value: "GA", label: "Georgia" },
-  { value: "HI", label: "Hawaii" },
-  { value: "ID", label: "Idaho" },
-  { value: "IL", label: "Illinois" },
-  { value: "IN", label: "Indiana" },
-  { value: "IA", label: "Iowa" },
-  { value: "KS", label: "Kansas" },
-  { value: "KY", label: "Kentucky" },
-  { value: "LA", label: "Louisiana" },
-  { value: "ME", label: "Maine" },
-  { value: "MD", label: "Maryland" },
-  { value: "MA", label: "Massachusetts" },
-  { value: "MI", label: "Michigan" },
-  { value: "MN", label: "Minnesota" },
-  { value: "MS", label: "Mississippi" },
-  { value: "MO", label: "Missouri" },
-  { value: "MT", label: "Montana" },
-  { value: "NE", label: "Nebraska" },
-  { value: "NV", label: "Nevada" },
-  { value: "NH", label: "New Hampshire" },
-  { value: "NJ", label: "New Jersey" },
-  { value: "NM", label: "New Mexico" },
-  { value: "NY", label: "New York" },
-  { value: "NC", label: "North Carolina" },
-  { value: "ND", label: "North Dakota" },
-  { value: "OH", label: "Ohio" },
-  { value: "OK", label: "Oklahoma" },
-  { value: "OR", label: "Oregon" },
-  { value: "PA", label: "Pennsylvania" },
-  { value: "RI", label: "Rhode Island" },
-  { value: "SC", label: "South Carolina" },
-  { value: "SD", label: "South Dakota" },
-  { value: "TN", label: "Tennessee" },
-  { value: "TX", label: "Texas" },
-  { value: "UT", label: "Utah" },
-  { value: "VT", label: "Vermont" },
-  { value: "VA", label: "Virginia" },
-  { value: "WA", label: "Washington" },
-  { value: "WV", label: "West Virginia" },
-  { value: "WI", label: "Wisconsin" },
-  { value: "WY", label: "Wyoming" },
-  { value: "PR", label: "Puerto Rico" },
-  { value: "VI", label: "Virgin Islands" },
-  { value: "GU", label: "Guam" },
-  { value: "AS", label: "American Samoa" },
-  { value: "MP", label: "Northern Mariana Islands" }
-];
+// Use centralized US States from base.ts
+const US_STATES = getUSStateOptions();
 
-// Common countries for dropdown
-const COUNTRIES = [
-  { value: "", label: "Select country..." },
-  { value: "United States", label: "United States" },
-  { value: "Canada", label: "Canada" },
-  { value: "Mexico", label: "Mexico" },
-  { value: "United Kingdom", label: "United Kingdom" },
-  { value: "Germany", label: "Germany" },
-  { value: "France", label: "France" },
-  { value: "Australia", label: "Australia" },
-  { value: "Japan", label: "Japan" },
-  { value: "China", label: "China" },
-  { value: "India", label: "India" },
-  { value: "Brazil", label: "Brazil" },
-  { value: "Other", label: "Other" }
-];
+// Use centralized countries from base.ts
+const COUNTRIES = getCountryOptions();
 
 const Section12Component: React.FC<Section12ComponentProps> = ({
   onValidationChange,

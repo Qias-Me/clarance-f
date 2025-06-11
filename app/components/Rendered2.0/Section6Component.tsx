@@ -63,17 +63,29 @@ export const Section6Component: React.FC<Section6ComponentProps> = ({
   // Handle form submission with data persistence
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🚀 Section 6: Starting form submission');
+    console.log('📊 Section 6: Current section6Data:', section6Data);
+
     const result = validateSection();
+    console.log('🔍 Section 6: Validation result:', result);
     setIsValid(result.isValid);
     onValidationChange?.(result.isValid);
 
     if (result.isValid) {
       try {
+        console.log('✅ Section 6: Validation passed, proceeding with save');
+
         // Update the central form context with Section 6 data
+        console.log('📤 Section 6: Updating central form context with data:', JSON.stringify(section6Data, null, 2));
         sf86Form.updateSectionData('section6', section6Data);
 
         // Save the form data to persistence layer
+        console.log('💾 Section 6: Saving form data to persistence...');
         await sf86Form.saveForm();
+
+        // Mark section as complete after successful save
+        console.log('✅ Section 6: Marking section as complete...');
+        sf86Form.markSectionComplete('section6');
 
         console.log('✅ Section 6 data saved successfully:', section6Data);
 
@@ -85,6 +97,8 @@ export const Section6Component: React.FC<Section6ComponentProps> = ({
         console.error('❌ Failed to save Section 6 data:', error);
         // Could show an error message to user here
       }
+    } else {
+      console.log('❌ Section 6: Validation failed, not saving');
     }
   };
 
@@ -149,7 +163,7 @@ export const Section6Component: React.FC<Section6ComponentProps> = ({
             >
               {HEIGHT_FEET_OPTIONS.map((feet) => (
                 <option key={feet} value={feet}>
-                  {feet} feet
+                  {feet}
                 </option>
               ))}
             </select>
@@ -172,7 +186,7 @@ export const Section6Component: React.FC<Section6ComponentProps> = ({
             >
               {HEIGHT_INCHES_OPTIONS.map((inches) => (
                 <option key={inches} value={inches}>
-                  {inches} inches
+                  {inches}
                 </option>
               ))}
             </select>
@@ -348,18 +362,7 @@ export const Section6Component: React.FC<Section6ComponentProps> = ({
         </div>
 
         {/* Validation Status */}
-        <div className="mt-4" data-testid="validation-status">
-          <div className="text-sm text-gray-600">
-            Section Status: <span className={`font-medium ${isDirty ? 'text-orange-500' : 'text-green-500'}`}>
-              {isDirty ? 'Modified, needs validation' : 'Ready for input'}
-            </span>
-          </div>
-          <div className="text-sm text-gray-600">
-            Validation: <span className={`font-medium ${isValid ? 'text-green-500' : 'text-red-500'}`}>
-              {isValid ? 'Valid' : 'Has errors'}
-            </span>
-          </div>
-        </div>
+     
       </form>
 
       {/* Debug Information (Development Only) */}

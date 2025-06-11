@@ -6,6 +6,7 @@
  */
 
 import type { Field, FieldWithOptions } from '../formDefinition2.0';
+import { SUFFIX_OPTIONS } from './base';
 import { createFieldFromReference, validateSectionFieldCount } from '../../utils/sections-references-loader';
 
 // ============================================================================
@@ -94,25 +95,8 @@ export interface Section1ValidationContext {
 // HELPER TYPES
 // ============================================================================
 
-/**
- * Common suffix options
- */
-export const NAME_SUFFIXES = {
-  JR: 'Jr.',
-  SR: 'Sr.',
-  II: 'II',
-  III: 'III',
-  IV: 'IV',
-  V: 'V',
-  NONE: ''
-} as const;
+// SUFFIX_OPTIONS imported from base.ts to avoid duplication
 
-/**
- * Suffix options for dropdown
- */
-export const SUFFIX_OPTIONS = [
-  "Jr", "Sr", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "Other"
-] as const;
 
 /**
  * Name validation patterns

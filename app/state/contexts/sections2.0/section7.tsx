@@ -49,7 +49,13 @@ export interface Section7ContextType {
   // Phone Number CRUD (for compatibility with component)
   addPhoneNumber: () => void;
   removePhoneNumber: (index: number) => void;
-  phoneNumbers: Array<{type: {value: string}, number: {value: string}}>;
+  phoneNumbers: Array<{
+    number: {value: string},
+    extension: {value: string},
+    dayTime: {value: boolean},
+    nightTime: {value: boolean},
+    isInternational: {value: boolean}
+  }>;
 
   // Email Address CRUD (for compatibility with component)
   addEmailAddress: () => void;
@@ -104,7 +110,22 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
   const [initialData] = useState<Section7>(createInitialSection7State());
   
   // Additional state for dynamic arrays (for component compatibility)
-  const [dynamicPhoneNumbers, setDynamicPhoneNumbers] = useState<Array<{type: {value: string}, number: {value: string}}>>([]);
+  const [dynamicPhoneNumbers, setDynamicPhoneNumbers] = useState<Array<{
+    number: {value: string},
+    extension: {value: string},
+    dayTime: {value: boolean},
+    nightTime: {value: boolean},
+    isInternational: {value: boolean}
+  }>>([
+    // Initialize with 1 default phone entry
+    {
+      number: { value: '' },
+      extension: { value: '' },
+      dayTime: { value: false },
+      nightTime: { value: false },
+      isInternational: { value: false }
+    }
+  ]);
   const [dynamicEmailAddresses, setDynamicEmailAddresses] = useState<Array<{address: {value: string}}>>([]);
   const [dynamicSocialMedia, setDynamicSocialMedia] = useState<Array<{platform: {value: string}, username: {value: string}, url?: {value: string}}>>([]);
 
@@ -261,10 +282,16 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
     if (index < dynamicPhoneNumbers.length) {
       setDynamicPhoneNumbers(prev => {
         const newArray = cloneDeep(prev);
-        if (fieldType === 'type') {
-          newArray[index].type.value = value;
-        } else if (fieldType === 'number') {
+        if (fieldType === 'number') {
           newArray[index].number.value = value;
+        } else if (fieldType === 'extension') {
+          newArray[index].extension.value = value;
+        } else if (fieldType === 'dayTime') {
+          newArray[index].dayTime.value = value;
+        } else if (fieldType === 'nightTime') {
+          newArray[index].nightTime.value = value;
+        } else if (fieldType === 'isInternational') {
+          newArray[index].isInternational.value = value;
         }
         return newArray;
       });
@@ -282,13 +309,15 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
   // ============================================================================
 
   const addPhoneNumber = useCallback(() => {
-    const phoneTypes = ['MOBILE', 'HOME', 'WORK', 'OTHER'];
     const newPhone = {
-      type: { value: phoneTypes[dynamicPhoneNumbers.length % phoneTypes.length] },
-      number: { value: '' }
+      number: { value: '' },
+      extension: { value: '' },
+      dayTime: { value: false },
+      nightTime: { value: false },
+      isInternational: { value: false }
     };
     setDynamicPhoneNumbers(prev => [...prev, newPhone]);
-  }, [dynamicPhoneNumbers]);
+  }, []);
 
   const removePhoneNumber = useCallback((index: number) => {
     setDynamicPhoneNumbers(prev => prev.filter((_, i) => i !== index));
@@ -343,7 +372,15 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
     const newData = createInitialSection7State();
     setSection7Data(newData);
     setErrors({});
-    setDynamicPhoneNumbers([]);
+    setDynamicPhoneNumbers([
+      {
+        number: { value: '' },
+        extension: { value: '' },
+        dayTime: { value: false },
+        nightTime: { value: false },
+        isInternational: { value: false }
+      }
+    ]);
     setDynamicEmailAddresses([]);
     setDynamicSocialMedia([]);
   }, []);

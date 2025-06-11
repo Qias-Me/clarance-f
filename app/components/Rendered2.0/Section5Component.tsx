@@ -32,7 +32,8 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
     validateSection,
     resetSection,
     isDirty,
-    errors
+    errors,
+    setValidationErrors
   } = useSection5();
 
   // SF86 Form Context for data persistence
@@ -46,10 +47,24 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
     const validationResult = validateSection();
     setIsValid(validationResult.isValid);
     onValidationChange?.(validationResult.isValid);
-  }, [section5Data]); // Removed validateSection and onValidationChange to prevent infinite loops
 
-  // Ensure data consistency on mount
+    // Convert validation errors to the format expected by the component
+    const errorMap: Record<string, string> = {};
+    validationResult.errors.forEach(error => {
+      errorMap[error.field] = error.message;
+    });
+
+    // Update the errors state in the Section5 context
+    setValidationErrors(errorMap);
+  }, [section5Data, validateSection, onValidationChange, setValidationErrors]); // Include all dependencies
+
+  // Ensure data consistency on mount with defensive programming
   useEffect(() => {
+    // Only run if section5Data is properly initialized
+    if (!section5Data?.section5?.hasOtherNames) {
+      return; // Skip if data not loaded yet
+    }
+
     const entryCount = getEntryCount();
     const hasOtherNamesValue = section5Data.section5.hasOtherNames.value;
 
@@ -57,7 +72,7 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
     if (entryCount > 0 && hasOtherNamesValue === "NO") {
       updateHasOtherNames(false);
     }
-  }, []); // Only run on mount
+  }, [section5Data, getEntryCount, updateHasOtherNames]); // Run when data changes
 
   // Handle submission with data persistence
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,6 +81,15 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
     setIsValid(result.isValid);
     onValidationChange?.(result.isValid);
 
+    // Convert validation errors to the format expected by the component
+    const errorMap: Record<string, string> = {};
+    result.errors.forEach(error => {
+      errorMap[error.field] = error.message;
+    });
+
+    // Update the errors in the Section5 context
+    setValidationErrors(errorMap);
+
     if (result.isValid) {
       try {
         // Update the central form context with Section 5 data
@@ -73,6 +97,9 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
 
         // Save the form data to persistence layer
         await sf86Form.saveForm();
+
+        // Mark section as complete after successful save
+        sf86Form.markSectionComplete('section5');
 
         console.log('✅ Section 5 data saved successfully:', section5Data);
 
@@ -84,8 +111,12 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
         console.error('❌ Failed to save Section 5 data:', error);
         // Could show an error message to user here
       }
+    } else {
+      // Log validation errors for debugging
+      console.log('❌ Section 5 validation failed:', result.errors);
+      console.log('📋 Error map for UI:', errorMap);
     }
-    
+
   };
 
   // Use a ref to prevent multiple rapid calls
@@ -150,10 +181,30 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
     return getEntryCount() < MAX_OTHER_NAME_ENTRIES;
   };
 
-  // Get value for Has Other Names radio buttons
+  // Get value for Has Other Names radio buttons with defensive programming
   const getHasOtherNamesValue = (): boolean => {
-    return section5Data.section5.hasOtherNames.value === "YES";
+    // Try the standard structure first
+    if (section5Data?.section5?.hasOtherNames?.value) {
+      return section5Data.section5.hasOtherNames.value === "YES";
+    }
+
+    // Try the flattened structure (cast to any to handle different data structures)
+    const flattenedData = actualSection5Data as any;
+    if (flattenedData?.value) {
+      return flattenedData.value === "YES";
+    }
+
+    return false;
   };
+
+  // Handle different data structures - the data might be stored with numeric keys
+  const actualSection5Data = section5Data?.section5 ||
+    (section5Data && Object.keys(section5Data).length > 0 ? Object.values(section5Data)[0] : null);
+
+
+
+  // Check if data is still loading - be more permissive
+  const isDataLoading = !section5Data || (!section5Data.section5 && !actualSection5Data);
 
 
 
@@ -302,7 +353,6 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
                 onChange={(e) => updateFieldValue(`section5.otherNames[${index}].to`, e.target.value)}
                 className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${entry.present.value ? 'bg-gray-100' : ''}`}
                 placeholder="MM/YYYY"
-                required={!entry.present.value}
                 disabled={entry.present.value}
                 data-testid={`other-name-${index}-to-date`}
               />
@@ -409,6 +459,26 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
       </div>
     );
   };
+
+  // Show loading state while data is being loaded
+  if (isDataLoading) {
+    return (
+      <div className={`bg-white rounded-lg shadow-lg p-6 ${className}`} data-testid="section5-form">
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Section 5: Other Names Used
+          </h2>
+          <p className="text-gray-600">
+            Loading section data...
+          </p>
+        </div>
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          <span className="ml-3 text-gray-600">Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={`bg-white rounded-lg shadow-lg p-6 ${className}`} data-testid="section5-form">
@@ -524,19 +594,9 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
         </div>
 
         {/* Validation Status */}
-        <div className="mt-4" data-testid="validation-status">
-          <div className="text-sm text-gray-600">
-            Section Status: <span className={`font-medium ${isDirty ? 'text-orange-500' : 'text-green-500'}`}>
-              {isDirty ? 'Modified, needs validation' : 'Ready for input'}
-            </span>
-          </div>
-          <div className="text-sm text-gray-600">
-            Validation: <span className={`font-medium ${isValid ? 'text-green-500' : 'text-red-500'}`}>
-              {isValid ? 'Valid' : 'Has errors'}
-            </span>
-          </div>
-        </div>
+     
       </form>
+      
 
       {/* Debug Information (Development Only) */}
       {typeof window !== 'undefined' && window.location.search.includes('debug=true') && (
@@ -560,17 +620,19 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
                   }
                 };
 
-                // Flatten main flag field
-                if (section5Data.section5.hasOtherNames) {
+                // Flatten main flag field with defensive programming
+                if (section5Data?.section5?.hasOtherNames) {
                   addField(section5Data.section5.hasOtherNames);
                 }
 
-                // Flatten entries
-                section5Data.section5.otherNames.forEach((entry) => {
-                  Object.entries(entry).forEach(([_, field]) => {
-                    addField(field);
+                // Flatten entries with defensive programming
+                if (section5Data?.section5?.otherNames && Array.isArray(section5Data.section5.otherNames)) {
+                  section5Data.section5.otherNames.forEach((entry) => {
+                    Object.entries(entry).forEach(([_, field]) => {
+                      addField(field);
+                    });
                   });
-                });
+                }
 
                 return flatFields;
               })(), null, 2)}

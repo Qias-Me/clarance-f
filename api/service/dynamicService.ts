@@ -1,4 +1,4 @@
-import  {type ApplicantFormValues } from "../interfaces/formDefinition";
+import  {type ApplicantFormValues } from "../interfaces/formDefinition2.0";
 import DynamicRepository from "../repository/formDataRepository";
 import cloneDeep from "lodash/cloneDeep";
 
@@ -19,9 +19,6 @@ interface FormDataMetadata {
 
 class DynamicService {
   private dynamicRepo: DynamicRepository;
-  private readonly FORM_DATA_KEY = 'complete-form';
-  private readonly METADATA_KEY = 'form-metadata';
-  private readonly SECTION_PREFIX = 'section-';
 
   constructor() {
     this.dynamicRepo = new DynamicRepository();
@@ -49,21 +46,6 @@ class DynamicService {
 
       // Save main form data
       await this.dynamicRepo.saveFormData(section, formData);
-
-      // Save metadata
-      const metadata: FormDataMetadata = {
-        lastSaved: timestamp,
-        sections: Object.keys(formData).filter(key => formData[key as keyof ApplicantFormValues] !== undefined),
-        version: '2.0',
-        sectionCount: Object.keys(formData).length
-      };
-      await this.dynamicRepo.saveFormData(this.METADATA_KEY, metadata as any);
-
-      if (isDebugMode) {
-        console.log(`✅ DynamicService: Form data saved successfully`);
-        console.log(`   📊 Sections saved: ${metadata.sections.length}`);
-        console.log(`   📋 Section list: ${metadata.sections.join(', ')}`);
-      }
 
       return { 
         success: true, 
@@ -104,17 +86,6 @@ class DynamicService {
           console.log(`   📋 Active sections: ${activeSections.length}`);
           console.log(`   📋 Section list: ${activeSections.join(', ')}`);
         }
-
-        // Load and validate metadata
-        try {
-          const metadata = await this.dynamicRepo.getFormData(this.METADATA_KEY) as FormDataMetadata | null;
-          if (metadata && isDebugMode) {
-            console.log(`   📊 Metadata: Last saved ${metadata.lastSaved}, Version ${metadata.version}`);
-          }
-        } catch (metaError) {
-          console.warn("⚠️ DynamicService: Could not load metadata:", metaError);
-        }
-
         return {
           success: true,
           formData,
@@ -139,92 +110,6 @@ class DynamicService {
     }
   }
 
-  /**
-   * Save individual section data
-   */
-  async saveSectionData(sectionId: string, sectionData: any): Promise<UserServiceResponse> {
-    const key = `${this.SECTION_PREFIX}${sectionId}`;
-    const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('debug=true');
-    
-    try {
-      const timestamp = new Date();
-      const dataSize = JSON.stringify(sectionData).length;
-
-      if (isDebugMode) {
-        console.log(`💾 DynamicService: Saving section data...`);
-        console.log(`   📋 Section: ${sectionId}`);
-        console.log(`   🔑 Key: ${key}`);
-        console.log(`   📊 Data size: ${dataSize} bytes`);
-      }
-
-      await this.dynamicRepo.saveFormData(key, sectionData);
-
-      if (isDebugMode) {
-        console.log(`✅ DynamicService: Section data saved successfully`);
-      }
-
-      return {
-        success: true,
-        message: `Section ${sectionId} saved successfully.`,
-        timestamp,
-        size: dataSize
-      };
-    } catch (error) {
-      console.error(`❌ DynamicService: Error saving section ${sectionId}:`, error);
-      return {
-        success: false,
-        message: `Failed to save section ${sectionId}: ${error}`,
-      };
-    }
-  }
-
-  /**
-   * Load individual section data
-   */
-  async loadSectionData(sectionId: string): Promise<UserServiceResponse> {
-    const key = `${this.SECTION_PREFIX}${sectionId}`;
-    const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('debug=true');
-    
-    try {
-      if (isDebugMode) {
-        console.log(`📂 DynamicService: Loading section data...`);
-        console.log(`   📋 Section: ${sectionId}`);
-        console.log(`   🔑 Key: ${key}`);
-      }
-
-      const sectionData = await this.dynamicRepo.getFormData(key);
-
-      if (sectionData) {
-        const dataSize = JSON.stringify(sectionData).length;
-
-        if (isDebugMode) {
-          console.log(`✅ DynamicService: Section data loaded successfully`);
-          console.log(`   📊 Data size: ${dataSize} bytes`);
-        }
-
-        return {
-          success: true,
-          formData: sectionData,
-          message: `Section ${sectionId} retrieved successfully.`,
-          size: dataSize
-        };
-      } else {
-        if (isDebugMode) {
-          console.log(`📭 DynamicService: No data found for section: ${sectionId}`);
-        }
-        return {
-          success: false,
-          message: `No data found for section ${sectionId}.`
-        };
-      }
-    } catch (error) {
-      console.error(`❌ DynamicService: Error loading section ${sectionId}:`, error);
-      return {
-        success: false,
-        message: `Failed to load section ${sectionId}: ${error}`,
-      };
-    }
-  }
 
   /**
    * Update form data with change tracking
@@ -368,58 +253,6 @@ class DynamicService {
     }
   }
 
-  /**
-   * Get form data statistics
-   */
-  async getFormDataStats(): Promise<{
-    totalSize: number;
-    sectionCount: number;
-    lastSaved?: Date;
-    sections: string[];
-  }> {
-    try {
-      const formData = await this.dynamicRepo.getFormData(this.FORM_DATA_KEY);
-      const metadata = await this.dynamicRepo.getFormData(this.METADATA_KEY) as FormDataMetadata | null;
-
-      if (formData) {
-        const totalSize = JSON.stringify(formData).length;
-        const sections = Object.keys(formData).filter(key => formData[key as keyof ApplicantFormValues] !== undefined);
-
-        return {
-          totalSize,
-          sectionCount: sections.length,
-          lastSaved: metadata?.lastSaved,
-          sections
-        };
-      }
-
-      return {
-        totalSize: 0,
-        sectionCount: 0,
-        sections: []
-      };
-    } catch (error) {
-      console.error("Error getting form data stats:", error);
-      return {
-        totalSize: 0,
-        sectionCount: 0,
-        sections: []
-      };
-    }
-  }
-
-  /**
-   * Check if form data exists
-   */
-  async hasFormData(): Promise<boolean> {
-    try {
-      const formData = await this.dynamicRepo.getFormData(this.FORM_DATA_KEY);
-      return formData !== null && formData !== undefined;
-    } catch (error) {
-      console.error("Error checking form data existence:", error);
-      return false;
-    }
-  }
+ 
 }
-
 export default DynamicService;

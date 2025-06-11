@@ -9,6 +9,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSection3 } from '~/state/contexts/sections2.0/section3';
 import { useSF86Form } from '~/state/contexts/SF86FormContext';
+import { getCountryOptions, getUSStateOptions } from '../../../api/interfaces/sections2.0/base';
 
 interface Section3ComponentProps {
   className?: string;
@@ -63,6 +64,9 @@ export const Section3Component: React.FC<Section3ComponentProps> = ({
 
         // Save the form data to persistence layer
         await sf86Form.saveForm();
+
+        // Mark section as complete after successful save
+        sf86Form.markSectionComplete('section3');
 
         console.log('✅ Section 3 data saved successfully:', section3Data);
 
@@ -127,11 +131,11 @@ export const Section3Component: React.FC<Section3ComponentProps> = ({
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             required
           >
-            <option value="">Select country</option>
-            <option value="United States">United States</option>
-            <option value="Canada">Canada</option>
-            <option value="Mexico">Mexico</option>
-            <option value="Other">Other</option>
+            {getCountryOptions().map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
           <p className="mt-1 text-xs text-gray-500">
             Select the country where you were born.
@@ -158,18 +162,11 @@ export const Section3Component: React.FC<Section3ComponentProps> = ({
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
             >
-              <option value="">Select state</option>
-              <option value="AL">Alabama</option>
-              <option value="AK">Alaska</option>
-              <option value="AZ">Arizona</option>
-              <option value="AR">Arkansas</option>
-              <option value="CA">California</option>
-              <option value="CO">Colorado</option>
-              <option value="CT">Connecticut</option>
-              <option value="DE">Delaware</option>
-              <option value="FL">Florida</option>
-              <option value="GA">Georgia</option>
-              {/* Add more states as needed */}
+              {getUSStateOptions().map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.value || option.label}
+                </option>
+              ))}
             </select>
             <p className="mt-1 text-xs text-gray-500">
               Select the state where you were born.
@@ -255,18 +252,7 @@ export const Section3Component: React.FC<Section3ComponentProps> = ({
         </div>
 
         {/* Validation Status */}
-        <div className="mt-4" data-testid="validation-status">
-          <div className="text-sm text-gray-600">
-            Section Status: <span className={`font-medium ${isDirty ? 'text-orange-500' : 'text-green-500'}`}>
-              {isDirty ? 'Modified, needs validation' : 'Ready for input'}
-            </span>
-          </div>
-          <div className="text-sm text-gray-600">
-            Validation: <span className={`font-medium ${isValid ? 'text-green-500' : 'text-red-500'}`}>
-              {isValid ? 'Valid' : 'Has errors'}
-            </span>
-          </div>
-        </div>
+     
       </form>
 
       {/* Debug Information (Development Only) */}

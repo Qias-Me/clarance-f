@@ -28,7 +28,6 @@ import type {
   ChangeSet
 } from '../shared/base-interfaces';
 import { useSection86FormIntegration } from '../shared/section-context-integration';
-import { useSectionIntegration } from '../shared/section-integration';
 
 // ============================================================================
 // CONTEXT TYPE DEFINITION
@@ -94,9 +93,6 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [initialData] = useState<Section9>(createDefaultSection9());
-
-  // Get integration access for data syncing
-  const sectionIntegration = useSectionIntegration();
 
   // ============================================================================
   // COMPUTED VALUES
@@ -164,13 +160,9 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
       const newData = cloneDeep(prevData);
       newData.section9.status.value = status;
 
-      // Sync data to SF86FormContext cache
-      sectionIntegration.syncSectionData('section9', newData);
-      console.log(`🔄 Section9: updateCitizenshipStatus - synced data to SF86FormContext`);
-
       return newData;
     });
-  }, [sectionIntegration]);
+  }, []);
 
   const updateBornToUSParentsInfo = useCallback((field: keyof BornInUSInfo, value: any) => {
     console.log(`🔄 Section9: updateBornToUSParentsInfo called with field=${field}, value=`, value);
@@ -196,13 +188,9 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
         }
       }
 
-      // Sync data to SF86FormContext cache
-      sectionIntegration.syncSectionData('section9', newData);
-      console.log(`🔄 Section9: updateBornToUSParentsInfo - synced data to SF86FormContext`);
-
       return newData;
     });
-  }, [sectionIntegration]);
+  }, []);
 
   const updateNaturalizedInfo = useCallback((field: keyof NaturalizedCitizenInfo, value: any) => {
     console.log(`🔄 Section9: updateNaturalizedInfo called with field=${field}, value=`, value);
@@ -228,13 +216,9 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
         }
       }
 
-      // Sync data to SF86FormContext cache
-      sectionIntegration.syncSectionData('section9', newData);
-      console.log(`🔄 Section9: updateNaturalizedInfo - synced data to SF86FormContext`);
-
       return newData;
     });
-  }, [sectionIntegration]);
+  }, []);
 
   const updateDerivedInfo = useCallback((field: keyof DerivedCitizenInfo, value: any) => {
     console.log(`🔄 Section9: updateDerivedInfo called with field=${field}, value=`, value);
@@ -260,13 +244,9 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
         }
       }
 
-      // Sync data to SF86FormContext cache
-      sectionIntegration.syncSectionData('section9', newData);
-      console.log(`🔄 Section9: updateDerivedInfo - synced data to SF86FormContext`);
-
       return newData;
     });
-  }, [sectionIntegration]);
+  }, []);
 
   const updateNonUSCitizenInfo = useCallback((field: keyof NonUSCitizenInfo, value: any) => {
     console.log(`🔄 Section9: updateNonUSCitizenInfo called with field=${field}, value=`, value);
@@ -292,13 +272,9 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
         }
       }
 
-      // Sync data to SF86FormContext cache
-      sectionIntegration.syncSectionData('section9', newData);
-      console.log(`🔄 Section9: updateNonUSCitizenInfo - synced data to SF86FormContext`);
-
       return newData;
     });
-  }, [sectionIntegration]);
+  }, []);
 
   const updateFieldValue = useCallback((fieldPath: string, newValue: any) => {
     console.log(`🔄 Section9: updateFieldValue called with fieldPath=${fieldPath}, newValue=`, newValue);
@@ -311,13 +287,9 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
       console.log(`📊 Section9: updateFieldValue - updated local state for path=${fullPath}`);
       console.log(`📊 Section9: updateFieldValue - new section9Data:`, newData);
 
-      // Sync data to SF86FormContext cache
-      sectionIntegration.syncSectionData('section9', newData);
-      console.log(`🔄 Section9: updateFieldValue - synced data to SF86FormContext`);
-
       return newData;
     });
-  }, [sectionIntegration]);
+  }, []);
 
   // ============================================================================
   // UTILITY FUNCTIONS
@@ -433,10 +405,6 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
           set(updated, fullPath, value);
           console.log(`✅ Section9: Updated nested field at path: ${fullPath}`);
 
-          // Sync data to SF86FormContext cache
-          sectionIntegration.syncSectionData('section9', updated);
-          console.log(`🔄 Section9: updateFieldValueWrapper - synced data to SF86FormContext`);
-
           return updated;
         });
       } else {
@@ -455,10 +423,6 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
           const fullPath = `section9.naturalizedCitizen.${fieldName}.value`;
           set(updated, fullPath, value);
           console.log(`✅ Section9: Updated nested field at path: ${fullPath}`);
-
-          // Sync data to SF86FormContext cache
-          sectionIntegration.syncSectionData('section9', updated);
-          console.log(`🔄 Section9: updateFieldValueWrapper - synced data to SF86FormContext`);
 
           return updated;
         });
@@ -479,10 +443,6 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
           set(updated, fullPath, value);
           console.log(`✅ Section9: Updated nested field at path: ${fullPath}`);
 
-          // Sync data to SF86FormContext cache
-          sectionIntegration.syncSectionData('section9', updated);
-          console.log(`🔄 Section9: updateFieldValueWrapper - synced data to SF86FormContext`);
-
           return updated;
         });
       } else {
@@ -502,10 +462,6 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
           set(updated, fullPath, value);
           console.log(`✅ Section9: Updated nested field at path: ${fullPath}`);
 
-          // Sync data to SF86FormContext cache
-          sectionIntegration.syncSectionData('section9', updated);
-          console.log(`🔄 Section9: updateFieldValueWrapper - synced data to SF86FormContext`);
-
           return updated;
         });
       } else {
@@ -519,16 +475,12 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
         const updated = cloneDeep(prev);
         set(updated, path, value);
 
-        // Sync data to SF86FormContext cache
-        sectionIntegration.syncSectionData('section9', updated);
-        console.log(`🔄 Section9: updateFieldValueWrapper - synced data to SF86FormContext`);
-
         return updated;
       });
     }
 
     console.log(`✅ Section9: updateFieldValueWrapper completed for path=${path}`);
-  }, [updateCitizenshipStatus, updateBornToUSParentsInfo, updateNaturalizedInfo, updateDerivedInfo, updateNonUSCitizenInfo, sectionIntegration]);
+  }, [updateCitizenshipStatus, updateBornToUSParentsInfo, updateNaturalizedInfo, updateDerivedInfo, updateNonUSCitizenInfo]);
 
   // Integration with main form context using Section 1 gold standard pattern
   // Note: integration variable is used internally by the hook for registration

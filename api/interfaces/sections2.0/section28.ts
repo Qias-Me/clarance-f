@@ -1,4 +1,4 @@
-import { type Field } from "api/interfaces/formDefinition";
+import { type Field } from "api/interfaces/formDefinition2.0";
 import { getSectionFields, createFieldFromReference, getSectionMetadata } from "../../utils/sections-references-loader";
 
 /**
@@ -236,10 +236,3 @@ export function getSection28ExpectedFieldCount(): number {
   const metadata = getSectionMetadata(28);
   return metadata.totalFields;
 }
-
-export type {
-  Section28,
-  CourtActionEntry,
-  DateInfo,
-  CourtAddress,
-};

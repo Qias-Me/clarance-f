@@ -37,7 +37,7 @@ import {
 } from '../../../../api/interfaces/sections2.0/section4';
 
 import { useSection86FormIntegration } from '../shared/section-context-integration';
-import type { ValidationResult, ValidationError, SectionId } from '../shared/base-interfaces';
+import type { ValidationResult, ValidationError } from '../shared/base-interfaces';
 
 // ============================================================================
 // CONTEXT INTERFACE
@@ -78,7 +78,7 @@ const createInitialSection4State = (): Section4 => createDefaultSection4();
 // ============================================================================
 
 const defaultValidationRules: Section4ValidationRules = {
-  requiresSSN: true,
+  requiresSSN: false, // SSN is optional - can be left blank or marked as "Not Applicable"
   allowsPartialSSN: false
 };
 
@@ -98,7 +98,7 @@ export const flattenSection4Fields = (section4Data: Section4): Record<string, an
   if (section4Data.section4) {
     // Main SSN array (usually just one SSN value)
     if (section4Data.section4.ssn && section4Data.section4.ssn.length > 0) {
-      section4Data.section4.ssn.forEach((ssnEntry, index) => {
+      section4Data.section4.ssn.forEach((ssnEntry) => {
         if (ssnEntry.value) {
           flattened[ssnEntry.value.id] = ssnEntry.value;
         }
@@ -157,44 +157,56 @@ export const Section4Provider: React.FC<Section4ProviderProps> = ({ children }) 
     const validationErrors: ValidationError[] = [];
     const validationWarnings: ValidationError[] = [];
 
-    // Skip validation if not applicable is checked
-    if (section4Data.section4.notApplicable?.value) {
-      return {
-        isValid: true,
-        errors: [],
-        warnings: []
-      };
+    // Always validate Acknowledgement field (required regardless of SSN applicability)
+    if (!section4Data.section4.Acknowledgement?.value ||
+        (section4Data.section4.Acknowledgement.value !== 'YES' && section4Data.section4.Acknowledgement.value !== 'NO')) {
+      validationErrors.push({
+        field: 'acknowledgement',
+        message: 'Acknowledgement is required',
+        code: 'REQUIRED_FIELD',
+        severity: 'error'
+      });
     }
 
-    // Validate SSN
-    const validationContext: Section4ValidationContext = {
-      rules: defaultValidationRules
-    };
+    // Only validate SSN if not applicable is NOT checked
+    if (!section4Data.section4.notApplicable?.value) {
+      // Validate SSN
+      const validationContext: Section4ValidationContext = {
+        rules: defaultValidationRules
+      };
 
-    if (section4Data.section4.ssn && section4Data.section4.ssn.length > 0) {
-      const primarySSN = section4Data.section4.ssn[0];
-      if (primarySSN?.value?.value) {
-        const ssnValidation = validateSSN(primarySSN.value.value, validationContext);
+      if (section4Data.section4.ssn && section4Data.section4.ssn.length > 0) {
+        const primarySSN = section4Data.section4.ssn[0];
+        if (primarySSN?.value?.value) {
+          const ssnValidation = validateSSN(primarySSN.value.value, validationContext);
 
-        if (!ssnValidation.isValid) {
-          ssnValidation.errors.forEach(error => {
-            validationErrors.push({
+          if (!ssnValidation.isValid) {
+            ssnValidation.errors.forEach(error => {
+              validationErrors.push({
+                field: 'ssn',
+                message: error,
+                code: 'VALIDATION_ERROR',
+                severity: 'error'
+              });
+            });
+          }
+
+          ssnValidation.warnings.forEach(warning => {
+            validationWarnings.push({
               field: 'ssn',
-              message: error,
-              code: 'VALIDATION_ERROR',
-              severity: 'error'
+              message: warning,
+              code: 'VALIDATION_WARNING',
+              severity: 'warning'
             });
           });
-        }
-
-        ssnValidation.warnings.forEach(warning => {
-          validationWarnings.push({
+        } else if (defaultValidationRules.requiresSSN) {
+          validationErrors.push({
             field: 'ssn',
-            message: warning,
-            code: 'VALIDATION_WARNING',
-            severity: 'warning'
+            message: 'Social Security Number is required',
+            code: 'REQUIRED_FIELD',
+            severity: 'error'
           });
-        });
+        }
       } else if (defaultValidationRules.requiresSSN) {
         validationErrors.push({
           field: 'ssn',
@@ -203,13 +215,6 @@ export const Section4Provider: React.FC<Section4ProviderProps> = ({ children }) 
           severity: 'error'
         });
       }
-    } else if (defaultValidationRules.requiresSSN) {
-      validationErrors.push({
-        field: 'ssn',
-        message: 'Social Security Number is required',
-        code: 'REQUIRED_FIELD',
-        severity: 'error'
-      });
     }
 
     // Update local errors
@@ -252,13 +257,17 @@ export const Section4Provider: React.FC<Section4ProviderProps> = ({ children }) 
   const updateSSN = useCallback((ssn: string) => {
     setSection4Data(prevData => {
       // Use the enhanced SSN propagation logic
-      return updateMainSSNAndPropagate(prevData, ssn);
+      const newData = updateMainSSNAndPropagate(prevData, ssn);
+      console.log(`🔄 Section4: updateSSN - updated SSN to: ${ssn}`);
+      return newData;
     });
   }, []);
 
   const updateSSNField = useCallback((update: Section4FieldUpdate) => {
     setSection4Data(prevData => {
-      return updateSection4Field(prevData, update);
+      const newData = updateSection4Field(prevData, update);
+      console.log(`🔄 Section4: updateSSNField - updated field: ${update.fieldPath}`);
+      return newData;
     });
   }, []);
 
@@ -268,7 +277,7 @@ export const Section4Provider: React.FC<Section4ProviderProps> = ({ children }) 
       if (newData.section4.notApplicable) {
         newData.section4.notApplicable.value = value;
       }
-      
+
       // Clear SSN if not applicable is checked
       if (value && newData.section4.ssn) {
         newData.section4.ssn.forEach(ssnEntry => {
@@ -277,7 +286,8 @@ export const Section4Provider: React.FC<Section4ProviderProps> = ({ children }) 
           }
         });
       }
-      
+
+      console.log(`🔄 Section4: toggleNotApplicable - set to: ${value}`);
       return newData;
     });
   }, []);
@@ -288,6 +298,8 @@ export const Section4Provider: React.FC<Section4ProviderProps> = ({ children }) 
       if (newData.section4.Acknowledgement) {
         newData.section4.Acknowledgement.value = value;
       }
+
+      console.log(`🔄 Section4: updateAcknowledgement - set to: ${value}`);
       return newData;
     });
   }, []);
@@ -302,6 +314,7 @@ export const Section4Provider: React.FC<Section4ProviderProps> = ({ children }) 
   }, []);
 
   const loadSection = useCallback((data: Section4) => {
+    console.log('🔄 Section4: loadSection called with data:', data);
     setSection4Data(data);
     setErrors({});
   }, []);
@@ -323,18 +336,49 @@ export const Section4Provider: React.FC<Section4ProviderProps> = ({ children }) 
     });
   }, []);
 
+  // Enhanced field update function for integration
+  const updateFieldValue = useCallback((path: string, value: any) => {
+    console.log(`🔄 Section4: updateFieldValue called with path=${path}, value=`, value);
+
+    setSection4Data(prevData => {
+      const newData = cloneDeep(prevData);
+
+      // Handle specific Section 4 field paths
+      if (path === 'section4.ssn[0].value.value') {
+        // Update SSN value
+        if (newData.section4.ssn[0]?.value) {
+          newData.section4.ssn[0].value.value = value;
+        }
+      } else if (path === 'section4.Acknowledgement.value') {
+        // Update acknowledgement value
+        newData.section4.Acknowledgement.value = value;
+      } else if (path === 'section4.notApplicable.value') {
+        // Update not applicable value
+        newData.section4.notApplicable.value = value;
+      } else {
+        // Fallback to generic lodash set
+        set(newData, path, value);
+      }
+
+      console.log(`🔄 Section4: updateFieldValue - updated path: ${path}`);
+      return newData;
+    });
+  }, []);
+
   // ============================================================================
-  // SF86FORM INTEGRATION WITH FIELD FLATTENING
+  // SF86FORM INTEGRATION
   // ============================================================================
 
-  const integration = useSection86FormIntegration<Section4>(
+  // Integration with main form context using Section 1 gold standard pattern
+  // Note: integration variable is used internally by the hook for registration
+  const integration = useSection86FormIntegration(
     'section4',
     'Section 4: Social Security Number',
     section4Data,
-    setSection4Data,
-    validateSection,
-    getChanges
-    // Removed flattenFields parameter to use structured format (preferred)
+    setSection4Data, // Use standard setSection4Data function
+    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
+    getChanges,
+    updateFieldValue // Pass Section 4's updateFieldValue function to integration
   );
 
   // ============================================================================

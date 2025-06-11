@@ -477,7 +477,7 @@ export interface Section13ValidationContext {
 /**
  * Employment type options for dropdown
  */
-export const EMPLOYMENT_TYPE_OPTIONS: EmploymentType[] = [
+export const EMPLOYMENT_TYPE_OPTIONS = [
   "Federal Employment",
   "State Government",
   "Local Government",
@@ -489,12 +489,12 @@ export const EMPLOYMENT_TYPE_OPTIONS: EmploymentType[] = [
   "Consulting",
   "Unemployment",
   "Other"
-];
+] as const;
 
 /**
  * Employment status options for dropdown
  */
-export const EMPLOYMENT_STATUS_OPTIONS: EmploymentStatus[] = [
+export const EMPLOYMENT_STATUS_OPTIONS = [
   "Full-time",
   "Part-time",
   "Contract",
@@ -503,12 +503,12 @@ export const EMPLOYMENT_STATUS_OPTIONS: EmploymentStatus[] = [
   "Volunteer",
   "Unemployed",
   "Other"
-];
+] as const;
 
 /**
  * Reason for leaving options for dropdown
  */
-export const REASON_FOR_LEAVING_OPTIONS: ReasonForLeaving[] = [
+export const REASON_FOR_LEAVING_OPTIONS = [
   "Resigned",
   "Terminated",
   "Laid Off",
@@ -521,7 +521,7 @@ export const REASON_FOR_LEAVING_OPTIONS: ReasonForLeaving[] = [
   "Retirement",
   "Still Employed",
   "Other"
-];
+] as const;
 
 // ============================================================================
 // OPERATION TYPES
