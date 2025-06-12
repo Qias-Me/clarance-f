@@ -101,12 +101,12 @@ export const Section6Component: React.FC<Section6ComponentProps> = ({
 
 
   // Get current values
-  const getHeightFeet = (): HeightFeet => section6Data.section6.heightFeet.value as HeightFeet;
-  const getHeightInches = (): HeightInches => section6Data.section6.heightInches.value as HeightInches;
+  const getHeightFeet = (): HeightFeet => section6Data.section6.heightFeet.value as HeightFeet || '';
+  const getHeightInches = (): HeightInches => section6Data.section6.heightInches.value as HeightInches || '';
   const getWeight = (): string => section6Data.section6.weight.value || '';
-  const getHairColor = (): HairColor => section6Data.section6.hairColor.value;
-  const getEyeColor = (): EyeColor => section6Data.section6.eyeColor.value;
-  const getSex = (): Sex => section6Data.section6.sex.value;
+  const getHairColor = (): HairColor => section6Data.section6.hairColor.value|| '';
+  const getEyeColor = (): EyeColor => section6Data.section6.eyeColor.value|| '';
+  const getSex = (): Sex => section6Data.section6.sex.value|| '';
 
   // Validation helpers
   const validateWeight = (weight: string): { isValid: boolean; error?: string } => {

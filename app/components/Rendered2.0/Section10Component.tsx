@@ -984,26 +984,32 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
             <>
               {getDualCitizenships().length > 0 && (
                 <div className="mb-4">
-                  {getDualCitizenships().map((citizenship, index) => renderDualCitizenshipEntry(citizenship, index))}
+                  {/* Progressive rendering: only render entries up to the limit of 2 */}
+                  {getDualCitizenships().slice(0, 2).map((citizenship, index) => renderDualCitizenshipEntry(citizenship, index))}
                 </div>
               )}
 
-              <button
-                type="button"
-                onClick={addDualCitizenship}
-                disabled={!canAddDualCitizenship()}
-                className={`inline-flex items-center px-3 py-2 border shadow-sm text-sm leading-4 font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                  canAddDualCitizenship()
-                    ? 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
-                    : 'border-gray-200 text-gray-400 bg-gray-100 cursor-not-allowed'
-                }`}
-                data-testid="add-dual-citizenship-button"
-              >
-                <svg className="-ml-0.5 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-                </svg>
-                Add Dual Citizenship {!canAddDualCitizenship() && '(Max 2)'}
-              </button>
+              {/* Only show Add button if we can add more entries (less than 2) */}
+              {canAddDualCitizenship() && (
+                <button
+                  type="button"
+                  onClick={addDualCitizenship}
+                  className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  data-testid="add-dual-citizenship-button"
+                >
+                  <svg className="-ml-0.5 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                  </svg>
+                  Add Dual Citizenship ({getDualCitizenships().length + 1} of 2)
+                </button>
+              )}
+
+              {/* Show max reached message when at limit */}
+              {!canAddDualCitizenship() && getDualCitizenships().length >= 2 && (
+                <div className="text-sm text-gray-500 italic">
+                  Maximum of 2 dual citizenship entries reached.
+                </div>
+              )}
             </>
           )}
         </div>
@@ -1043,26 +1049,32 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
             <>
               {getForeignPassports().length > 0 && (
                 <div className="mb-4">
-                  {getForeignPassports().map((passport, index) => renderForeignPassportEntry(passport, index))}
+                  {/* Progressive rendering: only render entries up to the limit of 2 */}
+                  {getForeignPassports().slice(0, 2).map((passport, index) => renderForeignPassportEntry(passport, index))}
                 </div>
               )}
 
-              <button
-                type="button"
-                onClick={addForeignPassport}
-                disabled={!canAddForeignPassport()}
-                className={`inline-flex items-center px-3 py-2 border shadow-sm text-sm leading-4 font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                  canAddForeignPassport()
-                    ? 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50'
-                    : 'border-gray-200 text-gray-400 bg-gray-100 cursor-not-allowed'
-                }`}
-                data-testid="add-foreign-passport-button"
-              >
-                <svg className="-ml-0.5 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-                </svg>
-                Add Foreign Passport {!canAddForeignPassport() && '(Max 2)'}
-              </button>
+              {/* Only show Add button if we can add more entries (less than 2) */}
+              {canAddForeignPassport() && (
+                <button
+                  type="button"
+                  onClick={addForeignPassport}
+                  className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  data-testid="add-foreign-passport-button"
+                >
+                  <svg className="-ml-0.5 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                  </svg>
+                  Add Foreign Passport ({getForeignPassports().length + 1} of 2)
+                </button>
+              )}
+
+              {/* Show max reached message when at limit */}
+              {!canAddForeignPassport() && getForeignPassports().length >= 2 && (
+                <div className="text-sm text-gray-500 italic">
+                  Maximum of 2 foreign passport entries reached.
+                </div>
+              )}
             </>
           )}
         </div>

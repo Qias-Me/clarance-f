@@ -202,7 +202,7 @@ export const Section3Provider: React.FC<Section3ProviderProps> = ({ children }) 
   const validateLocationOnly = useCallback((): LocationValidationResult => {
     const validationContext: Section3ValidationContext = {
       rules: defaultValidationRules,
-      defaultCountry: 'United States'
+      defaultCountry: ''
     };
 
     return validatePlaceOfBirth(section3Data.section3, validationContext);
