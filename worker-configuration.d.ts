@@ -5,6 +5,7 @@ declare namespace Cloudflare {
 	interface Env {
 		VALUE_FROM_CLOUDFLARE: "Hello from Cloudflare";
 		NODE_ENV: "development";
+		ASSETS: Fetcher;
 	}
 }
 interface Env extends Cloudflare.Env {}

@@ -6,28 +6,49 @@
  * The client handles all form data application locally.
  */
 
-const LOCAL_SF86_PDF_URL = '/clean.pdf'; // Using clean.pdf as it exists in public directory
+import type { LoaderFunctionArgs } from "react-router";
 
-export async function loader({ request }: { request: Request }) {
+export async function loader({ request, context }: LoaderFunctionArgs) {
   try {
-    console.log("Loading local SF-86 PDF template...");
+    console.log("🔄 API Route: /api/generate-pdf - Loading local SF-86 PDF template...");
 
-    // Get the origin from the request to construct the full URL
-    const url = new URL(request.url);
-    const fullPdfUrl = new URL(LOCAL_SF86_PDF_URL, url.origin).href;
+    // Access the ASSETS binding from the Cloudflare environment
+    const assets = context?.cloudflare?.env?.ASSETS;
 
-    console.log(`Fetching PDF from: ${fullPdfUrl}`);
+    if (!assets) {
+      console.error("❌ ASSETS binding not available");
+      throw new Error("ASSETS binding not configured - check wrangler.jsonc assets configuration");
+    }
 
-    // Fetch the local PDF file from the public directory
-    const response = await fetch(fullPdfUrl);
+    console.log("📄 Fetching PDF from ASSETS binding...");
+
+    // Create a request for the clean.pdf file from the assets
+    // The ASSETS binding serves files from the configured directory (./public/)
+    const assetRequest = new Request(new URL("/clean.pdf", request.url));
+    const response = await assets.fetch(assetRequest);
+
+    console.log(`📊 PDF fetch response status: ${response.status} ${response.statusText}`);
 
     if (!response.ok) {
-      throw new Error(`Failed to load local PDF: ${response.status} ${response.statusText}`);
+      const errorDetails = {
+        status: response.status,
+        statusText: response.statusText,
+        url: assetRequest.url,
+        headers: Object.fromEntries(response.headers.entries())
+      };
+      console.error("❌ PDF fetch failed:", errorDetails);
+
+      // Provide more helpful error message
+      if (response.status === 404) {
+        throw new Error(`PDF template not found: clean.pdf is missing from the public directory. Ensure the file exists and is deployed with the Worker.`);
+      } else {
+        throw new Error(`Failed to load PDF template: ${response.status} ${response.statusText}`);
+      }
     }
 
     const pdfBytes = await response.arrayBuffer();
 
-    console.log(`Successfully loaded local SF-86 PDF template. Size: ${pdfBytes.byteLength} bytes`);
+    console.log(`✅ Successfully loaded local SF-86 PDF template. Size: ${pdfBytes.byteLength} bytes`);
 
     // Return the base PDF template
     return new Response(pdfBytes, {
@@ -40,18 +61,27 @@ export async function loader({ request }: { request: Request }) {
       },
     });
   } catch (error) {
-    console.error("Error loading local PDF template:", error);
+    console.error("💥 Error in /api/generate-pdf route:", error);
+
+    const errorResponse = {
+      success: false,
+      error: `Failed to load local PDF template: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+      route: "/api/generate-pdf",
+      timestamp: new Date().toISOString(),
+      requestUrl: request.url,
+      assetsBindingAvailable: !!context?.cloudflare?.env?.ASSETS
+    };
 
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: `Failed to load local PDF template: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
-      }),
+      JSON.stringify(errorResponse),
       {
         status: 500,
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Access-Control-Allow-Origin": "*"
+        },
       }
     );
   }
@@ -63,7 +93,7 @@ export async function options() {
     status: 200,
     headers: {
       "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
     },
   });
