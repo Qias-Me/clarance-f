@@ -7,9 +7,6 @@
 	"name": "clarance-f",
 	"compatibility_date": "2025-04-04",
 	"main": "./workers/app.ts",
-	"vars": {
-		
-	},
 	"observability": {
 		"enabled": true
 	},

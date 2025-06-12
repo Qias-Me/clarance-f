@@ -33,6 +33,9 @@ import type {
 } from '../shared/base-interfaces';
 import { useSF86Form } from './SF86FormContext';
 
+// Maximum number of court action entries allowed
+const MAX_COURT_ACTION_ENTRIES = 2;
+
 // ============================================================================
 // CONTEXT TYPE DEFINITION
 // ============================================================================
@@ -311,11 +314,19 @@ export const Section28Provider: React.FC<Section28ProviderProps> = ({ children }
   const addCourtAction = useCallback(() => {
     setSection28Data(prevData => {
       const newData = cloneDeep(prevData);
+
+      // Enforce maximum entry limit
+      if (newData.section28.courtActionEntries.length >= MAX_COURT_ACTION_ENTRIES) {
+        console.warn(`⚠️ Section28: Cannot add more than ${MAX_COURT_ACTION_ENTRIES} court action entries`);
+        return prevData; // Return unchanged data
+      }
+
       const entryIndex = newData.section28.courtActionEntries.length; // Use current length as index
       const newEntry = createDefaultCourtActionEntry(entryIndex);
       // Set a unique ID for the entry
       newEntry._id = Date.now() + Math.random();
       newData.section28.courtActionEntries.push(newEntry);
+      console.log(`✅ Section28: Added court action entry #${entryIndex + 1}. Total entries: ${newData.section28.courtActionEntries.length}`);
       return newData;
     });
   }, []);

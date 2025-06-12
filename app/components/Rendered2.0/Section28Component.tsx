@@ -3,6 +3,9 @@ import React, { useState, useEffect, useCallback, memo } from "react";
 import { useSection28 } from "~/state/contexts/sections2.0/section28";
 import { useSF86Form } from "~/state/contexts/sections2.0/SF86FormContext";
 
+// Maximum number of court action entries allowed
+const MAX_COURT_ACTION_ENTRIES = 2;
+
 interface Section28ComponentProps {
   onValidationChange?: (isValid: boolean) => void;
   onNext?: () => void;
@@ -90,6 +93,11 @@ const Section28Component: React.FC<Section28ComponentProps> = memo(({
 
   // Handle adding a new court action entry
   const handleAddCourtAction = () => {
+    // Check if we've reached the maximum limit
+    if (sectionData.section28.courtActionEntries.length >= MAX_COURT_ACTION_ENTRIES) {
+      console.warn(`⚠️ Section28: Maximum of ${MAX_COURT_ACTION_ENTRIES} court action entries allowed`);
+      return;
+    }
     // console.log(`🔍 Section28Component: handleAddCourtAction called`);
     addCourtAction();
   };
@@ -358,13 +366,22 @@ const Section28Component: React.FC<Section28ComponentProps> = memo(({
               <p className="text-gray-500 italic">No court actions added yet.</p>
             )}
 
-            <button
-              type="button"
-              onClick={handleAddCourtAction}
-              className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-            >
-              + Add Court Action
-            </button>
+            {/* Add Court Action Button - conditionally rendered based on limit */}
+            {sectionData.section28.courtActionEntries.length < MAX_COURT_ACTION_ENTRIES ? (
+              <button
+                type="button"
+                onClick={handleAddCourtAction}
+                className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+              >
+                + Add Court Action
+              </button>
+            ) : (
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                <p className="text-yellow-800 text-sm">
+                  <strong>Maximum entries reached:</strong> You can only add up to {MAX_COURT_ACTION_ENTRIES} court action entries.
+                </p>
+              </div>
+            )}
           </div>
         )}
 

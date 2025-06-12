@@ -9,15 +9,8 @@
 		"dev": "react-router dev",
 		"preview": "npm run build && vite preview",
 		"typecheck": "npm run cf-typegen && react-router typegen && tsc -b",
-		"test": "playwright test",
-		"test:headed": "playwright test --headed",
-		"test:debug": "playwright test --debug",
-		"test:section29": "playwright test tests/section29",
-		"test:section7": "playwright test tests/section7",
-		"test:scalable-architecture": "playwright test tests/scalable-architecture",
-		"test:ui": "playwright test --ui",
-		"test:report": "playwright show-report",
-		"test:install": "playwright install"
+    "wrangler:update": "npm install wrangler@latest"
+
 	},
 	"dependencies": {
 		"@reduxjs/toolkit": "^2.7.0",

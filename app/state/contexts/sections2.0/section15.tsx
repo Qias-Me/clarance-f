@@ -41,6 +41,15 @@ import {
 import { useSF86Form } from './SF86FormContext';
 
 // ============================================================================
+// ENTRY LIMITS
+// ============================================================================
+
+// Maximum number of entries allowed for each subsection
+const MAX_MILITARY_SERVICE_ENTRIES = 2;
+const MAX_DISCIPLINARY_ENTRIES = 2;
+const MAX_FOREIGN_MILITARY_ENTRIES = 2;
+
+// ============================================================================
 // VALIDATION RULES
 // ============================================================================
 
@@ -180,13 +189,22 @@ const Section15Provider: React.FC<Section15ProviderProps> = ({ children }) => {
   // ============================================================================
 
   const addMilitaryServiceEntry = useCallback(() => {
-    setSection15Data(prev => ({
-      ...prev,
-      section15: {
-        ...prev.section15,
-        militaryService: [...prev.section15.militaryService, createDefaultMilitaryServiceEntry()]
+    setSection15Data(prev => {
+      // Enforce maximum entry limit
+      if (prev.section15.militaryService.length >= MAX_MILITARY_SERVICE_ENTRIES) {
+        console.warn(`⚠️ Section15: Cannot add more than ${MAX_MILITARY_SERVICE_ENTRIES} military service entries`);
+        return prev; // Return unchanged data
       }
-    }));
+
+      console.log(`✅ Section15: Adding military service entry #${prev.section15.militaryService.length + 1}. Total entries: ${prev.section15.militaryService.length + 1}`);
+      return {
+        ...prev,
+        section15: {
+          ...prev.section15,
+          militaryService: [...prev.section15.militaryService, createDefaultMilitaryServiceEntry()]
+        }
+      };
+    });
   }, []);
 
   const removeMilitaryServiceEntry = useCallback((index: number) => {
@@ -225,13 +243,22 @@ const Section15Provider: React.FC<Section15ProviderProps> = ({ children }) => {
   // ============================================================================
 
   const addDisciplinaryEntry = useCallback(() => {
-    setSection15Data(prev => ({
-      ...prev,
-      section15: {
-        ...prev.section15,
-        disciplinaryProcedures: [...prev.section15.disciplinaryProcedures, createDefaultDisciplinaryEntry()]
+    setSection15Data(prev => {
+      // Enforce maximum entry limit
+      if (prev.section15.disciplinaryProcedures.length >= MAX_DISCIPLINARY_ENTRIES) {
+        console.warn(`⚠️ Section15: Cannot add more than ${MAX_DISCIPLINARY_ENTRIES} disciplinary procedure entries`);
+        return prev; // Return unchanged data
       }
-    }));
+
+      console.log(`✅ Section15: Adding disciplinary entry #${prev.section15.disciplinaryProcedures.length + 1}. Total entries: ${prev.section15.disciplinaryProcedures.length + 1}`);
+      return {
+        ...prev,
+        section15: {
+          ...prev.section15,
+          disciplinaryProcedures: [...prev.section15.disciplinaryProcedures, createDefaultDisciplinaryEntry()]
+        }
+      };
+    });
   }, []);
 
   const removeDisciplinaryEntry = useCallback((index: number) => {
@@ -261,13 +288,22 @@ const Section15Provider: React.FC<Section15ProviderProps> = ({ children }) => {
   // ============================================================================
 
   const addForeignMilitaryEntry = useCallback(() => {
-    setSection15Data(prev => ({
-      ...prev,
-      section15: {
-        ...prev.section15,
-        foreignMilitaryService: [...prev.section15.foreignMilitaryService, createDefaultForeignMilitaryEntry()]
+    setSection15Data(prev => {
+      // Enforce maximum entry limit
+      if (prev.section15.foreignMilitaryService.length >= MAX_FOREIGN_MILITARY_ENTRIES) {
+        console.warn(`⚠️ Section15: Cannot add more than ${MAX_FOREIGN_MILITARY_ENTRIES} foreign military service entries`);
+        return prev; // Return unchanged data
       }
-    }));
+
+      console.log(`✅ Section15: Adding foreign military entry #${prev.section15.foreignMilitaryService.length + 1}. Total entries: ${prev.section15.foreignMilitaryService.length + 1}`);
+      return {
+        ...prev,
+        section15: {
+          ...prev.section15,
+          foreignMilitaryService: [...prev.section15.foreignMilitaryService, createDefaultForeignMilitaryEntry()]
+        }
+      };
+    });
   }, []);
 
   const removeForeignMilitaryEntry = useCallback((index: number) => {

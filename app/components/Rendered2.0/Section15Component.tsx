@@ -19,6 +19,11 @@ import {
 } from '../../../api/interfaces/sections2.0/section15';
 import { getCountryOptions } from '../../../api/interfaces/sections2.0/base';
 
+// Maximum number of entries allowed for each subsection
+const MAX_MILITARY_SERVICE_ENTRIES = 2;
+const MAX_DISCIPLINARY_ENTRIES = 2;
+const MAX_FOREIGN_MILITARY_ENTRIES = 2;
+
 interface Section15ComponentProps {
   className?: string;
   onValidationChange?: (isValid: boolean) => void;
@@ -224,14 +229,23 @@ export const Section15Component: React.FC<Section15ComponentProps> = ({
                 <div className="space-y-6">
                   <div className="flex justify-between items-center mb-4">
                     <h4 className="font-medium">Military Service Entries ({militaryService.length})</h4>
-                    <button
-                      type="button"
-                      onClick={addMilitaryServiceEntry}
-                      className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
-                      data-testid="add-military-service-entry"
-                    >
-                      Add Service Entry
-                    </button>
+                    {/* Add Service Entry Button - conditionally rendered based on limit */}
+                    {militaryService.length < MAX_MILITARY_SERVICE_ENTRIES ? (
+                      <button
+                        type="button"
+                        onClick={addMilitaryServiceEntry}
+                        className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+                        data-testid="add-military-service-entry"
+                      >
+                        Add Service Entry
+                      </button>
+                    ) : (
+                      <div className="px-3 py-1 bg-yellow-50 border border-yellow-200 rounded text-sm">
+                        <span className="text-yellow-800">
+                          <strong>Maximum entries reached:</strong> You can only add up to {MAX_MILITARY_SERVICE_ENTRIES} military service entries.
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {militaryService.map((entry, index) => (
@@ -425,14 +439,23 @@ export const Section15Component: React.FC<Section15ComponentProps> = ({
                 <div className="space-y-6">
                   <div className="flex justify-between items-center mb-4">
                     <h4 className="font-medium">Disciplinary Procedures ({disciplinaryProcedures.length})</h4>
-                    <button
-                      type="button"
-                      onClick={addDisciplinaryEntry}
-                      className="px-3 py-1 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600"
-                      data-testid="add-disciplinary-entry"
-                    >
-                      Add Disciplinary Entry
-                    </button>
+                    {/* Add Disciplinary Entry Button - conditionally rendered based on limit */}
+                    {disciplinaryProcedures.length < MAX_DISCIPLINARY_ENTRIES ? (
+                      <button
+                        type="button"
+                        onClick={addDisciplinaryEntry}
+                        className="px-3 py-1 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600"
+                        data-testid="add-disciplinary-entry"
+                      >
+                        Add Disciplinary Entry
+                      </button>
+                    ) : (
+                      <div className="px-3 py-1 bg-yellow-50 border border-yellow-200 rounded text-sm">
+                        <span className="text-yellow-800">
+                          <strong>Maximum entries reached:</strong> You can only add up to {MAX_DISCIPLINARY_ENTRIES} disciplinary procedure entries.
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {disciplinaryProcedures.map((entry, index) => (
@@ -549,14 +572,23 @@ export const Section15Component: React.FC<Section15ComponentProps> = ({
                 <div className="space-y-6">
                   <div className="flex justify-between items-center mb-4">
                     <h4 className="font-medium">Foreign Military Service Entries ({foreignMilitaryService.length})</h4>
-                    <button
-                      type="button"
-                      onClick={addForeignMilitaryEntry}
-                      className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
-                      data-testid="add-foreign-military-entry"
-                    >
-                      Add Foreign Service Entry
-                    </button>
+                    {/* Add Foreign Service Entry Button - conditionally rendered based on limit */}
+                    {foreignMilitaryService.length < MAX_FOREIGN_MILITARY_ENTRIES ? (
+                      <button
+                        type="button"
+                        onClick={addForeignMilitaryEntry}
+                        className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
+                        data-testid="add-foreign-military-entry"
+                      >
+                        Add Foreign Service Entry
+                      </button>
+                    ) : (
+                      <div className="px-3 py-1 bg-yellow-50 border border-yellow-200 rounded text-sm">
+                        <span className="text-yellow-800">
+                          <strong>Maximum entries reached:</strong> You can only add up to {MAX_FOREIGN_MILITARY_ENTRIES} foreign military service entries.
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {foreignMilitaryService.map((entry, index) => (
