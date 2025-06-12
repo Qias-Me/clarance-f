@@ -19,6 +19,7 @@ import section9Data from '../sections-references/section-9.json';
 import section10Data from '../sections-references/section-10.json';
 import section11Data from '../sections-references/section-11.json';
 import section12Data from '../sections-references/section-12.json';
+import section13Data from '../sections-references/section-13.json';
 import section14Data from '../sections-references/section-14.json';
 import section15Data from '../sections-references/section-15.json';
 
@@ -81,7 +82,7 @@ const sectionsRegistry: Record<number, SectionReference> = {
   10: section10Data as SectionReference,
   11: section11Data as SectionReference,
   12: section12Data as SectionReference,
-  // 13: section13Data as SectionReference,
+  13: section13Data as SectionReference,
   14: section14Data as SectionReference,
   15: section15Data as SectionReference,
   // 16: section16Data as SectionReference,

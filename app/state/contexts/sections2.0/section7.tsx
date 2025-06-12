@@ -26,7 +26,6 @@ import {
   updateSection7Field
 } from '../../../../api/interfaces/sections2.0/section7';
 import type { ValidationResult, ValidationError } from '../shared/base-interfaces';
-import { useSection86FormIntegration } from '../shared/section-context-integration';
 
 // ============================================================================
 // CONTEXT INTERFACE
@@ -77,6 +76,7 @@ export interface Section7ContextType {
   resetSection: () => void;
   loadSection: (data: Section7) => void;
   getChanges: () => any;
+  commitDraft: () => Section7;
 }
 
 // ============================================================================
@@ -105,6 +105,7 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
   // ============================================================================
 
   const [section7Data, setSection7Data] = useState<Section7>(createInitialSection7State());
+  const [draftData, setDraftData] = useState<Section7>(createInitialSection7State()); // Draft state for input changes
   const [isLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [initialData] = useState<Section7>(createInitialSection7State());
@@ -130,10 +131,40 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
   const [dynamicSocialMedia, setDynamicSocialMedia] = useState<Array<{platform: {value: string}, username: {value: string}, url?: {value: string}}>>([]);
 
   // ============================================================================
+  // SYNCHRONIZATION EFFECTS
+  // ============================================================================
+
+  // Synchronize dynamic phone numbers when draftData changes (for real-time display)
+  useEffect(() => {
+    if (draftData.section7.entries && draftData.section7.entries.length > 0) {
+      const syncedPhoneNumbers = draftData.section7.entries.map(entry => ({
+        number: { value: entry.number?.value || '' },
+        extension: { value: entry.extension?.value || '' },
+        dayTime: { value: entry.dayTime?.value || false },
+        nightTime: { value: entry.nightTime?.value || false },
+        isInternational: { value: entry.isInternational?.value || false }
+      }));
+
+      // Only update if the arrays are different to avoid infinite loops
+      const currentPhoneNumbers = JSON.stringify(dynamicPhoneNumbers);
+      const newPhoneNumbers = JSON.stringify(syncedPhoneNumbers);
+
+      if (currentPhoneNumbers !== newPhoneNumbers) {
+        setDynamicPhoneNumbers(syncedPhoneNumbers);
+      }
+    }
+  }, [draftData.section7.entries]); // Use draftData for real-time updates
+
+  // Synchronize draftData when section7Data changes (e.g., from data loading)
+  useEffect(() => {
+    setDraftData(cloneDeep(section7Data));
+  }, [section7Data]);
+
+  // ============================================================================
   // COMPUTED VALUES
   // ============================================================================
 
-  const isDirty = JSON.stringify(section7Data) !== JSON.stringify(initialData);
+  const isDirty = JSON.stringify(draftData) !== JSON.stringify(section7Data);
 
   // ============================================================================
   // VALIDATION FUNCTIONS
@@ -153,9 +184,9 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
     const validationErrors: ValidationError[] = [];
     const validationWarnings: ValidationError[] = [];
 
-    // Validate home email if provided
-    if (section7Data.section7.homeEmail.value &&
-        !validateEmail(section7Data.section7.homeEmail.value)) {
+    // Validate home email if provided (use draftData for real-time validation)
+    if (draftData.section7.homeEmail.value &&
+        !validateEmail(draftData.section7.homeEmail.value)) {
       validationErrors.push({
         field: 'section7.homeEmail',
         message: 'Please enter a valid home email address',
@@ -164,9 +195,9 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
       });
     }
 
-    // Validate work email if provided
-    if (section7Data.section7.workEmail.value &&
-        !validateEmail(section7Data.section7.workEmail.value)) {
+    // Validate work email if provided (use draftData for real-time validation)
+    if (draftData.section7.workEmail.value &&
+        !validateEmail(draftData.section7.workEmail.value)) {
       validationErrors.push({
         field: 'section7.workEmail',
         message: 'Please enter a valid work email address',
@@ -175,9 +206,9 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
       });
     }
 
-    // Validate phone numbers if provided (entries array structure)
-    if (section7Data.section7.entries && section7Data.section7.entries.length > 0) {
-      section7Data.section7.entries.forEach((phoneEntry, index) => {
+    // Validate phone numbers if provided (use draftData for real-time validation)
+    if (draftData.section7.entries && draftData.section7.entries.length > 0) {
+      draftData.section7.entries.forEach((phoneEntry, index) => {
         const phoneType = index === 0 ? 'home' : index === 1 ? 'work' : 'mobile';
 
         if (phoneEntry.number.value && !validatePhoneNumber(phoneEntry.number.value)) {
@@ -227,28 +258,28 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
       errors: validationErrors,
       warnings: validationWarnings
     };
-  }, [section7Data, dynamicPhoneNumbers, dynamicEmailAddresses, validateEmail, validatePhoneNumber]);
+  }, [draftData, dynamicPhoneNumbers, dynamicEmailAddresses, validateEmail, validatePhoneNumber]);
 
   const getChanges = useCallback(() => {
     const changes: Record<string, any> = {};
 
     if (isDirty) {
       changes.section7 = {
-        oldValue: initialData,
-        newValue: section7Data,
+        oldValue: section7Data,
+        newValue: draftData,
         timestamp: new Date()
       };
     }
 
     return changes;
-  }, [section7Data, isDirty, initialData]);
+  }, [draftData, isDirty, section7Data]);
 
   // ============================================================================
   // CRUD OPERATIONS
   // ============================================================================
 
   const updateHomeEmail = useCallback((email: string) => {
-    setSection7Data(prevData => {
+    setDraftData(prevData => {
       const newData = cloneDeep(prevData);
       newData.section7.homeEmail.value = email;
       return newData;
@@ -256,7 +287,7 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
   }, []);
 
   const updateWorkEmail = useCallback((email: string) => {
-    setSection7Data(prevData => {
+    setDraftData(prevData => {
       const newData = cloneDeep(prevData);
       newData.section7.workEmail.value = email;
       return newData;
@@ -264,10 +295,10 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
   }, []);
 
   const updatePhoneNumber = useCallback((index: number, fieldType: string, value: any) => {
-    setSection7Data(prevData => {
+    setDraftData(prevData => {
       const newData = cloneDeep(prevData);
 
-      // Update the actual section7 data structure (fixed 3 phone entries)
+      // Update the draft section7 data structure (fixed 3 phone entries)
       if (newData.section7.entries && newData.section7.entries[index]) {
         const phoneEntry = newData.section7.entries[index];
         if (phoneEntry[fieldType as keyof PhoneNumber]) {
@@ -299,10 +330,20 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
   }, [dynamicPhoneNumbers]);
 
   const updateContactField = useCallback((update: Section7FieldUpdate) => {
-    setSection7Data(prevData => {
+    setDraftData(prevData => {
       return updateSection7Field(prevData, update);
     });
   }, []);
+
+  // ============================================================================
+  // DRAFT MANAGEMENT
+  // ============================================================================
+
+  const commitDraft = useCallback(() => {
+    const committedData = cloneDeep(draftData);
+    setSection7Data(committedData);
+    return committedData; // Return the committed data for immediate use
+  }, [draftData]);
 
   // ============================================================================
   // DYNAMIC CRUD OPERATIONS (for component compatibility)
@@ -316,11 +357,43 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
       nightTime: { value: false },
       isInternational: { value: false }
     };
+
+    // Update dynamic phone numbers
     setDynamicPhoneNumbers(prev => [...prev, newPhone]);
+
+    // Also update the main section7Data structure
+    setSection7Data(prevData => {
+      const newData = cloneDeep(prevData);
+      if (!newData.section7.entries) {
+        newData.section7.entries = [];
+      }
+
+      // Add new phone entry to section7 data structure
+      const newEntry = {
+        number: { id: `section7-phone-${newData.section7.entries.length}-number`, value: '' },
+        extension: { id: `section7-phone-${newData.section7.entries.length}-extension`, value: '' },
+        dayTime: { id: `section7-phone-${newData.section7.entries.length}-dayTime`, value: false },
+        nightTime: { id: `section7-phone-${newData.section7.entries.length}-nightTime`, value: false },
+        isInternational: { id: `section7-phone-${newData.section7.entries.length}-isInternational`, value: false }
+      };
+      newData.section7.entries.push(newEntry);
+
+      return newData;
+    });
   }, []);
 
   const removePhoneNumber = useCallback((index: number) => {
+    // Update dynamic phone numbers
     setDynamicPhoneNumbers(prev => prev.filter((_, i) => i !== index));
+
+    // Also update the main section7Data structure
+    setSection7Data(prevData => {
+      const newData = cloneDeep(prevData);
+      if (newData.section7.entries && newData.section7.entries[index]) {
+        newData.section7.entries.splice(index, 1);
+      }
+      return newData;
+    });
   }, []);
 
   const addEmailAddress = useCallback(() => {
@@ -388,6 +461,29 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
   const loadSection = useCallback((data: Section7) => {
     setSection7Data(cloneDeep(data));
     setErrors({});
+
+    // Synchronize dynamic phone numbers from loaded data
+    if (data.section7.entries && data.section7.entries.length > 0) {
+      const syncedPhoneNumbers = data.section7.entries.map(entry => ({
+        number: { value: entry.number?.value || '' },
+        extension: { value: entry.extension?.value || '' },
+        dayTime: { value: entry.dayTime?.value || false },
+        nightTime: { value: entry.nightTime?.value || false },
+        isInternational: { value: entry.isInternational?.value || false }
+      }));
+      setDynamicPhoneNumbers(syncedPhoneNumbers);
+    } else {
+      // If no entries, reset to default single phone entry
+      setDynamicPhoneNumbers([
+        {
+          number: { value: '' },
+          extension: { value: '' },
+          dayTime: { value: false },
+          nightTime: { value: false },
+          isInternational: { value: false }
+        }
+      ]);
+    }
   }, []);
 
   // ============================================================================
@@ -470,17 +566,7 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
   // SF86FORM INTEGRATION
   // ============================================================================
 
-  // Integration with main form context using Section 1 gold standard pattern
-  // Note: integration variable is used internally by the hook for registration
-  const integration = useSection86FormIntegration(
-    'section7',
-    'Section 7: Your Contact Information',
-    section7Data,
-    setSection7Data,
-    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
-    getChanges,
-    updateFieldValue // Pass Section 7's updateFieldValue function to integration
-  );
+
 
   // ============================================================================
   // CONTEXT VALUE
@@ -488,7 +574,7 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
 
   const contextValue: Section7ContextType = {
     // State
-    section7Data,
+    section7Data: draftData, // Expose draftData as section7Data for component compatibility
     isLoading,
     errors,
     isDirty,
@@ -525,6 +611,7 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
     resetSection,
     loadSection,
     getChanges,
+    commitDraft, // Add commitDraft function
   };
 
   return (

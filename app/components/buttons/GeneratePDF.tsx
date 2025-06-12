@@ -15,8 +15,8 @@ export const PdfGenerator: React.FC<PdfGeneratorProps> = ({ formData }) => {
 
   const generatePdf = async () => {
     // COMMENTED OUT FOR DEVELOPMENT: Use server-side PDF generation instead
-    console.log("⚠️ Client-side PDF generation is disabled for development.");
-    console.log("🖥️ Please use the server-side PDF generation button in the main form for debugging.");
+    console.warn("⚠️ Client-side PDF generation is disabled for development.");
+    console.info("🖥️ Please use the server-side PDF generation button in the main form for debugging.");
     setError("Client-side PDF generation disabled for development. Use server-side generation for debugging.");
     return;
 

@@ -12,6 +12,7 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
 } from 'react';
 import { cloneDeep } from 'lodash';
 import type {
@@ -35,7 +36,7 @@ import type {
   ChangeSet,
   BaseSectionContext
 } from '../shared/base-interfaces';
-import { useSection86FormIntegration } from '../shared/section-context-integration';
+import { useSF86Form } from './SF86FormContext';
 
 // ============================================================================
 // CONTEXT TYPE DEFINITION
@@ -62,6 +63,9 @@ export interface Section27ContextType {
   // Validation
   validateSection: () => ValidationResult;
   validateTechnology: () => TechnologyValidationResult;
+
+  // Submit-only mode
+  submitSectionData: () => Promise<void>;
 
   // Utility
   resetSection: () => void;
@@ -101,6 +105,9 @@ export const Section27Provider: React.FC<Section27ProviderProps> = ({ children }
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [initialData] = useState<Section27>(createInitialSection27State());
 
+  // SF86 Form Context for data persistence
+  const sf86Form = useSF86Form();
+
   // ============================================================================
   // COMPUTED VALUES
   // ============================================================================
@@ -118,7 +125,7 @@ export const Section27Provider: React.FC<Section27ProviderProps> = ({ children }
     const validationWarnings: ValidationError[] = [];
 
     // Validate each subsection
-    const subsections: Section27SubsectionKey[] = ['illegalAccess', 'illegalModification', 'unauthorizedUse'];
+    const subsections: Section27SubsectionKey[] = ['illegalAccess', 'illegalModification', 'unauthorizedEntry'];
 
     subsections.forEach(subsectionKey => {
       const subsection = section27Data.section27[subsectionKey];
@@ -176,7 +183,7 @@ export const Section27Provider: React.FC<Section27ProviderProps> = ({ children }
     const warnings: string[] = [];
 
     // Basic technology validation
-    const subsections: Section27SubsectionKey[] = ['illegalAccess', 'illegalModification', 'unauthorizedUse'];
+    const subsections: Section27SubsectionKey[] = ['illegalAccess', 'illegalModification', 'unauthorizedEntry'];
 
     subsections.forEach(subsectionKey => {
       const subsection = section27Data.section27[subsectionKey];
@@ -204,6 +211,29 @@ export const Section27Provider: React.FC<Section27ProviderProps> = ({ children }
         newData.section27[subsectionKey].entries = [];
         newData.section27[subsectionKey].entriesCount = 0;
         console.log(`🧹 Section27: Cleared entries for ${subsectionKey} because value is NO`);
+      }
+      // If setting to YES and no entries exist, auto-add the first entry
+      else if (value === "YES" && newData.section27[subsectionKey].entries.length === 0) {
+        let newEntry: Section27BaseEntry;
+        const currentEntryCount = 0; // First entry
+
+        switch (subsectionKey) {
+          case 'illegalAccess':
+            newEntry = createDefaultSection27_1Entry(currentEntryCount);
+            break;
+          case 'illegalModification':
+            newEntry = createDefaultSection27_2Entry(currentEntryCount);
+            break;
+          case 'unauthorizedEntry':
+            newEntry = createDefaultSection27_3Entry(currentEntryCount);
+            break;
+          default:
+            throw new Error(`Unknown subsection: ${subsectionKey}`);
+        }
+
+        newData.section27[subsectionKey].entries.push(newEntry);
+        newData.section27[subsectionKey].entriesCount = 1;
+        console.log(`✅ Section27: Auto-added first entry for ${subsectionKey} when YES selected`, newEntry);
       }
 
       console.log(`✅ Section27: Updated subsection flag for ${subsectionKey} to ${value}`, newData.section27[subsectionKey]);
@@ -255,7 +285,13 @@ export const Section27Provider: React.FC<Section27ProviderProps> = ({ children }
   }, []);
 
   const updateFieldValue = useCallback((subsectionKey: Section27SubsectionKey, entryIndex: number, fieldPath: string, newValue: any) => {
-    console.log(`🔧 Section27: updateFieldValue called with subsectionKey=${subsectionKey}, entryIndex=${entryIndex}, fieldPath=${fieldPath}, newValue=`, newValue);
+    // Optimized for performance - reduced logging in production
+    const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('debug=true');
+
+    if (isDebugMode) {
+      console.log(`🔧 Section27: updateFieldValue called with subsectionKey=${subsectionKey}, entryIndex=${entryIndex}, fieldPath=${fieldPath}, newValue=`, newValue);
+    }
+
     setSection27Data(prevData => {
       const newData = cloneDeep(prevData);
 
@@ -271,14 +307,21 @@ export const Section27Provider: React.FC<Section27ProviderProps> = ({ children }
         const lastKey = pathParts[pathParts.length - 1];
         if (current[lastKey] && typeof current[lastKey] === 'object' && 'value' in current[lastKey]) {
           current[lastKey].value = newValue;
-          console.log(`✅ Section27: Updated field ${fieldPath} in entry ${entryIndex} of ${subsectionKey} to:`, newValue);
+          if (isDebugMode) {
+            console.log(`✅ Section27: Updated field ${fieldPath} in entry ${entryIndex} of ${subsectionKey} to:`, newValue);
+          }
         } else {
           current[lastKey] = newValue;
-          console.log(`✅ Section27: Set field ${fieldPath} in entry ${entryIndex} of ${subsectionKey} to:`, newValue);
+          if (isDebugMode) {
+            console.log(`✅ Section27: Set field ${fieldPath} in entry ${entryIndex} of ${subsectionKey} to:`, newValue);
+          }
         }
       } else {
         console.warn(`🚨 Section27: Invalid entry index ${entryIndex} for subsection ${subsectionKey}`);
       }
+
+      // Mark that we have pending changes
+      setPendingChanges(true);
 
       return newData;
     });
@@ -328,6 +371,57 @@ export const Section27Provider: React.FC<Section27ProviderProps> = ({ children }
   }, [section27Data, initialData]);
 
   // ============================================================================
+  // SUBMIT-ONLY MODE CONFIGURATION (Following Section 1 Pattern for Performance)
+  // ============================================================================
+
+  // Enable submit-only mode to prevent auto-sync on every field change
+  // This ensures data is only synced to SF86FormContext when user explicitly submits
+  const [submitOnlyMode] = useState(true); // Enable submit-only mode for Section 27
+  const [pendingChanges, setPendingChanges] = useState(false);
+  const lastSubmittedDataRef = useRef<Section27 | null>(null);
+
+  /**
+   * Manually sync data to main form context (submit-only mode)
+   * This function should only be called when the user explicitly submits
+   */
+  const submitSectionData = useCallback(async () => {
+    if (submitOnlyMode) {
+      console.log('🚀 Section27: Manually syncing data to main form context (submit-only mode)');
+
+      // Actually sync data to SF86FormContext
+      sf86Form.updateSectionData('section27', section27Data);
+
+      // Update tracking references
+      lastSubmittedDataRef.current = cloneDeep(section27Data);
+      setPendingChanges(false);
+
+      console.log('✅ Section27: Data sync complete');
+    }
+  }, [submitOnlyMode, section27Data, sf86Form]);
+
+  // ============================================================================
+  // SF86FORM CONTEXT SYNCHRONIZATION
+  // ============================================================================
+
+  // Sync with SF86FormContext when data is loaded
+  useEffect(() => {
+    const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('debug=true');
+
+    if (sf86Form.formData.section27 && sf86Form.formData.section27 !== section27Data) {
+      if (isDebugMode) {
+        console.log('🔄 Section27: Syncing with SF86FormContext loaded data');
+      }
+
+      // Load the data from SF86FormContext
+      loadSection(sf86Form.formData.section27);
+
+      if (isDebugMode) {
+        console.log('✅ Section27: Data sync complete');
+      }
+    }
+  }, [sf86Form.formData.section27, loadSection]);
+
+  // ============================================================================
   // SF86FORM INTEGRATION
   // ============================================================================
 
@@ -357,35 +451,6 @@ export const Section27Provider: React.FC<Section27ProviderProps> = ({ children }
     getChanges
   }), [section27Data, isLoading, errors, isDirty, updateFieldValue, validateSection, resetSection, loadSection, getChanges]);
 
-  // Create updateFieldValue wrapper function that matches expected signature
-  const updateFieldValueWrapper = useCallback((path: string, value: any) => {
-    console.log(`🔧 Section27: updateFieldValueWrapper called with path=${path}, value=`, value);
-
-    // Parse fieldPath to extract subsection and entry info
-    const pathParts = path.split('.');
-    if (pathParts.length >= 3) {
-      const subsectionKey = pathParts[0] as Section27SubsectionKey;
-      const entryIndex = parseInt(pathParts[1]);
-      const remainingPath = pathParts.slice(2).join('.');
-      updateFieldValue(subsectionKey, entryIndex, remainingPath, value);
-    } else {
-      console.warn(`🚨 Section27: Invalid field path format: ${path}`);
-    }
-  }, [updateFieldValue]);
-
-  // Integration with main form context using Section 1 gold standard pattern
-  // Note: integration variable is used internally by the hook for registration
-  // Restored updateFieldValue parameter to match Section 1 pattern exactly
-  const integration = useSection86FormIntegration(
-    'section27',
-    'Section 27: Use of Information Technology Systems',
-    section27Data,
-    setSection27Data,
-    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }), // Anonymous function like Section 1
-    () => getChanges(), // Anonymous function like Section 1
-    updateFieldValueWrapper // Pass wrapper function that matches expected signature
-  );
-
 
 
   // ============================================================================
@@ -413,6 +478,9 @@ export const Section27Provider: React.FC<Section27ProviderProps> = ({ children }
     // Validation
     validateSection,
     validateTechnology,
+
+    // Submit-only mode
+    submitSectionData,
 
     // Utility
     resetSection,

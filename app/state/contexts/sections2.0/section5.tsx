@@ -33,7 +33,6 @@ import type {
   ChangeSet,
   BaseSectionContext
 } from '../shared/base-interfaces';
-import { useSection86FormIntegration } from '../shared/section-context-integration';
 import DynamicService from '../../../../api/service/dynamicService';
 
 // ============================================================================
@@ -103,7 +102,7 @@ interface Section5ProviderProps {
   children: ReactNode;
 }
 
-export const Section5Provider: React.FC<Section5ProviderProps> = ({ children }) => {
+ const Section5Provider: React.FC<Section5ProviderProps> = ({ children }) => {
   // ============================================================================
   // STATE MANAGEMENT
   // ============================================================================
@@ -581,17 +580,7 @@ export const Section5Provider: React.FC<Section5ProviderProps> = ({ children }) 
     };
   }, [section5Data, isLoading, errors, isDirty, updateFieldValue, validateSection, resetSection, loadSection, flattenSection5Fields]);
 
-  // Integration with SF86FormContext using the enhanced integration hook
-  // Only initialize integration after section5Data is properly set up
-  const integration = useSection86FormIntegration(
-    'section5',
-    'Other Names Used',
-    section5Data || createDefaultSection5Impl(), // Provide fallback
-    setSection5Data,
-    validateSection,
-    getChanges,
-    updateFieldValue
-  );
+ 
 
   // ============================================================================
   // CONTEXT VALUE
@@ -654,3 +643,6 @@ export const useSection5 = (): Section5ContextType => {
   }
   return context;
 };
+
+
+export default Section5Provider;

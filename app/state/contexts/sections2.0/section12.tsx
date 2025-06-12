@@ -21,9 +21,10 @@ import React, {
   useState,
   useCallback,
   useMemo,
-  useRef
+  useRef,
+  useEffect
 } from 'react';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, isEqual } from 'lodash';
 import set from 'lodash/set';
 import type {
   Section12,
@@ -50,7 +51,9 @@ import {
   createDefaultContactPerson
 } from '../../../../api/interfaces/sections2.0/section12';
 import type { ValidationResult, ValidationError } from '../shared/base-interfaces';
-import { useSection86FormIntegration } from '../shared/section-context-integration';
+import { validateSection12FieldMappings } from './section12-field-mapping';
+import { validateFieldGeneration } from './section12-field-generator';
+import { useSF86Form } from './SF86FormContext';
 
 // ============================================================================
 // FIELD FLATTENING FOR PDF GENERATION
@@ -269,6 +272,13 @@ export interface Section12ContextType {
   calculateEducationDuration: (entryIndex: number) => number;
   getSchoolTypeOptions: () => string[];
   getDegreeTypeOptions: () => string[];
+
+  // ============================================================================
+  // SUBMIT-ONLY MODE FUNCTIONS
+  // ============================================================================
+
+  submitSectionData: () => Promise<void>;
+  hasPendingChanges: () => boolean;
 }
 
 // ============================================================================
@@ -281,46 +291,50 @@ const Section12Context = createContext<Section12ContextType | undefined>(undefin
 // ============================================================================
 
 const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+
+
+    // Initialize field mapping system on component mount
+    useEffect(() => {
+      // console.log('🔄 Section12: Initializing section data with complete field mapping verification');
+  
+      // Validate field mappings - NOW WITH 100% COVERAGE
+      const validation = validateSection12FieldMappings();
+      // console.log(`🎯 Section12: Field mapping verification - ${validation.coverage.toFixed(1)}% coverage (${validation.mappedFields}/${validation.totalFields} fields)`);
+
+      if (validation.coverage >= 100) {
+        // console.log(`✅ Section12: All ${validation.totalFields} PDF form fields are properly mapped - 100% COVERAGE ACHIEVED!`);
+      } else if (validation.coverage >= 98) {
+        // console.log(`✅ Section12: Nearly all ${validation.totalFields} PDF form fields are properly mapped`);
+      } else {
+        // console.warn(`⚠️ Section12: ${validation.missingFields.length} fields are not mapped`);
+        // console.warn('Missing fields:');
+        validation.missingFields.slice(0, 10).forEach(field => {
+          // console.warn(`  - ${field}`);
+        });
+        if (validation.missingFields.length > 10) {
+          // console.warn(`  ... and ${validation.missingFields.length - 10} more`);
+        }
+      }
+  
+      // Validate field generation
+      const generationValid = validateFieldGeneration();
+      if (generationValid) {
+        // console.log('✅ Section12: Field generation system validated successfully');
+      } else {
+        // console.error('❌ Section12: Field generation system validation failed');
+      }
+  
+      // console.log('🔧 Section12: Section initialization complete');
+    }, []);
+
   // ============================================================================
   // STATE MANAGEMENT
   // ============================================================================
 
-  // Create minimal initial data to avoid corruption issues
-  const createMinimalInitialData = (): Section12 => {
-    // console.log(`🔍 Section12: Creating minimal initial data to avoid corruption`);
-
-    // Create a minimal data structure without complex nested arrays
-    const minimalData: Section12 = {
-      _id: 12,
-      section12: {
-        hasAttendedSchool: {
-          id: "section12-hasAttendedSchool",
-          name: "section12-hasAttendedSchool",
-          type: 'PDFRadioGroup',
-          label: 'Do you have a high school diploma, GED, or equivalent?',
-          value: 'NO',
-          rect: { x: 0, y: 0, width: 0, height: 0 }
-        },
-        hasAttendedSchoolOutsideUS: {
-          id: "section12-hasAttendedSchoolOutsideUS",
-          name: "section12-hasAttendedSchoolOutsideUS",
-          type: 'PDFRadioGroup',
-          label: 'Have you attended any other educational institutions?',
-          value: 'NO',
-          rect: { x: 0, y: 0, width: 0, height: 0 }
-        },
-        entries: [] // Start with empty array - users can add entries as needed
-      }
-    };
-
-    // console.log(`✅ Section12: Minimal initial data created successfully:`, minimalData);
-    return minimalData;
-  };
-
-  const [section12Data, setSection12Data] = useState<Section12>(() => createMinimalInitialData());
+  const [section12Data, setSection12Data] = useState<Section12>(() => createDefaultSection12());
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [initialData] = useState<Section12>(() => createMinimalInitialData());
+  const initialData = useRef<Section12>(createDefaultSection12());
 
   // Ref to prevent React Strict Mode double execution of addSchoolEntry
   const isAddingEntryRef = useRef(false);
@@ -334,8 +348,8 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
   // ============================================================================
 
   const isDirty = useMemo(() => {
-    return JSON.stringify(section12Data) !== JSON.stringify(initialData);
-  }, [section12Data, initialData]);
+    return JSON.stringify(section12Data) !== JSON.stringify(initialData.current);
+  }, [section12Data]);
 
   // ============================================================================
   // VALIDATION
@@ -400,17 +414,21 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
     // Implementation for change tracking
     // Get current data fresh to avoid stale closure
     const currentData = section12Data;
-    const currentInitialData = initialData;
+    const currentInitialData = initialData.current;
     return {};
   }, []); // FIXED: Removed dependencies to prevent infinite loops
 
   const resetSection = useCallback(() => {
-    setSection12Data(createDefaultSection12());
+    const defaultData = createDefaultSection12();
+    setSection12Data(defaultData);
     setErrors({});
+
+    // Reset submit-only mode tracking (will be handled by useEffect)
   }, []);
 
   const loadSection = useCallback((data: Section12) => {
-    setSection12Data(data);
+    setSection12Data(cloneDeep(data));
+    initialData.current = cloneDeep(data);
     setErrors({});
   }, []);
 
@@ -496,19 +514,32 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
     }
   }, []);
 
+
+
   // ============================================================================
-  // INTEGRATION HOOKS
+  // SUBMIT-ONLY MODE CONFIGURATION (Following Section 11 Pattern)
   // ============================================================================
 
-  const integration = useSection86FormIntegration(
-    'section12',
-    'Section 12: Where You Went to School',
-    section12Data,
-    setSection12Data,
-    validateSectionData,
-    getChanges,
-    updateFieldValue // Pass Section 12's updateFieldValue function to integration
-  );
+  // Enable submit-only mode to prevent auto-sync on every field change
+  // This ensures data is only synced to SF86FormContext when user explicitly submits
+  const [submitOnlyMode] = useState(true); // Enable submit-only mode for Section 12
+  const [pendingChanges, setPendingChanges] = useState(false);
+  const lastSubmittedDataRef = useRef<Section12 | null>(null);
+
+  // ============================================================================
+  // SF86FORM INTEGRATION
+  // ============================================================================
+
+  // Access SF86FormContext to sync with loaded data
+  const sf86Form = useSF86Form();
+
+  // Track when data changes to show pending changes indicator
+  useEffect(() => {
+    if (submitOnlyMode && lastSubmittedDataRef.current) {
+      const hasChanges = !isEqual(section12Data, lastSubmittedDataRef.current);
+      setPendingChanges(hasChanges);
+    }
+  }, [section12Data, submitOnlyMode]);
 
   // ============================================================================
   // SECTION-SPECIFIC OPERATIONS
@@ -884,6 +915,59 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
   }, []);
 
   // ============================================================================
+  // SUBMIT-ONLY MODE FUNCTIONS (After Integration)
+  // ============================================================================
+
+  /**
+   * Manually sync data to main form context (submit-only mode)
+   * This function should only be called when the user explicitly submits
+   */
+  const submitSectionData = useCallback(async () => {
+    if (submitOnlyMode) {
+      // console.log('🚀 Section12: Manually syncing data to main form context (submit-only mode)');
+
+      // Actually sync data to SF86FormContext (this was missing!)
+      sf86Form.updateSectionData('section12', section12Data);
+
+      // Update tracking references
+      lastSubmittedDataRef.current = cloneDeep(section12Data);
+      setPendingChanges(false);
+
+      // console.log('✅ Section12: Data sync complete');
+    }
+  }, [submitOnlyMode, section12Data, sf86Form]);
+
+  /**
+   * Check if there are pending changes that haven't been submitted
+   */
+  const hasPendingChanges = useCallback(() => {
+    if (!submitOnlyMode) return false;
+    return pendingChanges;
+  }, [submitOnlyMode, pendingChanges]);
+
+  // ============================================================================
+  // SF86FORM CONTEXT SYNC
+  // ============================================================================
+
+  // Sync with SF86FormContext when data is loaded
+  useEffect(() => {
+    const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('debug=true');
+
+    if (sf86Form.formData.section12 && sf86Form.formData.section12 !== section12Data) {
+      if (isDebugMode) {
+        // console.log('🔄 Section12: Syncing with SF86FormContext loaded data');
+      }
+
+      // Load the data from SF86FormContext
+      loadSection(sf86Form.formData.section12);
+
+      if (isDebugMode) {
+        // console.log('✅ Section12: Data sync complete');
+      }
+    }
+  }, [sf86Form.formData.section12, loadSection]);
+
+  // ============================================================================
   // CONTEXT VALUE
   // ============================================================================
 
@@ -932,7 +1016,11 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
     formatEducationDate: formatEducationDateWrapper,
     calculateEducationDuration: calculateEducationDurationWrapper,
     getSchoolTypeOptions,
-    getDegreeTypeOptions
+    getDegreeTypeOptions,
+
+    // Submit-Only Mode Functions
+    submitSectionData,
+    hasPendingChanges
   };
 
   return (

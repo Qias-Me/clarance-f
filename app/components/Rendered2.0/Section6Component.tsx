@@ -8,7 +8,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSection6 } from '~/state/contexts/sections2.0/section6';
-import { useSF86Form } from '~/state/contexts/SF86FormContext';
+import { useSF86Form } from '~/state/contexts/sections2.0/SF86FormContext';
 import {
   HAIR_COLOR_OPTIONS,
   EYE_COLOR_OPTIONS,
@@ -60,47 +60,45 @@ export const Section6Component: React.FC<Section6ComponentProps> = ({
     onValidationChange?.(validationResult.isValid);
   }, [section6Data]);
 
-  // Handle form submission with data persistence
+  // Handle submission with data persistence
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('🚀 Section 6: Starting form submission');
-    console.log('📊 Section 6: Current section6Data:', section6Data);
-
     const result = validateSection();
-    console.log('🔍 Section 6: Validation result:', result);
     setIsValid(result.isValid);
     onValidationChange?.(result.isValid);
 
+    // console.log('🔍 Section 6 validation result:', result);
+    // console.log('📊 Section 6 data before submission:', section6Data);
+
     if (result.isValid) {
       try {
-        console.log('✅ Section 6: Validation passed, proceeding with save');
+        // console.log('🔄 Section 6: Starting data synchronization...');
 
-        // Update the central form context with Section 6 data
-        console.log('📤 Section 6: Updating central form context with data:', JSON.stringify(section6Data, null, 2));
+        // Update the central form context with Section 6 data and wait for synchronization
         sf86Form.updateSectionData('section6', section6Data);
 
+        // console.log('✅ Section 6: Data synchronization complete, proceeding to save...');
+
         // Save the form data to persistence layer
-        console.log('💾 Section 6: Saving form data to persistence...');
         await sf86Form.saveForm();
 
         // Mark section as complete after successful save
-        console.log('✅ Section 6: Marking section as complete...');
         sf86Form.markSectionComplete('section6');
 
-        console.log('✅ Section 6 data saved successfully:', section6Data);
+        // console.log('✅ Section 6 data saved successfully:', section6Data);
 
         // Proceed to next section if callback provided
         if (onNext) {
           onNext();
         }
       } catch (error) {
-        console.error('❌ Failed to save Section 6 data:', error);
-        // Could show an error message to user here
+        // console.error('❌ Failed to save Section 6 data:', error);
+        // Show an error message to user
+        // console.log('There was an error saving your information. Please try again.');
       }
-    } else {
-      console.log('❌ Section 6: Validation failed, not saving');
     }
   };
+
 
   // Get current values
   const getHeightFeet = (): HeightFeet => section6Data.section6.heightFeet.value as HeightFeet;

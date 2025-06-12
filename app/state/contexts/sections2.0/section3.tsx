@@ -31,9 +31,9 @@ import {
   updateSection3Field
 } from '../../../../api/interfaces/sections2.0/section3';
 
-import { useSection86FormIntegration } from '../shared/section-context-integration';
 import type { ValidationResult, ValidationError, SectionId } from '../shared/base-interfaces';
 import { generateSection3Fields, validateSection3FieldMappings } from './section3-field-generator';
+import { useSF86Form } from './SF86FormContext';
 
 // ============================================================================
 // CONTEXT INTERFACE
@@ -291,18 +291,28 @@ export const Section3Provider: React.FC<Section3ProviderProps> = ({ children }) 
   }, [updatePlaceOfBirth]);
 
   // ============================================================================
-  // SF86FORM INTEGRATION WITH FIELD FLATTENING
+  // SF86FORM INTEGRATION
   // ============================================================================
+  // Access SF86FormContext to sync with loaded data
+  const sf86Form = useSF86Form();
 
-  const integration = useSection86FormIntegration<Section3>(
-    'section3',
-    'Section 3: Place of Birth',
-    section3Data,
-    setSection3Data,
-    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
-    getChanges,
-    updateFieldValue // Pass Section 3's updateFieldValue function to integration
-  );
+  // Sync with SF86FormContext when data is loaded
+  useEffect(() => {
+    const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('debug=true');
+
+    if (sf86Form.formData.section3 && sf86Form.formData.section3 !== section3Data) {
+      if (isDebugMode) {
+        console.log('🔄 Section3: Syncing with SF86FormContext loaded data');
+      }
+
+      // Load the data from SF86FormContext
+      loadSection(sf86Form.formData.section3);
+
+      if (isDebugMode) {
+        console.log('✅ Section3: Data sync complete');
+      }
+    }
+  }, [sf86Form.formData.section3, loadSection]);
 
   // ============================================================================
   // CONTEXT VALUE

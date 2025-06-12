@@ -8,7 +8,8 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useSection5 } from '~/state/contexts/sections2.0/section5';
-import { useSF86Form } from '~/state/contexts/SF86FormContext';
+import { useSF86Form } from '~/state/contexts/sections2.0/SF86FormContext';
+import { getSuffixOptions } from '../../../api/interfaces/sections2.0/base';
 
 interface Section5ComponentProps {
   className?: string;
@@ -81,43 +82,43 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
     setIsValid(result.isValid);
     onValidationChange?.(result.isValid);
 
-    // Convert validation errors to the format expected by the component
-    const errorMap: Record<string, string> = {};
-    result.errors.forEach(error => {
-      errorMap[error.field] = error.message;
-    });
-
-    // Update the errors in the Section5 context
-    setValidationErrors(errorMap);
+    // console.log('🔍 Section 5 validation result:', result);
+    // console.log('📊 Section 5 data before submission:', section5Data);
 
     if (result.isValid) {
       try {
+        // console.log('🔄 Section 5: Starting data synchronization...');
+
         // Update the central form context with Section 5 data
         sf86Form.updateSectionData('section5', section5Data);
 
-        // Save the form data to persistence layer
-        await sf86Form.saveForm();
+        // console.log('✅ Section 5: Data synchronization complete, proceeding to save...');
+
+        // Get the current form data and update it with section5 data for immediate saving
+        const currentFormData = sf86Form.exportForm();
+        const updatedFormData = { ...currentFormData, section5: section5Data };
+
+        // Save the form data to persistence layer with the updated data
+        await sf86Form.saveForm(updatedFormData);
 
         // Mark section as complete after successful save
         sf86Form.markSectionComplete('section5');
 
-        console.log('✅ Section 5 data saved successfully:', section5Data);
+        // console.log('✅ Section 5 data saved successfully:', section5Data);
 
         // Proceed to next section if callback provided
         if (onNext) {
           onNext();
         }
       } catch (error) {
-        console.error('❌ Failed to save Section 5 data:', error);
-        // Could show an error message to user here
+        // console.error('❌ Failed to save Section 5 data:', error);
+        // Show an error message to user
+        // console.log('There was an error saving your information. Please try again.');
       }
-    } else {
-      // Log validation errors for debugging
-      console.log('❌ Section 5 validation failed:', result.errors);
-      console.log('📋 Error map for UI:', errorMap);
     }
-
   };
+
+
 
   // Use a ref to prevent multiple rapid calls
   const isAddingEntryRef = useRef(false);
@@ -295,13 +296,11 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               data-testid={`other-name-${index}-suffix`}
             >
-              <option value="">Select suffix (if applicable)</option>
-              <option value="Jr">Jr.</option>
-              <option value="Sr">Sr.</option>
-              <option value="II">II</option>
-              <option value="III">III</option>
-              <option value="IV">IV</option>
-              <option value="V">V</option>
+              {getSuffixOptions().map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </div>
 

@@ -91,22 +91,3 @@ export const SECTION30_FIELD_IDS = {
   DATE_SIGNED_PAGE4: "form1[0].continuation4[0].p17-t2[0]"
 } as const;
 
-// ============================================================================
-// UTILITY TYPES
-// ============================================================================
-
-/**
- * Type for creating new continuation entries
- */
-export type CreateContinuationEntryParams = {
-  entryIndex: number;
-};
-
-/**
- * Type for continuation entry updates
- */
-export type ContinuationEntryUpdate = {
-  entryIndex: number;
-  fieldPath: string;
-  newValue: any;
-};

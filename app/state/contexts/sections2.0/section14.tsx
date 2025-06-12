@@ -32,7 +32,6 @@ import {
   getActiveExplanationField
 } from '../../../../api/interfaces/sections2.0/section14';
 
-import { useSection86FormIntegration } from '../shared/section-context-integration';
 import type { ValidationResult, ValidationError, ChangeSet } from '../shared/base-interfaces';
 
 // ============================================================================
@@ -89,7 +88,7 @@ export interface Section14ProviderProps {
   children: React.ReactNode;
 }
 
-export const Section14Provider: React.FC<Section14ProviderProps> = ({ children }) => {
+const Section14Provider: React.FC<Section14ProviderProps> = ({ children }) => {
   // ============================================================================
   // CORE STATE MANAGEMENT
   // ============================================================================
@@ -330,25 +329,6 @@ export const Section14Provider: React.FC<Section14ProviderProps> = ({ children }
   // SF86FORM INTEGRATION
   // ============================================================================
 
-  // Create a wrapper function that matches the integration hook's expected signature
-  // Integration expects: (path: string, value: any) => void
-  // Section 14 has: (path: string, value: any) => void (already compatible)
-  const updateFieldValueWrapper = useCallback((path: string, value: any) => {
-    console.log(`🔧 Section14: updateFieldValueWrapper called with path=${path}, value=`, value);
-    updateFieldValue(path, value);
-  }, [updateFieldValue]);
-
-  // Integration with main form context using Section 1 gold standard pattern
-  // Note: integration variable is used internally by the hook for registration
-  const integration = useSection86FormIntegration(
-    'section14',
-    'Section 14: Selective Service',
-    section14Data,
-    setSection14Data,
-    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
-    getChanges,
-    updateFieldValueWrapper // Pass wrapper function that matches expected signature
-  );
 
   // ============================================================================
   // CONTEXT VALUE
@@ -399,3 +379,5 @@ export const useSection14 = (): Section14ContextType => {
   }
   return context;
 }; 
+
+export default Section14Provider;

@@ -173,6 +173,8 @@ export const SECTION9_FIELD_MAPPING = {
   'section9.naturalizedCitizen.entryCity.value': 'form1[0].Section9\\.1-9\\.4[0].TextField11[16]',
   'section9.naturalizedCitizen.entryState.value': 'form1[0].Section9\\.1-9\\.4[0].School6_State[1]',
   'section9.naturalizedCitizen.priorCitizenship.value': 'form1[0].Section9\\.1-9\\.4[0].DropDownList15[0]',
+  'section9.naturalizedCitizen.hasAlienRegistrationRadio.value': 'form1[0].Section9\\.1-9\\.4[0].RadioButtonList[1]',
+  'section9.naturalizedCitizen.alienRegistrationNumber.value': 'form1[0].Section9\\.1-9\\.4[0].TextField11[9]',
 } as const;
 
 /**

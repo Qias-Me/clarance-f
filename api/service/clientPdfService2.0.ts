@@ -114,52 +114,52 @@ export class ClientPdfService2 {
     };
 
     try {
-      this.clientLog('INFO', "🚀 CLIENT-SIDE PDF GENERATION STARTED");
-      this.clientLog('INFO', `⏰ Timestamp: ${new Date().toISOString()}`);
-      this.clientLog('INFO', `📊 Form data sections: ${Object.keys(formData).length}`);
-      this.clientLog('INFO', `📋 Available sections: ${Object.keys(formData).join(', ')}`);
+      // this.clientLog('INFO', "🚀 CLIENT-SIDE PDF GENERATION STARTED");
+      // this.clientLog('INFO', `⏰ Timestamp: ${new Date().toISOString()}`);
+      // this.clientLog('INFO', `📊 Form data sections: ${Object.keys(formData).length}`);
+      // this.clientLog('INFO', `📋 Available sections: ${Object.keys(formData).join(', ')}`);
 
       // STEP 1: ANALYZE FORM DATA
-      this.clientLog('INFO', "📊 STEP 1: ANALYZING FORM DATA");
+      // this.clientLog('INFO', "📊 STEP 1: ANALYZING FORM DATA");
       const formAnalysis = this.analyzeFormData(formData);
       result.stats.totalFormFields = formAnalysis.totalFields;
 
-      this.clientLog('INFO', `📈 Form analysis complete:`);
-      this.clientLog('INFO', `   📋 Sections found: ${formAnalysis.sections.length}`);
-      this.clientLog('INFO', `   🎯 Total fields: ${formAnalysis.totalFields}`);
-      this.clientLog('INFO', `   ✅ Valid fields: ${formAnalysis.validFields}`);
+      // this.clientLog('INFO', `📈 Form analysis complete:`);
+      // this.clientLog('INFO', `   📋 Sections found: ${formAnalysis.sections.length}`);
+      // this.clientLog('INFO', `   🎯 Total fields: ${formAnalysis.totalFields}`);
+      // this.clientLog('INFO', `   ✅ Valid fields: ${formAnalysis.validFields}`);
 
       // STEP 2: LOAD PDF TEMPLATE
-      this.clientLog('INFO', "📄 STEP 2: LOADING PDF TEMPLATE");
+      // this.clientLog('INFO', "📄 STEP 2: LOADING PDF TEMPLATE");
       await this.loadPdfTemplate();
 
       const form = this.pdfDoc!.getForm();
       const allPdfFields = form.getFields();
       result.stats.totalPdfFields = allPdfFields.length;
 
-      this.clientLog('INFO', `📄 PDF template loaded successfully`);
-      this.clientLog('INFO', `   📊 Total PDF fields: ${allPdfFields.length}`);
+      // this.clientLog('INFO', `📄 PDF template loaded successfully`);
+      // this.clientLog('INFO', `   📊 Total PDF fields: ${allPdfFields.length}`);
 
       // STEP 3: CREATE FIELD MAPPINGS
-      this.clientLog('INFO', "🗂️ STEP 3: CREATING ENHANCED FIELD MAPPINGS");
+      // this.clientLog('INFO', "🗂️ STEP 3: CREATING ENHANCED FIELD MAPPINGS");
       const fieldMappings = this.createFieldMappings(allPdfFields);
 
-      this.clientLog('INFO', `🗂️ Field mappings created:`);
-      this.clientLog('INFO', `   🆔 ID-based mappings: ${fieldMappings.idMap.size}`);
-      this.clientLog('INFO', `   📛 Name-based mappings: ${fieldMappings.nameMap.size}`);
+      // this.clientLog('INFO', `🗂️ Field mappings created:`);
+      // this.clientLog('INFO', `   🆔 ID-based mappings: ${fieldMappings.idMap.size}`);
+      // this.clientLog('INFO', `   📛 Name-based mappings: ${fieldMappings.nameMap.size}`);
 
       // STEP 4: EXTRACT FORM VALUES
-      this.clientLog('INFO', "💾 STEP 4: EXTRACTING FORM VALUES");
+      // this.clientLog('INFO', "💾 STEP 4: EXTRACTING FORM VALUES");
       const formValues = this.extractFormValues(formData);
 
-      this.clientLog('INFO', `💾 Form values extracted:`);
-      this.clientLog('INFO', `   🎯 Values to map: ${formValues.size}`);
+      // this.clientLog('INFO', `💾 Form values extracted:`);
+      // this.clientLog('INFO', `   🎯 Values to map: ${formValues.size}`);
 
       result.stats.mappingSuccessRate = formValues.size > 0 ?
         (formValues.size / result.stats.totalFormFields) * 100 : 0;
 
       // STEP 5: APPLY VALUES TO PDF
-      this.clientLog('INFO', "🔧 STEP 5: APPLYING VALUES TO PDF");
+      // this.clientLog('INFO', "🔧 STEP 5: APPLYING VALUES TO PDF");
       const applicationResult = await this.applyValuesToPdf(allPdfFields, fieldMappings, formValues);
 
       result.fieldsMapped = formValues.size;
@@ -173,34 +173,34 @@ export class ClientPdfService2 {
       result.stats.applicationSuccessRate = result.fieldsMapped > 0 ?
         (result.fieldsApplied / result.fieldsMapped) * 100 : 0;
 
-      this.clientLog('INFO', `🔧 Values application complete:`);
-      this.clientLog('INFO', `   📊 Fields mapped: ${result.fieldsMapped}`);
-      this.clientLog('INFO', `   ✅ Fields applied: ${result.fieldsApplied}`);
-      this.clientLog('INFO', `   📈 Success rate: ${result.stats.applicationSuccessRate.toFixed(2)}%`);
+      // this.clientLog('INFO', `🔧 Values application complete:`);
+      // this.clientLog('INFO', `   📊 Fields mapped: ${result.fieldsMapped}`);
+      // this.clientLog('INFO', `   ✅ Fields applied: ${result.fieldsApplied}`);
+      // this.clientLog('INFO', `   📈 Success rate: ${result.stats.applicationSuccessRate.toFixed(2)}%`);
 
       // STEP 6: GENERATE FINAL PDF
-      this.clientLog('INFO', "📄 STEP 6: GENERATING FINAL PDF");
+      // this.clientLog('INFO', "📄 STEP 6: GENERATING FINAL PDF");
       const pdfBytes = await this.pdfDoc!.save();
       result.pdfBytes = new Uint8Array(pdfBytes);
 
       result.success = true;
 
-      this.clientLog('INFO', "✅ PDF GENERATION COMPLETED SUCCESSFULLY");
-      this.clientLog('INFO', `📊 Final PDF size: ${result.pdfBytes.length} bytes (${(result.pdfBytes.length / 1024 / 1024).toFixed(2)} MB)`);
-      this.clientLog('INFO', `📈 FINAL SUMMARY:`);
-      this.clientLog('INFO', `   📊 Form fields processed: ${result.stats.totalFormFields}`);
-      this.clientLog('INFO', `   🗂️ Fields mapped: ${result.fieldsMapped}`);
-      this.clientLog('INFO', `   ✅ Fields applied: ${result.fieldsApplied}`);
-      this.clientLog('INFO', `   📊 Application success rate: ${result.stats.applicationSuccessRate.toFixed(2)}%`);
-      this.clientLog('INFO', `   ❌ Errors: ${result.errors.length}`);
-      this.clientLog('INFO', `   ⚠️ Warnings: ${result.warnings.length}`);
+      // this.clientLog('INFO', "✅ PDF GENERATION COMPLETED SUCCESSFULLY");
+      // this.clientLog('INFO', `📊 Final PDF size: ${result.pdfBytes.length} bytes (${(result.pdfBytes.length / 1024 / 1024).toFixed(2)} MB)`);
+      // this.clientLog('INFO', `📈 FINAL SUMMARY:`);
+      // this.clientLog('INFO', `   📊 Form fields processed: ${result.stats.totalFormFields}`);
+      // this.clientLog('INFO', `   🗂️ Fields mapped: ${result.fieldsMapped}`);
+      // this.clientLog('INFO', `   ✅ Fields applied: ${result.fieldsApplied}`);
+      // this.clientLog('INFO', `   📊 Application success rate: ${result.stats.applicationSuccessRate.toFixed(2)}%`);
+      // this.clientLog('INFO', `   ❌ Errors: ${result.errors.length}`);
+      // this.clientLog('INFO', `   ⚠️ Warnings: ${result.warnings.length}`);
 
       return result;
 
     } catch (error) {
-      this.clientLog('ERROR', "💥 FATAL ERROR IN CLIENT PDF GENERATION");
-      this.clientLog('ERROR', `❌ Error: ${error instanceof Error ? error.message : String(error)}`);
-      this.clientLog('ERROR', `📍 Stack trace: ${error instanceof Error ? error.stack : 'No stack trace available'}`);
+      // this.clientLog('ERROR', "💥 FATAL ERROR IN CLIENT PDF GENERATION");
+      // this.clientLog('ERROR', `❌ Error: ${error instanceof Error ? error.message : String(error)}`);
+      // this.clientLog('ERROR', `📍 Stack trace: ${error instanceof Error ? error.stack : 'No stack trace available'}`);
 
       result.errors.push(`Client PDF generation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
       return result;
@@ -215,11 +215,11 @@ export class ClientPdfService2 {
     const prefix = `[${timestamp}] [CLIENT-PDF-ACTION] [${level}]`;
 
     if (level === 'ERROR') {
-      console.error(`${prefix} ${message}`, data || '');
+      // console.error(`${prefix} ${message}`, data || '');
     } else if (level === 'WARN') {
-      console.warn(`${prefix} ${message}`, data || '');
+      // console.warn(`${prefix} ${message}`, data || '');
     } else {
-      console.log(`${prefix} ${message}`, data || '');
+      // console.log(`${prefix} ${message}`, data || '');
     }
   }
 
@@ -227,7 +227,7 @@ export class ClientPdfService2 {
    * Analyze form data structure (matches server-side logic)
    */
   private analyzeFormData(formData: ApplicantFormValues) {
-    this.clientLog('INFO', "🔍 Analyzing form data structure...");
+    // this.clientLog('INFO', "🔍 Analyzing form data structure...");
 
     const analysis = {
       sections: Object.keys(formData),
@@ -265,11 +265,11 @@ export class ClientPdfService2 {
 
     countFields(formData);
 
-    this.clientLog('INFO', `📊 Form structure analysis:`);
-    this.clientLog('INFO', `   📁 Sections: ${analysis.sections.join(', ')}`);
-    this.clientLog('INFO', `   🎯 Total fields: ${analysis.totalFields}`);
-    this.clientLog('INFO', `   ✅ Valid fields: ${analysis.validFields}`);
-    this.clientLog('INFO', `   🎯 Section 29 fields: ${analysis.section29Fields}`);
+    // this.clientLog('INFO', `📊 Form structure analysis:`);
+    // this.clientLog('INFO', `   📁 Sections: ${analysis.sections.join(', ')}`);
+    // this.clientLog('INFO', `   🎯 Total fields: ${analysis.totalFields}`);
+    // this.clientLog('INFO', `   ✅ Valid fields: ${analysis.validFields}`);
+    // this.clientLog('INFO', `   🎯 Section 29 fields: ${analysis.section29Fields}`);
 
     return analysis;
   }
@@ -281,7 +281,7 @@ export class ClientPdfService2 {
     if (this.pdfDoc && this.isLoaded) return this.pdfDoc;
 
     try {
-      this.clientLog('INFO', "📄 Fetching SF-86 PDF template...");
+      // this.clientLog('INFO', "📄 Fetching SF-86 PDF template...");
       const response = await fetch(SF86_PDF_TEMPLATE_URL);
 
       if (!response.ok) {
@@ -293,10 +293,10 @@ export class ClientPdfService2 {
       await this.mapFormFields();
       this.isLoaded = true;
 
-      this.clientLog('INFO', `✅ PDF template loaded successfully. Size: ${pdfBytes.byteLength} bytes`);
+      // this.clientLog('INFO', `✅ PDF template loaded successfully. Size: ${pdfBytes.byteLength} bytes`);
       return this.pdfDoc;
     } catch (error) {
-      this.clientLog('ERROR', "💥 Error loading PDF template:", error);
+      // this.clientLog('ERROR', "💥 Error loading PDF template:", error);
       throw error;
     }
   }
@@ -305,7 +305,7 @@ export class ClientPdfService2 {
    * Create enhanced field mappings (matches server-side logic)
    */
   private createFieldMappings(pdfFields: any[]) {
-    this.clientLog('INFO', "🗂️ Creating enhanced field mappings...");
+    // this.clientLog('INFO', "🗂️ Creating enhanced field mappings...");
 
     const idMap = new Map<string, any>();
     const nameMap = new Map<string, string>();
@@ -321,9 +321,9 @@ export class ClientPdfService2 {
       nameMap.set(name, id);
     });
 
-    this.clientLog('INFO', `🗂️ Field mappings created:`);
-    this.clientLog('INFO', `   🆔 ID mappings: ${idMap.size}`);
-    this.clientLog('INFO', `   📛 Name mappings: ${nameMap.size}`);
+    // this.clientLog('INFO', `🗂️ Field mappings created:`);
+    // this.clientLog('INFO', `   🆔 ID mappings: ${idMap.size}`);
+    // this.clientLog('INFO', `   📛 Name mappings: ${nameMap.size}`);
 
     // Show sample Section 29 mappings for debugging
     const section29Samples = Array.from(nameMap.entries())
@@ -331,7 +331,7 @@ export class ClientPdfService2 {
       .slice(0, 5);
 
     if (section29Samples.length > 0) {
-      this.clientLog('INFO', `🎯 Sample Section 29 mappings:`, section29Samples);
+      // this.clientLog('INFO', `🎯 Sample Section 29 mappings:`, section29Samples);
     }
 
     return { idMap, nameMap };
@@ -347,7 +347,7 @@ export class ClientPdfService2 {
    * 4. Filters out fields without IDs, undefined values, or empty strings
    */
   private extractFormValues(formData: ApplicantFormValues): Map<string, any> {
-    this.clientLog('INFO', "💾 Extracting form values...");
+    // this.clientLog('INFO', "💾 Extracting form values...");
 
     const formValues = new Map<string, any>();
 
@@ -376,7 +376,7 @@ export class ClientPdfService2 {
 
     traverse(formData);
 
-    this.clientLog('INFO', `💾 Form values extracted: ${formValues.size} values`);
+    // this.clientLog('INFO', `💾 Form values extracted: ${formValues.size} values`);
     return formValues;
   }
 
@@ -388,7 +388,7 @@ export class ClientPdfService2 {
     fieldMappings: { idMap: Map<string, any>; nameMap: Map<string, string> },
     formValues: Map<string, any>
   ) {
-    this.clientLog('INFO', "🔧 Applying values to PDF fields...");
+    // this.clientLog('INFO', "🔧 Applying values to PDF fields...");
 
     const result = {
       appliedCount: 0,
@@ -412,9 +412,9 @@ export class ClientPdfService2 {
       const verbose = processedCount <= 20; // Log details for first 20 fields
 
       if (verbose) {
-        this.clientLog('INFO', `--- Processing Field [${processedCount}/${formValues.size}] ---`);
-        this.clientLog('INFO', `🆔 Field ID: "${fieldId}"`);
-        this.clientLog('INFO', `💾 Field Value: "${value}"`);
+        // this.clientLog('INFO', `--- Processing Field [${processedCount}/${formValues.size}] ---`);
+        // this.clientLog('INFO', `🆔 Field ID: "${fieldId}"`);
+        // this.clientLog('INFO', `💾 Field Value: "${value}"`);
       }
 
       // Enhanced field lookup with multiple strategies (using class properties like server-side)
@@ -425,7 +425,7 @@ export class ClientPdfService2 {
       if (this.isNumericId(fieldId) && this.fieldIdMap.has(fieldId)) {
         pdfField = this.fieldIdMap.get(fieldId);
         lookupMethod = 'direct-numeric-id';
-        if (verbose) this.clientLog('INFO', `✅ Scalable service lookup successful: "${fieldId}"`);
+        // if (verbose) this.clientLog('INFO', `✅ Scalable service lookup successful: "${fieldId}"`);
       }
       // Strategy 2: Convert field name to numeric ID using class properties
       else if (this.fieldNameToIdMap.has(fieldId)) {
@@ -433,7 +433,7 @@ export class ClientPdfService2 {
         if (numericId && this.fieldIdMap.has(numericId)) {
           pdfField = this.fieldIdMap.get(numericId);
           lookupMethod = 'name-to-numeric-id';
-          if (verbose) this.clientLog('INFO', `✅ Name conversion lookup: "${fieldId}" → "${numericId}"`);
+          // if (verbose) this.clientLog('INFO', `✅ Name conversion lookup: "${fieldId}" → "${numericId}"`);
         }
       }
 
@@ -444,27 +444,27 @@ export class ClientPdfService2 {
 
       // If no field found, add enhanced debugging
       if (!pdfField && verbose) {
-        this.clientLog('WARN', `❌ PDF field not found for ID: "${fieldId}"`);
-        this.clientLog('INFO', `   🔍 isNumericId("${fieldId}"): ${this.isNumericId(fieldId)}`);
-        this.clientLog('INFO', `   🗂️ fieldIdMap.has("${fieldId}"): ${this.fieldIdMap.has(fieldId)}`);
-        this.clientLog('INFO', `   📛 fieldNameToIdMap.has("${fieldId}"): ${this.fieldNameToIdMap.has(fieldId)}`);
-        this.clientLog('INFO', `   🆔 Total fieldIdMap size: ${this.fieldIdMap.size}`);
-        this.clientLog('INFO', `   📝 Total fieldNameToIdMap size: ${this.fieldNameToIdMap.size}`);
+        // this.clientLog('WARN', `❌ PDF field not found for ID: "${fieldId}"`);
+        // this.clientLog('INFO', `   🔍 isNumericId("${fieldId}"): ${this.isNumericId(fieldId)}`);
+        // this.clientLog('INFO', `   🗂️ fieldIdMap.has("${fieldId}"): ${this.fieldIdMap.has(fieldId)}`);
+        // this.clientLog('INFO', `   📛 fieldNameToIdMap.has("${fieldId}"): ${this.fieldNameToIdMap.has(fieldId)}`);
+        // this.clientLog('INFO', `   🆔 Total fieldIdMap size: ${this.fieldIdMap.size}`);
+        // this.clientLog('INFO', `   📝 Total fieldNameToIdMap size: ${this.fieldNameToIdMap.size}`);
 
         // Show some sample IDs for debugging
         const sampleIds = Array.from(this.fieldIdMap.keys()).slice(0, 10);
-        this.clientLog('INFO', `   📋 Sample PDF field IDs: ${sampleIds.join(', ')}`);
+        // this.clientLog('INFO', `   📋 Sample PDF field IDs: ${sampleIds.join(', ')}`);
 
         // Show some sample names for debugging
         const sampleNames = Array.from(this.fieldNameToIdMap.keys()).slice(0, 10);
-        this.clientLog('INFO', `   📋 Sample PDF field names: ${sampleNames.slice(0, 3).join(', ')}`);
+        // this.clientLog('INFO', `   📋 Sample PDF field names: ${sampleNames.slice(0, 3).join(', ')}`);
       }
 
       if (pdfField) {
         if (verbose) {
-          this.clientLog('INFO', `✅ PDF field found! Method: ${lookupMethod}`);
-          this.clientLog('INFO', `🏷️ PDF Field Type: ${pdfField.constructor.name}`);
-          this.clientLog('INFO', `📛 PDF Field Name: "${pdfField.getName()}"`);
+          // this.clientLog('INFO', `✅ PDF field found! Method: ${lookupMethod}`);
+          // this.clientLog('INFO', `🏷️ PDF Field Type: ${pdfField.constructor.name}`);
+          // this.clientLog('INFO', `📛 PDF Field Name: "${pdfField.getName()}"`);
         }
 
         // CRITICAL FIX: Add field value validation for Section 30 field 16262
@@ -474,12 +474,12 @@ export class ClientPdfService2 {
         const isZipField = fieldId === '16262' || fieldName.includes('p17-t10[0]'); // ZIP code field in Section 30
         
         if (isZipField && isDateValue) {
-          this.clientLog('ERROR', `🚨 CRITICAL FIELD MAPPING ERROR DETECTED IN PDF SERVICE`);
-          this.clientLog('ERROR', `   Field ID: "${fieldId}"`);
-          this.clientLog('ERROR', `   Field Name: "${fieldName}"`);
-          this.clientLog('ERROR', `   Value: "${valueStr}"`);
-          this.clientLog('ERROR', `   Issue: Date value "${valueStr}" being assigned to ZIP code field 16262`);
-          this.clientLog('ERROR', `   This would cause truncation from "${valueStr}" to "${valueStr.substring(0, 5)}" due to maxLength constraint`);
+          // this.clientLog('ERROR', `🚨 CRITICAL FIELD MAPPING ERROR DETECTED IN PDF SERVICE`);
+          // this.clientLog('ERROR', `   Field ID: "${fieldId}"`);
+          // this.clientLog('ERROR', `   Field Name: "${fieldName}"`);
+          // this.clientLog('ERROR', `   Value: "${valueStr}"`);
+          // this.clientLog('ERROR', `   Issue: Date value "${valueStr}" being assigned to ZIP code field 16262`);
+          // this.clientLog('ERROR', `   This would cause truncation from "${valueStr}" to "${valueStr.substring(0, 5)}" due to maxLength constraint`);
           
           result.errors.push(`CRITICAL: Date value "${valueStr}" incorrectly assigned to ZIP code field ${fieldId}`);
           result.fieldsWithErrors.push({
@@ -492,7 +492,7 @@ export class ClientPdfService2 {
           });
           
           // Skip this field to prevent the invalid assignment
-          this.clientLog('ERROR', `   Skipping field assignment to prevent data corruption`);
+          // this.clientLog('ERROR', `   Skipping field assignment to prevent data corruption`);
           return;
         }
 
@@ -517,31 +517,31 @@ export class ClientPdfService2 {
                 const originalValue = textValue;
                 textValue = textValue.substring(0, maxLength);
                 if (verbose) {
-                  this.clientLog('WARN', `⚠️ Text truncated for field "${fieldId}": "${originalValue}" → "${textValue}" (maxLength: ${maxLength})`);
+                  // this.clientLog('WARN', `⚠️ Text truncated for field "${fieldId}": "${originalValue}" → "${textValue}" (maxLength: ${maxLength})`);
                 }
                 result.warnings.push(`Text truncated for field ${fieldId}: value exceeded maxLength of ${maxLength} characters`);
               }
             } catch (maxLengthError) {
               // If we can't get maxLength, continue with original value
-              if (verbose) this.clientLog('INFO', `ℹ️ Could not check maxLength for field "${fieldId}"`);
+              // if (verbose) this.clientLog('INFO', `ℹ️ Could not check maxLength for field "${fieldId}"`);
             }
 
-            if (verbose) this.clientLog('INFO', `📝 Setting text field to: "${textValue}"`);
+            // if (verbose) this.clientLog('INFO', `📝 Setting text field to: "${textValue}"`);
             pdfField.setText(textValue);
             result.fieldTypeStats[fieldType].success++;
             result.appliedCount++;
           }
           else if (pdfField instanceof PDFDropdown) {
             const selectValue = String(value);
-            if (verbose) this.clientLog('INFO', `📋 Setting dropdown to: "${selectValue}"`);
+            // if (verbose) this.clientLog('INFO', `📋 Setting dropdown to: "${selectValue}"`);
 
             const options = pdfField.getOptions();
-            if (verbose) this.clientLog('INFO', `   📋 Available options:`, options);
+            // if (verbose) this.clientLog('INFO', `   📋 Available options:`, options);
 
             // Enhanced option matching
             let matchedValue = this.findBestOptionMatch(selectValue, options);
             if (verbose && matchedValue !== selectValue) {
-              this.clientLog('INFO', `   🔄 Using matched option: "${selectValue}" → "${matchedValue}"`);
+              // this.clientLog('INFO', `   🔄 Using matched option: "${selectValue}" → "${matchedValue}"`);
             }
 
             pdfField.select(matchedValue);
@@ -550,23 +550,23 @@ export class ClientPdfService2 {
           }
           else if (pdfField instanceof PDFRadioGroup) {
             const selectValue = String(value);
-            if (verbose) this.clientLog('INFO', `📻 Setting radio group to: "${selectValue}"`);
+            // if (verbose) this.clientLog('INFO', `📻 Setting radio group to: "${selectValue}"`);
 
             try {
               const options = pdfField.getOptions();
-              if (verbose) this.clientLog('INFO', `   📋 Radio options:`, options);
+              // if (verbose) this.clientLog('INFO', `   📋 Radio options:`, options);
 
               // Enhanced radio group value matching
               let matchedValue = this.findBestOptionMatch(selectValue, options);
               if (verbose && matchedValue !== selectValue) {
-                this.clientLog('INFO', `   🔄 Using matched radio option: "${selectValue}" → "${matchedValue}"`);
+                // this.clientLog('INFO', `   🔄 Using matched radio option: "${selectValue}" → "${matchedValue}"`);
               }
 
               pdfField.select(matchedValue);
               result.fieldTypeStats[fieldType].success++;
               result.appliedCount++;
             } catch (radioError) {
-              if (verbose) this.clientLog('WARN', `   ⚠️ Radio group selection failed, trying alternative approach...`);
+              // if (verbose) this.clientLog('WARN', `   ⚠️ Radio group selection failed, trying alternative approach...`);
               // Alternative approach for radio groups
               try {
                 (pdfField as any).setValue?.(selectValue);
@@ -579,7 +579,7 @@ export class ClientPdfService2 {
           }
           else if (pdfField instanceof PDFCheckBox) {
             const checkValue = this.parseCheckboxValue(value);
-            if (verbose) this.clientLog('INFO', `☑️ Setting checkbox to: ${checkValue ? 'checked' : 'unchecked'}`);
+            // if (verbose) this.clientLog('INFO', `☑️ Setting checkbox to: ${checkValue ? 'checked' : 'unchecked'}`);
 
             if (checkValue) {
               pdfField.check();
@@ -590,12 +590,12 @@ export class ClientPdfService2 {
             result.appliedCount++;
           }
           else {
-            if (verbose) this.clientLog('WARN', `⚠️ Unknown field type: ${fieldType}`);
+            // if (verbose) this.clientLog('WARN', `⚠️ Unknown field type: ${fieldType}`);
             result.warnings.push(`Unknown field type: ${fieldType} for field ${fieldId}`);
           }
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
-          if (verbose) this.clientLog('ERROR', `💥 Error setting field "${fieldId}":`, errorMessage);
+          // if (verbose) this.clientLog('ERROR', `💥 Error setting field "${fieldId}":`, errorMessage);
 
           result.errors.push(`Error setting field ${fieldId}: ${errorMessage}`);
           result.fieldsWithErrors.push({
@@ -608,7 +608,7 @@ export class ClientPdfService2 {
           });
         }
       } else {
-        if (verbose) this.clientLog('WARN', `❌ PDF field not found for ID: "${fieldId}"`);
+        // if (verbose) this.clientLog('WARN', `❌ PDF field not found for ID: "${fieldId}"`);
         result.warnings.push(`PDF field not found: ${fieldId}`);
         result.fieldsWithErrors.push({
           fieldId,
@@ -621,10 +621,10 @@ export class ClientPdfService2 {
       }
     });
 
-    this.clientLog('INFO', `🔧 Field application complete:`);
-    this.clientLog('INFO', `   ✅ Applied: ${result.appliedCount}/${formValues.size}`);
-    this.clientLog('INFO', `   ❌ Errors: ${result.errors.length}`);
-    this.clientLog('INFO', `   ⚠️ Warnings: ${result.warnings.length}`);
+    // this.clientLog('INFO', `🔧 Field application complete:`);
+    // this.clientLog('INFO', `   ✅ Applied: ${result.appliedCount}/${formValues.size}`);
+    // this.clientLog('INFO', `   ❌ Errors: ${result.errors.length}`);
+    // this.clientLog('INFO', `   ⚠️ Warnings: ${result.warnings.length}`);
 
     return result;
   }
@@ -695,7 +695,7 @@ export class ClientPdfService2 {
 
     try {
       // Fetch the base PDF template from our API route (client-side only)
-      console.log("Fetching SF-86 PDF template from API...");
+      // console.log("Fetching SF-86 PDF template from API...");
       const response = await fetch(SF86_PDF_TEMPLATE_URL);
 
       if (response.ok) {
@@ -703,13 +703,13 @@ export class ClientPdfService2 {
         this.pdfDoc = await PDFDocument.load(pdfBytes);
         await this.mapFormFields();
         this.isLoaded = true;
-        console.log(`Successfully loaded SF-86 PDF template. Size: ${pdfBytes.byteLength} bytes`);
+        // console.log(`Successfully loaded SF-86 PDF template. Size: ${pdfBytes.byteLength} bytes`);
         return this.pdfDoc;
       } else {
         throw new Error(`Failed to fetch PDF template: ${response.status} ${response.statusText}`);
       }
     } catch (error) {
-      console.error("Error loading PDF:", error);
+      // console.error("Error loading PDF:", error);
       throw error;
     }
   }
@@ -719,7 +719,7 @@ export class ClientPdfService2 {
    */
   async loadPdfFromBuffer(pdfBuffer: ArrayBuffer): Promise<PDFDocument> {
     try {
-      console.log("Loading PDF from uploaded file...");
+      // console.log("Loading PDF from uploaded file...");
       this.pdfDoc = await PDFDocument.load(pdfBuffer);
 
       // Map fields immediately after loading
@@ -728,7 +728,7 @@ export class ClientPdfService2 {
 
       return this.pdfDoc;
     } catch (error) {
-      console.error("Error loading PDF from buffer:", error);
+      // console.error("Error loading PDF from buffer:", error);
       throw error;
     }
   }
@@ -794,7 +794,7 @@ export class ClientPdfService2 {
       };
     });
 
-    console.log(`📄 Mapped ${this.fieldMapping.length} PDF fields`);
+    // console.log(`📄 Mapped ${this.fieldMapping.length} PDF fields`);
 
     // Create ID-based mapping for faster lookups
     this.createIdBasedMappings();
@@ -847,21 +847,21 @@ export class ClientPdfService2 {
       this.fieldNameToIdMap.set(name, cleanId);
     });
 
-    console.log(`🗂️ Created ID-based mappings: ${this.fieldIdMap.size} field IDs, ${this.fieldNameToIdMap.size} name mappings`);
+    // console.log(`🗂️ Created ID-based mappings: ${this.fieldIdMap.size} field IDs, ${this.fieldNameToIdMap.size} name mappings`);
 
     // Debug: Show some Section 29 field mappings
     const section29Mappings = Array.from(this.fieldNameToIdMap.entries())
       .filter(([name]) => name.includes('Section29'))
       .slice(0, 5);
 
-    console.log(`🎯 Sample Section 29 ID mappings:`, section29Mappings);
+    // console.log(`🎯 Sample Section 29 ID mappings:`, section29Mappings);
 
     // Enhanced debugging for client-side
     const sampleFieldMappings = Array.from(this.fieldIdMap.entries()).slice(0, 10);
-    console.log(`🆔 Sample field ID mappings (clean IDs):`, sampleFieldMappings.map(([id, field]) => `${id} -> ${field.getName()}`));
+    // console.log(`🆔 Sample field ID mappings (clean IDs):`, sampleFieldMappings.map(([id, field]) => `${id} -> ${field.getName()}`));
 
     const sampleNameMappings = Array.from(this.fieldNameToIdMap.entries()).slice(0, 10);
-    console.log(`📝 Sample name-to-ID mappings:`, sampleNameMappings);
+    // console.log(`📝 Sample name-to-ID mappings:`, sampleNameMappings);
   }
 
   /**
@@ -877,66 +877,63 @@ export class ClientPdfService2 {
 
     const flattenFormValues = (data: any, prefix = '', depth = 0) => {
       const indent = '  '.repeat(depth);
-      console.log(`${indent}🔍 [DEPTH ${depth}] Analyzing path: "${prefix}" | Type: ${typeof data}`);
+      // console.log(`${indent}🔍 [DEPTH ${depth}] Analyzing path: "${prefix}" | Type: ${typeof data}`);
 
       if (!data || typeof data !== 'object') {
-        console.log(`${indent}⏭️ Skipping non-object value at path: "${prefix}"`);
+        // console.log(`${indent}⏭️ Skipping non-object value at path: "${prefix}"`);
         return;
       }
 
-      console.log(`${indent}📋 Object keys at "${prefix}":`, Object.keys(data));
+      // console.log(`${indent}📋 Object keys at "${prefix}":`, Object.keys(data));
 
       Object.entries(data).forEach(([key, val]) => {
         const path = prefix ? `${prefix}.${key}` : key;
-        console.log(`${indent}🔑 Processing key: "${key}" at path: "${path}"`);
-        console.log(`${indent}📝 Value type: ${typeof val} | Is null: ${val === null} | Is undefined: ${val === undefined}`);
+        // console.log(`${indent}🔑 Processing key: "${key}" at path: "${path}"`);
+        // console.log(`${indent}📝 Value type: ${typeof val} | Is null: ${val === null} | Is undefined: ${val === undefined}`);
 
         if (val && typeof val === "object") {
           // Check if this is a Field<T> object
           if ('id' in val && 'value' in val) {
-            console.log(`${indent}🎯 FOUND FIELD OBJECT at path: "${path}"`);
-            console.log(`${indent}   📋 Full field object:`, JSON.stringify(val, null, 2));
-            console.log(`${indent}   🆔 Field ID: "${val.id}"`);
-            console.log(`${indent}   💾 Field Value: "${val.value}"`);
-            console.log(`${indent}   📊 Value type: ${typeof val.value}`);
-            console.log(`${indent}   ✅ Has ID: ${!!val.id}`);
-            console.log(`${indent}   ✅ Has Value: ${val.value !== undefined}`);
-            console.log(`${indent}   ✅ Value not empty: ${val.value !== ''}`);
+            // this.clientLog('INFO', `🎯 FOUND FIELD OBJECT at path: "${path}"`);
+            // this.clientLog('INFO', `${indent}   🆔 Field ID: "${val.id}"`);
+            // this.clientLog('INFO', `${indent}   📊 Value type: ${typeof val.value}`);
+            // this.clientLog('INFO', `${indent}   ✅ Has ID: ${!!val.id}, Has Value: ${val.value !== undefined}`);
+            // console.log(`${indent}   ✅ Value not empty: ${val.value !== ''}`);
 
             // Check the condition that was filtering fields
             const hasValidId = val.id && val.id !== '';
             const hasValidValue = val.value !== undefined && val.value !== '';
-            console.log(`${indent}   🔍 Valid ID check: ${hasValidId}`);
-            console.log(`${indent}   🔍 Valid Value check: ${hasValidValue}`);
+            // console.log(`${indent}   🔍 Valid ID check: ${hasValidId}`);
+            // console.log(`${indent}   🔍 Valid Value check: ${hasValidValue}`);
 
             if (hasValidId && hasValidValue) {
               totalFields++;
               try {
                 const idStr = String(val.id);
                 const valueStr = val.value;
-                console.log(`${indent}✅ PROCESSING FIELD: ${path}`);
-                console.log(`${indent}   🆔 ID: "${idStr}"`);
-                console.log(`${indent}   💾 Value: ${typeof valueStr === 'object' ? JSON.stringify(valueStr) : valueStr}`);
+                // this.clientLog('INFO', `${indent}✅ PROCESSING FIELD: ${path}`);
+                // this.clientLog('INFO', `${indent}   🆔 ID: "${idStr}"`);
+                // this.clientLog('INFO', `${indent}   💾 Value type: ${typeof valueStr}, Length: ${typeof valueStr === 'string' ? valueStr.length : 'N/A'}`);
 
                 let numericId: string | null = null;
 
                 // FIXED: Clean the ID string to remove " 0 R" suffix if present
                 const cleanIdStr = idStr.replace(/ 0 R$/, '').trim();
-                console.log(`${indent}🧹 Cleaned ID: "${idStr}" → "${cleanIdStr}"`);
+                // console.log(`${indent}🧹 Cleaned ID: "${idStr}" → "${cleanIdStr}"`);
 
                 // Handle both numeric IDs and field name paths
                 if (cleanIdStr.includes('form1[0]')) {
-                  console.log(`${indent}🔍 Field ID appears to be a field name path, converting to numeric ID...`);
+                  // console.log(`${indent}🔍 Field ID appears to be a field name path, converting to numeric ID...`);
 
                   // This is a field name, convert to numeric ID using our mapping
                   numericId = this.fieldNameToIdMap.get(cleanIdStr) || null;
 
                   if (numericId) {
-                    console.log(`${indent}✅ CONVERTED: Field name "${cleanIdStr}" → Numeric ID: "${numericId}"`);
+                    // console.log(`${indent}✅ CONVERTED: Field name "${cleanIdStr}" → Numeric ID: "${numericId}"`);
                     idValueMap.set(numericId, valueStr);
-                    console.log(`${indent}🗂️ MAPPED: "${cleanIdStr}" → ID:"${numericId}" → Value:"${valueStr}"`);
+                    // console.log(`${indent}🗂️ MAPPED: "${cleanIdStr}" → ID:"${numericId}" → Value:"${valueStr}"`);
                   } else {
-                    console.log(`${indent}❌ NO CONVERSION: No numeric ID found for field name: "${cleanIdStr}"`);
+                    // console.log(`${indent}❌ NO CONVERSION: No numeric ID found for field name: "${cleanIdStr}"`);
 
                     // Show similar field names for debugging
                     const similarFieldNames = Array.from(this.fieldNameToIdMap.keys()).filter(name =>
@@ -945,49 +942,49 @@ export class ClientPdfService2 {
                       cleanIdStr.includes(name.split('.').pop() || '')
                     ).slice(0, 5);
 
-                    console.log(`${indent}   🔍 Similar PDF field names:`, similarFieldNames);
+                    // console.log(`${indent}   🔍 Similar PDF field names:`, similarFieldNames);
                     errors.push(`No numeric ID found for field name: ${cleanIdStr}`);
                   }
                 } else {
-                  console.log(`${indent}🔢 Field ID appears to be numeric, using directly: "${cleanIdStr}"`);
+                  // console.log(`${indent}🔢 Field ID appears to be numeric, using directly: "${cleanIdStr}"`);
                   numericId = cleanIdStr;
 
                   // Verify the numeric ID exists in our PDF
                   if (this.fieldIdMap.has(numericId)) {
                     idValueMap.set(numericId, valueStr);
-                    console.log(`${indent}🗂️ MAPPED: Numeric ID:"${numericId}" → Value:"${valueStr}"`);
+                    // console.log(`${indent}🗂️ MAPPED: Numeric ID:"${numericId}" → Value:"${valueStr}"`);
                   } else {
-                    console.log(`${indent}❌ INVALID ID: Numeric ID "${numericId}" not found in PDF`);
+                    // console.log(`${indent}❌ INVALID ID: Numeric ID "${numericId}" not found in PDF`);
                     errors.push(`Invalid numeric ID: ${numericId}`);
                   }
                 }
               } catch (error) {
-                console.error(`${indent}💥 ERROR mapping field at path "${path}":`, error);
+                // console.error(`${indent}💥 ERROR mapping field at path "${path}":`, error);
                 errors.push(`Error mapping field ${path}: ${error}`);
               }
             } else {
-              console.log(`${indent}⚠️ SKIPPING FIELD: Invalid ID or value`);
-              console.log(`${indent}   🆔 ID: "${val.id}" (valid: ${hasValidId})`);
-              console.log(`${indent}   💾 Value: "${val.value}" (valid: ${hasValidValue})`);
+              // console.log(`${indent}⚠️ SKIPPING FIELD: Invalid ID or value`);
+              // console.log(`${indent}   🆔 ID: "${val.id}" (valid: ${hasValidId})`);
+              // console.log(`${indent}   💾 Value: "${val.value}" (valid: ${hasValidValue})`);
             }
           } else {
-            console.log(`${indent}📁 Object without id/value properties, recursing deeper...`);
-            console.log(`${indent}   🔍 Object properties:`, Object.keys(val));
+            // console.log(`${indent}📁 Object without id/value properties, recursing deeper...`);
+            // console.log(`${indent}   🔍 Object properties:`, Object.keys(val));
             flattenFormValues(val, path, depth + 1);
           }
         } else {
-          console.log(`${indent}📄 Primitive value at "${path}": ${val}`);
+          // console.log(`${indent}📄 Primitive value at "${path}": ${val}`);
         }
       });
     };
 
-    console.log(`\n🚀 ===== DEEP FORM DATA ANALYSIS START =====`);
-    console.log(`📊 Form Data Structure Overview:`);
-    console.log(`   📋 Available sections:`, Object.keys(formData));
-    console.log(`   📈 Total sections: ${Object.keys(formData).length}`);
+    // console.log(`\n🚀 ===== DEEP FORM DATA ANALYSIS START =====`);
+    // console.log(`📊 Form Data Structure Overview:`);
+    // console.log(`   📋 Available sections:`, Object.keys(formData));
+    // console.log(`   📈 Total sections: ${Object.keys(formData).length}`);
 
     // Enhanced form data inspection
-    console.log(`\n🔍 ===== SECTION-BY-SECTION ANALYSIS =====`);
+    // console.log(`\n🔍 ===== SECTION-BY-SECTION ANALYSIS =====`);
     Object.entries(formData).forEach(([sectionKey, sectionValue]) => {
       console.log(`\n📁 Section "${sectionKey}":`);
       console.log(`   📊 Type: ${typeof sectionValue}`);
@@ -1279,7 +1276,7 @@ export class ClientPdfService2 {
    */
   downloadJson(jsonData: any, filename = 'SF86-form-data.json'): void {
     try {
-      console.log(`📄 Starting JSON download: ${filename}`);
+      // this.clientLog('INFO', `📄 Starting JSON download: ${filename}`);
 
       // Create formatted JSON string
       const jsonString = JSON.stringify(jsonData, null, 2);
@@ -1300,7 +1297,7 @@ export class ClientPdfService2 {
         link.click();
         document.body.removeChild(link);
 
-        console.log('✅ JSON download initiated (desktop)');
+        // this.clientLog('INFO', '✅ JSON download initiated (desktop)');
 
         // Cleanup
         setTimeout(() => {
@@ -1310,7 +1307,7 @@ export class ClientPdfService2 {
         // Mobile fallback - open in new tab
         const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
         if (newWindow) {
-          console.log('✅ JSON opened in new tab (mobile)');
+          // this.clientLog('INFO', '✅ JSON opened in new tab (mobile)');
         } else {
           // Final fallback - show instructions
           const instructions = `📱 JSON download ready!\n\nTo save the JSON file:\n1. Copy this link\n2. Paste in a new browser tab\n3. Save the file\n\nLink: ${url}`;
@@ -1328,8 +1325,7 @@ export class ClientPdfService2 {
         }, 30000);
       }
     } catch (error) {
-      console.error('❌ JSON download failed:', error);
-      alert(`JSON download failed: ${error}`);
+      // this.clientLog('ERROR', '❌ JSON download failed', error);
     }
   }
 
@@ -1338,7 +1334,7 @@ export class ClientPdfService2 {
    */
   downloadPdf(pdfBytes: Uint8Array, filename = 'SF86-filled.pdf'): void {
     try {
-      console.log(`📱 Starting PDF download: ${filename}, size: ${pdfBytes.length} bytes`);
+      // console.log(`📱 Starting PDF download: ${filename}, size: ${pdfBytes.length} bytes`);
 
       // Create blob with PDF data
       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
@@ -1353,15 +1349,15 @@ export class ClientPdfService2 {
       const isChrome = /chrome/.test(userAgent);
       const isFirefox = /firefox/.test(userAgent);
 
-      console.log(`📱 Device detection:`, {
-        isMobile,
-        isIOS,
-        isAndroid,
-        isSafari,
-        isChrome,
-        isFirefox,
-        userAgent: userAgent.substring(0, 100) + '...'
-      });
+      // console.log(`📱 Device detection:`, {
+      //   isMobile,
+      //   isIOS,
+      //   isAndroid,
+      //   isSafari,
+      //   isChrome,
+      //   isFirefox,
+      //   userAgent: userAgent.substring(0, 100) + '...'
+      // });
 
       // Track if any method succeeds
       let downloadAttempted = false;
@@ -1369,7 +1365,7 @@ export class ClientPdfService2 {
       // Method 1: For Desktop browsers - use standard approach
       if (!isMobile) {
         try {
-          console.log('💻 Using desktop download method...');
+          // console.log('💻 Using desktop download method...');
           const link = document.createElement('a');
           link.href = url;
           link.download = filename;
@@ -1379,25 +1375,25 @@ export class ClientPdfService2 {
           link.click();
           document.body.removeChild(link);
           
-          console.log('✅ Desktop download initiated');
+          // console.log('✅ Desktop download initiated');
           downloadAttempted = true;
           
           // Cleanup after successful desktop download
           setTimeout(() => {
             URL.revokeObjectURL(url);
-            console.log('🧹 Desktop URL cleanup completed');
+            // console.log('🧹 Desktop URL cleanup completed');
           }, 5000);
           
           return; // Exit early for desktop
         } catch (desktopError) {
-          console.warn('⚠️ Desktop download failed, trying fallback:', desktopError);
+          // console.warn('⚠️ Desktop download failed, trying fallback:', desktopError);
         }
       }
 
       // Method 2: iOS-specific approach
       if (isIOS) {
         try {
-          console.log('🍎 Using iOS-specific download method...');
+          // console.log('🍎 Using iOS-specific download method...');
           
           // For iOS, create a new tab with PDF and instructions
           const newWindow = window.open('about:blank', '_blank');
@@ -1512,28 +1508,28 @@ export class ClientPdfService2 {
             `);
             newWindow.document.close();
             
-            console.log('✅ iOS PDF interface opened successfully');
+            // console.log('✅ iOS PDF interface opened successfully');
             downloadAttempted = true;
             
             // Extended cleanup for iOS
             setTimeout(() => {
               URL.revokeObjectURL(url);
-              console.log('🧹 iOS URL cleanup completed');
+              // console.log('🧹 iOS URL cleanup completed');
             }, 60000); // 1 minute for iOS
             
             return;
           } else {
-            console.warn('⚠️ Failed to open new window for iOS - popup blocked');
+            // console.warn('⚠️ Failed to open new window for iOS - popup blocked');
           }
         } catch (iosError) {
-          console.warn('⚠️ iOS download method failed:', iosError);
+          // console.warn('⚠️ iOS download method failed:', iosError);
         }
       }
 
       // Method 3: Android-specific approach
       if (isAndroid) {
         try {
-          console.log('🤖 Using Android-specific download method...');
+          // console.log('🤖 Using Android-specific download method...');
           
           // Try multiple Android approaches
           const androidMethods = [
@@ -1569,14 +1565,14 @@ export class ClientPdfService2 {
                 }
               }, 1000);
               
-              console.log('✅ Android standard download attempted');
+              // console.log('✅ Android standard download attempted');
               return true;
             },
             
             // Method 3b: Direct navigation for Android browsers
             () => {
               window.location.href = url;
-              console.log('✅ Android direct navigation attempted');
+              // console.log('✅ Android direct navigation attempted');
               return true;
             },
             
@@ -1584,7 +1580,7 @@ export class ClientPdfService2 {
             () => {
               const androidWindow = window.open(url, '_blank', 'noopener,noreferrer,toolbar=yes,scrollbars=yes,resizable=yes');
               if (androidWindow) {
-                console.log('✅ Android window.open attempted');
+                // console.log('✅ Android window.open attempted');
                 return true;
               }
               return false;
@@ -1596,30 +1592,30 @@ export class ClientPdfService2 {
             try {
               if (androidMethods[i]()) {
                 downloadAttempted = true;
-                console.log(`✅ Android method ${i + 1} succeeded`);
+                // console.log(`✅ Android method ${i + 1} succeeded`);
                 
                 // Cleanup after successful Android download
                 setTimeout(() => {
                   URL.revokeObjectURL(url);
-                  console.log('🧹 Android URL cleanup completed');
+                  // console.log('🧹 Android URL cleanup completed');
                 }, 10000); // 10 seconds for Android
                 
                 return;
               }
             } catch (methodError) {
-              console.warn(`⚠️ Android method ${i + 1} failed:`, methodError);
+              // console.warn(`⚠️ Android method ${i + 1} failed:`, methodError);
             }
           }
           
         } catch (androidError) {
-          console.warn('⚠️ Android download methods failed:', androidError);
+          // console.warn('⚠️ Android download methods failed:', androidError);
         }
       }
 
       // Method 4: Generic mobile fallback
       if (isMobile && !downloadAttempted) {
         try {
-          console.log('📱 Using generic mobile fallback...');
+          // console.log('📱 Using generic mobile fallback...');
           
           // Create a user-friendly download page for unhandled mobile browsers
           const fallbackWindow = window.open('about:blank', '_blank');
@@ -1697,48 +1693,48 @@ export class ClientPdfService2 {
             `);
             fallbackWindow.document.close();
             
-            console.log('✅ Generic mobile fallback interface created');
+            // console.log('✅ Generic mobile fallback interface created');
             downloadAttempted = true;
             
             // Extended cleanup for generic mobile
             setTimeout(() => {
               URL.revokeObjectURL(url);
-              console.log('🧹 Generic mobile URL cleanup completed');
+              // console.log('🧹 Generic mobile URL cleanup completed');
             }, 45000); // 45 seconds
             
             return;
           }
         } catch (fallbackError) {
-          console.warn('⚠️ Generic mobile fallback failed:', fallbackError);
+          // console.warn('⚠️ Generic mobile fallback failed:', fallbackError);
         }
       }
 
       // Method 5: Final universal fallback
       if (!downloadAttempted) {
-        console.log('🆘 Using final universal fallback...');
+        // console.log('🆘 Using final universal fallback...');
         try {
           const universalWindow = window.open(url, '_blank', 'noopener,noreferrer');
           if (universalWindow) {
-            console.log('✅ Universal fallback window opened');
+            // console.log('✅ Universal fallback window opened');
           } else {
-            console.error('❌ All download methods failed - showing instructions');
+            // console.error('❌ All download methods failed - showing instructions');
             this.showDownloadInstructions(url, filename);
           }
         } catch (universalError) {
-          console.error('❌ Universal fallback failed:', universalError);
+          // console.error('❌ Universal fallback failed:', universalError);
           this.showDownloadInstructions(url, filename);
         }
         
         // Final cleanup
         setTimeout(() => {
           URL.revokeObjectURL(url);
-          console.log('🧹 Final cleanup completed');
+          // console.log('🧹 Final cleanup completed');
         }, 30000);
       }
 
     } catch (error) {
-      console.error('💥 Critical error in PDF download process:', error);
-      alert(`PDF download failed: ${error instanceof Error ? error.message : String(error)}\n\nPlease try refreshing the page and generating the PDF again.`);
+      // console.error('💥 Critical error in PDF download process:', error);
+      // console.log(`PDF download failed: ${error instanceof Error ? error.message : String(error)}\n\nPlease try refreshing the page and generating the PDF again.`);
     }
   }
 
@@ -1799,7 +1795,7 @@ export class ClientPdfService2 {
           try {
             window.open(url, '_blank', 'noopener,noreferrer');
           } catch (error) {
-            console.error('Failed to open fallback window:', error);
+            // console.error('Failed to open fallback window:', error);
             this.showUrlPrompt(url);
           }
         }
@@ -1814,9 +1810,9 @@ export class ClientPdfService2 {
     // Try modern clipboard API first
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(url).then(() => {
-        alert(`✅ PDF link copied to clipboard!\n\n📋 Link for: ${filename}\n\n📱 Now paste it in your browser to download.`);
+        // console.log(`✅ PDF link copied to clipboard!\n\n📋 Link for: ${filename}\n\n📱 Now paste it in your browser to download.`);
       }).catch((clipboardError) => {
-        console.warn('Modern clipboard API failed:', clipboardError);
+        // console.warn('Modern clipboard API failed:', clipboardError);
         this.fallbackCopyMethod(url, filename);
       });
     } else {
@@ -1846,12 +1842,12 @@ export class ClientPdfService2 {
       document.body.removeChild(textArea);
       
       if (successful) {
-        alert(`✅ PDF link copied to clipboard!\n\n📋 Link for: ${filename}\n\n📱 Now paste it in your browser to download.`);
+        // console.log(`✅ PDF link copied to clipboard!\n\n📋 Link for: ${filename}\n\n📱 Now paste it in your browser to download.`);
       } else {
         this.showUrlPrompt(url);
       }
     } catch (error) {
-      console.warn('Fallback copy method failed:', error);
+      // console.warn('Fallback copy method failed:', error);
       this.showUrlPrompt(url);
     }
   }
@@ -1866,7 +1862,7 @@ export class ClientPdfService2 {
     if (typeof prompt !== 'undefined') {
       prompt('Copy this URL to download your PDF:', url);
     } else {
-      alert(message);
+      // console.log(message);
     }
   }
 
@@ -1915,7 +1911,7 @@ export class ClientPdfService2 {
 
     // Extract fields from the section
     const sectionFields = this.extractFieldsFromSection(sectionData);
-    console.log(`Found ${sectionFields.length} fields in section ${sectionName}`);
+    // console.log(`Found ${sectionFields.length} fields in section ${sectionName}`);
 
     // Get PDF form for lookup
     const form = this.pdfDoc.getForm();
@@ -2057,7 +2053,7 @@ export class ClientPdfService2 {
    * New code should use generatePdfClientAction directly for enhanced features.
    */
   async generateFilledPdf(formData: ApplicantFormValues): Promise<PdfGenerationResult> {
-    this.clientLog('INFO', "🔄 generateFilledPdf called - using enhanced client action...");
+    // this.clientLog('INFO', "🔄 generateFilledPdf called - using enhanced client action...");
 
     const enhancedResult = await this.generatePdfClientAction(formData);
 

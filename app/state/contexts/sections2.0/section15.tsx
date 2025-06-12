@@ -34,11 +34,11 @@ import {
   getVisibleFields
 } from '../../../../api/interfaces/sections2.0/section15';
 
-import { useSection86FormIntegration } from '../shared/section-context-integration';
 import type { ValidationResult, ValidationError, ChangeSet } from '../shared/base-interfaces';
 import {
   validateSectionFieldCount,
 } from "../../../../api/utils/sections-references-loader";
+import { useSF86Form } from './SF86FormContext';
 
 // ============================================================================
 // VALIDATION RULES
@@ -65,6 +65,11 @@ export interface Section15ContextType {
   isLoading: boolean;
   errors: Record<string, string>;
   isDirty: boolean;
+
+  // Section-level Parent Questions (with auto-generation)
+  updateHasServed: (value: "YES" | "NO") => void;
+  updateHasBeenSubjectToDisciplinary: (value: "YES" | "NO") => void;
+  updateHasServedInForeignMilitary: (value: "YES" | "NO") => void;
 
   // Military Service Actions
   addMilitaryServiceEntry: () => void;
@@ -133,7 +138,7 @@ export interface Section15ProviderProps {
   children: React.ReactNode;
 }
 
-export const Section15Provider: React.FC<Section15ProviderProps> = ({ children }) => {
+const Section15Provider: React.FC<Section15ProviderProps> = ({ children }) => {
   // console.log('🔄 Section15Provider: Provider initializing...');
 
   // ============================================================================
@@ -145,6 +150,9 @@ export const Section15Provider: React.FC<Section15ProviderProps> = ({ children }
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [initialData] = useState<Section15>(createInitialSection15State());
   const [isInitialized, setIsInitialized] = useState(false);
+
+  // SF86 Form Context for data persistence and synchronization
+  const sf86Form = useSF86Form();
 
   // console.log('🔍 Section15Provider: State initialized', {
   //   section15Data,
@@ -316,6 +324,129 @@ export const Section15Provider: React.FC<Section15ProviderProps> = ({ children }
   }, []);
 
   // ============================================================================
+  // SECTION-LEVEL PARENT QUESTIONS (with auto-generation)
+  // ============================================================================
+
+  const updateHasServed = useCallback((value: "YES" | "NO") => {
+    console.log(`🔧 Section15: updateHasServed called with value=${value}`);
+    setSection15Data(prevData => {
+      console.log(`🔍 Section15: Current prevData structure:`, prevData);
+      console.log(`🔍 Section15: prevData.section15:`, prevData.section15);
+      console.log(`🔍 Section15: prevData.section15.hasServed:`, prevData.section15.hasServed);
+
+      const newData = cloneDeep(prevData);
+      console.log(`🔍 Section15: newData after cloneDeep:`, newData);
+      console.log(`🔍 Section15: newData.section15.hasServed after cloneDeep:`, newData.section15.hasServed);
+
+      // Ensure hasServed field exists
+      if (!newData.section15.hasServed) {
+        console.log(`🔧 Section15: hasServed field missing, initializing manually...`);
+        newData.section15.hasServed = {
+          value: "NO",
+          options: ["YES", "NO"],
+          id: "hasServed",
+          name: "hasServed",
+          type: "radio",
+          label: "Have you ever served in the U.S. Military?"
+        };
+        console.log(`🔍 Section15: newData.section15.hasServed after manual initialization:`, newData.section15.hasServed);
+      }
+
+      console.log(`🔍 Section15: About to set value on:`, newData.section15.hasServed);
+      newData.section15.hasServed.value = value;
+
+      // If setting to NO, clear entries
+      if (value === "NO") {
+        newData.section15.militaryService = [];
+        console.log(`🧹 Section15: Cleared military service entries because value is NO`);
+      }
+      // If setting to YES and no entries exist, auto-add the first entry
+      else if (value === "YES" && newData.section15.militaryService.length === 0) {
+        const newEntry = createDefaultMilitaryServiceEntry();
+        newData.section15.militaryService.push(newEntry);
+        console.log(`✅ Section15: Auto-added first military service entry when YES selected`, newEntry);
+      }
+
+      console.log(`✅ Section15: Updated hasServed to ${value}`, newData.section15);
+      return newData;
+    });
+  }, []);
+
+  const updateHasBeenSubjectToDisciplinary = useCallback((value: "YES" | "NO") => {
+    console.log(`🔧 Section15: updateHasBeenSubjectToDisciplinary called with value=${value}`);
+    setSection15Data(prevData => {
+      const newData = cloneDeep(prevData);
+
+      // Ensure hasBeenSubjectToDisciplinary field exists
+      if (!newData.section15.hasBeenSubjectToDisciplinary) {
+        console.log(`🔧 Section15: hasBeenSubjectToDisciplinary field missing, initializing manually...`);
+        newData.section15.hasBeenSubjectToDisciplinary = {
+          value: "NO",
+          options: ["YES", "NO"],
+          id: "hasBeenSubjectToDisciplinary",
+          name: "hasBeenSubjectToDisciplinary",
+          type: "radio",
+          label: "Have you been subject to court martial or disciplinary procedure?"
+        };
+      }
+
+      newData.section15.hasBeenSubjectToDisciplinary.value = value;
+
+      // If setting to NO, clear entries
+      if (value === "NO") {
+        newData.section15.disciplinaryProcedures = [];
+        console.log(`🧹 Section15: Cleared disciplinary entries because value is NO`);
+      }
+      // If setting to YES and no entries exist, auto-add the first entry
+      else if (value === "YES" && newData.section15.disciplinaryProcedures.length === 0) {
+        const newEntry = createDefaultDisciplinaryEntry();
+        newData.section15.disciplinaryProcedures.push(newEntry);
+        console.log(`✅ Section15: Auto-added first disciplinary entry when YES selected`, newEntry);
+      }
+
+      console.log(`✅ Section15: Updated hasBeenSubjectToDisciplinary to ${value}`, newData.section15);
+      return newData;
+    });
+  }, []);
+
+  const updateHasServedInForeignMilitary = useCallback((value: "YES" | "NO") => {
+    console.log(`🔧 Section15: updateHasServedInForeignMilitary called with value=${value}`);
+    setSection15Data(prevData => {
+      const newData = cloneDeep(prevData);
+
+      // Ensure hasServedInForeignMilitary field exists
+      if (!newData.section15.hasServedInForeignMilitary) {
+        console.log(`🔧 Section15: hasServedInForeignMilitary field missing, initializing manually...`);
+        newData.section15.hasServedInForeignMilitary = {
+          value: "NO",
+          options: ["YES", "NO"],
+          id: "hasServedInForeignMilitary",
+          name: "hasServedInForeignMilitary",
+          type: "radio",
+          label: "Have you served in a foreign military organization?"
+        };
+      }
+
+      newData.section15.hasServedInForeignMilitary.value = value;
+
+      // If setting to NO, clear entries
+      if (value === "NO") {
+        newData.section15.foreignMilitaryService = [];
+        console.log(`🧹 Section15: Cleared foreign military service entries because value is NO`);
+      }
+      // If setting to YES and no entries exist, auto-add the first entry
+      else if (value === "YES" && newData.section15.foreignMilitaryService.length === 0) {
+        const newEntry = createDefaultForeignMilitaryEntry();
+        newData.section15.foreignMilitaryService.push(newEntry);
+        console.log(`✅ Section15: Auto-added first foreign military service entry when YES selected`, newEntry);
+      }
+
+      console.log(`✅ Section15: Updated hasServedInForeignMilitary to ${value}`, newData.section15);
+      return newData;
+    });
+  }, []);
+
+  // ============================================================================
   // GENERAL FIELD UPDATES
   // ============================================================================
 
@@ -404,7 +535,7 @@ export const Section15Provider: React.FC<Section15ProviderProps> = ({ children }
 
   const getVisibleFieldsForEntry = useCallback((entryType: Section15SubsectionKey, index: number): string[] => {
     if (entryType === 'militaryService' && section15Data.section15.militaryService[index]) {
-      return getVisibleFields(section15Data.section15.militaryService[index]);
+      return getVisibleFields(section15Data.section15.militaryService[index], section15Data.section15);
     }
     return [];
   }, [section15Data]);
@@ -441,10 +572,25 @@ export const Section15Provider: React.FC<Section15ProviderProps> = ({ children }
       return;
     }
 
+    // Preserve parent questions if they exist in current data but not in incoming data
+    const mergedData = { ...data };
+    if (section15Data.section15.hasServed && !data.section15.hasServed) {
+      console.log(`🔧 Section15: Preserving current hasServed field`);
+      mergedData.section15.hasServed = section15Data.section15.hasServed;
+    }
+    if (section15Data.section15.hasBeenSubjectToDisciplinary && !data.section15.hasBeenSubjectToDisciplinary) {
+      console.log(`🔧 Section15: Preserving current hasBeenSubjectToDisciplinary field`);
+      mergedData.section15.hasBeenSubjectToDisciplinary = section15Data.section15.hasBeenSubjectToDisciplinary;
+    }
+    if (section15Data.section15.hasServedInForeignMilitary && !data.section15.hasServedInForeignMilitary) {
+      console.log(`🔧 Section15: Preserving current hasServedInForeignMilitary field`);
+      mergedData.section15.hasServedInForeignMilitary = section15Data.section15.hasServedInForeignMilitary;
+    }
+
     // If incoming data has entries or current data is empty, load the new data
-    console.log(`✅ Section15: Loading new data`);
-    setSection15Data(data);
-  }, [section15Data]);
+    console.log(`✅ Section15: Loading merged data`);
+    setSection15Data(mergedData);
+  }, []);
 
   const getChanges = useCallback((): ChangeSet => {
     // Return changes for tracking purposes
@@ -477,59 +623,6 @@ export const Section15Provider: React.FC<Section15ProviderProps> = ({ children }
   // SF86 FORM INTEGRATION
   // ============================================================================
 
-  // console.log('🔄 Section15: About to call useSection86FormIntegration...');
-
-  // Create wrapper function for updateFieldValue following Section 29 pattern
-  const updateFieldValueWrapper = useCallback((path: string, value: any) => {
-    // console.log('🔄 Section15: updateFieldValueWrapper called', { path, value });
-
-    // Parse the path to extract subsection, entry index, and field path
-    // Expected format: "section15.subsectionKey.entries[index].fieldPath"
-    const pathParts = path.split('.');
-
-    if (pathParts.length >= 4 && pathParts[0] === 'section15') {
-      const subsectionKey = pathParts[1] as Section15SubsectionKey;
-      const entriesMatch = pathParts[2].match(/entries\[(\d+)\]/);
-
-      if (entriesMatch) {
-        const entryIndex = parseInt(entriesMatch[1]);
-        const fieldPath = pathParts.slice(3).join('.');
-
-        console.log('🔍 Section15: Parsed path', {
-          subsectionKey,
-          entryIndex,
-          fieldPath,
-          value
-        });
-
-        // Call the appropriate update function based on subsection
-        if (subsectionKey === 'militaryService') {
-          updateMilitaryServiceEntry(entryIndex, fieldPath, value);
-        } else if (subsectionKey === 'disciplinaryProcedures') {
-          updateDisciplinaryEntry(entryIndex, fieldPath, value);
-        } else if (subsectionKey === 'foreignMilitaryService') {
-          updateForeignMilitaryEntry(entryIndex, fieldPath, value);
-        }
-        return;
-      }
-    }
-
-    // Fallback: use lodash set for direct path updates
-    console.log('🔍 Section15: Using direct path update', { path, value });
-    updateFieldValue(path, value);
-  }, [updateFieldValue, updateMilitaryServiceEntry, updateDisciplinaryEntry, updateForeignMilitaryEntry]);
-
-  // Integration with main form context using Section 29 gold standard pattern
-  // Note: integration variable is used internally by the hook for registration
-  const integration = useSection86FormIntegration(
-    'section15',
-    'Section 15: Military History',
-    section15Data,
-    setSection15Data,
-    () => ({ isValid: validateSection().isValid, errors: [], warnings: [] }), // Anonymous function like Section 29
-    () => getChanges(), // Anonymous function like Section 29
-    updateFieldValueWrapper // Pass wrapper function that matches expected signature
-  );
 
   // console.log('🔍 Section15: Integration hook result', { integration });
 
@@ -556,6 +649,28 @@ export const Section15Provider: React.FC<Section15ProviderProps> = ({ children }
   }, [section15Data, isInitialized, errors, validateSection]);
 
   // ============================================================================
+  // SF86 FORM CONTEXT SYNCHRONIZATION
+  // ============================================================================
+
+  // Sync with SF86FormContext when data is loaded
+  useEffect(() => {
+    const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('debug=true');
+
+    if (sf86Form.formData.section15 && sf86Form.formData.section15 !== section15Data) {
+      if (isDebugMode) {
+        console.log('🔄 Section15: Syncing with SF86FormContext loaded data');
+      }
+
+      // Load the data from SF86FormContext
+      loadSection(sf86Form.formData.section15);
+
+      if (isDebugMode) {
+        console.log('✅ Section15: Data sync complete');
+      }
+    }
+  }, [sf86Form.formData.section15, loadSection]);
+
+  // ============================================================================
   // CONTEXT VALUE
   // ============================================================================
 
@@ -565,6 +680,11 @@ export const Section15Provider: React.FC<Section15ProviderProps> = ({ children }
     isLoading,
     errors,
     isDirty,
+
+    // Section-level Parent Questions (with auto-generation)
+    updateHasServed,
+    updateHasBeenSubjectToDisciplinary,
+    updateHasServedInForeignMilitary,
 
     // Military Service Actions
     addMilitaryServiceEntry,
@@ -622,3 +742,5 @@ export const useSection15 = (): Section15ContextType => {
   }
   return context;
 };
+
+export default Section15Provider;

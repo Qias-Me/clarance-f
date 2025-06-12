@@ -29,8 +29,8 @@ import {
   updateSection1Field
 } from '../../../../api/interfaces/sections2.0/section1';
 
-import { useSection86FormIntegration } from '../shared/section-context-integration';
 import type { ValidationResult, ValidationError, ChangeSet } from '../shared/base-interfaces';
+import { useSF86Form } from './SF86FormContext';
 
 // ============================================================================
 // CONTEXT INTERFACE
@@ -296,18 +296,26 @@ export const Section1Provider: React.FC<Section1ProviderProps> = ({ children }) 
   // ============================================================================
   // SF86FORM INTEGRATION
   // ============================================================================
+  // Access SF86FormContext to sync with loaded data
+  const sf86Form = useSF86Form();
 
-  // Integration with main form context using standard pattern
-  // Note: integration variable is used internally by the hook for registration
-  const integration = useSection86FormIntegration(
-    'section1',
-    'Section 1: Information About You',
-    section1Data,
-    setSection1Data,
-    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
-    getChanges,
-    updateFieldValue // Pass Section 1's updateFieldValue function to integration
-  );
+  // Sync with SF86FormContext when data is loaded
+  useEffect(() => {
+    const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('debug=true');
+
+    if (sf86Form.formData.section1 && sf86Form.formData.section1 !== section1Data) {
+      if (isDebugMode) {
+        console.log('🔄 Section1: Syncing with SF86FormContext loaded data');
+      }
+
+      // Load the data from SF86FormContext
+      loadSection(sf86Form.formData.section1);
+
+      if (isDebugMode) {
+        console.log('✅ Section1: Data sync complete');
+      }
+    }
+  }, [sf86Form.formData.section1, loadSection]);
 
 
 

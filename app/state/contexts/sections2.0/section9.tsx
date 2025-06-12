@@ -10,7 +10,8 @@ import React, {
   useContext,
   useState,
   useCallback,
-  useMemo
+  useMemo,
+  useEffect
 } from 'react';
 import { cloneDeep } from 'lodash';
 import set from 'lodash/set';
@@ -27,7 +28,7 @@ import type {
   ValidationError,
   ChangeSet
 } from '../shared/base-interfaces';
-import { useSection86FormIntegration } from '../shared/section-context-integration';
+import { useSF86Form } from './SF86FormContext';
 
 // ============================================================================
 // CONTEXT TYPE DEFINITION
@@ -85,14 +86,12 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
 
   const [section9Data, setSection9Data] = useState<Section9>(() => {
     const defaultData = createDefaultSection9();
-    // console.log('🏗️ Section9: Initializing with default data:', defaultData);
-    // console.log('🔍 Section9: Status field:', defaultData.section9.status);
-    // console.log('🔍 Section9: BornToUSParents field:', defaultData.section9.bornToUSParents);
     return defaultData;
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [initialData] = useState<Section9>(createDefaultSection9());
+  const [initialData] = useState<Section9>(() => createDefaultSection9());
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // ============================================================================
   // COMPUTED VALUES
@@ -137,19 +136,36 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
       }
     }
 
-    // Update local errors
-    const newErrors: Record<string, string> = {};
-    validationErrors.forEach(error => {
-      newErrors[error.field] = error.message;
-    });
-    setErrors(newErrors);
-
     return {
       isValid: validationErrors.length === 0,
       errors: validationErrors,
       warnings: validationWarnings
     };
   }, [section9Data]);
+
+  // Update errors when section data changes (but not during initial render)
+  useEffect(() => {
+    // Skip validation on initial render to avoid infinite loops
+    if (!isInitialized) return;
+
+    const validationResult = validateSection();
+    const newErrors: Record<string, string> = {};
+
+    validationResult.errors.forEach(error => {
+      newErrors[error.field] = error.message;
+    });
+
+    // Only update errors if they actually changed
+    const currentErrorKeys = Object.keys(errors);
+    const newErrorKeys = Object.keys(newErrors);
+    const errorsChanged =
+      currentErrorKeys.length !== newErrorKeys.length ||
+      currentErrorKeys.some(key => errors[key] !== newErrors[key]);
+
+    if (errorsChanged) {
+      setErrors(newErrors);
+    }
+  }, [section9Data, isInitialized, errors, validateSection]);
 
   // ============================================================================
   // CRUD OPERATIONS
@@ -159,21 +175,16 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
     setSection9Data(prevData => {
       const newData = cloneDeep(prevData);
       newData.section9.status.value = status;
-
       return newData;
     });
   }, []);
 
   const updateBornToUSParentsInfo = useCallback((field: keyof BornInUSInfo, value: any) => {
-    console.log(`🔄 Section9: updateBornToUSParentsInfo called with field=${field}, value=`, value);
-
     setSection9Data(prevData => {
       const newData = cloneDeep(prevData);
 
       // Ensure bornToUSParents exists - initialize if needed
       if (!newData.section9.bornToUSParents) {
-        console.log('🔧 Section9: Creating bornToUSParents structure');
-        // Get the default structure from createDefaultSection9
         const defaultData = createDefaultSection9();
         newData.section9.bornToUSParents = defaultData.section9.bornToUSParents;
       }
@@ -182,9 +193,6 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
         const fieldObject = newData.section9.bornToUSParents[field];
         if (fieldObject && typeof fieldObject === 'object' && 'value' in fieldObject) {
           (fieldObject as any).value = value;
-          console.log(`✅ Section9: Updated bornToUSParents.${field}.value = ${value}`);
-        } else {
-          console.warn(`🚨 Section9: Field ${field} not found in bornToUSParents or is not a valid field object:`, fieldObject);
         }
       }
 
@@ -193,15 +201,11 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
   }, []);
 
   const updateNaturalizedInfo = useCallback((field: keyof NaturalizedCitizenInfo, value: any) => {
-    console.log(`🔄 Section9: updateNaturalizedInfo called with field=${field}, value=`, value);
-
     setSection9Data(prevData => {
       const newData = cloneDeep(prevData);
 
       // Ensure naturalizedCitizen exists - initialize if needed
       if (!newData.section9.naturalizedCitizen) {
-        console.log('🔧 Section9: Creating naturalizedCitizen structure');
-        // Get the default structure from createDefaultSection9
         const defaultData = createDefaultSection9();
         newData.section9.naturalizedCitizen = defaultData.section9.naturalizedCitizen;
       }
@@ -210,9 +214,6 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
         const fieldObject = newData.section9.naturalizedCitizen[field];
         if (fieldObject && typeof fieldObject === 'object' && 'value' in fieldObject) {
           (fieldObject as any).value = value;
-          console.log(`✅ Section9: Updated naturalizedCitizen.${field}.value = ${value}`);
-        } else {
-          console.warn(`🚨 Section9: Field ${field} not found in naturalizedCitizen or is not a valid field object:`, fieldObject);
         }
       }
 
@@ -221,15 +222,11 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
   }, []);
 
   const updateDerivedInfo = useCallback((field: keyof DerivedCitizenInfo, value: any) => {
-    console.log(`🔄 Section9: updateDerivedInfo called with field=${field}, value=`, value);
-
     setSection9Data(prevData => {
       const newData = cloneDeep(prevData);
 
       // Ensure derivedCitizen exists - initialize if needed
       if (!newData.section9.derivedCitizen) {
-        console.log('🔧 Section9: Creating derivedCitizen structure');
-        // Get the default structure from createDefaultSection9
         const defaultData = createDefaultSection9();
         newData.section9.derivedCitizen = defaultData.section9.derivedCitizen;
       }
@@ -238,9 +235,6 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
         const fieldObject = newData.section9.derivedCitizen[field];
         if (fieldObject && typeof fieldObject === 'object' && 'value' in fieldObject) {
           (fieldObject as any).value = value;
-          console.log(`✅ Section9: Updated derivedCitizen.${field}.value = ${value}`);
-        } else {
-          console.warn(`🚨 Section9: Field ${field} not found in derivedCitizen or is not a valid field object:`, fieldObject);
         }
       }
 
@@ -249,15 +243,11 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
   }, []);
 
   const updateNonUSCitizenInfo = useCallback((field: keyof NonUSCitizenInfo, value: any) => {
-    console.log(`🔄 Section9: updateNonUSCitizenInfo called with field=${field}, value=`, value);
-
     setSection9Data(prevData => {
       const newData = cloneDeep(prevData);
 
       // Ensure nonUSCitizen exists - initialize if needed
       if (!newData.section9.nonUSCitizen) {
-        console.log('🔧 Section9: Creating nonUSCitizen structure');
-        // Get the default structure from createDefaultSection9
         const defaultData = createDefaultSection9();
         newData.section9.nonUSCitizen = defaultData.section9.nonUSCitizen;
       }
@@ -266,9 +256,6 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
         const fieldObject = newData.section9.nonUSCitizen[field];
         if (fieldObject && typeof fieldObject === 'object' && 'value' in fieldObject) {
           (fieldObject as any).value = value;
-          console.log(`✅ Section9: Updated nonUSCitizen.${field}.value = ${value}`);
-        } else {
-          console.warn(`🚨 Section9: Field ${field} not found in nonUSCitizen or is not a valid field object:`, fieldObject);
         }
       }
 
@@ -277,16 +264,10 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
   }, []);
 
   const updateFieldValue = useCallback((fieldPath: string, newValue: any) => {
-    console.log(`🔄 Section9: updateFieldValue called with fieldPath=${fieldPath}, newValue=`, newValue);
-
     setSection9Data(prevData => {
       const newData = cloneDeep(prevData);
       const fullPath = `section9.${fieldPath}.value`;
       set(newData, fullPath, newValue);
-
-      console.log(`📊 Section9: updateFieldValue - updated local state for path=${fullPath}`);
-      console.log(`📊 Section9: updateFieldValue - new section9Data:`, newData);
-
       return newData;
     });
   }, []);
@@ -296,21 +277,28 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
   // ============================================================================
 
   const resetSection = useCallback(() => {
-    const newData = createDefaultSection9();
-    setSection9Data(newData);
+    const defaultData = createDefaultSection9();
+    setSection9Data(defaultData);
     setErrors({});
   }, []);
 
-  const loadSection = useCallback((data: Section9) => {
-    setSection9Data(cloneDeep(data));
-    setErrors({});
+  const loadSection = useCallback(async (data: Section9) => {
+    setIsLoading(true);
+    try {
+      setSection9Data(data);
+      setIsInitialized(true);
+    } catch (error) {
+      console.error('❌ Section9: Error loading data:', error);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   const getChanges = useCallback((): ChangeSet => {
     const changes: ChangeSet = {};
 
     // Simple change detection - compare with initial data
-    if (JSON.stringify(section9Data) !== JSON.stringify(initialData)) {
+    if (isDirty) {
       changes['section9'] = {
         oldValue: initialData,
         newValue: section9Data,
@@ -319,7 +307,7 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
     }
 
     return changes;
-  }, [section9Data, initialData]);
+  }, [section9Data, isDirty, initialData]);
 
   // ============================================================================
   // FIELD FLATTENING FOR PDF GENERATION
@@ -386,115 +374,67 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
    * Section 9 has: various subsection-specific update functions
    */
   const updateFieldValueWrapper = useCallback((path: string, value: any) => {
-    console.log(`🔄 Section9: updateFieldValueWrapper called with path=${path}, value=`, value);
-
-    // Parse path to update the correct field using existing subsection functions
+    // Simple path mapping following Section 1 pattern
     if (path === 'section9.status' || path === 'status') {
-      console.log(`📊 Section9: Updating citizenship status`);
       updateCitizenshipStatus(value);
     } else if (path.startsWith('section9.bornToUSParents.') || path.startsWith('bornToUSParents.')) {
       const fieldName = path.replace(/^(section9\.)?bornToUSParents\./, '');
-      console.log(`📊 Section9: Updating bornToUSParents field: ${fieldName}`);
-
-      // Handle nested paths like 'nameOnDocument.firstName' using lodash set
       if (fieldName.includes('.')) {
-        console.log(`📊 Section9: Handling nested field path: ${fieldName}`);
-        setSection9Data(prev => {
-          const updated = cloneDeep(prev);
-          const fullPath = `section9.bornToUSParents.${fieldName}.value`;
-          set(updated, fullPath, value);
-          console.log(`✅ Section9: Updated nested field at path: ${fullPath}`);
-
-          return updated;
-        });
+        // Handle nested paths with direct field update
+        updateFieldValue(`bornToUSParents.${fieldName}`, value);
       } else {
-        // Handle direct fields using existing function
         updateBornToUSParentsInfo(fieldName as keyof BornInUSInfo, value);
       }
     } else if (path.startsWith('section9.naturalizedCitizen.') || path.startsWith('naturalizedCitizen.')) {
       const fieldName = path.replace(/^(section9\.)?naturalizedCitizen\./, '');
-      console.log(`📊 Section9: Updating naturalizedCitizen field: ${fieldName}`);
-
-      // Handle nested paths using lodash set
       if (fieldName.includes('.')) {
-        console.log(`📊 Section9: Handling nested field path: ${fieldName}`);
-        setSection9Data(prev => {
-          const updated = cloneDeep(prev);
-          const fullPath = `section9.naturalizedCitizen.${fieldName}.value`;
-          set(updated, fullPath, value);
-          console.log(`✅ Section9: Updated nested field at path: ${fullPath}`);
-
-          return updated;
-        });
+        updateFieldValue(`naturalizedCitizen.${fieldName}`, value);
       } else {
-        // Handle direct fields using existing function
         updateNaturalizedInfo(fieldName as keyof NaturalizedCitizenInfo, value);
       }
     } else if (path.startsWith('section9.derivedCitizen.') || path.startsWith('derivedCitizen.')) {
       const fieldName = path.replace(/^(section9\.)?derivedCitizen\./, '');
-      console.log(`📊 Section9: Updating derivedCitizen field: ${fieldName}`);
-
-      // Handle nested paths using lodash set
       if (fieldName.includes('.')) {
-        console.log(`📊 Section9: Handling nested field path: ${fieldName}`);
-        setSection9Data(prev => {
-          const updated = cloneDeep(prev);
-          const fullPath = `section9.derivedCitizen.${fieldName}.value`;
-          set(updated, fullPath, value);
-          console.log(`✅ Section9: Updated nested field at path: ${fullPath}`);
-
-          return updated;
-        });
+        updateFieldValue(`derivedCitizen.${fieldName}`, value);
       } else {
-        // Handle direct fields using existing function
         updateDerivedInfo(fieldName as keyof DerivedCitizenInfo, value);
       }
     } else if (path.startsWith('section9.nonUSCitizen.') || path.startsWith('nonUSCitizen.')) {
       const fieldName = path.replace(/^(section9\.)?nonUSCitizen\./, '');
-      console.log(`📊 Section9: Updating nonUSCitizen field: ${fieldName}`);
-
-      // Handle nested paths using lodash set
       if (fieldName.includes('.')) {
-        console.log(`📊 Section9: Handling nested field path: ${fieldName}`);
-        setSection9Data(prev => {
-          const updated = cloneDeep(prev);
-          const fullPath = `section9.nonUSCitizen.${fieldName}.value`;
-          set(updated, fullPath, value);
-          console.log(`✅ Section9: Updated nested field at path: ${fullPath}`);
-
-          return updated;
-        });
+        updateFieldValue(`nonUSCitizen.${fieldName}`, value);
       } else {
-        // Handle direct fields using existing function
         updateNonUSCitizenInfo(fieldName as keyof NonUSCitizenInfo, value);
       }
     } else {
-      // Fallback: use lodash set for direct path updates
-      console.log(`📊 Section9: Using fallback lodash set for path: ${path}`);
-      setSection9Data(prev => {
-        const updated = cloneDeep(prev);
-        set(updated, path, value);
-
-        return updated;
-      });
+      // Fallback: use direct field update
+      updateFieldValue(path.replace('section9.', ''), value);
     }
+  }, [updateCitizenshipStatus, updateBornToUSParentsInfo, updateNaturalizedInfo, updateDerivedInfo, updateNonUSCitizenInfo, updateFieldValue]);
 
-    console.log(`✅ Section9: updateFieldValueWrapper completed for path=${path}`);
-  }, [updateCitizenshipStatus, updateBornToUSParentsInfo, updateNaturalizedInfo, updateDerivedInfo, updateNonUSCitizenInfo]);
+  // ============================================================================
+  // SF86FORM INTEGRATION
+  // ============================================================================
+  // Access SF86FormContext to sync with loaded data
+  const sf86Form = useSF86Form();
 
-  // Integration with main form context using Section 1 gold standard pattern
-  // Note: integration variable is used internally by the hook for registration
-  const integration = useSection86FormIntegration(
-    'section9',
-    'Section 9: Citizenship of Your Parents',
-    section9Data,
-    setSection9Data,
-    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
-    getChanges,
-    updateFieldValueWrapper // Pass wrapper function that matches expected signature
-  );
+  // Sync with SF86FormContext when data is loaded
+  useEffect(() => {
+    const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('debug=true');
 
+    if (sf86Form.formData.section9 && sf86Form.formData.section9 !== section9Data) {
+      if (isDebugMode) {
+        console.log('🔄 Section9: Syncing with SF86FormContext loaded data');
+      }
 
+      // Load the data from SF86FormContext
+      loadSection(sf86Form.formData.section9);
+
+      if (isDebugMode) {
+        console.log('✅ Section9: Data sync complete');
+      }
+    }
+  }, [sf86Form.formData.section9, loadSection]);
 
   // ============================================================================
   // CONTEXT VALUE

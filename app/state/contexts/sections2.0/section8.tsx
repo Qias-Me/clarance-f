@@ -26,7 +26,6 @@ import type {
   ValidationError,
   ChangeSet
 } from '../shared/base-interfaces';
-import { useSection86FormIntegration } from '../shared/section-context-integration';
 
 // ============================================================================
 // CONTEXT TYPE DEFINITION
@@ -54,6 +53,7 @@ export interface Section8ContextType {
   resetSection: () => void;
   loadSection: (data: Section8) => void;
   getChanges: () => ChangeSet;
+  commitDraft: () => Section8;
 }
 
 // ============================================================================
@@ -91,17 +91,27 @@ export const Section8Provider: React.FC<Section8ProviderProps> = ({ children }) 
   // ============================================================================
 
   const [section8Data, setSection8Data] = useState<Section8>(createDefaultSection8());
+  const [draftData, setDraftData] = useState<Section8>(createDefaultSection8()); // Draft state for input changes
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [initialData] = useState<Section8>(createDefaultSection8());
+
+  // ============================================================================
+  // SYNCHRONIZATION EFFECTS
+  // ============================================================================
+
+  // Synchronize draftData when section8Data changes (e.g., from data loading)
+  useEffect(() => {
+    setDraftData(cloneDeep(section8Data));
+  }, [section8Data]);
 
   // ============================================================================
   // COMPUTED VALUES
   // ============================================================================
 
   const isDirty = useMemo(() => {
-    return JSON.stringify(section8Data) !== JSON.stringify(initialData);
-  }, [section8Data, initialData]);
+    return JSON.stringify(draftData) !== JSON.stringify(section8Data);
+  }, [draftData, section8Data]);
 
   // ============================================================================
   // VALIDATION FUNCTIONS
@@ -111,15 +121,15 @@ export const Section8Provider: React.FC<Section8ProviderProps> = ({ children }) 
     const validationErrors: ValidationError[] = [];
     const validationWarnings: ValidationError[] = [];
 
-    // Validate passport information if passport is indicated
-    if (section8Data.section8.hasPassport.value === "YES") {
+    // Validate passport information if passport is indicated (use draftData for real-time validation)
+    if (draftData.section8.hasPassport.value === "YES") {
       const validationContext: Section8ValidationContext = {
         currentDate: new Date(),
         rules: defaultValidationRules
       };
 
       // Basic passport number validation
-      if (!section8Data.section8.passportNumber.value.trim()) {
+      if (!draftData.section8.passportNumber.value.trim()) {
         validationErrors.push({
           field: 'passportNumber',
           message: 'Passport number is required when passport is indicated',
@@ -129,7 +139,7 @@ export const Section8Provider: React.FC<Section8ProviderProps> = ({ children }) 
       }
 
       // Basic name validation
-      if (!section8Data.section8.nameOnPassport.lastName.value.trim()) {
+      if (!draftData.section8.nameOnPassport.lastName.value.trim()) {
         validationErrors.push({
           field: 'lastName',
           message: 'Last name on passport is required',
@@ -138,7 +148,7 @@ export const Section8Provider: React.FC<Section8ProviderProps> = ({ children }) 
         });
       }
 
-      if (!section8Data.section8.nameOnPassport.firstName.value.trim()) {
+      if (!draftData.section8.nameOnPassport.firstName.value.trim()) {
         validationErrors.push({
           field: 'firstName',
           message: 'First name on passport is required',
@@ -160,14 +170,14 @@ export const Section8Provider: React.FC<Section8ProviderProps> = ({ children }) 
       errors: validationErrors,
       warnings: validationWarnings
     };
-  }, [section8Data]);
+  }, [draftData]);
 
   const validatePassport = useCallback((): PassportValidationResult => {
     const errors: string[] = [];
     const warnings: string[] = [];
 
-    if (section8Data.section8.hasPassport.value === "YES") {
-      const passportNum = section8Data.section8.passportNumber.value.toUpperCase();
+    if (draftData.section8.hasPassport.value === "YES") {
+      const passportNum = draftData.section8.passportNumber.value.toUpperCase();
 
       if (!passportNum) {
         errors.push('Passport number is required');
@@ -179,14 +189,14 @@ export const Section8Provider: React.FC<Section8ProviderProps> = ({ children }) 
     }
 
     return { isValid: errors.length === 0, errors, warnings };
-  }, [section8Data]);
+  }, [draftData]);
 
   // ============================================================================
   // CRUD OPERATIONS
   // ============================================================================
 
   const updatePassportFlag = useCallback((hasPassport: "YES" | "NO") => {
-    setSection8Data(prevData => {
+    setDraftData(prevData => {
       const newData = cloneDeep(prevData);
       newData.section8.hasPassport.value = hasPassport;
       return newData;
@@ -194,7 +204,7 @@ export const Section8Provider: React.FC<Section8ProviderProps> = ({ children }) 
   }, []);
 
   const updatePassportNumber = useCallback((passportNumber: string) => {
-    setSection8Data(prevData => {
+    setDraftData(prevData => {
       const newData = cloneDeep(prevData);
       newData.section8.passportNumber.value = passportNumber;
       return newData;
@@ -202,7 +212,7 @@ export const Section8Provider: React.FC<Section8ProviderProps> = ({ children }) 
   }, []);
 
   const updatePassportName = useCallback((field: 'lastName' | 'firstName' | 'middleName' | 'suffix', value: string) => {
-    setSection8Data(prevData => {
+    setDraftData(prevData => {
       const newData = cloneDeep(prevData);
       newData.section8.nameOnPassport[field].value = value;
       return newData;
@@ -210,7 +220,7 @@ export const Section8Provider: React.FC<Section8ProviderProps> = ({ children }) 
   }, []);
 
   const updatePassportDate = useCallback((dateType: 'issueDate' | 'expirationDate', date: string, estimated?: boolean) => {
-    setSection8Data(prevData => {
+    setDraftData(prevData => {
       const newData = cloneDeep(prevData);
       newData.section8.dates[dateType].date.value = date;
       if (estimated !== undefined) {
@@ -221,7 +231,7 @@ export const Section8Provider: React.FC<Section8ProviderProps> = ({ children }) 
   }, []);
 
   const updateFieldValue = useCallback((fieldPath: string, newValue: any) => {
-    setSection8Data(prevData => {
+    setDraftData(prevData => {
       const newData = cloneDeep(prevData);
       const pathParts = fieldPath.split('.');
       let current: any = newData;
@@ -256,20 +266,30 @@ export const Section8Provider: React.FC<Section8ProviderProps> = ({ children }) 
     setErrors({});
   }, []);
 
+  // ============================================================================
+  // DRAFT MANAGEMENT
+  // ============================================================================
+
+  const commitDraft = useCallback(() => {
+    const committedData = cloneDeep(draftData);
+    setSection8Data(committedData);
+    return committedData; // Return the committed data for immediate use
+  }, [draftData]);
+
   const getChanges = useCallback((): ChangeSet => {
     const changes: ChangeSet = {};
 
-    // Simple change detection - compare with initial data
-    if (JSON.stringify(section8Data) !== JSON.stringify(initialData)) {
+    // Simple change detection - compare draft with main data
+    if (isDirty) {
       changes['section8'] = {
-        oldValue: initialData,
-        newValue: section8Data,
+        oldValue: section8Data,
+        newValue: draftData,
         timestamp: new Date()
       };
     }
 
     return changes;
-  }, [section8Data, initialData]);
+  }, [draftData, isDirty, section8Data]);
 
   // ============================================================================
   // FIELD FLATTENING FOR PDF GENERATION
@@ -333,25 +353,14 @@ export const Section8Provider: React.FC<Section8ProviderProps> = ({ children }) 
   // SF86FORM INTEGRATION
   // ============================================================================
 
-  // Integration with main form context using Section 1 gold standard pattern
-  // Note: integration variable is used internally by the hook for registration
-  const integration = useSection86FormIntegration(
-    'section8',
-    'Section 8: U.S. Passport Information',
-    section8Data,
-    setSection8Data,
-    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
-    getChanges,
-    updateFieldValue // Pass Section 8's updateFieldValue function to integration
-  );
 
   // ============================================================================
   // CONTEXT VALUE
   // ============================================================================
 
   const contextValue: Section8ContextType = {
-    // State
-    section8Data,
+    // State - expose draftData as section8Data for component to see real-time changes
+    section8Data: draftData,
     isLoading,
     errors,
     isDirty,
@@ -371,6 +380,7 @@ export const Section8Provider: React.FC<Section8ProviderProps> = ({ children }) 
     resetSection,
     loadSection,
     getChanges,
+    commitDraft,
   };
 
   return (

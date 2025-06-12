@@ -190,8 +190,9 @@ export const createDefaultPhoneNumber = (
  * This eliminates hardcoded values and uses the single source of truth
  */
 export const createDefaultSection7 = (): Section7 => {
-  // Validate field count against sections-references (expected: 17 fields)
-  validateSectionFieldCount(7, 17);
+  // Validate field count against sections-references (expected: 7 fields)
+  // 2 email fields + 1 phone entry × 5 fields = 7 total fields
+  validateSectionFieldCount(7);
 
   return {
     _id: 7,
@@ -207,32 +208,14 @@ export const createDefaultSection7 = (): Section7 => {
         ''
       ),
       entries: [
-        // Home phone
+        // Start with only 1 phone entry - users can add more via "Add Phone" button
         createDefaultPhoneNumber(
           'form1[0].Sections7-9[0].p3-t68[1]',
           'form1[0].Sections7-9[0].TextField11[15]',
           'form1[0].Sections7-9[0].#field[33]',
           'form1[0].Sections7-9[0].#field[35]',
           'form1[0].Sections7-9[0].#field[34]',
-          'Home telephone'
-        ),
-        // Work phone
-        createDefaultPhoneNumber(
-          'form1[0].Sections7-9[0].p3-t68[2]',
-          'form1[0].Sections7-9[0].TextField11[16]',
-          'form1[0].Sections7-9[0].#field[38]',
-          'form1[0].Sections7-9[0].#field[40]',
-          'form1[0].Sections7-9[0].#field[39]',
-          'Work telephone'
-        ),
-        // Mobile phone
-        createDefaultPhoneNumber(
-          'form1[0].Sections7-9[0].p3-t68[3]',
-          'form1[0].Sections7-9[0].TextField11[17]',
-          'form1[0].Sections7-9[0].#field[43]',
-          'form1[0].Sections7-9[0].#field[45]',
-          'form1[0].Sections7-9[0].#field[44]',
-          'Mobile/Cell telephone'
+          'Phone'
         )
       ]
     }

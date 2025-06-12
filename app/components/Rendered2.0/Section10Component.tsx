@@ -8,7 +8,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSection10 } from '~/state/contexts/sections2.0/section10';
-import { useSF86Form } from '~/state/contexts/SF86FormContext';
+import { useSF86Form } from '~/state/contexts/sections2.0/SF86FormContext';
+import { getSuffixOptions, getCountryOptions } from '../../../api/interfaces/sections2.0/base';
 
 interface Section10ComponentProps {
   className?: string;
@@ -38,7 +39,10 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
     validateSection,
     resetSection,
     canAddDualCitizenship,
-    canAddForeignPassport
+    canAddForeignPassport,
+    // NEW: Submit-only mode functions
+    submitSectionData,
+    hasPendingChanges
     // REMOVED: isDirty - only save button should trigger state updates
     // FIXED: Removed errors from context to prevent infinite loops
   } = useSection10();
@@ -50,51 +54,103 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
 
   // Track validation state internally
   const [isValid, setIsValid] = useState(false);
-  // FIXED: Local errors state to prevent infinite loops
-  const [localErrors, setLocalErrors] = useState<Record<string, string>>({});
+  // FIXED: Enhanced error state management with proper typing
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
+  // Submit state management
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Handle validation on component mount and when data changes
+  // PERFORMANCE FIX: Only validate on component mount, not on every data change
   useEffect(() => {
+    // Initial validation on component mount
+    performValidation();
+  }, []); // Remove section10Data dependency to prevent validation on every change
+
+  // Separate validation function for explicit calls
+  const performValidation = () => {
     const validationResult = validateSection();
     setIsValid(validationResult.isValid);
     onValidationChange?.(validationResult.isValid);
 
-    // FIXED: Handle errors from validation result instead of relying on context errors state
-    // This prevents infinite loops since we're not calling setErrors in validateSection
-    if ((validationResult as any).fieldErrors) {
-      setLocalErrors((validationResult as any).fieldErrors);
+    // FIXED: Properly convert ValidationError[] to Record<string, string>
+    if (validationResult.errors && Array.isArray(validationResult.errors)) {
+      const errorMap: Record<string, string> = {};
+      validationResult.errors.forEach(error => {
+        errorMap[error.field] = error.message;
+      });
+      setErrors(errorMap);
     } else {
-      setLocalErrors({});
+      setErrors({});
     }
-  }, [section10Data]); // FIXED: Removed validateSection from deps to prevent infinite loop
 
-  // Use local errors instead of context errors to prevent infinite loops
-  const errors = localErrors;
+    // Handle validation warnings if present
+    if (validationResult.warnings && validationResult.warnings.length > 0) {
+      setValidationWarnings(validationResult.warnings.map(w => w.message || w.toString()));
+    } else {
+      setValidationWarnings([]);
+    }
 
-  // Handle form submission with data persistence
+    // Log validation details in debug mode (only when explicitly called)
+    if (typeof window !== 'undefined' && window.location.search.includes('debug=true')) {
+      // console.log('🔍 Section10: Validation result:', {
+      //   isValid: validationResult.isValid,
+      //   errorCount: validationResult.errors?.length || 0,
+      //   warningCount: validationResult.warnings?.length || 0,
+      //   errors: validationResult.errors,
+      //   warnings: validationResult.warnings
+      // });
+    }
+
+    return validationResult;
+  };
+
+  // Handle submission with data persistence
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const result = validateSection();
-    setIsValid(result.isValid);
-    onValidationChange?.(result.isValid);
+
+    // PERFORMANCE FIX: Only validate and log on submit
+    // console.log('🚀 Section10: Form submitted - running validation');
+    const result = performValidation();
+    // console.log('🔍 Section10: Validation result:', result);
+    // console.log('📊 Section10: Data being submitted:', section10Data);
 
     if (result.isValid) {
       try {
+        // console.log('🔄 Section 10: Starting data synchronization...');
+
         // Update the central form context with Section 10 data
         sf86Form.updateSectionData('section10', section10Data);
 
-        // Save the form data to persistence layer
-        await sf86Form.saveForm();
+        // console.log('✅ Section 10: Data synchronization complete, proceeding to save...');
+
+        // Get the current form data and update it with section10 data for immediate saving
+        const currentFormData = sf86Form.exportForm();
+        const updatedFormData = { ...currentFormData, section10: section10Data };
+
+        // Save the form data to persistence layer with the updated data
+        await sf86Form.saveForm(updatedFormData);
+
+        // Mark section as complete after successful save
+        sf86Form.markSectionComplete('section10');
+
+        // Mark section as complete after successful save
+        sf86Form.markSectionComplete('section10');
+
+        // console.log('✅ Section 10 data saved successfully:', section10Data);
 
         // Proceed to next section if callback provided
         if (onNext) {
           onNext();
         }
       } catch (error) {
-        console.error('Failed to save Section 10 data:', error);
+        // console.error('❌ Failed to save Section 10 data:', error);
+        // Show an error message to user
+        // console.log('There was an error saving your information. Please try again.');
       }
     }
   };
+
 
 
 
@@ -143,15 +199,11 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
             >
-              <option value="">Select Country</option>
-              <option value="Canada">Canada</option>
-              <option value="United Kingdom">United Kingdom</option>
-              <option value="Germany">Germany</option>
-              <option value="France">France</option>
-              <option value="Italy">Italy</option>
-              <option value="Spain">Spain</option>
-              <option value="Mexico">Mexico</option>
-              <option value="Other">Other</option>
+              {getCountryOptions().map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
             {errors[`dualCitizenship.entries[${index}].country`] && (
               <p className="mt-1 text-sm text-red-600">{errors[`dualCitizenship.entries[${index}].country`]}</p>
@@ -409,26 +461,34 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
                       <select
                         value={travel.country?.value || ''}
                         onChange={(e) => updateTravelCountry(passportIndex, travelIndex, 'country', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className={`w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 ${
+                          errors[`foreignPassport.entries[${passportIndex}].travelCountries[${travelIndex}].country`]
+                            ? 'border-red-300 focus:ring-red-500'
+                            : 'border-gray-300 focus:ring-blue-500'
+                        }`}
                       >
-                        <option value="">Select Country</option>
-                        <option value="France">France</option>
-                        <option value="Germany">Germany</option>
-                        <option value="Italy">Italy</option>
-                        <option value="Spain">Spain</option>
-                        <option value="Netherlands">Netherlands</option>
-                        <option value="Belgium">Belgium</option>
-                        <option value="Australia">Australia</option>
-                        <option value="Japan">Japan</option>
-                        <option value="Other">Other</option>
+                        {getCountryOptions().map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
                       </select>
+                      {errors[`foreignPassport.entries[${passportIndex}].travelCountries[${travelIndex}].country`] && (
+                        <p className="mt-1 text-xs text-red-600">
+                          {errors[`foreignPassport.entries[${passportIndex}].travelCountries[${travelIndex}].country`]}
+                        </p>
+                      )}
                     </td>
                     <td className="px-3 py-2">
                       <input
                         type="date"
                         value={travel.fromDate?.value || ''}
                         onChange={(e) => updateTravelCountry(passportIndex, travelIndex, 'fromDate', e.target.value)}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className={`w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 ${
+                          errors[`foreignPassport.entries[${passportIndex}].travelCountries[${travelIndex}].fromDate`]
+                            ? 'border-red-300 focus:ring-red-500'
+                            : 'border-gray-300 focus:ring-blue-500'
+                        }`}
                       />
                       <label className="flex items-center mt-1">
                         <input
@@ -439,6 +499,11 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
                         />
                         <span className="ml-1 text-xs text-gray-600">Est.</span>
                       </label>
+                      {errors[`foreignPassport.entries[${passportIndex}].travelCountries[${travelIndex}].fromDate`] && (
+                        <p className="mt-1 text-xs text-red-600">
+                          {errors[`foreignPassport.entries[${passportIndex}].travelCountries[${travelIndex}].fromDate`]}
+                        </p>
+                      )}
                     </td>
                     <td className="px-3 py-2">
                       <input
@@ -446,7 +511,11 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
                         value={travel.isPresent?.value ? '' : travel.toDate?.value || ''}
                         onChange={(e) => updateTravelCountry(passportIndex, travelIndex, 'toDate', e.target.value)}
                         disabled={travel.isPresent?.value}
-                        className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-100"
+                        className={`w-full px-2 py-1 text-sm border rounded focus:outline-none focus:ring-1 disabled:bg-gray-100 ${
+                          errors[`foreignPassport.entries[${passportIndex}].travelCountries[${travelIndex}].toDate`]
+                            ? 'border-red-300 focus:ring-red-500'
+                            : 'border-gray-300 focus:ring-blue-500'
+                        }`}
                       />
                       <label className="flex items-center mt-1">
                         <input
@@ -458,6 +527,11 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
                         />
                         <span className="ml-1 text-xs text-gray-600">Est.</span>
                       </label>
+                      {errors[`foreignPassport.entries[${passportIndex}].travelCountries[${travelIndex}].toDate`] && (
+                        <p className="mt-1 text-xs text-red-600">
+                          {errors[`foreignPassport.entries[${passportIndex}].travelCountries[${travelIndex}].toDate`]}
+                        </p>
+                      )}
                     </td>
                     <td className="px-3 py-2">
                       <label className="flex items-center">
@@ -531,15 +605,11 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
             >
-              <option value="">Select Country</option>
-              <option value="Canada">Canada</option>
-              <option value="United Kingdom">United Kingdom</option>
-              <option value="Germany">Germany</option>
-              <option value="France">France</option>
-              <option value="Italy">Italy</option>
-              <option value="Spain">Spain</option>
-              <option value="Mexico">Mexico</option>
-              <option value="Other">Other</option>
+              {getCountryOptions().map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
             {errors[`foreignPassport.entries[${index}].country`] && (
               <p className="mt-1 text-sm text-red-600">{errors[`foreignPassport.entries[${index}].country`]}</p>
@@ -649,15 +719,11 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
             >
-              <option value="">Select Issuing Country</option>
-              <option value="Canada">Canada</option>
-              <option value="United Kingdom">United Kingdom</option>
-              <option value="Germany">Germany</option>
-              <option value="France">France</option>
-              <option value="Italy">Italy</option>
-              <option value="Spain">Spain</option>
-              <option value="Mexico">Mexico</option>
-              <option value="Other">Other</option>
+              {getCountryOptions().map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -743,12 +809,11 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
                 onChange={(e) => updateForeignPassport(index, 'suffix', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="">Select Suffix</option>
-                <option value="Jr.">Jr.</option>
-                <option value="Sr.">Sr.</option>
-                <option value="II">II</option>
-                <option value="III">III</option>
-                <option value="IV">IV</option>
+                {getSuffixOptions().map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -788,7 +853,7 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
                   name={`passport-used-for-us-entry-${index}`}
                   value="YES"
                   checked={passport.usedForUSEntry?.value === true || passport.usedForUSEntry?.value === 'YES'}
-                  onChange={(e) => updateForeignPassport(index, 'usedForUSEntry', true)}
+                  onChange={() => updateForeignPassport(index, 'usedForUSEntry', true)}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                 />
                 <span className="ml-2 text-sm text-gray-700">Yes</span>
@@ -799,7 +864,7 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
                   name={`passport-used-for-us-entry-${index}`}
                   value="NO"
                   checked={passport.usedForUSEntry?.value === false || passport.usedForUSEntry?.value === 'NO'}
-                  onChange={(e) => updateForeignPassport(index, 'usedForUSEntry', false)}
+                  onChange={() => updateForeignPassport(index, 'usedForUSEntry', false)}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                 />
                 <span className="ml-2 text-sm text-gray-700">No</span>
@@ -826,6 +891,55 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
         </p>
       </div>
 
+      {/* Pending Changes Indicator */}
+      {hasPendingChanges() && (
+        <div className="mb-4 p-3 border rounded-lg bg-blue-50 border-blue-200">
+          <div className="flex items-center">
+            <svg className="h-5 w-5 text-blue-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <p className="text-sm text-blue-700">
+              <strong>Unsaved Changes:</strong> You have made changes that will be saved when you click "Submit & Continue".
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Validation Summary */}
+      {(Object.keys(errors).length > 0 || validationWarnings.length > 0) && (
+        <div className="mb-6 p-4 border rounded-lg bg-yellow-50 border-yellow-200">
+          <h3 className="text-sm font-medium text-yellow-800 mb-2">Validation Issues</h3>
+
+          {Object.keys(errors).length > 0 && (
+            <div className="mb-3">
+              <h4 className="text-xs font-medium text-red-700 mb-1">Errors ({Object.keys(errors).length}):</h4>
+              <ul className="text-xs text-red-600 space-y-1">
+                {Object.entries(errors).slice(0, 5).map(([field, message]) => (
+                  <li key={field}>• {message}</li>
+                ))}
+                {Object.keys(errors).length > 5 && (
+                  <li className="text-gray-500">... and {Object.keys(errors).length - 5} more</li>
+                )}
+              </ul>
+            </div>
+          )}
+
+          {validationWarnings.length > 0 && (
+            <div>
+              <h4 className="text-xs font-medium text-yellow-700 mb-1">Warnings ({validationWarnings.length}):</h4>
+              <ul className="text-xs text-yellow-600 space-y-1">
+                {validationWarnings.slice(0, 3).map((warning, index) => (
+                  <li key={index}>• {warning}</li>
+                ))}
+                {validationWarnings.length > 3 && (
+                  <li className="text-gray-500">... and {validationWarnings.length - 3} more</li>
+                )}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Dual Citizenship and Foreign Passport Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Dual Citizenship Section */}
@@ -838,8 +952,17 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
                 type="checkbox"
                 checked={section10Data.section10.dualCitizenship?.hasDualCitizenship?.value === 'YES'}
                 onChange={(e) => {
-                  // FIXED: Use correct values from sections-reference
-                  updateDualCitizenshipFlag(e.target.checked ? 'YES' : 'NO (If NO, proceed to 10.2)');
+                  // Update the flag first
+                  const newValue = e.target.checked ? 'YES' : 'NO (If NO, proceed to 10.2)';
+                  updateDualCitizenshipFlag(newValue);
+
+                  // If checking YES and no entries exist, automatically add the first entry
+                  if (e.target.checked && getDualCitizenships().length === 0) {
+                    // Use setTimeout to ensure the flag update is processed first
+                    setTimeout(() => {
+                      addDualCitizenship();
+                    }, 0);
+                  }
                 }}
                 className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 data-testid="dual-citizenship-flag-checkbox"
@@ -859,12 +982,10 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
 
           {section10Data.section10.dualCitizenship?.hasDualCitizenship?.value === 'YES' && (
             <>
-              {getDualCitizenships().length > 0 ? (
+              {getDualCitizenships().length > 0 && (
                 <div className="mb-4">
                   {getDualCitizenships().map((citizenship, index) => renderDualCitizenshipEntry(citizenship, index))}
                 </div>
-              ) : (
-                <p className="italic text-gray-500 mb-4">No dual citizenships added yet.</p>
               )}
 
               <button
@@ -896,7 +1017,19 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
               <input
                 type="checkbox"
                 checked={section10Data.section10.foreignPassport?.hasForeignPassport?.value === 'YES'}
-                onChange={(e) => updateForeignPassportFlag(e.target.checked ? 'YES' : 'NO (If NO, proceed to Section 11)')}
+                onChange={(e) => {
+                  // Update the flag first
+                  const newValue = e.target.checked ? 'YES' : 'NO (If NO, proceed to Section 11)';
+                  updateForeignPassportFlag(newValue);
+
+                  // If checking YES and no entries exist, automatically add the first entry
+                  if (e.target.checked && getForeignPassports().length === 0) {
+                    // Use setTimeout to ensure the flag update is processed first
+                    setTimeout(() => {
+                      addForeignPassport();
+                    }, 0);
+                  }
+                }}
                 className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 data-testid="foreign-passport-flag-checkbox"
               />
@@ -908,12 +1041,10 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
 
           {section10Data.section10.foreignPassport?.hasForeignPassport?.value === 'YES' && (
             <>
-              {getForeignPassports().length > 0 ? (
+              {getForeignPassports().length > 0 && (
                 <div className="mb-4">
                   {getForeignPassports().map((passport, index) => renderForeignPassportEntry(passport, index))}
                 </div>
-              ) : (
-                <p className="italic text-gray-500 mb-4">No foreign passports added yet.</p>
               )}
 
               <button
@@ -936,6 +1067,18 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
           )}
         </div>
 
+        {/* Submit Error Display */}
+        {submitError && (
+          <div className="mt-6 p-4 border border-red-200 rounded-lg bg-red-50">
+            <div className="flex items-center">
+              <svg className="h-5 w-5 text-red-400 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+              <p className="text-sm text-red-700">{submitError}</p>
+            </div>
+          </div>
+        )}
+
         {/* Form Actions */}
         <div className="mt-8 flex justify-between items-center pt-6 border-t border-gray-200">
           <div className="text-sm text-gray-500">
@@ -945,15 +1088,35 @@ const Section10Component: React.FC<Section10ComponentProps> = ({
           <div className="flex space-x-4">
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+              disabled={isSubmitting}
+              className={`px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${
+                isSubmitting
+                  ? 'bg-gray-400 text-white cursor-not-allowed'
+                  : 'bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-500'
+              }`}
               data-testid="submit-section-button"
             >
-              Submit & Continue
+              {isSubmitting ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Saving...
+                </>
+              ) : (
+                'Submit & Continue'
+              )}
             </button>
 
             <button
               type="button"
-              className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+              disabled={isSubmitting}
+              className={`px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${
+                isSubmitting
+                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-gray-500 text-white hover:bg-gray-600 focus:ring-gray-500'
+              }`}
               data-testid="clear-section-button"
               onClick={resetSection}
             >

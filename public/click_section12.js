@@ -1,1 +1,0 @@
-const buttons = document.querySelectorAll("button"); console.log("Total buttons found:", buttons.length); for(let i = 0; i < buttons.length; i++) { const btn = buttons[i]; if(btn.textContent && btn.textContent.includes("Section 12")) { console.log("Found Section 12 button:", btn.textContent, "at index", i); btn.scrollIntoView(); setTimeout(() => btn.click(), 100); break; } }

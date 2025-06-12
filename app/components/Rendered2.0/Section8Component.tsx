@@ -8,7 +8,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSection8 } from '~/state/contexts/sections2.0/section8';
-import { useSF86Form } from '~/state/contexts/SF86FormContext';
+import { useSF86Form } from '~/state/contexts/sections2.0/SF86FormContext';
 import { getSuffixOptions } from '../../../api/interfaces/sections2.0/base';
 
 interface Section8ComponentProps {
@@ -32,7 +32,8 @@ export const Section8Component: React.FC<Section8ComponentProps> = ({
     validatePassport,
     resetSection,
     isDirty,
-    errors
+    errors,
+    commitDraft
   } = useSection8();
 
   // SF86 Form Context for data persistence
@@ -49,36 +50,49 @@ export const Section8Component: React.FC<Section8ComponentProps> = ({
     onValidationChange?.(validationResult.isValid);
   }, [section8Data]); // Removed validateSection and onValidationChange to prevent infinite loops
 
-  // Handle form submission with data persistence
+  // Handle submission with data persistence
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = validateSection();
     setIsValid(result.isValid);
     onValidationChange?.(result.isValid);
 
+    // console.log('🔍 Section 8 validation result:', result);
+    // console.log('📊 Section 8 data before submission:', section8Data);
+
     if (result.isValid) {
       try {
-        // Update the central form context with Section 6 data
+        // console.log('🔄 Section 8: Starting data synchronization...');
+
+        // Update the central form context with Section 8 data
         sf86Form.updateSectionData('section8', section8Data);
 
-        // Save the form data to persistence layer
-        await sf86Form.saveForm();
+        // console.log('✅ Section 8: Data synchronization complete, proceeding to save...');
+
+        // Get the current form data and update it with section8 data for immediate saving
+        const currentFormData = sf86Form.exportForm();
+        const updatedFormData = { ...currentFormData, section8: section8Data };
+
+        // Save the form data to persistence layer with the updated data
+        await sf86Form.saveForm(updatedFormData);
 
         // Mark section as complete after successful save
         sf86Form.markSectionComplete('section8');
 
-        console.log('✅ Section 8 data saved successfully:', section8Data);
+        // console.log('✅ Section 8 data saved successfully:', section8Data);
 
         // Proceed to next section if callback provided
         if (onNext) {
           onNext();
         }
       } catch (error) {
-        console.error('❌ Failed to save Section 8 data:', error);
-        // Could show an error message to user here
+        // console.error('❌ Failed to save Section 8 data:', error);
+        // Show an error message to user
+        // console.log('There was an error saving your information. Please try again.');
       }
     }
   };
+
 
   // Handle passport flag change (radio button)
   const handlePassportFlagChange = (value: 'YES' | 'NO') => {

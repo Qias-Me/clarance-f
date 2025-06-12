@@ -18,12 +18,24 @@ import Section9Component from "~/components/Rendered2.0/Section9Component";
 import Section10Component from "~/components/Rendered2.0/Section10Component";
 import Section11Component from "~/components/Rendered2.0/Section11Component";
 import Section12Component from "~/components/Rendered2.0/Section12Component";
+import Section13Component from "~/components/Rendered2.0/Section13Component";
 import Section14Component from "~/components/Rendered2.0/Section14Component";
 import Section15Component from "~/components/Rendered2.0/Section15Component";
+import Section17Component from "~/components/Rendered2.0/Section17Component";
+import Section18Component from "~/components/Rendered2.0/Section18Component";
+import Section19Component from "~/components/Rendered2.0/Section19Component";
+import Section20Component from "~/components/Rendered2.0/Section20Component";
+import Section21Component from "~/components/Rendered2.0/Section21Component";
+import Section22Component from "~/components/Rendered2.0/Section22Component";
 import Section27Component from "~/components/Rendered2.0/Section27Component";
 import Section28Component from "~/components/Rendered2.0/Section28Component";
 import Section29Component from "~/components/Rendered2.0/Section29Component";
 import Section30Component from "~/components/Rendered2.0/Section30Component";
+import Section16Component from "~/components/Rendered2.0/Section16Component";
+import Section23Component from "~/components/Rendered2.0/Section23Component";
+import Section24Component from "~/components/Rendered2.0/Section25Component";
+import Section25Component from "~/components/Rendered2.0/Section25Component";
+import Section26Component from "~/components/Rendered2.0/Section26Component";
 
 export interface SectionDefinition {
   id: string;
@@ -49,20 +61,20 @@ export const ALL_SF86_SECTIONS: SectionDefinition[] = [
   { id: "section10", name: "Dual Citizenship", component: Section10Component, isImplemented: true },
   { id: "section11", name: "Where You Have Lived", component: Section11Component, isImplemented: true },
   { id: "section12", name: "Where You Went to School", component: Section12Component, isImplemented: true },
-  // { id: "section13", name: "Employment Activities", component: Section13Component, isImplemented: true },
+  { id: "section13", name: "Employment Activities", component: Section13Component, isImplemented: false },
   { id: "section14", name: "Selective Service", component: Section14Component, isImplemented: true },
   { id: "section15", name: "Military Service", component: Section15Component, isImplemented: true },
-  // { id: "section16", name: "People Who Know You Well", component: Section16Component, isImplemented: true },
-  // { id: "section17", name: "Marital / Relationship", component: Section17Component, isImplemented: true },
-  // { id: "section18", name: "Relatives", component: Section18Component, isImplemented: true },
-  // { id: "section19", name: "Foreign Contacts", component: Section19Component, isImplemented: true },
-  // { id: "section20", name: "Foreign Activities", component: Section20Component, isImplemented: true },
-  // { id: "section21", name: "Mental Health", component: Section21Component, isImplemented: true },
-  // { id: "section22", name: "Police Record", component: Section22Component, isImplemented: true },
-  // { id: "section23", name: "Illegal Use of Drugs or Drug Activity", component: Section23Component, isImplemented: true },
-  // { id: "section24", name: "Use of Alcohol", component: Section24Component, isImplemented: true },
-  // { id: "section25", name: "Investigation and Clearance Record", component: Section25Component, isImplemented: true },
-  // { id: "section26", name: "Financial Record", component: Section26Component, isImplemented: true },
+  { id: "section16", name: "People Who Know You Well", component: Section16Component, isImplemented: false },
+  { id: "section17", name: "Marital / Relationship", component: Section17Component, isImplemented: false },
+  { id: "section18", name: "Relatives", component: Section18Component, isImplemented: false },
+  { id: "section19", name: "Foreign Contacts", component: Section19Component, isImplemented: false },
+  { id: "section20", name: "Foreign Activities", component: Section20Component, isImplemented: false },
+  { id: "section21", name: "Mental Health", component: Section21Component, isImplemented: false },
+  { id: "section22", name: "Police Record", component: Section22Component, isImplemented: false },
+  { id: "section23", name: "Illegal Use of Drugs or Drug Activity", component: Section23Component, isImplemented: false },
+  { id: "section24", name: "Use of Alcohol", component: Section24Component, isImplemented: false },
+  { id: "section25", name: "Investigation and Clearance Record", component: Section25Component, isImplemented: false },
+  { id: "section26", name: "Financial Record", component: Section26Component, isImplemented: false },
   { id: "section27", name: "Information Technology Systems", component: Section27Component, isImplemented: true },
   { id: "section28", name: "Involvement in Non-Criminal Court Actions", component: Section28Component, isImplemented: true },
   { id: "section29", name: "Associations", component: Section29Component, isImplemented: true },

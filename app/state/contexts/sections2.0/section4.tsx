@@ -36,7 +36,6 @@ import {
   propagateSSNToAllFields as propagateSSNHelper
 } from '../../../../api/interfaces/sections2.0/section4';
 
-import { useSection86FormIntegration } from '../shared/section-context-integration';
 import type { ValidationResult, ValidationError } from '../shared/base-interfaces';
 
 // ============================================================================
@@ -368,18 +367,6 @@ export const Section4Provider: React.FC<Section4ProviderProps> = ({ children }) 
   // ============================================================================
   // SF86FORM INTEGRATION
   // ============================================================================
-
-  // Integration with main form context using Section 1 gold standard pattern
-  // Note: integration variable is used internally by the hook for registration
-  const integration = useSection86FormIntegration(
-    'section4',
-    'Section 4: Social Security Number',
-    section4Data,
-    setSection4Data, // Use standard setSection4Data function
-    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
-    getChanges,
-    updateFieldValue // Pass Section 4's updateFieldValue function to integration
-  );
 
   // ============================================================================
   // CONTEXT VALUE

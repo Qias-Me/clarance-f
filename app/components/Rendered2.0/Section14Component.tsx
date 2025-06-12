@@ -8,7 +8,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSection14 } from '~/state/contexts/sections2.0/section14';
-import { useSF86Form } from '~/state/contexts/SF86FormContext';
+import { useSF86Form } from '~/state/contexts/sections2.0/SF86FormContext';
 import { BORN_MALE_AFTER_1959_OPTIONS, REGISTRATION_STATUS_OPTIONS } from '../../../api/interfaces/sections2.0/section14';
 
 interface Section14ComponentProps {
@@ -22,7 +22,7 @@ export const Section14Component: React.FC<Section14ComponentProps> = ({
   onValidationChange,
   onNext
 }) => {
-  console.log('🔄 Section14Component: Component rendering...');
+  // console.log('🔄 Section14Component: Component rendering...');
 
   // Section 14 Context
   const {
@@ -38,8 +38,8 @@ export const Section14Component: React.FC<Section14ComponentProps> = ({
     getActiveExplanationField
   } = useSection14();
 
-  console.log('🔍 Section14Component: section14Data=', section14Data);
-  console.log('🔍 Section14Component: isDirty=', isDirty);
+  // console.log('🔍 Section14Component: section14Data=', section14Data);
+  // console.log('🔍 Section14Component: isDirty=', isDirty);
 
   // SF86 Form Context for data persistence
   const sf86Form = useSF86Form();
@@ -50,13 +50,13 @@ export const Section14Component: React.FC<Section14ComponentProps> = ({
   const { bornMaleAfter1959, registrationStatus, registrationNumber, noRegistrationExplanation, unknownStatusExplanation } = section14Data.section14;
   const activeExplanationField = getActiveExplanationField();
 
-  console.log('🔍 Section14Component: Field values=', {
-    bornMaleAfter1959: bornMaleAfter1959.value,
-    registrationStatus: registrationStatus.value,
-    registrationNumber: registrationNumber.value,
-    noRegistrationExplanation: noRegistrationExplanation.value,
-    unknownStatusExplanation: unknownStatusExplanation.value
-  });
+  // console.log('🔍 Section14Component: Field values=', {
+  //   bornMaleAfter1959: bornMaleAfter1959.value,
+  //   registrationStatus: registrationStatus.value,
+  //   registrationNumber: registrationNumber.value,
+  //   noRegistrationExplanation: noRegistrationExplanation.value,
+  //   unknownStatusExplanation: unknownStatusExplanation.value
+  // });
 
   // Handle validation on component mount and when data changes
   useEffect(() => {
@@ -74,20 +74,31 @@ export const Section14Component: React.FC<Section14ComponentProps> = ({
 
     if (result.isValid) {
       try {
+        // console.log('🔄 Section 14: Starting data synchronization...');
+
         // Update the central form context with Section 14 data
         sf86Form.updateSectionData('section14', section14Data);
 
-        // Save the form data to persistence layer
-        await sf86Form.saveForm();
+        // console.log('✅ Section 14: Data synchronization complete, proceeding to save...');
 
-        console.log('✅ Section 14 data saved successfully:', section14Data);
+        // Get the current form data and update it with section14 data for immediate saving
+        const currentFormData = sf86Form.exportForm();
+        const updatedFormData = { ...currentFormData, section14: section14Data };
+
+        // Save the form data to persistence layer with the updated data
+        await sf86Form.saveForm(updatedFormData);
+
+        // Mark section as complete after successful save
+        sf86Form.markSectionComplete('section14');
+
+        // console.log('✅ Section 14 data saved successfully:', section14Data);
 
         // Proceed to next section if callback provided
         if (onNext) {
           onNext();
         }
       } catch (error) {
-        console.error('❌ Failed to save Section 14 data:', error);
+        // console.error('❌ Failed to save Section 14 data:', error);
         // Could show an error message to user here
       }
     }
@@ -127,7 +138,7 @@ export const Section14Component: React.FC<Section14ComponentProps> = ({
                   value={option}
                   checked={bornMaleAfter1959.value === option}
                   onChange={(e) => {
-                    console.log(`🔍 Section14Component: Born male after 1959 changed to: ${e.target.value}`);
+                    // console.log(`🔍 Section14Component: Born male after 1959 changed to: ${e.target.value}`);
                     updateBornMaleAfter1959(e.target.value);
                   }}
                   className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
@@ -160,7 +171,7 @@ export const Section14Component: React.FC<Section14ComponentProps> = ({
                     value={option}
                     checked={registrationStatus.value === option}
                     onChange={(e) => {
-                      console.log(`🔍 Section14Component: Registration status changed to: ${e.target.value}`);
+                      // console.log(`🔍 Section14Component: Registration status changed to: ${e.target.value}`);
                       updateRegistrationStatus(e.target.value);
                     }}
                     className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
@@ -190,7 +201,7 @@ export const Section14Component: React.FC<Section14ComponentProps> = ({
               id="registrationNumber"
               value={registrationNumber.value}
               onChange={(e) => {
-                console.log(`🔍 Section14Component: Registration number changed to: ${e.target.value}`);
+                // console.log(`🔍 Section14Component: Registration number changed to: ${e.target.value}`);
                 updateRegistrationNumber(e.target.value);
               }}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -213,7 +224,7 @@ export const Section14Component: React.FC<Section14ComponentProps> = ({
               id="noRegistrationExplanation"
               value={noRegistrationExplanation.value}
               onChange={(e) => {
-                console.log(`🔍 Section14Component: No registration explanation changed to: ${e.target.value}`);
+                // console.log(`🔍 Section14Component: No registration explanation changed to: ${e.target.value}`);
                 updateExplanation('no', e.target.value);
               }}
               rows={4}
@@ -237,7 +248,7 @@ export const Section14Component: React.FC<Section14ComponentProps> = ({
               id="unknownStatusExplanation"
               value={unknownStatusExplanation.value}
               onChange={(e) => {
-                console.log(`🔍 Section14Component: Unknown status explanation changed to: ${e.target.value}`);
+                // console.log(`🔍 Section14Component: Unknown status explanation changed to: ${e.target.value}`);
                 updateExplanation('unknown', e.target.value);
               }}
               rows={4}

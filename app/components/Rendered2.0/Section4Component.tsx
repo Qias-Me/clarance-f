@@ -8,7 +8,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSection4 } from '~/state/contexts/sections2.0/section4';
-import { useSF86Form } from '~/state/contexts/SF86FormContext';
+import { useSF86Form } from '~/state/contexts/sections2.0/SF86FormContext';
 
 interface Section4ComponentProps {
   className?: string;
@@ -28,6 +28,7 @@ export const Section4Component: React.FC<Section4ComponentProps> = ({
     updateAcknowledgement,
     validateSection,
     resetSection,
+    loadSection,
     isDirty,
     errors
   } = useSection4();
@@ -46,6 +47,29 @@ export const Section4Component: React.FC<Section4ComponentProps> = ({
     onValidationChange?.(validationResult.isValid);
   }, [section4Data]);
 
+
+  // ============================================================================
+// SF86FORM INTEGRATION
+// ============================================================================
+
+// Sync with SF86FormContext when data is loaded
+useEffect(() => {
+  const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('debug=true');
+
+  if (sf86Form.formData.section4 && sf86Form.formData.section4 !== section4Data) {
+    if (isDebugMode) {
+      // console.log('🔄 Section4: Syncing with SF86FormContext loaded data');
+    }
+
+    // Load the data from SF86FormContext
+    loadSection(sf86Form.formData.section4);
+
+    if (isDebugMode) {
+      // console.log('✅ Section4: Data sync complete');
+    }
+  }
+}, [sf86Form.formData.section4, loadSection]);
+
   // Handle submission with data persistence
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,29 +77,42 @@ export const Section4Component: React.FC<Section4ComponentProps> = ({
     setIsValid(result.isValid);
     onValidationChange?.(result.isValid);
 
+    // console.log('🔍 Section 4 validation result:', result);
+    // console.log('📊 Section 4 data before submission:', section4Data);
+
     if (result.isValid) {
       try {
+        // console.log('🔄 Section 4: Starting data synchronization...');
+
         // Update the central form context with Section 4 data
         sf86Form.updateSectionData('section4', section4Data);
 
-        // Save the form data to persistence layer
-        await sf86Form.saveForm();
+        // console.log('✅ Section 4: Data synchronization complete, proceeding to save...');
+
+        // Get the current form data and update it with section4 data for immediate saving
+        const currentFormData = sf86Form.exportForm();
+        const updatedFormData = { ...currentFormData, section4: section4Data };
+
+        // Save the form data to persistence layer with the updated data
+        await sf86Form.saveForm(updatedFormData);
 
         // Mark section as complete after successful save
         sf86Form.markSectionComplete('section4');
 
-        console.log('✅ Section 4 data saved successfully:', section4Data);
+        // console.log('✅ Section 4 data saved successfully:', section4Data);
 
         // Proceed to next section if callback provided
         if (onNext) {
           onNext();
         }
       } catch (error) {
-        console.error('❌ Failed to save Section 4 data:', error);
-        // Could show an error message to user here
+        // console.error('❌ Failed to save Section 4 data:', error);
+        // Show an error message to user
+        // console.log('There was an error saving your information. Please try again.');
       }
     }
   };
+
 
   // Handle SSN input change
   const handleSSNChange = (e: React.ChangeEvent<HTMLInputElement>) => {

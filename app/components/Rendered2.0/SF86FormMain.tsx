@@ -7,8 +7,8 @@
  */
 
 import React, { useState, useCallback, useMemo } from "react";
-import { useSF86Form } from "~/state/contexts/SF86FormContext";
-import { clientPdfService2 } from "../../../api/service/clientPdfService2.0";
+import { useSF86Form } from "~/state/contexts/sections2.0/SF86FormContext";
+import { generateAndDownloadPdf, generatePdfViaServer, downloadJsonData as downloadJsonDataUtil } from "../../utils/pdfGenerationUtils";
 // Import shared SF-86 section configuration instead of individual components
 import { getActiveSections } from "~/utils/sf86SectionConfig";
 
@@ -17,7 +17,7 @@ interface SF86FormMainProps {
 }
 
 const SF86FormMain: React.FC<SF86FormMainProps> = ({ className = "" }) => {
-  const { generatePdf, validateForm, saveForm, formData, exportForm, downloadJsonData, completedSections } =
+  const { saveForm, exportForm, completedSections } =
     useSF86Form();
   const [currentSection, setCurrentSection] = useState<string>("section1");
   const [sectionValidation, setSectionValidation] = useState<
@@ -42,168 +42,69 @@ const SF86FormMain: React.FC<SF86FormMainProps> = ({ className = "" }) => {
   // Handle PDF generation and download - CLIENT-SIDE processing
   const handleGeneratePdfLocal = async () => {
     try {
-      console.log("🚀 Starting CLIENT-SIDE PDF generation process...");
-      console.log("📊 Base form data:", formData);
-
       // Collect all section data from contexts before processing
       const completeFormData = exportForm(); // This calls collectAllSectionData internally
-      console.log(
-        "📋 Complete form data collected from contexts:",
-        completeFormData
-      );
 
-      const result = await generatePdf();
+      // Use centralized PDF generation utility
+      const result = await generateAndDownloadPdf(completeFormData, {
+        filename: `SF86_Client_Generated_${new Date().toISOString().split("T")[0]}.pdf`,
+        showConsoleOutput: true,
+        onProgress: (message) => {
+          // console.log(`� ${message}`);
+        },
+        onError: (error) => {
+          // console.error(`❌ ${error}`);
+        },
+        onSuccess: (result) => {
+          // Also download JSON data for debugging
+          const jsonFilename = result.filename.replace('.pdf', '-data.json');
+          downloadJsonDataUtil(completeFormData, jsonFilename);
+          // console.log("🔍 JSON data downloaded for debugging analysis");
+        }
+      });
 
-      if (result.success && result.pdfBytes) {
-        // Use the service's download method directly
-        const filename = `SF86_Client_Generated_${
-          new Date().toISOString().split("T")[0]
-        }.pdf`;
-        console.log(`📄 Initiating download with filename: ${filename}`);
-
-        // Call the enhanced download method
-        clientPdfService2.downloadPdf(result.pdfBytes, filename);
-
-        // Also download JSON data for debugging
-        const jsonFilename = filename.replace('.pdf', '-data.json');
-        console.log(`📄 Also downloading JSON data: ${jsonFilename}`);
-        downloadJsonData(jsonFilename);
-
-        console.log("✅ PDF and JSON downloaded successfully!");
-        console.log(
-          `📊 Statistics: ${result.fieldsApplied}/${result.fieldsMapped} fields applied`
-        );
-
-        // Show success message with detailed info
-        const message =
-          `🎉 CLIENT-SIDE PDF generated and downloaded successfully!\n\n` +
-          `📊 Client Processing Details:\n` +
-          `• Fields mapped: ${result.fieldsMapped}\n` +
-          `• Fields applied: ${result.fieldsApplied}\n` +
-          `• PDF size: ${result.pdfBytes.length} bytes\n` +
-          `• PDF filename: ${filename}\n` +
-          `• JSON filename: ${jsonFilename}\n\n` +
-          `🔍 JSON data downloaded for debugging analysis\n\n` +
-          `💡 If the download doesn't start automatically, check your browser's download settings or popup blocker.`;
-
-        alert(message);
-      } else {
-        console.error("❌ Client PDF generation failed:", result.errors);
-        const errorMessage = `❌ Client-side PDF generation failed:\n\n${result.errors.join(
-          "\n"
-        )}`;
-        alert(errorMessage);
-      }
     } catch (error) {
-      console.error("💥 Error during client PDF generation:", error);
-      const errorMessage = `💥 Client PDF generation error: ${error}`;
-      alert(errorMessage);
+      // console.error("💥 Error during client PDF generation:", error);
     }
   };
 
   // Handle PDF generation and download - SERVER-SIDE processing with terminal logging
   const handleGeneratePdfServer = async () => {
     try {
-      console.log("🚀 Starting SERVER-SIDE PDF generation process...");
-      console.log("📊 Form data to send:", formData);
-
-      // Collect all section data from contexts before sending to server
+      // Collect all section data from contexts before processing
       const completeFormData = exportForm(); // This calls collectAllSectionData internally
-      console.log("📋 Complete form data collected:", completeFormData);
 
-      // Create form data for the server action
-      const actionFormData = new FormData();
-      actionFormData.append("data", JSON.stringify(completeFormData));
-      actionFormData.append("actionType", "generatePDFServer");
-
-      console.log("📡 Sending request to server action...");
-
-      // Submit to the server action via startForm route
-      const response = await fetch("/startForm", {
-        method: "POST",
-        body: actionFormData,
+      // Use centralized server PDF generation utility
+      const result = await generatePdfViaServer(completeFormData, {
+        filename: `SF86_Server_Generated_${new Date().toISOString().split("T")[0]}.pdf`,
+        showConsoleOutput: true,
+        onProgress: (message) => {
+          // console.log(`� ${message}`);
+        },
+        onError: (error) => {
+          // console.error(`❌ ${error}`);
+        },
+        onSuccess: (result) => {
+          // Also download JSON data for debugging
+          const jsonFilename = result.filename.replace('.pdf', '-data.json');
+          downloadJsonDataUtil(completeFormData, jsonFilename);
+          // console.log("🔍 JSON data downloaded for debugging analysis");
+        }
       });
 
-      const result = (await response.json()) as any; // Type assertion for server response
-      console.log("📄 Server PDF generation result:", result);
-
-      if (result.success && result.data?.pdfBase64) {
-        console.log(`✅ PDF generation successful!`);
-        console.log(`📊 Fields mapped: ${result.data.fieldsMapped}`);
-        console.log(`📊 Fields applied: ${result.data.fieldsApplied}`);
-        console.log(`📈 Success rate: ${result.data.successRate?.toFixed(2)}%`);
-        console.log("📄 Check your terminal for detailed server logs!");
-
-        // Create download link for the PDF
-        const pdfBlob = new Blob(
-          [
-            Uint8Array.from(atob(result.data.pdfBase64), (c) =>
-              c.charCodeAt(0)
-            ),
-          ],
-          { type: "application/pdf" }
-        );
-
-        const url = URL.createObjectURL(pdfBlob);
-        const link = document.createElement("a");
-        link.href = url;
-        const filename = `SF86_Server_Generated_${
-          new Date().toISOString().split("T")[0]
-        }.pdf`;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-
-        // Also download JSON data for debugging
-        const jsonFilename = filename.replace('.pdf', '-data.json');
-        console.log(`📄 Also downloading JSON data: ${jsonFilename}`);
-        downloadJsonData(jsonFilename);
-
-        // Show success message with detailed server-side info
-        const message =
-          `🎉 SERVER-SIDE PDF generated and downloaded successfully!\n\n` +
-          `📊 Server Processing Details:\n` +
-          `• Fields mapped: ${result.data.fieldsMapped}\n` +
-          `• Fields applied: ${result.data.fieldsApplied}\n` +
-          `• Success rate: ${result.data.successRate?.toFixed(2)}%\n` +
-          `• Total PDF fields: ${result.data.totalPdfFields}\n` +
-          `• Total form fields: ${result.data.totalFormFields}\n` +
-          `• PDF filename: ${filename}\n` +
-          `• JSON filename: ${jsonFilename}\n\n` +
-          `🔍 JSON data downloaded for debugging analysis\n\n` +
-          `🖥️ IMPORTANT: Check your terminal/console for comprehensive field mapping logs!\n` +
-          `This includes detailed analysis of Section 29 radio button mappings and field lookup effectiveness.`;
-
-        alert(message);
-      } else {
-        const errorMessage =
-          `❌ Server-side PDF generation failed:\n\n${result.message}\n\n` +
-          `🔍 Check your terminal for detailed error logs.`;
-        console.error("❌ Server PDF generation failed:", result.message);
-        if (result.data?.errors) {
-          console.error("🔍 Server errors:", result.data.errors);
-        }
-        alert(errorMessage);
-      }
     } catch (error) {
-      const errorMessage =
-        `💥 Server PDF generation error: ${error}\n\n` +
-        `🔍 Check your terminal for detailed error information.`;
-      console.error("💥 Server PDF generation error:", error);
-      alert(errorMessage);
+      // console.error("💥 Error during server PDF generation:", error);
     }
   };
 
   // Handle form validation
   const handleValidateForm = () => {
-    const result = validateForm();
-    alert(
-      `Form validation: ${result.isValid ? "PASSED" : "FAILED"}\nErrors: ${
-        result.errors.length
-      }\nWarnings: ${result.warnings.length}`
-    );
+    // const result = validateForm();
+    // console.log(
+    //   `Form validation: ${result.isValid ? "PASSED" : "FAILED"}\nErrors: ${
+    //     result.errors.length
+    //   }\nWarnings: ${result.warnings.length}`
+    // );
   };
 
   // Handle form save
@@ -213,35 +114,34 @@ const SF86FormMain: React.FC<SF86FormMainProps> = ({ className = "" }) => {
 
       // Collect all section data from contexts before processing
       const completeFormData = exportForm(); // This calls collectAllSectionData internally
-      console.log(
-        "📋 Complete form data collected from contexts:",
-        completeFormData
-      );
+      // console.log(
+      //   "📋 Complete form data collected from contexts:",
+      //   completeFormData
+      // );
 
-      alert("Form saved successfully!");
+      // console.log("Form saved successfully!");
     } catch (error) {
-      alert(`Form save error: ${error}`);
+      // console.log(`Form save error: ${error}`);
     }
   };
 
   // Handle standalone JSON download
   const handleDownloadJson = () => {
     try {
+      const completeFormData = exportForm(); // Get the actual form data
       const filename = `SF86_Form_Data_${
         new Date().toISOString().split("T")[0]
       }.json`;
-      console.log(`📄 Downloading JSON data: ${filename}`);
 
-      const result = downloadJsonData(filename);
+      const result = downloadJsonDataUtil(completeFormData, filename);
 
       if (result.success) {
-        alert(`🎉 JSON data downloaded successfully!\n\nFilename: ${filename}\n\n🔍 This file contains all form data for debugging analysis.`);
+        console.info(`🎉 JSON data downloaded successfully! Filename: ${filename}`);
       } else {
-        alert(`❌ JSON download failed:\n\n${result.errors.join("\n")}`);
+        console.error(`❌ JSON download failed: ${result.errors.join(", ")}`);
       }
     } catch (error) {
       console.error("💥 JSON download error:", error);
-      alert(`💥 JSON download error: ${error}`);
     }
   };
 
@@ -308,13 +208,13 @@ const SF86FormMain: React.FC<SF86FormMainProps> = ({ className = "" }) => {
               <div className="px-6 py-3 bg-gray-50 border-b border-gray-100">
                 <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
                   <span>Progress</span>
-                  <span>{Math.round((completedSections.length / availableSections.length) * 100)}%</span>
+                  <span>{Math.round((completedSections.size / availableSections.length) * 100)}%</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
                     className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full transition-all duration-300 ease-out"
                     style={{
-                      width: `${(completedSections.length / availableSections.length) * 100}%`
+                      width: `${(completedSections.size / availableSections.length) * 100}%`
                     }}
                   ></div>
                 </div>
@@ -325,7 +225,7 @@ const SF86FormMain: React.FC<SF86FormMainProps> = ({ className = "" }) => {
                 <div className="space-y-1">
                   {availableSections.map((section, index) => {
                     const isActive = currentSection === section.id;
-                    const isCompleted = completedSections.includes(section.id);
+                    const isCompleted = completedSections.has(section.id);
                     
                     return (
                       <button
@@ -468,7 +368,7 @@ const SF86FormMain: React.FC<SF86FormMainProps> = ({ className = "" }) => {
                   
                   <div className="bg-white rounded-lg p-3 text-center">
                     <div className="text-lg font-bold text-green-600">
-                      {completedSections.length}
+                      {completedSections.size}
                     </div>
                     <div className="text-xs text-gray-600">Completed</div>
                   </div>
@@ -482,7 +382,7 @@ const SF86FormMain: React.FC<SF86FormMainProps> = ({ className = "" }) => {
                   <div className="flex items-center justify-between text-xs text-gray-600">
                     <span>Completion Rate</span>
                     <span className="font-medium text-gray-800">
-                      {Math.round((completedSections.length / availableSections.length) * 100)}%
+                      {Math.round((completedSections.size / availableSections.length) * 100)}%
                     </span>
                   </div>
                 </div>

@@ -30,16 +30,16 @@ export default function ClearCacheButton({
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [lastCleared, setLastCleared] = useState<Date | null>(null);
 
-  // Base styles for different variants
+  // Base styles for different variants - aligned with other buttons in the app
   const variantStyles = {
-    primary: 'bg-blue-500 hover:bg-blue-600 text-white',
-    secondary: 'bg-gray-500 hover:bg-gray-600 text-white',
-    danger: 'bg-red-500 hover:bg-red-600 text-white'
+    primary: 'bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white',
+    secondary: 'bg-gray-500 hover:bg-gray-600 active:bg-gray-700 text-white',
+    danger: 'bg-red-500 hover:bg-red-600 active:bg-red-700 text-white'
   };
 
-  // Size styles
+  // Size styles - aligned with other buttons
   const sizeStyles = {
-    sm: 'px-2 py-1 text-xs',
+    sm: 'px-3 py-2 text-sm',
     md: 'px-4 py-2 text-sm',
     lg: 'px-6 py-3 text-base'
   };
@@ -51,7 +51,7 @@ export default function ClearCacheButton({
     ${isClearing ? disabledStyles : variantStyles[variant]}
     ${sizeStyles[size]}
     ${className}
-    rounded-md font-medium transition-colors duration-200
+    rounded-lg font-medium transition-all duration-200 flex items-center space-x-1
     focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500
     disabled:opacity-50 disabled:cursor-not-allowed
   `.trim();
@@ -91,18 +91,20 @@ export default function ClearCacheButton({
           `• localStorage: ${result.details.localStorage.success ? `✅ Cleared ${result.details.localStorage.keysCleared.length} keys` : '❌ Failed'}\n` +
           `• sessionStorage: ${result.details.sessionStorage.success ? `✅ Cleared ${result.details.sessionStorage.keysCleared.length} keys` : '❌ Failed'}`;
 
-        // Optional: Reload the page to ensure clean state
-        if (window.confirm(`${successMessage}\n\nWould you like to reload the page to ensure a clean state?`)) {
-          window.location.reload();
-        }
+
+        window.location.reload();
+
+        console.log(successMessage)
+
+
       } else {
         console.warn('⚠️ Cache clear operation completed with errors:', result.message);
-        alert(`Cache clear completed with some errors:\n\n${result.message}\n\nCheck the console for more details.`);
+        console.log(`Cache clear completed with some errors:\n\n${result.message}\n\nCheck the console for more details.`);
       }
 
     } catch (error) {
       console.error('💥 Error clearing cache:', error);
-      alert(`Failed to clear cache: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.log(`Failed to clear cache: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsClearing(false);
     }
@@ -130,13 +132,13 @@ export default function ClearCacheButton({
             <div className="flex space-x-2">
               <button
                 onClick={handleClearCache}
-                className="px-3 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600 transition-colors"
+                className="px-3 py-1 bg-red-500 text-white text-xs rounded-lg hover:bg-red-600 active:bg-red-700 transition-all duration-200"
               >
                 Yes, Clear
               </button>
               <button
                 onClick={handleCancel}
-                className="px-3 py-1 bg-gray-500 text-white text-xs rounded hover:bg-gray-600 transition-colors"
+                className="px-3 py-1 bg-gray-500 text-white text-xs rounded-lg hover:bg-gray-600 active:bg-gray-700 transition-all duration-200"
               >
                 Cancel
               </button>
@@ -147,40 +149,37 @@ export default function ClearCacheButton({
     );
   }
 
-  return (
-    <div className="inline-flex flex-col items-start">
-      <button
-        onClick={handleClearCache}
-        disabled={isClearing}
-        className={buttonClasses}
-        data-testid="clear-cache-button"
-        title="Clear all cached form data from IndexedDB and localStorage"
-      >
-        {isClearing ? (
-          <>
-            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-current" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Clearing...
-          </>
-        ) : (
-          <>
-            {showIcon && (
-              <svg className="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            )}
-            Clear Cache
-          </>
-        )}
-      </button>
+  // Create dynamic title that includes last cleared info
+  const buttonTitle = lastCleared
+    ? `Clear all cached form data from IndexedDB and localStorage (Last cleared: ${lastCleared.toLocaleTimeString()})`
+    : "Clear all cached form data from IndexedDB and localStorage";
 
-      {lastCleared && (
-        <p className="text-xs text-gray-500 mt-1">
-          Last cleared: {lastCleared.toLocaleTimeString()}
-        </p>
+  return (
+    <button
+      onClick={handleClearCache}
+      disabled={isClearing}
+      className={buttonClasses}
+      data-testid="clear-cache-button"
+      title={buttonTitle}
+    >
+      {isClearing ? (
+        <>
+          <svg className="animate-spin h-4 w-4 text-current" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span>Clearing...</span>
+        </>
+      ) : (
+        <>
+          {showIcon && (
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          )}
+          <span>Clear Cache</span>
+        </>
       )}
-    </div>
+    </button>
   );
 }

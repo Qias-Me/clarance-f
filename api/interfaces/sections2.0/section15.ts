@@ -33,20 +33,19 @@ export interface DateField {
  * Military service entry structure for Section 15.1
  */
 export interface MilitaryServiceEntry {
-  hasServed: FieldWithOptions<string>; // YES/NO radio button
   branch: FieldWithOptions<string>; // Service branch (1-7 options)
   serviceState: Field<string>; // State of service if National Guard
   serviceStatus: FieldWithOptions<string>; // Officer/Enlisted/Other
-  
+
   // Service dates
   fromDate: DateField;
   fromDateEstimated: Field<boolean>;
   toDate: DateField;
   toDateEstimated: Field<boolean>;
   isPresent: Field<boolean>; // Still serving
-  
+
   serviceNumber: Field<string>;
-  
+
   // Discharge information
   dischargeType: FieldWithOptions<string>; // Radio button list
   typeOfDischarge: FieldWithOptions<string>; // Honorable/Dishonorable/etc
@@ -54,7 +53,7 @@ export interface MilitaryServiceEntry {
   dischargeDateEstimated: Field<boolean>;
   otherDischargeType: Field<string>; // If "Other" selected
   dischargeReason: Field<string>; // Required if not honorable
-  
+
   // Current status
   currentStatus: {
     activeDuty: Field<boolean>;
@@ -67,8 +66,7 @@ export interface MilitaryServiceEntry {
  * Court martial/disciplinary procedure entry for Section 15.2
  */
 export interface MilitaryDisciplinaryEntry {
-  hasBeenSubjectToDisciplinary: FieldWithOptions<string>; // YES/NO
-  
+
   // Disciplinary procedure details
   procedureDate: DateField;
   procedureDateEstimated: Field<boolean>;
@@ -82,15 +80,14 @@ export interface MilitaryDisciplinaryEntry {
  * Foreign military service entry for Section 15.3
  */
 export interface ForeignMilitaryServiceEntry {
-  hasServedInForeignMilitary: FieldWithOptions<string>; // YES/NO
-  
+
   // Service period
   fromDate: DateField;
   fromDateEstimated: Field<boolean>;
   toDate: DateField;
   toDateEstimated: Field<boolean>;
   isPresent: Field<boolean>;
-  
+
   // Organization details
   organizationName: Field<string>;
   country: Field<string>;
@@ -98,7 +95,7 @@ export interface ForeignMilitaryServiceEntry {
   divisionDepartment: Field<string>;
   reasonForLeaving: Field<string>;
   circumstancesDescription: Field<string>;
-  
+
   // Contact information
   contact1: {
     fullName: {
@@ -124,7 +121,7 @@ export interface ForeignMilitaryServiceEntry {
       zipCode: Field<string>;
     };
   };
-  
+
   contact2: {
     fullName: {
       firstName: Field<string>;
@@ -151,8 +148,14 @@ export interface ForeignMilitaryServiceEntry {
 export interface Section15 {
   _id: number;
   section15: {
+    hasServed: FieldWithOptions<"YES" | "NO (If NO, proceed to Section 15.2) ">; // YES/NO radio button
     militaryService: MilitaryServiceEntry[];
+
+
+    hasBeenSubjectToDisciplinary: FieldWithOptions<"YES" | "NO (If NO, proceed to Section 15.3) ">; // YES/NO
     disciplinaryProcedures: MilitaryDisciplinaryEntry[];
+
+    hasServedInForeignMilitary: FieldWithOptions<"YES" | "NO (If NO, proceed to Section 16)">; // YES/NO
     foreignMilitaryService: ForeignMilitaryServiceEntry[];
   };
 }
@@ -192,12 +195,12 @@ export const SECTION15_FIELD_IDS = {
   DISCHARGE_ESTIMATED: "11458", // Discharge date estimate
   OTHER_DISCHARGE_TYPE: "11457", // Other discharge type text
   DISCHARGE_REASON: "11456", // Reason for discharge
-  
+
   // Current status checkboxes
   ACTIVE_DUTY: "11455",
-  ACTIVE_RESERVE: "11454", 
+  ACTIVE_RESERVE: "11454",
   INACTIVE_RESERVE: "11453",
-  
+
   // 15.2 Disciplinary Procedures
   HAS_DISCIPLINARY: "17082", // Has been subject to disciplinary
   PROCEDURE_DATE: "11452", // Date of procedure
@@ -206,7 +209,7 @@ export const SECTION15_FIELD_IDS = {
   DISCIPLINARY_NAME: "11449", // Name of disciplinary procedure
   MILITARY_COURT: "11448", // Military court description
   FINAL_OUTCOME: "11447", // Final outcome
-  
+
   // 15.3 Foreign Military Service
   HAS_FOREIGN_SERVICE: "17081", // Has served in foreign military
   FOREIGN_FROM_DATE: "11446", // Foreign service from date
@@ -220,7 +223,7 @@ export const SECTION15_FIELD_IDS = {
   DIVISION_DEPARTMENT: "11438", // Division/department
   REASON_LEAVING: "11437", // Reason for leaving
   CIRCUMSTANCES: "11436", // Circumstances description
-  
+
   // Contact 1
   CONTACT1_LAST_NAME: "11435",
   CONTACT1_FIRST_NAME: "11434",
@@ -238,7 +241,7 @@ export const SECTION15_FIELD_IDS = {
   CONTACT1_STATE: "11422",
   CONTACT1_COUNTRY: "11421",
   CONTACT1_ZIP: "11420",
-  
+
   // Contact 2
   CONTACT2_LAST_NAME: "11419",
   CONTACT2_FIRST_NAME: "11418",
@@ -307,7 +310,31 @@ export const SERVICE_STATUS_OPTIONS = [
 ] as const;
 
 /**
- * Yes/No options
+ * Yes/No options for military service
+ */
+export const MILITARY_SERVICE_OPTIONS = [
+  "YES",
+  "NO (If NO, proceed to Section 15.2) "
+] as const;
+
+/**
+ * Yes/No options for disciplinary procedures
+ */
+export const DISCIPLINARY_OPTIONS = [
+  "YES",
+  "NO (If NO, proceed to Section 15.3) "
+] as const;
+
+/**
+ * Yes/No options for foreign military service
+ */
+export const FOREIGN_MILITARY_OPTIONS = [
+  "YES",
+  "NO (If NO, proceed to Section 16)"
+] as const;
+
+/**
+ * Generic Yes/No options (for backward compatibility)
  */
 export const YES_NO_OPTIONS = [
   "YES",
@@ -319,7 +346,7 @@ export const YES_NO_OPTIONS = [
  */
 export const DISCHARGE_TYPE_OPTIONS = [
   "Honorable",
-  "General Under Honorable Conditions", 
+  "General Under Honorable Conditions",
   "Other Than Honorable",
   "Bad Conduct",
   "Dishonorable",
@@ -377,8 +404,20 @@ export const createDefaultSection15 = (): Section15 => {
   return {
     _id: 15,
     section15: {
+      hasServed: {
+        ...createFieldFromReference(15, 'form1[0].Section14_1[0].#area[4].RadioButtonList[1]', 'NO (If NO, proceed to Section 15.2) '),
+        options: MILITARY_SERVICE_OPTIONS
+      },
       militaryService: [],
+      hasBeenSubjectToDisciplinary: {
+        ...createFieldFromReference(15, 'form1[0].Section15_2[0].#area[0].RadioButtonList[0]', 'NO (If NO, proceed to Section 15.3) '),
+        options: DISCIPLINARY_OPTIONS
+      },
       disciplinaryProcedures: [],
+      hasServedInForeignMilitary: {
+        ...createFieldFromReference(15, 'form1[0].Section15_3[0].RadioButtonList[0]', 'NO (If NO, proceed to Section 16)'),
+        options: FOREIGN_MILITARY_OPTIONS
+      },
       foreignMilitaryService: []
     }
   };
@@ -389,10 +428,6 @@ export const createDefaultSection15 = (): Section15 => {
  */
 export const createDefaultMilitaryServiceEntry = (): MilitaryServiceEntry => {
   return {
-    hasServed: {
-      ...createFieldFromReference(15, 'form1[0].Section14_1[0].#area[4].RadioButtonList[1]', 'NO (If NO, proceed to Section 15.2) '),
-      options: YES_NO_OPTIONS
-    },
     branch: {
       ...createFieldFromReference(15, 'form1[0].Section14_1[0].#area[5].#area[6].RadioButtonList[2]', '5'),
       options: MILITARY_BRANCH_OPTIONS
@@ -442,10 +477,6 @@ export const createDefaultMilitaryServiceEntry = (): MilitaryServiceEntry => {
  */
 export const createDefaultDisciplinaryEntry = (): MilitaryDisciplinaryEntry => {
   return {
-    hasBeenSubjectToDisciplinary: {
-      ...createFieldFromReference(15, 'form1[0].Section15_2[0].#area[0].RadioButtonList[0]', 'NO (If NO, proceed to Section 15.3) '),
-      options: YES_NO_OPTIONS
-    },
     procedureDate: {
       month: createFieldFromReference(15, 'form1[0].Section15_2[0].From_Datefield_Name_2[0]', 'DateOfCourt1'),
       year: createFieldFromReference(15, 'form1[0].Section15_2[0].From_Datefield_Name_2[0]', 'DateOfCourt1')
@@ -463,10 +494,7 @@ export const createDefaultDisciplinaryEntry = (): MilitaryDisciplinaryEntry => {
  */
 export const createDefaultForeignMilitaryEntry = (): ForeignMilitaryServiceEntry => {
   return {
-    hasServedInForeignMilitary: {
-      ...createFieldFromReference(15, 'form1[0].Section15_3[0].RadioButtonList[0]', 'NO (If NO, proceed to Section 16)'),
-      options: YES_NO_OPTIONS
-    },
+
     fromDate: {
       month: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[0]', '2020-01-01'),
       year: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[0]', '2020-01-01')
@@ -549,10 +577,10 @@ export const updateSection15Field = (
   update: Section15FieldUpdate
 ): Section15 => {
   const updatedData = { ...section15Data };
-  
+
   // Handle field updates based on subsection and entry index
   // Implementation would use lodash.set or similar for deep updates
-  
+
   return updatedData;
 };
 
@@ -560,15 +588,15 @@ export const updateSection15Field = (
  * Validates military history information
  */
 export function validateMilitaryHistory(
-  militaryData: Section15['section15'], 
+  militaryData: Section15['section15'],
   context: Section15ValidationContext
 ): MilitaryHistoryValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
+  if (militaryData.hasServed.value === 'YES') {
 
-  // Validate military service entries
-  militaryData.militaryService.forEach((entry, index) => {
-    if (entry.hasServed.value === 'YES') {
+    // Validate military service entries
+    militaryData.militaryService.forEach((entry, index) => {
       if (!entry.branch.value) {
         errors.push(`Military service entry ${index + 1}: Branch is required`);
       }
@@ -578,32 +606,32 @@ export function validateMilitaryHistory(
       if (!entry.serviceNumber.value) {
         errors.push(`Military service entry ${index + 1}: Service number is required`);
       }
-    }
-  });
+    });
+  }
+  if (militaryData.hasBeenSubjectToDisciplinary.value === 'YES') {
 
-  // Validate disciplinary procedures
-  militaryData.disciplinaryProcedures.forEach((entry, index) => {
-    if (entry.hasBeenSubjectToDisciplinary.value === 'YES') {
+    // Validate disciplinary procedures
+    militaryData.disciplinaryProcedures.forEach((entry, index) => {
       if (!entry.ucmjOffenseDescription.value) {
         errors.push(`Disciplinary entry ${index + 1}: UCMJ offense description is required`);
       }
       if (!entry.disciplinaryProcedureName.value) {
         errors.push(`Disciplinary entry ${index + 1}: Disciplinary procedure name is required`);
       }
-    }
-  });
+    });
+  }
 
   // Validate foreign military service
-  militaryData.foreignMilitaryService.forEach((entry, index) => {
-    if (entry.hasServedInForeignMilitary.value === 'YES') {
+  if (militaryData.hasServedInForeignMilitary.value === 'YES') {
+    militaryData.foreignMilitaryService.forEach((entry, index) => {
       if (!entry.organizationName.value) {
         errors.push(`Foreign military entry ${index + 1}: Organization name is required`);
       }
       if (!entry.country.value) {
         errors.push(`Foreign military entry ${index + 1}: Country is required`);
       }
-    }
-  });
+    });
+  }
 
   return {
     isValid: errors.length === 0,
@@ -616,40 +644,43 @@ export function validateMilitaryHistory(
  * Checks if Section 15 is complete
  */
 export function isSection15Complete(section15Data: Section15): boolean {
-  const { militaryService, disciplinaryProcedures, foreignMilitaryService } = section15Data.section15;
-  
-  // Check if at least one subsection has been addressed
-  const hasMilitaryServiceResponse = militaryService.some(entry => entry.hasServed.value);
-  const hasDisciplinaryResponse = disciplinaryProcedures.some(entry => entry.hasBeenSubjectToDisciplinary.value);
-  const hasForeignServiceResponse = foreignMilitaryService.some(entry => entry.hasServedInForeignMilitary.value);
-  
+  const { hasServed, hasBeenSubjectToDisciplinary, hasServedInForeignMilitary } = section15Data.section15;
+
+  // Check if at least one subsection has been addressed (not empty and not default NO values)
+  const hasMilitaryServiceResponse = hasServed.value && hasServed.value !== 'NO (If NO, proceed to Section 15.2) ';
+  const hasDisciplinaryResponse = hasBeenSubjectToDisciplinary.value && hasBeenSubjectToDisciplinary.value !== 'NO (If NO, proceed to Section 15.3) ';
+  const hasForeignServiceResponse = hasServedInForeignMilitary.value && hasServedInForeignMilitary.value !== 'NO (If NO, proceed to Section 16)';
+
   return hasMilitaryServiceResponse || hasDisciplinaryResponse || hasForeignServiceResponse;
 }
 
 /**
  * Determines which fields should be visible based on responses
  */
-export function getVisibleFields(entry: MilitaryServiceEntry): string[] {
+export function getVisibleFields(
+  entry: MilitaryServiceEntry,
+  militaryData: Section15['section15']
+): string[] {
   const visibleFields: string[] = ['hasServed'];
-  
-  if (entry.hasServed.value === 'YES') {
+
+  if (militaryData.hasServed.value === 'YES') {
     visibleFields.push(
-      'branch', 'serviceStatus', 'fromDate', 'toDate', 
+      'branch', 'serviceStatus', 'fromDate', 'toDate',
       'serviceNumber', 'dischargeType', 'currentStatus'
     );
-    
+
     if (entry.branch.value === '5') { // National Guard
       visibleFields.push('serviceState');
     }
-    
+
     if (entry.dischargeType.value && entry.dischargeType.value !== 'Honorable') {
       visibleFields.push('dischargeReason');
     }
-    
+
     if (entry.typeOfDischarge.value === 'Other') {
       visibleFields.push('otherDischargeType');
     }
   }
-  
+
   return visibleFields;
-} 
+}

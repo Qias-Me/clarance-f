@@ -35,11 +35,11 @@ import {
 import type {
   ChangeSet,
 } from "../shared/base-interfaces";
-import { useSection86FormIntegration } from "../shared/section-context-integration";
 import {
   createFieldFromReference,
   validateSectionFieldCount,
 } from "../../../../api/utils/sections-references-loader";
+import { useSF86Form } from "./SF86FormContext";
 
 // ============================================================================
 // CONTEXT INTERFACE
@@ -653,9 +653,10 @@ const Section29Context = createContext<Section29ContextType | undefined>(
   undefined
 );
 
-export const Section29Provider: React.FC<{ children: ReactNode }> = ({
+const Section29Provider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
+  const sf86Form = useSF86Form();
   const [section29Data, setSection29Data] = useState<Section29>(
     createInitialSection29State
   );
@@ -664,7 +665,6 @@ export const Section29Provider: React.FC<{ children: ReactNode }> = ({
   const [isDirty, setIsDirty] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
 
-  // Section integration will be handled by useSection86FormIntegration below
 
   // Safeguard: Prevent data loss during save operations
   // Store a reference to the current data to prevent reset during re-registration
@@ -1296,18 +1296,23 @@ export const Section29Provider: React.FC<{ children: ReactNode }> = ({
     });
   }, [updateFieldValue]);
 
-  // Integration with main form context using Section 1 gold standard pattern
-  // Note: integration variable is used internally by the hook for registration
-  // Restored updateFieldValue parameter to match Section 1 pattern exactly
-  const integration = useSection86FormIntegration(
-    'section29',
-    'Section 29: Associations',
-    section29Data,
-    setSection29Data,
-    () => ({ isValid: validateSection(), errors: [], warnings: [] }), // Anonymous function like Section 1
-    () => getChanges(), // Anonymous function like Section 1
-    updateFieldValueWrapper // Pass wrapper function that matches expected signature
-  );
+  // Sync with SF86FormContext when data is loaded
+  useEffect(() => {
+    const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('debug=true');
+
+    if (sf86Form.formData.section29 && sf86Form.formData.section29 !== section29Data) {
+      if (isDebugMode) {
+        console.log('🔄 Section29: Syncing with SF86FormContext loaded data');
+      }
+
+      // Load the data from SF86FormContext
+      loadSection(sf86Form.formData.section29);
+
+      if (isDebugMode) {
+        console.log('✅ Section29: Data sync complete');
+      }
+    }
+  }, [sf86Form.formData.section29, loadSection]);
 
   // ============================================================================
   // CONTEXT VALUE
@@ -1360,3 +1365,5 @@ export const useSection29 = (): Section29ContextType => {
   }
   return context;
 };
+
+export default Section29Provider;

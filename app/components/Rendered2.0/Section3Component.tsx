@@ -8,7 +8,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSection3 } from '~/state/contexts/sections2.0/section3';
-import { useSF86Form } from '~/state/contexts/SF86FormContext';
+import { useSF86Form } from '~/state/contexts/sections2.0/SF86FormContext';
 import { getCountryOptions, getUSStateOptions } from '../../../api/interfaces/sections2.0/base';
 
 interface Section3ComponentProps {
@@ -57,29 +57,42 @@ export const Section3Component: React.FC<Section3ComponentProps> = ({
     setIsValid(result.isValid);
     onValidationChange?.(result.isValid);
 
+    // console.log('🔍 Section 3 validation result:', result);
+    // console.log('📊 Section 3 data before submission:', section3Data);
+
     if (result.isValid) {
       try {
+        // console.log('🔄 Section 3: Starting data synchronization...');
+
         // Update the central form context with Section 3 data
         sf86Form.updateSectionData('section3', section3Data);
 
-        // Save the form data to persistence layer
-        await sf86Form.saveForm();
+        // console.log('✅ Section 3: Data synchronization complete, proceeding to save...');
+
+        // Get the current form data and update it with section3 data for immediate saving
+        const currentFormData = sf86Form.exportForm();
+        const updatedFormData = { ...currentFormData, section3: section3Data };
+
+        // Save the form data to persistence layer with the updated data
+        await sf86Form.saveForm(updatedFormData);
 
         // Mark section as complete after successful save
         sf86Form.markSectionComplete('section3');
 
-        console.log('✅ Section 3 data saved successfully:', section3Data);
+        // console.log('✅ Section 3 data saved successfully:', section3Data);
 
         // Proceed to next section if callback provided
         if (onNext) {
           onNext();
         }
       } catch (error) {
-        console.error('❌ Failed to save Section 3 data:', error);
-        // Could show an error message to user here
+        // console.error('❌ Failed to save Section 3 data:', error);
+        // Show an error message to user
+        // console.log('There was an error saving your information. Please try again.');
       }
     }
   };
+
 
   // Reset function
   const handleReset = () => {
@@ -252,7 +265,7 @@ export const Section3Component: React.FC<Section3ComponentProps> = ({
         </div>
 
         {/* Validation Status */}
-     
+
       </form>
 
       {/* Debug Information (Development Only) */}

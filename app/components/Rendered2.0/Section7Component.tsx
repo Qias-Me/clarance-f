@@ -8,7 +8,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSection7 } from '~/state/contexts/sections2.0/section7';
-import { useSF86Form } from '~/state/contexts/SF86FormContext';
+import { useSF86Form } from '~/state/contexts/sections2.0/SF86FormContext';
 
 interface Section7ComponentProps {
   className?: string;
@@ -39,7 +39,8 @@ export const Section7Component: React.FC<Section7ComponentProps> = ({
     validateSection,
     resetSection,
     isDirty,
-    errors
+    errors,
+    commitDraft
   } = useSection7();
 
   // SF86Form context for data persistence
@@ -55,17 +56,24 @@ export const Section7Component: React.FC<Section7ComponentProps> = ({
     onValidationChange?.(validationResult.isValid);
   }, [section7Data, phoneNumbers, emailAddresses, socialMedia]); // Removed validateSection and onValidationChange to prevent infinite loops
 
-  // Handle form submission with data persistence
+  // Handle submission with data persistence
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = validateSection();
     setIsValid(result.isValid);
     onValidationChange?.(result.isValid);
 
+    // console.log('🔍 Section 7 validation result:', result);
+    // console.log('📊 Section 7 data before submission:', section7Data);
+
     if (result.isValid) {
       try {
-        // Update the central form context with Section 7 data
+        // console.log('🔄 Section 7: Starting data synchronization...');
+
+        // Update the central form context with Section 7 data and wait for synchronization
         sf86Form.updateSectionData('section7', section7Data);
+
+        // console.log('✅ Section 7: Data synchronization complete, proceeding to save...');
 
         // Save the form data to persistence layer
         await sf86Form.saveForm();
@@ -73,18 +81,20 @@ export const Section7Component: React.FC<Section7ComponentProps> = ({
         // Mark section as complete after successful save
         sf86Form.markSectionComplete('section7');
 
-        console.log('✅ Section 7 data saved successfully:', section7Data);
+        // console.log('✅ Section 7 data saved successfully:', section7Data);
 
         // Proceed to next section if callback provided
         if (onNext) {
           onNext();
         }
       } catch (error) {
-        console.error('❌ Failed to save Section 7 data:', error);
-        // Could show an error message to user here
+        // console.error('❌ Failed to save Section 7 data:', error);
+        // Show an error message to user
+        // console.log('There was an error saving your information. Please try again.');
       }
     }
   };
+
 
 
 

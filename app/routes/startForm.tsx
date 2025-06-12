@@ -12,12 +12,12 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   CompleteSF86FormProvider,
   useSF86Form,
-} from "~/state/contexts/SF86FormContext";
+} from "~/state/contexts/sections2.0/SF86FormContext";
 
 import type { ApplicantFormValues } from "api/interfaces/formDefinition2.0";
 import ClearCacheButton from "~/components/buttons/ClearCacheButton";
 import LoadingSpinner from "~/components/LoadingSpinner";
-import { clientPdfService2 } from "../../api/service/clientPdfService2.0";
+import { generateAndDownloadPdf, downloadJsonData } from "~/utils/pdfGenerationUtils";
 
 // Section component imports from Rendered2.0
 // Import shared SF-86 section configuration instead of individual components
@@ -263,7 +263,7 @@ function SF86FormContent() {
 
   // Sync formProgress with persistent completedSections from SF86FormContext
   useEffect(() => {
-    if (sf86Form.completedSections && sf86Form.completedSections.length > 0) {
+    if (sf86Form.completedSections && sf86Form.completedSections.size > 0) {
       const progressFromPersistent: Record<string, boolean> = {};
       sf86Form.completedSections.forEach(sectionId => {
         progressFromPersistent[sectionId] = true;
@@ -330,7 +330,7 @@ function SF86FormContent() {
   // Load saved form data on mount
   useEffect(() => {
     if (config.savedFormData) {
-      console.log("Loading saved form data:", config.savedFormData);
+      // console.info("Loading saved form data - form restored from previous session");
     }
     setIsLoading(false);
   }, [config.savedFormData, config]);
@@ -358,19 +358,13 @@ function SF86FormContent() {
               </div>
 
               <div className="flex flex-wrap items-center gap-4 text-sm">
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                  <span className="text-gray-600">Environment:</span>
-                  <span className="font-medium text-gray-900 bg-gray-100 px-2 py-1 rounded-md">
-                    {config.environment}
-                  </span>
-                </div>
+         
 
                 <div className="flex items-center space-x-2">
                   <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                   <span className="text-gray-600">Progress:</span>
                   <span className="font-medium text-gray-900 bg-blue-50 px-2 py-1 rounded-md">
-                    {Object.values(formProgress).filter(Boolean).length}/{config.config.totalSections}
+                    {sf86Form.completedSections.size}/{config.config.totalSections}
                   </span>
                 </div>
               </div>
@@ -487,173 +481,33 @@ function SectionNavigation({
 
 
 
-  // Handle PDF generation and download - ENHANCED CLIENT-SIDE processing
+  // Handle PDF generation and download - Using centralized utility
   const handleClientPdfGeneration = async () => {
-    setIsGeneratingPdf(true);
     try {
-      console.log("🚀 Starting ENHANCED CLIENT-SIDE PDF generation process...");
-
       // Collect all section data from contexts before processing
       const completeFormData = exportForm(); // This calls collectAllSectionData internally
-      console.log("📊 Complete form data:", completeFormData);
-      console.log(
-        "📋 Complete form data collected from contexts:",
-        completeFormData
-      );
 
-      console.log("\n" + "=".repeat(80));
-      console.log(
-        "🚀 ENHANCED CLIENT-SIDE PDF GENERATION STARTED (via startForm.tsx)"
-      );
-      console.log("=".repeat(80));
-      console.log(`⏰ Timestamp: ${new Date().toISOString()}`);
-      console.log(
-        `📊 Form data sections: ${Object.keys(completeFormData).length}`
-      );
-      console.log(`📋 Available sections:`, Object.keys(completeFormData));
-
-      // Call the enhanced client action for PDF generation (matches server-side logic)
-      const result = await clientPdfService2.generatePdfClientAction(
-        completeFormData
-      );
-
-      if (result.success && result.pdfBytes) {
-        // Use the service's enhanced download method with mobile support
-        const filename = `SF86_Client_Generated_${new Date().toISOString().split("T")[0]
-          }.pdf`;
-        console.log(`📄 Initiating download with filename: ${filename}`);
-
-        // Detect mobile device for user messaging
-        const isMobileBrowser = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
-        if (isMobileBrowser) {
-          console.log("📱 Mobile device detected - using enhanced mobile download method");
+      // Use centralized PDF generation utility with enhanced features
+      const result = await generateAndDownloadPdf(completeFormData, {
+        filename: `SF86_Client_Generated_${new Date().toISOString().split("T")[0]}.pdf`,
+        showConsoleOutput: true,
+        onLoadingStateChange: setIsGeneratingPdf,
+        onProgress: (message) => {
+          // Progress updates are handled by the centralized utility
+        },
+        onError: (error) => {
+          console.error("PDF generation error:", error);
+        },
+        onSuccess: (result) => {
+          // Also download JSON data for debugging
+          const jsonFilename = result.filename.replace('.pdf', '-data.json');
+          downloadJsonData(completeFormData, jsonFilename);
+          console.info("🔍 JSON data downloaded for debugging analysis");
         }
+      });
 
-        // Call the enhanced download method with mobile compatibility
-        clientPdfService2.downloadPdf(result.pdfBytes, filename);
-
-        console.log(
-          "\n🎉 ENHANCED CLIENT PDF GENERATION COMPLETED SUCCESSFULLY"
-        );
-        console.log("=".repeat(80));
-        console.log(
-          `📊 Summary: ${result.fieldsApplied}/${result.fieldsMapped
-          } fields applied (${result.stats.applicationSuccessRate.toFixed(2)}%)`
-        );
-        console.log(
-          `📄 PDF size: ${result.pdfBytes.length} bytes (${(
-            result.pdfBytes.length /
-            1024 /
-            1024
-          ).toFixed(2)} MB)`
-        );
-        console.log(`⏰ Completed at: ${new Date().toISOString()}`);
-        console.log("=".repeat(80) + "\n");
-
-        // Enhanced mobile detection and messaging
-        const userAgent = navigator.userAgent.toLowerCase();
-        const isIOSDevice = /ipad|iphone|ipod/.test(userAgent);
-        const isAndroidDevice = /android/.test(userAgent);
-        const isMobileDevice = isIOSDevice || isAndroidDevice || /mobile/.test(userAgent);
-
-        // Provide specific mobile guidance based on device type
-        let mobileInstructions = '';
-        if (isIOSDevice) {
-          mobileInstructions =
-            `\n🍎 iOS Users:\n` +
-            `• If download didn't start, check if a new tab opened\n` +
-            `• Look for the Share button (⬆️) in Safari's toolbar\n` +
-            `• Tap Share → Save to Files (or Save to Photos)\n` +
-            `• Choose your preferred save location\n` +
-            `• Alternative: Long-press the PDF and select "Save"\n`;
-        } else if (isAndroidDevice) {
-          mobileInstructions =
-            `\n🤖 Android Users:\n` +
-            `• Check your notification panel for download progress\n` +
-            `• PDF should be saved to Downloads folder automatically\n` +
-            `• If no download, check if a new tab opened\n` +
-            `• Try long-pressing the PDF and selecting "Download"\n` +
-            `• Some browsers may open PDF instead - look for save options\n`;
-        } else if (isMobileDevice) {
-          mobileInstructions =
-            `\n📱 Mobile Browser:\n` +
-            `• Download behavior varies by mobile browser\n` +
-            `• Check if a new tab opened with the PDF\n` +
-            `• Look for save/download options in your browser\n` +
-            `• Check your device's Downloads folder\n`;
-        } else {
-          mobileInstructions =
-            `\n💻 Desktop: If download doesn't start, check browser's download settings or popup blocker.\n`;
-        }
-
-        const message =
-          `🎉 ENHANCED CLIENT-SIDE PDF Generated Successfully!\n\n` +
-          `📊 Processing Statistics:\n` +
-          `• Total form fields: ${result.stats.totalFormFields}\n` +
-          `• Fields mapped: ${result.fieldsMapped}\n` +
-          `• Fields applied: ${result.fieldsApplied}\n` +
-          `• Success rate: ${result.stats.applicationSuccessRate.toFixed(2)}%\n` +
-          `• PDF size: ${(result.pdfBytes.length / 1024 / 1024).toFixed(2)} MB\n` +
-          `• Filename: ${filename}\n` +
-          `• Errors: ${result.errors.length}\n` +
-          `• Warnings: ${result.warnings.length}\n` +
-          mobileInstructions +
-          `\n🔍 Check the browser console for detailed field mapping logs!`;
-
-        alert(message);
-      } else {
-        console.error("\n💥 ENHANCED CLIENT PDF GENERATION FAILED");
-        console.error("=".repeat(80));
-        console.error(`🚨 Total Errors: ${result.errors.length}`);
-        console.error(`⚠️ Total Warnings: ${result.warnings?.length || 0}`);
-        console.error(`📊 Fields Mapped: ${result.fieldsMapped || 0}`);
-        console.error(`📊 Fields Applied: ${result.fieldsApplied || 0}`);
-
-        if (result.errors.length > 0) {
-          console.error("\n💥 ===== DETAILED ERROR REPORT =====");
-          result.errors.forEach((error: any, index: number) => {
-            console.error(`   [${index + 1}] ${error}`);
-          });
-        }
-
-        if (result.warnings && result.warnings.length > 0) {
-          console.error("\n⚠️ ===== WARNINGS =====");
-          result.warnings
-            .slice(0, 10)
-            .forEach((warning: any, index: number) => {
-              console.error(`   [${index + 1}] ${warning}`);
-            });
-        }
-
-        console.error("=".repeat(80) + "\n");
-
-        const errorMessage =
-          `❌ Enhanced client-side PDF generation failed.\n\n` +
-          `🚨 ${result.errors.length} errors encountered.\n` +
-          `⚠️ ${result.warnings?.length || 0} warnings.\n\n` +
-          `📊 Fields mapped: ${result.fieldsMapped || 0}\n` +
-          `📊 Fields applied: ${result.fieldsApplied || 0}\n\n` +
-          `🔍 Check the browser console for detailed error information.\n\n` +
-          `${result.errors.slice(0, 5).join("\n")}`;
-        alert(errorMessage);
-      }
     } catch (error) {
-      console.error("💥 FATAL ERROR IN ENHANCED CLIENT PDF GENERATION");
-      console.error("-".repeat(50));
-      console.error(
-        `❌ Error: ${error instanceof Error ? error.message : String(error)}`
-      );
-      console.error(
-        `📍 Stack trace:`,
-        error instanceof Error ? error.stack : "No stack trace available"
-      );
-      console.error("-".repeat(50) + "\n");
-
-      const errorMessage = `💥 Enhanced client PDF generation error:\n\n${error instanceof Error ? error.message : String(error)
-        }\n\nCheck the browser console for details.`;
-      alert(errorMessage);
-    } finally {
+      console.error("💥 Error during client PDF generation:", error);
       setIsGeneratingPdf(false);
     }
   };
@@ -751,7 +605,29 @@ function SectionNavigation({
             </div>
           </div>
         </div>
+
+  
       </div>
+
+            {/* Important Notice */}
+        <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+          <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-sm font-medium text-amber-800">
+                Important Notice
+              </h3>
+              <p className="mt-1 text-sm text-amber-700">
+                Disabled sections (shown in gray) are not yet supported in this form.
+                You will need to complete these sections manually after generating the PDF.
+              </p>
+            </div>
+          </div>
+        </div>
 
       {/* All Sections (Expandable) */}
       {isExpanded && (

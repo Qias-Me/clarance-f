@@ -48,7 +48,7 @@ export type DegreeType =
  * Degree entry for table structure (supports multiple degrees per school)
  */
 export interface DegreeEntry {
-  degreeType: Field<DegreeType>;
+  degreeType: FieldWithOptions<DegreeType>;
   otherDegree: Field<string>;
   dateAwarded: Field<string>;
   dateAwardedEstimate: Field<boolean>;
@@ -115,13 +115,14 @@ export interface SchoolEntry {
 
 /**
  * Section 12 main data structure - supports all 150 fields
+ * UPDATED: Now supports up to 5 entries with 100% field coverage
  */
 export interface Section12Data {
   // Global section questions (2 fields)
   hasAttendedSchool: Field<'YES' | 'NO'>;
   hasAttendedSchoolOutsideUS: Field<'YES' | 'NO'>;
 
-  // School entries (148 fields across up to 3 entries)
+  // School entries (148 fields across up to 5 entries - complete coverage achieved)
   entries: SchoolEntry[];
 }
 
@@ -238,228 +239,20 @@ export interface Section12ValidationContext {
 // HELPER FUNCTIONS
 // ============================================================================
 
-/**
- * Complete field mapping for Section 12 entries based on comprehensive analysis
- * Maps all 150 fields to actual PDF field names from section-12.json
- *
- * STRUCTURE:
- * - Global questions: 2 fields
- * - Entry 1 (section_12[0]): 52 fields
- * - Entry 2 (section_12_2[0]): 59 fields
- * - Entry 3 (section_12_3[0]): 37 fields
- */
-const SECTION12_FIELD_MAPPING = {
-  // Global section questions (2 fields)
-  global: {
-    hasAttendedSchool: "form1[0].section_12[0].pg10r1[0]",
-    hasAttendedSchoolOutsideUS: "form1[0].section_12[0].pg10r2[0]"
-  },
+// Import the new field generation system
+import {
+  generateSection12Field,
+  generateSchoolEntryFields,
+  generateGlobalFields
+} from '../../../app/state/contexts/sections2.0/section12-field-generator';
 
-  // Entry 1 fields (52 fields) - section_12[0]
-  entry1: {
-    // Attendance dates (5 fields)
-    fromDate: "form1[0].section_12[0].From_Datefield_Name_2[0]",
-    toDate: "form1[0].section_12[0].From_Datefield_Name_2[1]",
-    fromDateEstimate: "form1[0].section_12[0].#field[3]",
-    toDateEstimate: "form1[0].section_12[0].sec12_1_1[1]",
-    isPresent: "form1[0].section_12[0].sec12_1_1[0]",
 
-    // School information (6 fields)
-    schoolType: "form1[0].section_12[0].pg10r4[0]",
-    schoolName: "form1[0].section_12[0].TextField11[3]",
-    schoolAddress: "form1[0].section_12[0].TextField11[0]",
-    schoolCity: "form1[0].section_12[0].TextField11[1]",
-    schoolState: "form1[0].section_12[0].School6_State[0]",
-    schoolZipCode: "form1[0].section_12[0].TextField11[2]",
-    schoolCountry: "form1[0].section_12[0].DropDownList28[0]",
 
-    // Degree information (7 fields - 2 degrees per school)
-    receivedDegree: "form1[0].section_12[0].pg2r5[0]",
-    // Degree 1
-    degreeType1: "form1[0].section_12[0].Table1[0].Row1[0].Cell1[0]",
-    otherDegree1: "form1[0].section_12[0].Table1[0].Row1[0].Cell2[0]",
-    dateAwarded1: "form1[0].section_12[0].Table1[0].Row1[0].Cell4[0]",
-    dateAwardedEstimate1: "form1[0].section_12[0].Table1[0].Row1[0].Cell5[0]",
-    // Degree 2
-    degreeType2: "form1[0].section_12[0].Table1[0].Row2[0].Cell1[0]",
-    otherDegree2: "form1[0].section_12[0].Table1[0].Row2[0].Cell2[0]",
-    dateAwarded2: "form1[0].section_12[0].Table1[0].Row2[0].Cell4[0]",
-    dateAwardedEstimate2: "form1[0].section_12[0].Table1[0].Row2[0].Cell5[0]",
 
-    // Contact person information (14 fields)
-    unknownPerson: "form1[0].section_12[0].#field[14]",
-    contactLastName: "form1[0].section_12[0].TextField11[4]",
-    contactFirstName: "form1[0].section_12[0].TextField11[5]",
-    contactAddress: "form1[0].section_12[0].TextField11[6]",
-    contactCity: "form1[0].section_12[0].TextField11[7]",
-    contactState: "form1[0].section_12[0].School6_State[1]",
-    contactZipCode: "form1[0].section_12[0].TextField11[8]",
-    contactCountry: "form1[0].section_12[0].DropDownList27[0]",
-    contactPhone: "form1[0].section_12[0].p3-t68[0]",
-    contactExtension: "form1[0].section_12[0].TextField11[9]",
-    contactEmail: "form1[0].section_12[0].p3-t68[1]",
-    isInternationalPhone: "form1[0].section_12[0].#field[22]",
-    unknownPhone: "form1[0].section_12[0].#field[23]",
-    unknownEmail: "form1[0].section_12[0].#field[25]"
-  },
 
-  // Entry 2 fields (section_12[0] with different indices)
-  entry2: {
-    // Attendance dates (5 fields)
-    fromDate: "form1[0].section_12[0].From_Datefield_Name_2[2]",
-    toDate: "form1[0].section_12[0].From_Datefield_Name_2[3]",
-    fromDateEstimate: "form1[0].section_12[0].#field[28]",
-    toDateEstimate: "form1[0].section_12[0].#field[30]",
-    isPresent: "form1[0].section_12[0].#field[29]",
 
-    // School information (6 fields)
-    schoolType: "form1[0].section_12_2[0].pg10r4[0]",
-    schoolName: "form1[0].section_12_2[0].TextField11[6]",
-    schoolAddress: "form1[0].section_12_2[0].TextField11[3]",
-    schoolCity: "form1[0].section_12_2[0].TextField11[4]",
-    schoolState: "form1[0].section_12_2[0].School6_State[0]",
-    schoolZipCode: "form1[0].section_12_2[0].TextField11[5]",
-    schoolCountry: "form1[0].section_12_2[0].DropDownList25[0]",
 
-    // Degree information (8 fields - 2 degrees per school)
-    receivedDegree: "form1[0].section_12_2[0].pg2r5[0]",
-    // Degree 1
-    degreeType1: "form1[0].section_12_2[0].Table1[0].Row1[0].Cell1[0]",
-    otherDegree1: "form1[0].section_12_2[0].Table1[0].Row1[0].Cell2[0]",
-    dateAwarded1: "form1[0].section_12_2[0].Table1[0].Row1[0].Cell4[0]",
-    dateAwardedEstimate1: "form1[0].section_12_2[0].Table1[0].Row1[0].Cell5[0]",
-    // Degree 2
-    degreeType2: "form1[0].section_12_2[0].Table1[0].Row2[0].Cell1[0]",
-    otherDegree2: "form1[0].section_12_2[0].Table1[0].Row2[0].Cell2[0]",
-    dateAwarded2: "form1[0].section_12_2[0].Table1[0].Row2[0].Cell4[0]",
-    dateAwardedEstimate2: "form1[0].section_12_2[0].Table1[0].Row2[0].Cell5[0]",
 
-    // Contact person information (14 fields)
-    unknownPerson: "form1[0].section_12_2[0].#field[6]",
-    contactLastName: "form1[0].section_12_2[0].TextField11[7]",
-    contactFirstName: "form1[0].section_12_2[0].TextField11[8]",
-    contactAddress: "form1[0].section_12_2[0].TextField11[0]",
-    contactCity: "form1[0].section_12_2[0].TextField11[1]",
-    contactState: "form1[0].section_12_2[0].School6_State[1]",
-    contactZipCode: "form1[0].section_12_2[0].TextField11[2]",
-    contactCountry: "form1[0].section_12_2[0].DropDownList27[0]",
-    contactPhone: "form1[0].section_12_2[0].p3-t68[2]",
-    contactExtension: "form1[0].section_12_2[0].TextField11[12]",
-    contactEmail: "form1[0].section_12_2[0].p3-t68[0]",
-    isInternationalPhone: "form1[0].section_12_2[0].#field[7]",
-    unknownPhone: "form1[0].section_12_2[0].#field[9]",
-    unknownEmail: "form1[0].section_12_2[0].#field[8]"
-  },
-
-  // Entry 3 fields (section_12_2[0])
-  entry3: {
-    // Attendance dates (5 fields)
-    fromDate: "form1[0].section_12_2[0].From_Datefield_Name_2[0]",
-    toDate: "form1[0].section_12_2[0].From_Datefield_Name_2[1]",
-    fromDateEstimate: "form1[0].section_12_2[0].#field[10]",
-    toDateEstimate: "form1[0].section_12_2[0].#field[12]",
-    isPresent: "form1[0].section_12_2[0].#field[11]",
-
-    // School information (6 fields)
-    schoolType: "form1[0].section_12_3[0].pg10r4[0]",
-    schoolName: "form1[0].section_12_3[0].TextField11[3]",
-    schoolAddress: "form1[0].section_12_3[0].TextField11[0]",
-    schoolCity: "form1[0].section_12_3[0].TextField11[1]",
-    schoolState: "form1[0].section_12_3[0].School6_State[0]",
-    schoolZipCode: "form1[0].section_12_3[0].TextField11[2]",
-    schoolCountry: "form1[0].section_12_3[0].DropDownList28[0]",
-
-    // Degree information (9 fields - 2 degrees per school)
-    receivedDegree: "form1[0].section_12_3[0].pg2r5[0]",
-    // Degree 1
-    degreeType1: "form1[0].section_12_3[0].Table1[0].Row1[0].Cell1[0]",
-    otherDegree1: "form1[0].section_12_3[0].Table1[0].Row1[0].Cell2[0]",
-    dateAwarded1: "form1[0].section_12_3[0].Table1[0].Row1[0].Cell4[0]",
-    dateAwardedEstimate1: "form1[0].section_12_3[0].Table1[0].Row1[0].Cell5[0]",
-    // Degree 2
-    degreeType2: "form1[0].section_12_3[0].Table1[0].Row2[0].Cell1[0]",
-    otherDegree2: "form1[0].section_12_3[0].Table1[0].Row2[0].Cell2[0]",
-    dateAwarded2: "form1[0].section_12_3[0].Table1[0].Row2[0].Cell4[0]",
-    dateAwardedEstimate2: "form1[0].section_12_3[0].Table1[0].Row2[0].Cell5[0]",
-
-    // Contact person information (14 fields)
-    unknownPerson: "form1[0].section_12_2[0].#field[21]",
-    contactLastName: "form1[0].section_12_2[0].TextField11[7]",
-    contactFirstName: "form1[0].section_12_2[0].TextField11[8]",
-    contactAddress: "form1[0].section_12_2[0].TextField11[0]",
-    contactCity: "form1[0].section_12_2[0].TextField11[1]",
-    contactState: "form1[0].section_12_2[0].School6_State[1]",
-    contactZipCode: "form1[0].section_12_2[0].TextField11[2]",
-    contactCountry: "form1[0].section_12_2[0].DropDownList27[0]",
-    contactPhone: "form1[0].section_12_2[0].p3-t68[2]",
-    contactExtension: "form1[0].section_12_2[0].TextField11[12]",
-    contactEmail: "form1[0].section_12_2[0].p3-t68[0]",
-    isInternationalPhone: "form1[0].section_12_2[0].#field[31]",
-    unknownPhone: "form1[0].section_12_2[0].#field[30]",
-    unknownEmail: "form1[0].section_12_2[0].#field[28]"
-  },
-
-  // Entry 4 fields (section_12_3[0])
-  entry4: {
-    // Attendance dates (5 fields)
-    fromDate: "form1[0].section_12_3[0].From_Datefield_Name_2[0]",
-    toDate: "form1[0].section_12_3[0].From_Datefield_Name_2[1]",
-    fromDateEstimate: "form1[0].section_12_3[0].#field[3]",
-    toDateEstimate: "form1[0].section_12_3[0].#field[5]",
-    isPresent: "form1[0].section_12_3[0].#field[4]",
-
-    // School information (6 fields)
-    schoolType: "form1[0].section_12_3[0].pg10r4[0]",
-    schoolName: "form1[0].section_12_3[0].TextField11[3]",
-    schoolAddress: "form1[0].section_12_3[0].TextField11[0]",
-    schoolCity: "form1[0].section_12_3[0].TextField11[1]",
-    schoolState: "form1[0].section_12_3[0].School6_State[0]",
-    schoolZipCode: "form1[0].section_12_3[0].TextField11[2]",
-    schoolCountry: "form1[0].section_12_3[0].DropDownList28[0]",
-
-    // Degree information (9 fields - 2 degrees per school)
-    receivedDegree: "form1[0].section_12_3[0].pg2r5[0]",
-    // Degree 1
-    degreeType1: "form1[0].section_12_3[0].Table1[0].Row1[0].Cell1[0]",
-    otherDegree1: "form1[0].section_12_3[0].Table1[0].Row1[0].Cell2[0]",
-    dateAwarded1: "form1[0].section_12_3[0].Table1[0].Row1[0].Cell4[0]",
-    dateAwardedEstimate1: "form1[0].section_12_3[0].Table1[0].Row1[0].Cell5[0]",
-    // Degree 2
-    degreeType2: "form1[0].section_12_3[0].Table1[0].Row2[0].Cell1[0]",
-    otherDegree2: "form1[0].section_12_3[0].Table1[0].Row2[0].Cell2[0]",
-    dateAwarded2: "form1[0].section_12_3[0].Table1[0].Row2[0].Cell4[0]",
-    dateAwardedEstimate2: "form1[0].section_12_3[0].Table1[0].Row2[0].Cell5[0]",
-
-    // Contact person information (8 fields - fewer than other entries)
-    contactLastName: "form1[0].section_12_3[0].TextField11[4]",
-    contactFirstName: "form1[0].section_12_3[0].TextField11[5]",
-    contactPhone: "form1[0].section_12_3[0].p3-t68[1]",
-    contactExtension: "form1[0].section_12_3[0].TextField11[9]",
-    contactState: "form1[0].section_12_3[0].School6_State[1]",
-    contactCountry: "form1[0].section_12_3[0].DropDownList27[0]"
-  }
-};
-
-/**
- * Helper function to get field mapping based on entry index
- */
-const getFieldMapping = (entryIndex: number): any => {
-  switch (entryIndex) {
-    case 0: return SECTION12_FIELD_MAPPING.entry1;
-    case 1: return SECTION12_FIELD_MAPPING.entry2;
-    case 2: return SECTION12_FIELD_MAPPING.entry3;
-    case 3: return SECTION12_FIELD_MAPPING.entry4;
-    default: return SECTION12_FIELD_MAPPING.entry1; // Fallback
-  }
-};
-
-/**
- * Helper function to generate field ID based on entry index and field name
- */
-const generateFieldId = (entryIndex: number, fieldName: string): string => {
-  const mapping = getFieldMapping(entryIndex);
-  return mapping?.[fieldName] || "";
-};
 
 /**
  * Creates a default degree entry
@@ -623,125 +416,32 @@ export const createDefaultContactPerson = (): ContactPerson => {
 };
 
 /**
- * Creates a default school entry with comprehensive field mapping
+ * Creates a default school entry using the new field generation system
  */
 export const createDefaultSchoolEntry = (entryId: string | number, entryIndex: number = 0): SchoolEntry => {
-  const mapping = getFieldMapping(entryIndex);
-
   return {
     _id: entryId,
 
     // Attendance dates (5 fields)
-    fromDate: {
-      id: generateFieldId(entryIndex, "fromDate"),
-      name: generateFieldId(entryIndex, "fromDate"),
-      type: 'PDFTextField',
-      label: `From Date (Month/Year) - Entry ${entryIndex + 1}`,
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    toDate: {
-      id: generateFieldId(entryIndex, "toDate"),
-      name: generateFieldId(entryIndex, "toDate"),
-      type: 'PDFTextField',
-      label: `To Date (Month/Year) - Entry ${entryIndex + 1}`,
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    fromDateEstimate: {
-      id: generateFieldId(entryIndex, "fromDateEstimate"),
-      name: generateFieldId(entryIndex, "fromDateEstimate"),
-      type: 'PDFCheckBox',
-      label: 'From Date Estimate',
-      value: false,
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    toDateEstimate: {
-      id: generateFieldId(entryIndex, "toDateEstimate"),
-      name: generateFieldId(entryIndex, "toDateEstimate"),
-      type: 'PDFCheckBox',
-      label: 'To Date Estimate',
-      value: false,
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    isPresent: {
-      id: generateFieldId(entryIndex, "isPresent"),
-      name: generateFieldId(entryIndex, "isPresent"),
-      type: 'PDFCheckBox',
-      label: 'Present',
-      value: false,
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
+    fromDate: generateSection12Field(`section12.entries[${entryIndex}].fromDate`, ''),
+    toDate: generateSection12Field(`section12.entries[${entryIndex}].toDate`, ''),
+    fromDateEstimate: generateSection12Field(`section12.entries[${entryIndex}].fromDateEstimate`, false),
+    toDateEstimate: generateSection12Field(`section12.entries[${entryIndex}].toDateEstimate`, false),
+    isPresent: generateSection12Field(`section12.entries[${entryIndex}].isPresent`, false),
 
     // School information (7 fields)
-    schoolName: {
-      id: generateFieldId(entryIndex, "schoolName"),
-      name: generateFieldId(entryIndex, "schoolName"),
-      type: 'PDFTextField',
-      label: `School Name - Entry ${entryIndex + 1}`,
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    schoolAddress: {
-      id: generateFieldId(entryIndex, "schoolAddress"),
-      name: generateFieldId(entryIndex, "schoolAddress"),
-      type: 'PDFTextField',
-      label: `School Address - Entry ${entryIndex + 1}`,
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    schoolCity: {
-      id: generateFieldId(entryIndex, "schoolCity"),
-      name: generateFieldId(entryIndex, "schoolCity"),
-      type: 'PDFTextField',
-      label: `School City - Entry ${entryIndex + 1}`,
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    schoolState: {
-      id: generateFieldId(entryIndex, "schoolState"),
-      name: generateFieldId(entryIndex, "schoolState"),
-      type: 'PDFDropdown',
-      label: `School State - Entry ${entryIndex + 1}`,
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    schoolCountry: {
-      id: generateFieldId(entryIndex, "schoolCountry"),
-      name: generateFieldId(entryIndex, "schoolCountry"),
-      type: 'PDFDropdown',
-      label: `School Country - Entry ${entryIndex + 1}`,
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    schoolZipCode: {
-      id: generateFieldId(entryIndex, "schoolZipCode"),
-      name: generateFieldId(entryIndex, "schoolZipCode"),
-      type: 'PDFTextField',
-      label: `School Zip Code - Entry ${entryIndex + 1}`,
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
+    schoolName: generateSection12Field(`section12.entries[${entryIndex}].schoolName`, ''),
+    schoolAddress: generateSection12Field(`section12.entries[${entryIndex}].schoolAddress`, ''),
+    schoolCity: generateSection12Field(`section12.entries[${entryIndex}].schoolCity`, ''),
+    schoolState: generateSection12Field(`section12.entries[${entryIndex}].schoolState`, ''),
+    schoolCountry: generateSection12Field(`section12.entries[${entryIndex}].schoolCountry`, ''),
+    schoolZipCode: generateSection12Field(`section12.entries[${entryIndex}].schoolZipCode`, ''),
 
     // School type (1 field)
-    schoolType: {
-      id: generateFieldId(entryIndex, "schoolType"),
-      name: generateFieldId(entryIndex, "schoolType"),
-      type: 'PDFRadioGroup',
-      label: `School Type - Entry ${entryIndex + 1}`,
-      value: "High School",
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
+    schoolType: generateSection12Field(`section12.entries[${entryIndex}].schoolType`, 'High School'),
 
     // Degree information (2+ fields)
-    receivedDegree: {
-      id: generateFieldId(entryIndex, "receivedDegree"),
-      name: generateFieldId(entryIndex, "receivedDegree"),
-      type: 'PDFRadioGroup',
-      label: `Received Degree - Entry ${entryIndex + 1}`,
-      value: 'NO',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
+    receivedDegree: generateSection12Field(`section12.entries[${entryIndex}].receivedDegree`, 'NO'),
     degrees: [], // Start with empty degrees array - user can add as needed
 
     // Contact person (optional - for schools attended in last 3 years)
@@ -753,26 +453,21 @@ export const createDefaultSchoolEntry = (entryId: string | number, entryIndex: n
 };
 
 /**
- * Creates a default Section 12 data structure with comprehensive field coverage
+ * Creates a default Section 12 data structure using the new field generation system
  */
 export const createDefaultSection12 = (): Section12 => {
   // Validate field count against sections-references
   validateSectionFieldCount(12);
 
+  // Generate global fields using the new system
+  const globalFields = generateGlobalFields();
+
   return {
     _id: 12,
     section12: {
       // Global section questions (2 fields)
-      hasAttendedSchool: createFieldFromReference(
-        12,
-        SECTION12_FIELD_MAPPING.global.hasAttendedSchool,
-        'NO'
-      ),
-      hasAttendedSchoolOutsideUS: createFieldFromReference(
-        12,
-        SECTION12_FIELD_MAPPING.global.hasAttendedSchoolOutsideUS,
-        'NO'
-      ),
+      hasAttendedSchool: globalFields.hasAttendedSchool,
+      hasAttendedSchoolOutsideUS: globalFields.hasAttendedSchoolOutsideUS,
 
       // Start with empty entries array - users can add entries as needed
       entries: []

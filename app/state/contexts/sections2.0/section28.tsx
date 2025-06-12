@@ -31,7 +31,7 @@ import type {
   ChangeSet,
   BaseSectionContext
 } from '../shared/base-interfaces';
-import { useSection86FormIntegration } from '../shared/section-context-integration';
+import { useSF86Form } from './SF86FormContext';
 
 // ============================================================================
 // CONTEXT TYPE DEFINITION
@@ -100,6 +100,9 @@ export const Section28Provider: React.FC<Section28ProviderProps> = ({ children }
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [initialData] = useState<Section28>(createInitialSection28State());
   const [isInitialized, setIsInitialized] = useState(false);
+
+  // SF86 Form Context for data persistence
+  const sf86Form = useSF86Form();
 
   // ============================================================================
   // COMPUTED VALUES
@@ -291,6 +294,14 @@ export const Section28Provider: React.FC<Section28ProviderProps> = ({ children }
       // Clear entries if NO is selected
       if (value === "NO (If NO, proceed to Section 29)") {
         newData.section28.courtActionEntries = [];
+        console.log('🧹 Section28: Cleared court action entries because value is NO');
+      }
+      // If setting to YES and no entries exist, auto-add the first entry
+      else if (value === "YES" && newData.section28.courtActionEntries.length === 0) {
+        const newEntry = createDefaultCourtActionEntry(0); // First entry
+        newEntry._id = Date.now() + Math.random(); // Set unique ID
+        newData.section28.courtActionEntries.push(newEntry);
+        console.log('✅ Section28: Auto-added first court action entry when YES selected', newEntry);
       }
 
       return newData;
@@ -475,6 +486,28 @@ export const Section28Provider: React.FC<Section28ProviderProps> = ({ children }
   }, [isDirty, initialData, section28Data]);
 
   // ============================================================================
+  // SF86FORM CONTEXT SYNCHRONIZATION
+  // ============================================================================
+
+  // Sync with SF86FormContext when data is loaded
+  useEffect(() => {
+    const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('debug=true');
+
+    if (sf86Form.formData.section28 && sf86Form.formData.section28 !== section28Data) {
+      if (isDebugMode) {
+        console.log('🔄 Section28: Syncing with SF86FormContext loaded data');
+      }
+
+      // Load the data from SF86FormContext
+      loadSection(sf86Form.formData.section28);
+
+      if (isDebugMode) {
+        console.log('✅ Section28: Data sync complete');
+      }
+    }
+  }, [sf86Form.formData.section28, loadSection]);
+
+  // ============================================================================
   // SF86FORM INTEGRATION - Following Section 29 pattern
   // ============================================================================
 
@@ -489,16 +522,7 @@ export const Section28Provider: React.FC<Section28ProviderProps> = ({ children }
     updateFieldValue(targetPath, value);
   }, [updateFieldValue]);
 
-  // Integration with main form context using Section 1 gold standard pattern
-  const integration = useSection86FormIntegration(
-    'section28',
-    'Section 28: Involvement in Non-Criminal Court Actions',
-    section28Data,
-    setSection28Data,
-    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
-    getChanges,
-    updateFieldValueWrapper // Pass wrapper function that matches expected signature
-  );
+
 
   // ============================================================================
   // CONTEXT VALUE

@@ -8,7 +8,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSection2 } from '~/state/contexts/sections2.0/section2';
-import { useSF86Form } from '~/state/contexts/SF86FormContext';
+import { useSF86Form } from '~/state/contexts/sections2.0/SF86FormContext';
 
 interface Section2ComponentProps {
   className?: string;
@@ -152,7 +152,7 @@ const Section2Component: React.FC<Section2ComponentProps> = ({
     // Always update the date field, even with partial values
     // This ensures individual field changes are preserved
     const newDate = `${newMonth || ''}/${newDay || ''}/${newYear || ''}`;
-    console.log('🔧 Section2Component: Updating date (partial allowed):', { type, value, newDate });
+    // console.log('🔧 Section2Component: Updating date (partial allowed):', { type, value, newDate });
 
     // Update section data directly - this will preserve partial values
     updateDateOfBirth(newDate);
@@ -160,45 +160,53 @@ const Section2Component: React.FC<Section2ComponentProps> = ({
 
   // Handle estimated checkbox change
   const handleEstimatedChange = (isEstimated: boolean) => {
-    console.log('🔧 Section2Component: Updating estimated flag:', { isEstimated });
+    // console.log('🔧 Section2Component: Updating estimated flag:', { isEstimated });
     updateEstimated(isEstimated);
   };
 
-  // Handle form submission with data persistence
+  // Handle submission with data persistence
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     const result = validateSection();
     setIsValid(result.isValid);
     onValidationChange?.(result.isValid);
 
-    console.log('🔍 Section 2 validation result:', result);
-    console.log('📊 Section 2 data before submission:', section2Data);
+    // console.log('🔍 Section 2 validation result:', result);
+    // console.log('📊 Section 2 data before submission:', section2Data);
 
     if (result.isValid) {
       try {
+        // console.log('🔄 Section 2: Starting data synchronization...');
+
         // Update the central form context with Section 2 data
         sf86Form.updateSectionData('section2', section2Data);
 
-        // Save the form data to persistence layer
-        await sf86Form.saveForm();
+        // console.log('✅ Section 2: Data synchronization complete, proceeding to save...');
+
+        // Get the current form data and update it with section2 data for immediate saving
+        const currentFormData = sf86Form.exportForm();
+        const updatedFormData = { ...currentFormData, section2: section2Data };
+
+        // Save the form data to persistence layer with the updated data
+        await sf86Form.saveForm(updatedFormData);
 
         // Mark section as complete after successful save
         sf86Form.markSectionComplete('section2');
 
-        console.log('✅ Section 2 data saved successfully');
+        // console.log('✅ Section 2 data saved successfully:', section2Data);
 
         // Proceed to next section if callback provided
         if (onNext) {
           onNext();
         }
       } catch (error) {
-        console.error('❌ Failed to save Section 2 data:', error);
+        // console.error('❌ Failed to save Section 2 data:', error);
         // Show an error message to user
-        alert('There was an error saving your date of birth information. Please try again.');
+        // console.log('There was an error saving your information. Please try again.');
       }
     }
   };
+
 
   // Validate date format and constraints
   const validateDate = (dateString: string): { isValid: boolean; error?: string } => {

@@ -94,6 +94,13 @@ function createRadioField(fieldIdentifier: string): Field<"YES" | "NO"> {
 }
 
 /**
+ * Create the specific hasCourtActions field with the correct type
+ */
+function createHasCourtActionsField(fieldIdentifier: string): Field<"YES" | "NO (If NO, proceed to Section 29)"> {
+  return createFieldFromReference<"YES" | "NO (If NO, proceed to Section 29)">(28, fieldIdentifier, "NO (If NO, proceed to Section 29)");
+}
+
+/**
  * Create a default dropdown field with sections-references integration
  */
 function createDropdownField(fieldIdentifier: string): Field<string> {
@@ -177,7 +184,7 @@ export function createDefaultSection28(): Section28 {
   return {
     _id: 28,
     section28: {
-      hasCourtActions: createRadioField("form1[0].Section28[0].RadioButtonList[0]"),
+      hasCourtActions: createHasCourtActionsField("form1[0].Section28[0].RadioButtonList[0]"),
       courtActionEntries: []
     }
   };

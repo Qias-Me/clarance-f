@@ -1,7 +1,5 @@
-import type { Print } from "~/state/contexts/sections/print";
-import type { AknowledgeInfo } from "./sections/aknowledgement";
-import type { PersonalInfo } from "./sections/personalInfo";
-import type { Signature } from "./sections/signature";
+// import type { Print } from "~/state/contexts/sections/print";
+
 
 // Import all Section 2.0 interfaces
 import type { Section1 } from "./sections2.0/section1";
@@ -17,22 +15,22 @@ import type { Section10 } from "./sections2.0/section10";
 import type { Section11 } from "./sections2.0/section11";
 import type { Section12 } from "./sections2.0/section12";
 import type { Section13 } from "./sections2.0/section13";
-import type { Section17 } from "./sections2.0/section17";
-import type { Section20 } from "./sections2.0/section20";
-import type { Section21 } from "./sections2.0/section21";
-import type { Section22 } from "./sections2.0/section22";
-import type { Section23 } from "./sections2.0/section23";
-import type { Section24 } from "./sections2.0/section24";
-import type { Section25 } from "./sections2.0/section25";
+// import type { Section17 } from "./sections2.0/section17";
+// import type { Section20 } from "./sections2.0/section20";
+// import type { Section21 } from "./sections2.0/section21";
+// import type { Section22 } from "./sections2.0/section22";
+// import type { Section23 } from "./sections2.0/section23";
+// import type { Section24 } from "./sections2.0/section24";
+// import type { Section25 } from "./sections2.0/section25";
 import type { Section27 } from "./sections2.0/section27";
 import type { Section28 } from "./sections2.0/section28";
 import type { Section14 } from "./sections2.0/section14";
 import type { Section15 } from "./sections2.0/section15";
-import type { Section16 } from "./sections2.0/section16";
+// import type { Section16 } from "./sections2.0/section16";
 import type { Section29 } from "./sections2.0/section29";
-import type { Section19 } from "./sections2.0/section19";
-import type { Section18 } from "./sections2.0/Section18";
-import type { Section26 } from "./sections2.0/section26";
+// import type { Section19 } from "./sections2.0/section19";
+// import type { Section18 } from "./sections2.0/Section18";
+// import type { Section26 } from "./sections2.0/section26";
 import type { Section30 } from "./sections2.0/section30";
 
 
@@ -83,22 +81,22 @@ interface ApplicantFormValues {
   section13?: Section13;
   section14?: Section14;
   section15?: Section15;
-  section16?: Section16;
-  section17?: Section17;
-  section18?: Section18;
-  section19?: Section19;
-  section20?: Section20;
-  section21?: Section21;
-  section22?: Section22;
-  section23?: Section23;
-  section24?: Section24;
-  section25?: Section25;
-  section26?: Section26;
+  // section16?: Section16;
+  // section17?: Section17;
+  // section18?: Section18;
+  // section19?: Section19;
+  // section20?: Section20;
+  // section21?: Section21;
+  // section22?: Section22;
+  // section23?: Section23;
+  // section24?: Section24;
+  // section25?: Section25;
+  // section26?: Section26;
   section27?: Section27;
   section28?: Section28;
   section29?: Section29;
   section30?: Section30;
-  print?: Print;
+  // print?: Print;
 }
 
 export type { Field, FieldWithOptions, ApplicantFormValues };

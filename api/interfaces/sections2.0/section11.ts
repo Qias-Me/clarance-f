@@ -586,10 +586,10 @@ export type ResidenceValidationResult = {
 export const createDefaultAddressInformationWithReferences = (entryIndex: number): AddressInformation => {
   if (entryIndex === 0) {
     return {
-      streetAddress: createFieldFromReference(11, SECTION11_FIELD_NAMES.STREET_ADDRESS_1, 'sect11Entry1Street'),
-      city: createFieldFromReference(11, SECTION11_FIELD_NAMES.CITY_1, 'sect11Entry1City'),
+      streetAddress: createFieldFromReference(11, SECTION11_FIELD_NAMES.STREET_ADDRESS_1, ''),
+      city: createFieldFromReference(11, SECTION11_FIELD_NAMES.CITY_1, ''),
       state: {
-        ...createFieldFromReference(11, SECTION11_FIELD_NAMES.STATE_1, 'sect11Entry1State'),
+        ...createFieldFromReference(11, SECTION11_FIELD_NAMES.STATE_1, ''),
         options: [
           "AK", "AL", "AR", "AS", "AZ", "CA", "CO", "CT", "DC", "DE",
           "FL", "FM", "GA", "GU", "HI", "IA", "ID", "IL", "IN", "KS",
@@ -600,9 +600,9 @@ export const createDefaultAddressInformationWithReferences = (entryIndex: number
         ],
         value: '' as USState
       },
-      zipCode: createFieldFromReference(11, SECTION11_FIELD_NAMES.ZIP_CODE_1, 'sect11Entry1ZipCode'),
+      zipCode: createFieldFromReference(11, SECTION11_FIELD_NAMES.ZIP_CODE_1, ''),
       country: {
-        ...createFieldFromReference(11, SECTION11_FIELD_NAMES.COUNTRY_1, 'sect11Entry1Country'),
+        ...createFieldFromReference(11, SECTION11_FIELD_NAMES.COUNTRY_1, ''),
         options: [
           "Afghanistan", "Albania", "Algeria", "Argentina", "Armenia", "Australia",
           "Austria", "Azerbaijan", "Bahrain", "Bangladesh", "Belarus", "Belgium",
@@ -700,9 +700,9 @@ export const createDefaultAddressInformation = (): AddressInformation => ({
 export const createDefaultContactPersonWithReferences = (entryIndex: number): ContactPerson => {
   if (entryIndex === 0) {
     return {
-      lastName: createFieldFromReference(11, SECTION11_FIELD_NAMES.CONTACT_LAST_NAME_1, 'sect11Entry1_neighborLastName'),
-      firstName: createFieldFromReference(11, SECTION11_FIELD_NAMES.CONTACT_FIRST_NAME_1, 'sect11Entry1_neighborFirstName'),
-      middleName: createFieldFromReference(11, SECTION11_FIELD_NAMES.CONTACT_MIDDLE_NAME_1, 'sect11Entry1_neighborMiddleName'),
+      lastName: createFieldFromReference(11, SECTION11_FIELD_NAMES.CONTACT_LAST_NAME_1, ''),
+      firstName: createFieldFromReference(11, SECTION11_FIELD_NAMES.CONTACT_FIRST_NAME_1, ''),
+      middleName: createFieldFromReference(11, SECTION11_FIELD_NAMES.CONTACT_MIDDLE_NAME_1, ''),
       relationship: {
         id: '',
         name: '',
@@ -720,23 +720,23 @@ export const createDefaultContactPersonWithReferences = (entryIndex: number): Co
         value: '',
         rect: { x: 0, y: 0, width: 0, height: 0 }
       },
-      eveningPhone: createFieldFromReference(11, SECTION11_FIELD_NAMES.EVENING_PHONE_1, 'sect11Entry1_neighborTeleNumber1'),
-      eveningPhoneExt: createFieldFromReference(11, SECTION11_FIELD_NAMES.EVENING_PHONE_EXT_1, 'sect11Entry1_Extension1'),
+      eveningPhone: createFieldFromReference(11, SECTION11_FIELD_NAMES.EVENING_PHONE_1, ''),
+      eveningPhoneExt: createFieldFromReference(11, SECTION11_FIELD_NAMES.EVENING_PHONE_EXT_1, ''),
       eveningPhoneIntl: createFieldFromReference(11, SECTION11_FIELD_NAMES.EVENING_PHONE_INTL_1, false),
-      daytimePhone: createFieldFromReference(11, SECTION11_FIELD_NAMES.DAYTIME_PHONE_1, 'sect11Entry1_neighborTeleNumber2'),
-      daytimePhoneExt: createFieldFromReference(11, SECTION11_FIELD_NAMES.DAYTIME_PHONE_EXT_1, 'sect11Entry1_Extension2'),
+      daytimePhone: createFieldFromReference(11, SECTION11_FIELD_NAMES.DAYTIME_PHONE_1, ''),
+      daytimePhoneExt: createFieldFromReference(11, SECTION11_FIELD_NAMES.DAYTIME_PHONE_EXT_1, ''),
       daytimePhoneIntl: createFieldFromReference(11, SECTION11_FIELD_NAMES.DAYTIME_PHONE_INTL_1, false),
-      mobilePhone: createFieldFromReference(11, SECTION11_FIELD_NAMES.MOBILE_PHONE_1, 'sect11Entry1_neighborTeleNumber3'),
-      mobilePhoneExt: createFieldFromReference(11, SECTION11_FIELD_NAMES.MOBILE_PHONE_EXT_1, 'sect11Entry1_Extension3'),
+      mobilePhone: createFieldFromReference(11, SECTION11_FIELD_NAMES.MOBILE_PHONE_1, ''),
+      mobilePhoneExt: createFieldFromReference(11, SECTION11_FIELD_NAMES.MOBILE_PHONE_EXT_1, ''),
       mobilePhoneIntl: createFieldFromReference(11, SECTION11_FIELD_NAMES.MOBILE_PHONE_INTL_1, false),
-      email: createFieldFromReference(11, SECTION11_FIELD_NAMES.EMAIL_1, 'sect11Entry1_neighborEmail'),
+      email: createFieldFromReference(11, SECTION11_FIELD_NAMES.EMAIL_1, ''),
       address: createDefaultAddressInformationWithReferences(entryIndex),
       monthLastContact: {
         id: '',
         name: '',
         type: 'PDFTextField',
         label: 'Month of Last Contact',
-        value: 'sect11Entry1_b_neighboMonthLasContact',
+        value: '',
         rect: { x: 0, y: 0, width: 0, height: 0 }
       },
       dontKnowContact: createFieldFromReference(11, SECTION11_FIELD_NAMES.DONT_KNOW_CONTACT_1, false)
@@ -897,10 +897,10 @@ export const createDefaultContactPerson = (): ContactPerson => ({
 export const createDefaultAddressInformationDynamic = (entryIndex: number): AddressInformation => {
   try {
     return {
-      streetAddress: createSection11Field(entryIndex, 'TextField11[3]', `sect11Entry${entryIndex + 1}Street`),
-      city: createSection11Field(entryIndex, 'TextField11[4]', `sect11Entry${entryIndex + 1}City`),
+      streetAddress: createSection11Field(entryIndex, 'TextField11[3]', ''),
+      city: createSection11Field(entryIndex, 'TextField11[4]', ''),
       state: {
-        ...createSection11Field(entryIndex, 'School6_State[0]', `sect11Entry${entryIndex + 1}State`),
+        ...createSection11Field(entryIndex, 'School6_State[0]', ''),
         options: [
           "AK", "AL", "AR", "AS", "AZ", "CA", "CO", "CT", "DC", "DE",
           "FL", "FM", "GA", "GU", "HI", "IA", "ID", "IL", "IN", "KS",
@@ -911,9 +911,9 @@ export const createDefaultAddressInformationDynamic = (entryIndex: number): Addr
         ],
         value: '' as USState
       },
-      zipCode: createSection11Field(entryIndex, 'TextField11[5]', `sect11Entry${entryIndex + 1}ZipCode`),
+      zipCode: createSection11Field(entryIndex, 'TextField11[5]', ''),
       country: {
-        ...createSection11Field(entryIndex, 'DropDownList5[0]', `sect11Entry${entryIndex + 1}Country`),
+        ...createSection11Field(entryIndex, 'DropDownList5[0]', ''),
         options: [
           "Afghanistan", "Albania", "Algeria", "Argentina", "Armenia", "Australia",
           "Austria", "Azerbaijan", "Bahrain", "Bangladesh", "Belarus", "Belgium",
@@ -943,9 +943,9 @@ export const createDefaultAddressInformationDynamic = (entryIndex: number): Addr
 export const createDefaultContactPersonDynamic = (entryIndex: number): ContactPerson => {
   try {
     return {
-      lastName: createSection11Field(entryIndex, 'TextField11[6]', `sect11Entry${entryIndex + 1}_neighborLastName`),
-      firstName: createSection11Field(entryIndex, 'TextField11[7]', `sect11Entry${entryIndex + 1}_neighborFirstName`),
-      middleName: createSection11Field(entryIndex, 'TextField11[8]', `sect11Entry${entryIndex + 1}_neighborMiddleName`),
+      lastName: createSection11Field(entryIndex, 'TextField11[6]', ''),
+      firstName: createSection11Field(entryIndex, 'TextField11[7]', ''),
+      middleName: createSection11Field(entryIndex, 'TextField11[8]', ''),
       relationship: {
         id: '',
         name: '',
@@ -963,23 +963,23 @@ export const createDefaultContactPersonDynamic = (entryIndex: number): ContactPe
         value: '',
         rect: { x: 0, y: 0, width: 0, height: 0 }
       },
-      eveningPhone: createSection11Field(entryIndex, 'p3-t68[0]', `sect11Entry${entryIndex + 1}_neighborTeleNumber1`),
-      eveningPhoneExt: createSection11Field(entryIndex, 'TextField11[0]', `sect11Entry${entryIndex + 1}_Extension1`),
+      eveningPhone: createSection11Field(entryIndex, 'p3-t68[0]', ''),
+      eveningPhoneExt: createSection11Field(entryIndex, 'TextField11[0]', ''),
       eveningPhoneIntl: createSection11Field(entryIndex, '#field[4]', false),
-      daytimePhone: createSection11Field(entryIndex, 'p3-t68[1]', `sect11Entry${entryIndex + 1}_neighborTeleNumber2`),
-      daytimePhoneExt: createSection11Field(entryIndex, 'TextField11[1]', `sect11Entry${entryIndex + 1}_Extension2`),
+      daytimePhone: createSection11Field(entryIndex, 'p3-t68[1]', ''),
+      daytimePhoneExt: createSection11Field(entryIndex, 'TextField11[1]', ''),
       daytimePhoneIntl: createSection11Field(entryIndex, '#field[10]', false),
-      mobilePhone: createSection11Field(entryIndex, 'p3-t68[2]', `sect11Entry${entryIndex + 1}_neighborTeleNumber3`),
-      mobilePhoneExt: createSection11Field(entryIndex, 'TextField11[2]', `sect11Entry${entryIndex + 1}_Extension3`),
+      mobilePhone: createSection11Field(entryIndex, 'p3-t68[2]', ''),
+      mobilePhoneExt: createSection11Field(entryIndex, 'TextField11[2]', ''),
       mobilePhoneIntl: createSection11Field(entryIndex, '#field[12]', false),
-      email: createSection11Field(entryIndex, 'p3-t68[3]', `sect11Entry${entryIndex + 1}_neighborEmail`),
+      email: createSection11Field(entryIndex, 'p3-t68[3]', ''),
       address: createDefaultAddressInformationDynamic(entryIndex),
       monthLastContact: {
         id: '',
         name: '',
         type: 'PDFTextField',
         label: 'Month of Last Contact',
-        value: `sect11Entry${entryIndex + 1}_b_neighboMonthLasContact`,
+        value: '',
         rect: { x: 0, y: 0, width: 0, height: 0 }
       },
       dontKnowContact: createSection11Field(entryIndex, '#field[5]', false)
@@ -1002,7 +1002,7 @@ export const createFallbackResidenceEntry = (index: number): ResidenceEntry => {
       name: `residence_from_date_${indexStr}`,
       type: 'PDFTextField',
       label: 'From Date (Month/Year)',
-      value: `sect11Entry${indexStr}FromDate`,
+      value: '',
       rect: { x: 0, y: 0, width: 0, height: 0 }
     },
     fromDateEstimate: {
@@ -1018,7 +1018,7 @@ export const createFallbackResidenceEntry = (index: number): ResidenceEntry => {
       name: `residence_to_date_${indexStr}`,
       type: 'PDFTextField',
       label: 'To Date (Month/Year)',
-      value: `sect11Entry${indexStr}ToDate`,
+      value: '',
       rect: { x: 0, y: 0, width: 0, height: 0 }
     },
     toDateEstimate: {
@@ -1051,7 +1051,7 @@ export const createFallbackResidenceEntry = (index: number): ResidenceEntry => {
       name: `residence_type_other_${indexStr}`,
       type: 'PDFTextField',
       label: 'Other Residence Type',
-      value: `sect11Entry${indexStr}OtherField`,
+      value: '',
       rect: { x: 0, y: 0, width: 0, height: 0 }
     },
     address: createDefaultAddressInformation(),
@@ -1074,9 +1074,9 @@ export const createDefaultResidenceEntry = (index: number): ResidenceEntry => {
   try {
     return {
       // Date fields using dynamic field mapping
-      fromDate: createSection11Field(index, 'From_Datefield_Name_2[0]', `sect11Entry${index + 1}FromDate`),
+      fromDate: createSection11Field(index, 'From_Datefield_Name_2[0]', ''),
       fromDateEstimate: createSection11Field(index, '#field[15]', false),
-      toDate: createSection11Field(index, 'From_Datefield_Name_2[1]', `sect11Entry${index + 1}ToDate`),
+      toDate: createSection11Field(index, 'From_Datefield_Name_2[1]', ''),
       toDateEstimate: createSection11Field(index, '#field[18]', false),
       present: createSection11Field(index, '#field[17]', false),
 
@@ -1086,7 +1086,7 @@ export const createDefaultResidenceEntry = (index: number): ResidenceEntry => {
         options: RESIDENCE_TYPE_OPTIONS,
         value: 'Own' as const
       },
-      residenceTypeOther: createSection11Field(index, 'TextField12[0]', `sect11Entry${index + 1}OtherField`),
+      residenceTypeOther: createSection11Field(index, 'TextField12[0]', ''),
 
       // Address and contact using dynamic creation
       address: createDefaultAddressInformationDynamic(index),

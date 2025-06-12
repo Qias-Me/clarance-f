@@ -8,7 +8,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSection1 } from '~/state/contexts/sections2.0/section1';
-import { useSF86Form } from '~/state/contexts/SF86FormContext';
+import { useSF86Form } from '~/state/contexts/sections2.0/SF86FormContext';
 import { getSuffixOptions } from '../../../api/interfaces/sections2.0/base';
 
 interface Section1ComponentProps {
@@ -57,26 +57,38 @@ export const Section1Component: React.FC<Section1ComponentProps> = ({
     setIsValid(result.isValid);
     onValidationChange?.(result.isValid);
 
+    // console.log('🔍 Section 1 validation result:', result);
+    // console.log('📊 Section 1 data before submission:', section1Data);
+
     if (result.isValid) {
       try {
+        // console.log('🔄 Section 1: Starting data synchronization...');
+
         // Update the central form context with Section 1 data
         sf86Form.updateSectionData('section1', section1Data);
 
-        // Save the form data to persistence layer
-        await sf86Form.saveForm();
+        // console.log('✅ Section 1: Data synchronization complete, proceeding to save...');
+
+        // Get the current form data and update it with section1 data for immediate saving
+        const currentFormData = sf86Form.exportForm();
+        const updatedFormData = { ...currentFormData, section1: section1Data };
+
+        // Save the form data to persistence layer with the updated data
+        await sf86Form.saveForm(updatedFormData);
 
         // Mark section as complete after successful save
         sf86Form.markSectionComplete('section1');
 
-        console.log('✅ Section 1 data saved successfully:', section1Data);
+        // console.log('✅ Section 1 data saved successfully:', section1Data);
 
         // Proceed to next section if callback provided
         if (onNext) {
           onNext();
         }
       } catch (error) {
-        console.error('❌ Failed to save Section 1 data:', error);
-        // Could show an error message to user here
+        // console.error('❌ Failed to save Section 1 data:', error);
+        // Show an error message to user
+        // console.log('There was an error saving your information. Please try again.');
       }
     }
   };

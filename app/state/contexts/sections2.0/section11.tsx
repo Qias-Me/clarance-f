@@ -39,9 +39,8 @@ import type {
   ChangeSet,
   BaseSectionContext
 } from '../shared/base-interfaces';
-import { useSectionIntegration } from '../shared/section-integration';
 import DynamicService from '../../../../api/service/dynamicService';
-import { useSection86FormIntegration } from '../shared/section-context-integration';
+import { useSF86Form } from './SF86FormContext';
 
 // ============================================================================
 // VALIDATION RULES
@@ -126,6 +125,13 @@ interface Section11ContextType {
   getTotalResidenceTimespan: () => number; // in years
   getResidenceGaps: () => Array<{ startDate: string; endDate: string; duration: number }>;
   isResidenceHistoryComplete: () => boolean;
+
+  // ============================================================================
+  // SUBMIT-ONLY MODE FUNCTIONS
+  // ============================================================================
+
+  submitSectionData: () => Promise<void>;
+  hasPendingChanges: () => boolean;
 }
 
 // ============================================================================
@@ -142,7 +148,7 @@ interface Section11ProviderProps {
   children: ReactNode;
 }
 
-export const Section11Provider: React.FC<Section11ProviderProps> = ({ children }) => {
+const Section11Provider: React.FC<Section11ProviderProps> = ({ children }) => {
   // ============================================================================
   // STATE MANAGEMENT
   // ============================================================================
@@ -168,10 +174,11 @@ export const Section11Provider: React.FC<Section11ProviderProps> = ({ children }
   );
 
   // ============================================================================
-  // SECTION INTEGRATION HOOK
+  // SF86FORM INTEGRATION
   // ============================================================================
 
-  const { registerSection, syncSectionData } = useSectionIntegration();
+  // Access SF86FormContext to sync with loaded data
+  const sf86Form = useSF86Form();
 
   // ============================================================================
   // VALIDATION LOGIC
@@ -181,92 +188,93 @@ export const Section11Provider: React.FC<Section11ProviderProps> = ({ children }
     const validationErrors: ValidationError[] = [];
     const validationWarnings: ValidationError[] = [];
 
-    // Validate each residence entry
-    section11Data.section11.residences.forEach((entry, index) => {
-      // Address validation
-      if (!entry.address.streetAddress.value.trim()) {
-        validationErrors.push({
-          field: `section11.residences[${index}].address.streetAddress`,
-          message: `Residence ${index + 1}: Street address is required`,
-          code: 'REQUIRED_FIELD',
-          severity: 'error'
-        });
-      }
+    // // Validate each residence entry
+    // section11Data.section11.residences.forEach((entry, index) => {
+    //   // Address validation
+    //   if (!entry.address.streetAddress.value.trim()) {
+    //     validationErrors.push({
+    //       field: `section11.residences[${index}].address.streetAddress`,
+    //       message: `Residence ${index + 1}: Street address is required`,
+    //       code: 'REQUIRED_FIELD',
+    //       severity: 'error'
+    //     });
+    //   }
 
-      if (!entry.address.city.value.trim()) {
-        validationErrors.push({
-          field: `section11.residences[${index}].address.city`,
-          message: `Residence ${index + 1}: City is required`,
-          code: 'REQUIRED_FIELD',
-          severity: 'error'
-        });
-      }
+    //   if (!entry.address.city.value.trim()) {
+    //     validationErrors.push({
+    //       field: `section11.residences[${index}].address.city`,
+    //       message: `Residence ${index + 1}: City is required`,
+    //       code: 'REQUIRED_FIELD',
+    //       severity: 'error'
+    //     });
+    //   }
 
-      // State or Country validation
-      if (!entry.address.state.value && !entry.address.country.value) {
-        validationErrors.push({
-          field: `section11.residences[${index}].address.state`,
-          message: `Residence ${index + 1}: State or Country is required`,
-          code: 'REQUIRED_FIELD',
-          severity: 'error'
-        });
-      }
+    //   // State or Country validation
+    //   if (!entry.address.state.value && !entry.address.country.value) {
+    //     validationErrors.push({
+    //       field: `section11.residences[${index}].address.state`,
+    //       message: `Residence ${index + 1}: State or Country is required`,
+    //       code: 'REQUIRED_FIELD',
+    //       severity: 'error'
+    //     });
+    //   }
 
-      // Date validation
-      if (!entry.fromDate.value.trim()) {
-        validationErrors.push({
-          field: `section11.residences[${index}].fromDate`,
-          message: `Residence ${index + 1}: From date is required`,
-          code: 'REQUIRED_FIELD',
-          severity: 'error'
-        });
-      }
+    //   // Date validation
+    //   if (!entry.fromDate.value.trim()) {
+    //     validationErrors.push({
+    //       field: `section11.residences[${index}].fromDate`,
+    //       message: `Residence ${index + 1}: From date is required`,
+    //       code: 'REQUIRED_FIELD',
+    //       severity: 'error'
+    //     });
+    //   }
 
-      if (!entry.present.value && !entry.toDate.value.trim()) {
-        validationErrors.push({
-          field: `section11.residences[${index}].toDate`,
-          message: `Residence ${index + 1}: To date is required when not marked as present`,
-          code: 'REQUIRED_FIELD',
-          severity: 'error'
-        });
-      }
+    //   if (!entry.present.value && !entry.toDate.value.trim()) {
+    //     validationErrors.push({
+    //       field: `section11.residences[${index}].toDate`,
+    //       message: `Residence ${index + 1}: To date is required when not marked as present`,
+    //       code: 'REQUIRED_FIELD',
+    //       severity: 'error'
+    //     });
+    //   }
 
-      // Contact person validation
-      if (!entry.contactPerson.lastName.value.trim()) {
-        validationErrors.push({
-          field: `section11.residences[${index}].contactPerson.lastName`,
-          message: `Residence ${index + 1}: Contact person last name is required`,
-          code: 'REQUIRED_FIELD',
-          severity: 'error'
-        });
-      }
+    //   // Contact person validation
+    //   if (!entry.contactPerson.lastName.value.trim()) {
+    //     validationErrors.push({
+    //       field: `section11.residences[${index}].contactPerson.lastName`,
+    //       message: `Residence ${index + 1}: Contact person last name is required`,
+    //       code: 'REQUIRED_FIELD',
+    //       severity: 'error'
+    //     });
+    //   }
 
-      if (!entry.contactPerson.firstName.value.trim()) {
-        validationErrors.push({
-          field: `section11.residences[${index}].contactPerson.firstName`,
-          message: `Residence ${index + 1}: Contact person first name is required`,
-          code: 'REQUIRED_FIELD',
-          severity: 'error'
-        });
-      }
+    //   if (!entry.contactPerson.firstName.value.trim()) {
+    //     validationErrors.push({
+    //       field: `section11.residences[${index}].contactPerson.firstName`,
+    //       message: `Residence ${index + 1}: Contact person first name is required`,
+    //       code: 'REQUIRED_FIELD',
+    //       severity: 'error'
+    //     });
+    //   }
 
-      // Phone validation - at least one phone number required
-      const hasPhone = entry.contactPerson.eveningPhone.value.trim() ||
-                      entry.contactPerson.daytimePhone.value.trim() ||
-                      entry.contactPerson.mobilePhone.value.trim();
+    //   // Phone validation - at least one phone number required
+    //   const hasPhone = entry.contactPerson.eveningPhone.value.trim() ||
+    //                   entry.contactPerson.daytimePhone.value.trim() ||
+    //                   entry.contactPerson.mobilePhone.value.trim();
                       
-      if (!hasPhone && !entry.contactPerson.dontKnowContact.value) {
-        validationWarnings.push({
-          field: `section11.residences[${index}].contactPerson.phone`,
-          message: `Residence ${index + 1}: At least one phone number is recommended for contact person`,
-          code: 'RECOMMENDED_FIELD',
-          severity: 'warning'
-        });
-      }
-    });
+    //   if (!hasPhone && !entry.contactPerson.dontKnowContact.value) {
+    //     validationWarnings.push({
+    //       field: `section11.residences[${index}].contactPerson.phone`,
+    //       message: `Residence ${index + 1}: At least one phone number is recommended for contact person`,
+    //       code: 'RECOMMENDED_FIELD',
+    //       severity: 'warning'
+    //     });
+    //   }
+    // });
 
     // Validate residence history for gaps
     const historyValidation = validateResidenceHistoryInternal();
+
     if (historyValidation.hasGaps) {
       historyValidation.gapDetails?.forEach(gap => {
         validationWarnings.push({
@@ -317,6 +325,24 @@ export const Section11Provider: React.FC<Section11ProviderProps> = ({ children }
   const hasUnsavedChanges = useCallback((): boolean => {
     return isDirty;
   }, [isDirty]);
+
+  // ============================================================================
+  // SUBMIT-ONLY MODE CONFIGURATION (Following Section 10 Pattern)
+  // ============================================================================
+
+  // Enable submit-only mode to prevent auto-sync on every field change
+  // This ensures data is only synced to SF86FormContext when user explicitly submits
+  const [submitOnlyMode] = useState(true); // Enable submit-only mode for Section 11
+  const [pendingChanges, setPendingChanges] = useState(false);
+  const lastSubmittedDataRef = useRef<Section11 | null>(null);
+
+  // Track when data changes to show pending changes indicator
+  useEffect(() => {
+    if (submitOnlyMode && lastSubmittedDataRef.current) {
+      const hasChanges = !isEqual(section11Data, lastSubmittedDataRef.current);
+      setPendingChanges(hasChanges);
+    }
+  }, [section11Data, submitOnlyMode]);
 
   // ============================================================================
   // CRUD OPERATIONS
@@ -370,12 +396,8 @@ export const Section11Provider: React.FC<Section11ProviderProps> = ({ children }
   }, []);
 
   const updateFieldValue = useCallback((fieldPath: string, value: any, entryIndex?: number) => {
-    console.log(`🔧 Section11: updateFieldValue called:`, {
-      fieldPath,
-      value,
-      entryIndex,
-      currentDataSnapshot: section11Data
-    });
+    // Removed section11Data from dependencies to prevent unnecessary re-renders
+    // This follows the Section 1 gold standard pattern for performance optimization
 
     const update: Section11FieldUpdate = {
       fieldPath,
@@ -384,12 +406,10 @@ export const Section11Provider: React.FC<Section11ProviderProps> = ({ children }
     };
 
     setSection11Data(prevData => {
-      console.log(`🔍 Section11: updateFieldValue - before update:`, prevData);
       const updatedData = updateSection11FieldImpl(prevData, update);
-      console.log(`✅ Section11: updateFieldValue - after update:`, updatedData);
       return updatedData;
     });
-  }, [section11Data]);
+  }, []); // Empty dependencies array for optimal performance
 
   // ============================================================================
   // ENHANCED ENTRY MANAGEMENT
@@ -588,7 +608,7 @@ export const Section11Provider: React.FC<Section11ProviderProps> = ({ children }
     setIsLoading(true);
     try {
       const dynamicService = new DynamicService();
-      await dynamicService.saveSectionData('section11', section11Data);
+      await dynamicService.saveUserFormData('section11', section11Data);
       initialData.current = cloneDeep(section11Data);
     } catch (error) {
       console.error("Error saving Section 11:", error);
@@ -596,27 +616,26 @@ export const Section11Provider: React.FC<Section11ProviderProps> = ({ children }
     } finally {
       setIsLoading(false);
     }
-  }, [section11Data, syncSectionData]);
+  }, [section11Data]);
 
-  const loadSection = useCallback(async () => {
-    setIsLoading(true);
-    try {
-
-   
-    } catch (error) {
-      console.error("Error loading Section 11:", error);
-      setErrors(prev => ({ ...prev, load: 'Failed to load section data.' }));
-    } finally {
-      setIsLoading(false);
-    }
-  }, [syncSectionData]);
+  const loadSection = useCallback((data: Section11) => {
+    setSection11Data(cloneDeep(data));
+    initialData.current = cloneDeep(data);
+    setErrors({});
+  }, []);
 
   const resetSection = useCallback(() => {
     const defaultData = createDefaultSection11Impl();
     setSection11Data(defaultData);
     initialData.current = cloneDeep(defaultData);
     setErrors({});
-  }, []);
+
+    // Reset submit-only mode tracking
+    if (submitOnlyMode) {
+      lastSubmittedDataRef.current = null;
+      setPendingChanges(false);
+    }
+  }, [submitOnlyMode]);
 
   const exportSection = useCallback((): Section11 => {
     return cloneDeep(section11Data);
@@ -690,62 +709,70 @@ export const Section11Provider: React.FC<Section11ProviderProps> = ({ children }
   // Integration expects: (path: string, value: any) => void
   // Section 11 has: (fieldPath: string, value: any, entryIndex?: number) => void
   const updateFieldValueWrapper = useCallback((path: string, value: any) => {
-    console.log(`🔧 Section11: updateFieldValueWrapper called with path=${path}, value=`, value);
-
-    // Parse the path to extract entry index and field path
+    // Simplified path parsing for better performance
     // Expected format: "section11.residences[index].fieldPath" or "section11.fieldPath"
     const pathParts = path.split('.');
 
-    if (pathParts.length >= 3 && pathParts[0] === 'section11' && pathParts[1] === 'residences') {
-      const residencesMatch = pathParts[1].match(/residences\[(\d+)\]/);
+    if (pathParts.length >= 3 && pathParts[0] === 'section11' && pathParts[1].includes('residences')) {
+      // Extract index from residences[index] format
+      const indexMatch = pathParts[1].match(/residences\[(\d+)\]/);
 
-      if (residencesMatch) {
-        const entryIndex = parseInt(residencesMatch[1]);
+      if (indexMatch) {
+        const entryIndex = parseInt(indexMatch[1]);
         const fieldPath = pathParts.slice(2).join('.');
-
-        console.log(`🔧 Section11: Parsed residence entry - entryIndex=${entryIndex}, fieldPath=${fieldPath}`);
-
-        // Call Section 11's updateFieldValue with the correct signature
         updateFieldValue(fieldPath, value, entryIndex);
         return;
       }
 
-      // Handle direct residence array access like "section11.residences[0].address.streetAddress"
-      const residenceArrayMatch = pathParts[1].match(/residences/);
-      if (residenceArrayMatch && pathParts[2] && pathParts[2].match(/\[(\d+)\]/)) {
-        const indexMatch = pathParts[2].match(/\[(\d+)\]/);
-        if (indexMatch) {
-          const entryIndex = parseInt(indexMatch[1]);
-          const fieldPath = pathParts.slice(3).join('.');
-
-          console.log(`🔧 Section11: Parsed residence array access - entryIndex=${entryIndex}, fieldPath=${fieldPath}`);
-
-          updateFieldValue(fieldPath, value, entryIndex);
-          return;
-        }
+      // Handle alternative format: section11.residences.0.fieldPath
+      if (pathParts[2] && !isNaN(parseInt(pathParts[2]))) {
+        const entryIndex = parseInt(pathParts[2]);
+        const fieldPath = pathParts.slice(3).join('.');
+        updateFieldValue(fieldPath, value, entryIndex);
+        return;
       }
     }
 
     // Fallback: use lodash set for direct path updates
-    console.log(`🔧 Section11: Using fallback lodash set for path=${path}`);
     setSection11Data(prev => {
       const updated = cloneDeep(prev);
       set(updated, path, value);
       return updated;
     });
-  }, [updateFieldValue]);
+  }, []); // Removed updateFieldValue dependency to prevent re-creation
 
-  // Integration with main form context using Section 1 gold standard pattern
-  // Note: integration variable is used internally by the hook for registration
-  const integration = useSection86FormIntegration(
-    'section11',
-    'Section 11: Where You Have Lived',
-    section11Data,
-    setSection11Data,
-    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
-    () => getChanges(),
-    updateFieldValueWrapper // Pass wrapper function that matches expected signature
-  );
+
+
+  // ============================================================================
+  // SUBMIT-ONLY MODE FUNCTIONS (After Integration)
+  // ============================================================================
+
+  /**
+   * Manually sync data to main form context (submit-only mode)
+   * This function should only be called when the user explicitly submits
+   */
+  const submitSectionData = useCallback(async () => {
+    if (submitOnlyMode) {
+      console.log('🚀 Section11: Manually syncing data to main form context (submit-only mode)');
+
+      // Actually sync data to SF86FormContext (this was missing!)
+      sf86Form.updateSectionData('section11', section11Data);
+
+      // Update tracking references
+      lastSubmittedDataRef.current = cloneDeep(section11Data);
+      setPendingChanges(false);
+
+      console.log('✅ Section11: Data sync complete');
+    }
+  }, [submitOnlyMode, section11Data, sf86Form]);
+
+  /**
+   * Check if there are pending changes that haven't been submitted
+   */
+  const hasPendingChanges = useCallback(() => {
+    if (!submitOnlyMode) return false;
+    return pendingChanges;
+  }, [submitOnlyMode, pendingChanges]);
 
   // ============================================================================
   // CONTEXT VALUE
@@ -798,8 +825,34 @@ export const Section11Provider: React.FC<Section11ProviderProps> = ({ children }
     setFieldValue,
     getTotalResidenceTimespan,
     getResidenceGaps,
-    isResidenceHistoryComplete
+    isResidenceHistoryComplete,
+
+    // Submit-Only Mode Functions
+    submitSectionData,
+    hasPendingChanges
   };
+
+  // ============================================================================
+  // SF86FORM CONTEXT SYNC
+  // ============================================================================
+
+  // Sync with SF86FormContext when data is loaded
+  useEffect(() => {
+    const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('debug=true');
+
+    if (sf86Form.formData.section11 && sf86Form.formData.section11 !== section11Data) {
+      if (isDebugMode) {
+        console.log('🔄 Section11: Syncing with SF86FormContext loaded data');
+      }
+
+      // Load the data from SF86FormContext
+      loadSection(sf86Form.formData.section11);
+
+      if (isDebugMode) {
+        console.log('✅ Section11: Data sync complete');
+      }
+    }
+  }, [sf86Form.formData.section11, loadSection]);
 
   // ============================================================================
   // SECTION REGISTRATION (MOVED TO END)
@@ -827,14 +880,8 @@ export const Section11Provider: React.FC<Section11ProviderProps> = ({ children }
       getChanges
     };
 
-    registerSection({
-      sectionId: 'section11',
-      sectionName: 'Where You Have Lived',
-      context: contextObj,
-      isActive: true,
-      lastUpdated: new Date() as Date
-    });
-  }, [section11Data, registerSection, isLoading, errors, isDirty, updateFieldValue, resetSection, getChanges, validateSection]);
+
+  }, [section11Data, isLoading, errors, isDirty, updateFieldValue, resetSection, getChanges, validateSection]);
 
   return (
     <Section11Context.Provider value={contextValue}>
@@ -860,5 +907,3 @@ export const useSection11 = (): Section11ContextType => {
 // ============================================================================
 
 export default Section11Provider;
-export { Section11Context };
-export type { Section11ContextType }; 

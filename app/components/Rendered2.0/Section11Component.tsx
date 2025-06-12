@@ -5,10 +5,10 @@
  * UI patterns and integrating with the Section11 context provider.
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useSection11 } from '../../state/contexts/sections2.0/section11';
 import type { ResidenceEntry } from '../../../api/interfaces/sections2.0/section11';
-import { useSF86Form } from '~/state/contexts/SF86FormContext';
+import { useSF86Form } from '~/state/contexts/sections2.0/SF86FormContext';
 
 // ============================================================================
 // TYPES
@@ -18,6 +18,7 @@ interface Section11ComponentProps {
   onNext?: () => void;
   onPrevious?: () => void;
   showNavigation?: boolean;
+  onValidationChange?: (isValid: boolean) => void;
 }
 
 // ============================================================================
@@ -27,7 +28,8 @@ interface Section11ComponentProps {
 const Section11Component: React.FC<Section11ComponentProps> = ({
   onNext,
   onPrevious,
-  showNavigation = true
+  showNavigation = true,
+  onValidationChange
 }) => {
   const {
     section11Data,
@@ -40,13 +42,16 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
     getEntryCount,
     validateSection,
     isResidenceHistoryComplete,
-    getTotalResidenceTimespan
+    getTotalResidenceTimespan,
+    submitSectionData,
+    hasPendingChanges
   } = useSection11();
 
-    // SF86 Form Context for data persistence
-    const sf86Form = useSF86Form();
-  
+  // SF86 Form Context for data persistence
+  const sf86Form = useSF86Form();
 
+  // Track validation state internally
+  const [isValid, setIsValid] = useState(false);
   const [activeEntryIndex, setActiveEntryIndex] = useState(0);
   const [showValidation, setShowValidation] = useState(false);
   const [pendingNewEntry, setPendingNewEntry] = useState(false);
@@ -61,38 +66,28 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
   // Track add calls to detect multiple invocations
   const addCallCountRef = React.useRef(0);
 
-  // Debug logging for entry count tracking
+  // Handle validation on component mount and when data changes
+  useEffect(() => {
+    const validationResult = validateSection();
+    setIsValid(validationResult.isValid);
+    onValidationChange?.(validationResult.isValid);
+  }, [section11Data, validateSection, onValidationChange]);
+
+  // Track entry count changes for validation
   React.useEffect(() => {
     const currentCount = getEntryCount();
-    console.log(`📊 Section 11: Current entry count: ${currentCount}/${MAX_ENTRIES}, activeEntryIndex: ${activeEntryIndex}`);
-    console.log(`📊 Section 11: Residence entries:`, section11Data.section11.residences.map((entry, index) => ({
-      index,
-      streetAddress: entry.address.streetAddress.value,
-      fromDate: entry.fromDate.value
-    })));
-
-    // Track entry count changes to detect unexpected jumps
-    if (lastEntryCountRef.current > 0 && currentCount > lastEntryCountRef.current + 1) {
-      console.warn(`⚠️ Section 11: Entry count jumped from ${lastEntryCountRef.current} to ${currentCount} - possible double execution!`);
-    }
     lastEntryCountRef.current = currentCount;
 
     if (currentCount > MAX_ENTRIES) {
-      console.warn(`⚠️ Section 11: Entry count (${currentCount}) exceeds maximum (${MAX_ENTRIES})`);
+      // console.warn(`⚠️ Section 11: Entry count (${currentCount}) exceeds maximum (${MAX_ENTRIES})`);
     }
-  }, [getEntryCount, section11Data.section11.residences.length, activeEntryIndex, section11Data]);
-
-  // Track active entry index changes
-  React.useEffect(() => {
-    console.log(`🎯 Section 11: Active entry index changed to: ${activeEntryIndex}`);
-  }, [activeEntryIndex]);
+  }, [getEntryCount, section11Data.section11.residences.length]);
 
   // Handle setting active index to new entry after it's been added
   React.useEffect(() => {
     if (pendingNewEntry) {
       const currentCount = getEntryCount();
       const newEntryIndex = currentCount - 1; // Last entry is the new one
-      console.log(`🎯 Section 11: Setting active index to new entry: ${newEntryIndex} (total entries: ${currentCount})`);
       setActiveEntryIndex(newEntryIndex);
       setPendingNewEntry(false);
       isAddingEntryRef.current = false; // Reset the adding flag
@@ -110,19 +105,13 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
   const handleAddResidence = useCallback(() => {
     // Prevent multiple rapid calls
     if (isAddingEntryRef.current) {
-      console.warn(`🚫 Already adding an entry, ignoring duplicate call`);
       return;
     }
 
     // Enforce maximum entry limit
     if (getEntryCount() >= MAX_ENTRIES) {
-      console.warn(`Cannot add more than ${MAX_ENTRIES} residence entries`);
       return;
     }
-
-    const currentCount = getEntryCount();
-    addCallCountRef.current += 1;
-    console.log(`🏠 Adding residence entry (call #${addCallCountRef.current}). Current count: ${currentCount}, new entry will be at index: ${currentCount}`);
 
     // Set flags to prevent duplicate calls and track new entry
     isAddingEntryRef.current = true;
@@ -144,33 +133,49 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
     }
   }, [removeResidenceEntry, getEntryCount, activeEntryIndex]);
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+  // Handle submission with data persistence
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setShowValidation(true);
-
     const result = validateSection();
-    console.log(`🔍 Section 11 validation result:`, result);
+    setIsValid(result.isValid);
+    onValidationChange?.(result.isValid);
 
-    // if (result.isValid) {
+    // console.log('🔍 Section 11 validation result:', result);
+    // console.log('📊 Section 11 data before submission:', section11Data);
+
+    if (result.isValid) {
       try {
-        // Update the central form context with Section 11 data
+        // console.log('🔄 Section 11: Starting data synchronization...');
+
+        // Update the central form context with Section 11 data and wait for synchronization
         sf86Form.updateSectionData('section11', section11Data);
 
-        // Save the form data to persistence layer
-        await sf86Form.saveForm();
+        // console.log('✅ Section 11: Data synchronization complete, proceeding to save...');
+
+        // Get the current form data and update it with section11 data for immediate saving
+        const currentFormData = sf86Form.exportForm();
+        const updatedFormData = { ...currentFormData, section11: section11Data };
+
+        // Save the form data to persistence layer with the updated data
+        await sf86Form.saveForm(updatedFormData);
+
+        // Mark section as complete after successful save
+        sf86Form.markSectionComplete('section11');
+
+        // console.log('✅ Section 11 data saved successfully:', section11Data);
 
         // Proceed to next section if callback provided
         if (onNext) {
           onNext();
         }
       } catch (error) {
-        console.error('Failed to save Section 11 data:', error);
+        // console.error('❌ Failed to save Section 11 data:', error);
+        // Show an error message to user
+        // console.log('There was an error saving your information. Please try again.');
       }
-    // } else {
-    //   console.warn(`⚠️ Section 11 validation failed:`, result.errors);
-    // }
-  }, [validateSection, sf86Form, section11Data, onNext]);
-  
+    }
+  };
+
   // ============================================================================
   // RENDER FUNCTIONS
   // ============================================================================
@@ -178,11 +183,8 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
   const renderResidenceEntry = (entry: ResidenceEntry, index: number) => {
     const isActive = index === activeEntryIndex;
 
-    // Debug logging for entry index validation
-    console.log(`🎯 Rendering residence entry ${index + 1} (index: ${index}), isActive: ${isActive}, activeEntryIndex: ${activeEntryIndex}`);
-
     if (index >= MAX_ENTRIES) {
-      console.warn(`⚠️ Section 11: Attempting to render entry ${index} which exceeds maximum of ${MAX_ENTRIES}`);
+      // console.warn(`⚠️ Section 11: Attempting to render entry ${index} which exceeds maximum of ${MAX_ENTRIES}`);
     }
 
     return (
@@ -697,7 +699,7 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
           </div>
           <div className="bg-white rounded-md p-3 border border-gray-200">
             <div className="text-sm font-medium text-gray-500">Total Timespan</div>
-            <div className="text-2xl font-bold text-gray-900">{timespan.toFixed(1)} years</div>
+            <div className="text-2xl font-bold text-gray-900">{timespan ? timespan.toFixed(1) : 0} years</div>
           </div>
           <div className="bg-white rounded-md p-3 border border-gray-200">
             <div className="text-sm font-medium text-gray-500">History Complete</div>
@@ -759,7 +761,7 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
         <div className="mt-4 text-sm text-gray-500">
           Fields marked with <span className="text-red-500">*</span> are required.
         </div>
-        {isDirty && (
+        {hasPendingChanges() && (
           <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-md">
             <div className="flex">
               <div className="flex-shrink-0">
@@ -769,7 +771,7 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
               </div>
               <div className="ml-3">
                 <p className="text-sm text-orange-700">
-                  You have unsaved changes
+                  You have unsaved changes (submit-only mode active)
                 </p>
               </div>
             </div>
@@ -782,11 +784,9 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
 
       {/* Residences Container */}
       <div className="space-y-6">
-        {(() => {
-          const residences = section11Data.section11.residences.slice(0, MAX_ENTRIES);
-          console.log(`📋 Section 11: Rendering ${residences.length} residences, activeEntryIndex: ${activeEntryIndex}`);
-          return residences.map((entry, index) => renderResidenceEntry(entry, index));
-        })()}
+        {section11Data.section11.residences.slice(0, MAX_ENTRIES).map((entry, index) =>
+          renderResidenceEntry(entry, index)
+        )}
       </div>
 
       {/* Add Residence Button */}

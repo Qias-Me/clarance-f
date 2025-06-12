@@ -4,7 +4,6 @@
  * React context for managing SF-86 Section 10 data state and operations.
  * This section handles dual citizenship information and foreign passport details.
  *
- * Updated to follow Section 1 gold standard pattern with useSection86FormIntegration.
  */
 
 import React, { createContext, useContext, useState, useCallback, useMemo, useEffect, useRef } from 'react';
@@ -27,10 +26,11 @@ import {
   removeForeignPassportEntry,
   removeTravelCountryEntry  // NEW: Added travel country management
 } from '../../../../api/interfaces/sections2.0/section10';
-import { useSection86FormIntegration } from '../shared/section-context-integration';
+import type { ValidationResult, ValidationError, ChangeSet } from '../shared/base-interfaces';
 // NEW: Import field mapping and generation systems
-import { validateSection10FieldMappings } from './section10-field-mapping';
+import { validateSection10FieldMappings, mapLogicalFieldToPdfField } from './section10-field-mapping';
 import { initializeSection10FieldMapping, validateFieldGeneration } from './section10-field-generator';
+import { useSF86Form } from './SF86FormContext';
 
 // ============================================================================
 // CONTEXT INTERFACE FOLLOWING SECTION 1 GOLD STANDARD
@@ -41,10 +41,11 @@ import { initializeSection10FieldMapping, validateFieldGeneration } from './sect
  * UPDATED: Added travel country management functions
  */
 interface Section10ContextType {
-  // State
+  // State (Following Section 1 Gold Standard)
   section10Data: Section10;
   isLoading: boolean;
-  // REMOVED: isDirty - only save button should trigger state updates
+  errors: Record<string, string>;
+  isDirty: boolean;
 
   // Dual Citizenship Actions
   updateDualCitizenshipFlag: (value: string) => void;
@@ -66,11 +67,18 @@ interface Section10ContextType {
   updateTravelCountry: (passportIndex: number, travelIndex: number, field: string, value: any) => void;
   canAddTravelCountry: (passportIndex: number) => boolean;
 
+  // Field Update Function (Following Section 1 Gold Standard)
+  updateFieldValue: (path: string, value: any) => void;
+
   // Utility Functions
   resetSection: () => void;
   loadSection: (data: Section10) => void;
-  validateSection: () => { isValid: boolean; errors: any[]; warnings: any[] };
+  validateSection: () => ValidationResult;
   getChanges: () => any;
+
+  // Submit-Only Mode Functions
+  submitSectionData: () => Promise<void>;
+  hasPendingChanges: () => boolean;
 }
 
 // ============================================================================
@@ -79,26 +87,28 @@ interface Section10ContextType {
 
 const Section10Context = createContext<Section10ContextType | undefined>(undefined);
 
-export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // ============================================================================
   // FIELD MAPPING INITIALIZATION (Following Section 29 pattern)
   // ============================================================================
 
   // Initialize field mapping system on component mount
   useEffect(() => {
-    // console.log('🔄 Section10: Initializing section data with complete field mapping verification');
 
     // Validate field mappings
     const validation = validateSection10FieldMappings();
-    // console.log(`🎯 Section10: Field mapping verification - ${validation.coverage.toFixed(1)}% coverage (${validation.mappedFields}/${validation.totalFields} fields)`);
 
     if (validation.coverage >= 98) {
       // console.log(`✅ Section10: All ${validation.totalFields} PDF form fields are properly mapped`);
     } else {
       // console.warn(`⚠️ Section10: ${validation.missingFields.length} fields are not mapped`);
-      validation.missingFields.slice(0, 5).forEach(field => {
+      // console.warn('Missing fields:');
+      validation.missingFields.slice(0, 10).forEach(field => {
         // console.warn(`  - ${field}`);
       });
+      if (validation.missingFields.length > 10) {
+        // console.warn(`  ... and ${validation.missingFields.length - 10} more`);
+      }
     }
 
     // Validate field generation
@@ -120,10 +130,22 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
     return createDefaultSection10();
   });
   const [isLoading, setIsLoading] = useState(false);
-  // REMOVED: isDirty state - only save button should trigger state updates
+  // FIXED: Add back error state and isDirty following Section 1 gold standard
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [initialData] = useState<Section10>(createDefaultSection10());
+  const [isInitialized, setIsInitialized] = useState(false);
   const currentDataRef = useRef(section10Data);
 
-  // REMOVED: State change tracking - only save button should trigger updates
+  // ============================================================================
+  // COMPUTED VALUES (Following Section 1 Gold Standard)
+  // ============================================================================
+
+  const isDirty = JSON.stringify(section10Data) !== JSON.stringify(initialData);
+
+  // Set initialized flag after component mounts
+  useEffect(() => {
+    setIsInitialized(true);
+  }, []);
 
   // Update ref when data changes
   useEffect(() => {
@@ -134,20 +156,26 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
   // UTILITY FUNCTIONS (DECLARED EARLY FOR INTEGRATION)
   // ============================================================================
 
-  const validateSection = useCallback(() => {
+  // PERFORMANCE FIX: Validation function with no dependencies to prevent re-creation on every data change
+  const validateSection = useCallback((): ValidationResult => {
+    // Use ref to get current data without creating dependency
+    const currentData = currentDataRef.current;
+
+    if (typeof window !== 'undefined' && window.location.search.includes('debug=true')) {
+      // console.log('🔍 Section10: Running validation...');
+    }
+
+    const validationErrors: ValidationError[] = [];
+    const validationWarnings: ValidationError[] = [];
     const newErrors: Record<string, string> = {};
-    const validationErrors: Array<{ field: string, message: string, code: string, severity: 'error' | 'warning' }> = [];
-    const warnings: Array<{ field: string, message: string, code: string, severity: 'error' | 'warning' }> = [];
 
     // Validate dual citizenship entries
-    if (section10Data.section10.dualCitizenship.hasDualCitizenship.value === 'YES') {
-      section10Data.section10.dualCitizenship.entries.forEach((entry, index) => {
+    if (currentData.section10.dualCitizenship.hasDualCitizenship.value === 'YES') {
+      currentData.section10.dualCitizenship.entries.forEach((entry, index) => {
         if (!entry.country.value) {
-          const errorMsg = 'Country is required';
-          newErrors[`dualCitizenship.entries[${index}].country`] = errorMsg;
           validationErrors.push({
             field: `dualCitizenship.entries[${index}].country`,
-            message: errorMsg,
+            message: 'Country is required',
             code: 'REQUIRED_FIELD',
             severity: 'error'
           });
@@ -189,8 +217,8 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
 
     // Validate foreign passport entries
-    if (section10Data.section10.foreignPassport.hasForeignPassport.value === 'YES') {
-      section10Data.section10.foreignPassport.entries.forEach((entry, index) => {
+    if (currentData.section10.foreignPassport.hasForeignPassport.value === 'YES') {
+      currentData.section10.foreignPassport.entries.forEach((entry, index) => {
         if (!entry.country.value) {
           const errorMsg = 'Country is required';
           newErrors[`foreignPassport.entries[${index}].country`] = errorMsg;
@@ -267,17 +295,69 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
     // FIXED: Removed setErrors(newErrors) call that was causing infinite loop
     // Return validation result with errors included - let the component handle error state
     return {
-      isValid: Object.keys(newErrors).length === 0,
+      isValid: validationErrors.length === 0,
       errors: validationErrors,
-      warnings,
-      fieldErrors: newErrors // Include field errors for component to use
+      warnings: validationWarnings,
     };
-  }, [section10Data]);
+  }, []); // PERFORMANCE FIX: No dependencies to prevent re-creation on every data change
 
   const getChanges = useCallback(() => {
     // REMOVED: isDirty tracking - only save button should trigger state updates
     return section10Data; // Always return current data since we're not tracking dirty state
   }, [section10Data]);
+
+  const loadSection = useCallback((data: Section10) => {
+    const currentData = currentDataRef.current;
+    const hasCurrentEntries =
+      (currentData.section10.dualCitizenship.entries.length > 0 ||
+        currentData.section10.foreignPassport.entries.length > 0);
+
+    const hasIncomingEntries =
+      (data.section10.dualCitizenship.entries?.length > 0 ||
+        data.section10.foreignPassport.entries?.length > 0);
+
+    // If we have current data with entries and incoming data is empty/default, preserve current data
+    if (hasCurrentEntries && !hasIncomingEntries) {
+      return;
+    }
+
+    setSection10Data(data);
+  }, []);
+
+  // ============================================================================
+  // SUBMIT-ONLY MODE CONFIGURATION
+  // ============================================================================
+
+  // FIXED: Enable submit-only mode to prevent auto-save on every keystroke
+  // This ensures data is only persisted when user explicitly submits
+  const [submitOnlyMode] = useState(true); // Enable submit-only mode for Section 10
+  const [pendingChanges, setPendingChanges] = useState(false);
+  const lastSubmittedDataRef = useRef<Section10 | null>(null);
+
+  // PERFORMANCE FIX: Greatly reduce pending changes tracking frequency
+  // Only check on specific actions, not on every data change
+  const checkPendingChanges = useCallback(() => {
+    if (!lastSubmittedDataRef.current) {
+      setPendingChanges(false);
+      return;
+    }
+
+    // More efficient comparison - check key fields instead of full JSON stringify
+    const current = currentDataRef.current;
+    const submitted = lastSubmittedDataRef.current;
+
+    const hasChanges = (
+      current.section10.dualCitizenship.hasDualCitizenship.value !== submitted.section10.dualCitizenship.hasDualCitizenship.value ||
+      current.section10.foreignPassport.hasForeignPassport.value !== submitted.section10.foreignPassport.hasForeignPassport.value ||
+      current.section10.dualCitizenship.entries.length !== submitted.section10.dualCitizenship.entries.length ||
+      current.section10.foreignPassport.entries.length !== submitted.section10.foreignPassport.entries.length
+    );
+
+    setPendingChanges(hasChanges);
+  }, []); // PERFORMANCE FIX: No dependencies to prevent re-creation
+
+  // PERFORMANCE FIX: Only check pending changes on major actions, not every data change
+  // This will be called manually when needed instead of automatically
 
   // ============================================================================
   // FIELD UPDATE FUNCTIONS (FOLLOWING SECTION 29 PATTERN)
@@ -295,24 +375,37 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
     newValue: any
   ) => {
     try {
+      // PERFORMANCE FIX: Efficient state update without expensive cloneDeep
       setSection10Data((prev) => {
-        const updated = cloneDeep(prev);
-        const subsection = updated.section10[subsectionType];
+        // Only clone the specific entry that needs updating
+        const newEntries = [...prev.section10[subsectionType].entries];
+        const entryToUpdate = newEntries[entryIndex];
 
-        if (
-          subsection?.entries &&
-          entryIndex >= 0 &&
-          entryIndex < subsection?.entries.length
-        ) {
-          const entry = subsection?.entries[entryIndex];
+        if (entryToUpdate) {
+          // Create a shallow copy of the entry and update the specific field
+          const updatedEntry = { ...entryToUpdate };
           const fullFieldPath = `${fieldPath}.value`;
-          set(entry, fullFieldPath, newValue);
+
+          // Use lodash set for nested field updates, but only on the entry copy
+          set(updatedEntry, fullFieldPath, newValue);
+          newEntries[entryIndex] = updatedEntry;
+
+          return {
+            ...prev,
+            section10: {
+              ...prev.section10,
+              [subsectionType]: {
+                ...prev.section10[subsectionType],
+                entries: newEntries
+              }
+            }
+          };
         }
 
-        return updated;
+        return prev;
       });
     } catch (error) {
-      console.error('Section10: updateFieldValue error:', error);
+      // console.error('Section10: updateFieldValue error:', error);
     }
   }, []);
 
@@ -336,28 +429,31 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, []);
 
   // ============================================================================
-  // SF86FORM INTEGRATION (FOLLOWING SECTION 29 PATTERN)
+  // SF86FORM INTEGRATION (FOLLOWING SECTION 1 PATTERN)
   // ============================================================================
 
-  // REMOVED: updateFieldValueWrapper - Section 10 context is now source of truth
-  // SF86FormContext only updated on explicit save via handleSubmit in component
+  // Access SF86FormContext to sync with loaded data
+  const sf86Form = useSF86Form();
 
-  // FIXED: Integration with main form context using Section 1/29 pattern
-  // Section context is source of truth - SF86FormContext only updated on explicit save
-  // Note: integration variable is used internally by the hook for registration
-  const integration = useSection86FormIntegration(
-    'section10',
-    'Section 10: Dual/Multiple Citizenship & Foreign Passport',
-    section10Data,
-    setSection10Data,
-    () => {
-      // FIXED: Call validateSection only once to prevent multiple calls
-      const result = validateSection();
-      return { isValid: result.isValid, errors: result.errors, warnings: result.warnings };
-    },
-    getChanges,
-    undefined // FIXED: Don't pass updateFieldValueWrapper to prevent automatic sync
-  );
+  // Sync with SF86FormContext when data is loaded
+  useEffect(() => {
+    const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('debug=true');
+
+    if (sf86Form.formData.section10 && sf86Form.formData.section10 !== section10Data) {
+      if (isDebugMode) {
+        // console.log('🔄 Section10: Syncing with SF86FormContext loaded data');
+      }
+
+      // Load the data from SF86FormContext
+      loadSection(sf86Form.formData.section10);
+
+      if (isDebugMode) {
+        // console.log('✅ Section10: Data sync complete');
+      }
+    }
+  }, [sf86Form.formData.section10, loadSection]);
+
+
 
   // ============================================================================
   // DUAL CITIZENSHIP ACTIONS FOLLOWING SECTION 29 PATTERN
@@ -382,14 +478,14 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       // If this is a duplicate call within 50ms with the same count, skip it
       if (now - lastOp.timestamp < 50 && currentCount === lastOp.count) {
-        console.log('🚫 Section10: Preventing duplicate dual citizenship add (React Strict Mode)');
+        // console.log('🚫 Section10: Preventing duplicate dual citizenship add (React Strict Mode)');
         return prev;
       }
 
       // Update the last operation tracking
       lastDualCitizenshipOpRef.current = { count: currentCount + 1, timestamp: now };
 
-      console.log(`✅ Section10: Adding dual citizenship entry ${currentCount + 1}`);
+      // console.log(`✅ Section10: Adding dual citizenship entry ${currentCount + 1}`);
       return addDualCitizenshipEntry(prev);
     });
   }, []);
@@ -424,14 +520,14 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       // If this is a duplicate call within 50ms with the same count, skip it
       if (now - lastOp.timestamp < 50 && currentCount === lastOp.count) {
-        console.log('🚫 Section10: Preventing duplicate foreign passport add (React Strict Mode)');
+        // console.log('🚫 Section10: Preventing duplicate foreign passport add (React Strict Mode)');
         return prev;
       }
 
       // Update the last operation tracking
       lastForeignPassportOpRef.current = { count: currentCount + 1, timestamp: now };
 
-      console.log(`✅ Section10: Adding foreign passport entry ${currentCount + 1}`);
+      // console.log(`✅ Section10: Adding foreign passport entry ${currentCount + 1}`);
       return addForeignPassportEntry(prev);
     });
   }, []);
@@ -452,6 +548,34 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
   // TRAVEL COUNTRY ACTIONS (NEW)
   // ============================================================================
 
+  /**
+   * Helper function to construct proper logical field paths for travel countries
+   * This ensures field paths match the regex pattern in mapLogicalFieldToPdfField
+   */
+  const constructTravelCountryFieldPath = useCallback((passportIndex: number, travelIndex: number, field: string): string => {
+    return `foreignPassport.entries[${passportIndex}].travelCountries[${travelIndex}].${field}`;
+  }, []);
+
+  /**
+   * Validate that travel country field paths work with the field mapping system
+   * This helps debug field mapping issues during development
+   */
+  const validateTravelCountryFieldMapping = useCallback((passportIndex: number, travelIndex: number, field: string): boolean => {
+    const logicalPath = constructTravelCountryFieldPath(passportIndex, travelIndex, field);
+    const pdfFieldName = mapLogicalFieldToPdfField(logicalPath);
+
+    // Check if the mapping was successful (not just returning the original path)
+    const isMapped = pdfFieldName !== logicalPath;
+
+    if (!isMapped) {
+      // console.warn(`⚠️ Section10: Travel country field mapping failed for: ${logicalPath}`);
+    } else {
+      // console.log(`✅ Section10: Travel country field mapped: ${logicalPath} → ${pdfFieldName}`);
+    }
+
+    return isMapped;
+  }, [constructTravelCountryFieldPath]);
+
   const addTravelCountry = useCallback((passportIndex: number) => {
     setSection10Data(prev => {
       const passport = prev.section10.foreignPassport.entries[passportIndex];
@@ -467,14 +591,14 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       // If this is a duplicate call within 50ms with the same passport and count, skip it
       if (now - lastOp.timestamp < 50 && passportIndex === lastOp.passportIndex && currentCount === lastOp.count) {
-        console.log(`🚫 Section10: Preventing duplicate travel country add for passport ${passportIndex} (React Strict Mode)`);
+        // console.log(`🚫 Section10: Preventing duplicate travel country add for passport ${passportIndex} (React Strict Mode)`);
         return prev;
       }
 
       // Update the last operation tracking
       lastTravelCountryOpRef.current = { passportIndex, count: currentCount + 1, timestamp: now };
 
-      console.log(`✅ Section10: Adding travel country ${currentCount + 1} to passport ${passportIndex + 1}`);
+      // console.log(`✅ Section10: Adding travel country ${currentCount + 1} to passport ${passportIndex + 1}`);
       return addTravelCountryEntry(prev, passportIndex);
     });
   }, []);
@@ -487,27 +611,60 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const updateTravelCountry = useCallback((passportIndex: number, travelIndex: number, field: string, value: any) => {
     try {
-      setSection10Data((prev) => {
-        const updated = cloneDeep(prev);
-        const passport = updated.section10.foreignPassport.entries[passportIndex];
+      // PERFORMANCE FIX: No logging on input - only on submit
 
-        if (passport && passport.travelCountries[travelIndex]) {
-          const travelEntry = passport.travelCountries[travelIndex];
-          const fullFieldPath = `${field}.value`;
-          set(travelEntry, fullFieldPath, value);
+      setSection10Data((prev) => {
+        // PERFORMANCE FIX: Efficient update without expensive cloneDeep
+        const newPassportEntries = [...prev.section10.foreignPassport.entries];
+        const passportToUpdate = newPassportEntries[passportIndex];
+
+        if (passportToUpdate && passportToUpdate.travelCountries[travelIndex]) {
+          // Create shallow copy of passport entry
+          const updatedPassport = {
+            ...passportToUpdate,
+            travelCountries: [...passportToUpdate.travelCountries]
+          };
+
+          // Create shallow copy of travel entry
+          const travelEntry = { ...updatedPassport.travelCountries[travelIndex] };
+
+          // Update the specific field
+          if (travelEntry[field] && typeof travelEntry[field] === 'object' && 'value' in travelEntry[field]) {
+            travelEntry[field] = { ...travelEntry[field], value };
+          } else {
+            // Fallback for direct field access
+            const fullFieldPath = `${field}.value`;
+            set(travelEntry, fullFieldPath, value);
+          }
 
           // Special handling for "present" checkbox
           if (field === "isPresent" && value === true) {
-            travelEntry.toDate.value = "Present";
+            if (travelEntry.toDate && typeof travelEntry.toDate === 'object' && 'value' in travelEntry.toDate) {
+              travelEntry.toDate = { ...travelEntry.toDate, value: "Present" };
+            }
           }
+
+          updatedPassport.travelCountries[travelIndex] = travelEntry;
+          newPassportEntries[passportIndex] = updatedPassport;
+
+          return {
+            ...prev,
+            section10: {
+              ...prev.section10,
+              foreignPassport: {
+                ...prev.section10.foreignPassport,
+                entries: newPassportEntries
+              }
+            }
+          };
         }
 
-        return updated;
+        return prev;
       });
     } catch (error) {
-      console.error('Section10: updateTravelCountry error:', error);
+      // console.error('Section10: updateTravelCountry error:', error);
     }
-  }, []);
+  }, [constructTravelCountryFieldPath, validateTravelCountryFieldMapping]);
 
   const canAddTravelCountry = useCallback((passportIndex: number) => {
     const passport = section10Data.section10.foreignPassport.entries[passportIndex];
@@ -515,9 +672,11 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [section10Data.section10.foreignPassport.entries]);
 
   // ============================================================================
-  // ENTRY LIMIT HELPER FUNCTIONS
+  // ENTRY LIMIT HELPER FUNCTIONS (OPTIMIZED)
   // ============================================================================
 
+  // PERFORMANCE FIX: Remove memoized computed values that cause re-renders
+  // Simple functions are more performant than complex memoization
   const canAddDualCitizenship = useCallback(() => {
     return section10Data.section10.dualCitizenship.entries.length < 2;
   }, [section10Data.section10.dualCitizenship.entries.length]);
@@ -527,6 +686,37 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
   }, [section10Data.section10.foreignPassport.entries.length]);
 
   // ============================================================================
+  // SUBMIT-ONLY MODE FUNCTIONS
+  // ============================================================================
+
+  /**
+   * Manually sync data to main form context (submit-only mode)
+   * This function should only be called when the user explicitly submits
+   */
+  const submitSectionData = useCallback(async () => {
+    if (submitOnlyMode) {
+      // console.log('🚀 Section10: Manually syncing data to main form context (submit-only mode)');
+
+      // PERFORMANCE FIX: Use current data ref to avoid dependency on section10Data
+      const currentData = currentDataRef.current;
+      sf86Form.updateSectionData('section10', currentData);
+
+      // Update the last submitted data reference
+      lastSubmittedDataRef.current = cloneDeep(currentData);
+      setPendingChanges(false);
+
+      // console.log('✅ Section10: Data sync complete');
+    }
+  }, [submitOnlyMode, sf86Form]); // PERFORMANCE FIX: Removed section10Data dependency
+
+  /**
+   * Check if there are pending changes that haven't been submitted
+   */
+  const hasPendingChanges = useCallback(() => {
+    return pendingChanges;
+  }, [pendingChanges]);
+
+  // ============================================================================
   // UTILITY FUNCTIONS
   // ============================================================================
 
@@ -534,25 +724,13 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
     setSection10Data(createDefaultSection10());
     // FIXED: Removed setErrors({}) call to prevent infinite loops
     // REMOVED: setIsDirty(false) - only save button should trigger state updates
-  }, []);
 
-  const loadSection = useCallback((data: Section10) => {
-    const currentData = currentDataRef.current;
-    const hasCurrentEntries =
-      (currentData.section10.dualCitizenship.entries.length > 0 ||
-       currentData.section10.foreignPassport.entries.length > 0);
-
-    const hasIncomingEntries =
-      (data.section10.dualCitizenship.entries?.length > 0 ||
-       data.section10.foreignPassport.entries?.length > 0);
-
-    // If we have current data with entries and incoming data is empty/default, preserve current data
-    if (hasCurrentEntries && !hasIncomingEntries) {
-      return;
+    // Reset submit-only mode tracking
+    if (submitOnlyMode) {
+      lastSubmittedDataRef.current = null;
+      setPendingChanges(false);
     }
-
-    setSection10Data(data);
-  }, []);
+  }, [submitOnlyMode]);
 
 
 
@@ -628,12 +806,17 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
   // CONTEXT VALUE
   // ============================================================================
 
-  // FIXED: Memoize context value to prevent infinite re-renders
-  const contextValue: Section10ContextType = useMemo(() => ({
+  // PERFORMANCE FIX: Remove render monitoring that causes extra useEffect calls
+  // This was contributing to the re-render issues
+
+  // PERFORMANCE FIX: Follow Section 1's simple pattern - no useMemo for context value
+  // This prevents over-optimization that causes more re-renders than it saves
+  const contextValue: Section10ContextType = {
     // State
     section10Data,
     isLoading,
-    // REMOVED: isDirty - only save button should trigger state updates
+    errors,
+    isDirty,
 
     // Dual Citizenship Actions
     updateDualCitizenshipFlag,
@@ -649,42 +832,25 @@ export const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ chi
     updateForeignPassport,
     canAddForeignPassport,
 
-    // NEW: Travel Country Actions
+    // Travel Country Actions
     addTravelCountry,
     removeTravelCountry,
     updateTravelCountry,
     canAddTravelCountry,
 
+    // Field Update Function
+    updateFieldValue,
+
     // Utility Functions
     resetSection,
     loadSection,
     validateSection,
-    getChanges
-  }), [
-    // Dependencies for memoization
-    section10Data,
-    isLoading,
-    // REMOVED: isDirty - only save button should trigger state updates
-    updateDualCitizenshipFlag,
-    addDualCitizenship,
-    removeDualCitizenship,
-    updateDualCitizenship,
-    canAddDualCitizenship,
-    updateForeignPassportFlag,
-    addForeignPassport,
-    removeForeignPassport,
-    updateForeignPassport,
-    canAddForeignPassport,
-    // NEW: Travel Country Dependencies
-    addTravelCountry,
-    removeTravelCountry,
-    updateTravelCountry,
-    canAddTravelCountry,
-    resetSection,
-    loadSection,
-    validateSection,
-    getChanges
-  ]);
+    getChanges,
+
+    // Submit-Only Mode Functions
+    submitSectionData,
+    hasPendingChanges
+  };
 
   return (
     <Section10Context.Provider value={contextValue}>
@@ -704,3 +870,5 @@ export const useSection10 = (): Section10ContextType => {
   }
   return context;
 };
+
+export default Section10Provider;

@@ -17,7 +17,7 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { useSection29 } from '~/state/contexts/sections2.0/section29';
-import { useSF86Form } from '~/state/contexts/SF86FormContext';
+import { useSF86Form } from '~/state/contexts/sections2.0/SF86FormContext';
 import { getUSStateOptions, getCountryOptions } from '../../../api/interfaces/sections2.0/base';
 import type {
   SubsectionKey,
@@ -182,7 +182,7 @@ export const Section29Component: React.FC<Section29ComponentProps> = ({
 
     // Check if we've reached the maximum entries limit
     if (currentEntries.length >= MAX_ENTRIES_PER_SUBSECTION) {
-      alert(`Maximum of ${MAX_ENTRIES_PER_SUBSECTION} entries allowed per subsection.`);
+      // console.log(`Maximum of ${MAX_ENTRIES_PER_SUBSECTION} entries allowed per subsection.`);
       return;
     }
 
@@ -228,38 +228,49 @@ export const Section29Component: React.FC<Section29ComponentProps> = ({
     }
   }, [updateFieldValue, validateDate]);
 
-  // Handle submission with data persistence (like Section 1)
+  // Handle submission with data persistence
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const result = validateSection();
     setIsValid(result);
     onValidationChange?.(result);
 
+    // console.log('🔍 Section 29 validation result:', result);
+    // console.log('📊 Section 29 data before submission:', section29Data);
+
     if (result) {
       try {
+        // console.log('🔄 Section 29: Starting data synchronization...');
+
         // Update the central form context with Section 29 data
         sf86Form.updateSectionData('section29', section29Data);
 
-        // Save the form data to persistence layer
-        await sf86Form.saveForm();
+        // console.log('✅ Section 29: Data synchronization complete, proceeding to save...');
+
+        // Get the current form data and update it with section29 data for immediate saving
+        const currentFormData = sf86Form.exportForm();
+        const updatedFormData = { ...currentFormData, section29: section29Data };
+
+        // Save the form data to persistence layer with the updated data
+        await sf86Form.saveForm(updatedFormData);
 
         // Mark section as complete after successful save
         sf86Form.markSectionComplete('section29');
 
-        console.log('✅ Section 29 data saved successfully:', section29Data);
+        // console.log('✅ Section 29 data saved successfully:', section29Data);
 
         // Proceed to next section if callback provided
         if (onNext) {
-                    sf86Form.markSectionComplete('section29');
-
           onNext();
         }
       } catch (error) {
-        console.error('❌ Failed to save Section 29 data:', error);
-        // Could show an error message to user here
+        // console.error('❌ Failed to save Section 29 data:', error);
+        // Show an error message to user
+        // console.log('There was an error saving your information. Please try again.');
       }
     }
   };
+
 
   // Get current subsection data
   const getCurrentSubsectionData = () => {
@@ -808,44 +819,6 @@ export const Section29Component: React.FC<Section29ComponentProps> = ({
             </div>
           )}
 
-          {/* Comprehensive Section Summary */}
-          <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-            <h4 className="text-sm font-medium text-gray-900 mb-2">Section 29 Interaction Summary</h4>
-            <div className="text-xs text-gray-600 space-y-1">
-              <p><strong>Current Subsection:</strong> {currentSubsection?.title}</p>
-              <p><strong>Expected Fields per Entry:</strong> {currentSubsection?.fieldCount || 0}</p>
-              <p><strong>Active Entries:</strong> {entries.length} of {MAX_ENTRIES_PER_SUBSECTION} maximum</p>
-              <p><strong>Flag Response:</strong> {flagField?.value || 'Not answered'}</p>
-              <div className="mt-2 pt-2 border-t border-blue-200">
-                <p><strong>📋 All Section 29 Subsections (141 total fields):</strong></p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2 text-xs">
-                  {subsections.map((subsection) => {
-                    const subsectionData = section29Data.section29[subsection.key];
-                    const entriesCount = subsectionData?.entries?.length || 0;
-                    const flagValue = subsectionData && 'hasAssociation' in subsectionData
-                      ? subsectionData.hasAssociation?.value
-                      : subsectionData && 'hasActivity' in subsectionData
-                      ? subsectionData.hasActivity?.value
-                      : 'N/A';
-
-                    return (
-                      <div key={subsection.key} className={`p-2 rounded border ${
-                        activeSubsection === subsection.key ? 'bg-blue-100 border-blue-300' : 'bg-white border-gray-200'
-                      }`}>
-                        <div className="font-medium">{subsection.title}</div>
-                        <div className="text-xs text-gray-500">
-                          Fields: {subsection.fieldCount} • Flag: {flagValue?.substring(0,3) || 'N/A'} • Entries: {entriesCount}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="mt-2 pt-2 border-t border-blue-200 text-xs text-gray-500">
-                  💡 <strong>Tip:</strong> Navigate between subsections using the tabs above. Each subsection can have up to {MAX_ENTRIES_PER_SUBSECTION} entries.
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* Submit Button and Status */}
           <div className="mt-8 flex justify-between items-center">

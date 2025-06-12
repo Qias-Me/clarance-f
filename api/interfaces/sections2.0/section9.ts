@@ -81,6 +81,7 @@ export interface NaturalizedCitizenInfo {
   priorCitizenship4?: Field<string>; // DropDownList15[3]
   // Additional alien registration radio button
   hasAlienRegistrationRadio?: Field<"YES" | "NO">; // RadioButtonList[1]
+  alienRegistrationNumber?: Field<string>; // TextField11[9] - Alien registration number field
 }
 
 /**
@@ -628,6 +629,11 @@ export const createDefaultSection9 = (): Section9 => {
           9,
           'form1[0].Section9\\.1-9\\.4[0].RadioButtonList[1]',
           "YES"
+        ),
+        alienRegistrationNumber: createFieldFromReference(
+          9,
+          'form1[0].Section9\\.1-9\\.4[0].TextField11[9]',
+          ""
         ),
       },
       // Derived Citizen subsection (9.3) - using actual field names from sections-reference

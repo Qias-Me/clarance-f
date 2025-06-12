@@ -34,7 +34,6 @@ import {
   formatHeight
 } from '../../../../api/interfaces/sections2.0/section6';
 
-import { useSection86FormIntegration } from '../shared/section-context-integration';
 import type { ValidationResult, ValidationError, SectionId } from '../shared/base-interfaces';
 
 // ============================================================================
@@ -366,18 +365,7 @@ export const Section6Provider: React.FC<Section6ProviderProps> = ({ children }) 
   // SF86FORM INTEGRATION
   // ============================================================================
 
-  // Integration with main form context using Section 1 gold standard pattern
-  // Note: integration variable is used internally by the hook for registration
-  const integration = useSection86FormIntegration(
-    'section6',
-    'Section 6: Your Identifying Information',
-    section6Data,
-    setSection6Data,
-    () => ({ isValid: validateSection().isValid, errors: validateSection().errors, warnings: validateSection().warnings }),
-    getChanges,
-    updateFieldValue // Pass Section 6's updateFieldValue function to integration
-  );
-
+ 
   // ============================================================================
   // CONTEXT VALUE
   // ============================================================================

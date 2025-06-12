@@ -8,9 +8,10 @@
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
 import { useSection12 } from "~/state/contexts/sections2.0/section12";
-import { useSF86Form } from "~/state/contexts/SF86FormContext";
+import { useSF86Form } from "~/state/contexts/sections2.0/SF86FormContext";
 import { getUSStateOptions, getCountryOptions } from "../../../api/interfaces/sections2.0/base";
-import type { SchoolEntry } from "../../../api/interfaces/sections2.0/section12";
+import type { SchoolEntry, Section12 } from "../../../api/interfaces/sections2.0/section12";
+import { cloneDeep, set } from "lodash";
 
 interface Section12ComponentProps {
   onValidationChange?: (isValid: boolean) => void;
@@ -26,7 +27,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
   onValidationChange,
 }) => {
   const {
-    section12Data: sectionData,
+    section12Data: contextData,
     updateAttendedSchoolFlag,
     updateAttendedSchoolOutsideUSFlag,
     addSchoolEntry,
@@ -41,38 +42,109 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
     getHighestDegree,
     getSchoolTypeOptions,
     getDegreeTypeOptions,
+    submitSectionData,
+    hasPendingChanges,
   } = useSection12();
+
+  // ============================================================================
+  // LOCAL STATE FOR PERFORMANCE OPTIMIZATION (Section 1 Gold Standard Pattern)
+  // ============================================================================
+
+  // Use local state for field changes to prevent context updates on every onChange
+  const [localSectionData, setLocalSectionData] = useState<Section12>(contextData);
+  const [hasLocalChanges, setHasLocalChanges] = useState(false);
+
+  // Sync local state when context data changes (on initial load or external updates)
+  useEffect(() => {
+    // console.log('🔍 Section12Component: Context data changed, syncing to local state:', {
+    //   contextEntries: contextData.section12.entries.length,
+    //   contextData: contextData.section12.entries
+    // });
+    setLocalSectionData(contextData);
+    setHasLocalChanges(false);
+  }, [contextData]);
+
+  // Use local data for rendering, context data for validation
+  const sectionData = localSectionData;
 
 
   // SF86 Form Context for data persistence
   const sf86Form = useSF86Form();
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setShowValidation(true);
+  // Validate current local state (not stale context data)
+  const validateCurrentState = () => {
+    const errors: string[] = [];
+    const currentData = localSectionData;
 
-    const result = validateSection();
-    console.log(`🔍 Section 12 validation result:`, result);
+    // Check if education questions are answered
+    const hasEducation = currentData.section12?.hasAttendedSchool?.value;
+    const hasOtherEducation = currentData.section12?.hasAttendedSchoolOutsideUS?.value;
 
-    try {
-      // Get current data fresh to avoid stale closure
-      const currentData = sectionData;
-      if (currentData) {
-        // Update the central form context with Section 12 data
-        sf86Form.updateSectionData('section12', currentData);
-
-        // Save the form data to persistence layer
-        await sf86Form.saveForm();
-
-        console.log('✅ Section 12 data saved successfully');
-      }
-    } catch (error) {
-      console.error('❌ Failed to save Section 12 data:', error);
-    } finally {
-      setIsLoading(false);
+    if (!hasEducation) {
+      errors.push('Please answer question 12.a about high school diploma');
     }
-  }, [validateSection, sf86Form]); // Removed sectionData dependency
+
+    if (!hasOtherEducation) {
+      errors.push('Please answer question 12.b about other educational institutions');
+    }
+
+    // If user answered YES to question 12.b (other educational institutions), require at least one entry
+    // Note: Question 12.a (high school) doesn't require entries, only 12.b does
+    if (hasOtherEducation === 'YES' && currentData.section12.entries.length === 0) {
+      errors.push('At least one school entry is required when you answered YES to question 12.b');
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors: errors
+    };
+  };
+
+  // Handle submission with data persistence
+  const handleSubmit = async (e: React.FormEvent) => {
+    // console.log('🚀 Section12Component: handleSubmit called!');
+    e.preventDefault();
+
+    // Validate current local state instead of stale context data
+    const result = validateCurrentState();
+    onValidationChange?.(result.isValid);
+
+    // console.log('🔍 Section 12 validation result:', result);
+    // console.log('📊 Section 12 local data before submission:', localSectionData);
+
+    if (result.isValid) {
+      try {
+        // console.log('🔄 Section 12: Starting data synchronization...');
+
+        // Sync local data to context first
+        sf86Form.updateSectionData('section12', localSectionData);
+
+        // console.log('✅ Section 12: Data synchronization complete, proceeding to save...');
+
+        // Get the current form data and save it
+        const currentFormData = sf86Form.exportForm();
+        const updatedFormData = { ...currentFormData, section12: localSectionData };
+        await sf86Form.saveForm(updatedFormData);
+
+        // Mark section as complete after successful save
+        sf86Form.markSectionComplete('section12');
+
+        // console.log('✅ Section 12 data saved successfully:', localSectionData);
+
+        // Clear local changes flag
+        setHasLocalChanges(false);
+
+      } catch (error) {
+        // console.error('❌ Failed to save Section 12 data:', error);
+        // Show an error message to user
+        alert('There was an error saving your information. Please try again.');
+      }
+    } else {
+      // Show validation errors to user
+      setGlobalErrors(result.errors);
+      // console.log('❌ Section 12 validation failed:', result.errors);
+    }
+  };
 
 
   // Get direct access to SF86Form context for debugging
@@ -99,34 +171,35 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
 
   // Enhanced debug logging to help identify the radio button issue
   useEffect(() => {
-    if (isDebugMode) {
-      console.log('🔍 Section12 Debug State:', {
-        sectionData,
-        hasEducationValue: sectionData?.section12?.hasAttendedSchool?.value,
-        hasEducationField: sectionData?.section12?.hasAttendedSchool,
-        hasHighSchoolValue: sectionData?.section12?.hasAttendedSchoolOutsideUS?.value,
-        hasHighSchoolField: sectionData?.section12?.hasAttendedSchoolOutsideUS,
-        entries: sectionData?.section12?.entries,
-        entriesCount: sectionData?.section12?.entries?.length || 0,
-        expandedEntries: Array.from(expandedEntries),
-        validationErrors
-      });
-    }
+    // if (isDebugMode) {
+      // console.log('🔍 Section12 Debug State:', {
+    //     sectionData,
+    //     hasEducationValue: sectionData?.section12?.hasAttendedSchool?.value,
+    //     hasEducationField: sectionData?.section12?.hasAttendedSchool,
+    //     hasHighSchoolValue: sectionData?.section12?.hasAttendedSchoolOutsideUS?.value,
+    //     hasHighSchoolField: sectionData?.section12?.hasAttendedSchoolOutsideUS,
+    //     entries: sectionData?.section12?.entries,
+    //     entriesCount: sectionData?.section12?.entries?.length || 0,
+    //     expandedEntries: Array.from(expandedEntries),
+    //     validationErrors
+    //   });
+    // }
   }, [sectionData, expandedEntries, validationErrors, isDebugMode]);
 
-  // Initialize with default entry if needed and clear entries when both flags are NO
-  // FIXED: Use refs to prevent infinite recursion
+  // Initialize with default entry if needed and clear entries when question 12.b is NO
+  // FIXED: Use refs to prevent infinite recursion and focus on question 12.b
   useEffect(() => {
-    const hasEducationFlag = sectionData?.section12?.hasAttendedSchool?.value === "YES";
-    const hasHighSchoolFlag = sectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "YES";
+    const hasEducationFlag = sectionData?.section12?.hasAttendedSchool?.value === "YES"; // Question 12.a
+    const hasOtherEducationFlag = sectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "YES"; // Question 12.b
     const entriesCount = getSchoolEntryCount();
 
     // Check if flags have actually changed to prevent infinite loops
     const educationFlagChanged = lastEducationFlagRef.current !== sectionData?.section12?.hasAttendedSchool?.value;
-    const highSchoolFlagChanged = lastHighSchoolFlagRef.current !== sectionData?.section12?.hasAttendedSchoolOutsideUS?.value;
+    const otherEducationFlagChanged = lastHighSchoolFlagRef.current !== sectionData?.section12?.hasAttendedSchoolOutsideUS?.value;
 
-    if (!educationFlagChanged && !highSchoolFlagChanged) {
-      return; // No flag changes, skip processing
+    // Only proceed if question 12.b flag has actually changed (this is what controls entry visibility)
+    if (!otherEducationFlagChanged) {
+      return; // No relevant flag changes, skip processing
     }
 
     // Prevent recursive calls
@@ -141,9 +214,9 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
       lastEducationFlagRef.current = sectionData?.section12?.hasAttendedSchool?.value;
       lastHighSchoolFlagRef.current = sectionData?.section12?.hasAttendedSchoolOutsideUS?.value;
 
-      // If both flags are NO, clear all entries
-      if (!hasEducationFlag && !hasHighSchoolFlag && entriesCount > 0) {
-        // Clear all entries when both flags are NO
+      // Clear entries if question 12.b is NO (since entries are only shown when 12.b is YES)
+      if (!hasOtherEducationFlag && entriesCount > 0) {
+        // Clear all entries when question 12.b is NO
         while (getSchoolEntryCount() > 0) {
           removeSchoolEntry(0);
         }
@@ -158,40 +231,9 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
     }
   }, [sectionData?.section12?.hasAttendedSchool?.value, sectionData?.section12?.hasAttendedSchoolOutsideUS?.value, getSchoolEntryCount, addSchoolEntry, removeSchoolEntry]);
 
-  // Enhanced validation with real-time feedback
-  // FIXED: Use more specific dependencies to prevent excessive re-renders
-  useEffect(() => {
-    const validation = validateSection();
-    const newErrors: Record<number, string[]> = {};
-
-    // Validate each entry individually
-    sectionData?.section12?.entries?.forEach((_, index) => {
-      const entryValidation = validateSchoolEntry(index);
-      if (!entryValidation.isValid) {
-        newErrors[index] = entryValidation.errors;
-      }
-    });
-
-    setValidationErrors(newErrors);
-
-    // Extract error messages from validation result objects
-    const globalErrorMessages = validation.errors?.map((error: any) =>
-      typeof error === 'string' ? error : error.message || String(error)
-    ) || [];
-
-    setGlobalErrors(globalErrorMessages);
-    onValidationChange?.(validation.isValid);
-  }, [
-    // More specific dependencies to prevent infinite loops
-    sectionData?.section12?.hasAttendedSchool?.value,
-    sectionData?.section12?.hasAttendedSchoolOutsideUS?.value,
-    sectionData?.section12?.entries?.length,
-    // Serialize entries to detect changes without causing infinite loops
-    JSON.stringify(sectionData?.section12?.entries),
-    validateSection,
-    validateSchoolEntry,
-    onValidationChange
-  ]);
+  // VALIDATION DISABLED: Only validate on submit to avoid stale closure issues
+  // Real-time validation was causing problems due to stale data access
+  // Validation now happens only when user clicks "Submit & Continue"
 
   // Date validation helper
   const validateDate = (dateString: string, fieldName: string): string | null => {
@@ -212,13 +254,76 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
     return null;
   };
 
-  // Enhanced field update with validation
+  // Enhanced field update with validation - PERFORMANCE OPTIMIZED (Section 1 Gold Standard)
+  // Updates local state only, context sync happens on submit
   const handleFieldUpdate = useCallback((index: number, fieldPath: string, value: any) => {
     if (isDebugMode) {
-      console.log('🔧 Updating field:', { index, fieldPath, value });
+      // console.log('🔧 Updating field locally:', { index, fieldPath, value });
     }
 
-    updateSchoolEntry(index, fieldPath, value);
+    // Update local state instead of context to prevent performance issues
+    setLocalSectionData(prev => {
+      const updated = cloneDeep(prev);
+      const fullFieldPath = `section12.entries[${index}].${fieldPath}`;
+      set(updated, fullFieldPath, value);
+
+      // Auto-create first degree entry when user selects "YES" for receivedDegree
+      if (fieldPath === "receivedDegree.value" && value === "YES") {
+        const schoolEntry = updated.section12.entries[index];
+        if (schoolEntry && schoolEntry.degrees.length === 0) {
+          // Create a new default degree entry
+          const newDegree = {
+            degreeType: {
+              id: "",
+              name: "",
+              type: 'PDFDropdown' as const,
+              label: 'Degree Type',
+              value: "High School Diploma" as const,
+              options: ["High School Diploma", "Associate's", "Bachelor's", "Master's", "Doctorate", "Professional Degree (e.g. M D, D V M, J D)", "Other"],
+              rect: { x: 0, y: 0, width: 0, height: 0 }
+            },
+            otherDegree: {
+              id: "",
+              name: "",
+              type: 'PDFTextField' as const,
+              label: 'Other Degree',
+              value: '',
+              rect: { x: 0, y: 0, width: 0, height: 0 }
+            },
+            dateAwarded: {
+              id: "",
+              name: "",
+              type: 'PDFTextField' as const,
+              label: 'Date Awarded',
+              value: '',
+              rect: { x: 0, y: 0, width: 0, height: 0 }
+            },
+            dateAwardedEstimate: {
+              id: "",
+              name: "",
+              type: 'PDFCheckBox' as const,
+              label: 'Date Awarded Estimate',
+              value: false,
+              rect: { x: 0, y: 0, width: 0, height: 0 }
+            }
+          };
+          schoolEntry.degrees.push(newDegree);
+          // console.log(`✅ Auto-added first degree when receivedDegree set to YES for school ${index}`);
+        }
+      } else if (fieldPath === "receivedDegree.value" && value === "NO") {
+        // Clear degrees when user selects "NO" for receivedDegree
+        const schoolEntry = updated.section12.entries[index];
+        if (schoolEntry) {
+          schoolEntry.degrees = [];
+          // console.log(`🧹 Cleared degrees when receivedDegree set to NO for school ${index}`);
+        }
+      }
+
+      return updated;
+    });
+
+    // Mark that we have local changes
+    setHasLocalChanges(true);
 
     // Real-time validation for date fields
     if (fieldPath.includes('Date') && typeof value === 'string') {
@@ -241,7 +346,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
         }));
       }
     }
-  }, [updateSchoolEntry, isDebugMode]);
+  }, [isDebugMode]);
 
   const toggleEntryExpansion = useCallback((index: number) => {
     setExpandedEntries(prev => {
@@ -258,33 +363,75 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
   const handleAddEntry = useCallback(() => {
     // Prevent React Strict Mode double execution
     if (isAddingEntryRef.current) {
-      console.log('🚫 Section12Component: handleAddEntry blocked - already in progress (React Strict Mode protection)');
+      // console.log('🚫 Section12Component: handleAddEntry blocked - already in progress (React Strict Mode protection)');
       return;
     }
 
     isAddingEntryRef.current = true;
-    console.log('🎯 Section12Component: handleAddEntry called');
+    // console.log('🎯 Section12Component: handleAddEntry called (local state mode)');
 
     try {
-      addSchoolEntry();
-      const newIndex = getSchoolEntryCount();
+      // PERFORMANCE OPTIMIZATION: Add entry to local state instead of context
+      // This prevents the context update from overwriting our local flag changes
+      setLocalSectionData(prev => {
+        const updated = cloneDeep(prev);
+        const entryIndex = updated.section12.entries.length;
+
+        // Limit to 4 entries as per PDF structure
+        if (entryIndex >= 4) {
+          // console.warn('⚠️ Section12: Maximum of 4 school entries allowed');
+          return prev;
+        }
+
+        // Create a new default entry (matching SchoolEntry interface)
+        const newEntry = {
+          _id: Date.now(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          fromDate: { value: "" },
+          toDate: { value: "" },
+          fromDateEstimate: { value: false },
+          toDateEstimate: { value: false },
+          isPresent: { value: false },
+          schoolType: { value: "High School" },
+          schoolName: { value: "" },
+          schoolAddress: { value: "" },
+          schoolCity: { value: "" },
+          schoolState: { value: "" },
+          schoolZipCode: { value: "" },
+          schoolCountry: { value: "United States" },
+          receivedDegree: { value: "NO" },
+          degrees: []
+        };
+
+        updated.section12.entries.push(newEntry);
+        // console.log(`✅ Section12Component: Added entry #${entryIndex + 1} to local state. Total entries: ${updated.section12.entries.length}`);
+        return updated;
+      });
+
+      // Mark that we have local changes
+      setHasLocalChanges(true);
+
+      // Expand the new entry
+      const newIndex = localSectionData.section12.entries.length;
       setExpandedEntries(prev => new Set([...prev, newIndex]));
-      console.log(`✅ Section12Component: Added entry, expanded entry #${newIndex}`);
+      // console.log(`✅ Section12Component: Expanded entry #${newIndex}`);
     } finally {
       // Reset the flag after a short delay to allow for state updates
       setTimeout(() => {
         isAddingEntryRef.current = false;
-        console.log('🔄 Section12Component: handleAddEntry flag reset');
+        // console.log('🔄 Section12Component: handleAddEntry flag reset');
       }, 100);
     }
-  }, [addSchoolEntry, getSchoolEntryCount]);
+  }, [localSectionData]);
 
   const handleRemoveEntry = useCallback((index: number) => {
-    const hasEducationFlag = sectionData?.section12?.hasAttendedSchool?.value === "YES";
-    const hasHighSchoolFlag = sectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "YES";
+    const hasEducationFlag = sectionData?.section12?.hasAttendedSchool?.value === "YES"; // Question 12.a
+    const hasOtherEducationFlag = sectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "YES"; // Question 12.b
 
-    // Allow removal if both flags are NO, or if there are multiple entries
-    if ((!hasEducationFlag && !hasHighSchoolFlag) || getSchoolEntryCount() > 1) {
+    // Allow removal if question 12.b is NO, or if there are multiple entries
+    // Since entries are only shown when 12.b is YES, we focus on that flag
+    if (!hasOtherEducationFlag || getSchoolEntryCount() > 1) {
       if (window.confirm("Are you sure you want to remove this education entry?")) {
         removeSchoolEntry(index);
         setExpandedEntries(prev => {
@@ -303,138 +450,219 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
         });
       }
     } else {
-      alert("You must have at least one education entry when either education flag is YES.");
+      // console.log("You must have at least one education entry when question 12.b is set to YES. Please change the flag first or add another entry.");
     }
   }, [removeSchoolEntry, getSchoolEntryCount, sectionData]);
 
   // Degree management handlers with React Strict Mode protection
+  // PERFORMANCE OPTIMIZED (Section 1 Gold Standard) - Updates local state only
   const handleAddDegree = useCallback((schoolIndex: number) => {
     // Prevent React Strict Mode double execution
     if (isAddingDegreeRef.current) {
-      console.log('🚫 Section12Component: handleAddDegree blocked - already in progress (React Strict Mode protection)');
+      // console.log('🚫 Section12Component: handleAddDegree blocked - already in progress (React Strict Mode protection)');
       return;
     }
 
     isAddingDegreeRef.current = true;
-    console.log(`🎯 Section12Component: handleAddDegree called for school ${schoolIndex}`);
+    // console.log(`🎯 Section12Component: handleAddDegree called for school ${schoolIndex} (local state mode)`);
 
     try {
-      addDegreeEntry(schoolIndex);
-      console.log(`✅ Section12Component: Added degree to school ${schoolIndex}`);
+      // PERFORMANCE OPTIMIZATION: Update local state instead of context to prevent performance issues
+      setLocalSectionData(prev => {
+        const updated = cloneDeep(prev);
+        const schoolEntry = updated.section12.entries[schoolIndex];
+
+        if (!schoolEntry) {
+          // console.warn(`⚠️ Section12Component: School entry ${schoolIndex} not found`);
+          return prev;
+        }
+
+        // Limit to 2 degrees per school as per PDF structure
+        if (schoolEntry.degrees.length >= 2) {
+          // console.warn('⚠️ Section12Component: Maximum of 2 degrees per school allowed');
+          return prev;
+        }
+
+        // Create a new default degree entry (matching DegreeEntry interface)
+        const newDegree = {
+          degreeType: {
+            id: "",
+            name: "",
+            type: 'PDFDropdown' as const,
+            label: 'Degree Type',
+            value: "High School Diploma" as const,
+            options: ["High School Diploma", "Associate's", "Bachelor's", "Master's", "Doctorate", "Professional Degree (e.g. M D, D V M, J D)", "Other"],
+            rect: { x: 0, y: 0, width: 0, height: 0 }
+          },
+          otherDegree: {
+            id: "",
+            name: "",
+            type: 'PDFTextField' as const,
+            label: 'Other Degree',
+            value: '',
+            rect: { x: 0, y: 0, width: 0, height: 0 }
+          },
+          dateAwarded: {
+            id: "",
+            name: "",
+            type: 'PDFTextField' as const,
+            label: 'Date Awarded',
+            value: '',
+            rect: { x: 0, y: 0, width: 0, height: 0 }
+          },
+          dateAwardedEstimate: {
+            id: "",
+            name: "",
+            type: 'PDFCheckBox' as const,
+            label: 'Date Awarded Estimate',
+            value: false,
+            rect: { x: 0, y: 0, width: 0, height: 0 }
+          }
+        };
+
+        schoolEntry.degrees.push(newDegree);
+        // console.log(`✅ Section12Component: Added degree to school ${schoolIndex} in local state. Total degrees: ${schoolEntry.degrees.length}`);
+        return updated;
+      });
+
+      // Mark that we have local changes
+      setHasLocalChanges(true);
+      // console.log(`✅ Section12Component: Added degree to school ${schoolIndex} (local state updated)`);
     } finally {
       // Reset the flag after a short delay to allow for state updates
       setTimeout(() => {
         isAddingDegreeRef.current = false;
-        console.log('🔄 Section12Component: handleAddDegree flag reset');
+        // console.log('🔄 Section12Component: handleAddDegree flag reset');
       }, 100);
     }
-  }, [addDegreeEntry]);
+  }, []);
 
   const handleRemoveDegree = useCallback((schoolIndex: number, degreeIndex: number) => {
     // Prevent React Strict Mode double execution
     if (isRemovingDegreeRef.current) {
-      console.log('🚫 Section12Component: handleRemoveDegree blocked - already in progress (React Strict Mode protection)');
+      // console.log('🚫 Section12Component: handleRemoveDegree blocked - already in progress (React Strict Mode protection)');
       return;
     }
 
     isRemovingDegreeRef.current = true;
-    console.log(`🎯 Section12Component: handleRemoveDegree called for school ${schoolIndex}, degree ${degreeIndex}`);
+    // console.log(`🎯 Section12Component: handleRemoveDegree called for school ${schoolIndex}, degree ${degreeIndex} (local state mode)`);
 
     try {
       if (window.confirm("Are you sure you want to remove this degree?")) {
-        removeDegreeEntry(schoolIndex, degreeIndex);
-        console.log(`✅ Section12Component: Removed degree ${degreeIndex} from school ${schoolIndex}`);
+        // PERFORMANCE OPTIMIZATION: Update local state instead of context to prevent performance issues
+        setLocalSectionData(prev => {
+          const updated = cloneDeep(prev);
+          const schoolEntry = updated.section12.entries[schoolIndex];
+
+          if (!schoolEntry) {
+            // console.warn(`⚠️ Section12Component: School entry ${schoolIndex} not found`);
+            return prev;
+          }
+
+          if (degreeIndex < 0 || degreeIndex >= schoolEntry.degrees.length) {
+            // console.warn(`⚠️ Section12Component: Degree index ${degreeIndex} out of bounds`);
+            return prev;
+          }
+
+          schoolEntry.degrees.splice(degreeIndex, 1);
+          // console.log(`✅ Section12Component: Removed degree ${degreeIndex} from school ${schoolIndex} in local state. Remaining degrees: ${schoolEntry.degrees.length}`);
+          return updated;
+        });
+
+        // Mark that we have local changes
+        setHasLocalChanges(true);
+        // console.log(`✅ Section12Component: Removed degree ${degreeIndex} from school ${schoolIndex} (local state updated)`);
       }
     } finally {
       // Reset the flag after a short delay to allow for state updates
       setTimeout(() => {
         isRemovingDegreeRef.current = false;
-        console.log('🔄 Section12Component: handleRemoveDegree flag reset');
+        // console.log('🔄 Section12Component: handleRemoveDegree flag reset');
       }, 100);
     }
-  }, [removeDegreeEntry]);
+  }, []);
 
-  // Enhanced education flag change handler with debugging and fallback
-  // FIXED: Removed sectionData dependency to prevent infinite loops
+  // Enhanced education flag change handler - PERFORMANCE OPTIMIZED (Section 1 Gold Standard)
+  // Updates local state only, context sync happens on submit
   const handleEducationFlagChange = useCallback((value: "YES" | "NO") => {
     if (isDebugMode) {
-      console.log('🎯 handleEducationFlagChange called:', { value, currentValue: sectionData?.section12?.hasAttendedSchool?.value });
+      // console.log('🎯 handleEducationFlagChange called (local update):', { value, currentValue: sectionData?.section12?.hasAttendedSchool?.value });
     }
 
-    try {
-      // Primary method: use the context hook
-      updateAttendedSchoolFlag(value);
+    // Update local state instead of context to prevent performance issues
+    setLocalSectionData(prev => {
+      const updated = cloneDeep(prev);
+      updated.section12.hasAttendedSchool.value = value;
+      return updated;
+    });
 
-      if (isDebugMode) {
-        console.log('✅ updateAttendedSchoolFlag called successfully');
-      }
-    } catch (error) {
-      console.error('❌ updateAttendedSchoolFlag failed, trying fallback:', error);
+    // Mark that we have local changes
+    setHasLocalChanges(true);
 
-      // Fallback method: direct update through SF86Form context
-      if (updateSectionData) {
-        // Get current data fresh to avoid stale closure
-        const currentData = sectionData;
-        if (currentData) {
-          const updatedSection = {
-            ...currentData,
-            section12: {
-              ...currentData.section12,
-              hasAttendedSchool: {
-                ...currentData.section12.hasAttendedSchool,
-                value: value
-              }
-            }
-          };
-
-          updateSectionData('section12', updatedSection);
-          console.log('🔄 Used fallback updateSectionData method');
-        }
-      }
+    if (isDebugMode) {
+      // console.log('✅ Education flag updated locally');
     }
 
     // Note: Removed automatic entry addition - users can now add entries manually with the "Add School Entry" button
-  }, [updateAttendedSchoolFlag, getSchoolEntryCount, addSchoolEntry, updateSectionData, isDebugMode]); // Removed sectionData dependency
+  }, [isDebugMode]);
 
   const handleHighSchoolFlagChange = useCallback((value: "YES" | "NO") => {
     if (isDebugMode) {
-      console.log('🎯 handleHighSchoolFlagChange called:', { value, currentValue: sectionData?.section12?.hasAttendedSchoolOutsideUS?.value });
+      // console.log('🎯 handleHighSchoolFlagChange called (local update):', { value, currentValue: sectionData?.section12?.hasAttendedSchoolOutsideUS?.value });
     }
 
-    try {
-      // Primary method: use the context hook
-      updateAttendedSchoolOutsideUSFlag(value);
+    // Update local state instead of context to prevent performance issues
+    setLocalSectionData(prev => {
+      const updated = cloneDeep(prev);
+      updated.section12.hasAttendedSchoolOutsideUS.value = value;
 
-      if (isDebugMode) {
-        console.log('✅ updateAttendedSchoolOutsideUSFlag called successfully');
+      if (value === "NO") {
+        // Clear entries when flag changes to "NO"
+        updated.section12.entries = [];
+        // console.log('🧹 Cleared local entries when question 12.b set to NO');
+      } else if (value === "YES" && updated.section12.entries.length === 0) {
+        // Automatically add first entry when flag changes to "YES"
+        const newEntry = {
+          _id: Date.now(),
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          fromDate: { value: "" },
+          toDate: { value: "" },
+          fromDateEstimate: { value: false },
+          toDateEstimate: { value: false },
+          isPresent: { value: false },
+          schoolType: { value: "High School" },
+          schoolName: { value: "" },
+          schoolAddress: { value: "" },
+          schoolCity: { value: "" },
+          schoolState: { value: "" },
+          schoolZipCode: { value: "" },
+          schoolCountry: { value: "United States" },
+          receivedDegree: { value: "NO" },
+          degrees: []
+        };
+        updated.section12.entries.push(newEntry);
+        // console.log('✅ Auto-added first entry when question 12.b set to YES');
       }
-    } catch (error) {
-      console.error('❌ updateAttendedSchoolOutsideUSFlag failed, trying fallback:', error);
 
-      // Fallback method: direct update through SF86Form context
-      if (updateSectionData) {
-        // Get current data fresh to avoid stale closure
-        const currentData = sectionData;
-        if (currentData) {
-          const updatedSection = {
-            ...currentData,
-            section12: {
-              ...currentData.section12,
-              hasAttendedSchoolOutsideUS: {
-                ...currentData.section12.hasAttendedSchoolOutsideUS,
-                value: value
-              }
-            }
-          };
+      return updated;
+    });
 
-          updateSectionData('section12', updatedSection);
-          console.log('🔄 Used fallback updateSectionData method');
-        }
-      }
+    // Mark that we have local changes
+    setHasLocalChanges(true);
+
+    // Handle expanded entries
+    if (value === "NO") {
+      setExpandedEntries(new Set());
+    } else if (value === "YES") {
+      // Expand the first entry when YES is selected
+      setExpandedEntries(new Set([0]));
     }
 
-    // Note: Removed automatic entry addition - users can now add entries manually with the "Add School Entry" button
-  }, [updateAttendedSchoolOutsideUSFlag, getSchoolEntryCount, addSchoolEntry, updateSectionData, isDebugMode]); // Removed sectionData dependency
+    if (isDebugMode) {
+      // console.log('✅ High school flag updated locally');
+    }
+  }, [isDebugMode]);
 
   // Save function to update SF86 context
   // FIXED: Removed sectionData dependency to prevent infinite loops
@@ -444,7 +672,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
       const currentData = sectionData;
       if (currentData) {
         updateSectionData('section12', currentData);
-        console.log('💾 Section 12 data saved to SF86 context');
+        // console.log('💾 Section 12 data saved to SF86 context');
       }
     }
   }, [updateSectionData]); // Removed sectionData dependency
@@ -917,7 +1145,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
               <input
                 type="radio"
                 name="hasEducation"
-                checked={sectionData?.section12?.hasAttendedSchool?.value === "YES"}
+                checked={localSectionData?.section12?.hasAttendedSchool?.value === "YES"}
                 onChange={() => handleEducationFlagChange("YES")}
                 className="mr-2"
               />
@@ -927,7 +1155,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
               <input
                 type="radio"
                 name="hasEducation"
-                checked={sectionData?.section12?.hasAttendedSchool?.value === "NO"}
+                checked={localSectionData?.section12?.hasAttendedSchool?.value === "NO"}
                 onChange={() => handleEducationFlagChange("NO")}
                 className="mr-2"
               />
@@ -945,7 +1173,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
               <input
                 type="radio"
                 name="hasHighSchool"
-                checked={sectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "YES"}
+                checked={localSectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "YES"}
                 onChange={() => handleHighSchoolFlagChange("YES")}
                 className="mr-2"
               />
@@ -955,7 +1183,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
               <input
                 type="radio"
                 name="hasHighSchool"
-                checked={sectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "NO"}
+                checked={localSectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "NO"}
                 onChange={() => handleHighSchoolFlagChange("NO")}
                 className="mr-2"
               />
@@ -965,9 +1193,8 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
         </div>
       </div>
 
-      {/* Education Entries - Only show when at least one flag is YES */}
-      {(sectionData?.section12?.hasAttendedSchool?.value === "YES" ||
-        sectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "YES") && (
+      {/* Education Entries - Only show when question 12.b (hasAttendedSchoolOutsideUS) is YES */}
+      {localSectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "YES" && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-medium text-gray-900">
@@ -976,20 +1203,20 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
               <button
                 type="button"
                 onClick={handleAddEntry}
-                disabled={getSchoolEntryCount() >= 3}
+                disabled={localSectionData.section12.entries.length >= 3}
                 className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                title={getSchoolEntryCount() >= 3 ? "Maximum of 3 school entries allowed" : "Add new school entry"}
+                title={localSectionData.section12.entries.length >= 3 ? "Maximum of 3 school entries allowed" : "Add new school entry"}
               >
                 Add School Entry
-                {getSchoolEntryCount() >= 3 && (
+                {localSectionData.section12.entries.length >= 3 && (
                   <span className="ml-1 text-xs">(Max: 3)</span>
                 )}
               </button>
             </div>
 
             {/* Show entries or helpful message */}
-            {sectionData?.section12?.entries && sectionData.section12.entries.length > 0 ? (
-              sectionData.section12.entries.map((entry, index) =>
+            {localSectionData?.section12?.entries && localSectionData.section12.entries.length > 0 ? (
+              localSectionData.section12.entries.map((entry, index) =>
                 renderSchoolEntry(entry, index)
               )
             ) : (
@@ -1038,7 +1265,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                       <li>Use MM/YYYY format for dates (e.g., 09/2018)</li>
                       <li>Check "Estimated" if you're unsure of exact dates</li>
                       <li>If currently attending, check "Present" for the end date</li>
-                      <li>Answer "Yes" to 12.a or 12.b to add education entries</li>
+                      <li>Answer "Yes" to question 12.b to add education entries</li>
                     </ul>
                   </div>
                 </div>
@@ -1047,18 +1274,63 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
           </div>
         )}
 
+      {/* Local Changes Indicator - Performance Optimization Feature */}
+      {(hasLocalChanges || hasPendingChanges()) && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-4">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-yellow-800">
+                <strong>Unsaved Changes:</strong> You have local changes that haven't been saved yet. Click "Save & Continue" to save your progress.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Show validation errors if any */}
+      {globalErrors.length > 0 && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">Please fix the following errors:</h3>
+              <div className="mt-2 text-sm text-red-700">
+                <ul className="list-disc list-inside space-y-1">
+                  {globalErrors.map((error, index) => (
+                    <li key={index}>{error}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <button
         type="button"
         onClick={handleSubmit}
-        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className={`px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+          (hasLocalChanges || hasPendingChanges())
+            ? 'bg-orange-500 text-white hover:bg-orange-600 focus:ring-orange-500'
+            : 'bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-500'
+        }`}
         disabled={isLoading}
       >
-        {isLoading ? 'Saving...' : 'Save & Continue'}
+        {isLoading ? 'Saving...' : (hasLocalChanges || hasPendingChanges()) ? 'Save Changes & Continue' : 'Save & Continue'}
       </button>
 
       {/* Show instruction when no education flags are selected */}
-      {sectionData?.section12?.hasAttendedSchool?.value === "NO" &&
-        sectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "NO" && (
+      {localSectionData?.section12?.hasAttendedSchool?.value === "NO" &&
+        localSectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "NO" && (
           <div className="text-center py-8 bg-green-50 rounded-lg border border-green-200 mt-6">
             <div className="flex justify-center mb-3">
               <svg className="h-8 w-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
