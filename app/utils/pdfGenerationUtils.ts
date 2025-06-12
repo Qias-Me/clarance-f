@@ -65,7 +65,7 @@ export async function generateAndDownloadPdf(
       console.info("🚀 Starting ENHANCED CLIENT-SIDE PDF generation process...");
       console.info("=".repeat(80));
       console.info(`⏰ Timestamp: ${new Date().toISOString()}`);
-      console.info(`📊 Form data sections: ${Object.keys(formData).length}`);
+      // console.info(`📊 Form data sections: ${Object.keys(formData).length}`);
     }
     onProgress?.("Starting PDF generation...");
 

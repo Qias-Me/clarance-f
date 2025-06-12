@@ -46,20 +46,17 @@ const SF86FormMain: React.FC<SF86FormMainProps> = ({ className = "" }) => {
       const completeFormData = exportForm(); // This calls collectAllSectionData internally
 
       // Use centralized PDF generation utility
-      const result = await generateAndDownloadPdf(completeFormData, {
+      await generateAndDownloadPdf(completeFormData, {
         filename: `SF86_Client_Generated_${new Date().toISOString().split("T")[0]}.pdf`,
         showConsoleOutput: true,
-        onProgress: (message) => {
-          // console.log(`� ${message}`);
+        onProgress: () => {
+          // Progress updates are handled by the centralized utility
         },
-        onError: (error) => {
-          // console.error(`❌ ${error}`);
+        onError: () => {
+          // Error handling is done by the centralized utility
         },
-        onSuccess: (result) => {
-          // Also download JSON data for debugging
-          const jsonFilename = result.filename.replace('.pdf', '-data.json');
-          downloadJsonDataUtil(completeFormData, jsonFilename);
-          // console.log("🔍 JSON data downloaded for debugging analysis");
+        onSuccess: () => {
+          console.info("🎉 Local PDF generation completed successfully!");
         }
       });
 
@@ -75,20 +72,17 @@ const SF86FormMain: React.FC<SF86FormMainProps> = ({ className = "" }) => {
       const completeFormData = exportForm(); // This calls collectAllSectionData internally
 
       // Use centralized server PDF generation utility
-      const result = await generatePdfViaServer(completeFormData, {
+      await generatePdfViaServer(completeFormData, {
         filename: `SF86_Server_Generated_${new Date().toISOString().split("T")[0]}.pdf`,
         showConsoleOutput: true,
-        onProgress: (message) => {
-          // console.log(`� ${message}`);
+        onProgress: () => {
+          // Progress updates are handled by the centralized utility
         },
-        onError: (error) => {
-          // console.error(`❌ ${error}`);
+        onError: () => {
+          // Error handling is done by the centralized utility
         },
-        onSuccess: (result) => {
-          // Also download JSON data for debugging
-          const jsonFilename = result.filename.replace('.pdf', '-data.json');
-          downloadJsonDataUtil(completeFormData, jsonFilename);
-          // console.log("🔍 JSON data downloaded for debugging analysis");
+        onSuccess: () => {
+          console.info("🎉 Server PDF generation completed successfully!");
         }
       });
 
@@ -111,17 +105,9 @@ const SF86FormMain: React.FC<SF86FormMainProps> = ({ className = "" }) => {
   const handleSaveForm = async () => {
     try {
       await saveForm();
-
-      // Collect all section data from contexts before processing
-      const completeFormData = exportForm(); // This calls collectAllSectionData internally
-      // console.log(
-      //   "📋 Complete form data collected from contexts:",
-      //   completeFormData
-      // );
-
-      // console.log("Form saved successfully!");
+      console.info("Form saved successfully!");
     } catch (error) {
-      // console.log(`Form save error: ${error}`);
+      console.error("Form save error:", error);
     }
   };
 
@@ -312,7 +298,7 @@ const SF86FormMain: React.FC<SF86FormMainProps> = ({ className = "" }) => {
                     Save Form
                   </button>
 
-                  <button
+                  {/* <button
                     onClick={handleDownloadJson}
                     className="w-full px-4 py-3 bg-teal-500 text-white rounded-lg hover:bg-teal-600 active:bg-teal-700 transition-all duration-200 text-sm font-medium flex items-center justify-center group"
                     data-testid="download-json-button"
@@ -321,7 +307,7 @@ const SF86FormMain: React.FC<SF86FormMainProps> = ({ className = "" }) => {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M7 7h10a2 2 0 012 2v10a2 2 0 01-2 2H7a2 2 0 01-2-2V9a2 2 0 012-2z" />
                     </svg>
                     Download JSON
-                  </button>
+                  </button> */}
 
                   <div className="pt-2 border-t border-gray-100">
                     <p className="text-xs text-gray-500 mb-2 font-medium">PDF Generation</p>

@@ -499,16 +499,31 @@ function SectionNavigation({
           console.error("PDF generation error:", error);
         },
         onSuccess: (result) => {
-          // Also download JSON data for debugging
-          const jsonFilename = result.filename.replace('.pdf', '-data.json');
-          downloadJsonData(completeFormData, jsonFilename);
-          console.info("🔍 JSON data downloaded for debugging analysis");
+          console.info("🎉 PDF generation completed successfully!");
         }
       });
 
     } catch (error) {
       console.error("💥 Error during client PDF generation:", error);
       setIsGeneratingPdf(false);
+    }
+  };
+
+  // Handle standalone JSON download
+  const handleDownloadJson = () => {
+    try {
+      const completeFormData = exportForm(); // Get the actual form data
+      const filename = `SF86_Form_Data_${new Date().toISOString().split("T")[0]}.json`;
+
+      const result = downloadJsonData(completeFormData, filename);
+
+      if (result.success) {
+        console.info(`🎉 JSON data downloaded successfully! Filename: ${filename}`);
+      } else {
+        console.error(`❌ JSON download failed: ${result.errors.join(", ")}`);
+      }
+    } catch (error) {
+      console.error("💥 JSON download error:", error);
     }
   };
 
@@ -550,7 +565,7 @@ function SectionNavigation({
 
             {/* PDF Generation */}
             <div className="flex flex-wrap gap-2 border-l border-gray-300 pl-2">
-        
+
               <button
                 onClick={handleClientPdfGeneration}
                 disabled={isGeneratingPdf}
@@ -573,11 +588,23 @@ function SectionNavigation({
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    <span className="hidden sm:inline">Client PDF</span>
-                    <span className="sm:hidden">Local</span>
+                    <span className="hidden sm:inline">Download PDF</span>
+                    <span className="sm:hidden">PDF</span>
                   </>
                 )}
               </button>
+
+              {/* <button
+                onClick={handleDownloadJson}
+                className="px-3 py-2 bg-teal-500 text-white text-sm rounded-lg hover:bg-teal-600 active:bg-teal-700 transition-all duration-200 flex items-center space-x-1"
+                data-testid="download-json-button"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3M7 7h10a2 2 0 012 2v10a2 2 0 01-2 2H7a2 2 0 01-2-2V9a2 2 0 012-2z" />
+                </svg>
+                <span className="hidden sm:inline">Download JSON</span>
+                <span className="sm:hidden">JSON</span>
+              </button> */}
             </div>
 
             {/* Utility Actions */}
