@@ -37,10 +37,10 @@ export interface MilitaryServiceEntry {
   serviceState: Field<string>; // State of service if National Guard
   serviceStatus: FieldWithOptions<string>; // Officer/Enlisted/Other
 
-  // Service dates
-  fromDate: DateField;
+  // Service dates (using single value fields to match mapping)
+  fromDate: Field<string>;
   fromDateEstimated: Field<boolean>;
-  toDate: DateField;
+  toDate: Field<string>;
   toDateEstimated: Field<boolean>;
   isPresent: Field<boolean>; // Still serving
 
@@ -48,8 +48,8 @@ export interface MilitaryServiceEntry {
 
   // Discharge information
   dischargeType: FieldWithOptions<string>; // Radio button list
-  typeOfDischarge: FieldWithOptions<string>; // Honorable/Dishonorable/etc
-  dischargeDate: DateField;
+  typeOfDischarge?: FieldWithOptions<string>; // Honorable/Dishonorable/etc (optional for second entry)
+  dischargeDate: Field<string>;
   dischargeDateEstimated: Field<boolean>;
   otherDischargeType: Field<string>; // If "Other" selected
   dischargeReason: Field<string>; // Required if not honorable
@@ -60,15 +60,18 @@ export interface MilitaryServiceEntry {
     activeReserve: Field<boolean>;
     inactiveReserve: Field<boolean>;
   };
+
+  // Additional service information fields
+  additionalServiceInfo?: Field<string>;
+  secondaryBranch?: Field<string>; // For the missing RadioButtonList[7] field
 }
 
 /**
  * Court martial/disciplinary procedure entry for Section 15.2
  */
 export interface MilitaryDisciplinaryEntry {
-
   // Disciplinary procedure details
-  procedureDate: DateField;
+  procedureDate: Field<string>; // Using single value field to match mapping
   procedureDateEstimated: Field<boolean>;
   ucmjOffenseDescription: Field<string>; // Description of UCMJ offense
   disciplinaryProcedureName: Field<string>; // Court Martial, Article 15, etc.
@@ -80,11 +83,10 @@ export interface MilitaryDisciplinaryEntry {
  * Foreign military service entry for Section 15.3
  */
 export interface ForeignMilitaryServiceEntry {
-
-  // Service period
-  fromDate: DateField;
+  // Service period (using single value fields to match mapping)
+  fromDate: Field<string>;
   fromDateEstimated: Field<boolean>;
-  toDate: DateField;
+  toDate: Field<string>;
   toDateEstimated: Field<boolean>;
   isPresent: Field<boolean>;
 
@@ -96,49 +98,44 @@ export interface ForeignMilitaryServiceEntry {
   reasonForLeaving: Field<string>;
   circumstancesDescription: Field<string>;
 
-  // Contact information
-  contact1: {
-    fullName: {
-      firstName: Field<string>;
-      middleName: Field<string>;
-      lastName: Field<string>;
-      suffix: Field<string>;
-    };
-    associationPeriod: {
-      fromDate: DateField;
-      fromDateEstimated: Field<boolean>;
-      toDate: DateField;
-      toDateEstimated: Field<boolean>;
-      isPresent: Field<boolean>;
-    };
+  // Contact information (matching field mapping structure)
+  contactPerson1: {
+    firstName: Field<string>;
+    middleName: Field<string>;
+    lastName: Field<string>;
+    suffix: Field<string>;
+    associationFromDate: Field<string>; // Single value field
+    associationFromDateEstimated: Field<boolean>;
+    associationToDate: Field<string>; // Single value field
+    associationToDateEstimated: Field<boolean>;
+    associationIsPresent: Field<boolean>;
     frequencyOfContact: Field<string>;
     officialTitle: Field<string>;
-    address: {
-      street: Field<string>;
-      city: Field<string>;
-      state: Field<string>;
-      country: Field<string>;
-      zipCode: Field<string>;
-    };
+    street: Field<string>;
+    city: Field<string>;
+    state: Field<string>;
+    country: Field<string>;
+    zipCode: Field<string>;
   };
 
-  contact2: {
-    fullName: {
-      firstName: Field<string>;
-      middleName: Field<string>;
-      lastName: Field<string>;
-      suffix: Field<string>;
-    };
-    associationPeriod: {
-      fromDate: DateField;
-      fromDateEstimated: Field<boolean>;
-      toDate: DateField;
-      toDateEstimated: Field<boolean>;
-      isPresent: Field<boolean>;
-    };
+  contactPerson2: {
+    firstName: Field<string>;
+    middleName: Field<string>;
+    lastName: Field<string>;
+    suffix: Field<string>;
+    associationFromDate: Field<string>; // Single value field
+    associationFromDateEstimated: Field<boolean>;
+    associationToDate: Field<string>; // Single value field
+    associationToDateEstimated: Field<boolean>;
+    associationIsPresent: Field<boolean>;
     frequencyOfContact: Field<string>;
     officialTitle: Field<string>;
-    specify: Field<string>; // Additional specification field
+    street: Field<string>;
+    city: Field<string>;
+    state: Field<string>;
+    country: Field<string>;
+    zipCode: Field<string>;
+    specify?: Field<string>; // Only contactPerson2 has specify field
   };
 }
 
@@ -148,15 +145,23 @@ export interface ForeignMilitaryServiceEntry {
 export interface Section15 {
   _id: number;
   section15: {
-    hasServed: FieldWithOptions<"YES" | "NO (If NO, proceed to Section 15.2) ">; // YES/NO radio button
-    militaryService: MilitaryServiceEntry[];
+    // Military Service section (15.1)
+    militaryService: {
+      hasServed: FieldWithOptions<"YES" | "NO (If NO, proceed to Section 15.2) ">; // YES/NO radio button
+      entries: MilitaryServiceEntry[]; // Array of military service entries
+    };
 
+    // Disciplinary Procedures section (15.2)
+    disciplinaryProcedures: {
+      hasDisciplinaryAction: FieldWithOptions<"YES" | "NO (If NO, proceed to Section 15.3) ">; // YES/NO
+      entries: MilitaryDisciplinaryEntry[]; // Array of disciplinary entries
+    };
 
-    hasBeenSubjectToDisciplinary: FieldWithOptions<"YES" | "NO (If NO, proceed to Section 15.3) ">; // YES/NO
-    disciplinaryProcedures: MilitaryDisciplinaryEntry[];
-
-    hasServedInForeignMilitary: FieldWithOptions<"YES" | "NO (If NO, proceed to Section 16)">; // YES/NO
-    foreignMilitaryService: ForeignMilitaryServiceEntry[];
+    // Foreign Military Service section (15.3)
+    foreignMilitaryService: {
+      hasServedInForeignMilitary: FieldWithOptions<"YES" | "NO (If NO, proceed to Section 16)">; // YES/NO
+      entries: ForeignMilitaryServiceEntry[]; // Array of foreign military entries
+    };
   };
 }
 
@@ -292,11 +297,11 @@ export interface Section15ValidationContext {
  */
 export const MILITARY_BRANCH_OPTIONS = [
   "1", // Army
-  "2", // Navy  
+  "2", // Navy
   "3", // Marine Corps
   "4", // Air Force
-  "5", // Coast Guard
-  "6", // Space Force
+  "5", // National Guard
+  "6", // Coast Guard
   "7"  // Other
 ] as const;
 
@@ -404,21 +409,27 @@ export const createDefaultSection15 = (): Section15 => {
   return {
     _id: 15,
     section15: {
-      hasServed: {
-        ...createFieldFromReference(15, 'form1[0].Section14_1[0].#area[4].RadioButtonList[1]', 'NO (If NO, proceed to Section 15.2) '),
-        options: MILITARY_SERVICE_OPTIONS
+      militaryService: {
+        hasServed: {
+          ...createFieldFromReference(15, 'form1[0].Section14_1[0].#area[4].RadioButtonList[1]', 'NO (If NO, proceed to Section 15.2) '),
+          options: MILITARY_SERVICE_OPTIONS
+        },
+        entries: []
       },
-      militaryService: [],
-      hasBeenSubjectToDisciplinary: {
-        ...createFieldFromReference(15, 'form1[0].Section15_2[0].#area[0].RadioButtonList[0]', 'NO (If NO, proceed to Section 15.3) '),
-        options: DISCIPLINARY_OPTIONS
+      disciplinaryProcedures: {
+        hasDisciplinaryAction: {
+          ...createFieldFromReference(15, 'form1[0].Section15_2[0].#area[0].RadioButtonList[0]', 'NO (If NO, proceed to Section 15.3) '),
+          options: DISCIPLINARY_OPTIONS
+        },
+        entries: []
       },
-      disciplinaryProcedures: [],
-      hasServedInForeignMilitary: {
-        ...createFieldFromReference(15, 'form1[0].Section15_3[0].RadioButtonList[0]', 'NO (If NO, proceed to Section 16)'),
-        options: FOREIGN_MILITARY_OPTIONS
-      },
-      foreignMilitaryService: []
+      foreignMilitaryService: {
+        hasServedInForeignMilitary: {
+          ...createFieldFromReference(15, 'form1[0].Section15_3[0].RadioButtonList[0]', 'NO (If NO, proceed to Section 16)'),
+          options: FOREIGN_MILITARY_OPTIONS
+        },
+        entries: []
+      }
     }
   };
 };
@@ -437,38 +448,31 @@ export const createDefaultMilitaryServiceEntry = (): MilitaryServiceEntry => {
       ...createFieldFromReference(15, 'form1[0].Section14_1[0].#area[7].RadioButtonList[3]', '3'),
       options: SERVICE_STATUS_OPTIONS
     },
-    fromDate: {
-      month: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[8].From_Datefield_Name_2[0]', 'fromDate'),
-      year: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[8].From_Datefield_Name_2[0]', 'fromDate')
-    },
-    fromDateEstimated: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[8].#field[7]', true),
-    toDate: {
-      month: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[8].From_Datefield_Name_2[1]', 'toDate'),
-      year: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[8].From_Datefield_Name_2[1]', 'toDate')
-    },
-    toDateEstimated: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[8].#field[10]', true),
-    isPresent: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[8].#field[9]', true),
-    serviceNumber: createFieldFromReference(15, 'form1[0].Section14_1[0].TextField11[3]', 'serviceNumber'),
+    fromDate: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[8].From_Datefield_Name_2[0]', ''),
+    fromDateEstimated: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[8].#field[7]', false),
+    toDate: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[8].From_Datefield_Name_2[1]', ''),
+    toDateEstimated: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[8].#field[10]', false),
+    isPresent: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[8].#field[9]', false),
+    serviceNumber: createFieldFromReference(15, 'form1[0].Section14_1[0].TextField11[3]', ''),
     dischargeType: {
-      ...createFieldFromReference(15, 'form1[0].Section14_1[0].#area[9].RadioButtonList[4]', 'YES'),
+      ...createFieldFromReference(15, 'form1[0].Section14_1[0].#area[9].RadioButtonList[4]', ''),
       options: DISCHARGE_TYPE_OPTIONS
     },
     typeOfDischarge: {
-      ...createFieldFromReference(15, 'form1[0].Section14_1[0].#area[10].RadioButtonList[5]', '4'),
+      ...createFieldFromReference(15, 'form1[0].Section14_1[0].#area[10].RadioButtonList[5]', ''),
       options: DISCHARGE_TYPE_OPTIONS
     },
-    dischargeDate: {
-      month: createFieldFromReference(15, 'form1[0].Section14_1[0].From_Datefield_Name_2[2]', 'date'),
-      year: createFieldFromReference(15, 'form1[0].Section14_1[0].From_Datefield_Name_2[2]', 'date')
-    },
-    dischargeDateEstimated: createFieldFromReference(15, 'form1[0].Section14_1[0].#field[13]', true),
-    otherDischargeType: createFieldFromReference(15, 'form1[0].Section14_1[0].TextField11[4]', 'Other'),
-    dischargeReason: createFieldFromReference(15, 'form1[0].Section14_1[0].TextField11[5]', 'dischargeReadon'),
+    dischargeDate: createFieldFromReference(15, 'form1[0].Section14_1[0].From_Datefield_Name_2[2]', ''),
+    dischargeDateEstimated: createFieldFromReference(15, 'form1[0].Section14_1[0].#field[13]', false),
+    otherDischargeType: createFieldFromReference(15, 'form1[0].Section14_1[0].TextField11[4]', ''),
+    dischargeReason: createFieldFromReference(15, 'form1[0].Section14_1[0].TextField11[5]', ''),
     currentStatus: {
       activeDuty: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[19].#field[27]', false),
       activeReserve: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[19].#field[28]', false),
       inactiveReserve: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[19].#field[29]', false)
-    }
+    },
+    additionalServiceInfo: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[11].RadioButtonList[6]', ''),
+    secondaryBranch: createFieldFromReference(15, 'form1[0].Section14_1[0].#area[12].RadioButtonList[7]', '')
   };
 };
 
@@ -477,11 +481,8 @@ export const createDefaultMilitaryServiceEntry = (): MilitaryServiceEntry => {
  */
 export const createDefaultDisciplinaryEntry = (): MilitaryDisciplinaryEntry => {
   return {
-    procedureDate: {
-      month: createFieldFromReference(15, 'form1[0].Section15_2[0].From_Datefield_Name_2[0]', 'DateOfCourt1'),
-      year: createFieldFromReference(15, 'form1[0].Section15_2[0].From_Datefield_Name_2[0]', 'DateOfCourt1')
-    },
-    procedureDateEstimated: createFieldFromReference(15, 'form1[0].Section15_2[0].#field[2]', true),
+    procedureDate: createFieldFromReference(15, 'form1[0].Section15_2[0].From_Datefield_Name_2[0]', ''),
+    procedureDateEstimated: createFieldFromReference(15, 'form1[0].Section15_2[0].#field[2]', false),
     ucmjOffenseDescription: createFieldFromReference(15, 'form1[0].Section15_2[0].From_Datefield_Name_2[1]', 'OffencesCharged1'),
     disciplinaryProcedureName: createFieldFromReference(15, 'form1[0].Section15_2[0].From_Datefield_Name_2[2]', 'DisplinaryProcedure1'),
     militaryCourtDescription: createFieldFromReference(15, 'form1[0].Section15_2[0].From_Datefield_Name_2[3]', 'CourtCharged1'),
@@ -494,78 +495,56 @@ export const createDefaultDisciplinaryEntry = (): MilitaryDisciplinaryEntry => {
  */
 export const createDefaultForeignMilitaryEntry = (): ForeignMilitaryServiceEntry => {
   return {
+    fromDate: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[0]', ''),
+    fromDateEstimated: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].#field[3]', false),
+    toDate: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[1]', ''),
+    toDateEstimated: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].#field[5]', false),
+    isPresent: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].#field[6]', false),
+    organizationName: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField11[0]', ''),
+    country: createFieldFromReference(15, 'form1[0].Section15_3[0].DropDownList29[0]', ''),
+    highestRank: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField11[1]', ''),
+    divisionDepartment: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField11[2]', ''),
+    reasonForLeaving: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField12[0]', ''),
+    circumstancesDescription: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField13[0]', ''),
+    contactPerson1: {
+      firstName: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[5].TextField11[16]', ''),
+      middleName: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[5].TextField11[15]', ''),
+      lastName: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[5].TextField11[14]', ''),
+      suffix: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[5].suffix[1]', ''),
+      associationFromDate: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[5].#area[7].From_Datefield_Name_2[4]', ''),
+      associationFromDateEstimated: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[5].#area[7].#field[39]', false),
+      associationToDate: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[5].#area[7].From_Datefield_Name_2[5]', ''),
+      associationToDateEstimated: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[5].#area[7].#field[41]', false),
+      associationIsPresent: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[5].#area[7].#field[42]', false),
+      frequencyOfContact: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[5].TextField11[18]', ''),
+      officialTitle: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[5].TextField11[17]', ''),
+      street: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[5].#area[6].TextField11[11]', ''),
+      city: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[5].#area[6].TextField11[12]', ''),
+      state: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[5].#area[6].School6_State[1]', ''),
+      country: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[5].#area[6].DropDownList7[0]', ''),
+      zipCode: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[5].#area[6].TextField11[13]', '')
+    },
+    contactPerson2: {
+      firstName: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].TextField11[8]', ''),
+      middleName: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].TextField11[6]', ''),
+      lastName: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].TextField11[7]', ''),
+      suffix: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].suffix[0]', ''),
+      associationFromDate: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].From_Datefield_Name_2[2]', ''),
+      associationFromDateEstimated: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#field[23]', false),
+      associationToDate: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].From_Datefield_Name_2[3]', ''),
+      associationToDateEstimated: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#field[25]', false),
+      associationIsPresent: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#field[26]', false),
+      frequencyOfContact: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField11[9]', ''),
+      officialTitle: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField11[10]', ''),
+      street: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].TextField11[3]', ''),
+      city: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].TextField11[4]', ''),
+      state: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].School6_State[0]', ''),
+      country: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].DropDownList6[0]', ''),
+      zipCode: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].TextField11[5]', ''),
+      specify: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField11[19]', '')
+    },
 
-    fromDate: {
-      month: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[0]', '2020-01-01'),
-      year: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[0]', '2020-01-01')
-    },
-    fromDateEstimated: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].#field[3]', true),
-    toDate: {
-      month: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[1]', '2023-01-01'),
-      year: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[1]', '2023-01-01')
-    },
-    toDateEstimated: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].#field[5]', true),
-    isPresent: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].#field[6]', true),
-    organizationName: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField11[0]', 'NameOfORg'),
-    country: createFieldFromReference(15, 'form1[0].Section15_3[0].DropDownList29[0]', 'United States'),
-    highestRank: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField11[1]', 'Manager'),
-    divisionDepartment: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField11[2]', 'Human Resources'),
-    reasonForLeaving: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField12[0]', 'Personal Reasons'),
-    circumstancesDescription: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField13[0]', 'Team Collaboration'),
-    contact1: {
-      fullName: {
-        firstName: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].TextField11[3]', '123 Main St'),
-        middleName: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].TextField11[4]', 'Anytown'),
-        lastName: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].School6_State[0]', 'CA'),
-        suffix: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].DropDownList6[0]', 'USA')
-      },
-      associationPeriod: {
-        fromDate: {
-          month: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[0]', '2020-01-01'),
-          year: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[0]', '2020-01-01')
-        },
-        fromDateEstimated: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].#field[3]', true),
-        toDate: {
-          month: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[1]', '2023-01-01'),
-          year: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[1]', '2023-01-01')
-        },
-        toDateEstimated: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].#field[5]', true),
-        isPresent: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].#field[6]', true)
-      },
-      frequencyOfContact: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField11[1]', 'Manager'),
-      officialTitle: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField11[2]', 'Human Resources'),
-      address: {
-        street: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].TextField11[3]', '123 Main St'),
-        city: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].TextField11[4]', 'Anytown'),
-        state: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].School6_State[0]', 'CA'),
-        country: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].DropDownList6[0]', 'USA'),
-        zipCode: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].TextField11[3]', '123 Main St')
-      }
-    },
-    contact2: {
-      fullName: {
-        firstName: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].TextField11[3]', '123 Main St'),
-        middleName: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].TextField11[4]', 'Anytown'),
-        lastName: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].School6_State[0]', 'CA'),
-        suffix: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[2].#area[3].DropDownList6[0]', 'USA')
-      },
-      associationPeriod: {
-        fromDate: {
-          month: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[0]', '2020-01-01'),
-          year: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[0]', '2020-01-01')
-        },
-        fromDateEstimated: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].#field[3]', true),
-        toDate: {
-          month: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[1]', '2023-01-01'),
-          year: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].From_Datefield_Name_2[1]', '2023-01-01')
-        },
-        toDateEstimated: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].#field[5]', true),
-        isPresent: createFieldFromReference(15, 'form1[0].Section15_3[0].#area[0].#field[6]', true)
-      },
-      frequencyOfContact: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField11[1]', 'Manager'),
-      officialTitle: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField11[2]', 'Human Resources'),
-      specify: createFieldFromReference(15, 'form1[0].Section15_3[0].TextField12[0]', 'Personal Reasons')
-    }
+
   };
 };
 
@@ -593,14 +572,14 @@ export function validateMilitaryHistory(
 ): MilitaryHistoryValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
-  if (militaryData.hasServed.value === 'YES') {
 
+  if (militaryData.militaryService.hasServed.value === 'YES') {
     // Validate military service entries
-    militaryData.militaryService.forEach((entry, index) => {
+    militaryData.militaryService.entries.forEach((entry, index) => {
       if (!entry.branch.value) {
         errors.push(`Military service entry ${index + 1}: Branch is required`);
       }
-      if (!entry.fromDate.month.value || !entry.fromDate.year.value) {
+      if (!entry.fromDate.value) {
         errors.push(`Military service entry ${index + 1}: Service start date is required`);
       }
       if (!entry.serviceNumber.value) {
@@ -608,10 +587,10 @@ export function validateMilitaryHistory(
       }
     });
   }
-  if (militaryData.hasBeenSubjectToDisciplinary.value === 'YES') {
 
+  if (militaryData.disciplinaryProcedures.hasDisciplinaryAction.value === 'YES') {
     // Validate disciplinary procedures
-    militaryData.disciplinaryProcedures.forEach((entry, index) => {
+    militaryData.disciplinaryProcedures.entries.forEach((entry, index) => {
       if (!entry.ucmjOffenseDescription.value) {
         errors.push(`Disciplinary entry ${index + 1}: UCMJ offense description is required`);
       }
@@ -622,8 +601,8 @@ export function validateMilitaryHistory(
   }
 
   // Validate foreign military service
-  if (militaryData.hasServedInForeignMilitary.value === 'YES') {
-    militaryData.foreignMilitaryService.forEach((entry, index) => {
+  if (militaryData.foreignMilitaryService.hasServedInForeignMilitary.value === 'YES') {
+    militaryData.foreignMilitaryService.entries.forEach((entry, index) => {
       if (!entry.organizationName.value) {
         errors.push(`Foreign military entry ${index + 1}: Organization name is required`);
       }
@@ -644,12 +623,12 @@ export function validateMilitaryHistory(
  * Checks if Section 15 is complete
  */
 export function isSection15Complete(section15Data: Section15): boolean {
-  const { hasServed, hasBeenSubjectToDisciplinary, hasServedInForeignMilitary } = section15Data.section15;
+  const { militaryService, disciplinaryProcedures, foreignMilitaryService } = section15Data.section15;
 
   // Check if at least one subsection has been addressed (not empty and not default NO values)
-  const hasMilitaryServiceResponse = hasServed.value && hasServed.value !== 'NO (If NO, proceed to Section 15.2) ';
-  const hasDisciplinaryResponse = hasBeenSubjectToDisciplinary.value && hasBeenSubjectToDisciplinary.value !== 'NO (If NO, proceed to Section 15.3) ';
-  const hasForeignServiceResponse = hasServedInForeignMilitary.value && hasServedInForeignMilitary.value !== 'NO (If NO, proceed to Section 16)';
+  const hasMilitaryServiceResponse = militaryService.hasServed.value && militaryService.hasServed.value !== 'NO (If NO, proceed to Section 15.2) ';
+  const hasDisciplinaryResponse = disciplinaryProcedures.hasDisciplinaryAction.value && disciplinaryProcedures.hasDisciplinaryAction.value !== 'NO (If NO, proceed to Section 15.3) ';
+  const hasForeignServiceResponse = foreignMilitaryService.hasServedInForeignMilitary.value && foreignMilitaryService.hasServedInForeignMilitary.value !== 'NO (If NO, proceed to Section 16)';
 
   return hasMilitaryServiceResponse || hasDisciplinaryResponse || hasForeignServiceResponse;
 }
@@ -663,7 +642,7 @@ export function getVisibleFields(
 ): string[] {
   const visibleFields: string[] = ['hasServed'];
 
-  if (militaryData.hasServed.value === 'YES') {
+  if (militaryData.militaryService.hasServed.value === 'YES') {
     visibleFields.push(
       'branch', 'serviceStatus', 'fromDate', 'toDate',
       'serviceNumber', 'dischargeType', 'currentStatus'
@@ -677,7 +656,7 @@ export function getVisibleFields(
       visibleFields.push('dischargeReason');
     }
 
-    if (entry.typeOfDischarge.value === 'Other') {
+    if (entry.typeOfDischarge?.value === 'Other') {
       visibleFields.push('otherDischargeType');
     }
   }

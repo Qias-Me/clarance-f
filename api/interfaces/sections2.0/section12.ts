@@ -167,8 +167,8 @@ export const DEGREE_TYPE_OPTIONS = [
 export const EDUCATION_DATE_VALIDATION = {
   MIN_YEAR: 1950,
   MAX_YEAR: new Date().getFullYear() + 10, // Allow future dates for ongoing education
-  DATE_REGEX: /^(0[1-9]|1[0-2])\/\d{4}$/, // MM/YYYY format
-  FULL_DATE_REGEX: /^(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])\/\d{4}$/ // MM/DD/YYYY format
+  DATE_REGEX: /^(0[1-9]|1[0-2])\/(\d{4})$/, // MM/YYYY format with capture groups
+  FULL_DATE_REGEX: /^(0[1-9]|1[0-2])\/(0[1-9]|[12]\d|3[01])\/(\d{4})$/ // MM/DD/YYYY format with capture groups
 } as const;
 
 // ============================================================================
@@ -447,6 +447,10 @@ export const createDefaultSchoolEntry = (entryId: string | number, entryIndex: n
     // Contact person (optional - for schools attended in last 3 years)
     contactPerson: createDefaultContactPerson(),
 
+    // Day/Night attendance fields
+    dayAttendance: generateSection12Field(`section12.entries[${entryIndex}].dayAttendance`, false),
+    nightAttendance: generateSection12Field(`section12.entries[${entryIndex}].nightAttendance`, false),
+
     createdAt: new Date(),
     updatedAt: new Date()
   };
@@ -528,6 +532,33 @@ export const updateSection12Field = (
 };
 
 /**
+ * Parse MM/YYYY date format to Date object
+ */
+const parseEducationDate = (dateString: string): Date | null => {
+  if (!dateString) return null;
+
+  // Check if it matches MM/YYYY format
+  const mmYyyyMatch = dateString.match(EDUCATION_DATE_VALIDATION.DATE_REGEX);
+  if (mmYyyyMatch) {
+    // Use regex capture groups: [fullMatch, month, year]
+    const [, month, year] = mmYyyyMatch;
+    const monthNum = parseInt(month);
+    const yearNum = parseInt(year);
+
+    // Validate month and year ranges
+    if (monthNum < 1 || monthNum > 12) return null;
+    if (yearNum < EDUCATION_DATE_VALIDATION.MIN_YEAR || yearNum > EDUCATION_DATE_VALIDATION.MAX_YEAR) return null;
+
+    const date = new Date(yearNum, monthNum - 1, 1);
+    return isNaN(date.getTime()) ? null : date;
+  }
+
+  // Try parsing as full date
+  const date = new Date(dateString);
+  return isNaN(date.getTime()) ? null : date;
+};
+
+/**
  * Validates school entry dates
  */
 export const validateSchoolDates = (
@@ -541,9 +572,9 @@ export const validateSchoolDates = (
   if (!entry.fromDate.value) {
     errors.push('From date is required');
   } else {
-    const fromDate = new Date(entry.fromDate.value);
-    if (isNaN(fromDate.getTime())) {
-      errors.push('From date is not a valid date');
+    const fromDate = parseEducationDate(entry.fromDate.value);
+    if (!fromDate) {
+      errors.push('From date is not a valid date (use MM/YYYY format)');
     } else if (fromDate.getFullYear() < EDUCATION_DATE_VALIDATION.MIN_YEAR) {
       errors.push(`From date cannot be before ${EDUCATION_DATE_VALIDATION.MIN_YEAR}`);
     } else if (fromDate > context.currentDate) {
@@ -555,12 +586,12 @@ export const validateSchoolDates = (
   if (!entry.isPresent.value && !entry.toDate.value) {
     errors.push('To date is required when not currently attending');
   } else if (!entry.isPresent.value && entry.toDate.value) {
-    const toDate = new Date(entry.toDate.value);
-    if (isNaN(toDate.getTime())) {
-      errors.push('To date is not a valid date');
+    const toDate = parseEducationDate(entry.toDate.value);
+    if (!toDate) {
+      errors.push('To date is not a valid date (use MM/YYYY format)');
     } else if (entry.fromDate.value) {
-      const fromDate = new Date(entry.fromDate.value);
-      if (toDate < fromDate) {
+      const fromDate = parseEducationDate(entry.fromDate.value);
+      if (fromDate && toDate < fromDate) {
         errors.push('To date cannot be before from date');
       }
     }
@@ -574,6 +605,17 @@ export const validateSchoolDates = (
 };
 
 /**
+ * Check if a school entry is essentially empty (no meaningful data entered)
+ */
+const isEmptySchoolEntry = (entry: SchoolEntry): boolean => {
+  return !entry.schoolName.value?.trim() &&
+         !entry.fromDate.value?.trim() &&
+         !entry.toDate.value?.trim() &&
+         !entry.schoolAddress.value?.trim() &&
+         !entry.schoolCity.value?.trim();
+};
+
+/**
  * Validates a complete school entry
  */
 export function validateSchoolEntry(
@@ -582,6 +624,15 @@ export function validateSchoolEntry(
 ): EducationValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
+
+  // Skip validation for empty entries - they're allowed
+  if (isEmptySchoolEntry(entry)) {
+    return {
+      isValid: true,
+      errors: [],
+      warnings: []
+    };
+  }
 
   // Validate attendance dates
   const dateValidation = validateSchoolDates(entry, context);

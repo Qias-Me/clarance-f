@@ -32,7 +32,7 @@ import {
   removeResidenceEntry as removeResidenceEntryImpl,
   validateResidenceHistory
 } from '../../../../api/interfaces/sections2.0/section11';
-import { debugAllEntries } from './section11-field-mapping';
+import { debugAllEntries, validateSection11FieldMappings, createFieldMappingChecklist } from './section11-field-mapping';
 import type {
   ValidationResult,
   ValidationError,
@@ -53,7 +53,9 @@ const defaultValidationRules: Section11ValidationRules = {
   requiresContactPerson: true,
   requiresFromDate: true,
   maxResidenceGap: 30, // days
-  minimumResidenceTimeframe: 7 // years
+  minimumResidenceTimeframe: 10 // years - FIXED: Changed from 7 to 10 years per SF-86 requirements
+  // NOTE: This was previously set to 7 years but was corrected to match official SF-86 requirements
+  // which specify a 10-year residence history requirement for security clearance background checks
 };
 
 // ============================================================================
@@ -95,6 +97,18 @@ interface Section11ContextType {
   // Contact Person Management
   updateContactPerson: (entryIndex: number, contactData: any) => void;
   addContactPhone: (entryIndex: number, phoneType: 'evening' | 'daytime' | 'mobile', phoneData: any) => void;
+
+  // Comprehensive field management for all 252 fields (63 per entry)
+  updatePhoneFields: (entryIndex: number, phoneData: { phone1?: string; phone1Ext?: string; phone1Intl?: boolean; phone2?: string; phone2Ext?: string; phone2Intl?: boolean; phone3?: string; phone3Ext?: string; phone3Intl?: boolean; dontKnowContact?: boolean }) => void;
+  updateDateFields: (entryIndex: number, dateData: { fromDate?: string; fromDateEstimate?: boolean; toDate?: string; toDateEstimate?: boolean; present?: boolean }) => void;
+  updateMainAddressFields: (entryIndex: number, addressData: { streetAddress?: string; city?: string; state?: string; country?: string; zipCode?: string }) => void;
+  updateContactPersonNames: (entryIndex: number, nameData: { firstName?: string; middleName?: string; lastName?: string; suffix?: string }) => void;
+  updateRelationshipFields: (entryIndex: number, relationshipData: { neighbor?: boolean; friend?: boolean; landlord?: boolean; business?: boolean; other?: boolean; otherExplain?: string }) => void;
+  updateContactAddressFields: (entryIndex: number, contactAddressData: { street?: string; city?: string; state?: string; country?: string; zip?: string; email?: string; emailUnknown?: boolean }) => void;
+  updateLastContactFields: (entryIndex: number, lastContactData: { lastContact?: string; lastContactEstimate?: boolean }) => void;
+  updatePhysicalAddressFields: (entryIndex: number, physicalData: { street?: string; city?: string; state?: string; country?: string; addressAlt?: string; apoFpoAddress?: string; apoFpoState?: string; apoFpoZip?: string; physicalZip?: string; altStreet?: string; altCity?: string; altState?: string; altCountry?: string; altZip?: string; addressFull?: string }) => void;
+  updateRadioButtonFields: (entryIndex: number, radioData: { residenceType?: string; addressTypeRadio?: string; residenceTypeRadioAlt?: string }) => void;
+  updateAdditionalFields: (entryIndex: number, additionalData: { residenceTypeOther?: string; apoFpoFull?: string; apoFpoStateAlt?: string; apoFpoZipAlt?: string }) => void;
 
   // Date Management
   updateDateRange: (entryIndex: number, fromDate: string, toDate: string, isPresent?: boolean) => void;
@@ -162,6 +176,28 @@ const Section11Provider: React.FC<Section11ProviderProps> = ({ children }) => {
   useEffect(() => {
     // console.log('🔍 Section 11 Context: Initializing with field mapping debug');
     debugAllEntries();
+
+    // Validate field mappings coverage
+    const validation = validateSection11FieldMappings();
+
+    if (validation.coverage >= 100) {
+      // console.log(`✅ Section11: All ${validation.totalFields} PDF form fields are properly mapped - 100% COVERAGE ACHIEVED!`);
+    } else if (validation.coverage >= 98) {
+      // console.log(`✅ Section11: Nearly all ${validation.totalFields} PDF form fields are properly mapped`);
+    } else {
+      // console.warn(`⚠️ Section11: ${validation.missingFields.length} fields are not mapped`);
+      // console.warn('Missing fields:');
+      validation.missingFields.slice(0, 10).forEach(field => {
+        // console.warn(`  - ${field}`);
+      });
+      if (validation.missingFields.length > 10) {
+        // console.warn(`  ... and ${validation.missingFields.length - 10} more`);
+      }
+    }
+
+    // Create comprehensive field mapping checklist
+    const checklist = createFieldMappingChecklist();
+    // console.log('📊 Section11: Field mapping checklist:', checklist);
   }, []);
 
   // ============================================================================
@@ -556,6 +592,171 @@ const Section11Provider: React.FC<Section11ProviderProps> = ({ children }) => {
   }, []);
 
   // ============================================================================
+  // COMPREHENSIVE FIELD MANAGEMENT FOR ALL 252 FIELDS (63 PER ENTRY)
+  // ============================================================================
+
+  const updatePhoneFields = useCallback((entryIndex: number, phoneData: { phone1?: string; phone1Ext?: string; phone1Intl?: boolean; phone2?: string; phone2Ext?: string; phone2Intl?: boolean; phone3?: string; phone3Ext?: string; phone3Intl?: boolean; dontKnowContact?: boolean }) => {
+    setSection11Data(prevData => {
+      const newData = cloneDeep(prevData);
+      if (newData.section11.residences[entryIndex]) {
+        const contact = newData.section11.residences[entryIndex].contactPerson;
+        if (phoneData.phone1 !== undefined) contact.phone1.value = phoneData.phone1;
+        if (phoneData.phone1Ext !== undefined) contact.phone1Ext.value = phoneData.phone1Ext;
+        if (phoneData.phone1Intl !== undefined) contact.phone1Intl.value = phoneData.phone1Intl;
+        if (phoneData.phone2 !== undefined) contact.phone2.value = phoneData.phone2;
+        if (phoneData.phone2Ext !== undefined) contact.phone2Ext.value = phoneData.phone2Ext;
+        if (phoneData.phone2Intl !== undefined) contact.phone2Intl.value = phoneData.phone2Intl;
+        if (phoneData.phone3 !== undefined) contact.phone3.value = phoneData.phone3;
+        if (phoneData.phone3Ext !== undefined) contact.phone3Ext.value = phoneData.phone3Ext;
+        if (phoneData.phone3Intl !== undefined) contact.phone3Intl.value = phoneData.phone3Intl;
+        if (phoneData.dontKnowContact !== undefined) contact.dontKnowContact.value = phoneData.dontKnowContact;
+      }
+      return newData;
+    });
+  }, []);
+
+  const updateDateFields = useCallback((entryIndex: number, dateData: { fromDate?: string; fromDateEstimate?: boolean; toDate?: string; toDateEstimate?: boolean; present?: boolean }) => {
+    setSection11Data(prevData => {
+      const newData = cloneDeep(prevData);
+      if (newData.section11.residences[entryIndex]) {
+        const contact = newData.section11.residences[entryIndex].contactPerson;
+        if (dateData.fromDate !== undefined) contact.fromDate.value = dateData.fromDate;
+        if (dateData.fromDateEstimate !== undefined) contact.fromDateEstimate.value = dateData.fromDateEstimate;
+        if (dateData.toDate !== undefined) contact.toDate.value = dateData.toDate;
+        if (dateData.toDateEstimate !== undefined) contact.toDateEstimate.value = dateData.toDateEstimate;
+        if (dateData.present !== undefined) contact.present.value = dateData.present;
+      }
+      return newData;
+    });
+  }, []);
+
+  const updateMainAddressFields = useCallback((entryIndex: number, addressData: { streetAddress?: string; city?: string; state?: string; country?: string; zipCode?: string }) => {
+    setSection11Data(prevData => {
+      const newData = cloneDeep(prevData);
+      if (newData.section11.residences[entryIndex]) {
+        const contact = newData.section11.residences[entryIndex].contactPerson;
+        if (addressData.streetAddress !== undefined) contact.streetAddress.value = addressData.streetAddress;
+        if (addressData.city !== undefined) contact.city.value = addressData.city;
+        if (addressData.state !== undefined) contact.state.value = addressData.state;
+        if (addressData.country !== undefined) contact.country.value = addressData.country;
+        if (addressData.zipCode !== undefined) contact.zipCode.value = addressData.zipCode;
+      }
+      return newData;
+    });
+  }, []);
+
+  const updateContactPersonNames = useCallback((entryIndex: number, nameData: { firstName?: string; middleName?: string; lastName?: string; suffix?: string }) => {
+    setSection11Data(prevData => {
+      const newData = cloneDeep(prevData);
+      if (newData.section11.residences[entryIndex]) {
+        const contact = newData.section11.residences[entryIndex].contactPerson;
+        if (nameData.firstName !== undefined) contact.firstName.value = nameData.firstName;
+        if (nameData.middleName !== undefined) contact.middleName.value = nameData.middleName;
+        if (nameData.lastName !== undefined) contact.lastName.value = nameData.lastName;
+        if (nameData.suffix !== undefined) contact.suffix.value = nameData.suffix;
+      }
+      return newData;
+    });
+  }, []);
+
+  const updateRelationshipFields = useCallback((entryIndex: number, relationshipData: { neighbor?: boolean; friend?: boolean; landlord?: boolean; business?: boolean; other?: boolean; otherExplain?: string }) => {
+    setSection11Data(prevData => {
+      const newData = cloneDeep(prevData);
+      if (newData.section11.residences[entryIndex]) {
+        const contact = newData.section11.residences[entryIndex].contactPerson;
+        if (relationshipData.neighbor !== undefined) contact.relationshipNeighbor.value = relationshipData.neighbor;
+        if (relationshipData.friend !== undefined) contact.relationshipFriend.value = relationshipData.friend;
+        if (relationshipData.landlord !== undefined) contact.relationshipLandlord.value = relationshipData.landlord;
+        if (relationshipData.business !== undefined) contact.relationshipBusiness.value = relationshipData.business;
+        if (relationshipData.other !== undefined) contact.relationshipOther.value = relationshipData.other;
+        if (relationshipData.otherExplain !== undefined) contact.relationshipOtherExplain.value = relationshipData.otherExplain;
+      }
+      return newData;
+    });
+  }, []);
+
+  const updateContactAddressFields = useCallback((entryIndex: number, contactAddressData: { street?: string; city?: string; state?: string; country?: string; zip?: string; email?: string; emailUnknown?: boolean }) => {
+    setSection11Data(prevData => {
+      const newData = cloneDeep(prevData);
+      if (newData.section11.residences[entryIndex]) {
+        const contact = newData.section11.residences[entryIndex].contactPerson;
+        if (contactAddressData.street !== undefined) contact.contactStreet.value = contactAddressData.street;
+        if (contactAddressData.city !== undefined) contact.contactCity.value = contactAddressData.city;
+        if (contactAddressData.state !== undefined) contact.contactState.value = contactAddressData.state;
+        if (contactAddressData.country !== undefined) contact.contactCountry.value = contactAddressData.country;
+        if (contactAddressData.zip !== undefined) contact.contactZip.value = contactAddressData.zip;
+        if (contactAddressData.email !== undefined) contact.contactEmail.value = contactAddressData.email;
+        if (contactAddressData.emailUnknown !== undefined) contact.contactEmailUnknown.value = contactAddressData.emailUnknown;
+      }
+      return newData;
+    });
+  }, []);
+
+  const updateLastContactFields = useCallback((entryIndex: number, lastContactData: { lastContact?: string; lastContactEstimate?: boolean }) => {
+    setSection11Data(prevData => {
+      const newData = cloneDeep(prevData);
+      if (newData.section11.residences[entryIndex]) {
+        const contact = newData.section11.residences[entryIndex].contactPerson;
+        if (lastContactData.lastContact !== undefined) contact.lastContact.value = lastContactData.lastContact;
+        if (lastContactData.lastContactEstimate !== undefined) contact.lastContactEstimate.value = lastContactData.lastContactEstimate;
+      }
+      return newData;
+    });
+  }, []);
+
+  const updatePhysicalAddressFields = useCallback((entryIndex: number, physicalData: { street?: string; city?: string; state?: string; country?: string; addressAlt?: string; apoFpoAddress?: string; apoFpoState?: string; apoFpoZip?: string; physicalZip?: string; altStreet?: string; altCity?: string; altState?: string; altCountry?: string; altZip?: string; addressFull?: string }) => {
+    setSection11Data(prevData => {
+      const newData = cloneDeep(prevData);
+      if (newData.section11.residences[entryIndex]) {
+        const contact = newData.section11.residences[entryIndex].contactPerson;
+        if (physicalData.street !== undefined) contact.physicalStreet.value = physicalData.street;
+        if (physicalData.city !== undefined) contact.physicalCity.value = physicalData.city;
+        if (physicalData.state !== undefined) contact.physicalState.value = physicalData.state;
+        if (physicalData.country !== undefined) contact.physicalCountry.value = physicalData.country;
+        if (physicalData.addressAlt !== undefined) contact.physicalAddressAlt.value = physicalData.addressAlt;
+        if (physicalData.apoFpoAddress !== undefined) contact.apoFpoAddress.value = physicalData.apoFpoAddress;
+        if (physicalData.apoFpoState !== undefined) contact.apoFpoState.value = physicalData.apoFpoState;
+        if (physicalData.apoFpoZip !== undefined) contact.apoFpoZip.value = physicalData.apoFpoZip;
+        if (physicalData.physicalZip !== undefined) contact.physicalZip.value = physicalData.physicalZip;
+        if (physicalData.altStreet !== undefined) contact.physicalAltStreet.value = physicalData.altStreet;
+        if (physicalData.altCity !== undefined) contact.physicalAltCity.value = physicalData.altCity;
+        if (physicalData.altState !== undefined) contact.physicalAltState.value = physicalData.altState;
+        if (physicalData.altCountry !== undefined) contact.physicalAltCountry.value = physicalData.altCountry;
+        if (physicalData.altZip !== undefined) contact.physicalAltZip.value = physicalData.altZip;
+        if (physicalData.addressFull !== undefined) contact.physicalAddressFull.value = physicalData.addressFull;
+      }
+      return newData;
+    });
+  }, []);
+
+  const updateRadioButtonFields = useCallback((entryIndex: number, radioData: { residenceType?: string; addressTypeRadio?: string; residenceTypeRadioAlt?: string }) => {
+    setSection11Data(prevData => {
+      const newData = cloneDeep(prevData);
+      if (newData.section11.residences[entryIndex]) {
+        const contact = newData.section11.residences[entryIndex].contactPerson;
+        if (radioData.residenceType !== undefined) contact.residenceType.value = radioData.residenceType;
+        if (radioData.addressTypeRadio !== undefined) contact.addressTypeRadio.value = radioData.addressTypeRadio;
+        if (radioData.residenceTypeRadioAlt !== undefined) contact.residenceTypeRadioAlt.value = radioData.residenceTypeRadioAlt;
+      }
+      return newData;
+    });
+  }, []);
+
+  const updateAdditionalFields = useCallback((entryIndex: number, additionalData: { residenceTypeOther?: string; apoFpoFull?: string; apoFpoStateAlt?: string; apoFpoZipAlt?: string }) => {
+    setSection11Data(prevData => {
+      const newData = cloneDeep(prevData);
+      if (newData.section11.residences[entryIndex]) {
+        const contact = newData.section11.residences[entryIndex].contactPerson;
+        if (additionalData.residenceTypeOther !== undefined) contact.residenceTypeOther.value = additionalData.residenceTypeOther;
+        if (additionalData.apoFpoFull !== undefined) contact.apoFpoFull.value = additionalData.apoFpoFull;
+        if (additionalData.apoFpoStateAlt !== undefined) contact.apoFpoStateAlt.value = additionalData.apoFpoStateAlt;
+        if (additionalData.apoFpoZipAlt !== undefined) contact.apoFpoZipAlt.value = additionalData.apoFpoZipAlt;
+      }
+      return newData;
+    });
+  }, []);
+
+  // ============================================================================
   // DATE MANAGEMENT
   // ============================================================================
 
@@ -676,18 +877,40 @@ const Section11Provider: React.FC<Section11ProviderProps> = ({ children }) => {
   const getTotalResidenceTimespan = useCallback((): number => {
     const residences = section11Data.section11.residences
       .filter(r => r.fromDate.value && (r.toDate.value || r.present.value))
-      .map(r => ({
-        from: new Date(r.fromDate.value),
-        to: r.present.value ? new Date() : new Date(r.toDate.value)
-      }))
-      .sort((a, b) => a.from.getTime() - b.from.getTime());
+      .map(r => {
+        // Parse MM/YYYY format correctly by converting to MM/01/YYYY
+        const parseMMYYYY = (dateStr: string): Date => {
+          if (!dateStr) return new Date();
+
+          // Handle MM/YYYY format (e.g., "01/2020")
+          const parts = dateStr.split('/');
+          if (parts.length === 2) {
+            const month = parseInt(parts[0]) - 1; // Month is 0-indexed in Date
+            const year = parseInt(parts[1]);
+            return new Date(year, month, 1); // Use first day of month
+          }
+
+          // Fallback to regular Date parsing
+          return new Date(dateStr);
+        };
+
+        return {
+          from: parseMMYYYY(r.fromDate.value),
+          to: r.present.value ? new Date() : parseMMYYYY(r.toDate.value)
+        };
+      });
 
     if (residences.length === 0) return 0;
 
-    const earliest = residences[0].from;
-    const latest = Math.max(...residences.map(r => r.to.getTime()));
-    const timeDiff = latest - earliest.getTime();
-    return timeDiff / (1000 * 60 * 60 * 24 * 365.25); // Convert to years
+    // Calculate cumulative time for each residence period
+    let totalYears = 0;
+    for (const residence of residences) {
+      const timeDiff = residence.to.getTime() - residence.from.getTime();
+      const years = timeDiff / (1000 * 60 * 60 * 24 * 365.25); // Convert to years
+      totalYears += years;
+    }
+
+    return totalYears;
   }, [section11Data]);
 
   const getResidenceGaps = useCallback(() => {
@@ -804,6 +1027,18 @@ const Section11Provider: React.FC<Section11ProviderProps> = ({ children }) => {
     // Contact Person Management
     updateContactPerson,
     addContactPhone,
+
+    // Comprehensive field management for all 252 fields (63 per entry)
+    updatePhoneFields,
+    updateDateFields,
+    updateMainAddressFields,
+    updateContactPersonNames,
+    updateRelationshipFields,
+    updateContactAddressFields,
+    updateLastContactFields,
+    updatePhysicalAddressFields,
+    updateRadioButtonFields,
+    updateAdditionalFields,
 
     // Date Management
     updateDateRange,

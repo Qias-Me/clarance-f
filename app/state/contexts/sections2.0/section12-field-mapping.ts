@@ -194,13 +194,15 @@ export const SECTION12_FIELD_MAPPINGS = {
   'section12.entries[2].contactPerson.unknownPhone': 'form1[0].section_12_2[0].#field[36]',
   'section12.entries[2].contactPerson.email': 'form1[0].section_12_2[0].p3-t68[3]',
   'section12.entries[2].contactPerson.unknownEmail': 'form1[0].section_12_2[0].#field[37]',
+  'section12.entries[2].dayAttendance': 'form1[0].section_12_2[0].#field[34]',
+  'section12.entries[2].nightAttendance': 'form1[0].section_12_2[0].#field[35]',
 
   // Entry 4 fields (section_12_3[0]) - CORRECTED MAPPINGS
   'section12.entries[3].fromDate': 'form1[0].section_12_3[0].From_Datefield_Name_2[0]',
   'section12.entries[3].fromDateEstimate': 'form1[0].section_12_3[0].#field[3]',
   'section12.entries[3].toDate': 'form1[0].section_12_3[0].From_Datefield_Name_2[1]',
-  'section12.entries[3].toDateEstimate': 'form1[0].section_12_3[0].sec12_1_1[1]',
-  'section12.entries[3].isPresent': 'form1[0].section_12_3[0].sec12_1_1[0]',
+  'section12.entries[3].toDateEstimate': 'form1[0].section_12_3[0].#field[5]',
+  'section12.entries[3].isPresent': 'form1[0].section_12_3[0].#field[4]',
   'section12.entries[3].schoolName': 'form1[0].section_12_3[0].TextField11[3]', // FIXED: was TextField11[2] (ZIP code)
   'section12.entries[3].schoolAddress': 'form1[0].section_12_3[0].TextField11[0]',
   'section12.entries[3].schoolCity': 'form1[0].section_12_3[0].TextField11[1]',
@@ -238,10 +240,10 @@ export const SECTION12_FIELD_MAPPINGS = {
 
   // MISSING COMPONENTS - ADDITIONAL FIELDS IDENTIFIED FROM VALIDATION
 
-  // Additional checkbox fields in section_12[0] (Entry 1 & 2 additional fields)
+  // Day/Night attendance fields in section_12[0] (Entry 1 & 2)
   'section12.entries[0].additionalField1': 'form1[0].section_12[0].#field[39]',
-  'section12.entries[0].additionalField2': 'form1[0].section_12[0].#field[41]',
-  'section12.entries[0].additionalField3': 'form1[0].section_12[0].#field[42]',
+  'section12.entries[0].dayAttendance': 'form1[0].section_12[0].#field[41]',
+  'section12.entries[0].nightAttendance': 'form1[0].section_12[0].#field[42]',
 
   // Entry 5 fields (section_12_2[0]) - NEWLY IDENTIFIED COMPLETE ENTRY
   'section12.entries[4].receivedDegree': 'form1[0].section_12_2[0].pg2r5[0]',
@@ -279,16 +281,16 @@ export const SECTION12_FIELD_MAPPINGS = {
   'section12.entries[4].contactPerson.country': 'form1[0].section_12_2[0].DropDownList27[0]',
   'section12.entries[4].contactPerson.email': 'form1[0].section_12_2[0].p3-t68[1]',
   'section12.entries[4].contactPerson.unknownEmail': 'form1[0].section_12_2[0].#field[28]',
-  'section12.entries[4].additionalField2': 'form1[0].section_12_2[0].#field[30]',
-  'section12.entries[4].additionalField3': 'form1[0].section_12_2[0].#field[31]',
+  'section12.entries[4].dayAttendance': 'form1[0].section_12_2[0].#field[30]',
+  'section12.entries[4].nightAttendance': 'form1[0].section_12_2[0].#field[31]',
   'section12.entries[4].additionalField4': 'form1[0].section_12_2[0].#field[40]',
   'section12.entries[4].additionalField5': 'form1[0].section_12_2[0].#field[41]',
 
   // Additional fields in section_12_3[0] - NEWLY IDENTIFIED
   'section12.entries[3].additionalField1': 'form1[0].section_12_3[0].#field[4]',
   'section12.entries[3].additionalField2': 'form1[0].section_12_3[0].#field[5]',
-  'section12.entries[3].additionalField3': 'form1[0].section_12_3[0].#field[27]',
-  'section12.entries[3].additionalField4': 'form1[0].section_12_3[0].#field[28]',
+  'section12.entries[3].dayAttendance': 'form1[0].section_12_3[0].#field[27]',
+  'section12.entries[3].nightAttendance': 'form1[0].section_12_3[0].#field[28]',
 } as const;
 
 /**

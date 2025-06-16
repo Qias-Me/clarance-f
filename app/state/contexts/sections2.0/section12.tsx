@@ -40,6 +40,7 @@ import type {
 import {
   createDefaultSection12,
   validateSection12,
+  validateSchoolDates,
   updateSection12Field,
   createDefaultSchoolEntry,
   validateSchoolEntry,
@@ -277,7 +278,7 @@ export interface Section12ContextType {
   // SUBMIT-ONLY MODE FUNCTIONS
   // ============================================================================
 
-  submitSectionData: () => Promise<void>;
+  submitSectionData: () => Promise<{success: boolean, error?: string}>;
   hasPendingChanges: () => boolean;
 }
 
@@ -698,8 +699,9 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
         const entryIndex = newData.section12.entries.length;
 
         // Limit to 4 entries as per PDF structure (discovered 4 entries in JSON)
-        if (entryIndex >= 4) {
-          // console.warn('⚠️ Section12: Maximum of 4 school entries allowed');
+        // Allow indices 0, 1, 2, 3 (total of 4 entries)
+        if (entryIndex > 3) {
+          console.warn('⚠️ Section12: Maximum of 4 school entries allowed (indices 0-3)');
           return prevData;
         }
 
@@ -922,18 +924,49 @@ const Section12Provider: React.FC<{ children: React.ReactNode }> = ({ children }
    * Manually sync data to main form context (submit-only mode)
    * This function should only be called when the user explicitly submits
    */
-  const submitSectionData = useCallback(async () => {
-    if (submitOnlyMode) {
-      // console.log('🚀 Section12: Manually syncing data to main form context (submit-only mode)');
+  const submitSectionData = useCallback(async (): Promise<{success: boolean, error?: string}> => {
+    try {
+      if (submitOnlyMode) {
+        console.log('🚀 Section12: Manually syncing data to main form context (submit-only mode)');
 
-      // Actually sync data to SF86FormContext (this was missing!)
-      sf86Form.updateSectionData('section12', section12Data);
+        // Validate data before syncing
+        const validation = validateSection12(section12Data, {
+          currentDate: new Date(),
+          minimumEducationAge: 16,
+          rules: {
+            requiresEducationHistory: true,
+            requiresHighSchoolInfo: true,
+            maxEducationEntries: 10,
+            requiresSchoolName: true,
+            requiresSchoolAddress: true,
+            requiresAttendanceDates: true,
+            allowsEstimatedDates: true,
+            maxSchoolNameLength: 100,
+            maxAddressLength: 200
+          }
+        });
 
-      // Update tracking references
-      lastSubmittedDataRef.current = cloneDeep(section12Data);
-      setPendingChanges(false);
+        if (!validation.isValid) {
+          console.error('❌ Section12: Validation failed before sync:', validation.errors);
+          return { success: false, error: `Validation failed: ${validation.errors.join(', ')}` };
+        }
 
-      // console.log('✅ Section12: Data sync complete');
+        // Actually sync data to SF86FormContext
+        sf86Form.updateSectionData('section12', section12Data);
+
+        // Update tracking references
+        lastSubmittedDataRef.current = cloneDeep(section12Data);
+        setPendingChanges(false);
+
+        console.log('✅ Section12: Data sync complete');
+        return { success: true };
+      } else {
+        console.log('⚠️ Section12: Not in submit-only mode, skipping manual sync');
+        return { success: true };
+      }
+    } catch (error) {
+      console.error('❌ Section12: Error during data sync:', error);
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error during data sync' };
     }
   }, [submitOnlyMode, section12Data, sf86Form]);
 

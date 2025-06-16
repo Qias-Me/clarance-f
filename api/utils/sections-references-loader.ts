@@ -62,7 +62,8 @@ export interface SectionReference {
     averageConfidence: number;
     pageRange: number[];
   };
-  fields: FieldReference[];
+  fields?: FieldReference[];
+  fieldsByEntry?: Record<string, FieldReference[]>;
 }
 
 // ============================================================================
@@ -114,7 +115,20 @@ export function getSectionFields(sectionId: number): FieldReference[] {
   if (!sectionData) {
     throw new Error(`Section ${sectionId} not found in sections-references`);
   }
-  return sectionData.fields;
+
+  // Handle both formats: direct fields array or fieldsByEntry object
+  if (sectionData.fields) {
+    return sectionData.fields;
+  } else if (sectionData.fieldsByEntry) {
+    // Flatten all entry arrays into a single fields array
+    const allFields: FieldReference[] = [];
+    Object.values(sectionData.fieldsByEntry).forEach(entryFields => {
+      allFields.push(...entryFields);
+    });
+    return allFields;
+  } else {
+    throw new Error(`Section ${sectionId} has no fields or fieldsByEntry data`);
+  }
 }
 
 /**

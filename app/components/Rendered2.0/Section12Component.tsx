@@ -6,12 +6,18 @@
  * college, vocational schools, and correspondence/online education.
  */
 
-import React, { useState, useCallback, useEffect, useRef } from "react";
+import React, { useState, useCallback, useEffect, useRef, memo } from "react";
 import { useSection12 } from "~/state/contexts/sections2.0/section12";
 import { useSF86Form } from "~/state/contexts/sections2.0/SF86FormContext";
 import { getUSStateOptions, getCountryOptions } from "../../../api/interfaces/sections2.0/base";
 import type { SchoolEntry, Section12 } from "../../../api/interfaces/sections2.0/section12";
 import { cloneDeep, set } from "lodash";
+import {
+  mapLogicalFieldToPdfField,
+  getFieldMetadata,
+  validateFieldExists,
+  getNumericFieldId
+} from "~/state/contexts/sections2.0/section12-field-mapping";
 
 interface Section12ComponentProps {
   onValidationChange?: (isValid: boolean) => void;
@@ -23,11 +29,90 @@ const US_STATES = getUSStateOptions();
 // Use centralized countries from base.ts
 const COUNTRIES = getCountryOptions();
 
+// ============================================================================
+// CONDITIONAL RENDERING HELPERS (Applied from RenderResidencyInfo.tsx patterns)
+// ============================================================================
+
+/**
+ * Determines if a field should be visible based on conditional logic
+ */
+const shouldShowField = (
+  fieldType: string,
+  entry: SchoolEntry,
+  entryIndex: number,
+  globalFlags?: { hasAttendedSchool?: string; hasAttendedSchoolOutsideUS?: string }
+): boolean => {
+  switch (fieldType) {
+    case 'degreeFields':
+      return entry.receivedDegree?.value === 'YES';
+
+    case 'otherDegreeField':
+      return entry.degrees.some(degree => degree.degreeType?.value === 'Other');
+
+    case 'contactPersonFields':
+      // Show contact person fields for schools attended in last 3 years
+      const fromDate = entry.fromDate?.value;
+      if (fromDate) {
+        const [month, year] = fromDate.split('/').map(Number);
+        const entryYear = year || 0;
+        const currentYear = new Date().getFullYear();
+        return (currentYear - entryYear) <= 3;
+      }
+      return false;
+
+    case 'schoolEntries':
+      return globalFlags?.hasAttendedSchoolOutsideUS === 'YES';
+
+    case 'presentDateLogic':
+      return !entry.isPresent?.value;
+
+    default:
+      return true;
+  }
+};
+
+/**
+ * Gets field validation state with conditional requirements
+ */
+const getFieldValidationState = (
+  fieldPath: string,
+  entry: SchoolEntry,
+  entryIndex: number,
+  errors: any[]
+): { isRequired: boolean; hasError: boolean; errorMessage?: string } => {
+  const hasError = errors.some(e => {
+    const errorMessage = typeof e === 'string' ? e : e.message || String(e);
+    return errorMessage.includes(fieldPath);
+  });
+
+  const errorMessage = hasError ?
+    errors.find(e => {
+      const msg = typeof e === 'string' ? e : e.message || String(e);
+      return msg.includes(fieldPath);
+    }) : undefined;
+
+  // Conditional requirements based on field type and context
+  let isRequired = false;
+
+  if (fieldPath.includes('schoolName') || fieldPath.includes('fromDate')) {
+    isRequired = true; // Always required
+  } else if (fieldPath.includes('toDate')) {
+    isRequired = !entry.isPresent?.value; // Required unless present is checked
+  } else if (fieldPath.includes('otherDegree')) {
+    isRequired = entry.degrees.some(degree => degree.degreeType?.value === 'Other');
+  } else if (fieldPath.includes('degreeType') || fieldPath.includes('dateAwarded')) {
+    isRequired = entry.receivedDegree?.value === 'YES';
+  }
+
+  return { isRequired, hasError, errorMessage };
+};
+
 const Section12Component: React.FC<Section12ComponentProps> = ({
   onValidationChange,
 }) => {
   const {
     section12Data: contextData,
+    updateField,
     updateAttendedSchoolFlag,
     updateAttendedSchoolOutsideUSFlag,
     addSchoolEntry,
@@ -100,44 +185,111 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
     };
   };
 
-  // Handle submission with data persistence
+  // Handle submission with data persistence - FIXED: Use context's submit mechanism
   const handleSubmit = async (e: React.FormEvent) => {
-    // console.log('🚀 Section12Component: handleSubmit called!');
+    console.log('🚀 Section12Component: handleSubmit called!');
     e.preventDefault();
 
     // Validate current local state instead of stale context data
     const result = validateCurrentState();
     onValidationChange?.(result.isValid);
 
-    // console.log('🔍 Section 12 validation result:', result);
-    // console.log('📊 Section 12 local data before submission:', localSectionData);
+    console.log('🔍 Section 12 validation result:', result);
+    console.log('📊 Section 12 local data before submission:', {
+      hasAttendedSchool: localSectionData?.section12?.hasAttendedSchool?.value,
+      hasAttendedSchoolOutsideUS: localSectionData?.section12?.hasAttendedSchoolOutsideUS?.value,
+      entriesCount: localSectionData?.section12?.entries?.length || 0,
+      entries: localSectionData?.section12?.entries?.map((entry, idx) => ({
+        index: idx,
+        schoolName: entry.schoolName?.value,
+        fromDate: entry.fromDate?.value,
+        toDate: entry.toDate?.value,
+        degreesCount: entry.degrees?.length || 0
+      }))
+    });
 
     if (result.isValid) {
       try {
-        // console.log('🔄 Section 12: Starting data synchronization...');
+        console.log('🔄 Section 12: Starting data synchronization...');
 
-        // Sync local data to context first
-        sf86Form.updateSectionData('section12', localSectionData);
+        // SIMPLIFIED APPROACH: Directly update the context's section data with local state
+        // This bypasses the complex field-by-field sync and ensures complete data transfer
 
-        // console.log('✅ Section 12: Data synchronization complete, proceeding to save...');
+        // Step 1: Update global flags
+        console.log('📝 Section 12: Updating global flags...');
+        updateAttendedSchoolFlag(localSectionData.section12.hasAttendedSchool.value);
+        updateAttendedSchoolOutsideUSFlag(localSectionData.section12.hasAttendedSchoolOutsideUS.value);
 
-        // Get the current form data and save it
-        const currentFormData = sf86Form.exportForm();
-        const updatedFormData = { ...currentFormData, section12: localSectionData };
-        await sf86Form.saveForm(updatedFormData);
+        // Step 2: Clear existing entries in context and rebuild from local state
+        console.log(`🧹 Section 12: Clearing ${getSchoolEntryCount()} existing entries...`);
+        while (getSchoolEntryCount() > 0) {
+          removeSchoolEntry(0);
+        }
 
-        // Mark section as complete after successful save
-        sf86Form.markSectionComplete('section12');
+        // Step 3: Add all entries from local state to context
+        console.log(`📚 Section 12: Adding ${localSectionData.section12.entries.length} entries to context...`);
+        for (let i = 0; i < localSectionData.section12.entries.length; i++) {
+          const entry = localSectionData.section12.entries[i];
+          console.log(`📝 Section 12: Processing entry ${i}:`, {
+            schoolName: entry.schoolName?.value,
+            degreesCount: entry.degrees?.length || 0
+          });
 
-        // console.log('✅ Section 12 data saved successfully:', localSectionData);
+          // Add entry to context
+          addSchoolEntry();
 
-        // Clear local changes flag
-        setHasLocalChanges(false);
+          // Update all entry fields
+          Object.entries(entry).forEach(([fieldKey, fieldValue]) => {
+            if (fieldKey !== '_id' && fieldKey !== 'createdAt' && fieldKey !== 'updatedAt' && fieldKey !== 'degrees') {
+              const fieldPath = `section12.entries[${i}].${fieldKey}.value`;
+              updateField(fieldPath, (fieldValue as any).value);
+            }
+          });
+
+          // Add degrees for this entry
+          console.log(`🎓 Section 12: Adding ${entry.degrees.length} degrees for entry ${i}...`);
+          for (let j = 0; j < entry.degrees.length; j++) {
+            const degree = entry.degrees[j];
+
+            // Add degree to context
+            addDegreeEntry(i);
+
+            // Update degree fields
+            Object.entries(degree).forEach(([degreeKey, degreeValue]) => {
+              const degreePath = `section12.entries[${i}].degrees[${j}].${degreeKey}.value`;
+              updateField(degreePath, (degreeValue as any).value);
+            });
+          }
+        }
+
+        console.log('✅ Section 12: Data synchronization to context complete');
+
+        // console.log('✅ Section 12: Local state synced to context, calling submitSectionData...');
+
+        // Step 4: Use context's submit mechanism (this handles SF86FormContext sync)
+        console.log('🔄 Section 12: Calling submitSectionData...');
+        const submitResult = await submitSectionData();
+        console.log('📋 Section 12: Submit result:', submitResult);
+
+        if (submitResult && submitResult.success) {
+          console.log('✅ Section 12 data saved successfully via context');
+          // Clear local changes flag
+          setHasLocalChanges(false);
+
+          // Show success message
+          alert('Section 12 data saved successfully!');
+        } else {
+          const errorMessage = submitResult?.error || 'Submit failed - no error details provided';
+          console.error('❌ Section 12: Submit failed:', errorMessage);
+          throw new Error(errorMessage);
+        }
 
       } catch (error) {
-        // console.error('❌ Failed to save Section 12 data:', error);
-        // Show an error message to user
-        alert('There was an error saving your information. Please try again.');
+        console.error('❌ Failed to save Section 12 data:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+
+        // Show detailed error message to user
+        alert(`Failed to save Section 12 data: ${errorMessage}\n\nPlease check the console for more details and try again.`);
       }
     } else {
       // Show validation errors to user
@@ -378,8 +530,9 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
         const entryIndex = updated.section12.entries.length;
 
         // Limit to 4 entries as per PDF structure
-        if (entryIndex >= 4) {
-          // console.warn('⚠️ Section12: Maximum of 4 school entries allowed');
+        // Allow indices 0, 1, 2, 3 (total of 4 entries)
+        if (entryIndex > 3) {
+          console.warn('⚠️ Section12Component: Maximum of 4 school entries allowed (indices 0-3)');
           return prev;
         }
 
@@ -705,9 +858,136 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
     );
   };
 
+  // ============================================================================
+  // ENHANCED FIELD RENDERING WITH CONDITIONAL LOGIC (Applied from RenderResidencyInfo.tsx)
+  // ============================================================================
+
+  /**
+   * Renders a form field with conditional validation and field mapping
+   */
+  const renderFormField = useCallback((
+    fieldConfig: {
+      type: 'text' | 'select' | 'checkbox' | 'radio';
+      label: string;
+      fieldPath: string;
+      value: any;
+      options?: string[];
+      placeholder?: string;
+      disabled?: boolean;
+      maxLength?: number;
+    },
+    entry: SchoolEntry,
+    entryIndex: number,
+    entryErrors: any[]
+  ) => {
+    const { isRequired, hasError, errorMessage } = getFieldValidationState(
+      fieldConfig.fieldPath,
+      entry,
+      entryIndex,
+      entryErrors
+    );
+
+    // Get PDF field mapping for debugging/validation
+    const logicalPath = `section12.entries[${entryIndex}].${fieldConfig.fieldPath}`;
+    const pdfFieldName = mapLogicalFieldToPdfField(logicalPath);
+    const fieldMetadata = getFieldMetadata(pdfFieldName);
+    const numericId = getNumericFieldId(pdfFieldName);
+
+    const baseClassName = `w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+      hasError ? 'border-red-300 bg-red-50' : 'border-gray-300'
+    } ${fieldConfig.disabled ? 'disabled:bg-gray-100 disabled:cursor-not-allowed' : ''}`;
+
+    const labelElement = (
+      <label className="block text-sm font-medium text-gray-700 mb-2">
+        {fieldConfig.label}
+        {isRequired && <span className="text-red-500">*</span>}
+        {isDebugMode && numericId && (
+          <span className="ml-2 text-xs text-gray-400">
+            (ID: {numericId})
+          </span>
+        )}
+      </label>
+    );
+
+    switch (fieldConfig.type) {
+      case 'text':
+        return (
+          <div key={fieldConfig.fieldPath}>
+            {labelElement}
+            <input
+              type="text"
+              value={fieldConfig.value || ""}
+              onChange={(e) => handleFieldUpdate(entryIndex, `${fieldConfig.fieldPath}.value`, e.target.value)}
+              className={baseClassName}
+              placeholder={fieldConfig.placeholder}
+              maxLength={fieldConfig.maxLength}
+              disabled={fieldConfig.disabled}
+            />
+            {hasError && errorMessage && (
+              <p className="mt-1 text-sm text-red-600">{String(errorMessage)}</p>
+            )}
+          </div>
+        );
+
+      case 'select':
+        return (
+          <div key={fieldConfig.fieldPath}>
+            {labelElement}
+            <select
+              value={fieldConfig.value || ""}
+              onChange={(e) => handleFieldUpdate(entryIndex, `${fieldConfig.fieldPath}.value`, e.target.value)}
+              className={baseClassName}
+              disabled={fieldConfig.disabled}
+            >
+              <option value="">Select {fieldConfig.label.toLowerCase()}...</option>
+              {fieldConfig.options?.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            {hasError && errorMessage && (
+              <p className="mt-1 text-sm text-red-600">{String(errorMessage)}</p>
+            )}
+          </div>
+        );
+
+      case 'checkbox':
+        return (
+          <div key={fieldConfig.fieldPath}>
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={fieldConfig.value || false}
+                onChange={(e) => handleFieldUpdate(entryIndex, `${fieldConfig.fieldPath}.value`, e.target.checked)}
+                className="mr-2"
+                disabled={fieldConfig.disabled}
+              />
+              <span className="text-sm text-gray-600">{fieldConfig.label}</span>
+              {isDebugMode && numericId && (
+                <span className="ml-2 text-xs text-gray-400">
+                  (ID: {numericId})
+                </span>
+              )}
+            </label>
+            {hasError && errorMessage && (
+              <p className="mt-1 text-sm text-red-600">{String(errorMessage)}</p>
+            )}
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  }, [handleFieldUpdate, isDebugMode]);
+
   const renderSchoolEntry = (entry: SchoolEntry, index: number) => {
     const isExpanded = expandedEntries.has(index);
     const entryErrors = validationErrors[index] || [];
+    const globalFlags = {
+      hasAttendedSchool: sectionData?.section12?.hasAttendedSchool?.value,
+      hasAttendedSchoolOutsideUS: sectionData?.section12?.hasAttendedSchoolOutsideUS?.value
+    };
 
     return (
       <div key={entry._id} className="border border-gray-200 rounded-lg p-6 mb-4">
@@ -750,216 +1030,118 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
 
         {isExpanded && (
           <div className="space-y-6">
-            {/* Attendance Dates */}
+            {/* Attendance Dates - Enhanced with Conditional Logic */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  From Date (Month/Year) <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  placeholder="MM/YYYY"
-                  value={entry.fromDate.value || ""}
-                  onChange={(e) =>
-                    handleFieldUpdate(index, "fromDate.value", e.target.value)
-                  }
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('fromDate')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
-                />
-                <label className="flex items-center mt-2">
-                  <input
-                    type="checkbox"
-                    checked={entry.fromDateEstimate.value || false}
-                    onChange={(e) =>
-                      handleFieldUpdate(index, "fromDateEstimate.value", e.target.checked)
-                    }
-                    className="mr-2"
-                  />
-                  <span className="text-sm text-gray-600">Estimated</span>
-                </label>
+                {renderFormField({
+                  type: 'text',
+                  label: 'From Date (Month/Year)',
+                  fieldPath: 'fromDate',
+                  value: entry.fromDate.value,
+                  placeholder: 'MM/YYYY'
+                }, entry, index, entryErrors)}
+
+                {renderFormField({
+                  type: 'checkbox',
+                  label: 'Estimated',
+                  fieldPath: 'fromDateEstimate',
+                  value: entry.fromDateEstimate.value
+                }, entry, index, entryErrors)}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  To Date (Month/Year)
-                  {!entry.isPresent.value && <span className="text-red-500">*</span>}
-                </label>
-                <input
-                  type="text"
-                  placeholder="MM/YYYY"
-                  value={entry.toDate.value || ""}
-                  onChange={(e) =>
-                    handleFieldUpdate(index, "toDate.value", e.target.value)
-                  }
-                  disabled={entry.isPresent.value}
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed ${entryErrors.some(e => e.includes('toDate')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
-                />
+                {renderFormField({
+                  type: 'text',
+                  label: 'To Date (Month/Year)',
+                  fieldPath: 'toDate',
+                  value: entry.toDate.value,
+                  placeholder: 'MM/YYYY',
+                  disabled: entry.isPresent?.value
+                }, entry, index, entryErrors)}
+
                 <div className="mt-2 space-y-1">
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={entry.isPresent.value || false}
-                      onChange={(e) => {
-                        handleFieldUpdate(index, "isPresent.value", e.target.checked);
-                        if (e.target.checked) {
-                          handleFieldUpdate(index, "toDate.value", "");
-                        }
-                      }}
-                      className="mr-2"
-                    />
-                    <span className="text-sm text-gray-600">Present</span>
-                  </label>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={entry.toDateEstimate.value || false}
-                      onChange={(e) =>
-                        handleFieldUpdate(index, "toDateEstimate.value", e.target.checked)
-                      }
-                      disabled={entry.isPresent.value}
-                      className="mr-2 disabled:cursor-not-allowed"
-                    />
-                    <span className="text-sm text-gray-600">Estimated</span>
-                  </label>
+                  {renderFormField({
+                    type: 'checkbox',
+                    label: 'Present',
+                    fieldPath: 'isPresent',
+                    value: entry.isPresent.value
+                  }, entry, index, entryErrors)}
+
+                  {renderFormField({
+                    type: 'checkbox',
+                    label: 'Estimated',
+                    fieldPath: 'toDateEstimate',
+                    value: entry.toDateEstimate.value,
+                    disabled: entry.isPresent?.value
+                  }, entry, index, entryErrors)}
                 </div>
               </div>
             </div>
 
-            {/* School Type */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                School Type <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={entry.schoolType.value || ""}
-                onChange={(e) =>
-                  handleFieldUpdate(index, "schoolType.value", e.target.value)
-                }
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('schoolType')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
-              >
-                <option value="">Select school type...</option>
-                {getSchoolTypeOptions().map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {/* School Information - Enhanced with Field Mapping */}
+            {renderFormField({
+              type: 'select',
+              label: 'School Type',
+              fieldPath: 'schoolType',
+              value: entry.schoolType.value,
+              options: getSchoolTypeOptions()
+            }, entry, index, entryErrors)}
 
-            {/* School Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                School Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={entry.schoolName.value || ""}
-                onChange={(e) =>
-                  handleFieldUpdate(index, "schoolName.value", e.target.value)
-                }
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('schoolName')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                  }`}
-                placeholder="Enter the complete name of the school"
-                maxLength={100}
-              />
-            </div>
+            {renderFormField({
+              type: 'text',
+              label: 'School Name',
+              fieldPath: 'schoolName',
+              value: entry.schoolName.value,
+              placeholder: 'Enter the complete name of the school',
+              maxLength: 100
+            }, entry, index, entryErrors)}
 
-            {/* School Address */}
+            {/* School Address - Enhanced with Field Mapping */}
             <div className="space-y-4">
               <h5 className="text-md font-medium text-gray-800">School Address</h5>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Street Address <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={entry.schoolAddress.value || ""}
-                  onChange={(e) =>
-                    handleFieldUpdate(index, "schoolAddress.value", e.target.value)
-                  }
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('street')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
-                  placeholder="Enter street address"
-                  maxLength={200}
-                />
-              </div>
+              {renderFormField({
+                type: 'text',
+                label: 'Street Address',
+                fieldPath: 'schoolAddress',
+                value: entry.schoolAddress.value,
+                placeholder: 'Enter street address',
+                maxLength: 200
+              }, entry, index, entryErrors)}
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    City <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={entry.schoolCity.value || ""}
-                    onChange={(e) =>
-                      handleFieldUpdate(index, "schoolCity.value", e.target.value)
-                    }
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('city')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                      }`}
-                    placeholder="Enter city"
-                  />
-                </div>
+                {renderFormField({
+                  type: 'text',
+                  label: 'City',
+                  fieldPath: 'schoolCity',
+                  value: entry.schoolCity.value,
+                  placeholder: 'Enter city'
+                }, entry, index, entryErrors)}
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    State <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={entry.schoolState.value || ""}
-                    onChange={(e) =>
-                      handleFieldUpdate(index, "schoolState.value", e.target.value)
-                    }
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('state')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                      }`}
-                  >
-                    {US_STATES.map((state) => (
-                      <option key={state.value} value={state.value}>
-                        {state.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                {renderFormField({
+                  type: 'select',
+                  label: 'State',
+                  fieldPath: 'schoolState',
+                  value: entry.schoolState.value,
+                  options: US_STATES.map(state => state.value)
+                }, entry, index, entryErrors)}
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    ZIP Code
-                  </label>
-                  <input
-                    type="text"
-                    value={entry.schoolZipCode.value || ""}
-                    onChange={(e) =>
-                      handleFieldUpdate(index, "schoolZipCode.value", e.target.value)
-                    }
-                    className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('zipCode')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                      }`}
-                    placeholder="Enter ZIP code"
-                  />
-                </div>
+                {renderFormField({
+                  type: 'text',
+                  label: 'ZIP Code',
+                  fieldPath: 'schoolZipCode',
+                  value: entry.schoolZipCode.value,
+                  placeholder: 'Enter ZIP code'
+                }, entry, index, entryErrors)}
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Country <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={entry.schoolCountry.value || ""}
-                  onChange={(e) =>
-                    handleFieldUpdate(index, "schoolCountry.value", e.target.value)
-                  }
-                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${entryErrors.some(e => e.includes('country')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                    }`}
-                >
-                  {COUNTRIES.map((country) => (
-                    <option key={country.value} value={country.value}>
-                      {country.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {renderFormField({
+                type: 'select',
+                label: 'Country',
+                fieldPath: 'schoolCountry',
+                value: entry.schoolCountry.value,
+                options: COUNTRIES.map(country => country.value)
+              }, entry, index, entryErrors)}
             </div>
 
             {/* Degree Information */}
@@ -994,17 +1176,24 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                 </div>
               </div>
 
-              {entry.receivedDegree.value === "YES" && (
+              {/* Conditional Degree Information - Enhanced with Field Mapping */}
+              {shouldShowField('degreeFields', entry, index, globalFlags) && (
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <h4 className="text-md font-semibold text-gray-800">
                       Degree Information (up to 2 degrees per school)
+                      {isDebugMode && (
+                        <span className="ml-2 text-xs text-gray-400">
+                          (Conditional: receivedDegree === YES)
+                        </span>
+                      )}
                     </h4>
                     {entry.degrees.length < 2 && (
                       <button
                         type="button"
                         onClick={() => handleAddDegree(index)}
                         className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors"
+                        title="Add another degree (max 2 per school)"
                       >
                         Add Degree
                       </button>
@@ -1047,6 +1236,20 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                                 </option>
                               ))}
                             </select>
+
+                            {/* Conditional "Other degree" field - Enhanced with Field Mapping */}
+                            {shouldShowField('otherDegreeField', entry, index, globalFlags) &&
+                             degree?.degreeType?.value === "Other" && (
+                              <div className="mt-3">
+                                {renderFormField({
+                                  type: 'text',
+                                  label: 'Other Degree Type',
+                                  fieldPath: `degrees[${degreeIndex}].otherDegree`,
+                                  value: degree?.otherDegree?.value,
+                                  placeholder: 'Specify other degree type'
+                                }, entry, index, entryErrors)}
+                              </div>
+                            )}
                           </div>
                           <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1096,6 +1299,299 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                   )}
                 </div>
               )}
+            </div>
+
+            {/* Conditional Contact Person Information - Enhanced with Field Mapping */}
+            {shouldShowField('contactPersonFields', entry, index, globalFlags) && (
+              <div className="space-y-4 border-t pt-4">
+                <h5 className="text-md font-medium text-gray-800">
+                  Contact Person Information
+                  {isDebugMode && (
+                    <span className="ml-2 text-xs text-gray-400">
+                      (Conditional: School attended within last 3 years)
+                    </span>
+                  )}
+                </h5>
+                <p className="text-sm text-gray-600">
+                  For schools you attended in the last 3 years, list a person who knew you at the school (instructor, student, etc.).
+                  Do not list people for education periods completed more than 3 years ago.
+                </p>
+
+              {/* I don't know checkbox */}
+              <div className="mb-4">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={entry.contactPerson?.unknownPerson?.value || false}
+                    onChange={(e) =>
+                      handleFieldUpdate(index, "contactPerson.unknownPerson.value", e.target.checked)
+                    }
+                    className="mr-2"
+                  />
+                  <span className="text-sm text-gray-700">I don't know</span>
+                </label>
+              </div>
+
+              {/* Contact person fields - only show if not unknown */}
+              {!entry.contactPerson?.unknownPerson?.value && (
+                <div className="space-y-4">
+                  {/* Name fields */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Last Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={entry.contactPerson?.lastName?.value || ""}
+                        onChange={(e) =>
+                          handleFieldUpdate(index, "contactPerson.lastName.value", e.target.value)
+                        }
+                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          entryErrors.some(e => e.includes('contact') && e.includes('last name')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                        }`}
+                        placeholder="Enter last name"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        First Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={entry.contactPerson?.firstName?.value || ""}
+                        onChange={(e) =>
+                          handleFieldUpdate(index, "contactPerson.firstName.value", e.target.value)
+                        }
+                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          entryErrors.some(e => e.includes('contact') && e.includes('first name')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                        }`}
+                        placeholder="Enter first name"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Address fields */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Street Address <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={entry.contactPerson?.address?.value || ""}
+                      onChange={(e) =>
+                        handleFieldUpdate(index, "contactPerson.address.value", e.target.value)
+                      }
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        entryErrors.some(e => e.includes('contact') && e.includes('address')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
+                      placeholder="Enter street address"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        City <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={entry.contactPerson?.city?.value || ""}
+                        onChange={(e) =>
+                          handleFieldUpdate(index, "contactPerson.city.value", e.target.value)
+                        }
+                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          entryErrors.some(e => e.includes('contact') && e.includes('city')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                        }`}
+                        placeholder="Enter city"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        State <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={entry.contactPerson?.state?.value || ""}
+                        onChange={(e) =>
+                          handleFieldUpdate(index, "contactPerson.state.value", e.target.value)
+                        }
+                        className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                          entryErrors.some(e => e.includes('contact') && e.includes('state')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                        }`}
+                      >
+                        <option value="">Select state...</option>
+                        {US_STATES.map((state) => (
+                          <option key={state.value} value={state.value}>
+                            {state.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        ZIP Code
+                      </label>
+                      <input
+                        type="text"
+                        value={entry.contactPerson?.zipCode?.value || ""}
+                        onChange={(e) =>
+                          handleFieldUpdate(index, "contactPerson.zipCode.value", e.target.value)
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter ZIP code"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Country <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={entry.contactPerson?.country?.value || ""}
+                      onChange={(e) =>
+                        handleFieldUpdate(index, "contactPerson.country.value", e.target.value)
+                      }
+                      className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                        entryErrors.some(e => e.includes('contact') && e.includes('country')) ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                      }`}
+                    >
+                      {COUNTRIES.map((country) => (
+                        <option key={country.value} value={country.value}>
+                          {country.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Contact methods */}
+                  <div className="space-y-4">
+                    <h6 className="text-sm font-medium text-gray-800">Contact Information</h6>
+
+                    {/* Phone number */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Phone Number
+                        </label>
+                        <input
+                          type="tel"
+                          value={entry.contactPerson?.phoneNumber?.value || ""}
+                          onChange={(e) =>
+                            handleFieldUpdate(index, "contactPerson.phoneNumber.value", e.target.value)
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter phone number"
+                        />
+                        <div className="mt-2 space-y-2">
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={entry.contactPerson?.isInternationalPhone?.value || false}
+                              onChange={(e) =>
+                                handleFieldUpdate(index, "contactPerson.isInternationalPhone.value", e.target.checked)
+                              }
+                              className="mr-2"
+                            />
+                            <span className="text-sm text-gray-600">International or DSN phone number</span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={entry.contactPerson?.unknownPhone?.value || false}
+                              onChange={(e) =>
+                                handleFieldUpdate(index, "contactPerson.unknownPhone.value", e.target.checked)
+                              }
+                              className="mr-2"
+                            />
+                            <span className="text-sm text-gray-600">I don't know the phone number</span>
+                          </label>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Extension
+                        </label>
+                        <input
+                          type="text"
+                          value={entry.contactPerson?.phoneExtension?.value || ""}
+                          onChange={(e) =>
+                            handleFieldUpdate(index, "contactPerson.phoneExtension.value", e.target.value)
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter extension"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Email */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Email Address
+                      </label>
+                      <input
+                        type="email"
+                        value={entry.contactPerson?.email?.value || ""}
+                        onChange={(e) =>
+                          handleFieldUpdate(index, "contactPerson.email.value", e.target.value)
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter email address"
+                      />
+                      <div className="mt-2">
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={entry.contactPerson?.unknownEmail?.value || false}
+                            onChange={(e) =>
+                              handleFieldUpdate(index, "contactPerson.unknownEmail.value", e.target.checked)
+                            }
+                            className="mr-2"
+                          />
+                          <span className="text-sm text-gray-600">I don't know the email address</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              </div>
+            )}
+
+            {/* Day/Night Attendance */}
+            <div className="space-y-4">
+              <h5 className="text-md font-medium text-gray-800">Attendance Schedule</h5>
+              <p className="text-sm text-gray-600">
+                Indicate when you attended this school.
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={entry.dayAttendance?.value || false}
+                      onChange={(e) =>
+                        handleFieldUpdate(index, "dayAttendance.value", e.target.checked)
+                      }
+                      className="mr-2"
+                    />
+                    <span className="text-sm text-gray-700">Day</span>
+                  </label>
+                </div>
+                <div>
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={entry.nightAttendance?.value || false}
+                      onChange={(e) =>
+                        handleFieldUpdate(index, "nightAttendance.value", e.target.checked)
+                      }
+                      className="mr-2"
+                    />
+                    <span className="text-sm text-gray-700">Night</span>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -1203,13 +1699,13 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
               <button
                 type="button"
                 onClick={handleAddEntry}
-                disabled={localSectionData.section12.entries.length >= 3}
+                disabled={localSectionData.section12.entries.length >= 4}
                 className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                title={localSectionData.section12.entries.length >= 3 ? "Maximum of 3 school entries allowed" : "Add new school entry"}
+                title={localSectionData.section12.entries.length >= 4 ? "Maximum of 4 school entries allowed" : "Add new school entry"}
               >
                 Add School Entry
-                {localSectionData.section12.entries.length >= 3 && (
-                  <span className="ml-1 text-xs">(Max: 3)</span>
+                {localSectionData.section12.entries.length >= 4 && (
+                  <span className="ml-1 text-xs">(Max: 4)</span>
                 )}
               </button>
             </div>
@@ -1350,4 +1846,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
   );
 };
 
-export default Section12Component; 
+// Use memo to optimize rendering performance (Applied from RenderResidencyInfo.tsx pattern)
+const MemoizedSection12Component = memo(Section12Component);
+
+export default MemoizedSection12Component;

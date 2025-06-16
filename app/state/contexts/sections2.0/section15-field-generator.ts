@@ -99,28 +99,43 @@ export function generateFields<T = any>(
  */
 export function generateMilitaryServiceFields(entryIndex: number): Record<string, Field<any> | FieldWithOptions<any>> {
   console.log(`🔄 Section15: Generating military service fields for entry ${entryIndex}`);
-  
+
   const fieldMappings = {
-    [`section15.militaryService.${entryIndex}.branch.value`]: { 
-      defaultValue: '', 
-      options: ['Army', 'Navy', 'Air Force', 'Marines', 'Coast Guard', 'Space Force'] 
+    [`section15.militaryService.${entryIndex}.branch.value`]: {
+      defaultValue: '',
+      options: ['Army', 'Navy', 'Air Force', 'Marines', 'Coast Guard', 'Space Force']
     },
-    [`section15.militaryService.${entryIndex}.status.value`]: { 
-      defaultValue: '', 
-      options: ['Active Duty', 'Active Reserve', 'Inactive Reserve'] 
+    [`section15.militaryService.${entryIndex}.serviceState.value`]: { defaultValue: '' },
+    [`section15.militaryService.${entryIndex}.serviceStatus.value`]: {
+      defaultValue: '',
+      options: ['Officer', 'Enlisted', 'Other']
     },
+    [`section15.militaryService.${entryIndex}.fromDate.month.value`]: { defaultValue: '' },
+    [`section15.militaryService.${entryIndex}.fromDate.year.value`]: { defaultValue: '' },
+    [`section15.militaryService.${entryIndex}.fromDateEstimated.value`]: { defaultValue: false },
+    [`section15.militaryService.${entryIndex}.toDate.month.value`]: { defaultValue: '' },
+    [`section15.militaryService.${entryIndex}.toDate.year.value`]: { defaultValue: '' },
+    [`section15.militaryService.${entryIndex}.toDateEstimated.value`]: { defaultValue: false },
+    [`section15.militaryService.${entryIndex}.isPresent.value`]: { defaultValue: false },
     [`section15.militaryService.${entryIndex}.serviceNumber.value`]: { defaultValue: '' },
-    [`section15.militaryService.${entryIndex}.startDate.value`]: { defaultValue: '' },
-    [`section15.militaryService.${entryIndex}.endDate.value`]: { defaultValue: '' },
-    [`section15.militaryService.${entryIndex}.isStartDateEstimated.value`]: { defaultValue: false },
-    [`section15.militaryService.${entryIndex}.isEndDateEstimated.value`]: { defaultValue: false },
-    [`section15.militaryService.${entryIndex}.dischargeType.value`]: { 
-      defaultValue: '', 
-      options: ['Honorable', 'General', 'Other Than Honorable', 'Bad Conduct', 'Dishonorable'] 
+    [`section15.militaryService.${entryIndex}.dischargeType.value`]: {
+      defaultValue: '',
+      options: ['Yes', 'No']
     },
+    [`section15.militaryService.${entryIndex}.typeOfDischarge.value`]: {
+      defaultValue: '',
+      options: ['Honorable', 'General', 'Other Than Honorable', 'Bad Conduct', 'Dishonorable']
+    },
+    [`section15.militaryService.${entryIndex}.dischargeDate.month.value`]: { defaultValue: '' },
+    [`section15.militaryService.${entryIndex}.dischargeDate.year.value`]: { defaultValue: '' },
+    [`section15.militaryService.${entryIndex}.dischargeDateEstimated.value`]: { defaultValue: false },
+    [`section15.militaryService.${entryIndex}.otherDischargeType.value`]: { defaultValue: '' },
     [`section15.militaryService.${entryIndex}.dischargeReason.value`]: { defaultValue: '' },
+    [`section15.militaryService.${entryIndex}.currentStatus.activeDuty.value`]: { defaultValue: false },
+    [`section15.militaryService.${entryIndex}.currentStatus.activeReserve.value`]: { defaultValue: false },
+    [`section15.militaryService.${entryIndex}.currentStatus.inactiveReserve.value`]: { defaultValue: false },
   };
-  
+
   return generateFields(fieldMappings);
 }
 
@@ -129,15 +144,17 @@ export function generateMilitaryServiceFields(entryIndex: number): Record<string
  */
 export function generateDisciplinaryFields(entryIndex: number): Record<string, Field<any> | FieldWithOptions<any>> {
   console.log(`🔄 Section15: Generating disciplinary fields for entry ${entryIndex}`);
-  
+
   const fieldMappings = {
-    [`section15.disciplinaryProcedures.${entryIndex}.date.value`]: { defaultValue: '' },
-    [`section15.disciplinaryProcedures.${entryIndex}.isDateEstimated.value`]: { defaultValue: false },
-    [`section15.disciplinaryProcedures.${entryIndex}.offense.value`]: { defaultValue: '' },
-    [`section15.disciplinaryProcedures.${entryIndex}.action.value`]: { defaultValue: '' },
-    [`section15.disciplinaryProcedures.${entryIndex}.agency.value`]: { defaultValue: '' },
+    [`section15.disciplinaryProcedures.${entryIndex}.procedureDate.month.value`]: { defaultValue: '' },
+    [`section15.disciplinaryProcedures.${entryIndex}.procedureDate.year.value`]: { defaultValue: '' },
+    [`section15.disciplinaryProcedures.${entryIndex}.procedureDateEstimated.value`]: { defaultValue: false },
+    [`section15.disciplinaryProcedures.${entryIndex}.ucmjOffenseDescription.value`]: { defaultValue: '' },
+    [`section15.disciplinaryProcedures.${entryIndex}.disciplinaryProcedureName.value`]: { defaultValue: '' },
+    [`section15.disciplinaryProcedures.${entryIndex}.militaryCourtDescription.value`]: { defaultValue: '' },
+    [`section15.disciplinaryProcedures.${entryIndex}.finalOutcome.value`]: { defaultValue: '' },
   };
-  
+
   return generateFields(fieldMappings);
 }
 
@@ -146,17 +163,56 @@ export function generateDisciplinaryFields(entryIndex: number): Record<string, F
  */
 export function generateForeignMilitaryFields(entryIndex: number): Record<string, Field<any> | FieldWithOptions<any>> {
   console.log(`🔄 Section15: Generating foreign military fields for entry ${entryIndex}`);
-  
+
   const fieldMappings = {
+    [`section15.foreignMilitaryService.${entryIndex}.fromDate.month.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.fromDate.year.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.fromDateEstimated.value`]: { defaultValue: false },
+    [`section15.foreignMilitaryService.${entryIndex}.toDate.month.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.toDate.year.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.toDateEstimated.value`]: { defaultValue: false },
+    [`section15.foreignMilitaryService.${entryIndex}.isPresent.value`]: { defaultValue: false },
+    [`section15.foreignMilitaryService.${entryIndex}.organizationName.value`]: { defaultValue: '' },
     [`section15.foreignMilitaryService.${entryIndex}.country.value`]: { defaultValue: '' },
-    [`section15.foreignMilitaryService.${entryIndex}.branch.value`]: { defaultValue: '' },
-    [`section15.foreignMilitaryService.${entryIndex}.rank.value`]: { defaultValue: '' },
-    [`section15.foreignMilitaryService.${entryIndex}.startDate.value`]: { defaultValue: '' },
-    [`section15.foreignMilitaryService.${entryIndex}.endDate.value`]: { defaultValue: '' },
-    [`section15.foreignMilitaryService.${entryIndex}.isStartDateEstimated.value`]: { defaultValue: false },
-    [`section15.foreignMilitaryService.${entryIndex}.isEndDateEstimated.value`]: { defaultValue: false },
+    [`section15.foreignMilitaryService.${entryIndex}.highestRank.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.divisionDepartment.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.reasonForLeaving.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.circumstancesDescription.value`]: { defaultValue: '' },
+    // Contact Person 1
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson1.firstName.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson1.middleName.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson1.lastName.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson1.suffix.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson1.streetAddress.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson1.city.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson1.state.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson1.country.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson1.zipCode.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson1.officialTitle.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson1.frequencyOfContact.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson1.associationFromDate.month.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson1.associationFromDate.year.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson1.associationToDate.month.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson1.associationToDate.year.value`]: { defaultValue: '' },
+    // Contact Person 2
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson2.firstName.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson2.middleName.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson2.lastName.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson2.suffix.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson2.streetAddress.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson2.city.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson2.state.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson2.country.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson2.zipCode.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson2.officialTitle.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson2.frequencyOfContact.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson2.associationFromDate.month.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson2.associationFromDate.year.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson2.associationToDate.month.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson2.associationToDate.year.value`]: { defaultValue: '' },
+    [`section15.foreignMilitaryService.${entryIndex}.contactPerson2.specify.value`]: { defaultValue: '' },
   };
-  
+
   return generateFields(fieldMappings);
 }
 

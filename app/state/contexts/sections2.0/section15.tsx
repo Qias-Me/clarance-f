@@ -76,9 +76,9 @@ export interface Section15ContextType {
   isDirty: boolean;
 
   // Section-level Parent Questions (with auto-generation)
-  updateHasServed: (value: "YES" | "NO") => void;
-  updateHasBeenSubjectToDisciplinary: (value: "YES" | "NO") => void;
-  updateHasServedInForeignMilitary: (value: "YES" | "NO") => void;
+  updateHasServed: (value: "YES" | "NO (If NO, proceed to Section 15.2) ") => void;
+  updateHasDisciplinaryAction: (value: "YES" | "NO (If NO, proceed to Section 15.3) ") => void;
+  updateHasServedInForeignMilitary: (value: "YES" | "NO (If NO, proceed to Section 16)") => void;
 
   // Military Service Actions
   addMilitaryServiceEntry: () => void;
@@ -87,18 +87,45 @@ export interface Section15ContextType {
   updateMilitaryServiceStatus: (index: number, status: string) => void;
   updateMilitaryServiceBranch: (index: number, branch: string) => void;
   updateMilitaryServiceDates: (index: number, type: 'from' | 'to', month: string, year: string) => void;
+  updateMilitaryServiceState: (index: number, state: string) => void;
+  updateMilitaryServiceDateEstimate: (index: number, type: 'from' | 'to', estimated: boolean) => void;
+  updateMilitaryServicePresent: (index: number, isPresent: boolean) => void;
+  updateMilitaryServiceNumber: (index: number, serviceNumber: string) => void;
+  updateMilitaryServiceDischargeType: (index: number, dischargeType: string) => void;
+  updateMilitaryServiceTypeOfDischarge: (index: number, typeOfDischarge: string) => void;
+  updateMilitaryServiceDischargeDate: (index: number, month: string, year: string) => void;
+  updateMilitaryServiceDischargeDateEstimate: (index: number, estimated: boolean) => void;
+  updateMilitaryServiceOtherDischargeType: (index: number, otherType: string) => void;
+  updateMilitaryServiceDischargeReason: (index: number, reason: string) => void;
+  updateMilitaryServiceCurrentStatus: (index: number, statusType: 'activeDuty' | 'activeReserve' | 'inactiveReserve', value: boolean) => void;
 
   // Disciplinary Actions
   addDisciplinaryEntry: () => void;
   removeDisciplinaryEntry: (index: number) => void;
   updateDisciplinaryEntry: (index: number, fieldPath: string, value: any) => void;
   updateDisciplinaryStatus: (index: number, status: string) => void;
+  updateDisciplinaryProcedureDate: (index: number, month: string, year: string) => void;
+  updateDisciplinaryProcedureDateEstimate: (index: number, estimated: boolean) => void;
+  updateDisciplinaryUcmjOffense: (index: number, offense: string) => void;
+  updateDisciplinaryProcedureName: (index: number, procedureName: string) => void;
+  updateDisciplinaryCourtDescription: (index: number, courtDescription: string) => void;
+  updateDisciplinaryFinalOutcome: (index: number, outcome: string) => void;
 
   // Foreign Military Actions
   addForeignMilitaryEntry: () => void;
   removeForeignMilitaryEntry: (index: number) => void;
   updateForeignMilitaryEntry: (index: number, fieldPath: string, value: any) => void;
   updateForeignMilitaryStatus: (index: number, status: string) => void;
+  updateForeignMilitaryServiceDates: (index: number, type: 'from' | 'to', month: string, year: string) => void;
+  updateForeignMilitaryServiceDateEstimate: (index: number, type: 'from' | 'to', estimated: boolean) => void;
+  updateForeignMilitaryServicePresent: (index: number, isPresent: boolean) => void;
+  updateForeignMilitaryOrganizationName: (index: number, organizationName: string) => void;
+  updateForeignMilitaryCountry: (index: number, country: string) => void;
+  updateForeignMilitaryHighestRank: (index: number, rank: string) => void;
+  updateForeignMilitaryDivisionDepartment: (index: number, division: string) => void;
+  updateForeignMilitaryReasonForLeaving: (index: number, reason: string) => void;
+  updateForeignMilitaryCircumstances: (index: number, circumstances: string) => void;
+  updateForeignMilitaryContact: (index: number, contactNumber: 1 | 2, fieldPath: string, value: any) => void;
 
   // Cross-Section Support: Handle Section16_1 fields that map to Section 15 Entry 2
   updateForeignOrganizationContact: (contact: Partial<ForeignMilitaryServiceEntry>) => void;
@@ -191,17 +218,20 @@ const Section15Provider: React.FC<Section15ProviderProps> = ({ children }) => {
   const addMilitaryServiceEntry = useCallback(() => {
     setSection15Data(prev => {
       // Enforce maximum entry limit
-      if (prev.section15.militaryService.length >= MAX_MILITARY_SERVICE_ENTRIES) {
+      if (prev.section15.militaryService.entries.length >= MAX_MILITARY_SERVICE_ENTRIES) {
         console.warn(`⚠️ Section15: Cannot add more than ${MAX_MILITARY_SERVICE_ENTRIES} military service entries`);
         return prev; // Return unchanged data
       }
 
-      console.log(`✅ Section15: Adding military service entry #${prev.section15.militaryService.length + 1}. Total entries: ${prev.section15.militaryService.length + 1}`);
+      console.log(`✅ Section15: Adding military service entry #${prev.section15.militaryService.entries.length + 1}. Total entries: ${prev.section15.militaryService.entries.length + 1}`);
       return {
         ...prev,
         section15: {
           ...prev.section15,
-          militaryService: [...prev.section15.militaryService, createDefaultMilitaryServiceEntry()]
+          militaryService: {
+            ...prev.section15.militaryService,
+            entries: [...prev.section15.militaryService.entries, createDefaultMilitaryServiceEntry()]
+          }
         }
       };
     });
@@ -212,7 +242,10 @@ const Section15Provider: React.FC<Section15ProviderProps> = ({ children }) => {
       ...prev,
       section15: {
         ...prev.section15,
-        militaryService: prev.section15.militaryService.filter((_, i) => i !== index)
+        militaryService: {
+          ...prev.section15.militaryService,
+          entries: prev.section15.militaryService.entries.filter((_, i) => i !== index)
+        }
       }
     }));
   }, []);
@@ -220,7 +253,7 @@ const Section15Provider: React.FC<Section15ProviderProps> = ({ children }) => {
   const updateMilitaryServiceEntry = useCallback((index: number, fieldPath: string, value: any) => {
     setSection15Data(prev => {
       const newData = cloneDeep(prev);
-      set(newData, `section15.militaryService.${index}.${fieldPath}`, value);
+      set(newData, `section15.militaryService.entries.${index}.${fieldPath}`, value);
       return newData;
     });
   }, []);
@@ -233,9 +266,52 @@ const Section15Provider: React.FC<Section15ProviderProps> = ({ children }) => {
     updateMilitaryServiceEntry(index, 'branch.value', branch);
   }, [updateMilitaryServiceEntry]);
 
-  const updateMilitaryServiceDates = useCallback((index: number, type: 'from' | 'to', month: string, year: string) => {
-    updateMilitaryServiceEntry(index, `${type}Date.month.value`, month);
-    updateMilitaryServiceEntry(index, `${type}Date.year.value`, year);
+  const updateMilitaryServiceDates = useCallback((index: number, type: 'from' | 'to', dateValue: string) => {
+    updateMilitaryServiceEntry(index, `${type}Date.value`, dateValue);
+  }, [updateMilitaryServiceEntry]);
+
+  const updateMilitaryServiceState = useCallback((index: number, state: string) => {
+    updateMilitaryServiceEntry(index, 'serviceState.value', state);
+  }, [updateMilitaryServiceEntry]);
+
+  const updateMilitaryServiceDateEstimate = useCallback((index: number, type: 'from' | 'to', estimated: boolean) => {
+    updateMilitaryServiceEntry(index, `${type}DateEstimated.value`, estimated);
+  }, [updateMilitaryServiceEntry]);
+
+  const updateMilitaryServicePresent = useCallback((index: number, isPresent: boolean) => {
+    updateMilitaryServiceEntry(index, 'isPresent.value', isPresent);
+  }, [updateMilitaryServiceEntry]);
+
+  const updateMilitaryServiceNumber = useCallback((index: number, serviceNumber: string) => {
+    updateMilitaryServiceEntry(index, 'serviceNumber.value', serviceNumber);
+  }, [updateMilitaryServiceEntry]);
+
+  const updateMilitaryServiceDischargeType = useCallback((index: number, dischargeType: string) => {
+    updateMilitaryServiceEntry(index, 'dischargeType.value', dischargeType);
+  }, [updateMilitaryServiceEntry]);
+
+  const updateMilitaryServiceTypeOfDischarge = useCallback((index: number, typeOfDischarge: string) => {
+    updateMilitaryServiceEntry(index, 'typeOfDischarge.value', typeOfDischarge);
+  }, [updateMilitaryServiceEntry]);
+
+  const updateMilitaryServiceDischargeDate = useCallback((index: number, dateValue: string) => {
+    updateMilitaryServiceEntry(index, 'dischargeDate.value', dateValue);
+  }, [updateMilitaryServiceEntry]);
+
+  const updateMilitaryServiceDischargeDateEstimate = useCallback((index: number, estimated: boolean) => {
+    updateMilitaryServiceEntry(index, 'dischargeDateEstimated.value', estimated);
+  }, [updateMilitaryServiceEntry]);
+
+  const updateMilitaryServiceOtherDischargeType = useCallback((index: number, otherType: string) => {
+    updateMilitaryServiceEntry(index, 'otherDischargeType.value', otherType);
+  }, [updateMilitaryServiceEntry]);
+
+  const updateMilitaryServiceDischargeReason = useCallback((index: number, reason: string) => {
+    updateMilitaryServiceEntry(index, 'dischargeReason.value', reason);
+  }, [updateMilitaryServiceEntry]);
+
+  const updateMilitaryServiceCurrentStatus = useCallback((index: number, statusType: 'activeDuty' | 'activeReserve' | 'inactiveReserve', value: boolean) => {
+    updateMilitaryServiceEntry(index, `currentStatus.${statusType}.value`, value);
   }, [updateMilitaryServiceEntry]);
 
   // ============================================================================
@@ -245,17 +321,20 @@ const Section15Provider: React.FC<Section15ProviderProps> = ({ children }) => {
   const addDisciplinaryEntry = useCallback(() => {
     setSection15Data(prev => {
       // Enforce maximum entry limit
-      if (prev.section15.disciplinaryProcedures.length >= MAX_DISCIPLINARY_ENTRIES) {
+      if (prev.section15.disciplinaryProcedures.entries.length >= MAX_DISCIPLINARY_ENTRIES) {
         console.warn(`⚠️ Section15: Cannot add more than ${MAX_DISCIPLINARY_ENTRIES} disciplinary procedure entries`);
         return prev; // Return unchanged data
       }
 
-      console.log(`✅ Section15: Adding disciplinary entry #${prev.section15.disciplinaryProcedures.length + 1}. Total entries: ${prev.section15.disciplinaryProcedures.length + 1}`);
+      console.log(`✅ Section15: Adding disciplinary entry #${prev.section15.disciplinaryProcedures.entries.length + 1}. Total entries: ${prev.section15.disciplinaryProcedures.entries.length + 1}`);
       return {
         ...prev,
         section15: {
           ...prev.section15,
-          disciplinaryProcedures: [...prev.section15.disciplinaryProcedures, createDefaultDisciplinaryEntry()]
+          disciplinaryProcedures: {
+            ...prev.section15.disciplinaryProcedures,
+            entries: [...prev.section15.disciplinaryProcedures.entries, createDefaultDisciplinaryEntry()]
+          }
         }
       };
     });
@@ -266,7 +345,10 @@ const Section15Provider: React.FC<Section15ProviderProps> = ({ children }) => {
       ...prev,
       section15: {
         ...prev.section15,
-        disciplinaryProcedures: prev.section15.disciplinaryProcedures.filter((_, i) => i !== index)
+        disciplinaryProcedures: {
+          ...prev.section15.disciplinaryProcedures,
+          entries: prev.section15.disciplinaryProcedures.entries.filter((_, i) => i !== index)
+        }
       }
     }));
   }, []);
@@ -274,13 +356,37 @@ const Section15Provider: React.FC<Section15ProviderProps> = ({ children }) => {
   const updateDisciplinaryEntry = useCallback((index: number, fieldPath: string, value: any) => {
     setSection15Data(prev => {
       const newData = cloneDeep(prev);
-      set(newData, `section15.disciplinaryProcedures.${index}.${fieldPath}`, value);
+      set(newData, `section15.disciplinaryProcedures.entries.${index}.${fieldPath}`, value);
       return newData;
     });
   }, []);
 
   const updateDisciplinaryStatus = useCallback((index: number, status: string) => {
     updateDisciplinaryEntry(index, 'hasBeenSubjectToDisciplinary.value', status);
+  }, [updateDisciplinaryEntry]);
+
+  const updateDisciplinaryProcedureDate = useCallback((index: number, dateValue: string) => {
+    updateDisciplinaryEntry(index, 'procedureDate.value', dateValue);
+  }, [updateDisciplinaryEntry]);
+
+  const updateDisciplinaryProcedureDateEstimate = useCallback((index: number, estimated: boolean) => {
+    updateDisciplinaryEntry(index, 'procedureDateEstimated.value', estimated);
+  }, [updateDisciplinaryEntry]);
+
+  const updateDisciplinaryUcmjOffense = useCallback((index: number, offense: string) => {
+    updateDisciplinaryEntry(index, 'ucmjOffenseDescription.value', offense);
+  }, [updateDisciplinaryEntry]);
+
+  const updateDisciplinaryProcedureName = useCallback((index: number, procedureName: string) => {
+    updateDisciplinaryEntry(index, 'disciplinaryProcedureName.value', procedureName);
+  }, [updateDisciplinaryEntry]);
+
+  const updateDisciplinaryCourtDescription = useCallback((index: number, courtDescription: string) => {
+    updateDisciplinaryEntry(index, 'militaryCourtDescription.value', courtDescription);
+  }, [updateDisciplinaryEntry]);
+
+  const updateDisciplinaryFinalOutcome = useCallback((index: number, outcome: string) => {
+    updateDisciplinaryEntry(index, 'finalOutcome.value', outcome);
   }, [updateDisciplinaryEntry]);
 
   // ============================================================================
@@ -290,17 +396,20 @@ const Section15Provider: React.FC<Section15ProviderProps> = ({ children }) => {
   const addForeignMilitaryEntry = useCallback(() => {
     setSection15Data(prev => {
       // Enforce maximum entry limit
-      if (prev.section15.foreignMilitaryService.length >= MAX_FOREIGN_MILITARY_ENTRIES) {
+      if (prev.section15.foreignMilitaryService.entries.length >= MAX_FOREIGN_MILITARY_ENTRIES) {
         console.warn(`⚠️ Section15: Cannot add more than ${MAX_FOREIGN_MILITARY_ENTRIES} foreign military service entries`);
         return prev; // Return unchanged data
       }
 
-      console.log(`✅ Section15: Adding foreign military entry #${prev.section15.foreignMilitaryService.length + 1}. Total entries: ${prev.section15.foreignMilitaryService.length + 1}`);
+      console.log(`✅ Section15: Adding foreign military entry #${prev.section15.foreignMilitaryService.entries.length + 1}. Total entries: ${prev.section15.foreignMilitaryService.entries.length + 1}`);
       return {
         ...prev,
         section15: {
           ...prev.section15,
-          foreignMilitaryService: [...prev.section15.foreignMilitaryService, createDefaultForeignMilitaryEntry()]
+          foreignMilitaryService: {
+            ...prev.section15.foreignMilitaryService,
+            entries: [...prev.section15.foreignMilitaryService.entries, createDefaultForeignMilitaryEntry()]
+          }
         }
       };
     });
@@ -311,7 +420,10 @@ const Section15Provider: React.FC<Section15ProviderProps> = ({ children }) => {
       ...prev,
       section15: {
         ...prev.section15,
-        foreignMilitaryService: prev.section15.foreignMilitaryService.filter((_, i) => i !== index)
+        foreignMilitaryService: {
+          ...prev.section15.foreignMilitaryService,
+          entries: prev.section15.foreignMilitaryService.entries.filter((_, i) => i !== index)
+        }
       }
     }));
   }, []);
@@ -319,13 +431,53 @@ const Section15Provider: React.FC<Section15ProviderProps> = ({ children }) => {
   const updateForeignMilitaryEntry = useCallback((index: number, fieldPath: string, value: any) => {
     setSection15Data(prev => {
       const newData = cloneDeep(prev);
-      set(newData, `section15.foreignMilitaryService.${index}.${fieldPath}`, value);
+      set(newData, `section15.foreignMilitaryService.entries.${index}.${fieldPath}`, value);
       return newData;
     });
   }, []);
 
   const updateForeignMilitaryStatus = useCallback((index: number, status: string) => {
     updateForeignMilitaryEntry(index, 'hasServedInForeignMilitary.value', status);
+  }, [updateForeignMilitaryEntry]);
+
+  const updateForeignMilitaryServiceDates = useCallback((index: number, type: 'from' | 'to', dateValue: string) => {
+    updateForeignMilitaryEntry(index, `${type}Date.value`, dateValue);
+  }, [updateForeignMilitaryEntry]);
+
+  const updateForeignMilitaryServiceDateEstimate = useCallback((index: number, type: 'from' | 'to', estimated: boolean) => {
+    updateForeignMilitaryEntry(index, `${type}DateEstimated.value`, estimated);
+  }, [updateForeignMilitaryEntry]);
+
+  const updateForeignMilitaryServicePresent = useCallback((index: number, isPresent: boolean) => {
+    updateForeignMilitaryEntry(index, 'isPresent.value', isPresent);
+  }, [updateForeignMilitaryEntry]);
+
+  const updateForeignMilitaryOrganizationName = useCallback((index: number, organizationName: string) => {
+    updateForeignMilitaryEntry(index, 'organizationName.value', organizationName);
+  }, [updateForeignMilitaryEntry]);
+
+  const updateForeignMilitaryCountry = useCallback((index: number, country: string) => {
+    updateForeignMilitaryEntry(index, 'country.value', country);
+  }, [updateForeignMilitaryEntry]);
+
+  const updateForeignMilitaryHighestRank = useCallback((index: number, rank: string) => {
+    updateForeignMilitaryEntry(index, 'highestRank.value', rank);
+  }, [updateForeignMilitaryEntry]);
+
+  const updateForeignMilitaryDivisionDepartment = useCallback((index: number, division: string) => {
+    updateForeignMilitaryEntry(index, 'divisionDepartment.value', division);
+  }, [updateForeignMilitaryEntry]);
+
+  const updateForeignMilitaryReasonForLeaving = useCallback((index: number, reason: string) => {
+    updateForeignMilitaryEntry(index, 'reasonForLeaving.value', reason);
+  }, [updateForeignMilitaryEntry]);
+
+  const updateForeignMilitaryCircumstances = useCallback((index: number, circumstances: string) => {
+    updateForeignMilitaryEntry(index, 'circumstancesDescription.value', circumstances);
+  }, [updateForeignMilitaryEntry]);
+
+  const updateForeignMilitaryContact = useCallback((index: number, contactNumber: 1 | 2, fieldPath: string, value: any) => {
+    updateForeignMilitaryEntry(index, `contactPerson${contactNumber}.${fieldPath}`, value);
   }, [updateForeignMilitaryEntry]);
 
   // ============================================================================
@@ -335,7 +487,7 @@ const Section15Provider: React.FC<Section15ProviderProps> = ({ children }) => {
   const updateForeignOrganizationContact = useCallback((contact: Partial<ForeignMilitaryServiceEntry>) => {
     // Ensure we have at least 2 foreign military entries (Entry 1 from Section15_3, Entry 2 from Section16_1)
     setSection15Data(prev => {
-      const currentEntries = prev.section15.foreignMilitaryService;
+      const currentEntries = prev.section15.foreignMilitaryService.entries;
       const updatedEntries = [...currentEntries];
 
       // Ensure we have at least 2 entries
@@ -353,7 +505,10 @@ const Section15Provider: React.FC<Section15ProviderProps> = ({ children }) => {
         ...prev,
         section15: {
           ...prev.section15,
-          foreignMilitaryService: updatedEntries
+          foreignMilitaryService: {
+            ...prev.section15.foreignMilitaryService,
+            entries: updatedEntries
+          }
         }
       };
     });
@@ -363,43 +518,23 @@ const Section15Provider: React.FC<Section15ProviderProps> = ({ children }) => {
   // SECTION-LEVEL PARENT QUESTIONS (with auto-generation)
   // ============================================================================
 
-  const updateHasServed = useCallback((value: "YES" | "NO") => {
+  const updateHasServed = useCallback((value: "YES" | "NO (If NO, proceed to Section 15.2) ") => {
     console.log(`🔧 Section15: updateHasServed called with value=${value}`);
     setSection15Data(prevData => {
-      console.log(`🔍 Section15: Current prevData structure:`, prevData);
-      console.log(`🔍 Section15: prevData.section15:`, prevData.section15);
-      console.log(`🔍 Section15: prevData.section15.hasServed:`, prevData.section15.hasServed);
-
       const newData = cloneDeep(prevData);
-      console.log(`🔍 Section15: newData after cloneDeep:`, newData);
-      console.log(`🔍 Section15: newData.section15.hasServed after cloneDeep:`, newData.section15.hasServed);
 
-      // Ensure hasServed field exists
-      if (!newData.section15.hasServed) {
-        console.log(`🔧 Section15: hasServed field missing, initializing manually...`);
-        newData.section15.hasServed = {
-          value: "NO",
-          options: ["YES", "NO"],
-          id: "hasServed",
-          name: "hasServed",
-          type: "radio",
-          label: "Have you ever served in the U.S. Military?"
-        };
-        console.log(`🔍 Section15: newData.section15.hasServed after manual initialization:`, newData.section15.hasServed);
-      }
-
-      console.log(`🔍 Section15: About to set value on:`, newData.section15.hasServed);
-      newData.section15.hasServed.value = value;
+      // Update the nested hasServed field
+      newData.section15.militaryService.hasServed.value = value;
 
       // If setting to NO, clear entries
-      if (value === "NO") {
-        newData.section15.militaryService = [];
+      if (value === "NO (If NO, proceed to Section 15.2) ") {
+        newData.section15.militaryService.entries = [];
         console.log(`🧹 Section15: Cleared military service entries because value is NO`);
       }
       // If setting to YES and no entries exist, auto-add the first entry
-      else if (value === "YES" && newData.section15.militaryService.length === 0) {
+      else if (value === "YES" && newData.section15.militaryService.entries.length === 0) {
         const newEntry = createDefaultMilitaryServiceEntry();
-        newData.section15.militaryService.push(newEntry);
+        newData.section15.militaryService.entries.push(newEntry);
         console.log(`✅ Section15: Auto-added first military service entry when YES selected`, newEntry);
       }
 
@@ -408,72 +543,48 @@ const Section15Provider: React.FC<Section15ProviderProps> = ({ children }) => {
     });
   }, []);
 
-  const updateHasBeenSubjectToDisciplinary = useCallback((value: "YES" | "NO") => {
-    console.log(`🔧 Section15: updateHasBeenSubjectToDisciplinary called with value=${value}`);
+  const updateHasDisciplinaryAction = useCallback((value: "YES" | "NO (If NO, proceed to Section 15.3) ") => {
+    console.log(`🔧 Section15: updateHasDisciplinaryAction called with value=${value}`);
     setSection15Data(prevData => {
       const newData = cloneDeep(prevData);
 
-      // Ensure hasBeenSubjectToDisciplinary field exists
-      if (!newData.section15.hasBeenSubjectToDisciplinary) {
-        console.log(`🔧 Section15: hasBeenSubjectToDisciplinary field missing, initializing manually...`);
-        newData.section15.hasBeenSubjectToDisciplinary = {
-          value: "NO",
-          options: ["YES", "NO"],
-          id: "hasBeenSubjectToDisciplinary",
-          name: "hasBeenSubjectToDisciplinary",
-          type: "radio",
-          label: "Have you been subject to court martial or disciplinary procedure?"
-        };
-      }
-
-      newData.section15.hasBeenSubjectToDisciplinary.value = value;
+      // Update the nested hasDisciplinaryAction field
+      newData.section15.disciplinaryProcedures.hasDisciplinaryAction.value = value;
 
       // If setting to NO, clear entries
-      if (value === "NO") {
-        newData.section15.disciplinaryProcedures = [];
+      if (value === "NO (If NO, proceed to Section 15.3) ") {
+        newData.section15.disciplinaryProcedures.entries = [];
         console.log(`🧹 Section15: Cleared disciplinary entries because value is NO`);
       }
       // If setting to YES and no entries exist, auto-add the first entry
-      else if (value === "YES" && newData.section15.disciplinaryProcedures.length === 0) {
+      else if (value === "YES" && newData.section15.disciplinaryProcedures.entries.length === 0) {
         const newEntry = createDefaultDisciplinaryEntry();
-        newData.section15.disciplinaryProcedures.push(newEntry);
+        newData.section15.disciplinaryProcedures.entries.push(newEntry);
         console.log(`✅ Section15: Auto-added first disciplinary entry when YES selected`, newEntry);
       }
 
-      console.log(`✅ Section15: Updated hasBeenSubjectToDisciplinary to ${value}`, newData.section15);
+      console.log(`✅ Section15: Updated hasDisciplinaryAction to ${value}`, newData.section15);
       return newData;
     });
   }, []);
 
-  const updateHasServedInForeignMilitary = useCallback((value: "YES" | "NO") => {
+  const updateHasServedInForeignMilitary = useCallback((value: "YES" | "NO (If NO, proceed to Section 16)") => {
     console.log(`🔧 Section15: updateHasServedInForeignMilitary called with value=${value}`);
     setSection15Data(prevData => {
       const newData = cloneDeep(prevData);
 
-      // Ensure hasServedInForeignMilitary field exists
-      if (!newData.section15.hasServedInForeignMilitary) {
-        console.log(`🔧 Section15: hasServedInForeignMilitary field missing, initializing manually...`);
-        newData.section15.hasServedInForeignMilitary = {
-          value: "NO",
-          options: ["YES", "NO"],
-          id: "hasServedInForeignMilitary",
-          name: "hasServedInForeignMilitary",
-          type: "radio",
-          label: "Have you served in a foreign military organization?"
-        };
-      }
-
-      newData.section15.hasServedInForeignMilitary.value = value;
+      // Update the nested hasServedInForeignMilitary field
+      newData.section15.foreignMilitaryService.hasServedInForeignMilitary.value = value;
 
       // If setting to NO, clear entries
-      if (value === "NO") {
-        newData.section15.foreignMilitaryService = [];
+      if (value === "NO (If NO, proceed to Section 16)") {
+        newData.section15.foreignMilitaryService.entries = [];
         console.log(`🧹 Section15: Cleared foreign military service entries because value is NO`);
       }
       // If setting to YES and no entries exist, auto-add the first entry
-      else if (value === "YES" && newData.section15.foreignMilitaryService.length === 0) {
+      else if (value === "YES" && newData.section15.foreignMilitaryService.entries.length === 0) {
         const newEntry = createDefaultForeignMilitaryEntry();
-        newData.section15.foreignMilitaryService.push(newEntry);
+        newData.section15.foreignMilitaryService.entries.push(newEntry);
         console.log(`✅ Section15: Auto-added first foreign military service entry when YES selected`, newEntry);
       }
 
@@ -570,8 +681,8 @@ const Section15Provider: React.FC<Section15ProviderProps> = ({ children }) => {
   }, [section15Data]);
 
   const getVisibleFieldsForEntry = useCallback((entryType: Section15SubsectionKey, index: number): string[] => {
-    if (entryType === 'militaryService' && section15Data.section15.militaryService[index]) {
-      return getVisibleFields(section15Data.section15.militaryService[index], section15Data.section15);
+    if (entryType === 'militaryService' && section15Data.section15.militaryService.entries[index]) {
+      return getVisibleFields(section15Data.section15.militaryService.entries[index], section15Data.section15);
     }
     return [];
   }, [section15Data]);
@@ -591,14 +702,14 @@ const Section15Provider: React.FC<Section15ProviderProps> = ({ children }) => {
 
     // Safeguard: Only load if the incoming data is different and not empty
     const hasCurrentEntries =
-      section15Data.section15.militaryService.length > 0 ||
-      section15Data.section15.disciplinaryProcedures.length > 0 ||
-      section15Data.section15.foreignMilitaryService.length > 0;
+      section15Data.section15.militaryService.entries.length > 0 ||
+      section15Data.section15.disciplinaryProcedures.entries.length > 0 ||
+      section15Data.section15.foreignMilitaryService.entries.length > 0;
 
     const hasIncomingEntries =
-      data.section15.militaryService.length > 0 ||
-      data.section15.disciplinaryProcedures.length > 0 ||
-      data.section15.foreignMilitaryService.length > 0;
+      data.section15.militaryService.entries.length > 0 ||
+      data.section15.disciplinaryProcedures.entries.length > 0 ||
+      data.section15.foreignMilitaryService.entries.length > 0;
 
     // If we have current data with entries and incoming data is empty/default, preserve current data
     if (hasCurrentEntries && !hasIncomingEntries) {
@@ -610,17 +721,17 @@ const Section15Provider: React.FC<Section15ProviderProps> = ({ children }) => {
 
     // Preserve parent questions if they exist in current data but not in incoming data
     const mergedData = { ...data };
-    if (section15Data.section15.hasServed && !data.section15.hasServed) {
+    if (section15Data.section15.militaryService.hasServed && !data.section15.militaryService.hasServed) {
       console.log(`🔧 Section15: Preserving current hasServed field`);
-      mergedData.section15.hasServed = section15Data.section15.hasServed;
+      mergedData.section15.militaryService.hasServed = section15Data.section15.militaryService.hasServed;
     }
-    if (section15Data.section15.hasBeenSubjectToDisciplinary && !data.section15.hasBeenSubjectToDisciplinary) {
-      console.log(`🔧 Section15: Preserving current hasBeenSubjectToDisciplinary field`);
-      mergedData.section15.hasBeenSubjectToDisciplinary = section15Data.section15.hasBeenSubjectToDisciplinary;
+    if (section15Data.section15.disciplinaryProcedures.hasDisciplinaryAction && !data.section15.disciplinaryProcedures.hasDisciplinaryAction) {
+      console.log(`🔧 Section15: Preserving current hasDisciplinaryAction field`);
+      mergedData.section15.disciplinaryProcedures.hasDisciplinaryAction = section15Data.section15.disciplinaryProcedures.hasDisciplinaryAction;
     }
-    if (section15Data.section15.hasServedInForeignMilitary && !data.section15.hasServedInForeignMilitary) {
+    if (section15Data.section15.foreignMilitaryService.hasServedInForeignMilitary && !data.section15.foreignMilitaryService.hasServedInForeignMilitary) {
       console.log(`🔧 Section15: Preserving current hasServedInForeignMilitary field`);
-      mergedData.section15.hasServedInForeignMilitary = section15Data.section15.hasServedInForeignMilitary;
+      mergedData.section15.foreignMilitaryService.hasServedInForeignMilitary = section15Data.section15.foreignMilitaryService.hasServedInForeignMilitary;
     }
 
     // If incoming data has entries or current data is empty, load the new data
@@ -719,7 +830,7 @@ const Section15Provider: React.FC<Section15ProviderProps> = ({ children }) => {
 
     // Section-level Parent Questions (with auto-generation)
     updateHasServed,
-    updateHasBeenSubjectToDisciplinary,
+    updateHasDisciplinaryAction,
     updateHasServedInForeignMilitary,
 
     // Military Service Actions
@@ -729,18 +840,45 @@ const Section15Provider: React.FC<Section15ProviderProps> = ({ children }) => {
     updateMilitaryServiceStatus,
     updateMilitaryServiceBranch,
     updateMilitaryServiceDates,
+    updateMilitaryServiceState,
+    updateMilitaryServiceDateEstimate,
+    updateMilitaryServicePresent,
+    updateMilitaryServiceNumber,
+    updateMilitaryServiceDischargeType,
+    updateMilitaryServiceTypeOfDischarge,
+    updateMilitaryServiceDischargeDate,
+    updateMilitaryServiceDischargeDateEstimate,
+    updateMilitaryServiceOtherDischargeType,
+    updateMilitaryServiceDischargeReason,
+    updateMilitaryServiceCurrentStatus,
 
     // Disciplinary Actions
     addDisciplinaryEntry,
     removeDisciplinaryEntry,
     updateDisciplinaryEntry,
     updateDisciplinaryStatus,
+    updateDisciplinaryProcedureDate,
+    updateDisciplinaryProcedureDateEstimate,
+    updateDisciplinaryUcmjOffense,
+    updateDisciplinaryProcedureName,
+    updateDisciplinaryCourtDescription,
+    updateDisciplinaryFinalOutcome,
 
     // Foreign Military Actions
     addForeignMilitaryEntry,
     removeForeignMilitaryEntry,
     updateForeignMilitaryEntry,
     updateForeignMilitaryStatus,
+    updateForeignMilitaryServiceDates,
+    updateForeignMilitaryServiceDateEstimate,
+    updateForeignMilitaryServicePresent,
+    updateForeignMilitaryOrganizationName,
+    updateForeignMilitaryCountry,
+    updateForeignMilitaryHighestRank,
+    updateForeignMilitaryDivisionDepartment,
+    updateForeignMilitaryReasonForLeaving,
+    updateForeignMilitaryCircumstances,
+    updateForeignMilitaryContact,
 
     // Cross-Section Support
     updateForeignOrganizationContact,
