@@ -18,13 +18,7 @@ import {
   createDefaultSection10,
   createDualCitizenshipEntry,
   createForeignPassportEntry,
-  createTravelCountryEntry,  // NEW: Added travel country creation
-  addDualCitizenshipEntry,
-  addForeignPassportEntry,
-  addTravelCountryEntry,  // NEW: Added travel country management
-  removeDualCitizenshipEntry,
-  removeForeignPassportEntry,
-  removeTravelCountryEntry  // NEW: Added travel country management
+  createTravelCountryEntry
 } from '../../../../api/interfaces/sections2.0/section10';
 import type { ValidationResult, ValidationError, ChangeSet } from '../shared/base-interfaces';
 // NEW: Import field mapping and generation systems
@@ -98,28 +92,8 @@ const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ children }
     // Validate field mappings
     const validation = validateSection10FieldMappings();
 
-    if (validation.coverage >= 98) {
-      // console.log(`✅ Section10: All ${validation.totalFields} PDF form fields are properly mapped`);
-    } else {
-      // console.warn(`⚠️ Section10: ${validation.missingFields.length} fields are not mapped`);
-      // console.warn('Missing fields:');
-      validation.missingFields.slice(0, 10).forEach(field => {
-        // console.warn(`  - ${field}`);
-      });
-      if (validation.missingFields.length > 10) {
-        // console.warn(`  ... and ${validation.missingFields.length - 10} more`);
-      }
-    }
-
     // Validate field generation
     const generationValid = validateFieldGeneration();
-    if (generationValid) {
-      // console.log('✅ Section10: Field generation system validated successfully');
-    } else {
-      // console.error('❌ Section10: Field generation system validation failed');
-    }
-
-    // console.log('🔧 Section10: Section initialization complete');
   }, []);
 
   // ============================================================================
@@ -161,9 +135,7 @@ const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ children }
     // Use ref to get current data without creating dependency
     const currentData = currentDataRef.current;
 
-    if (typeof window !== 'undefined' && window.location.search.includes('debug=true')) {
-      // console.log('🔍 Section10: Running validation...');
-    }
+
 
     const validationErrors: ValidationError[] = [];
     const validationWarnings: ValidationError[] = [];
@@ -405,7 +377,7 @@ const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ children }
         return prev;
       });
     } catch (error) {
-      // console.error('Section10: updateFieldValue error:', error);
+      // Error updating field value
     }
   }, []);
 
@@ -429,6 +401,87 @@ const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ children }
   }, []);
 
   // ============================================================================
+  // STATE MANIPULATION FUNCTIONS (MOVED FROM INTERFACE)
+  // ============================================================================
+
+  /**
+   * Adds a new dual citizenship entry
+   * MOVED FROM INTERFACE: State manipulation belongs in context layer
+   */
+  const addDualCitizenshipEntry = useCallback((section10Data: Section10): Section10 => {
+    const newData = { ...section10Data };
+    const newIndex = newData.section10.dualCitizenship.entries.length;
+    newData.section10.dualCitizenship.entries.push(createDualCitizenshipEntry(newIndex));
+    return newData;
+  }, []);
+
+  /**
+   * Adds a new foreign passport entry
+   * MOVED FROM INTERFACE: State manipulation belongs in context layer
+   */
+  const addForeignPassportEntry = useCallback((section10Data: Section10): Section10 => {
+    const newData = { ...section10Data };
+    const newIndex = newData.section10.foreignPassport.entries.length;
+    newData.section10.foreignPassport.entries.push(createForeignPassportEntry(newIndex));
+    return newData;
+  }, []);
+
+  /**
+   * Removes a dual citizenship entry
+   * MOVED FROM INTERFACE: State manipulation belongs in context layer
+   */
+  const removeDualCitizenshipEntry = useCallback((section10Data: Section10, index: number): Section10 => {
+    const newData = { ...section10Data };
+    if (index >= 0 && index < newData.section10.dualCitizenship.entries.length) {
+      newData.section10.dualCitizenship.entries.splice(index, 1);
+    }
+    return newData;
+  }, []);
+
+  /**
+   * Removes a foreign passport entry
+   * MOVED FROM INTERFACE: State manipulation belongs in context layer
+   */
+  const removeForeignPassportEntry = useCallback((section10Data: Section10, index: number): Section10 => {
+    const newData = { ...section10Data };
+    if (index >= 0 && index < newData.section10.foreignPassport.entries.length) {
+      newData.section10.foreignPassport.entries.splice(index, 1);
+    }
+    return newData;
+  }, []);
+
+  /**
+   * Adds a new travel country entry to a foreign passport
+   * MOVED FROM INTERFACE: State manipulation belongs in context layer
+   */
+  const addTravelCountryEntry = useCallback((section10Data: Section10, passportIndex: number): Section10 => {
+    const newData = { ...section10Data };
+    if (passportIndex >= 0 && passportIndex < newData.section10.foreignPassport.entries.length) {
+      const passport = newData.section10.foreignPassport.entries[passportIndex];
+      if (passport.travelCountries.length < 6) {
+        const newTravelIndex = passport.travelCountries.length;
+        passport.travelCountries.push(createTravelCountryEntry(passportIndex, newTravelIndex));
+      }
+    }
+    return newData;
+  }, []);
+
+  /**
+   * Removes a travel country entry from a foreign passport
+   * MOVED FROM INTERFACE: State manipulation belongs in context layer
+   */
+  const removeTravelCountryEntry = useCallback((section10Data: Section10, passportIndex: number, travelIndex: number): Section10 => {
+    const newData = { ...section10Data };
+    if (passportIndex >= 0 && passportIndex < newData.section10.foreignPassport.entries.length) {
+      const passport = newData.section10.foreignPassport.entries[passportIndex];
+      if (travelIndex >= 0 && travelIndex < passport.travelCountries.length) {
+        passport.travelCountries.splice(travelIndex, 1);
+      }
+    }
+    return newData;
+  }, []);
+
+  // ============================================================================
   // SF86FORM INTEGRATION (FOLLOWING SECTION 1 PATTERN)
   // ============================================================================
 
@@ -437,19 +490,9 @@ const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ children }
 
   // Sync with SF86FormContext when data is loaded
   useEffect(() => {
-    const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('debug=true');
-
     if (sf86Form.formData.section10 && sf86Form.formData.section10 !== section10Data) {
-      if (isDebugMode) {
-        // console.log('🔄 Section10: Syncing with SF86FormContext loaded data');
-      }
-
       // Load the data from SF86FormContext
       loadSection(sf86Form.formData.section10);
-
-      if (isDebugMode) {
-        // console.log('✅ Section10: Data sync complete');
-      }
     }
   }, [sf86Form.formData.section10, loadSection]);
 
@@ -478,14 +521,12 @@ const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ children }
 
       // If this is a duplicate call within 50ms with the same count, skip it
       if (now - lastOp.timestamp < 50 && currentCount === lastOp.count) {
-        // console.log('🚫 Section10: Preventing duplicate dual citizenship add (React Strict Mode)');
         return prev;
       }
 
       // Update the last operation tracking
       lastDualCitizenshipOpRef.current = { count: currentCount + 1, timestamp: now };
 
-      // console.log(`✅ Section10: Adding dual citizenship entry ${currentCount + 1}`);
       return addDualCitizenshipEntry(prev);
     });
   }, []);
@@ -520,14 +561,12 @@ const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ children }
 
       // If this is a duplicate call within 50ms with the same count, skip it
       if (now - lastOp.timestamp < 50 && currentCount === lastOp.count) {
-        // console.log('🚫 Section10: Preventing duplicate foreign passport add (React Strict Mode)');
         return prev;
       }
 
       // Update the last operation tracking
       lastForeignPassportOpRef.current = { count: currentCount + 1, timestamp: now };
 
-      // console.log(`✅ Section10: Adding foreign passport entry ${currentCount + 1}`);
       return addForeignPassportEntry(prev);
     });
   }, []);
@@ -567,12 +606,6 @@ const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ children }
     // Check if the mapping was successful (not just returning the original path)
     const isMapped = pdfFieldName !== logicalPath;
 
-    if (!isMapped) {
-      // console.warn(`⚠️ Section10: Travel country field mapping failed for: ${logicalPath}`);
-    } else {
-      // console.log(`✅ Section10: Travel country field mapped: ${logicalPath} → ${pdfFieldName}`);
-    }
-
     return isMapped;
   }, [constructTravelCountryFieldPath]);
 
@@ -591,14 +624,12 @@ const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ children }
 
       // If this is a duplicate call within 50ms with the same passport and count, skip it
       if (now - lastOp.timestamp < 50 && passportIndex === lastOp.passportIndex && currentCount === lastOp.count) {
-        // console.log(`🚫 Section10: Preventing duplicate travel country add for passport ${passportIndex} (React Strict Mode)`);
         return prev;
       }
 
       // Update the last operation tracking
       lastTravelCountryOpRef.current = { passportIndex, count: currentCount + 1, timestamp: now };
 
-      // console.log(`✅ Section10: Adding travel country ${currentCount + 1} to passport ${passportIndex + 1}`);
       return addTravelCountryEntry(prev, passportIndex);
     });
   }, []);
@@ -662,7 +693,7 @@ const Section10Provider: React.FC<{ children: React.ReactNode }> = ({ children }
         return prev;
       });
     } catch (error) {
-      // console.error('Section10: updateTravelCountry error:', error);
+      // Error updating travel country
     }
   }, [constructTravelCountryFieldPath, validateTravelCountryFieldMapping]);
 

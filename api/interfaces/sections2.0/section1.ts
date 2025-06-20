@@ -6,8 +6,6 @@
  */
 
 import type { Field, FieldWithOptions } from '../formDefinition2.0';
-import { SUFFIX_OPTIONS } from './base';
-import { createFieldFromReference, validateSectionFieldCount } from '../../utils/sections-references-loader';
 
 // ============================================================================
 // CORE INTERFACES
@@ -130,121 +128,10 @@ export type NameValidationResult = {
 };
 
 // ============================================================================
-// HELPER FUNCTIONS
+// INTERFACE LAYER - TYPES, INTERFACES, AND CONSTANTS ONLY
 // ============================================================================
-
-/**
- * Creates a default Section 1 data structure using DRY approach with sections-references
- * This eliminates hardcoded values and uses the single source of truth
- */
-export const createDefaultSection1 = (): Section1 => {
-  // Validate field count against sections-references
-  validateSectionFieldCount(1);
-
-  return {
-    _id: 1,
-    section1: {
-      lastName: createFieldFromReference(
-        1,
-        'form1[0].Sections1-6[0].TextField11[0]',
-        ''
-      ),
-      firstName: createFieldFromReference(
-        1,
-        'form1[0].Sections1-6[0].TextField11[1]',
-        ''
-      ),
-      middleName: createFieldFromReference(
-        1,
-        'form1[0].Sections1-6[0].TextField11[2]',
-        ''
-      ),
-      suffix: {
-        ...createFieldFromReference(
-          1,
-          'form1[0].Sections1-6[0].suffix[0]',
-          ''
-        ),
-        options: SUFFIX_OPTIONS
-      }
-    }
-  };
-};
-
-/**
- * Updates a specific field in the Section 1 data structure
- */
-export const updateSection1Field = (
-  section1Data: Section1,
-  update: Section1FieldUpdate
-): Section1 => {
-  const { fieldPath, newValue } = update;
-  const newData = { ...section1Data };
-
-  // Update the specified field
-  if (fieldPath === 'section1.lastName') {
-    newData.section1.lastName.value = newValue;
-  } else if (fieldPath === 'section1.firstName') {
-    newData.section1.firstName.value = newValue;
-  } else if (fieldPath === 'section1.middleName') {
-    newData.section1.middleName.value = newValue;
-  } else if (fieldPath === 'section1.suffix') {
-    newData.section1.suffix.value = newValue;
-  }
-
-  return newData;
-};
-
-/**
- * Validates a full name entry
- */
-export function validateFullName(fullName: PersonalInformation, context: Section1ValidationContext): NameValidationResult {
-  const errors: string[] = [];
-  const warnings: string[] = [];
-
-  // Required field validation
-  if (context.rules.requiresLastName && !fullName.lastName.value.trim()) {
-    errors.push('Last name is required');
-  }
-
-  if (context.rules.requiresFirstName && !fullName.firstName.value.trim()) {
-    errors.push('First name is required');
-  }
-
-  // Length validation
-  const fields = [
-    { value: fullName.lastName.value, name:  fullName.lastName.name, label: fullName.lastName.label },
-    { value: fullName.firstName.value, name: fullName.firstName.name, label: fullName.firstName.label },
-    { value: fullName.middleName.value, name: fullName.middleName.name, label: fullName.middleName.label },
-    { value: fullName.suffix.value, name: fullName.suffix.name, label: fullName.suffix.label }
-  ];
-
-  fields.forEach(field => {
-    if (field.value.length > context.rules.maxNameLength) {
-      errors.push(`${field.name} exceeds maximum length of ${context.rules.maxNameLength} characters`);
-    }
-  });
-
-  // Character validation
-  fields.forEach(field => {
-    if (field.value && !NAME_VALIDATION.ALLOWED_CHARACTERS.test(field.value)) {
-      errors.push(`${field.name} contains invalid characters`);
-    }
-  });
-
-  // Initial-only validation
-  if (context.allowInitialsOnly) {
-    if (NAME_VALIDATION.INITIAL_PATTERN.test(fullName.firstName.value)) {
-      warnings.push('First name appears to be an initial only');
-    }
-    if (NAME_VALIDATION.INITIAL_PATTERN.test(fullName.middleName.value)) {
-      warnings.push('Middle name appears to be an initial only');
-    }
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-    warnings
-  };
-}
+//
+// Note: Helper functions have been moved to the context layer to follow
+// proper Interface → Context → Component architectural hierarchy.
+// Functions like createDefaultSection1, updateSection1Field, and validateFullName
+// are now implemented in app/state/contexts/sections2.0/section1.tsx

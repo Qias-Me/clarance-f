@@ -257,7 +257,6 @@ export const Section4Provider: React.FC<Section4ProviderProps> = ({ children }) 
     setSection4Data(prevData => {
       // Use the enhanced SSN propagation logic
       const newData = updateMainSSNAndPropagate(prevData, ssn);
-      console.log(`🔄 Section4: updateSSN - updated SSN to: ${ssn}`);
       return newData;
     });
   }, []);
@@ -265,7 +264,6 @@ export const Section4Provider: React.FC<Section4ProviderProps> = ({ children }) 
   const updateSSNField = useCallback((update: Section4FieldUpdate) => {
     setSection4Data(prevData => {
       const newData = updateSection4Field(prevData, update);
-      console.log(`🔄 Section4: updateSSNField - updated field: ${update.fieldPath}`);
       return newData;
     });
   }, []);
@@ -286,7 +284,6 @@ export const Section4Provider: React.FC<Section4ProviderProps> = ({ children }) 
         });
       }
 
-      console.log(`🔄 Section4: toggleNotApplicable - set to: ${value}`);
       return newData;
     });
   }, []);
@@ -298,7 +295,6 @@ export const Section4Provider: React.FC<Section4ProviderProps> = ({ children }) 
         newData.section4.Acknowledgement.value = value;
       }
 
-      console.log(`🔄 Section4: updateAcknowledgement - set to: ${value}`);
       return newData;
     });
   }, []);
@@ -313,7 +309,6 @@ export const Section4Provider: React.FC<Section4ProviderProps> = ({ children }) 
   }, []);
 
   const loadSection = useCallback((data: Section4) => {
-    console.log('🔄 Section4: loadSection called with data:', data);
     setSection4Data(data);
     setErrors({});
   }, []);
@@ -337,8 +332,6 @@ export const Section4Provider: React.FC<Section4ProviderProps> = ({ children }) 
 
   // Enhanced field update function for integration
   const updateFieldValue = useCallback((path: string, value: any) => {
-    console.log(`🔄 Section4: updateFieldValue called with path=${path}, value=`, value);
-
     setSection4Data(prevData => {
       const newData = cloneDeep(prevData);
 
@@ -359,7 +352,6 @@ export const Section4Provider: React.FC<Section4ProviderProps> = ({ children }) 
         set(newData, path, value);
       }
 
-      console.log(`🔄 Section4: updateFieldValue - updated path: ${path}`);
       return newData;
     });
   }, []);

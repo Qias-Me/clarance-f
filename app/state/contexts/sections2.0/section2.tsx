@@ -225,26 +225,20 @@ export const Section2Provider: React.FC<Section2ProviderProps> = ({ children }) 
    * FIXED: Added fallback mechanism using lodash set() following Section 29 pattern
    */
   const updateFieldValue = useCallback((path: string, value: any) => {
-    console.log(`🔍 Section2: updateFieldValue called with path=${path}, value=`, value);
-
     // Parse path to update the correct field using specific handlers
     if (path === 'section2.date') {
-      console.log(`✅ Section2: Using specific handler for date field`);
       updateDateOfBirth(value);
       return;
     } else if (path === 'section2.isEstimated') {
-      console.log(`✅ Section2: Using specific handler for estimated field`);
       updateEstimated(value);
       return;
     }
 
     // CRITICAL FIX: Fallback using lodash set for any unmatched paths
     // This ensures compatibility with the integration system and prevents silent failures
-    console.log(`🔧 Section2: Using fallback lodash set for path: ${path}`);
     setSection2Data(prev => {
       const newData = cloneDeep(prev);
       set(newData, path, value);
-      console.log(`✅ Section2: Field updated via fallback at path: ${path}`);
       return newData;
     });
   }, [updateDateOfBirth, updateEstimated]);
@@ -349,19 +343,9 @@ export const Section2Provider: React.FC<Section2ProviderProps> = ({ children }) 
 
   // Sync with SF86FormContext when data is loaded
   useEffect(() => {
-    const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('debug=true');
-
     if (sf86Form.formData.section2 && sf86Form.formData.section2 !== section2Data) {
-      if (isDebugMode) {
-        console.log('🔄 Section2: Syncing with SF86FormContext loaded data');
-      }
-
       // Load the data from SF86FormContext
       loadSection(sf86Form.formData.section2);
-
-      if (isDebugMode) {
-        console.log('✅ Section2: Data sync complete');
-      }
     }
   }, [sf86Form.formData.section2, loadSection]);
 

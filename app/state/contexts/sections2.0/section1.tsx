@@ -21,13 +21,14 @@ import type {
   Section1FieldUpdate,
   Section1ValidationRules,
   Section1ValidationContext,
-  NameValidationResult
+  NameValidationResult,
+  PersonalInformation
 } from '../../../../api/interfaces/sections2.0/section1';
 import {
-  createDefaultSection1,
-  validateFullName,
-  updateSection1Field
+  NAME_VALIDATION
 } from '../../../../api/interfaces/sections2.0/section1';
+import { SUFFIX_OPTIONS } from '../../../../api/interfaces/sections2.0/base';
+import { createFieldFromReference, validateSectionFieldCount } from '../../../../api/utils/sections-references-loader';
 
 import type { ValidationResult, ValidationError, ChangeSet } from '../shared/base-interfaces';
 import { useSF86Form } from './SF86FormContext';
@@ -62,9 +63,48 @@ export interface Section1ContextType {
 // INITIAL STATE CREATION
 // ============================================================================
 
+/**
+ * Creates a default Section 1 data structure using DRY approach with sections-references
+ * This eliminates hardcoded values and uses the single source of truth
+ * MOVED FROM INTERFACE TO CONTEXT - proper architectural separation
+ */
+const createDefaultSection1Internal = (): Section1 => {
+  // Validate field count against sections-references
+  validateSectionFieldCount(1);
+
+  return {
+    _id: 1,
+    section1: {
+      lastName: createFieldFromReference(
+        1,
+        'form1[0].Sections1-6[0].TextField11[0]',
+        ''
+      ),
+      firstName: createFieldFromReference(
+        1,
+        'form1[0].Sections1-6[0].TextField11[1]',
+        ''
+      ),
+      middleName: createFieldFromReference(
+        1,
+        'form1[0].Sections1-6[0].TextField11[2]',
+        ''
+      ),
+      suffix: {
+        ...createFieldFromReference(
+          1,
+          'form1[0].Sections1-6[0].suffix[0]',
+          ''
+        ),
+        options: SUFFIX_OPTIONS
+      }
+    }
+  };
+};
+
 // Use the DRY approach with sections-references instead of hardcoded values
 const createInitialSection1State = (): Section1 => {
-  return createDefaultSection1();
+  return createDefaultSection1Internal();
 };
 
 // ============================================================================
@@ -77,6 +117,90 @@ const defaultValidationRules: Section1ValidationRules = {
   allowsMiddleNameEmpty: true,
   allowsSuffixEmpty: true,
   maxNameLength: 50
+};
+
+// ============================================================================
+// HELPER FUNCTIONS - MOVED FROM INTERFACE TO CONTEXT
+// ============================================================================
+
+/**
+ * Updates a specific field in the Section 1 data structure
+ * MOVED FROM INTERFACE TO CONTEXT - proper architectural separation
+ */
+const updateSection1FieldInternal = (
+  section1Data: Section1,
+  update: Section1FieldUpdate
+): Section1 => {
+  const { fieldPath, newValue } = update;
+  const newData = { ...section1Data };
+
+  // Update the specified field
+  if (fieldPath === 'section1.lastName') {
+    newData.section1.lastName.value = newValue;
+  } else if (fieldPath === 'section1.firstName') {
+    newData.section1.firstName.value = newValue;
+  } else if (fieldPath === 'section1.middleName') {
+    newData.section1.middleName.value = newValue;
+  } else if (fieldPath === 'section1.suffix') {
+    newData.section1.suffix.value = newValue;
+  }
+
+  return newData;
+};
+
+/**
+ * Validates a full name entry
+ * MOVED FROM INTERFACE TO CONTEXT - proper architectural separation
+ */
+const validateFullNameInternal = (fullName: PersonalInformation, context: Section1ValidationContext): NameValidationResult => {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  // Required field validation
+  if (context.rules.requiresLastName && !fullName.lastName.value.trim()) {
+    errors.push('Last name is required');
+  }
+
+  if (context.rules.requiresFirstName && !fullName.firstName.value.trim()) {
+    errors.push('First name is required');
+  }
+
+  // Length validation
+  const fields = [
+    { value: fullName.lastName.value, name:  fullName.lastName.name, label: fullName.lastName.label },
+    { value: fullName.firstName.value, name: fullName.firstName.name, label: fullName.firstName.label },
+    { value: fullName.middleName.value, name: fullName.middleName.name, label: fullName.middleName.label },
+    { value: fullName.suffix.value, name: fullName.suffix.name, label: fullName.suffix.label }
+  ];
+
+  fields.forEach(field => {
+    if (field.value.length > context.rules.maxNameLength) {
+      errors.push(`${field.name} exceeds maximum length of ${context.rules.maxNameLength} characters`);
+    }
+  });
+
+  // Character validation
+  fields.forEach(field => {
+    if (field.value && !NAME_VALIDATION.ALLOWED_CHARACTERS.test(field.value)) {
+      errors.push(`${field.name} contains invalid characters`);
+    }
+  });
+
+  // Initial-only validation
+  if (context.allowInitialsOnly) {
+    if (NAME_VALIDATION.INITIAL_PATTERN.test(fullName.firstName.value)) {
+      warnings.push('First name appears to be an initial only');
+    }
+    if (NAME_VALIDATION.INITIAL_PATTERN.test(fullName.middleName.value)) {
+      warnings.push('Middle name appears to be an initial only');
+    }
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings
+  };
 };
 
 // ============================================================================
@@ -129,7 +253,7 @@ export const Section1Provider: React.FC<Section1ProviderProps> = ({ children }) 
       allowInitialsOnly: false
     };
 
-    const nameValidation = validateFullName(section1Data.section1, validationContext);
+    const nameValidation = validateFullNameInternal(section1Data.section1, validationContext);
 
     if (!nameValidation.isValid) {
       nameValidation.errors.forEach(error => {
@@ -167,7 +291,7 @@ export const Section1Provider: React.FC<Section1ProviderProps> = ({ children }) 
       allowInitialsOnly: false
     };
 
-    return validateFullName(section1Data.section1, validationContext);
+    return validateFullNameInternal(section1Data.section1, validationContext);
   }, [section1Data]);
 
   // Update errors when section data changes (but not during initial render)
@@ -208,7 +332,7 @@ export const Section1Provider: React.FC<Section1ProviderProps> = ({ children }) 
 
   const updateFullNameField = useCallback((update: Section1FieldUpdate) => {
     setSection1Data(prevData => {
-      return updateSection1Field(prevData, update);
+      return updateSection1FieldInternal(prevData, update);
     });
   }, []);
 
@@ -301,19 +425,9 @@ export const Section1Provider: React.FC<Section1ProviderProps> = ({ children }) 
 
   // Sync with SF86FormContext when data is loaded
   useEffect(() => {
-    const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('debug=true');
-
     if (sf86Form.formData.section1 && sf86Form.formData.section1 !== section1Data) {
-      if (isDebugMode) {
-        console.log('🔄 Section1: Syncing with SF86FormContext loaded data');
-      }
-
       // Load the data from SF86FormContext
       loadSection(sf86Form.formData.section1);
-
-      if (isDebugMode) {
-        console.log('✅ Section1: Data sync complete');
-      }
     }
   }, [sf86Form.formData.section1, loadSection]);
 

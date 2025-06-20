@@ -288,7 +288,7 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
       setSection9Data(data);
       setIsInitialized(true);
     } catch (error) {
-      console.error('❌ Section9: Error loading data:', error);
+      // Error loading data
     } finally {
       setIsLoading(false);
     }
@@ -420,19 +420,9 @@ export const Section9Provider: React.FC<Section9ProviderProps> = ({ children }) 
 
   // Sync with SF86FormContext when data is loaded
   useEffect(() => {
-    const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('debug=true');
-
     if (sf86Form.formData.section9 && sf86Form.formData.section9 !== section9Data) {
-      if (isDebugMode) {
-        console.log('🔄 Section9: Syncing with SF86FormContext loaded data');
-      }
-
       // Load the data from SF86FormContext
       loadSection(sf86Form.formData.section9);
-
-      if (isDebugMode) {
-        console.log('✅ Section9: Data sync complete');
-      }
     }
   }, [sf86Form.formData.section9, loadSection]);
 

@@ -913,7 +913,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
       case 'text':
         return (
           <div key={fieldConfig.fieldPath}>
-            {labelElement}
+            {/* {labelElement} */}
             <input
               type="text"
               value={fieldConfig.value || ""}
@@ -932,7 +932,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
       case 'select':
         return (
           <div key={fieldConfig.fieldPath}>
-            {labelElement}
+            {/* {labelElement} */}
             <select
               value={fieldConfig.value || ""}
               onChange={(e) => handleFieldUpdate(entryIndex, `${fieldConfig.fieldPath}.value`, e.target.value)}
@@ -964,11 +964,11 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                 disabled={fieldConfig.disabled}
               />
               <span className="text-sm text-gray-600">{fieldConfig.label}</span>
-              {isDebugMode && numericId && (
+              {/* {isDebugMode && numericId && (
                 <span className="ml-2 text-xs text-gray-400">
                   (ID: {numericId})
                 </span>
-              )}
+              )} */}
             </label>
             {hasError && errorMessage && (
               <p className="mt-1 text-sm text-red-600">{String(errorMessage)}</p>
@@ -1613,18 +1613,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
           Fields marked with <span className="text-red-500">*</span> are required.
         </div>
 
-        {/* Debug Toggle */}
-        <div className="mt-4">
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={isDebugMode}
-              onChange={(e) => setIsDebugMode(e.target.checked)}
-              className="mr-2"
-            />
-            <span className="text-sm text-gray-600">Enable debug mode (check console)</span>
-          </label>
-        </div>
+  
       </div>
 
       {/* Show global validation errors */}

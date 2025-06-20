@@ -2,154 +2,183 @@
  * Section 11: Where You Have Lived
  *
  * TypeScript interface definitions for SF-86 Section 11 (Where You Have Lived) data structure.
- * Based on the established Field<T> interface patterns and PDF field ID mappings from section-11.json.
+ * Following the residencyInfo.ts pattern with human-readable field names, proper value types,
+ * and createReferenceFrom() method for PDF mapping.
  *
- * Section 11 supports 4 entries with these patterns:
- * - Entry 1: form1[0].Section11[0].*
- * - Entry 2: form1[0].Section11-2[0].*
- * - Entry 3: form1[0].Section11-3[0].*
- * - Entry 4: form1[0].Section11-4[0].*
+ * Based on section-11.json reference data: 252 total fields (63 per entry × 4 entries)
+ * Entry patterns: Section11[0], Section11-2[0], Section11-3[0], Section11-4[0]
  */
 
 import type { Field, FieldWithOptions } from '../formDefinition2.0';
-import type { USState, Country } from './base';
+import type { USState, Country, Suffix } from './base';
+import { getUSStateOptions, getCountryOptions, getSuffixOptions } from './base';
 import { createFieldFromReference, validateSectionFieldCount } from '../../utils/sections-references-loader';
-import { generateFieldName, getFieldByEntryAndType } from '../../../app/state/contexts/sections2.0/section11-field-mapping';
-import { cloneDeep, set } from 'lodash';
+import { generateFieldName } from '../../../app/state/contexts/sections2.0/section11-field-mapping';
+
 
 // ============================================================================
-// CORE INTERFACES
+// CORE INTERFACES - HUMAN READABLE STRUCTURE
 // ============================================================================
 
 /**
- * Address information structure for residence entries
+ * Residence dates information
  */
-export interface AddressInformation {
-  streetAddress: Field<string>;
-  city: Field<string>;
-  state: FieldWithOptions<USState>;
-  zipCode: Field<string>;
-  country: FieldWithOptions<Country>;
-}
-
-/**
- * APO/FPO address information for military addresses
- */
-export interface APOFPOAddress {
-  isAPOFPO: Field<boolean>;
-  streetUnit: Field<string>;
-  apoType: FieldWithOptions<"APO" | "FPO" | "DPO">;
-  aeCode: FieldWithOptions<"AA" | "AE" | "AP">;
-  zipCode: Field<string>;
-}
-
-/**
- * Contact person information for each residence entry
- * Based on verified 63-field structure per entry from section-11.json
- */
-export interface ContactPerson {
-  // Phone fields (10 fields per entry)
-  phone1: Field<string>;
-  phone1Ext: Field<string>;
-  phone1Intl: Field<boolean>;
-  phone2: Field<string>;
-  phone2Ext: Field<string>;
-  phone2Intl: Field<boolean>;
-  phone3: Field<string>;
-  phone3Ext: Field<string>;
-  phone3Intl: Field<boolean>;
-  dontKnowContact: Field<boolean>;
-
-  // Date fields (5 fields per entry)
+export interface ResidenceDates {
   fromDate: Field<string>;
   fromDateEstimate: Field<boolean>;
   toDate: Field<string>;
   toDateEstimate: Field<boolean>;
-  present: Field<boolean>;
-
-  // Main address fields (5 fields per entry)
-  streetAddress: Field<string>;
-  city: Field<string>;
-  state: Field<string>;
-  country: Field<string>;
-  zipCode: Field<string>;
-
-  // Contact person names (4 fields per entry)
-  firstName: Field<string>;
-  middleName: Field<string>;
-  lastName: Field<string>;
-  suffix: Field<string>;
-
-  // Relationship fields (6 fields per entry)
-  relationshipNeighbor: Field<boolean>;
-  relationshipFriend: Field<boolean>;
-  relationshipLandlord: Field<boolean>;
-  relationshipBusiness: Field<boolean>;
-  relationshipOther: Field<boolean>;
-  relationshipOtherExplain: Field<string>;
-
-  // Contact address fields (6 fields per entry)
-  contactStreet: Field<string>;
-  contactCity: Field<string>;
-  contactState: Field<string>;
-  contactCountry: Field<string>;
-  contactZip: Field<string>;
-  contactEmail: Field<string>;
-  contactEmailUnknown: Field<boolean>;
-
-  // Last contact fields (2 fields per entry)
-  lastContact: Field<string>;
-  lastContactEstimate: Field<boolean>;
-
-  // Physical address fields (15 fields per entry)
-  physicalStreet: Field<string>;
-  physicalCity: Field<string>;
-  physicalState: Field<string>;
-  physicalCountry: Field<string>;
-  physicalAddressAlt: Field<string>;
-  apoFpoAddress: Field<string>;
-  apoFpoState: Field<string>;
-  apoFpoZip: Field<string>;
-  physicalZip: Field<string>;
-  physicalAltStreet: Field<string>;
-  physicalAltCity: Field<string>;
-  physicalAltState: Field<string>;
-  physicalAltCountry: Field<string>;
-  physicalAltZip: Field<string>;
-  physicalAddressFull: Field<string>;
-
-  // Radio button fields (3 fields per entry)
-  residenceType: Field<string>;
-  addressTypeRadio: Field<string>;
-  residenceTypeRadioAlt: Field<string>;
-
-  // Additional fields to complete 63 per entry
-  residenceTypeOther: Field<string>;
-  apoFpoFull: Field<string>;
-  apoFpoStateAlt: Field<string>;
-  apoFpoZipAlt: Field<string>;
+  isPresent: Field<boolean>;
 }
 
 /**
- * Residence entry structure for Section 11
- * VERIFIED: Each entry has exactly 63 fields (uniform distribution)
- * All fields are contained within the ContactPerson interface
+ * Residence address information
+ */
+export interface ResidenceAddress {
+  streetAddress: Field<string>;
+  city: Field<string>;
+  state: FieldWithOptions<string>;
+  country: FieldWithOptions<string>;
+  zipCode: Field<string>;
+}
+
+/**
+ * Residence type information
+ */
+export interface ResidenceType {
+  type: FieldWithOptions<"1" | "2" | "3" | "4">; // 1=Own, 2=Rent, 3=Military Housing, 4=Other
+  otherExplanation: Field<string>;
+}
+
+/**
+ * Contact person name information
+ */
+export interface ContactPersonName {
+  firstName: Field<string>;
+  middleName?: Field<string>;
+  lastName: Field<string>;
+  suffix?: FieldWithOptions<string>;
+}
+
+/**
+ * Contact person phone information
+ */
+export interface ContactPersonPhones {
+  eveningPhone: Field<string>;
+  eveningPhoneExtension?: Field<string>;
+  eveningPhoneIsInternational: Field<boolean>;
+  daytimePhone: Field<string>;
+  daytimePhoneExtension?: Field<string>;
+  daytimePhoneIsInternational: Field<boolean>;
+  daytimePhoneUnknown: Field<boolean>;
+  mobilePhone: Field<string>;
+  mobilePhoneExtension?: Field<string>;
+  mobilePhoneIsInternational: Field<boolean>;
+  mobilePhoneUnknown: Field<boolean>;
+  dontKnowContact: Field<boolean>;
+}
+
+/**
+ * Contact person relationship information
+ */
+export interface ContactPersonRelationship {
+  isNeighbor: Field<boolean>;
+  isFriend: Field<boolean>;
+  isLandlord: Field<boolean>;
+  isBusinessAssociate: Field<boolean>;
+  isOther: Field<boolean>;
+  otherExplanation: Field<string>;
+}
+
+
+/**
+ * Contact person address information
+ */
+export interface ContactPersonAddress {
+  streetAddress: Field<string>;
+  city: Field<string>;
+  state: FieldWithOptions<string>;
+  country: FieldWithOptions<string>;
+  zipCode: Field<string>;
+}
+
+/**
+ * Contact person email information
+ */
+export interface ContactPersonEmail {
+  email: Field<string>;
+  emailUnknown: Field<boolean>;
+}
+
+/**
+ * Last contact information
+ */
+export interface LastContactInfo {
+  lastContactDate: Field<string>;
+  lastContactEstimate: Field<boolean>;
+}
+
+/**
+ * APO/FPO physical address information for military addresses
+ * Accounts for all 15 physical address fields per entry
+ */
+export interface APOFPOPhysicalAddress {
+  // Primary physical address (5 fields)
+  physicalStreetAddress: Field<string>;        // TextField11[13]
+  physicalCity: Field<string>;                 // TextField11[14]
+  physicalState: FieldWithOptions<string>;     // School6_State[2]
+  physicalCountry: FieldWithOptions<string>;   // DropDownList4[0]
+  physicalZipCode: Field<string>;              // TextField11[18]
+
+  // APO/FPO address (3 fields)
+  apoFpoAddress: Field<string>;                // TextField11[16]
+  apoFpoState: FieldWithOptions<string>;       // School6_State[3]
+  apoFpoZipCode: Field<string>;                // TextField11[17]
+
+  // Alternative physical address (7 fields)
+  physicalAddressAlt: Field<string>;           // TextField11[15]
+  physicalAltStreet: Field<string>;            // TextField11[19]
+  physicalAltCity: Field<string>;              // TextField11[20]
+  physicalAltState: FieldWithOptions<string>;  // School6_State[4]
+  physicalAltCountry: FieldWithOptions<string>; // DropDownList4[1]
+  physicalAltZip: Field<string>;               // TextField11[21]
+  physicalAddressFull: Field<string>;          // TextField11[22]
+}
+
+/**
+ * Additional radio button fields and APO/FPO alternatives
+ * Accounts for remaining fields to reach 63 per entry
+ */
+export interface AdditionalFields {
+  // Radio button fields (3 fields)
+  addressTypeRadio: FieldWithOptions<"YES" | "NO">;     // RadioButtonList[1]
+  residenceTypeRadioAlt: FieldWithOptions<"YES" | "NO">; // RadioButtonList[2]
+
+  // Additional APO/FPO fields (3 fields)
+  apoFpoFull: Field<string>;                   // TextField11[23]
+  apoFpoStateAlt: FieldWithOptions<string>;    // School6_State[5]
+  apoFpoZipAlt: Field<string>;                 // TextField11[24]
+}
+
+/**
+ * Complete residence entry structure following residencyInfo.ts pattern
+ * Human-readable field names with logical groupings
+ * Accounts for all 63 fields per entry: 5+5+2+4+12+6+5+2+2+15+5 = 63 fields
  */
 export interface ResidenceEntry {
-  // All 63 fields per entry are managed through the ContactPerson interface
-  // which has been restructured to include all field categories:
-  // - Phone fields (10): 3 phones + 3 extensions + 4 international flags
-  // - Date fields (5): from/to dates + estimates + present
-  // - Main address fields (5): street, city, state, country, zip
-  // - Contact person names (4): first, middle, last, suffix
-  // - Relationship fields (6): 5 checkboxes + other explanation
-  // - Contact address fields (7): street, city, state, country, zip, email + unknown
-  // - Last contact fields (2): date + estimate
-  // - Physical address fields (15): multiple address variations for APO/FPO
-  // - Radio button fields (3): residence type + address type selections
-  // - Additional fields (6): residence type other + APO/FPO variations
-  // TOTAL: 63 fields per entry (verified from section-11.json)
-  contactPerson: ContactPerson;
+  _id: number;
+  residenceDates: ResidenceDates;                    // 5 fields
+  residenceAddress: ResidenceAddress;               // 5 fields
+  residenceType: ResidenceType;                     // 2 fields
+  contactPersonName: ContactPersonName;             // 4 fields
+  contactPersonPhones: ContactPersonPhones;         // 12 fields
+  contactPersonRelationship: ContactPersonRelationship; // 6 fields
+  contactPersonAddress: ContactPersonAddress;       // 5 fields
+  contactPersonEmail: ContactPersonEmail;           // 2 fields
+  lastContactInfo: LastContactInfo;                 // 2 fields
+  apoFpoPhysicalAddress: APOFPOPhysicalAddress;     // 15 fields
+  additionalFields: AdditionalFields;               // 5 fields
+  // Total: 63 fields per entry ✓
 }
 
 /**
@@ -161,6 +190,509 @@ export interface Section11 {
     residences: ResidenceEntry[];
   };
 }
+
+// ============================================================================
+// CREATE REFERENCE FROM METHODS - PDF MAPPING
+// ============================================================================
+
+/**
+ * Creates ResidenceDates from PDF field references
+ */
+export const createResidenceDatesFromReference = (entryIndex: number): ResidenceDates => {
+  const entryPattern = entryIndex === 0 ? 'Section11[0]' : `Section11-${entryIndex + 1}[0]`;
+
+  return {
+    fromDate: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.From_Datefield_Name_2[0]`,
+      ''
+    ),
+    fromDateEstimate: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.#field[15]`,
+      false
+    ),
+    toDate: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.From_Datefield_Name_2[1]`,
+      ''
+    ),
+    toDateEstimate: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.#field[18]`,
+      false
+    ),
+    isPresent: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.#field[17]`,
+      false
+    )
+  };
+};
+
+/**
+ * Creates ResidenceAddress from PDF field references
+ */
+export const createResidenceAddressFromReference = (entryIndex: number): ResidenceAddress => {
+  const entryPattern = entryIndex === 0 ? 'Section11[0]' : `Section11-${entryIndex + 1}[0]`;
+
+  return {
+    streetAddress: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField11[3]`,
+      ''
+    ),
+    city: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField11[4]`,
+      ''
+    ),
+    state: {
+      ...createFieldFromReference(
+        11,
+        `form1[0].${entryPattern}.School6_State[0]`,
+        ''
+      ),
+      options: getUSStateOptions().map(option => option.value)
+    },
+    country: {
+      ...createFieldFromReference(
+        11,
+        `form1[0].${entryPattern}.DropDownList5[0]`,
+        'United States'
+      ),
+      options: getCountryOptions().map(option => option.value)
+    },
+    zipCode: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField11[5]`,
+      ''
+    )
+  };
+};
+
+/**
+ * Creates ResidenceType from PDF field references
+ */
+export const createResidenceTypeFromReference = (entryIndex: number): ResidenceType => {
+  const entryPattern = entryIndex === 0 ? 'Section11[0]' : `Section11-${entryIndex + 1}[0]`;
+
+  return {
+    type: {
+      ...createFieldFromReference(
+        11,
+        `form1[0].${entryPattern}.RadioButtonList[0]`,
+        '1'
+      ),
+      options: ['1', '2', '3', '4'] // 1=Own, 2=Rent, 3=Military Housing, 4=Other
+    },
+    otherExplanation: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField12[0]`,
+      ''
+    )
+  };
+};
+
+/**
+ * Creates ContactPersonName from PDF field references
+ */
+export const createContactPersonNameFromReference = (entryIndex: number): ContactPersonName => {
+  const entryPattern = entryIndex === 0 ? 'Section11[0]' : `Section11-${entryIndex + 1}[0]`;
+
+  return {
+    firstName: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField11[8]`,
+      ''
+    ),
+    middleName: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField11[6]`,
+      ''
+    ),
+    lastName: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField11[7]`,
+      ''
+    ),
+    suffix: {
+      ...createFieldFromReference(
+        11,
+        `form1[0].${entryPattern}.suffix[0]`,
+        ''
+      ),
+      options: getSuffixOptions().map(option => option.value)
+    }
+  };
+};
+
+/**
+ * Creates ContactPersonPhones from PDF field references
+ */
+export const createContactPersonPhonesFromReference = (entryIndex: number): ContactPersonPhones => {
+  const entryPattern = entryIndex === 0 ? 'Section11[0]' : `Section11-${entryIndex + 1}[0]`;
+
+  return {
+    eveningPhone: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.p3-t68[0]`,
+      ''
+    ),
+    eveningPhoneExtension: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField11[0]`,
+      ''
+    ),
+    eveningPhoneIsInternational: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.#field[4]`,
+      false
+    ),
+    daytimePhone: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.p3-t68[1]`,
+      ''
+    ),
+    daytimePhoneExtension: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField11[1]`,
+      ''
+    ),
+    daytimePhoneIsInternational: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.#field[10]`,
+      false
+    ),
+    daytimePhoneUnknown: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.#field[11]`,
+      false
+    ),
+    mobilePhone: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.p3-t68[2]`,
+      ''
+    ),
+    mobilePhoneExtension: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField11[2]`,
+      ''
+    ),
+    mobilePhoneIsInternational: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.#field[12]`,
+      false
+    ),
+    mobilePhoneUnknown: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.#field[13]`,
+      false
+    ),
+    dontKnowContact: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.#field[5]`,
+      false
+    )
+  };
+};
+
+/**
+ * Creates ContactPersonRelationship from PDF field references
+ */
+export const createContactPersonRelationshipFromReference = (entryIndex: number): ContactPersonRelationship => {
+  const entryPattern = entryIndex === 0 ? 'Section11[0]' : `Section11-${entryIndex + 1}[0]`;
+
+  return {
+    isNeighbor: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.#field[29]`,
+      false
+    ),
+    isFriend: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.#field[30]`,
+      false
+    ),
+    isLandlord: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.#field[31]`,
+      false
+    ),
+    isBusinessAssociate: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.#field[32]`,
+      false
+    ),
+    isOther: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.#field[33]`,
+      false
+    ),
+    otherExplanation: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField11[9]`,
+      ''
+    )
+  };
+};
+
+/**
+ * Creates ContactPersonAddress from PDF field references
+ */
+export const createContactPersonAddressFromReference = (entryIndex: number): ContactPersonAddress => {
+  const entryPattern = entryIndex === 0 ? 'Section11[0]' : `Section11-${entryIndex + 1}[0]`;
+
+  return {
+    streetAddress: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField11[10]`,
+      ''
+    ),
+    city: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField11[11]`,
+      ''
+    ),
+    state: {
+      ...createFieldFromReference(
+        11,
+        `form1[0].${entryPattern}.School6_State[1]`,
+        ''
+      ),
+      options: getUSStateOptions().map(option => option.value)
+    },
+    country: {
+      ...createFieldFromReference(
+        11,
+        `form1[0].${entryPattern}.DropDownList3[0]`,
+        'United States'
+      ),
+      options: getCountryOptions().map(option => option.value)
+    },
+    zipCode: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField11[12]`,
+      ''
+    )
+  };
+};
+
+/**
+ * Creates ContactPersonEmail from PDF field references
+ */
+export const createContactPersonEmailFromReference = (entryIndex: number): ContactPersonEmail => {
+  const entryPattern = entryIndex === 0 ? 'Section11[0]' : `Section11-${entryIndex + 1}[0]`;
+
+  return {
+    email: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.p3-t68[3]`,
+      ''
+    ),
+    emailUnknown: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.#field[41]`,
+      false
+    )
+  };
+};
+
+/**
+ * Creates LastContactInfo from PDF field references
+ */
+export const createLastContactInfoFromReference = (entryIndex: number): LastContactInfo => {
+  const entryPattern = entryIndex === 0 ? 'Section11[0]' : `Section11-${entryIndex + 1}[0]`;
+
+  return {
+    lastContactDate: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.From_Datefield_Name_2[2]`,
+      ''
+    ),
+    lastContactEstimate: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.#field[43]`,
+      false
+    )
+  };
+};
+
+/**
+ * Creates APOFPOPhysicalAddress from PDF field references
+ * Accounts for all 15 physical address fields per entry
+ */
+export const createAPOFPOPhysicalAddressFromReference = (entryIndex: number): APOFPOPhysicalAddress => {
+  const entryPattern = entryIndex === 0 ? 'Section11[0]' : `Section11-${entryIndex + 1}[0]`;
+
+  return {
+    // Primary physical address (5 fields)
+    physicalStreetAddress: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField11[13]`,
+      ''
+    ),
+    physicalCity: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField11[14]`,
+      ''
+    ),
+    physicalState: {
+      ...createFieldFromReference(
+        11,
+        `form1[0].${entryPattern}.School6_State[2]`,
+        ''
+      ),
+      options: getUSStateOptions().map(option => option.value)
+    },
+    physicalCountry: {
+      ...createFieldFromReference(
+        11,
+        `form1[0].${entryPattern}.DropDownList4[0]`,
+        'United States'
+      ),
+      options: getCountryOptions().map(option => option.value)
+    },
+    physicalZipCode: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField11[18]`,
+      ''
+    ),
+
+    // APO/FPO address (3 fields)
+    apoFpoAddress: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField11[16]`,
+      ''
+    ),
+    apoFpoState: {
+      ...createFieldFromReference(
+        11,
+        `form1[0].${entryPattern}.School6_State[3]`,
+        ''
+      ),
+      options: ['AA', 'AE', 'AP'] // APO/FPO state codes
+    },
+    apoFpoZipCode: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField11[17]`,
+      ''
+    ),
+
+    // Alternative physical address (7 fields)
+    physicalAddressAlt: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField11[15]`,
+      ''
+    ),
+    physicalAltStreet: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField11[19]`,
+      ''
+    ),
+    physicalAltCity: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField11[20]`,
+      ''
+    ),
+    physicalAltState: {
+      ...createFieldFromReference(
+        11,
+        `form1[0].${entryPattern}.School6_State[4]`,
+        ''
+      ),
+      options: getUSStateOptions().map(option => option.value)
+    },
+    physicalAltCountry: {
+      ...createFieldFromReference(
+        11,
+        `form1[0].${entryPattern}.DropDownList4[1]`,
+        'United States'
+      ),
+      options: getCountryOptions().map(option => option.value)
+    },
+    physicalAltZip: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField11[21]`,
+      ''
+    ),
+    physicalAddressFull: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField11[22]`,
+      ''
+    )
+  };
+};
+
+/**
+ * Creates AdditionalFields from PDF field references
+ * Accounts for remaining 5 fields to complete 63 per entry
+ */
+export const createAdditionalFieldsFromReference = (entryIndex: number): AdditionalFields => {
+  const entryPattern = entryIndex === 0 ? 'Section11[0]' : `Section11-${entryIndex + 1}[0]`;
+
+  return {
+    // Radio button fields (3 fields)
+    addressTypeRadio: {
+      ...createFieldFromReference(
+        11,
+        `form1[0].${entryPattern}.RadioButtonList[1]`,
+        'NO'
+      ),
+      options: ['YES', 'NO']
+    },
+    residenceTypeRadioAlt: {
+      ...createFieldFromReference(
+        11,
+        `form1[0].${entryPattern}.RadioButtonList[2]`,
+        'NO'
+      ),
+      options: ['YES', 'NO']
+    },
+
+    // Additional APO/FPO fields (3 fields)
+    apoFpoFull: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField11[23]`,
+      ''
+    ),
+    apoFpoStateAlt: {
+      ...createFieldFromReference(
+        11,
+        `form1[0].${entryPattern}.School6_State[5]`,
+        ''
+      ),
+      options: ['AA', 'AE', 'AP'] // APO/FPO state codes
+    },
+    apoFpoZipAlt: createFieldFromReference(
+      11,
+      `form1[0].${entryPattern}.TextField11[24]`,
+      ''
+    )
+  };
+};
+
+/**
+ * Creates a complete ResidenceEntry from PDF field references
+ * Accounts for all 63 fields per entry
+ */
+export const createResidenceEntryFromReference = (entryIndex: number): ResidenceEntry => {
+  return {
+    _id: Date.now() + Math.random(),
+    residenceDates: createResidenceDatesFromReference(entryIndex),           // 5 fields
+    residenceAddress: createResidenceAddressFromReference(entryIndex),       // 5 fields
+    residenceType: createResidenceTypeFromReference(entryIndex),             // 2 fields
+    contactPersonName: createContactPersonNameFromReference(entryIndex),     // 4 fields
+    contactPersonPhones: createContactPersonPhonesFromReference(entryIndex), // 12 fields
+    contactPersonRelationship: createContactPersonRelationshipFromReference(entryIndex), // 6 fields
+    contactPersonAddress: createContactPersonAddressFromReference(entryIndex), // 5 fields
+    contactPersonEmail: createContactPersonEmailFromReference(entryIndex),   // 2 fields
+    lastContactInfo: createLastContactInfoFromReference(entryIndex),         // 2 fields
+    apoFpoPhysicalAddress: createAPOFPOPhysicalAddressFromReference(entryIndex), // 15 fields
+    additionalFields: createAdditionalFieldsFromReference(entryIndex)        // 5 fields
+    // Total: 63 fields per entry ✓
+  };
+};
 
 // ============================================================================
 // SUBSECTION TYPES
@@ -539,10 +1071,18 @@ export const SECTION11_FIELD_NAMES = {
   RESIDENCE_TYPE_1: "form1[0].Section11[0].RadioButtonList[0]",
   RESIDENCE_TYPE_OTHER_1: "form1[0].Section11[0].TextField12[0]",
   
-  // Entry 1 - Contact person
-  CONTACT_LAST_NAME_1: "form1[0].Section11[0].TextField11[6]",
-  CONTACT_FIRST_NAME_1: "form1[0].Section11[0].TextField11[7]",
-  CONTACT_MIDDLE_NAME_1: "form1[0].Section11[0].TextField11[8]",
+  // Entry 1 - Contact person - CORRECTED MAPPINGS FROM JSON
+  CONTACT_LAST_NAME_1: "form1[0].Section11[0].TextField11[7]",
+  CONTACT_FIRST_NAME_1: "form1[0].Section11[0].TextField11[8]",
+  CONTACT_MIDDLE_NAME_1: "form1[0].Section11[0].TextField11[6]",
+
+  // Entry 1 - Relationship checkboxes
+  RELATIONSHIP_NEIGHBOR_1: "form1[0].Section11[0].#field[29]",
+  RELATIONSHIP_FRIEND_1: "form1[0].Section11[0].#field[30]",
+  RELATIONSHIP_LANDLORD_1: "form1[0].Section11[0].#field[31]",
+  RELATIONSHIP_BUSINESS_1: "form1[0].Section11[0].#field[32]",
+  RELATIONSHIP_OTHER_1: "form1[0].Section11[0].#field[33]",
+  RELATIONSHIP_OTHER_EXPLAIN_1: "form1[0].Section11[0].TextField11[9]",
   
   // Entry 1 - Contact phone numbers
   EVENING_PHONE_1: "form1[0].Section11[0].p3-t68[0]",
@@ -596,10 +1136,18 @@ export const SECTION11_FIELD_NAMES = {
   RESIDENCE_TYPE_2: "form1[0].Section11-2[0].RadioButtonList[0]",
   RESIDENCE_TYPE_OTHER_2: "form1[0].Section11-2[0].TextField12[0]",
 
-  // Entry 2 - Contact person
-  CONTACT_LAST_NAME_2: "form1[0].Section11-2[0].TextField11[6]",
-  CONTACT_FIRST_NAME_2: "form1[0].Section11-2[0].TextField11[7]",
-  CONTACT_MIDDLE_NAME_2: "form1[0].Section11-2[0].TextField11[8]",
+  // Entry 2 - Contact person - CORRECTED MAPPINGS FROM JSON
+  CONTACT_LAST_NAME_2: "form1[0].Section11-2[0].TextField11[7]",
+  CONTACT_FIRST_NAME_2: "form1[0].Section11-2[0].TextField11[8]",
+  CONTACT_MIDDLE_NAME_2: "form1[0].Section11-2[0].TextField11[6]",
+
+  // Entry 2 - Relationship checkboxes
+  RELATIONSHIP_NEIGHBOR_2: "form1[0].Section11-2[0].#field[29]",
+  RELATIONSHIP_FRIEND_2: "form1[0].Section11-2[0].#field[30]",
+  RELATIONSHIP_LANDLORD_2: "form1[0].Section11-2[0].#field[31]",
+  RELATIONSHIP_BUSINESS_2: "form1[0].Section11-2[0].#field[32]",
+  RELATIONSHIP_OTHER_2: "form1[0].Section11-2[0].#field[33]",
+  RELATIONSHIP_OTHER_EXPLAIN_2: "form1[0].Section11-2[0].TextField11[9]",
 
   // Entry 2 - Contact phone numbers
   EVENING_PHONE_2: "form1[0].Section11-2[0].p3-t68[0]",
@@ -646,10 +1194,18 @@ export const SECTION11_FIELD_NAMES = {
   RESIDENCE_TYPE_3: "form1[0].Section11-3[0].RadioButtonList[0]",
   RESIDENCE_TYPE_OTHER_3: "form1[0].Section11-3[0].TextField12[0]",
 
-  // Entry 3 - Contact person
-  CONTACT_LAST_NAME_3: "form1[0].Section11-3[0].TextField11[6]",
-  CONTACT_FIRST_NAME_3: "form1[0].Section11-3[0].TextField11[7]",
-  CONTACT_MIDDLE_NAME_3: "form1[0].Section11-3[0].TextField11[8]",
+  // Entry 3 - Contact person - CORRECTED MAPPINGS FROM JSON
+  CONTACT_LAST_NAME_3: "form1[0].Section11-3[0].TextField11[7]",
+  CONTACT_FIRST_NAME_3: "form1[0].Section11-3[0].TextField11[8]",
+  CONTACT_MIDDLE_NAME_3: "form1[0].Section11-3[0].TextField11[6]",
+
+  // Entry 3 - Relationship checkboxes
+  RELATIONSHIP_NEIGHBOR_3: "form1[0].Section11-3[0].#field[29]",
+  RELATIONSHIP_FRIEND_3: "form1[0].Section11-3[0].#field[30]",
+  RELATIONSHIP_LANDLORD_3: "form1[0].Section11-3[0].#field[31]",
+  RELATIONSHIP_BUSINESS_3: "form1[0].Section11-3[0].#field[32]",
+  RELATIONSHIP_OTHER_3: "form1[0].Section11-3[0].#field[33]",
+  RELATIONSHIP_OTHER_EXPLAIN_3: "form1[0].Section11-3[0].TextField11[9]",
 
   // Entry 3 - Contact phone numbers
   EVENING_PHONE_3: "form1[0].Section11-3[0].p3-t68[0]",
@@ -695,10 +1251,18 @@ export const SECTION11_FIELD_NAMES = {
   RESIDENCE_TYPE_4: "form1[0].Section11-4[0].RadioButtonList[0]",
   RESIDENCE_TYPE_OTHER_4: "form1[0].Section11-4[0].TextField12[0]",
 
-  // Entry 4 - Contact person
-  CONTACT_LAST_NAME_4: "form1[0].Section11-4[0].TextField11[6]",
-  CONTACT_FIRST_NAME_4: "form1[0].Section11-4[0].TextField11[7]",
-  CONTACT_MIDDLE_NAME_4: "form1[0].Section11-4[0].TextField11[8]",
+  // Entry 4 - Contact person - CORRECTED MAPPINGS FROM JSON
+  CONTACT_LAST_NAME_4: "form1[0].Section11-4[0].TextField11[7]",
+  CONTACT_FIRST_NAME_4: "form1[0].Section11-4[0].TextField11[8]",
+  CONTACT_MIDDLE_NAME_4: "form1[0].Section11-4[0].TextField11[6]",
+
+  // Entry 4 - Relationship checkboxes
+  RELATIONSHIP_NEIGHBOR_4: "form1[0].Section11-4[0].#field[29]",
+  RELATIONSHIP_FRIEND_4: "form1[0].Section11-4[0].#field[30]",
+  RELATIONSHIP_LANDLORD_4: "form1[0].Section11-4[0].#field[31]",
+  RELATIONSHIP_BUSINESS_4: "form1[0].Section11-4[0].#field[32]",
+  RELATIONSHIP_OTHER_4: "form1[0].Section11-4[0].#field[33]",
+  RELATIONSHIP_OTHER_EXPLAIN_4: "form1[0].Section11-4[0].TextField11[9]",
 
   // Entry 4 - Contact phone numbers
   EVENING_PHONE_4: "form1[0].Section11-4[0].p3-t68[0]",
@@ -730,21 +1294,31 @@ export const SECTION11_FIELD_NAMES = {
 // DYNAMIC FIELD MAPPING FUNCTIONS
 // ============================================================================
 
-/**
- * Generate field name for a specific entry and field type
- * Uses sections-references as single source of truth
- */
-export function getSection11FieldName(entryIndex: number, fieldType: string): string {
-  return generateFieldName(fieldType, entryIndex);
-}
 
 
 /**
  * Create a field using sections-references data for Section 11
+ * THROWS ERROR when field creation fails - no fallbacks to ensure proper implementation
  */
 export function createSection11Field<T>(entryIndex: number, fieldType: string, defaultValue: T): Field<T> {
-  const fieldName = getSection11FieldName(entryIndex, fieldType);
-  return createFieldFromReference(11, fieldName, defaultValue);
+  try {
+    const fieldName = generateFieldName(fieldType, entryIndex);
+    return createFieldFromReference(11, fieldName, defaultValue);
+  } catch (error) {
+    // THROW ERROR: Return information about fields that could not be created
+    const errorDetails = {
+      section: 11,
+      entryIndex,
+      fieldType,
+      attemptedFieldName: generateFieldName(fieldType, entryIndex),
+      originalError: error instanceof Error ? error.message : String(error),
+      expectedFieldPattern: `form1[0].Section11${entryIndex === 0 ? '' : `-${entryIndex + 1}`}[0].${fieldType}`,
+      availableEntries: [0, 1, 2, 3],
+      validEntryIndex: entryIndex >= 0 && entryIndex <= 3
+    };
+
+    throw new Error(`❌ SECTION11 FIELD CREATION FAILED: Could not create field "${fieldType}" for entry ${entryIndex}. Details: ${JSON.stringify(errorDetails, null, 2)}`);
+  }
 }
 
 // ============================================================================
@@ -756,21 +1330,124 @@ export function createSection11Field<T>(entryIndex: number, fieldType: string, d
  */
 export const RESIDENCE_TYPE_OPTIONS = [
   "Own",
-  "Rent", 
+  "Rent",
   "Military Housing",
   "Other"
 ] as const;
+
+/**
+ * Mapping from numeric residence type values to human-readable labels
+ */
+export const RESIDENCE_TYPE_MAPPING = {
+  '1': 'Own',
+  '2': 'Rent',
+  '3': 'Military Housing',
+  '4': 'Other'
+} as const;
+
+/**
+ * Converts numeric residence type value to human-readable label
+ * @param value - Numeric residence type ('1', '2', '3', '4')
+ * @returns Human-readable label or original value as fallback
+ */
+export const getResidenceTypeLabel = (value: '1' | '2' | '3' | '4'): string => {
+  return RESIDENCE_TYPE_MAPPING[value] || value;
+};
 
 /**
  * Relationship options for contact person
  */
 export const RELATIONSHIP_OPTIONS = [
   "Neighbor",
-  "Landlord", 
+  "Landlord",
   "Friend",
   "Relative",
   "Other"
 ] as const;
+
+/**
+ * Creates a relationship field that maps to the correct PDF checkbox based on relationship type and entry index
+ * THROWS ERROR if field mapping is not found - no fallbacks to ensure proper implementation
+ */
+export const createRelationshipField = (relationshipType: string, entryIndex: number): Field<boolean> => {
+  const relationshipMap: Record<string, Record<number, string>> = {
+    "Neighbor": {
+      0: SECTION11_FIELD_NAMES.RELATIONSHIP_NEIGHBOR_1,
+      1: SECTION11_FIELD_NAMES.RELATIONSHIP_NEIGHBOR_2,
+      2: SECTION11_FIELD_NAMES.RELATIONSHIP_NEIGHBOR_3,
+      3: SECTION11_FIELD_NAMES.RELATIONSHIP_NEIGHBOR_4
+    },
+    "Friend": {
+      0: SECTION11_FIELD_NAMES.RELATIONSHIP_FRIEND_1,
+      1: SECTION11_FIELD_NAMES.RELATIONSHIP_FRIEND_2,
+      2: SECTION11_FIELD_NAMES.RELATIONSHIP_FRIEND_3,
+      3: SECTION11_FIELD_NAMES.RELATIONSHIP_FRIEND_4
+    },
+    "Landlord": {
+      0: SECTION11_FIELD_NAMES.RELATIONSHIP_LANDLORD_1,
+      1: SECTION11_FIELD_NAMES.RELATIONSHIP_LANDLORD_2,
+      2: SECTION11_FIELD_NAMES.RELATIONSHIP_LANDLORD_3,
+      3: SECTION11_FIELD_NAMES.RELATIONSHIP_LANDLORD_4
+    },
+    "Business Associate": {
+      0: SECTION11_FIELD_NAMES.RELATIONSHIP_BUSINESS_1,
+      1: SECTION11_FIELD_NAMES.RELATIONSHIP_BUSINESS_2,
+      2: SECTION11_FIELD_NAMES.RELATIONSHIP_BUSINESS_3,
+      3: SECTION11_FIELD_NAMES.RELATIONSHIP_BUSINESS_4
+    },
+    "Other": {
+      0: SECTION11_FIELD_NAMES.RELATIONSHIP_OTHER_1,
+      1: SECTION11_FIELD_NAMES.RELATIONSHIP_OTHER_2,
+      2: SECTION11_FIELD_NAMES.RELATIONSHIP_OTHER_3,
+      3: SECTION11_FIELD_NAMES.RELATIONSHIP_OTHER_4
+    }
+  };
+
+  const fieldName = relationshipMap[relationshipType]?.[entryIndex];
+  if (!fieldName) {
+    throw new Error(`❌ SECTION11 FIELD MAPPING ERROR: No relationship field found for type "${relationshipType}" and entry ${entryIndex}. Available types: ${Object.keys(relationshipMap).join(', ')}. Valid entry indices: 0-3.`);
+  }
+
+  return createFieldFromReference(11, fieldName, false);
+};
+
+/**
+ * Creates all relationship fields for a given entry index
+ * THROWS ERROR if any field mapping is not found - no fallbacks to ensure proper implementation
+ */
+export const createAllRelationshipFields = (entryIndex: number) => {
+  if (entryIndex < 0 || entryIndex > 3) {
+    throw new Error(`❌ SECTION11 FIELD MAPPING ERROR: Invalid entry index ${entryIndex}. Valid entry indices: 0-3.`);
+  }
+
+  return {
+    neighbor: createRelationshipField('Neighbor', entryIndex),
+    friend: createRelationshipField('Friend', entryIndex),
+    landlord: createRelationshipField('Landlord', entryIndex),
+    businessAssociate: createRelationshipField('Business Associate', entryIndex),
+    other: createRelationshipField('Other', entryIndex)
+  };
+};
+
+/**
+ * Gets the relationship other explanation field ID based on entry index
+ * THROWS ERROR if field mapping is not found - no fallbacks to ensure proper implementation
+ */
+export const getRelationshipOtherFieldId = (entryIndex: number): string => {
+  const otherFieldMap: Record<number, string> = {
+    0: SECTION11_FIELD_NAMES.RELATIONSHIP_OTHER_EXPLAIN_1,
+    1: SECTION11_FIELD_NAMES.RELATIONSHIP_OTHER_EXPLAIN_2,
+    2: SECTION11_FIELD_NAMES.RELATIONSHIP_OTHER_EXPLAIN_3,
+    3: SECTION11_FIELD_NAMES.RELATIONSHIP_OTHER_EXPLAIN_4
+  };
+
+  const fieldName = otherFieldMap[entryIndex];
+  if (!fieldName) {
+    throw new Error(`❌ SECTION11 FIELD MAPPING ERROR: No relationship other explanation field found for entry ${entryIndex}. Valid entry indices: 0-3.`);
+  }
+
+  return fieldName;
+};
 
 /**
  * APO/FPO type options
@@ -847,557 +1524,174 @@ export type ResidenceValidationResult = {
 /**
  * Creates a default address information structure with sections-references
  */
-export const createDefaultAddressInformationWithReferences = (entryIndex: number): AddressInformation => {
+export const createDefaultAddressInformationWithReferences = (entryIndex: number): ResidenceAddress => {
   if (entryIndex === 0) {
     return {
       streetAddress: createFieldFromReference(11, SECTION11_FIELD_NAMES.STREET_ADDRESS_1, ''),
       city: createFieldFromReference(11, SECTION11_FIELD_NAMES.CITY_1, ''),
       state: {
         ...createFieldFromReference(11, SECTION11_FIELD_NAMES.STATE_1, ''),
-        options: [
-          "AK", "AL", "AR", "AS", "AZ", "CA", "CO", "CT", "DC", "DE",
-          "FL", "FM", "GA", "GU", "HI", "IA", "ID", "IL", "IN", "KS",
-          "KY", "LA", "MA", "MD", "ME", "MH", "MI", "MN", "MO", "MP",
-          "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY",
-          "OH", "OK", "OR", "PA", "PR", "PW", "RI", "SC", "SD", "TN",
-          "TX", "UT", "VA", "VI", "VT", "WA", "WI", "WV", "WY", "AA", "AE", "AP", ""
-        ],
+        options: getUSStateOptions().map(option => option.value),
         value: '' as USState
       },
       zipCode: createFieldFromReference(11, SECTION11_FIELD_NAMES.ZIP_CODE_1, ''),
       country: {
         ...createFieldFromReference(11, SECTION11_FIELD_NAMES.COUNTRY_1, ''),
-        options: [
-          "Afghanistan", "Albania", "Algeria", "Argentina", "Armenia", "Australia",
-          "Austria", "Azerbaijan", "Bahrain", "Bangladesh", "Belarus", "Belgium",
-          "Bolivia", "Brazil", "Bulgaria", "Cambodia", "Canada", "Chile", "China",
-          "Colombia", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark",
-          "Ecuador", "Egypt", "Estonia", "Finland", "France", "Germany", "Greece",
-          "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland",
-          "Israel", "Italy", "Japan", "Jordan", "Kazakhstan", "Kuwait", "Latvia",
-          "Lebanon", "Lithuania", "Luxembourg", "Mexico", "Netherlands", "New Zealand",
-          "Norway", "Pakistan", "Poland", "Portugal", "Romania", "Russia", "Saudi Arabia",
-          "Singapore", "Slovakia", "Slovenia", "South Korea", "Spain", "Sweden",
-          "Switzerland", "Syria", "Thailand", "Turkey", "Ukraine", "United Kingdom",
-          "Vietnam", ""
-        ],
+        options: getCountryOptions().map(option => option.value),
         value: '' as Country
       }
     };
   } else {
-    // Fallback for other entries
-    return createDefaultAddressInformation();
+    // THROW ERROR: Return information about entries that could not be created
+    const errorDetails = {
+      section: 11,
+      function: 'createDefaultAddressInformationWithReferences',
+      entryIndex,
+      implementedEntries: [0],
+      availableEntries: [0, 1, 2, 3],
+      validEntryIndex: entryIndex >= 0 && entryIndex <= 3,
+      reason: 'Only entry 0 is implemented with sections-references mapping'
+    };
+
+    throw new Error(`❌ SECTION11 ADDRESS CREATION FAILED: Could not create address information for entry ${entryIndex}. Details: ${JSON.stringify(errorDetails, null, 2)}`);
   }
 };
 
 /**
- * Creates a default address information structure (fallback)
+ * Creates a default address information structure - DEPRECATED FALLBACK FUNCTION
+ * THROWS ERROR to identify where fallback was being used
  */
-export const createDefaultAddressInformation = (): AddressInformation => ({
-  streetAddress: {
-    id: '',
-    name: '',
-    type: 'PDFTextField',
-    label: 'Street Address',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  city: {
-    id: '',
-    name: '',
-    type: 'PDFTextField',
-    label: 'City',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  state: {
-    id: '',
-    name: '',
-    type: 'PDFDropdown',
-    label: 'State',
-    value: '' as USState,
-    options: [
-      "AK", "AL", "AR", "AS", "AZ", "CA", "CO", "CT", "DC", "DE", 
-      "FL", "FM", "GA", "GU", "HI", "IA", "ID", "IL", "IN", "KS", 
-      "KY", "LA", "MA", "MD", "ME", "MH", "MI", "MN", "MO", "MP", 
-      "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY", 
-      "OH", "OK", "OR", "PA", "PR", "PW", "RI", "SC", "SD", "TN", 
-      "TX", "UT", "VA", "VI", "VT", "WA", "WI", "WV", "WY", "AA", "AE", "AP", ""
-    ],
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  zipCode: {
-    id: '',
-    name: '',
-    type: 'PDFTextField',
-    label: 'Zip Code',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  country: {
-    id: '',
-    name: '',
-    type: 'PDFDropdown',
-    label: 'Country',
-    value: '' as Country,
-    options: [
-      "Afghanistan", "Albania", "Algeria", "Argentina", "Armenia", "Australia", 
-      "Austria", "Azerbaijan", "Bahrain", "Bangladesh", "Belarus", "Belgium", 
-      "Bolivia", "Brazil", "Bulgaria", "Cambodia", "Canada", "Chile", "China", 
-      "Colombia", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark", 
-      "Ecuador", "Egypt", "Estonia", "Finland", "France", "Germany", "Greece", 
-      "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", 
-      "Israel", "Italy", "Japan", "Jordan", "Kazakhstan", "Kuwait", "Latvia", 
-      "Lebanon", "Lithuania", "Luxembourg", "Mexico", "Netherlands", "New Zealand", 
-      "Norway", "Pakistan", "Poland", "Portugal", "Romania", "Russia", "Saudi Arabia", 
-      "Singapore", "Slovakia", "Slovenia", "South Korea", "Spain", "Sweden", 
-      "Switzerland", "Syria", "Thailand", "Turkey", "Ukraine", "United Kingdom", 
-      "Vietnam", ""
-    ],
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  }
-});
+export const createDefaultAddressInformation = (): ResidenceAddress => {
+  const errorDetails = {
+    section: 11,
+    function: 'createDefaultAddressInformation',
+    reason: 'This fallback function should not be called',
+    recommendation: 'Use createDefaultAddressInformationWithReferences() with proper entry index',
+    implementedAlternatives: ['createDefaultAddressInformationWithReferences(0)'],
+    availableEntries: [0, 1, 2, 3]
+  };
+
+  throw new Error(`❌ SECTION11 DEPRECATED FALLBACK CALLED: createDefaultAddressInformation() is a deprecated fallback function. Details: ${JSON.stringify(errorDetails, null, 2)}`);
+};
 
 /**
  * Creates a default contact person structure with sections-references
  */
-export const createDefaultContactPersonWithReferences = (entryIndex: number): ContactPerson => {
+export const createDefaultContactPersonWithReferences = (entryIndex: number): ResidenceEntry => {
   if (entryIndex === 0) {
     return {
-      lastName: createFieldFromReference(11, SECTION11_FIELD_NAMES.CONTACT_LAST_NAME_1, ''),
-      firstName: createFieldFromReference(11, SECTION11_FIELD_NAMES.CONTACT_FIRST_NAME_1, ''),
-      middleName: createFieldFromReference(11, SECTION11_FIELD_NAMES.CONTACT_MIDDLE_NAME_1, ''),
-      relationship: {
-        id: '',
-        name: '',
-        type: 'PDFDropdown',
-        label: 'Relationship',
-        value: 'Neighbor' as const,
-        options: RELATIONSHIP_OPTIONS,
-        rect: { x: 0, y: 0, width: 0, height: 0 }
-      },
-      relationshipOther: {
-        id: '',
-        name: '',
-        type: 'PDFTextField',
-        label: 'Other Relationship',
-        value: '',
-        rect: { x: 0, y: 0, width: 0, height: 0 }
-      },
-      eveningPhone: createFieldFromReference(11, SECTION11_FIELD_NAMES.EVENING_PHONE_1, ''),
-      eveningPhoneExt: createFieldFromReference(11, SECTION11_FIELD_NAMES.EVENING_PHONE_EXT_1, ''),
-      eveningPhoneIntl: createFieldFromReference(11, SECTION11_FIELD_NAMES.EVENING_PHONE_INTL_1, false),
-      daytimePhone: createFieldFromReference(11, SECTION11_FIELD_NAMES.DAYTIME_PHONE_1, ''),
-      daytimePhoneExt: createFieldFromReference(11, SECTION11_FIELD_NAMES.DAYTIME_PHONE_EXT_1, ''),
-      daytimePhoneIntl: createFieldFromReference(11, SECTION11_FIELD_NAMES.DAYTIME_PHONE_INTL_1, false),
-      mobilePhone: createFieldFromReference(11, SECTION11_FIELD_NAMES.MOBILE_PHONE_1, ''),
-      mobilePhoneExt: createFieldFromReference(11, SECTION11_FIELD_NAMES.MOBILE_PHONE_EXT_1, ''),
-      mobilePhoneIntl: createFieldFromReference(11, SECTION11_FIELD_NAMES.MOBILE_PHONE_INTL_1, false),
-      email: createFieldFromReference(11, SECTION11_FIELD_NAMES.EMAIL_1, ''),
-      address: createDefaultAddressInformationWithReferences(entryIndex),
-      monthLastContact: {
-        id: '',
-        name: '',
-        type: 'PDFTextField',
-        label: 'Month of Last Contact',
-        value: '',
-        rect: { x: 0, y: 0, width: 0, height: 0 }
-      },
-      dontKnowContact: createFieldFromReference(11, SECTION11_FIELD_NAMES.DONT_KNOW_CONTACT_1, false),
-
-      // Missing high-priority fields for Entry 1
-      neighborLastName: createFieldFromReference(11, SECTION11_FIELD_NAMES.NEIGHBOR_LAST_NAME_1, ''),
-      neighborFirstName: createFieldFromReference(11, SECTION11_FIELD_NAMES.NEIGHBOR_FIRST_NAME_1, ''),
-      neighborMiddleName: createFieldFromReference(11, SECTION11_FIELD_NAMES.NEIGHBOR_MIDDLE_NAME_1, ''),
-      neighborPhone1: createFieldFromReference(11, SECTION11_FIELD_NAMES.NEIGHBOR_PHONE_1, ''),
-      neighborPhone2: createFieldFromReference(11, SECTION11_FIELD_NAMES.NEIGHBOR_PHONE_2, ''),
-      neighborPhone3: createFieldFromReference(11, SECTION11_FIELD_NAMES.NEIGHBOR_PHONE_3, ''),
-      neighborAddress: createFieldFromReference(11, SECTION11_FIELD_NAMES.NEIGHBOR_ADDRESS_1, ''),
-      neighborState: createFieldFromReference(11, SECTION11_FIELD_NAMES.NEIGHBOR_STATE_1, ''),
-      neighborZip: createFieldFromReference(11, SECTION11_FIELD_NAMES.NEIGHBOR_ZIP_1, ''),
-      neighborEmail: createFieldFromReference(11, SECTION11_FIELD_NAMES.NEIGHBOR_EMAIL_1, ''),
-      lastContact: createFieldFromReference(11, SECTION11_FIELD_NAMES.LAST_CONTACT_1, ''),
-      apoFpoAddressField: createFieldFromReference(11, SECTION11_FIELD_NAMES.APO_FPO_ADDRESS_1, ''),
-      physicalAddress: createFieldFromReference(11, SECTION11_FIELD_NAMES.PHYSICAL_ADDRESS_1, '')
+      _id: entryIndex,
+      residenceDates: createResidenceDatesFromReference(entryIndex),
+      residenceAddress: createResidenceAddressFromReference(entryIndex),
+      residenceType: createResidenceTypeFromReference(entryIndex),
+      contactPersonName: createContactPersonNameFromReference(entryIndex),
+      contactPersonPhones: createContactPersonPhonesFromReference(entryIndex),
+      contactPersonRelationship: createContactPersonRelationshipFromReference(entryIndex),
+      contactPersonAddress: createContactPersonAddressFromReference(entryIndex),
+      contactPersonEmail: createContactPersonEmailFromReference(entryIndex),
+      lastContactInfo: createLastContactInfoFromReference(entryIndex),
+      apoFpoPhysicalAddress: createAPOFPOPhysicalAddressFromReference(entryIndex),
+      additionalFields: createAdditionalFieldsFromReference(entryIndex)
     };
   } else {
-    // Fallback for other entries
-    return createDefaultContactPerson();
+    // No fallback - throw error to identify missing implementation
+    throw new Error(`❌ SECTION11 IMPLEMENTATION ERROR: createDefaultContactPersonWithReferences not implemented for entry index ${entryIndex}. Only entry 0 is currently implemented. Valid entry indices: 0-3.`);
   }
 };
 
-/**
- * Creates a default contact person structure (fallback)
- */
-export const createDefaultContactPerson = (): ContactPerson => ({
-  lastName: {
-    id: '',
-    name: '',
-    type: 'PDFTextField',
-    label: 'Last Name',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  firstName: {
-    id: '',
-    name: '',
-    type: 'PDFTextField',
-    label: 'First Name',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  middleName: {
-    id: '',
-    name: '',
-    type: 'PDFTextField',
-    label: 'Middle Name',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  relationship: {
-    id: '',
-    name: '',
-    type: 'PDFDropdown',
-    label: 'Relationship',
-    value: 'Neighbor' as const,
-    options: RELATIONSHIP_OPTIONS,
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  relationshipOther: {
-    id: '',
-    name: '',
-    type: 'PDFTextField',
-    label: 'Other Relationship',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  eveningPhone: {
-    id: '',
-    name: '',
-    type: 'PDFTextField',
-    label: 'Evening Phone',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  eveningPhoneExt: {
-    id: '',
-    name: '',
-    type: 'PDFTextField',
-    label: 'Evening Phone Extension',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  eveningPhoneIntl: {
-    id: '',
-    name: '',
-    type: 'PDFCheckBox',
-    label: 'Evening Phone International',
-    value: false,
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  daytimePhone: {
-    id: '',
-    name: '',
-    type: 'PDFTextField',
-    label: 'Daytime Phone',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  daytimePhoneExt: {
-    id: '',
-    name: '',
-    type: 'PDFTextField',
-    label: 'Daytime Phone Extension',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  daytimePhoneIntl: {
-    id: '',
-    name: '',
-    type: 'PDFCheckBox',
-    label: 'Daytime Phone International',
-    value: false,
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  mobilePhone: {
-    id: '',
-    name: '',
-    type: 'PDFTextField',
-    label: 'Mobile Phone',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  mobilePhoneExt: {
-    id: '',
-    name: '',
-    type: 'PDFTextField',
-    label: 'Mobile Phone Extension',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  mobilePhoneIntl: {
-    id: '',
-    name: '',
-    type: 'PDFCheckBox',
-    label: 'Mobile Phone International',
-    value: false,
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  email: {
-    id: '',
-    name: '',
-    type: 'PDFTextField',
-    label: 'Email',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  address: createDefaultAddressInformation(),
-  monthLastContact: {
-    id: '',
-    name: '',
-    type: 'PDFTextField',
-    label: 'Month of Last Contact',
-    value: '',
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-  dontKnowContact: {
-    id: '',
-    name: '',
-    type: 'PDFCheckBox',
-    label: "I don't know this person",
-    value: false,
-    rect: { x: 0, y: 0, width: 0, height: 0 }
-  },
-
-  // Optional fields for missing high-priority functionality
-  neighborLastName: undefined,
-  neighborFirstName: undefined,
-  neighborMiddleName: undefined,
-  neighborPhone1: undefined,
-  neighborPhone2: undefined,
-  neighborPhone3: undefined,
-  neighborAddress: undefined,
-  neighborState: undefined,
-  neighborZip: undefined,
-  neighborEmail: undefined,
-  lastContact: undefined,
-  apoFpoAddressField: undefined,
-  physicalAddress: undefined
-});
 
 /**
  * Creates a default address information structure using dynamic field mapping
  */
-export const createDefaultAddressInformationDynamic = (entryIndex: number): AddressInformation => {
+export const createDefaultAddressInformationDynamic = (entryIndex: number): ResidenceAddress => {
   try {
     return {
       streetAddress: createSection11Field(entryIndex, 'TextField11[3]', ''),
       city: createSection11Field(entryIndex, 'TextField11[4]', ''),
       state: {
         ...createSection11Field(entryIndex, 'School6_State[0]', ''),
-        options: [
-          "AK", "AL", "AR", "AS", "AZ", "CA", "CO", "CT", "DC", "DE",
-          "FL", "FM", "GA", "GU", "HI", "IA", "ID", "IL", "IN", "KS",
-          "KY", "LA", "MA", "MD", "ME", "MH", "MI", "MN", "MO", "MP",
-          "MS", "MT", "NC", "ND", "NE", "NH", "NJ", "NM", "NV", "NY",
-          "OH", "OK", "OR", "PA", "PR", "PW", "RI", "SC", "SD", "TN",
-          "TX", "UT", "VA", "VI", "VT", "WA", "WI", "WV", "WY", "AA", "AE", "AP", ""
-        ],
+        options: getUSStateOptions().map(option => option.value),
         value: '' as USState
       },
       zipCode: createSection11Field(entryIndex, 'TextField11[5]', ''),
       country: {
         ...createSection11Field(entryIndex, 'DropDownList5[0]', ''),
-        options: [
-          "Afghanistan", "Albania", "Algeria", "Argentina", "Armenia", "Australia",
-          "Austria", "Azerbaijan", "Bahrain", "Bangladesh", "Belarus", "Belgium",
-          "Bolivia", "Brazil", "Bulgaria", "Cambodia", "Canada", "Chile", "China",
-          "Colombia", "Croatia", "Cuba", "Cyprus", "Czech Republic", "Denmark",
-          "Ecuador", "Egypt", "Estonia", "Finland", "France", "Germany", "Greece",
-          "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland",
-          "Israel", "Italy", "Japan", "Jordan", "Kazakhstan", "Kuwait", "Latvia",
-          "Lebanon", "Lithuania", "Luxembourg", "Mexico", "Netherlands", "New Zealand",
-          "Norway", "Pakistan", "Poland", "Portugal", "Romania", "Russia", "Saudi Arabia",
-          "Singapore", "Slovakia", "Slovenia", "South Korea", "Spain", "Sweden",
-          "Switzerland", "Syria", "Thailand", "Turkey", "Ukraine", "United Kingdom",
-          "Vietnam", ""
-        ],
+        options: getCountryOptions().map(option => option.value),
         value: '' as Country
       }
     };
   } catch (error) {
-    console.warn(`⚠️ Failed to create dynamic address for entry ${entryIndex}, using fallback`);
-    return createDefaultAddressInformation();
+    // THROW ERROR: Return information about dynamic address creation failure
+    const errorDetails = {
+      section: 11,
+      function: 'createDefaultAddressInformationDynamic',
+      entryIndex,
+      originalError: error instanceof Error ? error.message : String(error),
+      attemptedFields: ['TextField11[3]', 'TextField11[4]', 'School6_State[0]', 'DropDownList5[0]', 'TextField11[5]'],
+      availableEntries: [0, 1, 2, 3],
+      validEntryIndex: entryIndex >= 0 && entryIndex <= 3,
+      recommendation: 'Check field mapping for the specified entry index'
+    };
+
+    throw new Error(`❌ SECTION11 DYNAMIC ADDRESS CREATION FAILED: Could not create dynamic address for entry ${entryIndex}. Details: ${JSON.stringify(errorDetails, null, 2)}`);
   }
 };
 
 /**
  * Creates a default contact person structure using dynamic field mapping
  */
-export const createDefaultContactPersonDynamic = (entryIndex: number): ContactPerson => {
-  try {
-    return {
-      lastName: createSection11Field(entryIndex, 'TextField11[6]', ''),
-      firstName: createSection11Field(entryIndex, 'TextField11[7]', ''),
-      middleName: createSection11Field(entryIndex, 'TextField11[8]', ''),
-      relationship: {
-        id: '',
-        name: '',
-        type: 'PDFDropdown',
-        label: 'Relationship',
-        value: 'Neighbor' as const,
-        options: RELATIONSHIP_OPTIONS,
-        rect: { x: 0, y: 0, width: 0, height: 0 }
-      },
-      relationshipOther: {
-        id: '',
-        name: '',
-        type: 'PDFTextField',
-        label: 'Other Relationship',
-        value: '',
-        rect: { x: 0, y: 0, width: 0, height: 0 }
-      },
-      eveningPhone: createSection11Field(entryIndex, 'p3-t68[0]', ''),
-      eveningPhoneExt: createSection11Field(entryIndex, 'TextField11[0]', ''),
-      eveningPhoneIntl: createSection11Field(entryIndex, '#field[4]', false),
-      daytimePhone: createSection11Field(entryIndex, 'p3-t68[1]', ''),
-      daytimePhoneExt: createSection11Field(entryIndex, 'TextField11[1]', ''),
-      daytimePhoneIntl: createSection11Field(entryIndex, '#field[10]', false),
-      mobilePhone: createSection11Field(entryIndex, 'p3-t68[2]', ''),
-      mobilePhoneExt: createSection11Field(entryIndex, 'TextField11[2]', ''),
-      mobilePhoneIntl: createSection11Field(entryIndex, '#field[12]', false),
-      email: createSection11Field(entryIndex, 'p3-t68[3]', ''),
-      address: createDefaultAddressInformationDynamic(entryIndex),
-      monthLastContact: {
-        id: '',
-        name: '',
-        type: 'PDFTextField',
-        label: 'Month of Last Contact',
-        value: '',
-        rect: { x: 0, y: 0, width: 0, height: 0 }
-      },
-      dontKnowContact: createSection11Field(entryIndex, '#field[5]', false)
-    };
-  } catch (error) {
-    console.warn(`⚠️ Failed to create dynamic contact person for entry ${entryIndex}, using fallback`);
-    return createDefaultContactPerson();
-  }
+export const createDefaultContactPersonDynamic = (entryIndex: number): ResidenceEntry => {
+  // No fallback - throw error to identify missing implementation
+  throw new Error(`❌ SECTION11 IMPLEMENTATION ERROR: createDefaultContactPersonDynamic is deprecated and should not be called. Use createDefaultResidenceEntry(${entryIndex}) instead.`);
 };
 
-/**
- * Creates a fallback residence entry when sections-references fails
- */
-export const createFallbackResidenceEntry = (index: number): ResidenceEntry => {
-  const indexStr = index === 0 ? '1' : `${index + 1}`;
 
-  return {
-    fromDate: {
-      id: `residence_from_date_${indexStr}`,
-      name: `residence_from_date_${indexStr}`,
-      type: 'PDFTextField',
-      label: 'From Date (Month/Year)',
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    fromDateEstimate: {
-      id: `residence_from_estimate_${indexStr}`,
-      name: `residence_from_estimate_${indexStr}`,
-      type: 'PDFCheckBox',
-      label: 'From Date Estimate',
-      value: false,
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    toDate: {
-      id: `residence_to_date_${indexStr}`,
-      name: `residence_to_date_${indexStr}`,
-      type: 'PDFTextField',
-      label: 'To Date (Month/Year)',
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    toDateEstimate: {
-      id: `residence_to_estimate_${indexStr}`,
-      name: `residence_to_estimate_${indexStr}`,
-      type: 'PDFCheckBox',
-      label: 'To Date Estimate',
-      value: false,
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    present: {
-      id: `residence_present_${indexStr}`,
-      name: `residence_present_${indexStr}`,
-      type: 'PDFCheckBox',
-      label: 'Present',
-      value: false,
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    residenceType: {
-      id: `residence_type_${indexStr}`,
-      name: `residence_type_${indexStr}`,
-      type: 'PDFRadioGroup',
-      label: 'Residence Type',
-      value: 'Own' as const,
-      options: RESIDENCE_TYPE_OPTIONS,
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    residenceTypeOther: {
-      id: `residence_type_other_${indexStr}`,
-      name: `residence_type_other_${indexStr}`,
-      type: 'PDFTextField',
-      label: 'Other Residence Type',
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    address: createDefaultAddressInformation(),
-    contactPerson: createDefaultContactPerson()
-  };
-};
 
 /**
  * Creates a default residence entry with the provided index using sections-references
  */
 export const createDefaultResidenceEntry = (index: number): ResidenceEntry => {
-  // Validate entry index
+  // Validate entry index - THROW ERROR instead of defaulting
   if (index < 0 || index > 3) {
-    console.warn(`Invalid entry index: ${index}, defaulting to 0`);
-    index = 0;
+    const errorDetails = {
+      section: 11,
+      function: 'createDefaultResidenceEntry',
+      providedIndex: index,
+      validIndices: [0, 1, 2, 3],
+      reason: 'Entry index out of valid range',
+      maxEntries: 4
+    };
+
+    throw new Error(`❌ SECTION11 INVALID ENTRY INDEX: Cannot create residence entry for index ${index}. Details: ${JSON.stringify(errorDetails, null, 2)}`);
   }
 
-  // console.log(`🏠 Creating Section 11 residence entry ${index + 1} using sections-references`);
+  // Creating Section 11 residence entry using sections-references
 
   try {
     return {
-      // Date fields using dynamic field mapping
-      fromDate: createSection11Field(index, 'From_Datefield_Name_2[0]', ''),
-      fromDateEstimate: createSection11Field(index, '#field[15]', false),
-      toDate: createSection11Field(index, 'From_Datefield_Name_2[1]', ''),
-      toDateEstimate: createSection11Field(index, '#field[18]', false),
-      present: createSection11Field(index, '#field[17]', false),
-
-      // Residence type fields
-      residenceType: {
-        ...createSection11Field(index, 'RadioButtonList[0]', '4'),
-        options: RESIDENCE_TYPE_OPTIONS,
-        value: 'Own' as const
-      },
-      residenceTypeOther: createSection11Field(index, 'TextField12[0]', ''),
-
-      // Address and contact using dynamic creation
-      address: createDefaultAddressInformationDynamic(index),
-      contactPerson: createDefaultContactPersonDynamic(index)
+      _id: index,
+      residenceDates: createResidenceDatesFromReference(index),
+      residenceAddress: createResidenceAddressFromReference(index),
+      residenceType: createResidenceTypeFromReference(index),
+      contactPersonName: createContactPersonNameFromReference(index),
+      contactPersonPhones: createContactPersonPhonesFromReference(index),
+      contactPersonRelationship: createContactPersonRelationshipFromReference(index),
+      contactPersonAddress: createContactPersonAddressFromReference(index),
+      contactPersonEmail: createContactPersonEmailFromReference(index),
+      lastContactInfo: createLastContactInfoFromReference(index),
+      apoFpoPhysicalAddress: createAPOFPOPhysicalAddressFromReference(index),
+      additionalFields: createAdditionalFieldsFromReference(index)
     };
-  } catch (error) {
-    console.error(`❌ Failed to create residence entry ${index + 1} using sections-references:`, error);
-    console.log(`🔄 Falling back to generic field creation for entry ${index + 1}`);
 
-    // Fallback to generic field creation
-    return createFallbackResidenceEntry(index);
+  } catch (error) {
+    // No fallback - throw error to identify missing implementation
+    throw new Error(`❌ SECTION11 IMPLEMENTATION ERROR: Failed to create residence entry ${index + 1}. Original error: ${error instanceof Error ? error.message : String(error)}. Entry index: ${index}, Valid indices: 0-3.`);
   }
 };
 
 /**
- * Creates a default Section 11 data structure using DRY approach with sections-references
- * This eliminates hardcoded values and uses the single source of truth
+ * Creates a default Section 11 data structure using the new human-readable structure
+ * with createReferenceFrom() methods for PDF mapping
  *
  * Note: Section 11 supports up to 4 residence entries, but we start with just 1
  * Additional entries can be added via addResidenceEntry()
@@ -1409,112 +1703,19 @@ export const createDefaultSection11 = (): Section11 => {
   return {
     _id: 11,
     section11: {
-      residences: [createDefaultResidenceEntry(0)]
+      residences: [createResidenceEntryFromReference(0)]
     }
   };
 };
 
-/**
- * Updates a specific field in the Section 11 data structure
- * Uses lodash set() for flexible field path handling (following Section 29 pattern)
- */
-export const updateSection11Field = (
-  section11Data: Section11,
-  update: Section11FieldUpdate
-): Section11 => {
-  const { fieldPath, newValue, entryIndex = 0 } = update;
-  const newData = cloneDeep(section11Data);
 
-  console.log(`🔧 Section11: updateSection11Field called:`, {
-    fieldPath,
-    newValue,
-    entryIndex,
-  });
 
-  // Ensure we have a valid entry index
-  if (!newData.section11.residences[entryIndex]) {
-    console.warn(`Section 11: Invalid entry index ${entryIndex}`);
-    return newData;
-  }
 
-  const residence = newData.section11.residences[entryIndex];
 
-  try {
-    // Use lodash set() to handle any field path automatically (like Section 29)
-    // This handles both simple paths like 'fromDate' and complex paths like 'contactPerson.firstName'
-    set(residence, `${fieldPath}.value`, newValue);
 
-    console.log(`✅ Section11: Field updated successfully - ${fieldPath} = ${newValue}`);
-
-    // Special handling for 'present' field - if true, set toDate to 'Present'
-    if (fieldPath === 'present' && newValue === true) {
-      residence.toDate.value = 'Present';
-      console.log(`✅ Section11: Auto-set toDate to 'Present' because present=true`);
-    }
-
-  } catch (error) {
-    console.error(`❌ Section11: Failed to update field ${fieldPath}:`, error);
-    console.warn(`Section 11: Unknown or invalid field path: ${fieldPath}`);
-  }
-
-  return newData;
-};
 
 /**
- * Adds a new residence entry to Section 11
- */
-// Global flag to prevent double execution at the interface level
-let isAddingResidenceEntry = false;
-
-export const addResidenceEntry = (section11Data: Section11): Section11 => {
-  // Prevent double execution at the lowest level
-  if (isAddingResidenceEntry) {
-    console.warn(`🚫 addResidenceEntryImpl: Already adding entry, returning unchanged data`);
-    return section11Data;
-  }
-
-  isAddingResidenceEntry = true;
-
-  try {
-    const newData = { ...section11Data };
-    const currentLength = newData.section11.residences.length;
-
-    console.log(`🏠 addResidenceEntryImpl: Current length: ${currentLength}, creating entry at index: ${currentLength}`);
-
-    // Additional safety check - prevent creating more than 4 entries
-    if (currentLength >= 4) {
-      console.warn(`🚫 addResidenceEntryImpl: Cannot add more than 4 entries (current: ${currentLength})`);
-      return section11Data;
-    }
-
-    const newEntry = createDefaultResidenceEntry(currentLength);
-
-    console.log(`🏠 addResidenceEntryImpl: Created entry for index ${currentLength}, adding to array`);
-
-    newData.section11.residences = [...newData.section11.residences, newEntry];
-
-    console.log(`🏠 addResidenceEntryImpl: Final array length: ${newData.section11.residences.length}`);
-
-    return newData;
-  } finally {
-    // Reset flag after a short delay to allow for React's double execution
-    setTimeout(() => {
-      isAddingResidenceEntry = false;
-    }, 200);
-  }
-};
-
-/**
- * Removes a residence entry from Section 11
- */
-export const removeResidenceEntry = (section11Data: Section11, index: number): Section11 => {
-  const newData = { ...section11Data };
-  newData.section11.residences = newData.section11.residences.filter((_, i) => i !== index);
-  return newData;
-};
-
-/**
- * Validates residence history for gaps and completeness
+ * Validates residence history for gaps and completeness using new structure
  */
 export const validateResidenceHistory = (
   residences: ResidenceEntry[],
@@ -1525,37 +1726,42 @@ export const validateResidenceHistory = (
 
   // Helper function to parse MM/YYYY format correctly
   const parseMMYYYY = (dateStr: string): Date => {
-    if (!dateStr) return new Date();
+    if (!dateStr) {
+      throw new Error(`❌ SECTION11 DATE PARSING FAILED: Empty date string provided`);
+    }
 
-    // Handle MM/YYYY format (e.g., "01/2020")
     const parts = dateStr.split('/');
     if (parts.length === 2) {
       const month = parseInt(parts[0]) - 1; // Month is 0-indexed in Date
       const year = parseInt(parts[1]);
-      return new Date(year, month, 1); // Use first day of month
+
+      if (isNaN(month) || isNaN(year) || month < 0 || month > 11 || year < 1900 || year > 2100) {
+        throw new Error(`❌ SECTION11 DATE PARSING FAILED: Invalid month or year in "${dateStr}"`);
+      }
+
+      return new Date(year, month, 1);
     }
 
-    // Fallback to regular Date parsing
-    return new Date(dateStr);
+    throw new Error(`❌ SECTION11 DATE PARSING FAILED: Invalid date format "${dateStr}"`);
   };
 
-  // Sort residences by date to check for gaps
+  // Sort residences by date to check for gaps using new structure
   const sortedResidences = residences
-    .filter(r => r.fromDate.value && r.toDate.value)
-    .sort((a, b) => parseMMYYYY(a.fromDate.value).getTime() - parseMMYYYY(b.fromDate.value).getTime());
+    .filter(r => r.residenceDates.fromDate?.value && r.residenceDates.toDate?.value)
+    .sort((a, b) => parseMMYYYY(a.residenceDates.fromDate.value).getTime() - parseMMYYYY(b.residenceDates.fromDate.value).getTime());
 
-  // Check for basic required fields
+  // Check for basic required fields using new structure
   residences.forEach((residence, index) => {
-    if (!residence.address.streetAddress.value) {
+    if (!residence.residenceAddress.streetAddress?.value) {
       errors.push(`Residence ${index + 1}: Street address is required`);
     }
-    if (!residence.address.city.value) {
+    if (!residence.residenceAddress.city?.value) {
       errors.push(`Residence ${index + 1}: City is required`);
     }
-    if (!residence.fromDate.value) {
+    if (!residence.residenceDates.fromDate?.value) {
       errors.push(`Residence ${index + 1}: From date is required`);
     }
-    if (!residence.contactPerson.lastName.value) {
+    if (!residence.contactPersonName.lastName?.value) {
       errors.push(`Residence ${index + 1}: Contact person last name is required`);
     }
   });
@@ -1566,16 +1772,16 @@ export const validateResidenceHistory = (
 
   if (hasGaps) {
     for (let i = 0; i < sortedResidences.length - 1; i++) {
-      const currentEnd = parseMMYYYY(sortedResidences[i].toDate.value);
-      const nextStart = parseMMYYYY(sortedResidences[i + 1].fromDate.value);
+      const currentEnd = parseMMYYYY(sortedResidences[i].residenceDates.toDate.value);
+      const nextStart = parseMMYYYY(sortedResidences[i + 1].residenceDates.fromDate.value);
 
       const timeDiff = nextStart.getTime() - currentEnd.getTime();
       const daysDiff = Math.floor(timeDiff / (1000 * 3600 * 24));
 
-      if (daysDiff > 30) { // Gap of more than 30 days
+      if (daysDiff > 30) {
         gapDetails.push({
-          startDate: sortedResidences[i].toDate.value,
-          endDate: sortedResidences[i + 1].fromDate.value,
+          startDate: sortedResidences[i].residenceDates.toDate.value,
+          endDate: sortedResidences[i + 1].residenceDates.fromDate.value,
           duration: daysDiff
         });
       }
@@ -1593,4 +1799,4 @@ export const validateResidenceHistory = (
     hasGaps: gapDetails.length > 0,
     gapDetails: gapDetails.length > 0 ? gapDetails : undefined
   };
-}; 
+};

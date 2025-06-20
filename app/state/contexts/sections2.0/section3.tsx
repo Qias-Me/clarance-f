@@ -257,35 +257,27 @@ export const Section3Provider: React.FC<Section3ProviderProps> = ({ children }) 
    * Includes fallback mechanism using lodash set() following Section 1 pattern
    */
   const updateFieldValue = useCallback((path: string, value: any) => {
-    console.log(`🔍 Section3: updateFieldValue called with path=${path}, value=`, value);
-
     // Parse path to update the correct field using specific handlers
     if (path === 'section3.city' || path.includes('city')) {
-      console.log(`✅ Section3: Using specific handler for city field`);
       updatePlaceOfBirth('section3.city.value', value);
       return;
     } else if (path === 'section3.county' || path.includes('county')) {
-      console.log(`✅ Section3: Using specific handler for county field`);
       updatePlaceOfBirth('section3.county.value', value);
       return;
     } else if (path === 'section3.country' || path.includes('country')) {
-      console.log(`✅ Section3: Using specific handler for country field`);
       updatePlaceOfBirth('section3.country.value', value);
       return;
     } else if (path === 'section3.state' || path.includes('state')) {
-      console.log(`✅ Section3: Using specific handler for state field`);
       updatePlaceOfBirth('section3.state.value', value);
       return;
     }
 
     // CRITICAL FIX: Fallback using lodash set for any unmatched paths
     // This ensures compatibility with the integration system and prevents silent failures
-    console.log(`🔧 Section3: Using fallback lodash set for path: ${path}`);
     setSection3Data(prev => {
       const newData = cloneDeep(prev);
       // Fix: Ensure we're setting the .value property like Section 1 gold standard
       set(newData, `${path}.value`, value);
-      console.log(`✅ Section3: Field updated via fallback at path: ${path}.value`);
       return newData;
     });
   }, [updatePlaceOfBirth]);
@@ -298,19 +290,9 @@ export const Section3Provider: React.FC<Section3ProviderProps> = ({ children }) 
 
   // Sync with SF86FormContext when data is loaded
   useEffect(() => {
-    const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('debug=true');
-
     if (sf86Form.formData.section3 && sf86Form.formData.section3 !== section3Data) {
-      if (isDebugMode) {
-        console.log('🔄 Section3: Syncing with SF86FormContext loaded data');
-      }
-
       // Load the data from SF86FormContext
       loadSection(sf86Form.formData.section3);
-
-      if (isDebugMode) {
-        console.log('✅ Section3: Data sync complete');
-      }
     }
   }, [sf86Form.formData.section3, loadSection]);
 

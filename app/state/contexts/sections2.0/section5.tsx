@@ -226,20 +226,13 @@ interface Section5ProviderProps {
   const flattenSection5Fields = useCallback((): Record<string, any> => {
     const flatFields: Record<string, any> = {};
 
-    // console.log('🔄 Section5: Flattening fields for PDF generation');
-
     // Helper function to add field with proper validation
     const addField = (field: any, logicalPath: string, debugInfo?: string) => {
       if (field && typeof field === 'object' && 'id' in field && 'value' in field) {
         // Ensure the field has a valid ID
         if (field.id && field.id !== '0000') {
           flatFields[field.id] = field;
-          // console.log(`✅ Section5: Added field ${field.id} (${logicalPath}) = "${field.value}"${debugInfo ? ` - ${debugInfo}` : ''}`);
-        } else {
-          // console.warn(`⚠️ Section5: Skipping field with invalid ID: ${field.id} (${logicalPath})`);
         }
-      } else {
-        // console.warn(`⚠️ Section5: Invalid field structure for ${logicalPath}:`, field);
       }
     };
 
@@ -255,8 +248,6 @@ interface Section5ProviderProps {
     // Flatten all other name entries with defensive programming
     if (section5Data?.section5?.otherNames && Array.isArray(section5Data.section5.otherNames)) {
       section5Data.section5.otherNames.forEach((entry, entryIndex) => {
-      // console.log(`🔄 Section5: Processing entry ${entryIndex}:`, entry);
-
       // Process each field in the entry (including estimate checkboxes and maiden name)
       const fieldTypes = ['lastName', 'firstName', 'middleName', 'suffix', 'from', 'fromEstimate', 'to', 'toEstimate', 'reasonChanged', 'present', 'isMaidenName'];
 
@@ -265,16 +256,12 @@ interface Section5ProviderProps {
         if (field) {
           const logicalPath = `section5.otherNames.${entryIndex}.${fieldType}`;
           addField(field, logicalPath, `Entry ${entryIndex + 1} ${fieldType}`);
-        } else {
-          // console.warn(`⚠️ Section5: Missing field ${fieldType} in entry ${entryIndex}`);
         }
       });
       });
     }
 
     const fieldCount = Object.keys(flatFields).length;
-    // console.log(`✅ Section5: Flattened ${fieldCount} fields for PDF generation`);
-    // console.log('📊 Section5: Field summary:', Object.keys(flatFields).map(id => `${id}: "${flatFields[id].value}"`));
 
     return flatFields;
   }, [section5Data]);
@@ -348,7 +335,6 @@ interface Section5ProviderProps {
     setSection5Data(prevData => {
       // Check if we're at the maximum limit
       if (prevData.section5.otherNames.length >= MAX_OTHER_NAME_ENTRIES) {
-        // console.warn(`Cannot add more entries. Maximum of ${MAX_OTHER_NAME_ENTRIES} other names allowed.`);
         return prevData;
       }
 
@@ -472,7 +458,6 @@ interface Section5ProviderProps {
       await dynamicService.saveUserFormData('section5', formData as any);
       initialData.current = cloneDeep(section5Data);
     } catch (error) {
-      // console.error('Failed to save Section 5:', error);
       setErrors(prev => ({ ...prev, save: 'Failed to save section data' }));
     } finally {
       setIsLoading(false);
@@ -483,7 +468,6 @@ interface Section5ProviderProps {
   const loadSection = useCallback(async (data?: Section5) => {
     if (data) {
       // Direct data loading (from SF86FormContext)
-      // console.log(`🔄 Section5: Loading section data directly`);
       setSection5Data(data);
       initialData.current = cloneDeep(data);
     } else {
@@ -497,7 +481,6 @@ interface Section5ProviderProps {
           initialData.current = cloneDeep(response.formData.section5);
         }
       } catch (error) {
-        // console.error('Failed to load Section 5:', error);
         setErrors(prev => ({ ...prev, load: 'Failed to load section data' }));
       } finally {
         setIsLoading(false);

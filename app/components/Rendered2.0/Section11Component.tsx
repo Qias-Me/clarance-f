@@ -8,6 +8,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useSection11 } from '../../state/contexts/sections2.0/section11';
 import type { ResidenceEntry } from '../../../api/interfaces/sections2.0/section11';
+import { getResidenceTypeLabel } from '../../../api/interfaces/sections2.0/section11';
 import { useSF86Form } from '~/state/contexts/sections2.0/SF86FormContext';
 
 // ============================================================================
@@ -196,10 +197,10 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
                 Residence {index + 1}
                 {index === 0 && <span className="ml-2 text-sm text-blue-600 font-normal">(Current)</span>}
               </h4>
-              {entry.address.streetAddress.value && (
+              {entry.residenceAddress?.streetAddress?.value && (
                 <p className="text-sm text-gray-600 mt-1">
-                  {entry.address.streetAddress.value}, {entry.address.city.value}
-                  {entry.address.state.value && `, ${entry.address.state.value}`}
+                  {entry.residenceAddress.streetAddress.value}, {entry.residenceAddress.city?.value}
+                  {entry.residenceAddress.state?.value && `, ${entry.residenceAddress.state.value}`}
                 </p>
               )}
             </div>
@@ -240,212 +241,246 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
     );
   };
 
-  const renderAddressSection = (entry: ResidenceEntry, index: number) => (
-    <div className="space-y-4">
-      <h5 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">
-        Address Information
-      </h5>
+  const renderAddressSection = (entry: ResidenceEntry, index: number) => {
+    // Add defensive programming to handle undefined data structure
+    if (!entry.residenceAddress) {
+      console.error(`Entry ${index} missing residenceAddress structure:`, entry);
+      return (
+        <div className="space-y-4">
+          <h5 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">
+            Address Information
+          </h5>
+          <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-red-700">Error: Address data structure not properly initialized for entry {index + 1}</p>
+          </div>
+        </div>
+      );
+    }
 
-      {/* Street Address */}
-      <div>
-        <label htmlFor={`street-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
-          Street Address <span className="text-red-500">*</span>
-        </label>
-        <input
-          id={`street-${index}`}
-          type="text"
-          value={entry.address.streetAddress.value}
-          onChange={(e) => handleFieldChange('address.streetAddress', e.target.value, index)}
-          className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-            errors[`section11.residences[${index}].address.streetAddress`]
-              ? 'border-red-300 text-red-900 placeholder-red-300'
-              : 'border-gray-300'
-          }`}
-          placeholder="Enter street address"
-        />
-        {errors[`section11.residences[${index}].address.streetAddress`] && (
-          <p className="mt-1 text-sm text-red-600">
-            {errors[`section11.residences[${index}].address.streetAddress`]}
-          </p>
-        )}
-      </div>
+    return (
+      <div className="space-y-4">
+        <h5 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">
+          Address Information
+        </h5>
 
-      {/* City, State, ZIP Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Street Address */}
         <div>
-          <label htmlFor={`city-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
-            City <span className="text-red-500">*</span>
+          <label htmlFor={`street-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+            Street Address <span className="text-red-500">*</span>
           </label>
           <input
-            id={`city-${index}`}
+            id={`street-${index}`}
             type="text"
-            value={entry.address.city.value}
-            onChange={(e) => handleFieldChange('address.city', e.target.value, index)}
+            value={entry.residenceAddress?.streetAddress?.value || ''}
+            onChange={(e) => handleFieldChange('residenceAddress.streetAddress', e.target.value, index)}
             className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              errors[`section11.residences[${index}].address.city`]
+              errors[`section11.residences[${index}].residenceAddress.streetAddress`]
                 ? 'border-red-300 text-red-900 placeholder-red-300'
                 : 'border-gray-300'
             }`}
-            placeholder="Enter city"
+            placeholder="Enter street address"
           />
-          {errors[`section11.residences[${index}].address.city`] && (
+          {errors[`section11.residences[${index}].residenceAddress.streetAddress`] && (
             <p className="mt-1 text-sm text-red-600">
-              {errors[`section11.residences[${index}].address.city`]}
+              {errors[`section11.residences[${index}].residenceAddress.streetAddress`]}
             </p>
           )}
         </div>
 
+        {/* City, State, ZIP Row */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label htmlFor={`city-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+              City <span className="text-red-500">*</span>
+            </label>
+            <input
+              id={`city-${index}`}
+              type="text"
+              value={entry.residenceAddress?.city?.value || ''}
+              onChange={(e) => handleFieldChange('residenceAddress.city', e.target.value, index)}
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                errors[`section11.residences[${index}].residenceAddress.city`]
+                  ? 'border-red-300 text-red-900 placeholder-red-300'
+                  : 'border-gray-300'
+              }`}
+              placeholder="Enter city"
+            />
+            {errors[`section11.residences[${index}].residenceAddress.city`] && (
+              <p className="mt-1 text-sm text-red-600">
+                {errors[`section11.residences[${index}].residenceAddress.city`]}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor={`state-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+              State
+            </label>
+            <select
+              id={`state-${index}`}
+              value={entry.residenceAddress?.state?.value || ''}
+              onChange={(e) => handleFieldChange('residenceAddress.state', e.target.value, index)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="">Select State</option>
+              {entry.residenceAddress?.state?.options?.map(state => (
+                <option key={state} value={state}>{state}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label htmlFor={`zip-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+              ZIP Code
+            </label>
+            <input
+              id={`zip-${index}`}
+              type="text"
+              value={entry.residenceAddress?.zipCode?.value || ''}
+              onChange={(e) => handleFieldChange('residenceAddress.zipCode', e.target.value, index)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Enter ZIP code"
+            />
+          </div>
+        </div>
+
+        {/* Country */}
         <div>
-          <label htmlFor={`state-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
-            State
+          <label htmlFor={`country-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+            Country
           </label>
           <select
-            id={`state-${index}`}
-            value={entry.address.state.value}
-            onChange={(e) => handleFieldChange('address.state', e.target.value, index)}
+            id={`country-${index}`}
+            value={entry.residenceAddress?.country?.value || ''}
+            onChange={(e) => handleFieldChange('residenceAddress.country', e.target.value, index)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="">Select State</option>
-            {entry.address.state.options?.map(state => (
-              <option key={state} value={state}>{state}</option>
+            <option value="">Select Country</option>
+            {entry.residenceAddress?.country?.options?.map(country => (
+              <option key={country} value={country}>{country}</option>
             ))}
           </select>
         </div>
+      </div>
+    );
+  };
 
-        <div>
-          <label htmlFor={`zip-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
-            ZIP Code
-          </label>
-          <input
-            id={`zip-${index}`}
-            type="text"
-            value={entry.address.zipCode.value}
-            onChange={(e) => handleFieldChange('address.zipCode', e.target.value, index)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Enter ZIP code"
-          />
+  const renderDateSection = (entry: ResidenceEntry, index: number) => {
+    // Add defensive programming to handle undefined data structure
+    if (!entry.residenceDates) {
+      console.error(`Entry ${index} missing residenceDates structure:`, entry);
+      return (
+        <div className="space-y-4">
+          <h5 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">
+            Residence Period
+          </h5>
+          <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-red-700">Error: Date data structure not properly initialized for entry {index + 1}</p>
+          </div>
         </div>
-      </div>
+      );
+    }
 
-      {/* Country */}
-      <div>
-        <label htmlFor={`country-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
-          Country
-        </label>
-        <select
-          id={`country-${index}`}
-          value={entry.address.country.value}
-          onChange={(e) => handleFieldChange('address.country', e.target.value, index)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="">Select Country</option>
-          {entry.address.country.options?.map(country => (
-            <option key={country} value={country}>{country}</option>
-          ))}
-        </select>
-      </div>
-    </div>
-  );
+    return (
+      <div className="space-y-4">
+        <h5 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">
+          Residence Period
+        </h5>
 
-  const renderDateSection = (entry: ResidenceEntry, index: number) => (
-    <div className="space-y-4">
-      <h5 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">
-        Residence Period
-      </h5>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* From Date */}
-        <div className="space-y-3">
-          <label htmlFor={`from-date-${index}`} className="block text-sm font-medium text-gray-700">
-            From Date (MM/YYYY) <span className="text-red-500">*</span>
-          </label>
-          <input
-            id={`from-date-${index}`}
-            type="text"
-            value={entry.fromDate.value}
-            onChange={(e) => handleFieldChange('fromDate', e.target.value, index)}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* From Date */}
+          <div className="space-y-3">
+            <label htmlFor={`from-date-${index}`} className="block text-sm font-medium text-gray-700">
+              From Date (MM/YYYY) <span className="text-red-500">*</span>
+            </label>
+            <input
+              id={`from-date-${index}`}
+              type="text"
+              value={entry.residenceDates?.fromDate?.value || ''}
+              onChange={(e) => handleFieldChange('residenceDates.fromDate', e.target.value, index)}
             className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              errors[`section11.residences[${index}].fromDate`]
+              errors[`section11.residences[${index}].residenceDates.fromDate`]
                 ? 'border-red-300 text-red-900 placeholder-red-300'
                 : 'border-gray-300'
             }`}
             placeholder="MM/YYYY"
           />
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={entry.residenceDates?.fromDateEstimate?.value || false}
+                onChange={(e) => handleFieldChange('residenceDates.fromDateEstimate', e.target.checked, index)}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <span className="ml-2 text-sm text-gray-600">Estimate</span>
+            </label>
+            {errors[`section11.residences[${index}].residenceDates.fromDate`] && (
+              <p className="text-sm text-red-600">
+                {errors[`section11.residences[${index}].residenceDates.fromDate`]}
+              </p>
+            )}
+          </div>
+
+          {/* To Date */}
+          <div className="space-y-3">
+            <label htmlFor={`to-date-${index}`} className="block text-sm font-medium text-gray-700">
+              To Date (MM/YYYY)
+            </label>
+            <input
+              id={`to-date-${index}`}
+              type="text"
+              value={entry.residenceDates?.toDate?.value || ''}
+              onChange={(e) => handleFieldChange('residenceDates.toDate', e.target.value, index)}
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                entry.residenceDates?.isPresent?.value ? 'bg-gray-100 text-gray-500' : ''
+              } ${
+                errors[`section11.residences[${index}].residenceDates.toDate`]
+                  ? 'border-red-300 text-red-900 placeholder-red-300'
+                  : 'border-gray-300'
+              }`}
+              placeholder="MM/YYYY"
+              disabled={entry.residenceDates?.isPresent?.value || false}
+            />
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={entry.residenceDates?.toDateEstimate?.value || false}
+                onChange={(e) => handleFieldChange('residenceDates.toDateEstimate', e.target.checked, index)}
+                disabled={entry.residenceDates?.isPresent?.value || false}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
+              />
+              <span className={`ml-2 text-sm ${entry.residenceDates?.isPresent?.value ? 'text-gray-400' : 'text-gray-600'}`}>
+                Estimate
+              </span>
+            </label>
+            {errors[`section11.residences[${index}].residenceDates.toDate`] && (
+              <p className="text-sm text-red-600">
+                {errors[`section11.residences[${index}].residenceDates.toDate`]}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Present Checkbox */}
+        <div className="pt-2">
           <label className="flex items-center">
             <input
               type="checkbox"
-              checked={entry.fromDateEstimate.value}
-              onChange={(e) => handleFieldChange('fromDateEstimate', e.target.checked, index)}
+              checked={entry.residenceDates?.isPresent?.value || false}
+              onChange={(e) => handleFieldChange('residenceDates.isPresent', e.target.checked, index)}
               className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
             />
-            <span className="ml-2 text-sm text-gray-600">Estimate</span>
-          </label>
-          {errors[`section11.residences[${index}].fromDate`] && (
-            <p className="text-sm text-red-600">
-              {errors[`section11.residences[${index}].fromDate`]}
-            </p>
-          )}
-        </div>
-
-        {/* To Date */}
-        <div className="space-y-3">
-          <label htmlFor={`to-date-${index}`} className="block text-sm font-medium text-gray-700">
-            To Date (MM/YYYY)
-          </label>
-          <input
-            id={`to-date-${index}`}
-            type="text"
-            value={entry.toDate.value}
-            onChange={(e) => handleFieldChange('toDate', e.target.value, index)}
-            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              entry.present.value ? 'bg-gray-100 text-gray-500' : ''
-            } ${
-              errors[`section11.residences[${index}].toDate`]
-                ? 'border-red-300 text-red-900 placeholder-red-300'
-                : 'border-gray-300'
-            }`}
-            placeholder="MM/YYYY"
-            disabled={entry.present.value}
-          />
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={entry.toDateEstimate.value}
-              onChange={(e) => handleFieldChange('toDateEstimate', e.target.checked, index)}
-              disabled={entry.present.value}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
-            />
-            <span className={`ml-2 text-sm ${entry.present.value ? 'text-gray-400' : 'text-gray-600'}`}>
-              Estimate
+            <span className="ml-2 text-sm font-medium text-gray-700">
+              I currently live at this address
             </span>
           </label>
-          {errors[`section11.residences[${index}].toDate`] && (
-            <p className="text-sm text-red-600">
-              {errors[`section11.residences[${index}].toDate`]}
-            </p>
-          )}
+          <p className="mt-1 text-xs text-gray-500">
+            Check this box if this is your current residence
+          </p>
         </div>
       </div>
-
-      {/* Present Checkbox */}
-      <div className="pt-2">
-        <label className="flex items-center">
-          <input
-            type="checkbox"
-            checked={entry.present.value}
-            onChange={(e) => handleFieldChange('present', e.target.checked, index)}
-            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-          />
-          <span className="ml-2 text-sm font-medium text-gray-700">
-            I currently live at this address
-          </span>
-        </label>
-        <p className="mt-1 text-xs text-gray-500">
-          Check this box if this is your current residence
-        </p>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderResidenceTypeSection = (entry: ResidenceEntry, index: number) => (
     <div className="space-y-4">
@@ -458,23 +493,23 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
           Select the type of residence this was for you:
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {entry.residenceType.options?.map(type => (
+          {entry.residenceType.type.options?.map(type => (
             <label key={type} className="flex items-center p-3 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer">
               <input
                 type="radio"
                 name={`residence-type-${index}`}
                 value={type}
-                checked={entry.residenceType.value === type}
-                onChange={(e) => handleFieldChange('residenceType', e.target.value, index)}
+                checked={entry.residenceType.type.value === type}
+                onChange={(e) => handleFieldChange('residenceType.type', e.target.value, index)}
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
               />
-              <span className="ml-3 text-sm font-medium text-gray-700">{type}</span>
+              <span className="ml-3 text-sm font-medium text-gray-700">{getResidenceTypeLabel(type as '1' | '2' | '3' | '4')}</span>
             </label>
           ))}
         </div>
       </div>
 
-      {entry.residenceType.value === 'Other' && (
+      {entry.residenceType.type.value === '4' && (
         <div className="mt-4">
           <label htmlFor={`residence-other-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
             Specify Other Residence Type
@@ -482,8 +517,8 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
           <input
             id={`residence-other-${index}`}
             type="text"
-            value={entry.residenceTypeOther.value}
-            onChange={(e) => handleFieldChange('residenceTypeOther', e.target.value, index)}
+            value={entry.residenceType.otherExplanation.value}
+            onChange={(e) => handleFieldChange('residenceType.otherExplanation', e.target.value, index)}
             className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             placeholder="Specify other residence type"
           />
@@ -492,198 +527,252 @@ const Section11Component: React.FC<Section11ComponentProps> = ({
     </div>
   );
 
-  const renderContactPersonSection = (entry: ResidenceEntry, index: number) => (
-    <div className="space-y-6">
-      <h5 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">
-        Contact Person Who Knows You at This Address
-      </h5>
-
-      <p className="text-sm text-gray-600">
-        Provide information for someone who knows you at this address (neighbor, landlord, friend, etc.).
-      </p>
-
-      {/* Name Fields */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label htmlFor={`contact-first-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
-            First Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            id={`contact-first-${index}`}
-            type="text"
-            value={entry.contactPerson.firstName.value}
-            onChange={(e) => handleFieldChange('contactPerson.firstName', e.target.value, index)}
-            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              errors[`section11.residences[${index}].contactPerson.firstName`]
-                ? 'border-red-300 text-red-900 placeholder-red-300'
-                : 'border-gray-300'
-            }`}
-            placeholder="Enter first name"
-          />
-          {errors[`section11.residences[${index}].contactPerson.firstName`] && (
-            <p className="mt-1 text-sm text-red-600">
-              {errors[`section11.residences[${index}].contactPerson.firstName`]}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <label htmlFor={`contact-middle-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
-            Middle Name
-          </label>
-          <input
-            id={`contact-middle-${index}`}
-            type="text"
-            value={entry.contactPerson.middleName.value}
-            onChange={(e) => handleFieldChange('contactPerson.middleName', e.target.value, index)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Enter middle name"
-          />
-        </div>
-
-        <div>
-          <label htmlFor={`contact-last-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
-            Last Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            id={`contact-last-${index}`}
-            type="text"
-            value={entry.contactPerson.lastName.value}
-            onChange={(e) => handleFieldChange('contactPerson.lastName', e.target.value, index)}
-            className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              errors[`section11.residences[${index}].contactPerson.lastName`]
-                ? 'border-red-300 text-red-900 placeholder-red-300'
-                : 'border-gray-300'
-            }`}
-            placeholder="Enter last name"
-          />
-          {errors[`section11.residences[${index}].contactPerson.lastName`] && (
-            <p className="mt-1 text-sm text-red-600">
-              {errors[`section11.residences[${index}].contactPerson.lastName`]}
-            </p>
-          )}
-        </div>
-      </div>
-
-      {/* Relationship */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <label htmlFor={`contact-relationship-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
-            Relationship
-          </label>
-          <select
-            id={`contact-relationship-${index}`}
-            value={entry.contactPerson.relationship.value}
-            onChange={(e) => handleFieldChange('contactPerson.relationship', e.target.value, index)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            {entry.contactPerson.relationship.options?.map(rel => (
-              <option key={rel} value={rel}>{rel}</option>
-            ))}
-          </select>
-        </div>
-
-        {entry.contactPerson.relationship.value === 'Other' && (
-          <div>
-            <label htmlFor={`contact-relationship-other-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
-              Specify Other Relationship
-            </label>
-            <input
-              id={`contact-relationship-other-${index}`}
-              type="text"
-              value={entry.contactPerson.relationshipOther.value}
-              onChange={(e) => handleFieldChange('contactPerson.relationshipOther', e.target.value, index)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Specify other relationship"
-            />
+  const renderContactPersonSection = (entry: ResidenceEntry, index: number) => {
+    // Add defensive programming to handle undefined data structure
+    if (!entry.contactPersonName) {
+      console.error(`Entry ${index} missing contactPersonName structure:`, entry);
+      return (
+        <div className="space-y-6">
+          <h5 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">
+            Contact Person Who Knows You at This Address
+          </h5>
+          <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+            <p className="text-red-700">Error: Contact person data structure not properly initialized for entry {index + 1}</p>
           </div>
-        )}
-      </div>
+        </div>
+      );
+    }
 
-      {/* Contact Information */}
-      <div className="space-y-4">
-        <h6 className="text-base font-medium text-gray-900">Contact Information</h6>
+    return (
+      <div className="space-y-6">
+        <h5 className="text-lg font-medium text-gray-900 border-b border-gray-200 pb-2">
+          Contact Person Who Knows You at This Address
+        </h5>
 
-        {/* Phone Numbers */}
+        <p className="text-sm text-gray-600">
+          Provide information for someone who knows you at this address (neighbor, landlord, friend, etc.).
+        </p>
+
+        {/* Name Fields */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
-            <label htmlFor={`contact-evening-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
-              Evening Phone
+            <label htmlFor={`contact-first-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+              First Name <span className="text-red-500">*</span>
             </label>
             <input
-              id={`contact-evening-${index}`}
-              type="tel"
-              value={entry.contactPerson.eveningPhone.value}
-              onChange={(e) => handleFieldChange('contactPerson.eveningPhone', e.target.value, index)}
+              id={`contact-first-${index}`}
+              type="text"
+              value={entry.contactPersonName?.firstName?.value || ''}
+              onChange={(e) => handleFieldChange('contactPersonName.firstName', e.target.value, index)}
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                errors[`section11.residences[${index}].contactPersonName.firstName`]
+                  ? 'border-red-300 text-red-900 placeholder-red-300'
+                  : 'border-gray-300'
+              }`}
+              placeholder="Enter first name"
+            />
+            {errors[`section11.residences[${index}].contactPersonName.firstName`] && (
+              <p className="mt-1 text-sm text-red-600">
+                {errors[`section11.residences[${index}].contactPersonName.firstName`]}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label htmlFor={`contact-middle-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+              Middle Name
+            </label>
+            <input
+              id={`contact-middle-${index}`}
+              type="text"
+              value={entry.contactPersonName?.middleName?.value || ''}
+              onChange={(e) => handleFieldChange('contactPersonName.middleName', e.target.value, index)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="(XXX) XXX-XXXX"
+              placeholder="Enter middle name"
             />
           </div>
 
           <div>
-            <label htmlFor={`contact-daytime-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
-              Daytime Phone
+            <label htmlFor={`contact-last-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+              Last Name <span className="text-red-500">*</span>
             </label>
             <input
-              id={`contact-daytime-${index}`}
-              type="tel"
-              value={entry.contactPerson.daytimePhone.value}
-              onChange={(e) => handleFieldChange('contactPerson.daytimePhone', e.target.value, index)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="(XXX) XXX-XXXX"
+              id={`contact-last-${index}`}
+              type="text"
+              value={entry.contactPersonName?.lastName?.value || ''}
+              onChange={(e) => handleFieldChange('contactPersonName.lastName', e.target.value, index)}
+              className={`w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                errors[`section11.residences[${index}].contactPersonName.lastName`]
+                  ? 'border-red-300 text-red-900 placeholder-red-300'
+                  : 'border-gray-300'
+              }`}
+              placeholder="Enter last name"
             />
+            {errors[`section11.residences[${index}].contactPersonName.lastName`] && (
+              <p className="mt-1 text-sm text-red-600">
+                {errors[`section11.residences[${index}].contactPersonName.lastName`]}
+              </p>
+            )}
           </div>
+        </div>
 
+        {/* Relationship */}
+        <div className="space-y-4">
           <div>
-            <label htmlFor={`contact-mobile-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
-              Mobile Phone
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Relationship to You
+            </label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={entry.contactPersonRelationship?.isNeighbor?.value || false}
+                  onChange={(e) => handleFieldChange('contactPersonRelationship.isNeighbor', e.target.checked, index)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-700">Neighbor</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={entry.contactPersonRelationship?.isFriend?.value || false}
+                  onChange={(e) => handleFieldChange('contactPersonRelationship.isFriend', e.target.checked, index)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-700">Friend</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={entry.contactPersonRelationship?.isLandlord?.value || false}
+                  onChange={(e) => handleFieldChange('contactPersonRelationship.isLandlord', e.target.checked, index)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-700">Landlord</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={entry.contactPersonRelationship?.isBusinessAssociate?.value || false}
+                  onChange={(e) => handleFieldChange('contactPersonRelationship.isBusinessAssociate', e.target.checked, index)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-700">Business Associate</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={entry.contactPersonRelationship?.isOther?.value || false}
+                  onChange={(e) => handleFieldChange('contactPersonRelationship.isOther', e.target.checked, index)}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <span className="ml-2 text-sm text-gray-700">Other</span>
+              </label>
+            </div>
+          </div>
+
+          {entry.contactPersonRelationship?.isOther?.value && (
+            <div>
+              <label htmlFor={`contact-relationship-other-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+                Specify Other Relationship
+              </label>
+              <input
+                id={`contact-relationship-other-${index}`}
+                type="text"
+                value={entry.contactPersonRelationship?.otherExplanation?.value || ''}
+                onChange={(e) => handleFieldChange('contactPersonRelationship.otherExplanation', e.target.value, index)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Specify other relationship"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Contact Information */}
+        <div className="space-y-4">
+          <h6 className="text-base font-medium text-gray-900">Contact Information</h6>
+
+          {/* Phone Numbers */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label htmlFor={`contact-evening-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+                Evening Phone
+              </label>
+              <input
+                id={`contact-evening-${index}`}
+                type="tel"
+                value={entry.contactPersonPhones?.eveningPhone?.value || ''}
+                onChange={(e) => handleFieldChange('contactPersonPhones.eveningPhone', e.target.value, index)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="(XXX) XXX-XXXX"
+              />
+            </div>
+
+            <div>
+              <label htmlFor={`contact-daytime-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+                Daytime Phone
+              </label>
+              <input
+                id={`contact-daytime-${index}`}
+                type="tel"
+                value={entry.contactPersonPhones?.daytimePhone?.value || ''}
+                onChange={(e) => handleFieldChange('contactPersonPhones.daytimePhone', e.target.value, index)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="(XXX) XXX-XXXX"
+              />
+            </div>
+
+            <div>
+              <label htmlFor={`contact-mobile-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+                Mobile Phone
+              </label>
+              <input
+                id={`contact-mobile-${index}`}
+                type="tel"
+                value={entry.contactPersonPhones?.mobilePhone?.value || ''}
+                onChange={(e) => handleFieldChange('contactPersonPhones.mobilePhone', e.target.value, index)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="(XXX) XXX-XXXX"
+              />
+            </div>
+          </div>
+
+          {/* Email */}
+          <div>
+            <label htmlFor={`contact-email-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
+              Email Address
             </label>
             <input
-              id={`contact-mobile-${index}`}
-              type="tel"
-              value={entry.contactPerson.mobilePhone.value}
-              onChange={(e) => handleFieldChange('contactPerson.mobilePhone', e.target.value, index)}
+              id={`contact-email-${index}`}
+              type="email"
+              value={entry.contactPersonEmail?.email?.value || ''}
+              onChange={(e) => handleFieldChange('contactPersonEmail.email', e.target.value, index)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              placeholder="(XXX) XXX-XXXX"
+              placeholder="email@example.com"
             />
           </div>
-        </div>
 
-        {/* Email */}
-        <div>
-          <label htmlFor={`contact-email-${index}`} className="block text-sm font-medium text-gray-700 mb-2">
-            Email Address
-          </label>
-          <input
-            id={`contact-email-${index}`}
-            type="email"
-            value={entry.contactPerson.email.value}
-            onChange={(e) => handleFieldChange('contactPerson.email', e.target.value, index)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="email@example.com"
-          />
-        </div>
-
-        {/* Don't Know Contact Checkbox */}
-        <div className="pt-2">
-          <label className="flex items-start">
-            <input
-              type="checkbox"
-              checked={entry.contactPerson.dontKnowContact.value}
-              onChange={(e) => handleFieldChange('contactPerson.dontKnowContact', e.target.checked, index)}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-0.5"
-            />
-            <span className="ml-2 text-sm text-gray-700">
-              I don't know this person or how to contact them
-            </span>
-          </label>
-          <p className="mt-1 ml-6 text-xs text-gray-500">
-            Check this box if you cannot provide contact information for someone at this address
-          </p>
+          {/* Don't Know Contact Checkbox */}
+          <div className="pt-2">
+            <label className="flex items-start">
+              <input
+                type="checkbox"
+                checked={entry.contactPersonPhones?.dontKnowContact?.value || false}
+                onChange={(e) => handleFieldChange('contactPersonPhones.dontKnowContact', e.target.checked, index)}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-0.5"
+              />
+              <span className="ml-2 text-sm text-gray-700">
+                I don't know this person or how to contact them
+              </span>
+            </label>
+            <p className="mt-1 ml-6 text-xs text-gray-500">
+              Check this box if you cannot provide contact information for someone at this address
+            </p>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderResidenceHistorySummary = () => {
     const timespan = getTotalResidenceTimespan();

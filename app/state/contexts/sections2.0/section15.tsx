@@ -22,16 +22,15 @@ import type {
   Section15ValidationRules,
   Section15ValidationContext,
   MilitaryHistoryValidationResult,
-  ForeignMilitaryServiceEntry
+  ForeignMilitaryServiceEntry,
+  Section15FieldUpdate,
+  MilitaryServiceEntry
 } from '../../../../api/interfaces/sections2.0/section15';
 import {
   createDefaultSection15,
   createDefaultMilitaryServiceEntry,
   createDefaultDisciplinaryEntry,
-  createDefaultForeignMilitaryEntry,
-  validateMilitaryHistory,
-  isSection15Complete,
-  getVisibleFields
+  createDefaultForeignMilitaryEntry
 } from '../../../../api/interfaces/sections2.0/section15';
 
 import type { ValidationResult, ValidationError, ChangeSet } from '../shared/base-interfaces';
@@ -63,6 +62,126 @@ const DEFAULT_SECTION15_VALIDATION_RULES: Section15ValidationRules = {
   maxDescriptionLength: 2000,
   maxServiceNumberLength: 20
 };
+
+// ============================================================================
+// BUSINESS LOGIC FUNCTIONS (moved from interface)
+// ============================================================================
+
+/**
+ * Updates a Section 15 field
+ */
+const updateSection15Field = (
+  section15Data: Section15,
+  update: Section15FieldUpdate
+): Section15 => {
+  const updatedData = { ...section15Data };
+
+  // Handle field updates based on subsection and entry index
+  // Implementation would use lodash.set or similar for deep updates
+
+  return updatedData;
+};
+
+/**
+ * Validates military history information
+ */
+function validateMilitaryHistory(
+  militaryData: Section15['section15'],
+  context: Section15ValidationContext
+): MilitaryHistoryValidationResult {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  if (militaryData.militaryService.hasServed.value === 'YES') {
+    // Validate military service entries
+    militaryData.militaryService.entries.forEach((entry, index) => {
+      if (!entry.branch.value) {
+        errors.push(`Military service entry ${index + 1}: Branch is required`);
+      }
+      if (!entry.fromDate.value) {
+        errors.push(`Military service entry ${index + 1}: Service start date is required`);
+      }
+      if (!entry.serviceNumber.value) {
+        errors.push(`Military service entry ${index + 1}: Service number is required`);
+      }
+    });
+  }
+
+  if (militaryData.disciplinaryProcedures.hasDisciplinaryAction.value === 'YES') {
+    // Validate disciplinary procedures
+    militaryData.disciplinaryProcedures.entries.forEach((entry, index) => {
+      if (!entry.ucmjOffenseDescription.value) {
+        errors.push(`Disciplinary entry ${index + 1}: UCMJ offense description is required`);
+      }
+      if (!entry.disciplinaryProcedureName.value) {
+        errors.push(`Disciplinary entry ${index + 1}: Disciplinary procedure name is required`);
+      }
+    });
+  }
+
+  // Validate foreign military service
+  if (militaryData.foreignMilitaryService.hasServedInForeignMilitary.value === 'YES') {
+    militaryData.foreignMilitaryService.entries.forEach((entry, index) => {
+      if (!entry.organizationName.value) {
+        errors.push(`Foreign military entry ${index + 1}: Organization name is required`);
+      }
+      if (!entry.country.value) {
+        errors.push(`Foreign military entry ${index + 1}: Country is required`);
+      }
+    });
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings
+  };
+}
+
+/**
+ * Checks if Section 15 is complete
+ */
+function isSection15Complete(section15Data: Section15): boolean {
+  const { militaryService, disciplinaryProcedures, foreignMilitaryService } = section15Data.section15;
+
+  // Check if at least one subsection has been addressed (not empty and not default NO values)
+  const hasMilitaryServiceResponse = militaryService.hasServed.value && militaryService.hasServed.value !== 'NO (If NO, proceed to Section 15.2) ';
+  const hasDisciplinaryResponse = disciplinaryProcedures.hasDisciplinaryAction.value && disciplinaryProcedures.hasDisciplinaryAction.value !== 'NO (If NO, proceed to Section 15.3) ';
+  const hasForeignServiceResponse = foreignMilitaryService.hasServedInForeignMilitary.value && foreignMilitaryService.hasServedInForeignMilitary.value !== 'NO (If NO, proceed to Section 16)';
+
+  return hasMilitaryServiceResponse || hasDisciplinaryResponse || hasForeignServiceResponse;
+}
+
+/**
+ * Determines which fields should be visible based on responses
+ */
+function getVisibleFields(
+  entry: MilitaryServiceEntry,
+  militaryData: Section15['section15']
+): string[] {
+  const visibleFields: string[] = ['hasServed'];
+
+  if (militaryData.militaryService.hasServed.value === 'YES') {
+    visibleFields.push(
+      'branch', 'serviceStatus', 'fromDate', 'toDate',
+      'serviceNumber', 'dischargeType', 'currentStatus'
+    );
+
+    if (entry.branch.value === '5') { // National Guard
+      visibleFields.push('serviceState');
+    }
+
+    if (entry.dischargeType.value && entry.dischargeType.value !== 'Honorable') {
+      visibleFields.push('dischargeReason');
+    }
+
+    if (entry.typeOfDischarge?.value === 'Other') {
+      visibleFields.push('otherDischargeType');
+    }
+  }
+
+  return visibleFields;
+}
 
 // ============================================================================
 // CONTEXT INTERFACE
