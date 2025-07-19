@@ -107,7 +107,9 @@ export async function generateAndDownloadPdf(
         }
       }
 
-      // Use the service's enhanced download method with mobile compatibility
+      // ENABLED: Automatic PDF download for validation workflow
+      console.log('✅ PDF download ENABLED for validation workflow');
+      console.log(`📄 Downloading: ${filename} (${pdfResult.pdfBytes.length} bytes)`);
       clientPdfService2.downloadPdf(pdfResult.pdfBytes, filename);
 
       if (showConsoleOutput) {
@@ -162,6 +164,82 @@ export async function generateAndDownloadPdf(
     onError?.(fatalErrorMessage);
   } finally {
     onLoadingStateChange?.(false);
+  }
+
+  return result;
+}
+
+/**
+ * Generate and save PDF to project directory for analysis
+ */
+export async function generateAndSavePdfForAnalysis(
+  formData: ApplicantFormValues,
+  options: PdfGenerationOptions = {}
+): Promise<PdfGenerationResult> {
+  const {
+    filename = `SF86_Analysis_${new Date().toISOString().split("T")[0]}.pdf`,
+    showConsoleOutput = true,
+    onProgress,
+    onError,
+    onSuccess
+  } = options;
+
+  const result: PdfGenerationResult = {
+    success: false,
+    filename,
+    fieldsMapped: 0,
+    fieldsApplied: 0,
+    errors: [],
+    warnings: []
+  };
+
+  try {
+    if (showConsoleOutput) {
+      console.log("🔬 Starting PDF generation for analysis...");
+    }
+    onProgress?.("Generating PDF for analysis...");
+
+    // Create form data for the server action
+    const actionFormData = new FormData();
+    actionFormData.append("data", JSON.stringify(formData));
+    actionFormData.append("actionType", "generatePDFForAnalysis");
+
+    // Submit to the server action via startForm route
+    const response = await fetch("/startForm", {
+      method: "POST",
+      body: actionFormData,
+    });
+
+    const serverResult = await response.json();
+
+    if (serverResult.success) {
+      result.success = true;
+      result.fieldsMapped = serverResult.fieldsMapped || 0;
+      result.fieldsApplied = serverResult.fieldsApplied || 0;
+      result.savedPath = serverResult.savedPath;
+
+      if (showConsoleOutput) {
+        console.log(`✅ PDF saved for analysis at: ${result.savedPath}`);
+        console.log(`📊 Fields mapped: ${result.fieldsMapped}, Fields applied: ${result.fieldsApplied}`);
+      }
+
+      onSuccess?.(result);
+    } else {
+      result.errors = serverResult.errors || ["Server PDF generation failed"];
+      if (showConsoleOutput) {
+        console.error("❌ Server PDF generation failed:", result.errors);
+      }
+      onError?.(result.errors[0]);
+    }
+
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    result.errors = [errorMessage];
+
+    if (showConsoleOutput) {
+      console.error("💥 Error during server PDF generation:", error);
+    }
+    onError?.(errorMessage);
   }
 
   return result;

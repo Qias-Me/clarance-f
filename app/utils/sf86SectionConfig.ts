@@ -61,7 +61,7 @@ export const ALL_SF86_SECTIONS: SectionDefinition[] = [
   { id: "section10", name: "Dual Citizenship", component: Section10Component, isImplemented: true },
   { id: "section11", name: "Where You Have Lived", component: Section11Component, isImplemented: true },
   { id: "section12", name: "Where You Went to School", component: Section12Component, isImplemented: true },
-  { id: "section13", name: "Employment Activities", component: Section13Component, isImplemented: false },
+  { id: "section13", name: "Employment Activities", component: Section13Component, isImplemented: true },
   { id: "section14", name: "Selective Service", component: Section14Component, isImplemented: true },
   { id: "section15", name: "Military Service", component: Section15Component, isImplemented: true },
   { id: "section16", name: "People Who Know You Well", component: Section16Component, isImplemented: false },
@@ -144,6 +144,9 @@ export const getImplementedSectionIds = (): string[] => {
 export type SF86ActionType =
   | "generatePDF"
   | "generatePDFServer"
+  | "generatePDFForAnalysis"
+  | "savePdfToWorkspace"
+  | "moveAndValidatePdf"
   | "generateJSON"
   | "showAllFormFields"
   | "saveForm"
@@ -170,6 +173,9 @@ export interface SF86Config {
 export const DEFAULT_SF86_ACTIONS: SF86ActionType[] = [
   "generatePDF",
   "generatePDFServer",
+  "generatePDFForAnalysis",
+  "savePdfToWorkspace",
+  "moveAndValidatePdf",
   "generateJSON",
   "showAllFormFields",
   "saveForm",

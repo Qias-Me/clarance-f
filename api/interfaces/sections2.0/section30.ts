@@ -26,7 +26,40 @@ export interface ContinuationPersonalInfo {
     zipCode: Field<string>;
     telephoneNumber: Field<string>;
   };
+}
 
+/**
+ * Medical/Additional information fields for page 135
+ */
+export interface ContinuationMedicalInfo {
+  radioButtonOption: Field<string>;
+  whatIsPrognosis: Field<string>;
+  natureOfCondition: Field<string>;
+  datesOfTreatment: Field<string>;
+}
+
+/**
+ * Page 135 personal information (duplicate set)
+ */
+export interface ContinuationPage3PersonalInfo {
+  fullName: Field<string>;
+  dateSigned: Field<string>;
+  otherNamesUsed: Field<string>;
+  currentAddress: {
+    street: Field<string>;
+    city: Field<string>;
+    state: Field<string>;
+    zipCode: Field<string>;
+    telephoneNumber: Field<string>;
+  };
+}
+
+/**
+ * Page 136 information
+ */
+export interface ContinuationPage4Info {
+  printName: Field<string>;
+  dateSigned: Field<string>;
 }
 
 /**
@@ -35,8 +68,19 @@ export interface ContinuationPersonalInfo {
 export interface Section30 {
   _id: number;
   section30: {
-  continuationSheet: Field<string>;
-  personalInfo: ContinuationPersonalInfo;
+    // Page 133 fields
+    continuationSheet: Field<string>;
+    dateSignedPage1: Field<string>;
+
+    // Page 134 fields (existing)
+    personalInfo: ContinuationPersonalInfo;
+
+    // Page 135 fields
+    medicalInfo: ContinuationMedicalInfo;
+    page3PersonalInfo: ContinuationPage3PersonalInfo;
+
+    // Page 136 fields
+    page4Info: ContinuationPage4Info;
   };
 }
 
