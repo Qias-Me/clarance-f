@@ -1,0 +1,273 @@
+{
+  "metadata": {
+    "iterationNumber": 2,
+    "title": "Employment Entry #1 Complete - Military/Federal Employment",
+    "description": "Comprehensive validation of first employment entry with all details",
+    "targetFields": 50,
+    "estimatedActualFields": 52,
+    "priority": "High",
+    "phase": "Phase 4 - Iteration 2"
+  },
+  "fieldCounterProgress": {
+    "startingCount": 1033,
+    "targetValidation": 50,
+    "estimatedNewCount": 983,
+    "cumulativeProgress": 9.5,
+    "remainingIterations": 6
+  },
+  "employmentEntryDetails": {
+    "entryType": "Military/Federal Employment",
+    "entryNumber": 1,
+    "subsection": "13A.1",
+    "pdfPages": [17, 18],
+    "fieldCategories": [
+      "Basic Employment Information",
+      "Employer Details",
+      "Position Information", 
+      "Employment Dates",
+      "Supervisor Information",
+      "Employer Address",
+      "Contact Information",
+      "Security Clearance",
+      "Employment Status"
+    ]
+  },
+  "fieldsToValidate": {
+    "basicEmploymentInfo": {
+      "employerName": {
+        "uiField": "militaryEmployment.entries[0].employerName.value",
+        "pdfField": "form1[0].section_13_1-2[0].TextField11[0]",
+        "testValue": "UNIQUE_MILITARY_EMPLOYER_TEST_001_United_States_Army",
+        "fieldType": "PDFTextField",
+        "required": true,
+        "page": 17
+      },
+      "positionTitle": {
+        "uiField": "militaryEmployment.entries[0].positionTitle.value", 
+        "pdfField": "form1[0].section_13_1-2[0].TextField11[1]",
+        "testValue": "UNIQUE_MILITARY_POSITION_TEST_002_Infantry_Officer",
+        "fieldType": "PDFTextField",
+        "required": true,
+        "page": 17
+      },
+      "employmentType": {
+        "uiField": "militaryEmployment.entries[0].employmentType.value",
+        "pdfField": "form1[0].section_13_1-2[0].RadioButtonList[0]",
+        "testValue": "Active military duty station",
+        "fieldType": "PDFRadioGroup",
+        "required": true,
+        "page": 17
+      }
+    },
+    "employmentDates": {
+      "fromDate": {
+        "uiField": "militaryEmployment.entries[0].employmentDates.fromDate.value",
+        "pdfField": "form1[0].section_13_1-2[0].From_Datefield_Name_2[0]",
+        "testValue": "UNIQUE_MILITARY_START_DATE_TEST_004_01/2018",
+        "fieldType": "PDFTextField",
+        "required": true,
+        "page": 17
+      },
+      "toDate": {
+        "uiField": "militaryEmployment.entries[0].employmentDates.toDate.value",
+        "pdfField": "form1[0].section_13_1-2[0].From_Datefield_Name_2[1]", 
+        "testValue": "UNIQUE_MILITARY_END_DATE_TEST_005_12/2022",
+        "fieldType": "PDFTextField",
+        "required": true,
+        "page": 17
+      },
+      "present": {
+        "uiField": "militaryEmployment.entries[0].employmentDates.present.value",
+        "pdfField": "form1[0].section_13_1-2[0].Present[0]",
+        "testValue": false,
+        "fieldType": "PDFCheckBox",
+        "required": false,
+        "page": 17
+      },
+      "estimate": {
+        "uiField": "militaryEmployment.entries[0].employmentDates.estimate.value",
+        "pdfField": "form1[0].section_13_1-2[0].Estimate[0]",
+        "testValue": false,
+        "fieldType": "PDFCheckBox",
+        "required": false,
+        "page": 17
+      }
+    },
+    "supervisorInformation": {
+      "supervisorName": {
+        "uiField": "militaryEmployment.entries[0].supervisor.name.value",
+        "pdfField": "form1[0].section_13_1-2[0].TextField11[0]",
+        "testValue": "UNIQUE_MILITARY_SUPERVISOR_TEST_006_Colonel_Jane_Williams",
+        "fieldType": "PDFTextField",
+        "required": true,
+        "page": 17
+      },
+      "supervisorRank": {
+        "uiField": "militaryEmployment.entries[0].supervisor.rank.value",
+        "pdfField": "form1[0].section_13_1-2[0].TextField11[1]",
+        "testValue": "UNIQUE_MILITARY_RANK_TEST_007_Colonel",
+        "fieldType": "PDFTextField",
+        "required": true,
+        "page": 17
+      },
+      "supervisorPhone": {
+        "uiField": "militaryEmployment.entries[0].supervisor.phone.value",
+        "pdfField": "form1[0].section_13_1-2[0].p3-t68[0]",
+        "testValue": "UNIQUE_MILITARY_PHONE_TEST_008_910-555-0123",
+        "fieldType": "PDFTextField",
+        "required": true,
+        "page": 17
+      },
+      "supervisorExtension": {
+        "uiField": "militaryEmployment.entries[0].supervisor.extension.value",
+        "pdfField": "form1[0].section_13_1-2[0].TextField11[2]",
+        "testValue": "UNIQUE_MILITARY_EXT_TEST_009_1234",
+        "fieldType": "PDFTextField",
+        "required": false,
+        "page": 17
+      },
+      "supervisorEmail": {
+        "uiField": "militaryEmployment.entries[0].supervisor.email.value",
+        "pdfField": "form1[0].section_13_1-2[0].TextField11[3]",
+        "testValue": "UNIQUE_MILITARY_EMAIL_TEST_010_jane.williams@army.mil",
+        "fieldType": "PDFTextField",
+        "required": true,
+        "page": 17
+      }
+    },
+    "employerAddress": {
+      "street": {
+        "uiField": "militaryEmployment.entries[0].employerAddress.street.value",
+        "pdfField": "form1[0].section_13_1-2[0].TextField11[3]",
+        "testValue": "UNIQUE_MILITARY_ADDRESS_TEST_011_Fort_Bragg_Main_Base",
+        "fieldType": "PDFTextField",
+        "required": true,
+        "page": 17
+      },
+      "city": {
+        "uiField": "militaryEmployment.entries[0].employerAddress.city.value",
+        "pdfField": "form1[0].section_13_1-2[0].TextField11[4]",
+        "testValue": "UNIQUE_MILITARY_CITY_TEST_012_Fayetteville",
+        "fieldType": "PDFTextField",
+        "required": true,
+        "page": 17
+      },
+      "state": {
+        "uiField": "militaryEmployment.entries[0].employerAddress.state.value",
+        "pdfField": "form1[0].section_13_1-2[0].DropdownList[0]",
+        "testValue": "NC",
+        "fieldType": "PDFDropdown",
+        "required": true,
+        "page": 17
+      },
+      "zipCode": {
+        "uiField": "militaryEmployment.entries[0].employerAddress.zipCode.value",
+        "pdfField": "form1[0].section_13_1-2[0].TextField11[5]",
+        "testValue": "UNIQUE_MILITARY_ZIP_TEST_013_28310",
+        "fieldType": "PDFTextField",
+        "required": true,
+        "page": 17
+      },
+      "country": {
+        "uiField": "militaryEmployment.entries[0].employerAddress.country.value",
+        "pdfField": "form1[0].section_13_1-2[0].DropdownList[1]",
+        "testValue": "United States",
+        "fieldType": "PDFDropdown",
+        "required": true,
+        "page": 17
+      }
+    },
+    "securityClearance": {
+      "hasAccess": {
+        "uiField": "militaryEmployment.entries[0].securityClearance.hasAccess.value",
+        "pdfField": "form1[0].section_13_1-2[0].RadioButtonList[1]",
+        "testValue": "YES",
+        "fieldType": "PDFRadioGroup",
+        "required": true,
+        "page": 17
+      },
+      "clearanceLevel": {
+        "uiField": "militaryEmployment.entries[0].securityClearance.clearanceLevel.value",
+        "pdfField": "form1[0].section_13_1-2[0].TextField12[0]",
+        "testValue": "UNIQUE_CLEARANCE_LEVEL_TEST_014_Top_Secret",
+        "fieldType": "PDFTextField",
+        "required": true,
+        "page": 17
+      },
+      "clearanceDate": {
+        "uiField": "militaryEmployment.entries[0].securityClearance.clearanceDate.value",
+        "pdfField": "form1[0].section_13_1-2[0].TextField12[1]",
+        "testValue": "UNIQUE_CLEARANCE_DATE_TEST_015_12/2022",
+        "fieldType": "PDFTextField",
+        "required": true,
+        "page": 17
+      },
+      "investigationDate": {
+        "uiField": "militaryEmployment.entries[0].securityClearance.investigationDate.value",
+        "pdfField": "form1[0].section_13_1-2[0].TextField12[2]",
+        "testValue": "UNIQUE_INVESTIGATION_DATE_TEST_016_10/2022",
+        "fieldType": "PDFTextField",
+        "required": true,
+        "page": 17
+      },
+      "polygraphDate": {
+        "uiField": "militaryEmployment.entries[0].securityClearance.polygraphDate.value",
+        "pdfField": "form1[0].section_13_1-2[0].TextField12[3]",
+        "testValue": "UNIQUE_POLYGRAPH_DATE_TEST_017_11/2022",
+        "fieldType": "PDFTextField",
+        "required": false,
+        "page": 17
+      }
+    },
+    "employmentStatus": {
+      "fullTime": {
+        "uiField": "militaryEmployment.entries[0].employmentStatus.fullTime.value",
+        "pdfField": "form1[0].section_13_1-2[0].CheckBox[0]",
+        "testValue": true,
+        "fieldType": "PDFCheckBox",
+        "required": true,
+        "page": 17
+      },
+      "partTime": {
+        "uiField": "militaryEmployment.entries[0].employmentStatus.partTime.value",
+        "pdfField": "form1[0].section_13_1-2[0].CheckBox[1]",
+        "testValue": false,
+        "fieldType": "PDFCheckBox",
+        "required": false,
+        "page": 17
+      }
+    }
+  },
+  "validationStrategy": {
+    "approach": "Comprehensive employment entry validation",
+    "testDataSource": "tests/section13/validation-test-data.txt",
+    "pdfValidationConfig": {
+      "sources": [{"path": "workspace/SF86_Section13_Iteration2_YYYY-MM-DD-HHMMSS.pdf"}],
+      "sf86_section": "Section 13",
+      "include_form_fields": true,
+      "include_full_text": true,
+      "search_values_file": "tests/section13/validation-test-data.txt",
+      "validation_mode": true,
+      "sf86_page_range": "17-18"
+    },
+    "successCriteria": [
+      "All 50+ test values found in PDF",
+      "Complete field mapping chain validated",
+      "Employment entry fully populated",
+      "Security clearance fields properly mapped",
+      "Address and contact information validated"
+    ]
+  },
+  "expectedOutcomes": {
+    "fieldsValidated": 52,
+    "newFieldCounter": 981,
+    "progressPercentage": 9.7,
+    "pdfPages": [17, 18],
+    "memoryMcpUpdates": [
+      "Military employment entry validation patterns",
+      "Security clearance field mapping success",
+      "Supervisor information validation approach",
+      "Address field validation methodology"
+    ]
+  }
+}

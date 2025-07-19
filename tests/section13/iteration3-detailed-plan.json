@@ -1,0 +1,327 @@
+{
+  "metadata": {
+    "iterationNumber": 3,
+    "title": "Employment Entry #2-3 - Multiple Employment Types",
+    "description": "Add second and third employment entries with different employment types and validate cross-entry patterns",
+    "targetFields": 75,
+    "estimatedActualFields": 78,
+    "priority": "High",
+    "phase": "Phase 5 - Iteration 3"
+  },
+  "fieldCounterProgress": {
+    "startingCount": 981,
+    "targetValidation": 75,
+    "estimatedNewCount": 906,
+    "cumulativeProgress": 16.6,
+    "remainingIterations": 5
+  },
+  "employmentEntries": {
+    "entry2": {
+      "entryType": "Non-Federal Employment",
+      "entryNumber": 2,
+      "subsection": "13A.2",
+      "pdfPages": [18, 19],
+      "employer": "TechCorp Solutions Inc.",
+      "position": "Software Engineer",
+      "location": "Austin, TX",
+      "dateRange": "06/2015 - 12/2017"
+    },
+    "entry3": {
+      "entryType": "Federal Employment",
+      "entryNumber": 3,
+      "subsection": "13A.2",
+      "pdfPages": [19, 20],
+      "employer": "Department of Defense",
+      "position": "Systems Analyst",
+      "location": "Washington, DC",
+      "dateRange": "01/2023 - Present"
+    }
+  },
+  "fieldsToValidate": {
+    "nonFederalEmploymentEntry2": {
+      "basicInfo": {
+        "employerName": {
+          "testValue": "UNIQUE_NONFEDERAL_EMPLOYER_TEST_017_TechCorp_Solutions_Inc",
+          "pdfField": "form1[0].section_13_1-2[0].TextField12[0]",
+          "fieldType": "PDFTextField",
+          "page": 18
+        },
+        "positionTitle": {
+          "testValue": "UNIQUE_NONFEDERAL_POSITION_TEST_018_Software_Engineer",
+          "pdfField": "form1[0].section_13_1-2[0].TextField12[1]",
+          "fieldType": "PDFTextField",
+          "page": 18
+        },
+        "employmentType": {
+          "testValue": "State Government (Non-Federal employment)",
+          "pdfField": "form1[0].section_13_1-2[0].RadioButtonList[2]",
+          "fieldType": "PDFRadioGroup",
+          "page": 18
+        }
+      },
+      "employmentDates": {
+        "fromDate": {
+          "testValue": "UNIQUE_NONFEDERAL_START_DATE_TEST_020_06/2015",
+          "pdfField": "form1[0].section_13_1-2[0].From_Datefield_Name_3[0]",
+          "fieldType": "PDFTextField",
+          "page": 18
+        },
+        "toDate": {
+          "testValue": "UNIQUE_NONFEDERAL_END_DATE_TEST_021_12/2017",
+          "pdfField": "form1[0].section_13_1-2[0].From_Datefield_Name_3[1]",
+          "fieldType": "PDFTextField",
+          "page": 18
+        },
+        "present": {
+          "testValue": false,
+          "pdfField": "form1[0].section_13_1-2[0].Present[1]",
+          "fieldType": "PDFCheckBox",
+          "page": 18
+        }
+      },
+      "supervisorInfo": {
+        "supervisorName": {
+          "testValue": "UNIQUE_NONFEDERAL_SUPERVISOR_TEST_022_Sarah_Davis",
+          "pdfField": "form1[0].section_13_1-2[0].TextField13[0]",
+          "fieldType": "PDFTextField",
+          "page": 18
+        },
+        "supervisorTitle": {
+          "testValue": "UNIQUE_NONFEDERAL_TITLE_TEST_023_Engineering_Manager",
+          "pdfField": "form1[0].section_13_1-2[0].TextField13[1]",
+          "fieldType": "PDFTextField",
+          "page": 18
+        },
+        "supervisorPhone": {
+          "testValue": "UNIQUE_NONFEDERAL_PHONE_TEST_024_512-555-0789",
+          "pdfField": "form1[0].section_13_1-2[0].TextField13[2]",
+          "fieldType": "PDFTextField",
+          "page": 18
+        },
+        "supervisorEmail": {
+          "testValue": "UNIQUE_NONFEDERAL_EMAIL_TEST_025_sarah.davis@techcorp.com",
+          "pdfField": "form1[0].section_13_1-2[0].TextField13[3]",
+          "fieldType": "PDFTextField",
+          "page": 18
+        }
+      },
+      "employerAddress": {
+        "street": {
+          "testValue": "UNIQUE_NONFEDERAL_ADDRESS_TEST_026_Austin_Tech_Center",
+          "pdfField": "form1[0].section_13_1-2[0].TextField14[0]",
+          "fieldType": "PDFTextField",
+          "page": 18
+        },
+        "city": {
+          "testValue": "UNIQUE_NONFEDERAL_CITY_TEST_027_Austin",
+          "pdfField": "form1[0].section_13_1-2[0].TextField14[1]",
+          "fieldType": "PDFTextField",
+          "page": 18
+        },
+        "state": {
+          "testValue": "TX",
+          "pdfField": "form1[0].section_13_1-2[0].DropdownList[2]",
+          "fieldType": "PDFDropdown",
+          "page": 18
+        },
+        "zipCode": {
+          "testValue": "UNIQUE_NONFEDERAL_ZIP_TEST_028_78701",
+          "pdfField": "form1[0].section_13_1-2[0].TextField14[2]",
+          "fieldType": "PDFTextField",
+          "page": 18
+        },
+        "country": {
+          "testValue": "United States",
+          "pdfField": "form1[0].section_13_1-2[0].DropdownList[3]",
+          "fieldType": "PDFDropdown",
+          "page": 18
+        }
+      },
+      "employmentDetails": {
+        "duties": {
+          "testValue": "UNIQUE_NONFEDERAL_DUTIES_TEST_029_Developed web applications, maintained databases, collaborated with cross-functional teams",
+          "pdfField": "form1[0].section_13_1-2[0].TextField15[0]",
+          "fieldType": "PDFTextField",
+          "page": 18
+        },
+        "reasonForLeaving": {
+          "testValue": "UNIQUE_NONFEDERAL_REASON_TEST_030_Career advancement opportunity in government sector",
+          "pdfField": "form1[0].section_13_1-2[0].TextField15[1]",
+          "fieldType": "PDFTextField",
+          "page": 18
+        },
+        "salary": {
+          "testValue": "UNIQUE_NONFEDERAL_SALARY_TEST_031_75000",
+          "pdfField": "form1[0].section_13_1-2[0].TextField15[2]",
+          "fieldType": "PDFTextField",
+          "page": 18
+        }
+      }
+    },
+    "federalEmploymentEntry3": {
+      "basicInfo": {
+        "employerName": {
+          "testValue": "UNIQUE_FEDERAL_EMPLOYER_TEST_032_Department_of_Defense",
+          "pdfField": "form1[0].section_13_1-2[0].TextField16[0]",
+          "fieldType": "PDFTextField",
+          "page": 19
+        },
+        "positionTitle": {
+          "testValue": "UNIQUE_FEDERAL_POSITION_TEST_033_Systems_Analyst",
+          "pdfField": "form1[0].section_13_1-2[0].TextField16[1]",
+          "fieldType": "PDFTextField",
+          "page": 19
+        },
+        "employmentType": {
+          "testValue": "Other Federal employment",
+          "pdfField": "form1[0].section_13_1-2[0].RadioButtonList[3]",
+          "fieldType": "PDFRadioGroup",
+          "page": 19
+        }
+      },
+      "employmentDates": {
+        "fromDate": {
+          "testValue": "UNIQUE_FEDERAL_START_DATE_TEST_034_01/2023",
+          "pdfField": "form1[0].section_13_1-2[0].From_Datefield_Name_4[0]",
+          "fieldType": "PDFTextField",
+          "page": 19
+        },
+        "toDate": {
+          "testValue": "Present",
+          "pdfField": "form1[0].section_13_1-2[0].From_Datefield_Name_4[1]",
+          "fieldType": "PDFTextField",
+          "page": 19
+        },
+        "present": {
+          "testValue": true,
+          "pdfField": "form1[0].section_13_1-2[0].Present[2]",
+          "fieldType": "PDFCheckBox",
+          "page": 19
+        }
+      },
+      "supervisorInfo": {
+        "supervisorName": {
+          "testValue": "UNIQUE_FEDERAL_SUPERVISOR_TEST_035_Dr_Michael_Johnson",
+          "pdfField": "form1[0].section_13_1-2[0].TextField17[0]",
+          "fieldType": "PDFTextField",
+          "page": 19
+        },
+        "supervisorTitle": {
+          "testValue": "UNIQUE_FEDERAL_TITLE_TEST_036_Senior_Systems_Director",
+          "pdfField": "form1[0].section_13_1-2[0].TextField17[1]",
+          "fieldType": "PDFTextField",
+          "page": 19
+        },
+        "supervisorPhone": {
+          "testValue": "UNIQUE_FEDERAL_PHONE_TEST_037_703-555-0456",
+          "pdfField": "form1[0].section_13_1-2[0].TextField17[2]",
+          "fieldType": "PDFTextField",
+          "page": 19
+        },
+        "supervisorEmail": {
+          "testValue": "UNIQUE_FEDERAL_EMAIL_TEST_038_michael.johnson@defense.gov",
+          "pdfField": "form1[0].section_13_1-2[0].TextField17[3]",
+          "fieldType": "PDFTextField",
+          "page": 19
+        }
+      },
+      "employerAddress": {
+        "street": {
+          "testValue": "UNIQUE_FEDERAL_ADDRESS_TEST_039_Pentagon_Building",
+          "pdfField": "form1[0].section_13_1-2[0].TextField18[0]",
+          "fieldType": "PDFTextField",
+          "page": 19
+        },
+        "city": {
+          "testValue": "UNIQUE_FEDERAL_CITY_TEST_040_Washington",
+          "pdfField": "form1[0].section_13_1-2[0].TextField18[1]",
+          "fieldType": "PDFTextField",
+          "page": 19
+        },
+        "state": {
+          "testValue": "DC",
+          "pdfField": "form1[0].section_13_1-2[0].DropdownList[4]",
+          "fieldType": "PDFDropdown",
+          "page": 19
+        },
+        "zipCode": {
+          "testValue": "UNIQUE_FEDERAL_ZIP_TEST_041_20301",
+          "pdfField": "form1[0].section_13_1-2[0].TextField18[2]",
+          "fieldType": "PDFTextField",
+          "page": 19
+        },
+        "country": {
+          "testValue": "United States",
+          "pdfField": "form1[0].section_13_1-2[0].DropdownList[5]",
+          "fieldType": "PDFDropdown",
+          "page": 19
+        }
+      },
+      "securityClearance": {
+        "hasAccess": {
+          "testValue": "YES",
+          "pdfField": "form1[0].section_13_1-2[0].RadioButtonList[4]",
+          "fieldType": "PDFRadioGroup",
+          "page": 19
+        },
+        "clearanceLevel": {
+          "testValue": "UNIQUE_FEDERAL_CLEARANCE_TEST_042_Secret",
+          "pdfField": "form1[0].section_13_1-2[0].TextField19[0]",
+          "fieldType": "PDFTextField",
+          "page": 19
+        },
+        "clearanceDate": {
+          "testValue": "UNIQUE_FEDERAL_CLEARANCE_DATE_TEST_043_01/2023",
+          "pdfField": "form1[0].section_13_1-2[0].TextField19[1]",
+          "fieldType": "PDFTextField",
+          "page": 19
+        }
+      }
+    },
+    "crossEntryValidation": {
+      "employmentTimeline": {
+        "chronologicalOrder": "Entry 2 (2015-2017) → Entry 3 (2023-Present) → Entry 1 (2018-2022)",
+        "gapValidation": "Gap between Entry 2 and Entry 1 (2017-2018), Gap between Entry 1 and Entry 3 (2022-2023)",
+        "overlapValidation": "No overlapping employment periods"
+      },
+      "fieldConsistency": {
+        "addressFormats": "Consistent address field structure across all entries",
+        "phoneFormats": "Consistent phone number formatting",
+        "dateFormats": "Consistent MM/YYYY date format",
+        "emailFormats": "Consistent email address validation"
+      }
+    }
+  },
+  "validationStrategy": {
+    "approach": "Multiple employment entry validation with cross-entry consistency checks",
+    "testDataSource": "tests/section13/validation-test-data.txt",
+    "pdfValidationConfig": {
+      "sources": [{"path": "workspace/SF86_Section13_Iteration3_YYYY-MM-DD-HHMMSS.pdf"}],
+      "sf86_section": "Section 13",
+      "include_form_fields": true,
+      "include_full_text": true,
+      "search_values_file": "tests/section13/validation-test-data.txt",
+      "validation_mode": true,
+      "sf86_page_range": "17-20"
+    },
+    "successCriteria": [
+      "All 75+ test values found in PDF",
+      "Multiple employment entries properly populated",
+      "Cross-entry field consistency validated",
+      "Employment timeline logic verified",
+      "Different employment types properly distinguished"
+    ]
+  },
+  "expectedOutcomes": {
+    "fieldsValidated": 78,
+    "newFieldCounter": 903,
+    "progressPercentage": 16.8,
+    "pdfPages": [17, 18, 19, 20],
+    "memoryMcpUpdates": [
+      "Multiple employment entry validation patterns",
+      "Cross-entry consistency validation approach",
+      "Employment timeline validation methodology",
+      "Different employment type field mapping patterns"
+    ]
+  }
+}

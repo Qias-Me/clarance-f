@@ -1,0 +1,213 @@
+{
+  "metadata": {
+    "title": "SF-86 Section 13 Validation Iteration Plan",
+    "description": "Systematic plan for validating all 1,086 fields across multiple iterations",
+    "totalFields": 1086,
+    "targetIterations": 8,
+    "averageFieldsPerIteration": 135,
+    "createdDate": "2025-01-19",
+    "phase": "Phase 2 - Field Inventory Complete"
+  },
+  "fieldCounterProgress": {
+    "startingCount": 1086,
+    "currentCount": 1058,
+    "validatedCount": 28,
+    "remainingCount": 1058,
+    "completionPercentage": 2.6
+  },
+  "iterationPlan": {
+    "iteration1": {
+      "title": "Core Employment Questions Validation",
+      "targetFields": 25,
+      "description": "Validate basic employment questions and employment type selection",
+      "fieldsToValidate": [
+        "hasEmployment (radio)",
+        "hasGaps (radio)", 
+        "gapExplanation (textarea)",
+        "employmentType (radio group)",
+        "otherExplanation (text field)"
+      ],
+      "testValues": [
+        "UNIQUE_EMPLOYMENT_STATUS_YES_TEST_123",
+        "UNIQUE_EMPLOYMENT_GAPS_YES_TEST_456",
+        "UNIQUE_GAP_EXPLANATION_TEST_789"
+      ],
+      "expectedPdfPages": [17],
+      "priority": "Critical",
+      "estimatedFieldCount": 25,
+      "newFieldCounter": 1033
+    },
+    "iteration2": {
+      "title": "Military Employment Entry Complete",
+      "targetFields": 50,
+      "description": "Complete first military employment entry with all details",
+      "fieldsToValidate": [
+        "Military employer name, position, dates",
+        "Military supervisor information",
+        "Military employment address",
+        "Military employment status checkboxes",
+        "Military security clearance fields"
+      ],
+      "testValues": [
+        "UNIQUE_MILITARY_EMPLOYER_TEST_001",
+        "UNIQUE_MILITARY_SUPERVISOR_TEST_006",
+        "UNIQUE_MILITARY_LOCATION_TEST_003"
+      ],
+      "expectedPdfPages": [17, 18],
+      "priority": "High",
+      "estimatedFieldCount": 50,
+      "newFieldCounter": 983
+    },
+    "iteration3": {
+      "title": "Non-Federal Employment Complete",
+      "targetFields": 75,
+      "description": "Complete non-federal employment with supervisor and address details",
+      "fieldsToValidate": [
+        "Non-federal employer information",
+        "Supervisor contact details",
+        "Employer address (street, city, state, zip, country)",
+        "Employment dates and status",
+        "Additional employment periods"
+      ],
+      "testValues": [
+        "UNIQUE_NONFEDERAL_EMPLOYER_TEST_017",
+        "UNIQUE_NONFEDERAL_SUPERVISOR_TEST_022",
+        "UNIQUE_ADDRESS_LINE1_TEST_044"
+      ],
+      "expectedPdfPages": [18, 19],
+      "priority": "High",
+      "estimatedFieldCount": 75,
+      "newFieldCounter": 908
+    },
+    "iteration4": {
+      "title": "Self-Employment and Federal Employment",
+      "targetFields": 120,
+      "description": "Add self-employment entries and federal employment details",
+      "fieldsToValidate": [
+        "Self-employment business information",
+        "Federal employment details",
+        "Business address and contact information",
+        "Employment verification contacts"
+      ],
+      "testValues": [
+        "UNIQUE_SELF_EMPLOYER_TEST_025",
+        "UNIQUE_FEDERAL_EMPLOYER_TEST_009",
+        "UNIQUE_SELF_REFERENCE_TEST_030"
+      ],
+      "expectedPdfPages": [19, 20, 21],
+      "priority": "High",
+      "estimatedFieldCount": 120,
+      "newFieldCounter": 788
+    },
+    "iteration5": {
+      "title": "Unemployment and Security Clearance",
+      "targetFields": 145,
+      "description": "Add unemployment periods and security clearance information",
+      "fieldsToValidate": [
+        "Unemployment period dates and reasons",
+        "Unemployment reference contacts",
+        "Security clearance levels and dates",
+        "Investigation history",
+        "Polygraph information"
+      ],
+      "testValues": [
+        "UNIQUE_UNEMPLOYMENT_REASON_TEST_033",
+        "UNIQUE_CLEARANCE_LEVEL_TEST_037",
+        "UNIQUE_CLEARANCE_INVESTIGATOR_TEST_040"
+      ],
+      "expectedPdfPages": [21, 22, 23],
+      "priority": "High",
+      "estimatedFieldCount": 145,
+      "newFieldCounter": 643
+    },
+    "iteration6": {
+      "title": "Employment Issues and Disciplinary Actions",
+      "targetFields": 90,
+      "description": "Complete employment record issues and disciplinary actions",
+      "fieldsToValidate": [
+        "Termination reasons and circumstances",
+        "Disciplinary actions received",
+        "Written warnings and performance issues",
+        "Mutual agreement departures",
+        "Misconduct allegations"
+      ],
+      "testValues": [
+        "UNIQUE_DISCIPLINARY_ACTION_TEST_049",
+        "UNIQUE_TERMINATION_REASON_TEST_051",
+        "UNIQUE_DISCIPLINARY_EXPLANATION_TEST_050"
+      ],
+      "expectedPdfPages": [32],
+      "priority": "Medium",
+      "estimatedFieldCount": 90,
+      "newFieldCounter": 553
+    },
+    "iteration7": {
+      "title": "Additional Employment Periods and Verification",
+      "targetFields": 280,
+      "description": "Complete additional employment periods and verification contacts",
+      "fieldsToValidate": [
+        "Multiple employment periods for each employer",
+        "Additional supervisor information",
+        "Employment verification contacts",
+        "Reference contact details",
+        "Phone number extensions and email addresses"
+      ],
+      "testValues": [
+        "UNIQUE_EXTENSION_TEST_042",
+        "UNIQUE_SUPERVISOR_EMAIL_TEST_043",
+        "UNIQUE_VERIFICATION_STRING_001"
+      ],
+      "expectedPdfPages": [24, 25, 26, 27, 28, 29, 30, 31],
+      "priority": "Medium",
+      "estimatedFieldCount": 280,
+      "newFieldCounter": 273
+    },
+    "iteration8": {
+      "title": "Final Validation and Remaining Fields",
+      "targetFields": 273,
+      "description": "Complete all remaining fields and final validation",
+      "fieldsToValidate": [
+        "All remaining dropdown selections",
+        "All remaining checkbox options",
+        "All remaining text fields",
+        "Final employment entries",
+        "Complete address and contact information"
+      ],
+      "testValues": [
+        "PDF_VALIDATION_CHECKPOINT_001",
+        "PDF_VALIDATION_CHECKPOINT_002",
+        "PDF_VALIDATION_CHECKPOINT_003"
+      ],
+      "expectedPdfPages": [17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33],
+      "priority": "Critical",
+      "estimatedFieldCount": 273,
+      "newFieldCounter": 0
+    }
+  },
+  "validationCriteria": {
+    "successMetrics": [
+      "All test values searchable in generated PDF",
+      "Field mapping chain complete: UI → PDF → JSON",
+      "No missing or unmapped fields",
+      "PDF file integrity maintained",
+      "Field counter reaches exactly 0"
+    ],
+    "failureCriteria": [
+      "Test values not found in PDF",
+      "PDF generation errors",
+      "Field mapping failures",
+      "Incomplete field population"
+    ],
+    "toolsRequired": [
+      "PDF Reader MCP for validation",
+      "Memory MCP for progress tracking",
+      "Browser automation for field population",
+      "Neo4j Cloud Aura MCP for final storage"
+    ]
+  },
+  "nextSteps": {
+    "immediate": "Begin Iteration 1 - Core Employment Questions",
+    "approach": "Navigate to Section 13 form, populate fields with test values, generate PDF, validate with PDF Reader MCP",
+    "documentation": "Update field counter and Memory MCP after each successful iteration"
+  }
+}

@@ -1,0 +1,378 @@
+{
+  "metadata": {
+    "iterationNumber": 4,
+    "title": "Military/Federal Service Details - Comprehensive Security and Investigation",
+    "description": "Complete military and federal employment subsections with detailed security clearance, investigation history, and specialized military/federal field validation",
+    "targetFields": 100,
+    "estimatedActualFields": 105,
+    "priority": "High",
+    "phase": "Phase 6 - Iteration 4"
+  },
+  "fieldCounterProgress": {
+    "startingCount": 903,
+    "targetValidation": 100,
+    "estimatedNewCount": 803,
+    "cumulativeProgress": 26.1,
+    "remainingIterations": 4
+  },
+  "specializedFieldCategories": {
+    "militaryServiceDetails": {
+      "description": "Comprehensive military service information and specializations",
+      "subsection": "13A.1 Extended",
+      "pdfPages": [20, 21],
+      "fieldCount": 45
+    },
+    "federalEmploymentDetails": {
+      "description": "Federal employment comprehensive information and classifications",
+      "subsection": "13A.2 Extended", 
+      "pdfPages": [21, 22],
+      "fieldCount": 40
+    },
+    "securityClearanceInvestigation": {
+      "description": "Detailed security clearance and investigation history",
+      "subsection": "13B",
+      "pdfPages": [22, 23],
+      "fieldCount": 20
+    }
+  },
+  "fieldsToValidate": {
+    "militaryServiceDetails": {
+      "serviceInformation": {
+        "militaryBranch": {
+          "testValue": "UNIQUE_MILITARY_BRANCH_TEST_044_United_States_Army",
+          "pdfField": "form1[0].section_13_1-2[0].DropdownList[6]",
+          "fieldType": "PDFDropdown",
+          "page": 20,
+          "options": ["Army", "Navy", "Air Force", "Marines", "Coast Guard", "Space Force"]
+        },
+        "serviceComponent": {
+          "testValue": "UNIQUE_SERVICE_COMPONENT_TEST_045_Active_Duty",
+          "pdfField": "form1[0].section_13_1-2[0].RadioButtonList[5]",
+          "fieldType": "PDFRadioGroup",
+          "page": 20,
+          "options": ["Active Duty", "Reserve", "National Guard"]
+        },
+        "militaryOccupationalSpecialty": {
+          "testValue": "UNIQUE_MOS_TEST_046_11A_Infantry_Officer",
+          "pdfField": "form1[0].section_13_1-2[0].TextField20[0]",
+          "fieldType": "PDFTextField",
+          "page": 20
+        },
+        "rankAtEntry": {
+          "testValue": "UNIQUE_ENTRY_RANK_TEST_047_Second_Lieutenant",
+          "pdfField": "form1[0].section_13_1-2[0].TextField20[1]",
+          "fieldType": "PDFTextField",
+          "page": 20
+        },
+        "rankAtSeparation": {
+          "testValue": "UNIQUE_SEPARATION_RANK_TEST_048_Captain",
+          "pdfField": "form1[0].section_13_1-2[0].TextField20[2]",
+          "fieldType": "PDFTextField",
+          "page": 20
+        },
+        "serviceNumber": {
+          "testValue": "UNIQUE_SERVICE_NUMBER_TEST_049_123456789",
+          "pdfField": "form1[0].section_13_1-2[0].TextField20[3]",
+          "fieldType": "PDFTextField",
+          "page": 20
+        }
+      },
+      "deploymentHistory": {
+        "hasDeployments": {
+          "testValue": "YES",
+          "pdfField": "form1[0].section_13_1-2[0].RadioButtonList[6]",
+          "fieldType": "PDFRadioGroup",
+          "page": 20
+        },
+        "deploymentLocation1": {
+          "testValue": "UNIQUE_DEPLOYMENT_LOC1_TEST_050_Afghanistan_Kandahar",
+          "pdfField": "form1[0].section_13_1-2[0].TextField21[0]",
+          "fieldType": "PDFTextField",
+          "page": 20
+        },
+        "deploymentDates1": {
+          "testValue": "UNIQUE_DEPLOYMENT_DATES1_TEST_051_03/2019_to_09/2019",
+          "pdfField": "form1[0].section_13_1-2[0].TextField21[1]",
+          "fieldType": "PDFTextField",
+          "page": 20
+        },
+        "deploymentLocation2": {
+          "testValue": "UNIQUE_DEPLOYMENT_LOC2_TEST_052_Iraq_Baghdad",
+          "pdfField": "form1[0].section_13_1-2[0].TextField21[2]",
+          "fieldType": "PDFTextField",
+          "page": 20
+        },
+        "deploymentDates2": {
+          "testValue": "UNIQUE_DEPLOYMENT_DATES2_TEST_053_06/2020_to_12/2020",
+          "pdfField": "form1[0].section_13_1-2[0].TextField21[3]",
+          "fieldType": "PDFTextField",
+          "page": 20
+        }
+      },
+      "militaryEducation": {
+        "officerCandidateSchool": {
+          "testValue": true,
+          "pdfField": "form1[0].section_13_1-2[0].CheckBox[2]",
+          "fieldType": "PDFCheckBox",
+          "page": 20
+        },
+        "commandAndGeneralStaffCollege": {
+          "testValue": false,
+          "pdfField": "form1[0].section_13_1-2[0].CheckBox[3]",
+          "fieldType": "PDFCheckBox",
+          "page": 20
+        },
+        "warCollege": {
+          "testValue": false,
+          "pdfField": "form1[0].section_13_1-2[0].CheckBox[4]",
+          "fieldType": "PDFCheckBox",
+          "page": 20
+        },
+        "specializedTraining": {
+          "testValue": "UNIQUE_SPECIALIZED_TRAINING_TEST_054_Airborne_Ranger_Leadership",
+          "pdfField": "form1[0].section_13_1-2[0].TextField22[0]",
+          "fieldType": "PDFTextField",
+          "page": 20
+        }
+      },
+      "awards": {
+        "hasAwards": {
+          "testValue": "YES",
+          "pdfField": "form1[0].section_13_1-2[0].RadioButtonList[7]",
+          "fieldType": "PDFRadioGroup",
+          "page": 20
+        },
+        "awardsList": {
+          "testValue": "UNIQUE_AWARDS_TEST_055_Bronze_Star_Combat_Infantry_Badge_Army_Commendation_Medal",
+          "pdfField": "form1[0].section_13_1-2[0].TextField22[1]",
+          "fieldType": "PDFTextField",
+          "page": 20
+        }
+      }
+    },
+    "federalEmploymentDetails": {
+      "positionClassification": {
+        "gradeLevel": {
+          "testValue": "UNIQUE_GRADE_LEVEL_TEST_056_GS_13",
+          "pdfField": "form1[0].section_13_1-2[0].TextField23[0]",
+          "fieldType": "PDFTextField",
+          "page": 21
+        },
+        "step": {
+          "testValue": "UNIQUE_STEP_TEST_057_Step_5",
+          "pdfField": "form1[0].section_13_1-2[0].TextField23[1]",
+          "fieldType": "PDFTextField",
+          "page": 21
+        },
+        "series": {
+          "testValue": "UNIQUE_SERIES_TEST_058_0343_Management_Analyst",
+          "pdfField": "form1[0].section_13_1-2[0].TextField23[2]",
+          "fieldType": "PDFTextField",
+          "page": 21
+        },
+        "payPlan": {
+          "testValue": "UNIQUE_PAY_PLAN_TEST_059_GS",
+          "pdfField": "form1[0].section_13_1-2[0].DropdownList[7]",
+          "fieldType": "PDFDropdown",
+          "page": 21
+        }
+      },
+      "agencyInformation": {
+        "parentAgency": {
+          "testValue": "UNIQUE_PARENT_AGENCY_TEST_060_Department_of_Defense",
+          "pdfField": "form1[0].section_13_1-2[0].TextField24[0]",
+          "fieldType": "PDFTextField",
+          "page": 21
+        },
+        "subAgency": {
+          "testValue": "UNIQUE_SUB_AGENCY_TEST_061_Defense_Intelligence_Agency",
+          "pdfField": "form1[0].section_13_1-2[0].TextField24[1]",
+          "fieldType": "PDFTextField",
+          "page": 21
+        },
+        "officeLocation": {
+          "testValue": "UNIQUE_OFFICE_LOCATION_TEST_062_Pentagon_Room_3E1073",
+          "pdfField": "form1[0].section_13_1-2[0].TextField24[2]",
+          "fieldType": "PDFTextField",
+          "page": 21
+        },
+        "organizationCode": {
+          "testValue": "UNIQUE_ORG_CODE_TEST_063_DIA_J2_HUMINT",
+          "pdfField": "form1[0].section_13_1-2[0].TextField24[3]",
+          "fieldType": "PDFTextField",
+          "page": 21
+        }
+      },
+      "federalEmploymentType": {
+        "appointmentType": {
+          "testValue": "UNIQUE_APPOINTMENT_TYPE_TEST_064_Career_Conditional",
+          "pdfField": "form1[0].section_13_1-2[0].RadioButtonList[8]",
+          "fieldType": "PDFRadioGroup",
+          "page": 21
+        },
+        "competitiveService": {
+          "testValue": true,
+          "pdfField": "form1[0].section_13_1-2[0].CheckBox[5]",
+          "fieldType": "PDFCheckBox",
+          "page": 21
+        },
+        "exceptedService": {
+          "testValue": false,
+          "pdfField": "form1[0].section_13_1-2[0].CheckBox[6]",
+          "fieldType": "PDFCheckBox",
+          "page": 21
+        },
+        "seniorExecutiveService": {
+          "testValue": false,
+          "pdfField": "form1[0].section_13_1-2[0].CheckBox[7]",
+          "fieldType": "PDFCheckBox",
+          "page": 21
+        }
+      },
+      "federalBenefits": {
+        "healthInsurance": {
+          "testValue": true,
+          "pdfField": "form1[0].section_13_1-2[0].CheckBox[8]",
+          "fieldType": "PDFCheckBox",
+          "page": 21
+        },
+        "retirementPlan": {
+          "testValue": "UNIQUE_RETIREMENT_PLAN_TEST_065_FERS",
+          "pdfField": "form1[0].section_13_1-2[0].RadioButtonList[9]",
+          "fieldType": "PDFRadioGroup",
+          "page": 21
+        },
+        "thriftSavingsPlan": {
+          "testValue": true,
+          "pdfField": "form1[0].section_13_1-2[0].CheckBox[9]",
+          "fieldType": "PDFCheckBox",
+          "page": 21
+        }
+      }
+    },
+    "securityClearanceInvestigation": {
+      "investigationHistory": {
+        "hasInvestigations": {
+          "testValue": "YES",
+          "pdfField": "form1[0].section_13_1-2[0].RadioButtonList[10]",
+          "fieldType": "PDFRadioGroup",
+          "page": 22
+        },
+        "investigationType1": {
+          "testValue": "UNIQUE_INVESTIGATION_TYPE1_TEST_066_Single_Scope_Background_Investigation",
+          "pdfField": "form1[0].section_13_1-2[0].TextField25[0]",
+          "fieldType": "PDFTextField",
+          "page": 22
+        },
+        "investigationDate1": {
+          "testValue": "UNIQUE_INVESTIGATION_DATE1_TEST_067_10/2022",
+          "pdfField": "form1[0].section_13_1-2[0].TextField25[1]",
+          "fieldType": "PDFTextField",
+          "page": 22
+        },
+        "investigatingAgency1": {
+          "testValue": "UNIQUE_INVESTIGATING_AGENCY1_TEST_068_Defense_Counterintelligence_Security_Agency",
+          "pdfField": "form1[0].section_13_1-2[0].TextField25[2]",
+          "fieldType": "PDFTextField",
+          "page": 22
+        },
+        "investigationType2": {
+          "testValue": "UNIQUE_INVESTIGATION_TYPE2_TEST_069_Periodic_Reinvestigation",
+          "pdfField": "form1[0].section_13_1-2[0].TextField25[3]",
+          "fieldType": "PDFTextField",
+          "page": 22
+        },
+        "investigationDate2": {
+          "testValue": "UNIQUE_INVESTIGATION_DATE2_TEST_070_01/2023",
+          "pdfField": "form1[0].section_13_1-2[0].TextField25[4]",
+          "fieldType": "PDFTextField",
+          "page": 22
+        }
+      },
+      "polygraphHistory": {
+        "hasPolygraphs": {
+          "testValue": "YES",
+          "pdfField": "form1[0].section_13_1-2[0].RadioButtonList[11]",
+          "fieldType": "PDFRadioGroup",
+          "page": 22
+        },
+        "polygraphType1": {
+          "testValue": "UNIQUE_POLYGRAPH_TYPE1_TEST_071_Counterintelligence_Polygraph",
+          "pdfField": "form1[0].section_13_1-2[0].TextField26[0]",
+          "fieldType": "PDFTextField",
+          "page": 22
+        },
+        "polygraphDate1": {
+          "testValue": "UNIQUE_POLYGRAPH_DATE1_TEST_072_11/2022",
+          "pdfField": "form1[0].section_13_1-2[0].TextField26[1]",
+          "fieldType": "PDFTextField",
+          "page": 22
+        },
+        "polygraphAgency1": {
+          "testValue": "UNIQUE_POLYGRAPH_AGENCY1_TEST_073_Defense_Intelligence_Agency",
+          "pdfField": "form1[0].section_13_1-2[0].TextField26[2]",
+          "fieldType": "PDFTextField",
+          "page": 22
+        }
+      },
+      "clearanceAdjudication": {
+        "adjudicatingAgency": {
+          "testValue": "UNIQUE_ADJUDICATING_AGENCY_TEST_074_Department_of_Defense_Consolidated_Adjudications_Facility",
+          "pdfField": "form1[0].section_13_1-2[0].TextField27[0]",
+          "fieldType": "PDFTextField",
+          "page": 22
+        },
+        "adjudicationDate": {
+          "testValue": "UNIQUE_ADJUDICATION_DATE_TEST_075_12/2022",
+          "pdfField": "form1[0].section_13_1-2[0].TextField27[1]",
+          "fieldType": "PDFTextField",
+          "page": 22
+        },
+        "clearanceGranted": {
+          "testValue": "YES",
+          "pdfField": "form1[0].section_13_1-2[0].RadioButtonList[12]",
+          "fieldType": "PDFRadioGroup",
+          "page": 22
+        },
+        "clearanceDenied": {
+          "testValue": "NO",
+          "pdfField": "form1[0].section_13_1-2[0].RadioButtonList[13]",
+          "fieldType": "PDFRadioGroup",
+          "page": 22
+        }
+      }
+    }
+  },
+  "validationStrategy": {
+    "approach": "Specialized military/federal field validation with security clearance focus",
+    "testDataSource": "tests/section13/validation-test-data.txt",
+    "pdfValidationConfig": {
+      "sources": [{"path": "workspace/SF86_Section13_Iteration4_YYYY-MM-DD-HHMMSS.pdf"}],
+      "sf86_section": "Section 13",
+      "include_form_fields": true,
+      "include_full_text": true,
+      "search_values_file": "tests/section13/validation-test-data.txt",
+      "validation_mode": true,
+      "sf86_page_range": "17-23"
+    },
+    "successCriteria": [
+      "All 100+ specialized test values found in PDF",
+      "Military service details properly validated",
+      "Federal employment classifications validated",
+      "Security clearance investigation history validated",
+      "Specialized field types (ranks, grades, classifications) validated"
+    ]
+  },
+  "expectedOutcomes": {
+    "fieldsValidated": 105,
+    "newFieldCounter": 798,
+    "progressPercentage": 26.5,
+    "pdfPages": [17, 18, 19, 20, 21, 22, 23],
+    "memoryMcpUpdates": [
+      "Military service detail validation patterns",
+      "Federal employment classification validation",
+      "Security clearance investigation validation methodology",
+      "Specialized military/federal field type handling"
+    ]
+  }
+}

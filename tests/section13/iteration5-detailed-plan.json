@@ -1,0 +1,424 @@
+{
+  "metadata": {
+    "iterationNumber": 5,
+    "title": "Self-Employment and Unemployment - Alternative Employment Patterns",
+    "description": "Validate self-employment business information and unemployment periods with comprehensive reference contacts and unique field patterns",
+    "targetFields": 80,
+    "estimatedActualFields": 85,
+    "priority": "High",
+    "phase": "Phase 7 - Iteration 5"
+  },
+  "fieldCounterProgress": {
+    "startingCount": 798,
+    "targetValidation": 80,
+    "estimatedNewCount": 718,
+    "cumulativeProgress": 33.9,
+    "remainingIterations": 3
+  },
+  "alternativeEmploymentTypes": {
+    "selfEmployment": {
+      "description": "Self-employment business information and verification",
+      "subsection": "13A.3",
+      "pdfPages": [23, 24],
+      "fieldCount": 45,
+      "businessType": "Consulting Services"
+    },
+    "unemployment": {
+      "description": "Unemployment periods with reference contacts and benefit information",
+      "subsection": "13A.4",
+      "pdfPages": [24, 25],
+      "fieldCount": 40,
+      "unemploymentType": "Between Jobs"
+    }
+  },
+  "fieldsToValidate": {
+    "selfEmploymentEntry": {
+      "businessInformation": {
+        "businessName": {
+          "testValue": "UNIQUE_SELF_BUSINESS_NAME_TEST_076_Strategic_Solutions_Consulting_LLC",
+          "pdfField": "form1[0].section_13_1-2[0].TextField28[0]",
+          "fieldType": "PDFTextField",
+          "page": 23
+        },
+        "businessType": {
+          "testValue": "UNIQUE_BUSINESS_TYPE_TEST_077_Management_Consulting_Services",
+          "pdfField": "form1[0].section_13_1-2[0].TextField28[1]",
+          "fieldType": "PDFTextField",
+          "page": 23
+        },
+        "businessAddress": {
+          "street": {
+            "testValue": "UNIQUE_BUSINESS_ADDRESS_TEST_078_Executive_Business_Center_Suite_200",
+            "pdfField": "form1[0].section_13_1-2[0].TextField29[0]",
+            "fieldType": "PDFTextField",
+            "page": 23
+          },
+          "city": {
+            "testValue": "UNIQUE_BUSINESS_CITY_TEST_079_McLean",
+            "pdfField": "form1[0].section_13_1-2[0].TextField29[1]",
+            "fieldType": "PDFTextField",
+            "page": 23
+          },
+          "state": {
+            "testValue": "VA",
+            "pdfField": "form1[0].section_13_1-2[0].DropdownList[8]",
+            "fieldType": "PDFDropdown",
+            "page": 23
+          },
+          "zipCode": {
+            "testValue": "UNIQUE_BUSINESS_ZIP_TEST_080_22102",
+            "pdfField": "form1[0].section_13_1-2[0].TextField29[2]",
+            "fieldType": "PDFTextField",
+            "page": 23
+          },
+          "country": {
+            "testValue": "United States",
+            "pdfField": "form1[0].section_13_1-2[0].DropdownList[9]",
+            "fieldType": "PDFDropdown",
+            "page": 23
+          }
+        },
+        "businessDates": {
+          "startDate": {
+            "testValue": "UNIQUE_BUSINESS_START_DATE_TEST_081_03/2018",
+            "pdfField": "form1[0].section_13_1-2[0].From_Datefield_Name_5[0]",
+            "fieldType": "PDFTextField",
+            "page": 23
+          },
+          "endDate": {
+            "testValue": "UNIQUE_BUSINESS_END_DATE_TEST_082_11/2022",
+            "pdfField": "form1[0].section_13_1-2[0].From_Datefield_Name_5[1]",
+            "fieldType": "PDFTextField",
+            "page": 23
+          },
+          "stillOperating": {
+            "testValue": false,
+            "pdfField": "form1[0].section_13_1-2[0].Present[3]",
+            "fieldType": "PDFCheckBox",
+            "page": 23
+          }
+        }
+      },
+      "businessDetails": {
+        "natureOfBusiness": {
+          "testValue": "UNIQUE_BUSINESS_NATURE_TEST_083_Strategic_planning_organizational_development_process_improvement_consulting",
+          "pdfField": "form1[0].section_13_1-2[0].TextField30[0]",
+          "fieldType": "PDFTextField",
+          "page": 23
+        },
+        "businessPhone": {
+          "testValue": "UNIQUE_BUSINESS_PHONE_TEST_084_703-555-0987",
+          "pdfField": "form1[0].section_13_1-2[0].TextField30[1]",
+          "fieldType": "PDFTextField",
+          "page": 23
+        },
+        "businessEmail": {
+          "testValue": "UNIQUE_BUSINESS_EMAIL_TEST_085_contact@strategicsolutions.com",
+          "pdfField": "form1[0].section_13_1-2[0].TextField30[2]",
+          "fieldType": "PDFTextField",
+          "page": 23
+        },
+        "businessWebsite": {
+          "testValue": "UNIQUE_BUSINESS_WEBSITE_TEST_086_www.strategicsolutions.com",
+          "pdfField": "form1[0].section_13_1-2[0].TextField30[3]",
+          "fieldType": "PDFTextField",
+          "page": 23
+        },
+        "employeeCount": {
+          "testValue": "UNIQUE_EMPLOYEE_COUNT_TEST_087_Solo_Practitioner",
+          "pdfField": "form1[0].section_13_1-2[0].TextField31[0]",
+          "fieldType": "PDFTextField",
+          "page": 23
+        },
+        "annualRevenue": {
+          "testValue": "UNIQUE_ANNUAL_REVENUE_TEST_088_150000",
+          "pdfField": "form1[0].section_13_1-2[0].TextField31[1]",
+          "fieldType": "PDFTextField",
+          "page": 23
+        }
+      },
+      "businessVerification": {
+        "businessLicense": {
+          "hasLicense": {
+            "testValue": "YES",
+            "pdfField": "form1[0].section_13_1-2[0].RadioButtonList[14]",
+            "fieldType": "PDFRadioGroup",
+            "page": 23
+          },
+          "licenseNumber": {
+            "testValue": "UNIQUE_LICENSE_NUMBER_TEST_089_VA_LLC_12345678",
+            "pdfField": "form1[0].section_13_1-2[0].TextField32[0]",
+            "fieldType": "PDFTextField",
+            "page": 23
+          },
+          "licensingAuthority": {
+            "testValue": "UNIQUE_LICENSING_AUTHORITY_TEST_090_Virginia_State_Corporation_Commission",
+            "pdfField": "form1[0].section_13_1-2[0].TextField32[1]",
+            "fieldType": "PDFTextField",
+            "page": 23
+          }
+        },
+        "taxInformation": {
+          "federalTaxId": {
+            "testValue": "UNIQUE_FEDERAL_TAX_ID_TEST_091_12-3456789",
+            "pdfField": "form1[0].section_13_1-2[0].TextField32[2]",
+            "fieldType": "PDFTextField",
+            "page": 23
+          },
+          "businessStructure": {
+            "testValue": "UNIQUE_BUSINESS_STRUCTURE_TEST_092_Limited_Liability_Company",
+            "pdfField": "form1[0].section_13_1-2[0].DropdownList[10]",
+            "fieldType": "PDFDropdown",
+            "page": 23
+          }
+        },
+        "clientReferences": {
+          "hasClientReferences": {
+            "testValue": "YES",
+            "pdfField": "form1[0].section_13_1-2[0].RadioButtonList[15]",
+            "fieldType": "PDFRadioGroup",
+            "page": 23
+          },
+          "clientReference1": {
+            "clientName": {
+              "testValue": "UNIQUE_CLIENT_NAME1_TEST_093_TechForward_Industries",
+              "pdfField": "form1[0].section_13_1-2[0].TextField33[0]",
+              "fieldType": "PDFTextField",
+              "page": 23
+            },
+            "contactPerson": {
+              "testValue": "UNIQUE_CLIENT_CONTACT1_TEST_094_Jennifer_Martinez_CEO",
+              "pdfField": "form1[0].section_13_1-2[0].TextField33[1]",
+              "fieldType": "PDFTextField",
+              "page": 23
+            },
+            "contactPhone": {
+              "testValue": "UNIQUE_CLIENT_PHONE1_TEST_095_571-555-0234",
+              "pdfField": "form1[0].section_13_1-2[0].TextField33[2]",
+              "fieldType": "PDFTextField",
+              "page": 23
+            },
+            "contactEmail": {
+              "testValue": "UNIQUE_CLIENT_EMAIL1_TEST_096_j.martinez@techforward.com",
+              "pdfField": "form1[0].section_13_1-2[0].TextField33[3]",
+              "fieldType": "PDFTextField",
+              "page": 23
+            }
+          },
+          "clientReference2": {
+            "clientName": {
+              "testValue": "UNIQUE_CLIENT_NAME2_TEST_097_Global_Dynamics_Corp",
+              "pdfField": "form1[0].section_13_1-2[0].TextField34[0]",
+              "fieldType": "PDFTextField",
+              "page": 23
+            },
+            "contactPerson": {
+              "testValue": "UNIQUE_CLIENT_CONTACT2_TEST_098_Robert_Chen_VP_Operations",
+              "pdfField": "form1[0].section_13_1-2[0].TextField34[1]",
+              "fieldType": "PDFTextField",
+              "page": 23
+            },
+            "contactPhone": {
+              "testValue": "UNIQUE_CLIENT_PHONE2_TEST_099_202-555-0567",
+              "pdfField": "form1[0].section_13_1-2[0].TextField34[2]",
+              "fieldType": "PDFTextField",
+              "page": 23
+            },
+            "contactEmail": {
+              "testValue": "UNIQUE_CLIENT_EMAIL2_TEST_100_r.chen@globaldynamics.com",
+              "pdfField": "form1[0].section_13_1-2[0].TextField34[3]",
+              "fieldType": "PDFTextField",
+              "page": 23
+            }
+          }
+        }
+      }
+    },
+    "unemploymentPeriod": {
+      "unemploymentDetails": {
+        "unemploymentReason": {
+          "testValue": "UNIQUE_UNEMPLOYMENT_REASON_TEST_101_Voluntary_career_transition_between_positions",
+          "pdfField": "form1[0].section_13_1-2[0].TextField35[0]",
+          "fieldType": "PDFTextField",
+          "page": 24
+        },
+        "unemploymentDates": {
+          "startDate": {
+            "testValue": "UNIQUE_UNEMPLOYMENT_START_DATE_TEST_102_01/2023",
+            "pdfField": "form1[0].section_13_1-2[0].From_Datefield_Name_6[0]",
+            "fieldType": "PDFTextField",
+            "page": 24
+          },
+          "endDate": {
+            "testValue": "UNIQUE_UNEMPLOYMENT_END_DATE_TEST_103_12/2022",
+            "pdfField": "form1[0].section_13_1-2[0].From_Datefield_Name_6[1]",
+            "fieldType": "PDFTextField",
+            "page": 24
+          }
+        },
+        "unemploymentBenefits": {
+          "receivedBenefits": {
+            "testValue": "NO",
+            "pdfField": "form1[0].section_13_1-2[0].RadioButtonList[16]",
+            "fieldType": "PDFRadioGroup",
+            "page": 24
+          },
+          "benefitAmount": {
+            "testValue": "UNIQUE_BENEFIT_AMOUNT_TEST_104_Not_Applicable",
+            "pdfField": "form1[0].section_13_1-2[0].TextField35[1]",
+            "fieldType": "PDFTextField",
+            "page": 24
+          }
+        }
+      },
+      "unemploymentReferences": {
+        "hasReferences": {
+          "testValue": "YES",
+          "pdfField": "form1[0].section_13_1-2[0].RadioButtonList[17]",
+          "fieldType": "PDFRadioGroup",
+          "page": 24
+        },
+        "reference1": {
+          "referenceName": {
+            "testValue": "UNIQUE_UNEMPLOYMENT_REF1_NAME_TEST_105_Dr_Amanda_Thompson",
+            "pdfField": "form1[0].section_13_1-2[0].TextField36[0]",
+            "fieldType": "PDFTextField",
+            "page": 24
+          },
+          "referenceRelationship": {
+            "testValue": "UNIQUE_UNEMPLOYMENT_REF1_RELATIONSHIP_TEST_106_Professional_Colleague_Former_Client",
+            "pdfField": "form1[0].section_13_1-2[0].TextField36[1]",
+            "fieldType": "PDFTextField",
+            "page": 24
+          },
+          "referencePhone": {
+            "testValue": "UNIQUE_UNEMPLOYMENT_REF1_PHONE_TEST_107_301-555-0890",
+            "pdfField": "form1[0].section_13_1-2[0].TextField36[2]",
+            "fieldType": "PDFTextField",
+            "page": 24
+          },
+          "referenceEmail": {
+            "testValue": "UNIQUE_UNEMPLOYMENT_REF1_EMAIL_TEST_108_a.thompson@consulting.com",
+            "pdfField": "form1[0].section_13_1-2[0].TextField36[3]",
+            "fieldType": "PDFTextField",
+            "page": 24
+          },
+          "referenceAddress": {
+            "street": {
+              "testValue": "UNIQUE_UNEMPLOYMENT_REF1_ADDRESS_TEST_109_Professional_Plaza_Building",
+              "pdfField": "form1[0].section_13_1-2[0].TextField37[0]",
+              "fieldType": "PDFTextField",
+              "page": 24
+            },
+            "city": {
+              "testValue": "UNIQUE_UNEMPLOYMENT_REF1_CITY_TEST_110_Bethesda",
+              "pdfField": "form1[0].section_13_1-2[0].TextField37[1]",
+              "fieldType": "PDFTextField",
+              "page": 24
+            },
+            "state": {
+              "testValue": "MD",
+              "pdfField": "form1[0].section_13_1-2[0].DropdownList[11]",
+              "fieldType": "PDFDropdown",
+              "page": 24
+            },
+            "zipCode": {
+              "testValue": "UNIQUE_UNEMPLOYMENT_REF1_ZIP_TEST_111_20814",
+              "pdfField": "form1[0].section_13_1-2[0].TextField37[2]",
+              "fieldType": "PDFTextField",
+              "page": 24
+            }
+          }
+        },
+        "reference2": {
+          "referenceName": {
+            "testValue": "UNIQUE_UNEMPLOYMENT_REF2_NAME_TEST_112_Mark_Stevens",
+            "pdfField": "form1[0].section_13_1-2[0].TextField38[0]",
+            "fieldType": "PDFTextField",
+            "page": 24
+          },
+          "referenceRelationship": {
+            "testValue": "UNIQUE_UNEMPLOYMENT_REF2_RELATIONSHIP_TEST_113_Personal_Friend_Professional_Network",
+            "pdfField": "form1[0].section_13_1-2[0].TextField38[1]",
+            "fieldType": "PDFTextField",
+            "page": 24
+          },
+          "referencePhone": {
+            "testValue": "UNIQUE_UNEMPLOYMENT_REF2_PHONE_TEST_114_410-555-0345",
+            "pdfField": "form1[0].section_13_1-2[0].TextField38[2]",
+            "fieldType": "PDFTextField",
+            "page": 24
+          },
+          "referenceEmail": {
+            "testValue": "UNIQUE_UNEMPLOYMENT_REF2_EMAIL_TEST_115_mark.stevens@email.com",
+            "pdfField": "form1[0].section_13_1-2[0].TextField38[3]",
+            "fieldType": "PDFTextField",
+            "page": 24
+          }
+        }
+      },
+      "unemploymentActivities": {
+        "jobSearchActivities": {
+          "activelySearching": {
+            "testValue": "YES",
+            "pdfField": "form1[0].section_13_1-2[0].RadioButtonList[18]",
+            "fieldType": "PDFRadioGroup",
+            "page": 24
+          },
+          "searchMethods": {
+            "testValue": "UNIQUE_SEARCH_METHODS_TEST_116_Online_job_boards_professional_networking_recruitment_agencies",
+            "pdfField": "form1[0].section_13_1-2[0].TextField39[0]",
+            "fieldType": "PDFTextField",
+            "page": 24
+          }
+        },
+        "professionalDevelopment": {
+          "continuingEducation": {
+            "testValue": "UNIQUE_CONTINUING_EDUCATION_TEST_117_Project_Management_Certification_Leadership_Training",
+            "pdfField": "form1[0].section_13_1-2[0].TextField39[1]",
+            "fieldType": "PDFTextField",
+            "page": 24
+          },
+          "volunteerWork": {
+            "testValue": "UNIQUE_VOLUNTEER_WORK_TEST_118_Local_Chamber_of_Commerce_Business_Mentorship_Program",
+            "pdfField": "form1[0].section_13_1-2[0].TextField39[2]",
+            "fieldType": "PDFTextField",
+            "page": 24
+          }
+        }
+      }
+    }
+  },
+  "validationStrategy": {
+    "approach": "Alternative employment type validation with business and reference verification",
+    "testDataSource": "tests/section13/validation-test-data.txt",
+    "pdfValidationConfig": {
+      "sources": [{"path": "workspace/SF86_Section13_Iteration5_YYYY-MM-DD-HHMMSS.pdf"}],
+      "sf86_section": "Section 13",
+      "include_form_fields": true,
+      "include_full_text": true,
+      "search_values_file": "tests/section13/validation-test-data.txt",
+      "validation_mode": true,
+      "sf86_page_range": "17-25"
+    },
+    "successCriteria": [
+      "All 80+ alternative employment test values found in PDF",
+      "Self-employment business information properly validated",
+      "Unemployment periods with reference contacts validated",
+      "Business verification and tax information validated",
+      "Reference contact information properly mapped"
+    ]
+  },
+  "expectedOutcomes": {
+    "fieldsValidated": 85,
+    "newFieldCounter": 713,
+    "progressPercentage": 34.3,
+    "pdfPages": [17, 18, 19, 20, 21, 22, 23, 24, 25],
+    "memoryMcpUpdates": [
+      "Self-employment business validation patterns",
+      "Unemployment period validation methodology",
+      "Business verification and licensing validation",
+      "Reference contact validation for alternative employment types"
+    ]
+  }
+}

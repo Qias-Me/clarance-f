@@ -38,6 +38,8 @@ The validation should confirm that all manually entered Section 13 data is prope
 
 
 
+Be sure to use a txt file contaning the expected values to search for in the PDF
+
 
 Based on my manual analysis it seems the fields are not being applied tot he PDF, so maybe you need to use playwright mcp to do better field validation before the values are even submitted to ensure everything is on the right track
 
@@ -46,3 +48,7 @@ Based on my manual analysis it seems the fields are not being applied tot he PDF
 
 
 section 13 has 1086 fields... so please ensure they are all being properly applied to the pdf
+
+
+
+If the values do not exits you must repeat the loop
