@@ -8,7 +8,7 @@
 
 import React, { useState, useCallback, useMemo } from "react";
 import { useSF86Form } from "~/state/contexts/sections2.0/SF86FormContext";
-import { generateAndDownloadPdf, generatePdfViaServer, downloadJsonData as downloadJsonDataUtil } from "../../utils/pdfGenerationUtils";
+import { generateAndDownloadPdf, generatePdfViaServer, generateAndValidatePdf, downloadJsonData as downloadJsonDataUtil } from "../../utils/pdfGenerationUtils";
 // Import shared SF-86 section configuration instead of individual components
 import { getActiveSections } from "~/utils/sf86SectionConfig";
 
@@ -89,6 +89,48 @@ const SF86FormMain: React.FC<SF86FormMainProps> = ({ className = "" }) => {
     } catch (error) {
       // console.error("💥 Error during server PDF generation:", error);
     }
+  };
+
+  // Handle PDF generation with in-memory validation
+  const handleGeneratePdfWithValidation = async (sectionName: string, inMemoryOnly = true) => {
+    try {
+      // Collect all section data from contexts before processing
+      const completeFormData = exportForm();
+
+      // Use enhanced PDF generation with validation
+      await generateAndValidatePdf(completeFormData, {
+        targetPage: getSectionTargetPage(sectionName),
+        sectionReference: `section-${sectionName}`,
+        inMemoryValidation: inMemoryOnly
+      }, {
+        filename: `SF86_${sectionName}_Validated_${new Date().toISOString().split("T")[0]}.pdf`,
+        showConsoleOutput: true,
+        onProgress: (msg) => console.log(`📋 ${msg}`),
+        onError: (err) => console.error(`❌ ${err}`),
+        onSuccess: (result) => {
+          console.info(`🎉 ${sectionName} PDF validation completed!`);
+          if (result.validation) {
+            console.info(`✅ Fields matched: ${result.validation.fieldsMatched}/${result.validation.fieldsFound.length}`);
+          }
+        }
+      });
+
+    } catch (error) {
+      console.error(`💥 Error during ${sectionName} PDF validation:`, error);
+    }
+  };
+
+  // Helper function to get target page for each section
+  const getSectionTargetPage = (sectionName: string): number => {
+    const pageMap: Record<string, number> = {
+      '1': 5,
+      '2': 5,
+      '7': 6,
+      '9': 8,
+      '12': 32,
+      '13': 33
+    };
+    return pageMap[sectionName] || 5;
   };
 
   // Handle form validation

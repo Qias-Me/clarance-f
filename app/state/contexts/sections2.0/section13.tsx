@@ -94,68 +94,76 @@ export const createDefaultMilitaryEmploymentEntry = (entryId: string | number): 
   return {
     _id: entryId,
 
-    // Basic Employment Information
-    employerName: createMappedField('section13.militaryEmployment.entries[0].employerName', ''),
-    positionTitle: createMappedField('section13.militaryEmployment.entries[0].positionTitle', ''),
+    // Basic Employment Information - CORRECTED FIELD MAPPINGS
+    employerName: createMappedField('employerName', ''),
+    positionTitle: createMappedField('positionTitle', ''),
 
-    // Supervisor Information
+    // Supervisor Information - CORRECTED FIELD MAPPINGS
     supervisor: {
-      name: createFieldFromReference(13, 'sect13A.1Entry1SupervisorName', ''),
-      title: createFieldFromReference(13, 'sect13A.1Entry1SupervisorRank', ''),
-      phone: createFieldFromReference(13, 'sect13A.1Entry1SupervisorPhone', ''),
-      email: createFieldFromReference(13, 'sect13A.1Entry1SupervisorEmail', '')
+      name: createMappedField('supervisor.name', ''),
+      title: createMappedField('supervisor.title', ''),
+      email: createMappedField('supervisor.email', ''),
+      emailUnknown: createMappedField('supervisor.emailUnknown', false),
+      phone: {
+        number: createMappedField('supervisor.phone.number', ''),
+        extension: createMappedField('supervisor.phone.extension', ''),
+        isDSN: createMappedField('supervisor.phone.isDSN', false),
+        isDay: createMappedField('supervisor.phone.isDay', false),
+        isNight: createMappedField('supervisor.phone.isNight', false)
+      },
+      workLocation: {
+        street: createMappedField('supervisor.workLocation.street', ''),
+        city: createMappedField('supervisor.workLocation.city', ''),
+        state: createMappedField('supervisor.workLocation.state', ''),
+        zipCode: createMappedField('supervisor.workLocation.zipCode', ''),
+        country: createMappedField('supervisor.workLocation.country', 'United States')
+      },
+      hasApoFpo: createMappedField('supervisor.hasApoFpo', false),
+      canContact: createMappedField('supervisor.canContact', 'YES' as "YES" | "NO"),
+      contactRestrictions: createMappedField('supervisor.contactRestrictions', '')
     },
 
-    // Employer Address
-    employerAddress: {
-      street: createFieldFromReference(13, 'sect13A.1Entry1Street', ''),
-      city: createFieldFromReference(13, 'sect13A.1Entry1City', ''),
-      state: createFieldFromReference(13, 'sect13A.1Entry1State', ''),
-      zipCode: createFieldFromReference(13, 'sect13A.1Entry1Zip', ''),
-      country: createFieldFromReference(13, 'sect13A.1Entry1Country', '')
-    },
 
-    // Employment Dates
+
+    // Employment Dates - CORRECTED FIELD MAPPINGS
     employmentDates: {
-      fromDate: createMappedField('section13.militaryEmployment.entries[0].employmentDates.fromDate', ''),
-      toDate: createMappedField('section13.militaryEmployment.entries[0].employmentDates.toDate', ''),
-      fromEstimated: createMappedField('section13.militaryEmployment.entries[0].employmentDates.fromEstimated', false),
-      toEstimated: createMappedField('section13.militaryEmployment.entries[0].employmentDates.toEstimated', false),
-      present: createMappedField('section13.militaryEmployment.entries[0].employmentDates.present', false)
+      fromDate: createMappedField('employmentDates.fromDate', ''),
+      toDate: createMappedField('employmentDates.toDate', ''),
+      fromEstimated: createMappedField('employmentDates.fromEstimated', false),
+      toEstimated: createMappedField('employmentDates.toEstimated', false),
+      present: createMappedField('employmentDates.present', false)
     },
 
     employmentStatus: {
-      ...createFieldFromReference(13, 'sect13A.1Entry1EmploymentStatus', 'Full-time' as EmploymentStatus),
+      ...createMappedField('employmentStatus', 'Full-time' as EmploymentStatus),
       options: ['Full-time', 'Part-time'] as const
     },
 
-    rankTitle: createFieldFromReference(13, 'sect13A.1Entry1RankTitle', ''),
+    rankTitle: createMappedField('rankTitle', ''),
     dutyStation: {
-      dutyStation: createFieldFromReference(13, 'sect13A.1Entry1DutyStation', ''),
-      street: createFieldFromReference(13, 'sect13A.1Entry1DutyStreet', ''),
-      city: createFieldFromReference(13, 'sect13A.1Entry1DutyCity', ''),
+      dutyStation: createMappedField('dutyStation.dutyStation', ''),
+      street: createMappedField('dutyStation.street', ''),
+      city: createMappedField('dutyStation.city', ''),
       state: {
-        ...createFieldFromReference(13, 'sect13A.1Entry1DutyState', ''),
+        ...createMappedField('dutyStation.state', ''),
         options: []
       },
-      zipCode: createFieldFromReference(13, 'sect13A.1Entry1DutyZip', ''),
+      zipCode: createMappedField('dutyStation.zipCode', ''),
       country: {
-        ...createFieldFromReference(13, 'sect13A.1Entry1DutyCountry', ''),
+        ...createMappedField('dutyStation.country', ''),
         options: []
       }
     },
 
     phone: {
-      number: createFieldFromReference(13, 'sect13A.1Entry1Phone', ''),
-      extension: createFieldFromReference(13, 'sect13A.1Entry1Extension1', ''),
-      isDSN: createFieldFromReference(13, 'sect13A.1Entry1DSN', false),
-      isDay: createFieldFromReference(13, 'sect13A.1Entry1Day', false),
-      isNight: createFieldFromReference(13, 'sect13A.1Entry1Night', false)
+      number: createMappedField('phone.number', ''),
+      extension: createMappedField('phone.extension', ''),
+      isDSN: createMappedField('phone.isDSN', false),
+      isDay: createMappedField('phone.isDay', false),
+      isNight: createMappedField('phone.isNight', false)
     },
 
-    otherExplanation: createFieldFromReference(13, 'sect13A.1Entry1OtherExplanation', ''),
-    createdAt: new Date(),
-    updatedAt: new Date()
+    otherExplanation: createMappedField('otherExplanation', '')
   };
 };
 
@@ -167,8 +175,8 @@ export const createDefaultNonFederalEmploymentEntry = (entryId: string | number)
     _id: entryId,
 
     // Basic Employment Information - NOW USING MAPPED FIELDS
-    employerName: createMappedField('section13.nonFederalEmployment.entries[0].employerName', ''),
-    positionTitle: createMappedField('section13.nonFederalEmployment.entries[0].positionTitle', ''),
+    employerName: createMappedField('section13.nonFederalEmployment.entries[0].employer.name', ''),
+    positionTitle: createMappedField('section13.nonFederalEmployment.entries[0].position.title', ''),
 
     // Supervisor Information - NOW USING MAPPED FIELDS
     supervisor: {
@@ -234,10 +242,10 @@ export const createDefaultNonFederalEmploymentEntry = (entryId: string | number)
 
     hasAdditionalPeriods: createMappedField('section13.nonFederalEmployment.entries[0].hasAdditionalPeriods', false),
     additionalPeriods: [],
-    hasPhysicalWorkAddress: createMappedField('section13.nonFederalEmployment.entries[0].hasPhysicalWorkAddress', false),
-
-    createdAt: new Date(),
-    updatedAt: new Date()
+    multipleEmploymentPeriods: {
+      periods: []
+    },
+    hasPhysicalWorkAddress: createMappedField('section13.nonFederalEmployment.entries[0].hasPhysicalWorkAddress', false)
   };
 };
 
@@ -305,10 +313,7 @@ export const createDefaultSelfEmploymentEntry = (entryId: string | number): Self
       isDSN: createFieldFromReference(13, 'sect13A.3Entry1_DSN', false),
       isDay: createFieldFromReference(13, 'sect13A.3Entry1_Day', false),
       isNight: createFieldFromReference(13, 'sect13A.3Entry1_Night', false)
-    },
-
-    createdAt: new Date(),
-    updatedAt: new Date()
+    }
   };
 };
 
@@ -350,10 +355,7 @@ export const createDefaultUnemploymentEntry = (entryId: string | number): Unempl
         isDay: createFieldFromReference(13, 'sect13A.4Entry1_Day', false),
         isNight: createFieldFromReference(13, 'sect13A.4Entry1_Night', false)
       }
-    },
-
-    createdAt: new Date(),
-    updatedAt: new Date()
+    }
   };
 };
 
@@ -411,6 +413,7 @@ export const createDefaultSection13 = (includeInitialEntry: boolean = false): Se
         wasFired: createMappedField('sect13A.5WasFired', false),
         quitAfterBeingTold: createMappedField('sect13A.5QuitAfterBeingTold', false),
         leftByMutualAgreement: createMappedField('sect13A.5LeftByMutualAgreement', false)
+        // Note: hasChargesOrAllegations and hasUnsatisfactoryPerformance fields don't exist in the PDF
       },
 
       // Disciplinary actions (Section 13A.6) - NOW USING MAPPED FIELDS

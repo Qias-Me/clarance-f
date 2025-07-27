@@ -9,6 +9,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSection13 } from '~/state/contexts/sections2.0/section13';
 import { useSF86Form } from '~/state/contexts/sections2.0/SF86FormContext';
+import { integratedValidationService, type IntegratedValidationResult } from '../../../api/service/integratedValidationService';
 
 interface Section13ComponentProps {
   className?: string;
@@ -51,6 +52,8 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
 
   // Track validation state internally
   const [isValid, setIsValid] = useState(false);
+  const [validationResult, setValidationResult] = useState<IntegratedValidationResult | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
 
   // Handle validation on component mount and when data changes
   useEffect(() => {
@@ -65,19 +68,20 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
   };
 
   // Handle employment entry field updates
-  const handleEmploymentEntryFieldChange = (entryType: string, entryId: string, fieldPath: string, value: any) => {
+  const handleEmploymentEntryFieldChange = (entryType: string, entryId: string | number, fieldPath: string, value: any) => {
+    const stringEntryId = String(entryId);
     switch (entryType) {
       case 'militaryEmployment':
-        updateMilitaryEmploymentEntry(entryId, `${fieldPath}.value`, value);
+        updateMilitaryEmploymentEntry(stringEntryId, `${fieldPath}.value`, value);
         break;
       case 'nonFederalEmployment':
-        updateNonFederalEmploymentEntry(entryId, `${fieldPath}.value`, value);
+        updateNonFederalEmploymentEntry(stringEntryId, `${fieldPath}.value`, value);
         break;
       case 'selfEmployment':
-        updateSelfEmploymentEntry(entryId, `${fieldPath}.value`, value);
+        updateSelfEmploymentEntry(stringEntryId, `${fieldPath}.value`, value);
         break;
       case 'unemployment':
-        updateUnemploymentEntry(entryId, `${fieldPath}.value`, value);
+        updateUnemploymentEntry(stringEntryId, `${fieldPath}.value`, value);
         break;
     }
   };
@@ -128,6 +132,80 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
   // Reset function
   const handleReset = () => {
     resetSection();
+    setValidationResult(null);
+  };
+
+  // Handle validation inputs
+  const handleValidateInputs = async () => {
+    setIsValidating(true);
+    setValidationResult(null);
+
+    try {
+      console.log('🚀 Starting Section 13 input validation...');
+
+      // First, generate a PDF with current form data
+      // const currentFormData = sf86Form.exportForm();
+      // const updatedFormData = { ...currentFormData, section13: section13Data };
+
+      // Generate PDF using the existing PDF generation service
+      const pdfResult = await sf86Form.generatePdf();
+
+      if (!pdfResult.success) {
+        throw new Error('Failed to generate PDF for validation');
+      }
+
+      // Use the actual PDF bytes from the generation result
+      const pdfBytes = pdfResult.pdfBytes;
+
+      if (!pdfBytes || pdfBytes.length === 0) {
+        throw new Error('No PDF data received from generation process');
+      }
+
+      console.log('📄 PDF generated, starting validation...');
+      console.log(`📊 PDF size: ${(pdfBytes.length / 1024 / 1024).toFixed(2)} MB`);
+
+      // Run integrated validation on page 17 (Section 13)
+      const validationResult = await integratedValidationService.validateSection13Inputs(
+        pdfBytes,
+        {
+          clearData: true,
+          generateImages: true,
+          extractFields: true,
+          targetPage: 17,
+          validateAgainstExpected:true
+        }
+      );
+
+      setValidationResult(validationResult);
+      console.log('✅ Validation completed successfully:', validationResult);
+
+    } catch (error: any) {
+      console.error('❌ Validation failed:', error);
+      setValidationResult({
+        success: false,
+        targetPage: 17,
+        section: 13,
+        totalFields: 0,
+        fieldsWithValues: 0,
+        fieldsEmpty: 0,
+        pageResult: {
+          pageNumber: 17,
+          totalFields: 0,
+          fieldsWithValues: 0,
+          fieldsEmpty: 0,
+          fields: [],
+          imageGenerated: false
+        },
+        errors: [error.message || 'Validation failed'],
+        warnings: [],
+        processingTime: 0,
+        dataCleared: false,
+        imageGenerated: false,
+        fieldsExtracted: false
+      });
+    } finally {
+      setIsValidating(false);
+    }
   };
 
   // Get field value safely
@@ -139,6 +217,8 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
       return section13Data.section13?.hasGaps?.value || 'NO';
     } else if (fieldPath === 'gapExplanation') {
       return section13Data.section13?.gapExplanation?.value || '';
+    } else if (fieldPath === 'employmentType') {
+      return section13Data.section13?.employmentType?.value || 'Other';
     }
     return '';
   };
@@ -257,6 +337,140 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
           </div>
         )}
 
+        {/* Employment Type Selection */}
+        {getFieldValue('hasEmployment') === 'YES' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-4">
+              Select your employment type <span className="text-red-500">*</span>
+            </label>
+            <div className="space-y-2">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="employmentType"
+                  value="Military"
+                  checked={section13Data.section13?.employmentType?.value === "Military"}
+                  onChange={(e) => handleFieldChange('employmentType', e.target.value)}
+                  className="mr-2"
+                  required
+                />
+                Active military duty station (Complete 13A.1, 13A.5 and 13A.6)
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="employmentType"
+                  value="National Guard/Reserve"
+                  checked={section13Data.section13?.employmentType?.value === "National Guard/Reserve"}
+                  onChange={(e) => handleFieldChange('employmentType', e.target.value)}
+                  className="mr-2"
+                  required
+                />
+                National Guard/Reserve (Complete 13A.1, 13A.5 and 13A.6)
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="employmentType"
+                  value="USPHS"
+                  checked={section13Data.section13?.employmentType?.value === "USPHS"}
+                  onChange={(e) => handleFieldChange('employmentType', e.target.value)}
+                  className="mr-2"
+                  required
+                />
+                USPHS Commissioned Corps (Complete 13A.1, 13A.5 and 13A.6)
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="employmentType"
+                  value="Federal"
+                  checked={section13Data.section13?.employmentType?.value === "Federal"}
+                  onChange={(e) => handleFieldChange('employmentType', e.target.value)}
+                  className="mr-2"
+                  required
+                />
+                Other Federal employment (Complete 13A.2, 13A.5 and 13A.6)
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="employmentType"
+                  value="State Government"
+                  checked={section13Data.section13?.employmentType?.value === "State Government"}
+                  onChange={(e) => handleFieldChange('employmentType', e.target.value)}
+                  className="mr-2"
+                  required
+                />
+                State Government (Complete 13A.2, 13A.5 and 13A.6)
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="employmentType"
+                  value="Federal Contractor"
+                  checked={section13Data.section13?.employmentType?.value === "Federal Contractor"}
+                  onChange={(e) => handleFieldChange('employmentType', e.target.value)}
+                  className="mr-2"
+                  required
+                />
+                Federal Contractor (Complete 13A.2, 13A.5 and 13A.6)
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="employmentType"
+                  value="Non-government employment"
+                  checked={section13Data.section13?.employmentType?.value === "Non-government employment"}
+                  onChange={(e) => handleFieldChange('employmentType', e.target.value)}
+                  className="mr-2"
+                  required
+                />
+                Non-government employment (Complete 13A.2, 13A.5 and 13A.6)
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="employmentType"
+                  value="Self-Employment"
+                  checked={section13Data.section13?.employmentType?.value === "Self-Employment"}
+                  onChange={(e) => handleFieldChange('employmentType', e.target.value)}
+                  className="mr-2"
+                  required
+                />
+                Self-Employment (Complete 13A.3, 13A.5 and 13A.6)
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="employmentType"
+                  value="Unemployment"
+                  checked={section13Data.section13?.employmentType?.value === "Unemployment"}
+                  onChange={(e) => handleFieldChange('employmentType', e.target.value)}
+                  className="mr-2"
+                  required
+                />
+                Unemployment (Complete 13A.4, 13A.5 and 13A.6)
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="employmentType"
+                  value="Other"
+                  checked={section13Data.section13?.employmentType?.value === "Other"}
+                  onChange={(e) => handleFieldChange('employmentType', e.target.value)}
+                  className="mr-2"
+                  required
+                />
+                Other (Provide explanation and complete 13A.2, 13A.5 and 13A.6)
+              </label>
+            </div>
+            {errors['employmentType'] && (
+              <p className="mt-1 text-sm text-red-600">{errors['employmentType']}</p>
+            )}
+          </div>
+        )}
+
         {/* Employment Entries Section */}
         {getFieldValue('hasEmployment') === 'YES' && (
           <div className="space-y-8 border-t border-gray-200 pt-8">
@@ -283,7 +497,7 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
                     <h5 className="font-medium text-gray-800">Entry {index + 1}</h5>
                     <button
                       type="button"
-                      onClick={() => removeMilitaryEmploymentEntry(entry._id)}
+                      onClick={() => removeMilitaryEmploymentEntry(String(entry._id))}
                       className="text-red-600 hover:text-red-800 text-sm"
                     >
                       Remove
@@ -340,6 +554,654 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
                         className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         disabled={entry.employmentDates?.present?.value}
                       />
+                    </div>
+                  </div>
+
+                  {/* Employment Status and Position Details - PAGE 17 FIELDS */}
+                  <div className="mt-6">
+                    <h6 className="text-md font-medium text-gray-800 mb-3">Employment Status & Position</h6>
+
+                    {/* Employment Status Dropdown */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Employment Status *
+                        </label>
+                        <select
+                          value={entry.employmentStatus?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'employmentStatus', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">Select Status</option>
+                          <option value="Full-time">Full-time</option>
+                          <option value="Part-time">Part-time</option>
+                          <option value="Contract">Contract</option>
+                          <option value="Temporary">Temporary</option>
+                          <option value="Seasonal">Seasonal</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={entry.employmentDates?.fromEstimated?.value || false}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'employmentDates.fromEstimated', e.target.checked)}
+                          className="mr-2"
+                        />
+                        <label className="text-sm text-gray-700">From Date is Estimate</label>
+                      </div>
+                    </div>
+
+                    {/* Position and Duty Station */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Most Recent Rank/Position Title *
+                        </label>
+                        <input
+                          type="text"
+                          value={entry.rankTitle?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'rankTitle', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter rank/position title"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Assigned Duty Station *
+                        </label>
+                        <input
+                          type="text"
+                          value={entry.dutyStation?.dutyStation?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'dutyStation.dutyStation', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter duty station"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Other Explanation Field */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Other Explanation (if applicable)
+                      </label>
+                      <input
+                        type="text"
+                        value={entry.otherExplanation?.value || ''}
+                        onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'otherExplanation', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Provide explanation if needed"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Duty Station Address - PAGE 17 FIELDS */}
+                  <div className="mt-6">
+                    <h6 className="text-md font-medium text-gray-800 mb-3">Duty Station Address</h6>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Street Address *
+                        </label>
+                        <input
+                          type="text"
+                          value={entry.dutyStation?.street?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'dutyStation.street', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter duty station street address"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          City *
+                        </label>
+                        <input
+                          type="text"
+                          value={entry.dutyStation?.city?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'dutyStation.city', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter city"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          State
+                        </label>
+                        <select
+                          value={entry.dutyStation?.state?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'dutyStation.state', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">Select State</option>
+                          <option value="AL">Alabama</option>
+                          <option value="AK">Alaska</option>
+                          <option value="AZ">Arizona</option>
+                          <option value="AR">Arkansas</option>
+                          <option value="CA">California</option>
+                          <option value="CO">Colorado</option>
+                          <option value="CT">Connecticut</option>
+                          <option value="DE">Delaware</option>
+                          <option value="FL">Florida</option>
+                          <option value="GA">Georgia</option>
+                          {/* Add more states as needed */}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Zip Code
+                        </label>
+                        <input
+                          type="text"
+                          value={entry.dutyStation?.zipCode?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'dutyStation.zipCode', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Zip Code"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Country
+                        </label>
+                        <select
+                          value={entry.dutyStation?.country?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'dutyStation.country', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">Select Country</option>
+                          <option value="United States">United States</option>
+                          <option value="Afghanistan">Afghanistan</option>
+                          <option value="Germany">Germany</option>
+                          <option value="Japan">Japan</option>
+                          <option value="South Korea">South Korea</option>
+                          {/* Add more countries as needed */}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* APO/FPO Address - PAGE 17 FIELDS */}
+                  <div className="mt-6">
+                    <h6 className="text-md font-medium text-gray-800 mb-3">APO/FPO Address (if applicable)</h6>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          APO/FPO Street Address
+                        </label>
+                        <input
+                          type="text"
+                          value={entry.apoAddress?.street?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'apoAddress.street', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter APO/FPO street address"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          APO or FPO
+                        </label>
+                        <input
+                          type="text"
+                          value={entry.apoAddress?.apo?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'apoAddress.apo', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter APO or FPO"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          State
+                        </label>
+                        <select
+                          value={entry.apoAddress?.state?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'apoAddress.state', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">Select State</option>
+                          <option value="AL">Alabama</option>
+                          <option value="AK">Alaska</option>
+                          <option value="AZ">Arizona</option>
+                          <option value="AR">Arkansas</option>
+                          <option value="CA">California</option>
+                          <option value="CO">Colorado</option>
+                          <option value="CT">Connecticut</option>
+                          <option value="DE">Delaware</option>
+                          <option value="FL">Florida</option>
+                          <option value="GA">Georgia</option>
+                          {/* Add more states as needed */}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Zip Code
+                        </label>
+                        <input
+                          type="text"
+                          value={entry.apoAddress?.zipCode?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'apoAddress.zipCode', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter zip code"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Physical Location Address - PAGE 17 FIELDS */}
+                  <div className="mt-6">
+                    <h6 className="text-md font-medium text-gray-800 mb-3">Physical Location Address (if different from duty station)</h6>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Street Address
+                        </label>
+                        <input
+                          type="text"
+                          value={entry.physicalLocation?.street?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'physicalLocation.street', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter physical location street address"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          City
+                        </label>
+                        <input
+                          type="text"
+                          value={entry.physicalLocation?.city?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'physicalLocation.city', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter city"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          State
+                        </label>
+                        <select
+                          value={entry.physicalLocation?.state?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'physicalLocation.state', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">Select State</option>
+                          <option value="AL">Alabama</option>
+                          <option value="AK">Alaska</option>
+                          <option value="AZ">Arizona</option>
+                          <option value="AR">Arkansas</option>
+                          <option value="CA">California</option>
+                          <option value="CO">Colorado</option>
+                          <option value="CT">Connecticut</option>
+                          <option value="DE">Delaware</option>
+                          <option value="FL">Florida</option>
+                          <option value="GA">Georgia</option>
+                          {/* Add more states as needed */}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Zip Code
+                        </label>
+                        <input
+                          type="text"
+                          value={entry.physicalLocation?.zipCode?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'physicalLocation.zipCode', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter zip code"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Country
+                        </label>
+                        <select
+                          value={entry.physicalLocation?.country?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'physicalLocation.country', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">Select Country</option>
+                          <option value="United States">United States</option>
+                          <option value="Afghanistan">Afghanistan</option>
+                          <option value="Germany">Germany</option>
+                          <option value="Japan">Japan</option>
+                          <option value="South Korea">South Korea</option>
+                          {/* Add more countries as needed */}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Personal Phone Information */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Personal Phone Number
+                        </label>
+                        <input
+                          type="text"
+                          value={entry.phone?.number?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'phone.number', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter personal phone"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Extension
+                        </label>
+                        <input
+                          type="text"
+                          value={entry.phone?.extension?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'phone.extension', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Extension"
+                        />
+                      </div>
+
+                      <div className="flex flex-col space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Phone Options
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={entry.phone?.isDSN?.value || false}
+                              onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'phone.isDSN', e.target.checked)}
+                              className="mr-1"
+                            />
+                            <span className="text-xs">DSN</span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={entry.phone?.isDay?.value || false}
+                              onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'phone.isDay', e.target.checked)}
+                              className="mr-1"
+                            />
+                            <span className="text-xs">Day</span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={entry.phone?.isNight?.value || false}
+                              onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'phone.isNight', e.target.checked)}
+                              className="mr-1"
+                            />
+                            <span className="text-xs">Night</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                  {/* Supervisor Information - COMPREHENSIVE */}
+                  <div className="mt-6">
+                    <h6 className="text-md font-medium text-gray-800 mb-3">Supervisor Information</h6>
+
+                    {/* Basic Supervisor Info */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Supervisor Name *
+                        </label>
+                        <input
+                          type="text"
+                          value={entry.supervisor?.name?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'supervisor.name', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter supervisor name"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Supervisor Title/Rank *
+                        </label>
+                        <input
+                          type="text"
+                          value={entry.supervisor?.title?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'supervisor.title', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter supervisor title/rank"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Supervisor Phone Information */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Supervisor Phone *
+                        </label>
+                        <input
+                          type="text"
+                          value={entry.supervisor?.phone?.number?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'supervisor.phone.number', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter supervisor phone"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Extension
+                        </label>
+                        <input
+                          type="text"
+                          value={entry.supervisor?.phone?.extension?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'supervisor.phone.extension', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Extension"
+                        />
+                      </div>
+
+                      <div className="flex flex-col space-y-2">
+                        <label className="block text-sm font-medium text-gray-700">
+                          Phone Options
+                        </label>
+                        <div className="flex flex-wrap gap-2">
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={entry.supervisor?.phone?.isDSN?.value || false}
+                              onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'supervisor.phone.isDSN', e.target.checked)}
+                              className="mr-1"
+                            />
+                            <span className="text-xs">DSN</span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={entry.supervisor?.phone?.isDay?.value || false}
+                              onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'supervisor.phone.isDay', e.target.checked)}
+                              className="mr-1"
+                            />
+                            <span className="text-xs">Day</span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={entry.supervisor?.phone?.isNight?.value || false}
+                              onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'supervisor.phone.isNight', e.target.checked)}
+                              className="mr-1"
+                            />
+                            <span className="text-xs">Night</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Supervisor Email */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Supervisor Email *
+                        </label>
+                        <input
+                          type="email"
+                          value={entry.supervisor?.email?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'supervisor.email', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter supervisor email"
+                        />
+                      </div>
+
+                      <div className="flex items-end">
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={entry.supervisor?.emailUnknown?.value || false}
+                            onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'supervisor.emailUnknown', e.target.checked)}
+                            className="mr-2"
+                          />
+                          <span className="text-sm text-gray-600">Email unknown</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Supervisor Physical Address - PAGE 17 FIELDS */}
+                  <div className="mt-6">
+                    <h6 className="text-md font-medium text-gray-800 mb-3">Supervisor Physical Address (if different from work location)</h6>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Street Address
+                        </label>
+                        <input
+                          type="text"
+                          value={entry.supervisor?.physicalAddress?.street?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'supervisor.physicalAddress.street', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter supervisor physical street address"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          City
+                        </label>
+                        <input
+                          type="text"
+                          value={entry.supervisor?.physicalAddress?.city?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'supervisor.physicalAddress.city', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter city"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          State
+                        </label>
+                        <select
+                          value={entry.supervisor?.physicalAddress?.state?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'supervisor.physicalAddress.state', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">Select State</option>
+                          <option value="AL">Alabama</option>
+                          <option value="AK">Alaska</option>
+                          <option value="AZ">Arizona</option>
+                          <option value="AR">Arkansas</option>
+                          <option value="CA">California</option>
+                          <option value="CO">Colorado</option>
+                          <option value="CT">Connecticut</option>
+                          <option value="DE">Delaware</option>
+                          <option value="FL">Florida</option>
+                          <option value="GA">Georgia</option>
+                          {/* Add more states as needed */}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Zip Code
+                        </label>
+                        <input
+                          type="text"
+                          value={entry.supervisor?.physicalAddress?.zipCode?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'supervisor.physicalAddress.zipCode', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter zip code"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Country
+                        </label>
+                        <select
+                          value={entry.supervisor?.physicalAddress?.country?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'supervisor.physicalAddress.country', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">Select Country</option>
+                          <option value="United States">United States</option>
+                          <option value="Afghanistan">Afghanistan</option>
+                          <option value="Germany">Germany</option>
+                          <option value="Japan">Japan</option>
+                          <option value="South Korea">South Korea</option>
+                          {/* Add more countries as needed */}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Additional Fields - PAGE 17 FIELDS */}
+                  <div className="mt-6">
+                    <h6 className="text-md font-medium text-gray-800 mb-3">Additional Information</h6>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Other Explanation
+                        </label>
+                        <textarea
+                          value={entry.otherExplanation?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'otherExplanation', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter other explanation if needed"
+                          rows={3}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          SSN (if required)
+                        </label>
+                        <input
+                          type="text"
+                          value={entry.ssn?.value || ''}
+                          onChange={(e) => handleEmploymentEntryFieldChange('militaryEmployment', entry._id, 'ssn', e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter SSN if required"
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -497,7 +1359,7 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
                           </label>
                           <input
                             type="tel"
-                            value={entry.supervisor?.phone?.value || ''}
+                            value={entry.supervisor?.phone?.number?.value || ''}
                             onChange={(e) => handleEmploymentEntryFieldChange('nonFederalEmployment', entry._id, 'supervisor.phone', e.target.value)}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             placeholder="Enter supervisor phone"
@@ -597,6 +1459,180 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
                 <p className="text-gray-500 text-center py-4">No non-federal employment entries added yet.</p>
               )}
             </div>
+
+            {/* Self-Employment */}
+            <div className="border border-gray-200 rounded-lg p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-lg font-medium text-gray-900">
+                  Self-Employment ({getEmploymentEntryCount('selfEmployment')})
+                </h4>
+                <button
+                  type="button"
+                  onClick={addSelfEmploymentEntry}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  Add Entry
+                </button>
+              </div>
+
+              {section13Data.section13.selfEmployment?.entries?.map((entry, index) => (
+                <div key={entry._id} className="border border-gray-100 rounded-md p-4 mb-4 last:mb-0">
+                  <div className="flex justify-between items-center mb-3">
+                    <h5 className="font-medium text-gray-800">Entry {index + 1}</h5>
+                    <button
+                      type="button"
+                      onClick={() => removeSelfEmploymentEntry(entry._id)}
+                      className="text-red-600 hover:text-red-800 text-sm"
+                    >
+                      Remove
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Business Name
+                      </label>
+                      <input
+                        type="text"
+                        value={entry.businessName?.value || ''}
+                        onChange={(e) => handleEmploymentEntryFieldChange('selfEmployment', entry._id, 'businessName', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter business name"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Business Type
+                      </label>
+                      <input
+                        type="text"
+                        value={entry.businessType?.value || ''}
+                        onChange={(e) => handleEmploymentEntryFieldChange('selfEmployment', entry._id, 'businessType', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter business type"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        From Date
+                      </label>
+                      <input
+                        type="date"
+                        value={entry.employmentDates?.fromDate?.value || ''}
+                        onChange={(e) => handleEmploymentEntryFieldChange('selfEmployment', entry._id, 'employmentDates.fromDate', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        To Date
+                      </label>
+                      <input
+                        type="date"
+                        value={entry.employmentDates?.toDate?.value || ''}
+                        onChange={(e) => handleEmploymentEntryFieldChange('selfEmployment', entry._id, 'employmentDates.toDate', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        disabled={entry.employmentDates?.present?.value}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mt-4">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={entry.employmentDates?.present?.value || false}
+                        onChange={(e) => handleEmploymentEntryFieldChange('selfEmployment', entry._id, 'employmentDates.present', e.target.checked)}
+                        className="mr-2"
+                      />
+                      Present (current employment)
+                    </label>
+                  </div>
+                </div>
+              ))}
+
+              {getEmploymentEntryCount('selfEmployment') === 0 && (
+                <p className="text-gray-500 text-center py-4">No self-employment entries added yet.</p>
+              )}
+            </div>
+
+            {/* Unemployment */}
+            <div className="border border-gray-200 rounded-lg p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-lg font-medium text-gray-900">
+                  Unemployment ({getEmploymentEntryCount('unemployment')})
+                </h4>
+                <button
+                  type="button"
+                  onClick={addUnemploymentEntry}
+                  className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                >
+                  Add Entry
+                </button>
+              </div>
+
+              {section13Data.section13.unemployment?.entries?.map((entry, index) => (
+                <div key={entry._id} className="border border-gray-100 rounded-md p-4 mb-4 last:mb-0">
+                  <div className="flex justify-between items-center mb-3">
+                    <h5 className="font-medium text-gray-800">Entry {index + 1}</h5>
+                    <button
+                      type="button"
+                      onClick={() => removeUnemploymentEntry(entry._id)}
+                      className="text-red-600 hover:text-red-800 text-sm"
+                    >
+                      Remove
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        From Date
+                      </label>
+                      <input
+                        type="date"
+                        value={entry.unemploymentDates?.fromDate?.value || ''}
+                        onChange={(e) => handleEmploymentEntryFieldChange('unemployment', entry._id, 'unemploymentDates.fromDate', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        To Date
+                      </label>
+                      <input
+                        type="date"
+                        value={entry.unemploymentDates?.toDate?.value || ''}
+                        onChange={(e) => handleEmploymentEntryFieldChange('unemployment', entry._id, 'unemploymentDates.toDate', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Reason for Unemployment
+                      </label>
+                      <textarea
+                        value={entry.reason?.value || ''}
+                        onChange={(e) => handleEmploymentEntryFieldChange('unemployment', entry._id, 'reason', e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Explain the reason for unemployment"
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {getEmploymentEntryCount('unemployment') === 0 && (
+                <p className="text-gray-500 text-center py-4">No unemployment entries added yet.</p>
+              )}
+            </div>
           </div>
         )}
 
@@ -617,6 +1653,16 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
 
             <button
               type="button"
+              className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              data-testid="validate-inputs-button"
+              onClick={handleValidateInputs}
+              disabled={isValidating}
+            >
+              {isValidating ? 'Validating...' : 'Validate Inputs'}
+            </button>
+
+            <button
+              type="button"
               className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
               data-testid="clear-section-button"
               onClick={handleReset}
@@ -626,6 +1672,83 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
           </div>
         </div>
       </form>
+
+      {/* Validation Results */}
+      {validationResult && (
+        <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">
+            Validation Results
+          </h3>
+
+          {validationResult.success ? (
+            <div className="space-y-4">
+              <div className="flex items-center text-green-600">
+                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Validation completed successfully
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div className="bg-white p-3 rounded border">
+                  <div className="font-medium text-gray-600">Target Page</div>
+                  <div className="text-lg font-bold text-blue-600">{validationResult.targetPage}</div>
+                </div>
+                <div className="bg-white p-3 rounded border">
+                  <div className="font-medium text-gray-600">Total Fields</div>
+                  <div className="text-lg font-bold text-gray-900">{validationResult.totalFields}</div>
+                </div>
+                <div className="bg-white p-3 rounded border">
+                  <div className="font-medium text-gray-600">Fields with Values</div>
+                  <div className="text-lg font-bold text-green-600">{validationResult.fieldsWithValues}</div>
+                </div>
+                <div className="bg-white p-3 rounded border">
+                  <div className="font-medium text-gray-600">Empty Fields</div>
+                  <div className="text-lg font-bold text-red-600">{validationResult.fieldsEmpty}</div>
+                </div>
+              </div>
+
+              <div className="text-sm text-gray-600">
+                <div>Processing time: {validationResult.processingTime}ms</div>
+                <div>Data cleared: {validationResult.dataCleared ? 'Yes' : 'No'}</div>
+                <div>Image generated: {validationResult.imageGenerated ? 'Yes' : 'No'}</div>
+                <div>Fields extracted: {validationResult.fieldsExtracted ? 'Yes' : 'No'}</div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center text-red-600">
+                <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+                Validation failed
+              </div>
+
+              {validationResult.errors.length > 0 && (
+                <div className="bg-red-50 border border-red-200 rounded p-3">
+                  <h4 className="font-medium text-red-800 mb-2">Errors:</h4>
+                  <ul className="text-sm text-red-700 space-y-1">
+                    {validationResult.errors.map((error, index) => (
+                      <li key={index}>• {error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {validationResult.warnings.length > 0 && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded p-3">
+                  <h4 className="font-medium text-yellow-800 mb-2">Warnings:</h4>
+                  <ul className="text-sm text-yellow-700 space-y-1">
+                    {validationResult.warnings.map((warning, index) => (
+                      <li key={index}>• {warning}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Debug Information (Development Only) */}
       {typeof window !== 'undefined' && window.location.search.includes('debug=true') && (

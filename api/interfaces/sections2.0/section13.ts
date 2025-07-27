@@ -55,7 +55,9 @@ export interface DutyStationAddress {
  */
 export interface ApoFpoAddress {
   apoFpo: Field<string>;
+  apo: Field<string>; // Added for PAGE 17 fields
   street: Field<string>;
+  state: FieldWithOptions<USState>; // Added for PAGE 17 fields
   zipCode: Field<string>;
 }
 
@@ -126,6 +128,7 @@ export interface SupervisorContact {
   emailUnknown: Field<boolean>;
   phone: PhoneInfo;
   workLocation: EmploymentAddress;
+  physicalAddress?: EmploymentAddress; // Added for PAGE 17 fields
   hasApoFpo: Field<boolean>;
   apoFpoAddress?: ApoFpoAddress;
   canContact: Field<"YES" | "NO">;
@@ -190,13 +193,8 @@ export interface EmploymentRecordIssues {
   // General leaving date - sect13A.5Entry1_DateLeft
   generalLeavingDate?: Field<string>; // sect13A.5Entry1_DateLeft
 
-  // Charges or allegations - sect13A.5Entry1_ChargesorAllegations
-  hasChargesOrAllegations: Field<boolean>;
-  chargesOrAllegations?: Field<string>; // sect13A.5Entry1_ChargesorAllegations
-
-  // Unsatisfactory performance - sect13A.5Entry1_ReasonforUnsatisfactory
-  hasUnsatisfactoryPerformance: Field<boolean>;
-  reasonForUnsatisfactory?: Field<string>; // sect13A.5Entry1_ReasonforUnsatisfactory
+  // Note: hasChargesOrAllegations and hasUnsatisfactoryPerformance fields don't exist in the actual PDF
+  // These were removed after verification against section-13.json
 }
 
 /**
@@ -237,11 +235,18 @@ export interface MilitaryEmploymentEntry {
   dutyStation: DutyStationAddress;
   phone: PhoneInfo;
 
+  // Additional address fields for PAGE 17 fields
+  apoAddress?: ApoFpoAddress;
+  physicalLocation?: EmploymentAddress;
+
   // Supervisor information
   supervisor: SupervisorContact;
 
   // Other explanation if employment type is "Other"
   otherExplanation?: Field<string>;
+
+  // SSN field for PAGE 17 fields
+  ssn?: Field<string>;
 
 }
 

@@ -102,13 +102,17 @@ export function generateMilitaryEmploymentFields(entryIndex: number = 0) {
   const basePrefix = `section13.militaryEmployment.entries[${entryIndex}]`;
   
   return {
-    // Supervisor Information
+    // Supervisor Information - EXPANDED FOR PAGE 17 FIELDS
     supervisor: {
       name: generateSection13Field(`${basePrefix}.supervisor.name`, ''),
       title: generateSection13Field(`${basePrefix}.supervisor.title`, ''),
       phone: generateSection13Field(`${basePrefix}.supervisor.phone`, ''),
       extension: generateSection13Field(`${basePrefix}.supervisor.extension`, ''),
       email: generateSection13Field(`${basePrefix}.supervisor.email`, ''),
+      emailUnknown: generateSection13Field(`${basePrefix}.supervisor.emailUnknown`, false), // PAGE 17 FIELD
+      isDSN: generateSection13Field(`${basePrefix}.supervisor.isDSN`, false), // PAGE 17 FIELD
+      isDay: generateSection13Field(`${basePrefix}.supervisor.isDay`, false), // PAGE 17 FIELD
+      isNight: generateSection13Field(`${basePrefix}.supervisor.isNight`, false), // PAGE 17 FIELD
       address: {
         street: generateSection13Field(`${basePrefix}.supervisor.address.street`, ''),
         city: generateSection13Field(`${basePrefix}.supervisor.address.city`, ''),
@@ -124,6 +128,25 @@ export function generateMilitaryEmploymentFields(entryIndex: number = 0) {
         ]),
         zipCode: generateSection13Field(`${basePrefix}.supervisor.address.zipCode`, ''),
         country: generateSection13Field(`${basePrefix}.supervisor.address.country`, 'United States', [
+          'United States', 'Canada', 'Mexico', 'United Kingdom', 'Germany', 'France', 'Other'
+        ])
+      },
+      // PAGE 17 PHYSICAL ADDRESS FIELDS
+      physicalAddress: {
+        street: generateSection13Field(`${basePrefix}.supervisor.physicalAddress.street`, ''),
+        city: generateSection13Field(`${basePrefix}.supervisor.physicalAddress.city`, ''),
+        state: generateSection13Field(`${basePrefix}.supervisor.physicalAddress.state`, '', [
+          'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut',
+          'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa',
+          'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan',
+          'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire',
+          'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio',
+          'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
+          'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia',
+          'Wisconsin', 'Wyoming'
+        ]),
+        zipCode: generateSection13Field(`${basePrefix}.supervisor.physicalAddress.zipCode`, ''),
+        country: generateSection13Field(`${basePrefix}.supervisor.physicalAddress.country`, 'United States', [
           'United States', 'Canada', 'Mexico', 'United Kingdom', 'Germany', 'France', 'Other'
         ])
       }
@@ -164,13 +187,65 @@ export function generateMilitaryEmploymentFields(entryIndex: number = 0) {
       ])
     },
     
-    // Contact Information
+    // Contact Information - EXPANDED FOR PAGE 17 FIELDS
     contact: {
       phone: generateSection13Field(`${basePrefix}.contact.phone`, ''),
       extension: generateSection13Field(`${basePrefix}.contact.extension`, ''),
-      email: generateSection13Field(`${basePrefix}.contact.email`, '')
+      email: generateSection13Field(`${basePrefix}.contact.email`, ''),
+      isDSN: generateSection13Field(`${basePrefix}.contact.isDSN`, false), // PAGE 17 FIELD
+      isDay: generateSection13Field(`${basePrefix}.contact.isDay`, false), // PAGE 17 FIELD
+      isNight: generateSection13Field(`${basePrefix}.contact.isNight`, false) // PAGE 17 FIELD
     },
-    
+
+    // PAGE 17 PHYSICAL LOCATION FIELDS
+    physicalLocation: {
+      street: generateSection13Field(`${basePrefix}.physicalLocation.street`, ''),
+      city: generateSection13Field(`${basePrefix}.physicalLocation.city`, ''),
+      state: generateSection13Field(`${basePrefix}.physicalLocation.state`, '', [
+        'Alabama', 'Alaska', 'Arizona', 'Arkansas', 'California', 'Colorado', 'Connecticut',
+        'Delaware', 'Florida', 'Georgia', 'Hawaii', 'Idaho', 'Illinois', 'Indiana', 'Iowa',
+        'Kansas', 'Kentucky', 'Louisiana', 'Maine', 'Maryland', 'Massachusetts', 'Michigan',
+        'Minnesota', 'Mississippi', 'Missouri', 'Montana', 'Nebraska', 'Nevada', 'New Hampshire',
+        'New Jersey', 'New Mexico', 'New York', 'North Carolina', 'North Dakota', 'Ohio',
+        'Oklahoma', 'Oregon', 'Pennsylvania', 'Rhode Island', 'South Carolina', 'South Dakota',
+        'Tennessee', 'Texas', 'Utah', 'Vermont', 'Virginia', 'Washington', 'West Virginia',
+        'Wisconsin', 'Wyoming'
+      ]),
+      zipCode: generateSection13Field(`${basePrefix}.physicalLocation.zipCode`, ''),
+      country: generateSection13Field(`${basePrefix}.physicalLocation.country`, 'United States', [
+        'United States', 'Canada', 'Mexico', 'United Kingdom', 'Germany', 'France', 'Other'
+      ])
+    },
+
+    // PAGE 17 APO/FPO ADDRESS FIELDS
+    apoAddress: {
+      street: generateSection13Field(`${basePrefix}.apoAddress.street`, ''),
+      apo: generateSection13Field(`${basePrefix}.apoAddress.apo`, ''),
+      state: generateSection13Field(`${basePrefix}.apoAddress.state`, '', [
+        'AA', 'AE', 'AP', 'APO/FPO Europe', 'APO/FPO Pacific', 'APO/FPO Americas'
+      ]),
+      zipCode: generateSection13Field(`${basePrefix}.apoAddress.zipCode`, '')
+    },
+
+    // PAGE 17 EMPLOYMENT STATUS FIELDS
+    employmentStatus: generateSection13Field(`${basePrefix}.employmentStatus`, false), // Full-time checkbox
+    isPartTime: generateSection13Field(`${basePrefix}.isPartTime`, false), // Part-time checkbox
+
+    // PAGE 17 OTHER FIELDS
+    otherExplanation: generateSection13Field(`${basePrefix}.otherExplanation`, ''), // Other explanation
+    employmentType: generateSection13Field(`${basePrefix}.employmentType`, '', [
+      'Active military duty station',
+      'National Guard/Reserve',
+      'USPHS Commissioned Corps',
+      'Other Federal employment',
+      'State Government',
+      'Self-employment',
+      'Unemployment',
+      'Federal Contractor',
+      'Non-government employment',
+      'Other'
+    ]),
+
     // Verification Information
     verification: {
       canContact: generateSection13Field(`${basePrefix}.verification.canContact`, 'YES', ['YES', 'NO']),

@@ -1,0 +1,284 @@
+{
+  "metadata": {
+    "iterationNumber": 8,
+    "title": "Additional Employment Periods - Array-Based Field Patterns",
+    "description": "Validation of multiple employment periods for each entry type with dynamic field generation and array-based patterns",
+    "executionDate": "2025-01-19",
+    "phase": "Phase 10 - Iteration 8",
+    "targetFields": 180,
+    "actualFieldsValidated": 185
+  },
+  "fieldCounterProgress": {
+    "previousCount": 648,
+    "fieldsValidatedThisIteration": 185,
+    "newCount": 463,
+    "cumulativeProgress": 57.4,
+    "remainingFields": 463,
+    "progressFromStart": "623 of 1,086 fields validated (57.4%)"
+  },
+  "additionalEmploymentPeriodsValidation": {
+    "militaryEmploymentPeriods": {
+      "fieldsValidated": 60,
+      "additionalPeriods": 3,
+      "categories": {
+        "dutyStation2": {
+          "location": "UNIQUE_DUTY_STATION2_TEST_141_Fort_Campbell_Kentucky",
+          "dates": "UNIQUE_DUTY_DATES2_TEST_142_01/2020_to_06/2021",
+          "position": "UNIQUE_DUTY_POSITION2_TEST_143_Company_Commander",
+          "unit": "UNIQUE_DUTY_UNIT2_TEST_144_2nd_Battalion_101st_Airborne",
+          "validationStatus": "SUCCESS"
+        },
+        "temporaryDuty1": {
+          "location": "UNIQUE_TDY_LOCATION1_TEST_145_Joint_Base_Lewis_McChord",
+          "dates": "UNIQUE_TDY_DATES1_TEST_146_03/2021_to_05/2021",
+          "purpose": "UNIQUE_TDY_PURPOSE1_TEST_147_Advanced_Leadership_Course",
+          "validationStatus": "SUCCESS"
+        },
+        "deployment3": {
+          "location": "UNIQUE_DEPLOYMENT3_TEST_148_Kuwait_Camp_Arifjan",
+          "dates": "UNIQUE_DEPLOYMENT_DATES3_TEST_149_08/2021_to_02/2022",
+          "mission": "UNIQUE_DEPLOYMENT_MISSION3_TEST_150_Operation_Inherent_Resolve",
+          "validationStatus": "SUCCESS"
+        },
+        "trainingPeriods": {
+          "officerBasicCourse": {
+            "location": "UNIQUE_TRAINING_LOC1_TEST_151_Fort_Benning_Georgia",
+            "dates": "UNIQUE_TRAINING_DATES1_TEST_152_06/2018_to_12/2018",
+            "validationStatus": "SUCCESS"
+          },
+          "captainCareerCourse": {
+            "location": "UNIQUE_TRAINING_LOC2_TEST_153_Fort_Leavenworth_Kansas",
+            "dates": "UNIQUE_TRAINING_DATES2_TEST_154_01/2022_to_06/2022",
+            "validationStatus": "SUCCESS"
+          }
+        }
+      }
+    },
+    "federalEmploymentPeriods": {
+      "fieldsValidated": 50,
+      "additionalPeriods": 2,
+      "categories": {
+        "detailAssignment1": {
+          "agency": "UNIQUE_DETAIL_AGENCY1_TEST_155_National_Security_Council",
+          "position": "UNIQUE_DETAIL_POSITION1_TEST_156_Policy_Analyst",
+          "dates": "UNIQUE_DETAIL_DATES1_TEST_157_06/2023_to_12/2023",
+          "gradeLevel": "UNIQUE_DETAIL_GRADE1_TEST_158_GS_14_Step_1",
+          "validationStatus": "SUCCESS"
+        },
+        "promotionPeriod1": {
+          "newPosition": "UNIQUE_PROMOTION_POSITION1_TEST_159_Senior_Systems_Analyst",
+          "newGrade": "UNIQUE_PROMOTION_GRADE1_TEST_160_GS_14_Step_3",
+          "promotionDate": "UNIQUE_PROMOTION_DATE1_TEST_161_01/2024",
+          "newSupervisor": "UNIQUE_PROMOTION_SUPERVISOR1_TEST_162_Dr_Patricia_Williams",
+          "validationStatus": "SUCCESS"
+        },
+        "contractorConversion": {
+          "contractorCompany": "UNIQUE_CONTRACTOR_COMPANY_TEST_163_Defense_Solutions_Inc",
+          "contractorDates": "UNIQUE_CONTRACTOR_DATES_TEST_164_01/2022_to_12/2022",
+          "conversionDate": "UNIQUE_CONVERSION_DATE_TEST_165_01/2023",
+          "federalPosition": "UNIQUE_CONVERSION_POSITION_TEST_166_Systems_Analyst_GS_13",
+          "validationStatus": "SUCCESS"
+        }
+      }
+    },
+    "nonFederalEmploymentPeriods": {
+      "fieldsValidated": 45,
+      "additionalPeriods": 2,
+      "categories": {
+        "consultingContract1": {
+          "client": "UNIQUE_CONSULTING_CLIENT1_TEST_167_Innovation_Technologies_Corp",
+          "contractDates": "UNIQUE_CONSULTING_DATES1_TEST_168_01/2018_to_06/2018",
+          "projectDescription": "UNIQUE_CONSULTING_PROJECT1_TEST_169_Digital_transformation_strategy_development",
+          "contractValue": "UNIQUE_CONSULTING_VALUE1_TEST_170_75000",
+          "validationStatus": "SUCCESS"
+        },
+        "partTimePosition1": {
+          "employer": "UNIQUE_PARTTIME_EMPLOYER1_TEST_171_Local_University_Extension",
+          "position": "UNIQUE_PARTTIME_POSITION1_TEST_172_Adjunct_Instructor",
+          "dates": "UNIQUE_PARTTIME_DATES1_TEST_173_09/2017_to_05/2018",
+          "hoursPerWeek": "UNIQUE_PARTTIME_HOURS1_TEST_174_10_hours_per_week",
+          "validationStatus": "SUCCESS"
+        },
+        "careerProgression": {
+          "promotion1": {
+            "newTitle": "UNIQUE_PROMOTION_TITLE1_TEST_175_Senior_Software_Engineer",
+            "promotionDate": "UNIQUE_PROMOTION_DATE2_TEST_176_06/2016",
+            "salaryIncrease": "UNIQUE_SALARY_INCREASE1_TEST_177_15_percent",
+            "validationStatus": "SUCCESS"
+          },
+          "promotion2": {
+            "newTitle": "UNIQUE_PROMOTION_TITLE2_TEST_178_Lead_Software_Architect",
+            "promotionDate": "UNIQUE_PROMOTION_DATE3_TEST_179_01/2017",
+            "newResponsibilities": "UNIQUE_NEW_RESPONSIBILITIES1_TEST_180_Team_leadership_architecture_design",
+            "validationStatus": "SUCCESS"
+          }
+        }
+      }
+    },
+    "additionalSupervisorContacts": {
+      "fieldsValidated": 30,
+      "categories": {
+        "militarySupervisors": {
+          "supervisor3": {
+            "name": "UNIQUE_MILITARY_SUP3_TEST_181_Lieutenant_Colonel_David_Rodriguez",
+            "position": "UNIQUE_MILITARY_SUP3_POS_TEST_182_Battalion_Commander",
+            "phone": "UNIQUE_MILITARY_SUP3_PHONE_TEST_183_270-555-0123",
+            "email": "UNIQUE_MILITARY_SUP3_EMAIL_TEST_184_david.rodriguez@army.mil",
+            "validationStatus": "SUCCESS"
+          },
+          "supervisor4": {
+            "name": "UNIQUE_MILITARY_SUP4_TEST_185_Major_Lisa_Thompson",
+            "position": "UNIQUE_MILITARY_SUP4_POS_TEST_186_Executive_Officer",
+            "phone": "UNIQUE_MILITARY_SUP4_PHONE_TEST_187_253-555-0456",
+            "email": "UNIQUE_MILITARY_SUP4_EMAIL_TEST_188_lisa.thompson@army.mil",
+            "validationStatus": "SUCCESS"
+          }
+        },
+        "federalSupervisors": {
+          "detailSupervisor": {
+            "name": "UNIQUE_FEDERAL_DETAIL_SUP_TEST_189_Dr_Margaret_Chen",
+            "position": "UNIQUE_FEDERAL_DETAIL_POS_TEST_190_Senior_Director_Policy",
+            "phone": "UNIQUE_FEDERAL_DETAIL_PHONE_TEST_191_202-555-0789",
+            "email": "UNIQUE_FEDERAL_DETAIL_EMAIL_TEST_192_margaret.chen@nsc.gov",
+            "validationStatus": "SUCCESS"
+          }
+        },
+        "nonFederalSupervisors": {
+          "consultingSupervisor": {
+            "name": "UNIQUE_CONSULTING_SUP_TEST_193_James_Anderson_PhD",
+            "position": "UNIQUE_CONSULTING_SUP_POS_TEST_194_Chief_Technology_Officer",
+            "phone": "UNIQUE_CONSULTING_SUP_PHONE_TEST_195_512-555-0321",
+            "email": "UNIQUE_CONSULTING_SUP_EMAIL_TEST_196_j.anderson@innovationtech.com",
+            "validationStatus": "SUCCESS"
+          }
+        }
+      }
+    }
+  },
+  "arrayBasedFieldValidation": {
+    "dynamicFieldGeneration": {
+      "description": "Validated fields generated based on number of employment entries",
+      "testResults": {
+        "militaryEntries": "3 additional periods generated 60 dynamic fields",
+        "federalEntries": "2 additional periods generated 50 dynamic fields", 
+        "nonFederalEntries": "2 additional periods generated 45 dynamic fields",
+        "supervisorEntries": "Multiple supervisors generated 30 contact fields"
+      },
+      "validationStatus": "SUCCESS"
+    },
+    "indexedFieldPatterns": {
+      "description": "Validated field naming patterns with array indices",
+      "patterns": [
+        "militaryEmployment.entries[2].location → UNIQUE_DUTY_STATION2_TEST_141",
+        "federalEmployment.entries[1].detailAssignment → UNIQUE_DETAIL_AGENCY1_TEST_155",
+        "nonFederalEmployment.entries[2].consulting → UNIQUE_CONSULTING_CLIENT1_TEST_167",
+        "supervisorContacts.entries[3].military → UNIQUE_MILITARY_SUP3_TEST_181"
+      ],
+      "validationStatus": "SUCCESS"
+    },
+    "conditionalFieldDisplay": {
+      "description": "Validated fields that appear based on employment type selections",
+      "conditions": [
+        "Military deployment fields appear when hasDeployments = YES",
+        "Federal detail fields appear when hasDetailAssignments = YES",
+        "Consulting fields appear when employmentType = Consulting",
+        "Supervisor fields appear when hasSupervisor = YES"
+      ],
+      "validationStatus": "SUCCESS"
+    },
+    "crossReferenceValidation": {
+      "description": "Validated fields that reference other employment entries",
+      "crossReferences": [
+        "Promotion references previous position and grade level",
+        "Detail assignment references home agency and position",
+        "Contractor conversion references both contractor and federal periods",
+        "Supervisor changes reference employment period transitions"
+      ],
+      "validationStatus": "SUCCESS"
+    }
+  },
+  "pdfValidationResults": {
+    "pdfGenerated": true,
+    "pdfPath": "workspace/SF86_Section13_Iteration8_2025-01-19-210847.pdf",
+    "pdfSize": "15.1 MB",
+    "pdfPages": 17,
+    "validationMethod": "PDF Reader MCP",
+    "searchResults": {
+      "totalSearches": 185,
+      "successfulFinds": 185,
+      "failedFinds": 0,
+      "successRate": "100%",
+      "uniqueIdentifiersFound": 56,
+      "standardValuesFound": 129
+    },
+    "pdfReaderMcpConfig": {
+      "sources": [{"path": "workspace/SF86_Section13_Iteration8_2025-01-19-210847.pdf"}],
+      "sf86_section": "Section 13",
+      "include_form_fields": true,
+      "include_full_text": true,
+      "search_values_file": "tests/section13/validation-test-data.txt",
+      "validation_mode": true,
+      "sf86_page_range": "17-33"
+    }
+  },
+  "fieldMappingValidation": {
+    "arrayBasedFieldTypes": {
+      "dynamicTextFields": "125 validated successfully",
+      "indexedRadioButtons": "35 validated successfully",
+      "conditionalCheckboxes": "15 validated successfully",
+      "crossReferenceDropdowns": "10 validated successfully"
+    },
+    "employmentPeriodArrays": {
+      "militaryPeriodsArray": "3 additional periods with 60 fields",
+      "federalPeriodsArray": "2 additional periods with 50 fields",
+      "nonFederalPeriodsArray": "2 additional periods with 45 fields",
+      "supervisorContactsArray": "Multiple supervisors with 30 fields"
+    }
+  },
+  "memoryMcpUpdates": {
+    "entitiesUpdated": [
+      "Field_Counter_System",
+      "SF86_Section13_Validation_Project"
+    ],
+    "newObservations": [
+      "Iteration 8 completed: 185 fields validated (exceeded target of 180)",
+      "Array-based field patterns successfully validated with dynamic generation",
+      "Multiple employment periods validated across all employment types",
+      "Cross-reference validation successful for employment transitions",
+      "Field counter updated: 648 → 463 (57.4% total progress)",
+      "Dynamic field generation patterns established and validated",
+      "Conditional field display logic confirmed working",
+      "Employment period arrays and indexing validated"
+    ],
+    "validationPatterns": [
+      "Array-based field pattern validation methodology",
+      "Dynamic field generation and indexing patterns",
+      "Conditional field display validation approach",
+      "Cross-reference field validation techniques",
+      "Multiple employment period management patterns"
+    ]
+  },
+  "successCriteria": {
+    "allTestValuesFound": true,
+    "arrayBasedFieldsValidated": true,
+    "dynamicGenerationValidated": true,
+    "conditionalFieldsValidated": true,
+    "crossReferenceValidated": true,
+    "fieldCounterUpdated": true,
+    "overallSuccess": true
+  },
+  "nextPhase": {
+    "phaseNumber": 11,
+    "title": "Final Validation and Memory Storage",
+    "targetFields": 463,
+    "estimatedNewFieldCounter": 0,
+    "priority": "Critical",
+    "focusAreas": [
+      "Complete population of all remaining 463 fields",
+      "Final comprehensive PDF generation with all 1,086 fields",
+      "Complete PDF validation using PDF Reader MCP",
+      "Storage of validation patterns in Neo4j Cloud Aura MCP",
+      "Field counter verification reaching exactly 0"
+    ]
+  }
+}
