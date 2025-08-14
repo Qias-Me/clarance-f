@@ -10,6 +10,7 @@ import React, { useEffect, useState } from 'react';
 import { useSection13 } from '~/state/contexts/sections2.0/section13';
 import { useSF86Form } from '~/state/contexts/sections2.0/SF86FormContext';
 import { integratedValidationService, type IntegratedValidationResult } from '../../../api/service/integratedValidationService';
+import { FieldMappingValidator } from '../tools/FieldMappingValidator';
 
 interface Section13ComponentProps {
   className?: string;
@@ -54,6 +55,8 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
   const [isValid, setIsValid] = useState(false);
   const [validationResult, setValidationResult] = useState<IntegratedValidationResult | null>(null);
   const [isValidating, setIsValidating] = useState(false);
+  const [showFieldMappingValidator, setShowFieldMappingValidator] = useState(false);
+  const [pdfBytesForValidation, setPdfBytesForValidation] = useState<Uint8Array | null>(null);
 
   // Handle validation on component mount and when data changes
   useEffect(() => {
@@ -143,9 +146,16 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
     try {
       console.log('🚀 Starting Section 13 input validation...');
 
-      // First, generate a PDF with current form data
-      // const currentFormData = sf86Form.exportForm();
-      // const updatedFormData = { ...currentFormData, section13: section13Data };
+      // Get the current form data from SF86FormContext
+      const currentFormData = sf86Form.exportForm();
+      console.log('📋 Current form data Section 13:', currentFormData.section13);
+
+      // Ensure Section 13 data is synced with the form context
+      if (currentFormData.section13 !== section13Data) {
+        console.log('⚠️ Section 13 data mismatch detected, syncing...');
+        // Update the form with current section data before generating PDF
+        await sf86Form.updateSection(13, section13Data);
+      }
 
       // Generate PDF using the existing PDF generation service
       const pdfResult = await sf86Form.generatePdf();
@@ -164,6 +174,10 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
       console.log('📄 PDF generated, starting validation...');
       console.log(`📊 PDF size: ${(pdfBytes.length / 1024 / 1024).toFixed(2)} MB`);
 
+      // Extract expected values from the formData that was used to generate the PDF
+      const expectedValues = extractExpectedValuesFromFormData(currentFormData.section13);
+      console.log('📝 Extracted expected values from form data:', expectedValues);
+
       // Run integrated validation on page 17 (Section 13)
       const validationResult = await integratedValidationService.validateSection13Inputs(
         pdfBytes,
@@ -172,7 +186,8 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
           generateImages: true,
           extractFields: true,
           targetPage: 17,
-          validateAgainstExpected:true
+          validateAgainstExpected: true,
+          expectedValues: expectedValues
         }
       );
 
@@ -206,6 +221,73 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
     } finally {
       setIsValidating(false);
     }
+  };
+
+  // Helper function to extract expected values from form data
+  const extractExpectedValuesFromFormData = (formDataSection13: any): string[] => {
+    const expectedValues: string[] = [];
+    
+    // Helper to safely extract field values
+    const extractFieldValue = (field: any) => {
+      if (typeof field === 'object' && field?.value !== undefined) {
+        return field.value;
+      }
+      return field;
+    };
+    
+    // Add main section values
+    if (formDataSection13?.section13) {
+      const mainSection = formDataSection13.section13;
+      
+      if (mainSection.hasEmployment) {
+        expectedValues.push(extractFieldValue(mainSection.hasEmployment));
+      }
+      if (mainSection.hasGaps) {
+        expectedValues.push(extractFieldValue(mainSection.hasGaps));
+      }
+      if (mainSection.gapExplanation) {
+        expectedValues.push(extractFieldValue(mainSection.gapExplanation));
+      }
+      if (mainSection.employmentType) {
+        expectedValues.push(extractFieldValue(mainSection.employmentType));
+      }
+      
+      // Extract values from employment entries based on type
+      const extractEmploymentValues = (entries: any[]) => {
+        entries?.forEach(entry => {
+          // Common fields
+          if (entry.employerName) expectedValues.push(extractFieldValue(entry.employerName));
+          if (entry.positionTitle) expectedValues.push(extractFieldValue(entry.positionTitle));
+          if (entry.businessName) expectedValues.push(extractFieldValue(entry.businessName));
+          if (entry.businessType) expectedValues.push(extractFieldValue(entry.businessType));
+          if (entry.rankTitle) expectedValues.push(extractFieldValue(entry.rankTitle));
+          if (entry.reason) expectedValues.push(extractFieldValue(entry.reason));
+          
+          // Nested fields
+          if (entry.supervisor?.name) expectedValues.push(extractFieldValue(entry.supervisor.name));
+          if (entry.dutyStation?.dutyStation) expectedValues.push(extractFieldValue(entry.dutyStation.dutyStation));
+          if (entry.employerAddress?.street) expectedValues.push(extractFieldValue(entry.employerAddress.street));
+          if (entry.employerAddress?.city) expectedValues.push(extractFieldValue(entry.employerAddress.city));
+        });
+      };
+      
+      // Process all employment types
+      if (mainSection.militaryEmployment?.entries) {
+        extractEmploymentValues(mainSection.militaryEmployment.entries);
+      }
+      if (mainSection.nonFederalEmployment?.entries) {
+        extractEmploymentValues(mainSection.nonFederalEmployment.entries);
+      }
+      if (mainSection.selfEmployment?.entries) {
+        extractEmploymentValues(mainSection.selfEmployment.entries);
+      }
+      if (mainSection.unemployment?.entries) {
+        extractEmploymentValues(mainSection.unemployment.entries);
+      }
+    }
+    
+    // Filter out empty values
+    return expectedValues.filter(val => val && String(val).trim() !== '');
   };
 
   // Get field value safely
@@ -471,25 +553,56 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
           </div>
         )}
 
-        {/* Employment Entries Section */}
-        {getFieldValue('hasEmployment') === 'YES' && (
+        {/* Employment Entries Section - Conditional Rendering Based on Type */}
+        {getFieldValue('hasEmployment') === 'YES' && section13Data.section13?.employmentType?.value && (
           <div className="space-y-8 border-t border-gray-200 pt-8">
             <h3 className="text-xl font-semibold text-gray-900 mb-6">Employment History</h3>
+            
+            {/* Instructions based on employment type */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-blue-800">
+                <strong>Note:</strong> Based on your employment type selection, you need to complete the following subsections:
+              </p>
+              <ul className="mt-2 text-sm text-blue-700 list-disc list-inside">
+                {(section13Data.section13?.employmentType?.value === 'Military' || 
+                  section13Data.section13?.employmentType?.value === 'National Guard/Reserve' ||
+                  section13Data.section13?.employmentType?.value === 'USPHS') && (
+                  <li>Complete 13A.1 (Military Employment), 13A.5 and 13A.6</li>
+                )}
+                {(section13Data.section13?.employmentType?.value === 'Federal' || 
+                  section13Data.section13?.employmentType?.value === 'State Government' ||
+                  section13Data.section13?.employmentType?.value === 'Federal Contractor' ||
+                  section13Data.section13?.employmentType?.value === 'Non-government employment' ||
+                  section13Data.section13?.employmentType?.value === 'Other') && (
+                  <li>Complete 13A.2 (Non-Federal Employment), 13A.5 and 13A.6</li>
+                )}
+                {section13Data.section13?.employmentType?.value === 'Self-Employment' && (
+                  <li>Complete 13A.3 (Self-Employment), 13A.5 and 13A.6</li>
+                )}
+                {section13Data.section13?.employmentType?.value === 'Unemployment' && (
+                  <li>Complete 13A.4 (Unemployment), 13A.5 and 13A.6</li>
+                )}
+              </ul>
+            </div>
 
-            {/* Military/Federal Employment */}
-            <div className="border border-gray-200 rounded-lg p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h4 className="text-lg font-medium text-gray-900">
-                  Military/Federal Employment ({getEmploymentEntryCount('militaryEmployment')})
-                </h4>
-                <button
-                  type="button"
-                  onClick={addMilitaryEmploymentEntry}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  Add Entry
-                </button>
-              </div>
+            {/* Military/Federal Employment - Show only for relevant types */}
+            {(section13Data.section13?.employmentType?.value === 'Military' || 
+              section13Data.section13?.employmentType?.value === 'National Guard/Reserve' ||
+              section13Data.section13?.employmentType?.value === 'USPHS') && (
+              <div className="border border-gray-200 rounded-lg p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="text-lg font-medium text-gray-900">
+                    13A.1 - Military/Federal Employment ({getEmploymentEntryCount('militaryEmployment')})
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={addMilitaryEmploymentEntry}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    disabled={getEmploymentEntryCount('militaryEmployment') >= 4}
+                  >
+                    {getEmploymentEntryCount('militaryEmployment') >= 4 ? 'Max Entries Reached' : 'Add Entry'}
+                  </button>
+                </div>
 
               {section13Data.section13.militaryEmployment?.entries?.map((entry, index) => (
                 <div key={entry._id} className="border border-gray-100 rounded-md p-4 mb-4 last:mb-0">
@@ -1222,22 +1335,29 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
               {getEmploymentEntryCount('militaryEmployment') === 0 && (
                 <p className="text-gray-500 text-center py-4">No military/federal employment entries added yet.</p>
               )}
-            </div>
-
-            {/* Non-Federal Employment */}
-            <div className="border border-gray-200 rounded-lg p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h4 className="text-lg font-medium text-gray-900">
-                  Non-Federal Employment ({getEmploymentEntryCount('nonFederalEmployment')})
-                </h4>
-                <button
-                  type="button"
-                  onClick={addNonFederalEmploymentEntry}
-                  className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-                >
-                  Add Entry
-                </button>
               </div>
+            )}
+
+            {/* Non-Federal Employment - Show only for relevant types */}
+            {(section13Data.section13?.employmentType?.value === 'Federal' || 
+              section13Data.section13?.employmentType?.value === 'State Government' ||
+              section13Data.section13?.employmentType?.value === 'Federal Contractor' ||
+              section13Data.section13?.employmentType?.value === 'Non-government employment' ||
+              section13Data.section13?.employmentType?.value === 'Other') && (
+              <div className="border border-gray-200 rounded-lg p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="text-lg font-medium text-gray-900">
+                    13A.2 - Non-Federal Employment ({getEmploymentEntryCount('nonFederalEmployment')})
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={addNonFederalEmploymentEntry}
+                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
+                    disabled={getEmploymentEntryCount('nonFederalEmployment') >= 4}
+                  >
+                    {getEmploymentEntryCount('nonFederalEmployment') >= 4 ? 'Max Entries Reached' : 'Add Entry'}
+                  </button>
+                </div>
 
               {section13Data.section13.nonFederalEmployment?.entries?.map((entry, index) => (
                 <div key={entry._id} className="border border-gray-100 rounded-md p-4 mb-4 last:mb-0">
@@ -1458,22 +1578,25 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
               {getEmploymentEntryCount('nonFederalEmployment') === 0 && (
                 <p className="text-gray-500 text-center py-4">No non-federal employment entries added yet.</p>
               )}
-            </div>
-
-            {/* Self-Employment */}
-            <div className="border border-gray-200 rounded-lg p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h4 className="text-lg font-medium text-gray-900">
-                  Self-Employment ({getEmploymentEntryCount('selfEmployment')})
-                </h4>
-                <button
-                  type="button"
-                  onClick={addSelfEmploymentEntry}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                >
-                  Add Entry
-                </button>
               </div>
+            )}
+
+            {/* Self-Employment - Show only for Self-Employment type */}
+            {section13Data.section13?.employmentType?.value === 'Self-Employment' && (
+              <div className="border border-gray-200 rounded-lg p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="text-lg font-medium text-gray-900">
+                    13A.3 - Self-Employment ({getEmploymentEntryCount('selfEmployment')})
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={addSelfEmploymentEntry}
+                    className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    disabled={getEmploymentEntryCount('selfEmployment') >= 4}
+                  >
+                    {getEmploymentEntryCount('selfEmployment') >= 4 ? 'Max Entries Reached' : 'Add Entry'}
+                  </button>
+                </div>
 
               {section13Data.section13.selfEmployment?.entries?.map((entry, index) => (
                 <div key={entry._id} className="border border-gray-100 rounded-md p-4 mb-4 last:mb-0">
@@ -1558,22 +1681,25 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
               {getEmploymentEntryCount('selfEmployment') === 0 && (
                 <p className="text-gray-500 text-center py-4">No self-employment entries added yet.</p>
               )}
-            </div>
-
-            {/* Unemployment */}
-            <div className="border border-gray-200 rounded-lg p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h4 className="text-lg font-medium text-gray-900">
-                  Unemployment ({getEmploymentEntryCount('unemployment')})
-                </h4>
-                <button
-                  type="button"
-                  onClick={addUnemploymentEntry}
-                  className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                >
-                  Add Entry
-                </button>
               </div>
+            )}
+
+            {/* Unemployment - Show only for Unemployment type */}
+            {section13Data.section13?.employmentType?.value === 'Unemployment' && (
+              <div className="border border-gray-200 rounded-lg p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="text-lg font-medium text-gray-900">
+                    13A.4 - Unemployment ({getEmploymentEntryCount('unemployment')})
+                  </h4>
+                  <button
+                    type="button"
+                    onClick={addUnemploymentEntry}
+                    className="px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    disabled={getEmploymentEntryCount('unemployment') >= 4}
+                  >
+                    {getEmploymentEntryCount('unemployment') >= 4 ? 'Max Entries Reached' : 'Add Entry'}
+                  </button>
+                </div>
 
               {section13Data.section13.unemployment?.entries?.map((entry, index) => (
                 <div key={entry._id} className="border border-gray-100 rounded-md p-4 mb-4 last:mb-0">
@@ -1632,6 +1758,16 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
               {getEmploymentEntryCount('unemployment') === 0 && (
                 <p className="text-gray-500 text-center py-4">No unemployment entries added yet.</p>
               )}
+              </div>
+            )}
+            
+            {/* Add notice for multiple entries */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-6">
+              <p className="text-sm text-yellow-800">
+                <strong>Important:</strong> You can add up to 4 entries total. Each entry represents a different employment period. 
+                If you need to add a different type of employment, you'll need to complete the current entries first, 
+                then start a new form section with a different employment type selected.
+              </p>
             </div>
           </div>
         )}
@@ -1659,6 +1795,23 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
               disabled={isValidating}
             >
               {isValidating ? 'Validating...' : 'Validate Inputs'}
+            </button>
+            <button
+              type="button"
+              className="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-colors"
+              data-testid="page-by-page-validation-button"
+              onClick={async () => {
+                // Generate PDF first
+                const pdfResult = await sf86Form.generatePdf();
+                if (pdfResult.success && pdfResult.pdfBytes) {
+                  setPdfBytesForValidation(pdfResult.pdfBytes);
+                  setShowFieldMappingValidator(true);
+                } else {
+                  alert('Failed to generate PDF for validation');
+                }
+              }}
+            >
+              Page-by-Page Validation
             </button>
 
             <button
@@ -1767,6 +1920,41 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
             </pre>
           </div>
         </details>
+      )}
+
+      {/* Field Mapping Validator Modal */}
+      {showFieldMappingValidator && pdfBytesForValidation && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-7xl w-full max-h-[90vh] overflow-hidden">
+            <div className="p-4 border-b flex justify-between items-center">
+              <h2 className="text-xl font-bold">Section 13 Field Mapping Validation</h2>
+              <button
+                onClick={() => {
+                  setShowFieldMappingValidator(false);
+                  setPdfBytesForValidation(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto" style={{ maxHeight: 'calc(90vh - 100px)' }}>
+              <FieldMappingValidator
+                pdfBytes={pdfBytesForValidation}
+                formData={section13Data}
+                sectionNumber={13}
+                startPage={17}
+                endPage={33}
+                onValidationComplete={(results) => {
+                  console.log('Validation complete:', results);
+                  // Handle completion
+                }}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -216,11 +216,10 @@ export class IntegratedValidationService {
    * Clear validation data from previous runs (browser-compatible)
    */
   private async clearValidationData(): Promise<void> {
-    console.log('🧹 Clearing validation data (browser mode)...');
-    // In browser mode, we simulate the clear-data.js functionality
-    // This would clear any cached validation results or temporary data
+    console.log('🧹 Clearing validation data...');
+    
     try {
-      // Clear any stored validation results in localStorage or sessionStorage
+      // Clear browser storage data
       if (typeof window !== 'undefined') {
         const keysToRemove = [];
         for (let i = 0; i < localStorage.length; i++) {
@@ -230,9 +229,32 @@ export class IntegratedValidationService {
           }
         }
         keysToRemove.forEach(key => localStorage.removeItem(key));
-        console.log(`🗑️  Cleared ${keysToRemove.length} validation cache entries`);
+        console.log(`🗑️  Cleared ${keysToRemove.length} validation cache entries from browser storage`);
       }
-      console.log('✅ Data clearing completed (browser mode)');
+      
+      // Also clear server-side validation data via API
+      try {
+        const response = await fetch('/api/pdf-validation-tools', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'clearAll'
+          })
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          console.log(`✅ Server-side validation data cleared: ${result.message}`);
+        } else {
+          console.warn('⚠️  Warning: Could not clear server-side validation data');
+        }
+      } catch (apiError) {
+        console.warn('⚠️  Warning: API call to clear validation data failed:', apiError);
+      }
+      
+      console.log('✅ Data clearing completed');
     } catch (error) {
       console.warn('⚠️  Warning: Could not clear all validation data:', error);
     }

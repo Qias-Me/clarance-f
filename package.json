@@ -13,7 +13,11 @@
 		"pdf-to-images": "node scripts/pdf-to-images.js",
 		"extract-pdf-fields": "node scripts/pdf-page-field-extractor.js",
 		"clear-data": "node scripts/clear-data.js",
-		"validate-pdf": "node scripts/validate-pdf-workflow.js"
+		"validate-pdf": "node scripts/validate-pdf-workflow.js",
+		"validate-mappings": "node scripts/validate-mappings.js",
+		"test:section15": "npx playwright test tests/section15/comprehensive-section15.test.ts --reporter=list",
+		"publish-validation": "node scripts/publish-validation-artifacts.js",
+		"test:section15:headed": "npx playwright test tests/section15/comprehensive-section15.test.ts --reporter=list --headed"
 	},
 	"dependencies": {
 		"@reduxjs/toolkit": "^2.7.0",

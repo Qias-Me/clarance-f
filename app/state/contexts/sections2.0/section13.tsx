@@ -40,12 +40,13 @@ import { useSF86Form } from './SF86FormContext';
  */
 function createMappedField<T>(logicalPath: string, defaultValue: T): any {
   const pdfFieldName = mapLogicalFieldToPdfField(logicalPath);
-  console.log(`🔄 Section13: Creating field for logical path: ${logicalPath} -> PDF field: ${pdfFieldName}`);
+  // Removed logging from here to prevent infinite loops
+  // Logging should be done in useEffect or event handlers only
 
   try {
     return createFieldFromReference(13, pdfFieldName, defaultValue);
   } catch (error) {
-    console.warn(`⚠️ Section13: Failed to create field for ${logicalPath}, using fallback:`, error);
+    // Silent fallback to prevent console spam
     return {
       name: pdfFieldName,
       id: pdfFieldName,
@@ -64,13 +65,13 @@ function createMappedField<T>(logicalPath: string, defaultValue: T): any {
 function createMappedFieldForEntry<T>(employmentType: string, entryIndex: number, fieldPath: string, defaultValue: T): any {
   const logicalPath = `section13.${employmentType}.entries[${entryIndex}].${fieldPath}`;
   const pdfFieldName = mapLogicalFieldToPdfField(logicalPath);
-
-  console.log(`🔄 Section13: Creating entry field for logical path: ${logicalPath} -> PDF field: ${pdfFieldName}`);
+  // Removed logging from here to prevent infinite loops
+  // Logging should be done in useEffect or event handlers only
 
   try {
     return createFieldFromReference(13, pdfFieldName, defaultValue);
   } catch (error) {
-    console.warn(`⚠️ Section13: Failed to create entry field for ${logicalPath}, using fallback:`, error);
+    // Silent fallback to prevent console spam
     return {
       name: pdfFieldName,
       id: pdfFieldName,
@@ -676,6 +677,20 @@ export const Section13Provider: React.FC<Section13ProviderProps> = ({ children }
   useEffect(() => {
     setIsInitialized(true);
   }, []);
+
+  // Log field creation only in debug mode and only when employment type changes
+  useEffect(() => {
+    const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('debug=true');
+    if (isDebugMode && isInitialized && section13Data.section13?.employmentType?.value) {
+      console.log(`🔄 Section13: Employment type changed to: ${section13Data.section13.employmentType.value}`);
+      console.log(`📋 Section13: Active entries:`, {
+        military: section13Data.section13.militaryEmployment?.entries?.length || 0,
+        nonFederal: section13Data.section13.nonFederalEmployment?.entries?.length || 0,
+        selfEmployment: section13Data.section13.selfEmployment?.entries?.length || 0,
+        unemployment: section13Data.section13.unemployment?.entries?.length || 0
+      });
+    }
+  }, [section13Data.section13?.employmentType?.value, isInitialized]);
 
   // ============================================================================
   // VALIDATION FUNCTIONS

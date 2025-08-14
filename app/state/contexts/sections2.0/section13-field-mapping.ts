@@ -579,7 +579,11 @@ export function createMappedFieldWithEntry(
   const logicalPath = `section13.${employmentType}.entries[${entryIndex}].${fieldPath}`;
   const pdfFieldName = mapLogicalFieldToPdfField(logicalPath);
 
-  console.log(`🔄 Section13: Creating field for logical path: ${logicalPath} -> PDF field: ${pdfFieldName}`);
+  // Only log in debug mode
+  const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('debug=true');
+  if (isDebugMode) {
+    console.log(`🔄 Section13: Creating field for logical path: ${logicalPath} -> PDF field: ${pdfFieldName}`);
+  }
 
   return {
     value: defaultValue,
@@ -589,4 +593,48 @@ export function createMappedFieldWithEntry(
     errors: [],
     isDirty: false
   };
+}
+
+// ============================================================================
+// ENHANCED MAPPING INTEGRATION
+// ============================================================================
+
+/**
+ * Get enhanced field mappings for better validation and coverage
+ * This integrates with the new enhanced mapping system
+ */
+export function getEnhancedFieldMappings(pageNumber: number = 17): Array<{
+  uiPath: string;
+  pdfFieldName: string;
+  fieldType: string;
+  validation?: any;
+}> {
+  try {
+    // Try to use enhanced mappings if available
+    const { getPageFieldMappings } = require('./section13-field-mapping-enhanced');
+    return getPageFieldMappings(pageNumber);
+  } catch (error) {
+    // Fallback to basic mappings
+    console.warn('Enhanced field mappings not available, using basic mappings');
+    return [];
+  }
+}
+
+/**
+ * Transform value using enhanced field mapping rules
+ */
+export function transformFieldValue(fieldPath: string, value: any): any {
+  try {
+    const { getPageFieldMappings, transformValueForPDF } = require('./section13-field-mapping-enhanced');
+    const mappings = getPageFieldMappings(17); // Default to page 17
+    const mapping = mappings.find(m => m.uiPath === fieldPath);
+    
+    if (mapping) {
+      return transformValueForPDF(mapping, value);
+    }
+  } catch (error) {
+    // Fallback to basic transformation
+  }
+  
+  return value;
 }

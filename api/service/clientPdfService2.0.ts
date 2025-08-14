@@ -17,6 +17,7 @@ import {
 } from 'pdf-lib';
 import type { ApplicantFormValues, Field } from '../interfaces/formDefinition2.0';
 import { integratedValidationService, type IntegratedValidationResult } from './integratedValidationService.js';
+import { mappingValidationService, buildExpectedByPage, type FullMappingReport } from './mappingValidationService.js';
 
 // URLs for fetching the SF86 PDF template
 const SF86_PDF_TEMPLATE_URL = '/api/generate-pdf'; // Our API route that serves the base PDF template
@@ -106,9 +107,10 @@ export class ClientPdfService2 {
       targetPages?: number[];
       enableValidation?: boolean;
       enableCorrection?: boolean;
-      generateImages?: boolean;
+    generateImages?: boolean;
+    enableMappingCheck?: boolean;
     } = {}
-  ): Promise<ClientPdfResult & { validationReport?: IntegratedValidationResult }> {
+  ): Promise<ClientPdfResult & { validationReport?: IntegratedValidationResult; mappingReport?: FullMappingReport }> {
     console.log('🚀 Starting enhanced PDF generation with validation...');
 
     // Step 1: Generate PDF using existing method
@@ -120,7 +122,8 @@ export class ClientPdfService2 {
     }
 
     // Step 2: Validate PDF in memory if enabled
-    let validationReport: IntegratedValidationResult | undefined;
+  let validationReport: IntegratedValidationResult | undefined;
+  let mappingReport: FullMappingReport | undefined;
 
     if (options.enableValidation !== false) {
       try {
@@ -136,7 +139,7 @@ export class ClientPdfService2 {
           }
         );
 
-        console.log('✅ PDF validation completed');
+  console.log('✅ PDF validation completed');
         console.log(`📊 Validation results: ${validationReport.fieldsWithValues}/${validationReport.totalFields} fields with values`);
 
         // Log validation summary
@@ -148,9 +151,30 @@ export class ClientPdfService2 {
       }
     }
 
+    // Step 3: Optional mapping validation (page-by-page, Section 13 default)
+    if (options.enableMappingCheck) {
+      try {
+        const pages = options.targetPages && options.targetPages.length > 0 ? options.targetPages : [17];
+        const sectionId = 13; // default section for current flow; make configurable later if needed
+        const expectedByPage = buildExpectedByPage(sectionId, pages);
+
+        mappingReport = await mappingValidationService.validateAcrossPages(
+          pdfResult.pdfBytes!,
+          pages,
+          expectedByPage,
+          sectionId
+        );
+
+        console.log('🧭 Mapping validation completed for pages:', pages.join(', '));
+      } catch (err) {
+        console.warn('⚠️ Mapping validation skipped due to error:', err instanceof Error ? err.message : String(err));
+      }
+    }
+
     return {
       ...pdfResult,
-      validationReport
+      validationReport,
+      mappingReport
     };
   }
 
@@ -1545,8 +1569,9 @@ export class ClientPdfService2 {
     try {
       // console.log(`📱 Starting PDF download: ${filename}, size: ${pdfBytes.length} bytes`);
 
-      // Create blob with PDF data
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+  // Create blob with PDF data (ensure ArrayBuffer backing to satisfy TS types)
+  const pdfArray = new Uint8Array(pdfBytes); // rebuffer to standard ArrayBuffer
+  const blob = new Blob([pdfArray.buffer], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
 
       // Enhanced mobile detection

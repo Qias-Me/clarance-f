@@ -322,6 +322,54 @@ export function getSection2FieldReferences() {
   };
 }
 
+// ============================================================================
+// ADDITIONAL HELPER UTILITIES (used by Section 13 generator and validators)
+// ============================================================================
+
+/**
+ * Validate that a field exists in a section by id/name/uniqueId
+ */
+export function validateFieldExists(identifier: string, sectionId: number = 13): boolean {
+  const byId = findFieldById(sectionId, identifier);
+  if (byId) return true;
+  const byName = findFieldByName(sectionId, identifier);
+  if (byName) return true;
+  const byUnique = findFieldByUniqueId(sectionId, identifier);
+  return !!byUnique;
+}
+
+/**
+ * Get field metadata (FieldReference) by id/name/uniqueId if found
+ */
+export function getFieldMetadata(identifier: string, sectionId: number = 13) {
+  return (
+    findFieldById(sectionId, identifier) ||
+    findFieldByName(sectionId, identifier) ||
+    findFieldByUniqueId(sectionId, identifier)
+  );
+}
+
+/**
+ * Find similar field names (basic substring search) to assist mapping fixes
+ */
+export function findSimilarFieldNames(identifier: string, limit: number = 3, sectionId: number = 13): string[] {
+  const fields = getSectionFields(sectionId);
+  const needle = identifier.toLowerCase();
+  const candidates = fields
+    .map(f => f.name)
+    .filter(name => name.toLowerCase().includes(needle) || needle.includes(name.toLowerCase()))
+    .slice(0, limit);
+  return candidates;
+}
+
+/**
+ * Get the numeric field ID for an identifier if it exists in the section
+ */
+export function getNumericFieldId(identifier: string, sectionId: number = 13): string | undefined {
+  const ref = getFieldMetadata(identifier, sectionId);
+  return ref?.id?.replace(' 0 R', '');
+}
+
 /**
  * Get Section 29 field references by subsection
  */
