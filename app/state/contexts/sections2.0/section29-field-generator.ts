@@ -12,7 +12,7 @@ import {
   getFieldBySubsectionAndType,
   getNumericFieldId
 } from './section29-field-mapping';
-import { SECTION29_RADIO_FIELD_IDS, SECTION29_RADIO_FIELD_NAMES } from '../../../../api/interfaces/sections2.0/section29';
+import { SECTION29_RADIO_FIELD_IDS, SECTION29_RADIO_FIELD_NAMES } from '../../../../api/interfaces/section-interfaces/section29';
 
 // ============================================================================
 // TYPE DEFINITIONS

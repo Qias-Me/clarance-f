@@ -20,11 +20,11 @@ import type {
   CourtActionEntry,
   Section28ValidationResult,
   CourtActionValidationResult
-} from '../../../../api/interfaces/sections2.0/section28';
+} from '../../../../api/interfaces/section-interfaces/section28';
 import {
   createDefaultSection28,
   createDefaultCourtActionEntry
-} from '../../../../api/interfaces/sections2.0/section28';
+} from '../../../../api/interfaces/section-interfaces/section28';
 import type {
   ValidationResult,
   ValidationError,

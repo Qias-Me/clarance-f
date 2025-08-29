@@ -24,12 +24,12 @@ import type {
   Section3ValidationRules,
   Section3ValidationContext,
   LocationValidationResult
-} from '../../../../api/interfaces/sections2.0/section3';
+} from '../../../../api/interfaces/section-interfaces/section3';
 import {
   createDefaultSection3,
   validatePlaceOfBirth,
   updateSection3Field
-} from '../../../../api/interfaces/sections2.0/section3';
+} from '../../../../api/interfaces/section-interfaces/section3';
 
 import type { ValidationResult, ValidationError, SectionId } from '../shared/base-interfaces';
 import { generateSection3Fields, validateSection3FieldMappings } from './section3-field-generator';

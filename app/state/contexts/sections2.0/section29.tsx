@@ -20,7 +20,7 @@ import type {
   DateRange,
   PositionsField,
   ContributionsField,
-} from "../../../../api/interfaces/sections2.0/section29";
+} from "../../../../api/interfaces/section-interfaces/section29";
 import {
   generateFieldId,
   generateFieldName,

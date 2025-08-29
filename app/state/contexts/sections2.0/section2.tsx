@@ -20,13 +20,15 @@ import type {
   Section2FieldUpdate,
   DateValidationResult,
   Section2ValidationContext
-} from '../../../../api/interfaces/sections2.0/section2';
+} from '../../../../api/interfaces/section-interfaces/section2';
 import {
   createDefaultSection2,
   validateDateOfBirth,
   updateSection2Field,
-  calculateAge
-} from '../../../../api/interfaces/sections2.0/section2';
+  calculateAge,
+  AGE_LIMITS,
+  DATE_VALIDATION_CONSTANTS
+} from '../../../../api/interfaces/section-interfaces/section2';
 import type { ValidationResult, ValidationError, ChangeSet } from '../shared/base-interfaces';
 import { useSF86Form } from './SF86FormContext';
 
@@ -64,7 +66,10 @@ export interface Section2ContextType {
 // INITIAL STATE CREATION
 // ============================================================================
 
-// Use the DRY approach with sections-references instead of hardcoded values
+/**
+ * Creates the initial Section 2 state
+ * Uses the DRY approach with sections-references instead of hardcoded values
+ */
 const createInitialSection2State = (): Section2 => {
   return createDefaultSection2();
 };
@@ -73,12 +78,15 @@ const createInitialSection2State = (): Section2 => {
 // VALIDATION RULES
 // ============================================================================
 
+/**
+ * Default validation rules using constants
+ */
 const defaultValidationRules = {
   requiresDateOfBirth: true,
-  minimumAge: 18,
-  maximumAge: 120,
+  minimumAge: AGE_LIMITS.MINIMUM,
+  maximumAge: AGE_LIMITS.MAXIMUM,
   allowsEstimatedDate: true,
-  dateFormat: 'MM/DD/YYYY'
+  dateFormat: DATE_VALIDATION_CONSTANTS.DEFAULT_FORMAT
 };
 
 // ============================================================================
@@ -110,6 +118,9 @@ export const Section2Provider: React.FC<Section2ProviderProps> = ({ children }) 
   // COMPUTED VALUES
   // ============================================================================
 
+  /**
+   * Check if data has been modified from initial state
+   */
   const isDirty = JSON.stringify(section2Data) !== JSON.stringify(initialData);
 
   // Set initialized flag after component mounts
@@ -197,14 +208,29 @@ export const Section2Provider: React.FC<Section2ProviderProps> = ({ children }) 
   // CRUD OPERATIONS
   // ============================================================================
 
+  /**
+   * Updates the date of birth field
+   * @param date - The new date value (converts from YYYY-MM-DD to MM/DD/YYYY if needed)
+   */
   const updateDateOfBirth = useCallback((date: string) => {
+    // Convert from YYYY-MM-DD (HTML date input) to MM/DD/YYYY format
+    let formattedDate = date;
+    if (date && date.includes('-')) {
+      const [year, month, day] = date.split('-');
+      formattedDate = `${month}/${day}/${year}`;
+    }
+    
     setSection2Data(prevData => {
       const newData = cloneDeep(prevData);
-      newData.section2.date.value = date;
+      newData.section2.date.value = formattedDate;
       return newData;
     });
   }, []);
 
+  /**
+   * Updates the estimation checkbox
+   * @param estimated - Whether the date is estimated
+   */
   const updateEstimated = useCallback((estimated: boolean) => {
     setSection2Data(prevData => {
       const newData = cloneDeep(prevData);
@@ -213,6 +239,10 @@ export const Section2Provider: React.FC<Section2ProviderProps> = ({ children }) 
     });
   }, []);
 
+  /**
+   * Updates a field using the Section2FieldUpdate type
+   * @param update - The field update containing path and value
+   */
   const updateDateFieldValue = useCallback((update: Section2FieldUpdate) => {
     setSection2Data(prevData => {
       return updateSection2Field(prevData, update);
@@ -222,9 +252,10 @@ export const Section2Provider: React.FC<Section2ProviderProps> = ({ children }) 
   /**
    * Generic field update function for integration compatibility
    * Maps generic field paths to Section 2 specific update functions
-   * FIXED: Added fallback mechanism using lodash set() following Section 29 pattern
+   * @param path - The field path to update
+   * @param value - The new value for the field
    */
-  const updateFieldValue = useCallback((path: string, value: any) => {
+  const updateFieldValue = useCallback((path: string, value: string | boolean) => {
     // Parse path to update the correct field using specific handlers
     if (path === 'section2.date') {
       updateDateOfBirth(value);

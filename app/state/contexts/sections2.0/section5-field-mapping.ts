@@ -12,7 +12,7 @@
  * - Entry 4: TextField11[14,13,12], suffix[3], dates, checkboxes
  */
 
-import section5Data from '../../../../api/sections-references/section-5.json';
+import section5Data from '../../../../api/interfaces/sections-references/section-5.json';
 
 // Type definitions for Section 5 field data
 interface Section5Field {

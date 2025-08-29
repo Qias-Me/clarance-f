@@ -4,6 +4,7 @@
  * React context provider for SF-86 Section 1 using the new Form Architecture 2.0.
  * This provider manages personal information data with full CRUD operations,
  * validation, and integration with the central SF86FormContext.
+ * Enhanced with PDF-to-UI field mapping integration.
  */
 
 import React, {
@@ -23,12 +24,21 @@ import type {
   Section1ValidationContext,
   NameValidationResult,
   PersonalInformation
-} from '../../../../api/interfaces/sections2.0/section1';
+} from '../../../../api/interfaces/section-interfaces/section1';
 import {
   NAME_VALIDATION
-} from '../../../../api/interfaces/sections2.0/section1';
-import { SUFFIX_OPTIONS } from '../../../../api/interfaces/sections2.0/base';
+} from '../../../../api/interfaces/section-interfaces/section1';
+import { SUFFIX_OPTIONS } from '../../../../api/interfaces/section-interfaces/base';
 import { createFieldFromReference, validateSectionFieldCount } from '../../../../api/utils/sections-references-loader';
+import {
+  getPdfFieldByName,
+  getPdfFieldById,
+  mapLogicalFieldToPdfField,
+  getFieldMetadata,
+  getMappingStatistics,
+  validateFieldMappings,
+  SECTION1_FIELD_MAPPINGS
+} from './section1-field-mapping';
 
 import type { ValidationResult, ValidationError, ChangeSet } from '../shared/base-interfaces';
 import { useSF86Form } from './SF86FormContext';
@@ -52,6 +62,13 @@ export interface Section1ContextType {
   // Validation
   validateSection: () => ValidationResult;
   validateFullName: () => NameValidationResult;
+
+  // Enhanced PDF-to-UI Field Mapping Integration
+  getPdfFieldMapping: (uiPath: string) => string | undefined;
+  getUiFieldForPdfField: (pdfFieldId: string) => string | undefined;
+  getFieldMappingMetadata: (logicalPath: string) => any;
+  validateFieldMappings: () => { isValid: boolean; errors: string[]; warnings: string[] };
+  getMappingStatistics: () => any;
 
   // Utility
   resetSection: () => void;
@@ -156,25 +173,37 @@ const validateFullNameInternal = (fullName: PersonalInformation, context: Sectio
   const errors: string[] = [];
   const warnings: string[] = [];
 
+  // Get values safely - handle both direct values and nested .value properties
+  const getFieldValue = (field: any): string => {
+    if (typeof field === 'string') return field;
+    if (field && typeof field === 'object' && 'value' in field) return field.value || '';
+    return '';
+  };
+
+  const lastName = getFieldValue(fullName.lastName);
+  const firstName = getFieldValue(fullName.firstName);
+  const middleName = getFieldValue(fullName.middleName);
+  const suffix = getFieldValue(fullName.suffix);
+
   // Required field validation
-  if (context.rules.requiresLastName && !fullName.lastName.value.trim()) {
+  if (context.rules.requiresLastName && !lastName.trim()) {
     errors.push('Last name is required');
   }
 
-  if (context.rules.requiresFirstName && !fullName.firstName.value.trim()) {
+  if (context.rules.requiresFirstName && !firstName.trim()) {
     errors.push('First name is required');
   }
 
   // Length validation
   const fields = [
-    { value: fullName.lastName.value, name:  fullName.lastName.name, label: fullName.lastName.label },
-    { value: fullName.firstName.value, name: fullName.firstName.name, label: fullName.firstName.label },
-    { value: fullName.middleName.value, name: fullName.middleName.name, label: fullName.middleName.label },
-    { value: fullName.suffix.value, name: fullName.suffix.name, label: fullName.suffix.label }
+    { value: lastName, name: 'Last name' },
+    { value: firstName, name: 'First name' },
+    { value: middleName, name: 'Middle name' },
+    { value: suffix, name: 'Suffix' }
   ];
 
   fields.forEach(field => {
-    if (field.value.length > context.rules.maxNameLength) {
+    if (field.value && field.value.length > context.rules.maxNameLength) {
       errors.push(`${field.name} exceeds maximum length of ${context.rules.maxNameLength} characters`);
     }
   });
@@ -188,10 +217,10 @@ const validateFullNameInternal = (fullName: PersonalInformation, context: Sectio
 
   // Initial-only validation
   if (context.allowInitialsOnly) {
-    if (NAME_VALIDATION.INITIAL_PATTERN.test(fullName.firstName.value)) {
+    if (NAME_VALIDATION.INITIAL_PATTERN.test(firstName)) {
       warnings.push('First name appears to be an initial only');
     }
-    if (NAME_VALIDATION.INITIAL_PATTERN.test(fullName.middleName.value)) {
+    if (NAME_VALIDATION.INITIAL_PATTERN.test(middleName)) {
       warnings.push('Middle name appears to be an initial only');
     }
   }
@@ -258,7 +287,7 @@ export const Section1Provider: React.FC<Section1ProviderProps> = ({ children }) 
     if (!nameValidation.isValid) {
       nameValidation.errors.forEach(error => {
         validationErrors.push({
-          field: 'fullName',
+          field: 'section1.fullName',
           message: error,
           code: 'VALIDATION_ERROR',
           severity: 'error'
@@ -268,7 +297,7 @@ export const Section1Provider: React.FC<Section1ProviderProps> = ({ children }) 
 
     nameValidation.warnings.forEach(warning => {
       validationWarnings.push({
-        field: 'fullName',
+        field: 'section1.fullName',
         message: warning,
         code: 'VALIDATION_WARNING',
         severity: 'warning'
@@ -436,6 +465,51 @@ export const Section1Provider: React.FC<Section1ProviderProps> = ({ children }) 
 
 
   // ============================================================================
+  // ENHANCED PDF-TO-UI FIELD MAPPING FUNCTIONS
+  // ============================================================================
+
+  /**
+   * Get PDF field mapping for a UI path
+   */
+  const getPdfFieldMapping = useCallback((uiPath: string): string | undefined => {
+    return mapLogicalFieldToPdfField(uiPath);
+  }, []);
+
+  /**
+   * Get UI field path for a PDF field ID (reverse mapping)
+   */
+  const getUiFieldForPdfField = useCallback((pdfFieldId: string): string | undefined => {
+    // Look through the SECTION1_FIELD_MAPPINGS to find the UI path
+    for (const [uiPath, pdfField] of Object.entries(SECTION1_FIELD_MAPPINGS)) {
+      if (pdfField === pdfFieldId) {
+        return uiPath;
+      }
+    }
+    return undefined;
+  }, []);
+
+  /**
+   * Get field metadata for a logical field path
+   */
+  const getFieldMappingMetadata = useCallback((logicalPath: string) => {
+    return getFieldMetadata(logicalPath);
+  }, []);
+
+  /**
+   * Validate field mappings
+   */
+  const validateFieldMappingsFunc = useCallback(() => {
+    return validateFieldMappings();
+  }, []);
+
+  /**
+   * Get mapping statistics
+   */
+  const getMappingStatisticsFunc = useCallback(() => {
+    return getMappingStatistics();
+  }, []);
+
+  // ============================================================================
   // CONTEXT VALUE
   // ============================================================================
 
@@ -454,6 +528,13 @@ export const Section1Provider: React.FC<Section1ProviderProps> = ({ children }) 
     // Validation
     validateSection,
     validateFullName: validateFullNameOnly,
+
+    // Enhanced PDF-to-UI Field Mapping Integration
+    getPdfFieldMapping,
+    getUiFieldForPdfField,
+    getFieldMappingMetadata,
+    validateFieldMappings: validateFieldMappingsFunc,
+    getMappingStatistics: getMappingStatisticsFunc,
 
     // Utility
     resetSection,

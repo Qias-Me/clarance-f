@@ -9,7 +9,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useSection5 } from '~/state/contexts/sections2.0/section5';
 import { useSF86Form } from '~/state/contexts/sections2.0/SF86FormContext';
-import { getSuffixOptions } from '../../../api/interfaces/sections2.0/base';
+import { getSuffixOptions } from '../../../api/interfaces/section-interfaces/base';
 
 interface Section5ComponentProps {
   className?: string;
@@ -145,31 +145,11 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
   // Handle Yes/No radio selection
   const handleHasOtherNamesChange = (value: boolean) => {
     if (value) {
-      // If selecting "Yes", ensure we have exactly 1 entry
-      // First, always update the flag
+      // If selecting "Yes", show the 4 fixed entries
       updateHasOtherNames(true);
-
-      // Prevent multiple rapid calls
-      if (isAddingEntryRef.current) {
-        return;
-      }
-
-      // Then, check if we need to add an entry (use a timeout to ensure state has updated)
-      setTimeout(() => {
-        const countAfterUpdate = getEntryCount();
-
-        if (countAfterUpdate === 0 && !isAddingEntryRef.current) {
-          isAddingEntryRef.current = true;
-          addOtherNameEntry('handleHasOtherNamesChange');
-
-          // Reset the flag after a short delay
-          setTimeout(() => {
-            isAddingEntryRef.current = false;
-          }, 100);
-        }
-      }, 0);
+      // All 4 entries are already present in state - just display them
     } else {
-      // If selecting "No", clear all entries
+      // If selecting "No", hide the entries (they remain in state per PDF structure)
       updateHasOtherNames(false);
     }
   };
@@ -216,18 +196,8 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
 
     return (
       <div key={`other-name-${index}`} className="border rounded-lg p-4 mb-4 bg-gray-50">
-        <div className="flex justify-between items-center mb-4">
+        <div className="mb-4">
           <h3 className="text-lg font-medium text-gray-900">Other Name #{index + 1}</h3>
-          <button
-            type="button"
-            onClick={() => removeOtherNameEntry(index)}
-            className="text-red-500 hover:text-red-700"
-            aria-label={`Remove name entry ${index + 1}`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-            </svg>
-          </button>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -539,32 +509,14 @@ export const Section5Component: React.FC<Section5ComponentProps> = ({
         {/* Other Names Entries */}
         {getHasOtherNamesValue() && (
           <div className="other-names-entries">
-            {Array.from({ length: getEntryCount() }).map((_, index) => renderOtherNameEntry(index))}
-
-            {/* Add Entry Button */}
+            {/* Display all 4 fixed entries */}
+            {Array.from({ length: 4 }).map((_, index) => renderOtherNameEntry(index))}
+            
+            {/* Note about fixed entries */}
             <div className="mt-4">
-              <button
-                type="button"
-                onClick={() => addOtherNameEntry('addAnotherNameButton')}
-                disabled={!canAddMoreEntries()}
-                className={`flex items-center px-4 py-2 border rounded-md shadow-sm text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors ${canAddMoreEntries()
-                    ? 'border-gray-300 text-gray-700 bg-white hover:bg-gray-50 focus:ring-blue-500'
-                    : 'border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed'
-                  }`}
-                data-testid="add-other-name-button"
-              >
-                <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                  <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-                </svg>
-                Add Another Name ({getEntryCount()}/{MAX_OTHER_NAME_ENTRIES})
-              </button>
-
-              {/* Show message when at maximum */}
-              {!canAddMoreEntries() && (
-                <p className="mt-2 text-sm text-gray-500">
-                  Maximum of {MAX_OTHER_NAME_ENTRIES} other names allowed.
-                </p>
-              )}
+              <p className="text-sm text-gray-500">
+                You can provide up to 4 other names as required by the form.
+              </p>
             </div>
           </div>
         )}

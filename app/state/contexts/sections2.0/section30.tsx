@@ -19,7 +19,7 @@ import set from "lodash/set";
 import { createFieldFromReference, validateSectionFieldCount } from "../../../../api/utils/sections-references-loader";
 
 // Import the correct Section 30 interface for Continuation Sheets
-import type { Section30 } from "../../../../api/interfaces/sections2.0/section30";
+import type { Section30 } from "../../../../api/interfaces/section-interfaces/section30";
 import type { Field } from "../../../../api/interfaces/formDefinition2.0";
 import { useSF86Form } from "./SF86FormContext";
 

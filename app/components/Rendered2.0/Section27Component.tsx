@@ -6,7 +6,7 @@
  * and unauthorized modification of information technology systems.
  */
 
-import type { Section27SubsectionKey, Section27 } from 'api/interfaces/sections2.0/section27';
+import type { Section27SubsectionKey, Section27 } from 'api/interfaces/section-interfaces/section27';
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSection27 } from '~/state/contexts/sections2.0/section27';
 import { useSF86Form } from '~/state/contexts/sections2.0/SF86FormContext';

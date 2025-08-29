@@ -9,7 +9,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSection10 } from '~/state/contexts/sections2.0/section10';
 import { useSF86Form } from '~/state/contexts/sections2.0/SF86FormContext';
-import { getSuffixOptions, getCountryOptions } from '../../../api/interfaces/sections2.0/base';
+import { getSuffixOptions, getCountryOptions } from '../../../api/interfaces/section-interfaces/base';
 
 interface Section10ComponentProps {
   className?: string;

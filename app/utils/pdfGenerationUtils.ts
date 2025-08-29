@@ -4,10 +4,15 @@
  * Centralized PDF generation logic to eliminate duplication between components.
  * This utility provides consistent PDF generation with proper error handling,
  * mobile device detection, and comprehensive user feedback.
+ * Enhanced with Section 1 PDF-to-UI field mapping integration.
  */
 
 import { clientPdfService2 } from "../../api/service/clientPdfService2.0";
+import { EnhancedPdfServiceWithSection1Integration } from "../services/enhancedPdfServiceWithSection1Integration";
 import type { ApplicantFormValues } from "../../api/interfaces/formDefinition2.0";
+
+// Create enhanced service instance for Section 1 integration
+const enhancedPdfService = new EnhancedPdfServiceWithSection1Integration();
 
 export interface PdfGenerationOptions {
   filename?: string;
@@ -16,6 +21,7 @@ export interface PdfGenerationOptions {
   onError?: (error: string) => void;
   onSuccess?: (result: PdfGenerationResult) => void;
   onLoadingStateChange?: (isLoading: boolean) => void;
+  useEnhancedSection1Integration?: boolean; // New option for enhanced integration
 }
 
 export interface PdfGenerationResult {
@@ -31,10 +37,14 @@ export interface PdfGenerationResult {
     totalFormFields: number;
     applicationSuccessRate: number;
   };
+  // Enhanced Section 1 integration data
+  section1Statistics?: any;
+  section1Validation?: any;
 }
 
 /**
  * Generate and download PDF using client-side processing with enhanced mobile support
+ * Enhanced with Section 1 PDF-to-UI field mapping integration
  */
 export async function generateAndDownloadPdf(
   formData: ApplicantFormValues,
@@ -46,7 +56,8 @@ export async function generateAndDownloadPdf(
     onProgress,
     onError,
     onSuccess,
-    onLoadingStateChange
+    onLoadingStateChange,
+    useEnhancedSection1Integration = true // Default to using enhanced integration
   } = options;
 
   const result: PdfGenerationResult = {
@@ -70,7 +81,39 @@ export async function generateAndDownloadPdf(
     onProgress?.("Starting PDF generation...");
 
     // Use the enhanced client PDF service
-    const pdfResult = await clientPdfService2.generatePdfClientAction(formData);
+    // Generate PDF using enhanced service with Section 1 integration or legacy service
+    let pdfResult;
+    if (useEnhancedSection1Integration) {
+      if (showConsoleOutput) {
+        console.info("🔗 Using Enhanced PDF Service with Section 1 Integration");
+      }
+      onProgress?.("Applying enhanced Section 1 field mappings...");
+      
+      try {
+        pdfResult = await enhancedPdfService.generateEnhancedPdf(formData);
+        
+        if (showConsoleOutput && pdfResult.section1Statistics) {
+          console.info("📊 Section 1 Integration Statistics:");
+          console.info(`   🎯 Section 1 Fields Processed: ${pdfResult.section1Statistics.totalSection1Fields || 0}`);
+          console.info(`   ✅ Successful Mappings: ${pdfResult.section1Statistics.successfulMappings || 0}`);
+          console.info(`   ❌ Failed Mappings: ${pdfResult.section1Statistics.failedMappings || 0}`);
+          console.info(`   📈 Mapping Success Rate: ${((pdfResult.section1Statistics.mappingSuccessRate || 0) * 100).toFixed(1)}%`);
+          console.info(`   🔗 Integration Mappings: ${pdfResult.section1Statistics.integrationMappings || 0}`);
+          console.info(`   🔄 Legacy Mappings: ${pdfResult.section1Statistics.legacyMappings || 0}`);
+        }
+      } catch (enhancedError) {
+        if (showConsoleOutput) {
+          console.warn("⚠️ Enhanced PDF Service failed, falling back to legacy service:", enhancedError);
+        }
+        onProgress?.("Enhanced service failed, using legacy PDF generation...");
+        pdfResult = await clientPdfService2.generatePdfClientAction(formData);
+      }
+    } else {
+      if (showConsoleOutput) {
+        console.info("🔄 Using Legacy PDF Service");
+      }
+      pdfResult = await clientPdfService2.generatePdfClientAction(formData);
+    }
 
     // Update result with PDF service response
     result.success = pdfResult.success;

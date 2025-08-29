@@ -1,0 +1,510 @@
+{
+  "metadata": {
+    "pdfPath": "../pdf/clean.pdf",
+    "section": 10,
+    "timestamp": "2025-08-19T03:29:49.349Z",
+    "version": "2.0.0-quality-improved",
+    "qualityMetrics": {
+      "validMappings": 122,
+      "invalidMappings": 0,
+      "accuracy": "100.00%"
+    }
+  },
+  "summary": {
+    "totalMappings": 122,
+    "averageConfidence": 1,
+    "highConfidenceMappings": 122,
+    "lowConfidenceMappings": 0,
+    "validatedMappings": 122
+  },
+  "mappings": [
+    {
+      "uiPath": "section10.dualCitizenship.hasDualCitizenship",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].RadioButtonList[0]"
+    },
+    {
+      "uiPath": "section10.dualCitizenship.entries[0].howAcquired",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].TextField11[0]"
+    },
+    {
+      "uiPath": "section10.dualCitizenship.entries[0].fromDate",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].From_Datefield_Name_2[0]"
+    },
+    {
+      "uiPath": "section10.dualCitizenship.entries[0].toDate",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].From_Datefield_Name_2[1]"
+    },
+    {
+      "uiPath": "section10.dualCitizenship.entries[1].howAcquired",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].TextField11[3]"
+    },
+    {
+      "uiPath": "section10.dualCitizenship.entries[1].fromDate",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].From_Datefield_Name_2[2]"
+    },
+    {
+      "uiPath": "section10.dualCitizenship.entries[1].toDate",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].From_Datefield_Name_2[3]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.hasForeignPassport",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].RadioButtonList[5]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].issueDate",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].From_Datefield_Name_2[4]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].city",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].TextField11[6]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].lastName",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].TextField11[7]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].firstName",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].TextField11[8]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].middleName",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].TextField11[9]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].suffix",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].suffix[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].passportNumber",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].TextField11[10]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].expirationDate",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].From_Datefield_Name_2[5]"
+    },
+    {
+      "uiPath": "section10.dualCitizenship.entries[0].country",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].DropDownList13[0]"
+    },
+    {
+      "uiPath": "section10.dualCitizenship.entries[0].isFromEstimated",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].#field[3]"
+    },
+    {
+      "uiPath": "section10.dualCitizenship.entries[0].isToEstimated",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].#field[6]"
+    },
+    {
+      "uiPath": "section10.dualCitizenship.entries[0].isPresent",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].#field[5]"
+    },
+    {
+      "uiPath": "section10.dualCitizenship.entries[0].hasRenounced",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].RadioButtonList[1]"
+    },
+    {
+      "uiPath": "section10.dualCitizenship.entries[0].renounceExplanation",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].TextField11[1]"
+    },
+    {
+      "uiPath": "section10.dualCitizenship.entries[0].hasTakenAction",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].RadioButtonList[2]"
+    },
+    {
+      "uiPath": "section10.dualCitizenship.entries[0].actionExplanation",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].TextField11[2]"
+    },
+    {
+      "uiPath": "section10.dualCitizenship.entries[1].country",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].DropDownList13[1]"
+    },
+    {
+      "uiPath": "section10.dualCitizenship.entries[1].isFromEstimated",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].#field[11]"
+    },
+    {
+      "uiPath": "section10.dualCitizenship.entries[1].isToEstimated",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].#field[14]"
+    },
+    {
+      "uiPath": "section10.dualCitizenship.entries[1].isPresent",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].#field[13]"
+    },
+    {
+      "uiPath": "section10.dualCitizenship.entries[1].hasRenounced",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].RadioButtonList[3]"
+    },
+    {
+      "uiPath": "section10.dualCitizenship.entries[1].renounceExplanation",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].TextField11[4]"
+    },
+    {
+      "uiPath": "section10.dualCitizenship.entries[1].hasTakenAction",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].RadioButtonList[4]"
+    },
+    {
+      "uiPath": "section10.dualCitizenship.entries[1].actionExplanation",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].TextField11[5]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].country",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].DropDownList14[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].isIssueDateEstimated",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].#field[20]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].country2",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].DropDownList11[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].isExpirationDateEstimated",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].#field[29]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].usedForUSEntry",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].RadioButtonList[6]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].country",
+      "pdfFieldId": "form1[0].Section10-2[0].DropDownList14[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].issueDate",
+      "pdfFieldId": "form1[0].Section10-2[0].From_Datefield_Name_2[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].isIssueDateEstimated",
+      "pdfFieldId": "form1[0].Section10-2[0].#field[4]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].city",
+      "pdfFieldId": "form1[0].Section10-2[0].TextField11[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].country2",
+      "pdfFieldId": "form1[0].Section10-2[0].DropDownList11[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].lastName",
+      "pdfFieldId": "form1[0].Section10-2[0].TextField11[1]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].firstName",
+      "pdfFieldId": "form1[0].Section10-2[0].TextField11[2]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].middleName",
+      "pdfFieldId": "form1[0].Section10-2[0].TextField11[3]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].suffix",
+      "pdfFieldId": "form1[0].Section10-2[0].suffix[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].passportNumber",
+      "pdfFieldId": "form1[0].Section10-2[0].TextField11[4]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].expirationDate",
+      "pdfFieldId": "form1[0].Section10-2[0].From_Datefield_Name_2[1]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].isExpirationDateEstimated",
+      "pdfFieldId": "form1[0].Section10-2[0].#field[13]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].usedForUSEntry",
+      "pdfFieldId": "form1[0].Section10-2[0].RadioButtonList[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[0].country",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row1[0].Cell1[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[0].fromDate",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row1[0].Cell2[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[0].isFromDateEstimated",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row1[0].Cell3[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[0].toDate",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row1[0].Cell4[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[0].isToDateEstimated",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row1[0].Cell5[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[0].isPresent",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row1[0].#field[5]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[1].country",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row2[0].Cell1[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[1].fromDate",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row2[0].Cell2[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[1].isFromDateEstimated",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row2[0].Cell3[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[1].toDate",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row2[0].Cell4[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[1].isToDateEstimated",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row2[0].Cell5[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[1].isPresent",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row2[0].#field[5]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[2].country",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row3[0].Cell1[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[2].fromDate",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row3[0].Cell2[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[2].isFromDateEstimated",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row3[0].Cell3[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[2].toDate",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row3[0].Cell4[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[2].isToDateEstimated",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row3[0].Cell5[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[2].isPresent",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row3[0].#field[5]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[3].country",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row4[0].Cell1[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[3].fromDate",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row4[0].Cell2[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[3].isFromDateEstimated",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row4[0].Cell3[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[3].toDate",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row4[0].Cell4[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[3].isToDateEstimated",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row4[0].Cell5[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[3].isPresent",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row4[0].#field[5]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[4].country",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row5[0].Cell1[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[4].fromDate",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row5[0].Cell2[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[4].isFromDateEstimated",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row5[0].Cell3[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[4].toDate",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row5[0].Cell4[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[4].isToDateEstimated",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row5[0].Cell5[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[4].isPresent",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row5[0].#field[5]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[5].country",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row5[1].#field[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[5].fromDate",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row5[1].#field[1]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[5].isFromDateEstimated",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row5[1].Cell3[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[5].toDate",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row5[1].#field[3]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[5].isToDateEstimated",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row5[1].Cell5[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[0].travelCountries[5].isPresent",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].Table1[0].Row5[1].#field[5]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[0].country",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row1[0].Cell1[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[0].fromDate",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row1[0].Cell2[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[0].isFromDateEstimated",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row1[0].Cell3[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[0].toDate",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row1[0].Cell4[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[0].isToDateEstimated",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row1[0].Cell5[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[0].isPresent",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row1[0].#field[5]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[1].country",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row2[0].Cell1[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[1].fromDate",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row2[0].Cell2[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[1].isFromDateEstimated",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row2[0].Cell3[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[1].toDate",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row2[0].Cell4[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[1].isToDateEstimated",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row2[0].Cell5[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[1].isPresent",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row2[0].#field[5]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[2].country",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row3[0].Cell1[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[2].fromDate",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row3[0].Cell2[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[2].isFromDateEstimated",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row3[0].Cell3[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[2].toDate",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row3[0].Cell4[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[2].isToDateEstimated",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row3[0].Cell5[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[2].isPresent",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row3[0].#field[5]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[3].country",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row4[0].Cell1[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[3].fromDate",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row4[0].Cell2[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[3].isFromDateEstimated",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row4[0].Cell3[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[3].toDate",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row4[0].Cell4[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[3].isToDateEstimated",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row4[0].Cell5[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[3].isPresent",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row4[0].#field[5]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[4].country",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row5[0].Cell1[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[4].fromDate",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row5[0].Cell2[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[4].isFromDateEstimated",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row5[0].Cell3[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[4].toDate",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row5[0].Cell4[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[4].isToDateEstimated",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row5[0].Cell5[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[4].isPresent",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row5[0].#field[5]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[5].country",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row5[1].#field[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[5].fromDate",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row5[1].#field[1]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[5].isFromDateEstimated",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row5[1].Cell3[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[5].toDate",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row5[1].#field[3]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[5].isToDateEstimated",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row5[1].Cell5[0]"
+    },
+    {
+      "uiPath": "section10.foreignPassport.entries[1].travelCountries[5].isPresent",
+      "pdfFieldId": "form1[0].Section10-2[0].Table1[0].Row5[1].#field[5]"
+    }
+  ]
+}

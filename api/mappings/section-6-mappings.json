@@ -1,0 +1,47 @@
+{
+  "metadata": {
+    "pdfPath": "../pdf/clean.pdf",
+    "section": 6,
+    "timestamp": "2025-08-17T03:28:17.311Z",
+    "version": "0.1.0"
+  },
+  "summary": {
+    "totalMappings": 6,
+    "averageConfidence": 1,
+    "highConfidenceMappings": 6,
+    "lowConfidenceMappings": 0,
+    "validatedMappings": 6
+  },
+  "mappings": [
+    {
+      "uiPath": "section6.heightFeet",
+      "pdfFieldId": "form1[0].Sections1-6[0].DropDownList8[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section6.heightInches",
+      "pdfFieldId": "form1[0].Sections1-6[0].DropDownList7[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section6.weight",
+      "pdfFieldId": "form1[0].Sections1-6[0].TextField11[5]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section6.hairColor",
+      "pdfFieldId": "form1[0].Sections1-6[0].DropDownList10[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section6.eyeColor",
+      "pdfFieldId": "form1[0].Sections1-6[0].DropDownList9[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section6.sex",
+      "pdfFieldId": "form1[0].Sections1-6[0].p3-rb3b[0]",
+      "confidence": 1
+    }
+  ]
+}

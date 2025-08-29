@@ -23,13 +23,13 @@ import type {
   Section27_2Entry,
   Section27_3Entry,
   TechnologyValidationResult
-} from '../../../../api/interfaces/sections2.0/section27';
+} from '../../../../api/interfaces/section-interfaces/section27';
 import {
   createDefaultSection27,
   createDefaultSection27_1Entry,
   createDefaultSection27_2Entry,
   createDefaultSection27_3Entry
-} from '../../../../api/interfaces/sections2.0/section27';
+} from '../../../../api/interfaces/section-interfaces/section27';
 import type {
   ValidationResult,
   ValidationError,

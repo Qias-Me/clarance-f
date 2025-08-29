@@ -15,17 +15,1011 @@ import React, {
 } from 'react';
 import cloneDeep from 'lodash/cloneDeep';
 import set from 'lodash/set';
+import get from 'lodash/get';
 import type {
   Section13,
-  Section13ValidationRules
-} from '../../../../api/interfaces/sections2.0/section13';
+  Section13ValidationRules,
+  Section13FieldUpdate,
+  MilitaryEmploymentEntry,
+  NonFederalEmploymentEntry,
+  SelfEmploymentEntry,
+  UnemploymentEntry,
+  FederalEmploymentInfo,
+  EmploymentEntry,
+  EmploymentType,
+  EmploymentStatus,
+  EmploymentDateRange,
+  Section13ValidationContext,
+  EmploymentValidationResult
+} from '../../../../api/interfaces/section-interfaces/section13';
 import {
-  createDefaultSection13,
-  updateSection13Field
-} from '../../../../api/interfaces/sections2.0/section13';
+} from '../../../../api/interfaces/section-interfaces/section13';
 
 import type { ValidationResult, ValidationError, ChangeSet } from '../shared/base-interfaces';
 import { useSF86Form } from './SF86FormContext';
+import {
+  mapPdfFieldToUiPath,
+  mapUiPathToPdfField,
+  isValidFieldMapping,
+  getFieldMetadata,
+  generateDynamicFieldMapping,
+  getCachedFieldMapping,
+  type FieldMapping,
+  type FieldMetadata
+} from './section13-field-mapping';
+
+import {
+  initializeEnhancedIntegration,
+  getEnhancedFieldMapping,
+  validateImplementationCoverage,
+  getEmploymentTypeStatistics
+} from './section13-enhanced-integration';
+
+import { createFieldFromReference, validateSectionFieldCount } from '../../../../api/utils/sections-references-loader';
+import { 
+  TOTAL_SECTION_13_FIELDS,
+  FIELD_COUNTS_BY_TYPE,
+  MAX_EMPLOYMENT_ENTRIES,
+  MIN_EMPLOYMENT_DURATION_MONTHS,
+  EMPLOYMENT_STATUS_OPTIONS,
+  EMPLOYMENT_TYPE_OPTIONS
+} from '~/constants/section13-constants';
+
+
+// ============================================================================
+// MOVED FROM INTERFACE - DEFAULT CREATORS AND VALIDATORS
+// ============================================================================
+
+export const createDefaultMilitaryEmploymentEntry = (entryId: string | number): MilitaryEmploymentEntry => {
+  return {
+    _id: entryId,
+    employmentDates: {
+      fromDate: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].From_Datefield_Name_2[0]', // Maps to sect13A.1Entry1FromDate
+        ''
+      ),
+      fromEstimated: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].#field[32]', // Maps to sect13A.1Entry1FromEstimated
+        false
+      ),
+      toDate: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].From_Datefield_Name_2[1]', // Maps to sect13A.1Entry1ToDate
+        ''
+      ),
+      toEstimated: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].#field[36]', // Maps to sect13A.1Entry1ToEstimated
+        false
+      ),
+      present: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].#field[37]', // Maps to sect13A.1Entry1Present
+        false
+      )
+    },
+    employmentStatus: {
+      ...createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].p13a-1-1cb[0]', // Maps to sect13A.1Entry1EmploymentStatus
+        'Full-time' as EmploymentStatus
+      ),
+      options: EMPLOYMENT_STATUS_OPTIONS
+    },
+    rankTitle: createFieldFromReference(
+      13,
+      'form1[0].section_13_1-2[0].p3-t68[3]', // Maps to sect13A.1Entry1RankTitle
+      ''
+    ),
+    dutyStation: {
+      dutyStation: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].p3-t68[4]', // Maps to sect13A.1Entry1DutyStation
+        ''
+      ),
+      street: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].TextField11[9]', // Maps to sect13A.1Entry1DutyStreet
+        ''
+      ),
+      city: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].TextField11[10]', // Maps to sect13A.1Entry1DutyCity
+        ''
+      ),
+      state: {
+        ...createFieldFromReference(
+          13,
+          'form1[0].section_13_1-2[0].School6_State[2]', // Maps to sect13A.1Entry1State
+          ''
+        ),
+        options: []
+      },
+      zipCode: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].TextField11[11]', // Maps to sect13A.1Entry1DutyZip
+        ''
+      ),
+      country: {
+        ...createFieldFromReference(
+          13,
+          'form1[0].section_13_1-2[0].DropDownList20[0]', // Maps to sect13A.1Entry1Country
+          ''
+        ),
+        options: []
+      }
+    },
+    phone: {
+      number: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].p3-t68[1]', // Maps to sect13A.1Entry1Phone
+        ''
+      ),
+      extension: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].TextField11[12]', // Maps to sect13A.1Entry1Extension1
+        ''
+      ),
+      isDSN: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].#field[26]', // Maps to DSN checkbox
+        false
+      ),
+      isDay: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].#field[27]', // Maps to Day checkbox
+        false
+      ),
+      isNight: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].#field[28]', // Maps to Night checkbox
+        false
+      )
+    },
+    supervisor: {
+      name: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].TextField11[0]', // Maps to sect13A.1Entry1SupervisorName
+        ''
+      ),
+      title: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].TextField11[1]', // Maps to sect13A.1Entry1SupervisorRank
+        ''
+      ),
+      email: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].p3-t68[2]', // Maps to sect13A.1Entry1SupervisorEmail
+        ''
+      ),
+      emailUnknown: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].#field[30]', // Maps to email unknown checkbox
+        false
+      ),
+      phone: {
+        number: createFieldFromReference(
+          13,
+          'form1[0].section_13_1-2[0].p3-t68[0]', // Maps to sect13A.1Entry1SupervisorPhone
+          ''
+        ),
+        extension: createFieldFromReference(
+          13,
+          'form1[0].section_13_1-2[0].TextField11[2]', // Maps to supervisor phone extension
+          ''
+        ),
+        isDSN: createFieldFromReference(
+          13,
+          'form1[0].section_13_1-2[0].#field[17]', // Maps to DSN checkbox
+          false
+        ),
+        isDay: createFieldFromReference(
+          13,
+          'form1[0].section_13_1-2[0].#field[16]', // Maps to Day checkbox
+          false
+        ),
+        isNight: createFieldFromReference(
+          13,
+          'form1[0].section_13_1-2[0].#field[15]', // Maps to Night checkbox
+          false
+        )
+      },
+      workLocation: {
+        street: createFieldFromReference(
+          13,
+          'form1[0].section_13_1-2[0].TextField11[3]', // Maps to sect13A.1Entry1SupervisorAddress
+          ''
+        ),
+        city: createFieldFromReference(
+          13,
+          'form1[0].section_13_1-2[0].TextField11[4]', // Maps to sect13A.1Entry1SupervisorCity
+          ''
+        ),
+        state: {
+          ...createFieldFromReference(
+            13,
+            'form1[0].section_13_1-2[0].School6_State[0]', // Maps to sect13A.1Entry1State
+            ''
+          ),
+          options: []
+        },
+        zipCode: createFieldFromReference(
+          13,
+          'form1[0].section_13_1-2[0].TextField11[5]', // Maps to sect13A.1Entry1Superviso (zip)
+          ''
+        ),
+        country: {
+          ...createFieldFromReference(
+            13,
+            'form1[0].section_13_1-2[0].DropDownList18[0]', // Maps to supervisor country
+            ''
+          ),
+          options: []
+        }
+      },
+      hasApoFpo: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].TextField11[17]', // Maps to APO/FPO indicator
+        false
+      ),
+      apoFpoAddress: {
+        apoFpo: createFieldFromReference(
+          13,
+          'form1[0].section_13_1-2[0].TextField11[17]', // Maps to sect13A.1Entry1_b_APO
+          ''
+        ),
+        street: createFieldFromReference(
+          13,
+          'form1[0].section_13_1-2[0].TextField11[16]', // Maps to sect13A.1Entry1_b_Street
+          ''
+        ),
+        zipCode: createFieldFromReference(
+          13,
+          'form1[0].section_13_1-2[0].TextField11[18]', // Maps to sect13A.1Entry1_b_Zip
+          ''
+        )
+      },
+      canContact: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].#field[30]', // Maps to can contact checkbox
+        "YES" as "YES" | "NO"
+      ),
+      contactRestrictions: createFieldFromReference(
+        13,
+        'form1[0].section_13_1-2[0].TextField11[13]', // Maps to contact restrictions
+        ''
+      )
+    },
+    otherExplanation: createFieldFromReference(
+      13,
+      'form1[0].section_13_1-2[0].TextField11[13]', // Maps to sect13A.1Entry1OtherExplanation
+      ''
+    ),
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+};
+
+export const createDefaultNonFederalEmploymentEntry = (entryId: string | number): NonFederalEmploymentEntry => {
+  return {
+    _id: entryId,
+    employmentDates: {
+      fromDate: createFieldFromReference(
+        13,
+        'form1[0].section13_2-2[0].From_Datefield_Name_2[1]', // Maps to sect13A.2Entry1FromDate
+        ''
+      ),
+      fromEstimated: createFieldFromReference(
+        13,
+        'form1[0].section13_2-2[0].#field[32]', // Maps to estimated checkbox
+        false
+      ),
+      toDate: createFieldFromReference(
+        13,
+        'form1[0].section13_2-2[0].From_Datefield_Name_2[0]', // Maps to sect13A.2Entry1ToDate
+        ''
+      ),
+      toEstimated: createFieldFromReference(
+        13,
+        'form1[0].section13_2-2[0].#field[36]', // Maps to estimated checkbox
+        false
+      ),
+      present: createFieldFromReference(
+        13,
+        'form1[0].section13_2-2[0].#field[37]', // Maps to present checkbox
+        false
+      )
+    },
+    employmentStatus: {
+      ...createFieldFromReference(
+        13,
+        'form1[0].section13_2-2[0].RadioButtonList[1]', // Maps to employment status
+        'Full-time' as EmploymentStatus
+      ),
+      options: EMPLOYMENT_STATUS_OPTIONS
+    },
+    employerName: createFieldFromReference(
+      13,
+      'form1[0].section13_2-2[0].TextField11[0]', // Maps to sect13A.2Entry1RecentEmployer
+      ''
+    ),
+    positionTitle: createFieldFromReference(
+      13,
+      'form1[0].section13_2-2[0].TextField11[1]', // Maps to sect13A.2Entry1RecentTitle
+      ''
+    ),
+    employerAddress: {
+      street: createFieldFromReference(
+        13,
+        'form1[0].section13_2-2[0].TextField11[2]', // Maps to sect13A.2Entry1Street
+        ''
+      ),
+      city: createFieldFromReference(
+        13,
+        'form1[0].section13_2-2[0].TextField11[3]', // Maps to sect13A.2Entry1City
+        ''
+      ),
+      state: {
+        ...createFieldFromReference(
+          13,
+          'form1[0].section13_2-2[0].School6_State[0]', // Maps to state dropdown
+          ''
+        ),
+        options: []
+      },
+      zipCode: createFieldFromReference(
+        13,
+        'form1[0].section13_2-2[0].TextField11[4]', // Maps to sect13A.2Entry1Zip
+        ''
+      ),
+      country: {
+        ...createFieldFromReference(
+          13,
+          'form1[0].section13_2-2[0].DropDownList18[0]', // Maps to country dropdown
+          ''
+        ),
+        options: []
+      }
+    },
+    phone: {
+      number: createFieldFromReference(
+        13,
+        'form1[0].section13_2-2[0].p3-t68[0]', // Maps to sect13A.2Entry1Phone
+        ''
+      ),
+      extension: createFieldFromReference(
+        13,
+        'form1[0].section13_2-2[0].TextField11[8]', // Maps to sect13A.2Entry1Extension1
+        ''
+      ),
+      isDSN: createFieldFromReference(
+        13,
+        'form1[0].section13_2-2[0].#field[26]', // Maps to DSN checkbox
+        false
+      ),
+      isDay: createFieldFromReference(
+        13,
+        'form1[0].section13_2-2[0].#field[27]', // Maps to Day checkbox
+        false
+      ),
+      isNight: createFieldFromReference(
+        13,
+        'form1[0].section13_2-2[0].#field[28]', // Maps to Night checkbox
+        false
+      )
+    },
+    hasAdditionalPeriods: createFieldFromReference(
+      13,
+      'form1[0].section13_2-2[0].RadioButtonList[2]', // Maps to additional periods question
+      false
+    ),
+    additionalPeriods: [], // Will be populated dynamically
+    hasPhysicalWorkAddress: createFieldFromReference(
+      13,
+      'form1[0].section13_2-2[0].RadioButtonList[3]', // Maps to physical work address question
+      false
+    ),
+    supervisor: {
+      name: createFieldFromReference(
+        13,
+        'form1[0].section13_2-2[0].TextField11[9]', // Maps to sect13A.2Entry1_SupervisorName
+        ''
+      ),
+      title: createFieldFromReference(
+        13,
+        'form1[0].section13_2-2[0].TextField11[10]', // Maps to supervisor title
+        ''
+      ),
+      email: createFieldFromReference(
+        13,
+        'form1[0].section13_2-2[0].p3-t68[2]', // Maps to supervisor email
+        ''
+      ),
+      emailUnknown: createFieldFromReference(
+        13,
+        'form1[0].section13_2-2[0].#field[30]', // Maps to email unknown checkbox
+        false
+      ),
+      phone: {
+        number: createFieldFromReference(
+          13,
+          'form1[0].section13_2-2[0].p3-t68[1]', // Maps to supervisor phone
+          ''
+        ),
+        extension: createFieldFromReference(
+          13,
+          'form1[0].section13_2-2[0].TextField11[11]', // Maps to supervisor extension
+          ''
+        ),
+        isDSN: createFieldFromReference(
+          13,
+          'form1[0].section13_2-2[0].#field[17]', // Maps to DSN checkbox
+          false
+        ),
+        isDay: createFieldFromReference(
+          13,
+          'form1[0].section13_2-2[0].#field[16]', // Maps to Day checkbox
+          false
+        ),
+        isNight: createFieldFromReference(
+          13,
+          'form1[0].section13_2-2[0].#field[15]', // Maps to Night checkbox
+          false
+        )
+      },
+      workLocation: {
+        street: createFieldFromReference(
+          13,
+          'form1[0].section13_2-2[0].TextField11[12]', // Maps to supervisor work address
+          ''
+        ),
+        city: createFieldFromReference(
+          13,
+          'form1[0].section13_2-2[0].TextField11[13]', // Maps to supervisor city
+          ''
+        ),
+        state: {
+          ...createFieldFromReference(
+            13,
+            'form1[0].section13_2-2[0].School6_State[1]', // Maps to supervisor state
+            ''
+          ),
+          options: []
+        },
+        zipCode: createFieldFromReference(
+          13,
+          'form1[0].section13_2-2[0].TextField11[14]', // Maps to supervisor zip
+          ''
+        ),
+        country: {
+          ...createFieldFromReference(
+            13,
+            'form1[0].section13_2-2[0].DropDownList19[0]', // Maps to supervisor country
+            ''
+          ),
+          options: []
+        }
+      },
+      hasApoFpo: createFieldFromReference(
+        13,
+        'form1[0].section13_2-2[0].RadioButtonList[4]', // Maps to APO/FPO question
+        false
+      ),
+      canContact: createFieldFromReference(
+        13,
+        'form1[0].section13_2-2[0].#field[30]', // Maps to can contact checkbox
+        "YES" as "YES" | "NO"
+      ),
+      contactRestrictions: createFieldFromReference(
+        13,
+        'form1[0].section13_2-2[0].TextField11[15]', // Maps to contact restrictions
+        ''
+      )
+    },
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+};
+
+export const createDefaultSelfEmploymentEntry = (entryId: string | number): SelfEmploymentEntry => {
+  return {
+    _id: entryId,
+    employmentDates: {
+      fromDate: createFieldFromReference(
+        13,
+        'form1[0].section13_3-2[0].From_Datefield_Name_2[1]', // Maps to sect13A.3Entry1Start
+        ''
+      ),
+      fromEstimated: createFieldFromReference(
+        13,
+        'form1[0].section13_3-2[0].#field[32]', // Maps to estimated checkbox
+        false
+      ),
+      toDate: createFieldFromReference(
+        13,
+        'form1[0].section13_3-2[0].From_Datefield_Name_2[0]', // Maps to sect13A.3Entry1ToDate
+        ''
+      ),
+      toEstimated: createFieldFromReference(
+        13,
+        'form1[0].section13_3-2[0].#field[36]', // Maps to estimated checkbox
+        false
+      ),
+      present: createFieldFromReference(
+        13,
+        'form1[0].section13_3-2[0].#field[37]', // Maps to present checkbox
+        false
+      )
+    },
+    businessName: createFieldFromReference(
+      13,
+      'form1[0].section13_3-2[0].p3-t68[3]', // Maps to sect13A.3Entry1Employment
+      ''
+    ),
+    businessType: createFieldFromReference(
+      13,
+      'form1[0].section13_3-2[0].TextField11[0]', // Maps to business type
+      ''
+    ),
+    positionTitle: createFieldFromReference(
+      13,
+      'form1[0].section13_3-2[0].p3-t68[4]', // Maps to sect13A.3Entry1PositionTitle
+      ''
+    ),
+    businessAddress: {
+      street: createFieldFromReference(
+        13,
+        'form1[0].section13_3-2[0].TextField11[9]', // Maps to sect13A.3Entry1Street
+        ''
+      ),
+      city: createFieldFromReference(
+        13,
+        'form1[0].section13_3-2[0].TextField11[10]', // Maps to sect13A.3Entry1City
+        ''
+      ),
+      state: {
+        ...createFieldFromReference(
+          13,
+          'form1[0].section13_3-2[0].School6_State[0]', // Maps to state dropdown
+          ''
+        ),
+        options: []
+      },
+      zipCode: createFieldFromReference(
+        13,
+        'form1[0].section13_3-2[0].TextField11[11]', // Maps to sect13A.3Entry1Zip
+        ''
+      ),
+      country: {
+        ...createFieldFromReference(
+          13,
+          'form1[0].section13_3-2[0].DropDownList18[0]', // Maps to country dropdown
+          ''
+        ),
+        options: []
+      }
+    },
+    phone: {
+      number: createFieldFromReference(
+        13,
+        'form1[0].section13_3-2[0].p3-t68[1]', // Maps to sect13A.3Entry1Phone
+        ''
+      ),
+      extension: createFieldFromReference(
+        13,
+        'form1[0].section13_3-2[0].TextField11[12]', // Maps to sect13A.3Entry1Ext
+        ''
+      ),
+      isDSN: createFieldFromReference(
+        13,
+        'form1[0].section13_3-2[0].#field[26]', // Maps to DSN checkbox
+        false
+      ),
+      isDay: createFieldFromReference(
+        13,
+        'form1[0].section13_3-2[0].#field[27]', // Maps to Day checkbox
+        false
+      ),
+      isNight: createFieldFromReference(
+        13,
+        'form1[0].section13_3-2[0].#field[28]', // Maps to Night checkbox
+        false
+      )
+    },
+    verifierFirstName: createFieldFromReference(
+      13,
+      'form1[0].section13_3-2[0].TextField11[1]', // Maps to sect13A.3Entry1_FName
+      ''
+    ),
+    verifierLastName: createFieldFromReference(
+      13,
+      'form1[0].section13_3-2[0].TextField11[2]', // Maps to sect13A.3Entry1_LName
+      ''
+    ),
+    verifierAddress: {
+      street: createFieldFromReference(
+        13,
+        'form1[0].section13_3-2[0].TextField11[3]', // Maps to sect13A.3Entry1_Street
+        ''
+      ),
+      city: createFieldFromReference(
+        13,
+        'form1[0].section13_3-2[0].TextField11[4]', // Maps to sect13A.3Entry1_City
+        ''
+      ),
+      state: {
+        ...createFieldFromReference(
+          13,
+          'form1[0].section13_3-2[0].School6_State[1]', // Maps to verifier state
+          ''
+        ),
+        options: []
+      },
+      zipCode: createFieldFromReference(
+        13,
+        'form1[0].section13_3-2[0].TextField11[5]', // Maps to sect13A.3Entry1_Zip
+        ''
+      ),
+      country: {
+        ...createFieldFromReference(
+          13,
+          'form1[0].section13_3-2[0].DropDownList19[0]', // Maps to verifier country
+          ''
+        ),
+        options: []
+      }
+    },
+    verifierPhone: {
+      number: createFieldFromReference(
+        13,
+        'form1[0].section13_3-2[0].p3-t68[2]', // Maps to sect13A.3Entry1_a_Phone
+        ''
+      ),
+      extension: createFieldFromReference(
+        13,
+        'form1[0].section13_3-2[0].TextField11[6]', // Maps to sect13A.3Entry1_a_ext
+        ''
+      ),
+      isDSN: createFieldFromReference(
+        13,
+        'form1[0].section13_3-2[0].#field[17]', // Maps to DSN checkbox
+        false
+      ),
+      isDay: createFieldFromReference(
+        13,
+        'form1[0].section13_3-2[0].#field[16]', // Maps to Day checkbox
+        false
+      ),
+      isNight: createFieldFromReference(
+        13,
+        'form1[0].section13_3-2[0].#field[15]', // Maps to Night checkbox
+        false
+      )
+    },
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+};
+
+export const createDefaultUnemploymentEntry = (entryId: string | number): UnemploymentEntry => {
+  return {
+    _id: entryId,
+    unemploymentDates: {
+      fromDate: createFieldFromReference(
+        13,
+        'form1[0].section13_4[0].From_Datefield_Name_2[1]', // Maps to sect13A.4Entry1_FromDate
+        ''
+      ),
+      fromEstimated: createFieldFromReference(
+        13,
+        'form1[0].section13_4[0].#field[32]', // Maps to estimated checkbox
+        false
+      ),
+      toDate: createFieldFromReference(
+        13,
+        'form1[0].section13_4[0].From_Datefield_Name_2[0]', // Maps to sect13A.4Entry1_ToDate
+        ''
+      ),
+      toEstimated: createFieldFromReference(
+        13,
+        'form1[0].section13_4[0].#field[36]', // Maps to estimated checkbox
+        false
+      ),
+      present: createFieldFromReference(
+        13,
+        'form1[0].section13_4[0].#field[37]', // Maps to present checkbox
+        false
+      )
+    },
+    reference: {
+      firstName: createFieldFromReference(
+        13,
+        'form1[0].section13_4[0].TextField11[1]', // Maps to sect13A.4Entry1_FName
+        ''
+      ),
+      lastName: createFieldFromReference(
+        13,
+        'form1[0].section13_4[0].TextField11[0]', // Maps to sect13A.4Entry1_LName
+        ''
+      ),
+      address: {
+        street: createFieldFromReference(
+          13,
+          'form1[0].section13_4[0].TextField11[2]', // Maps to sect13A.4Entry1_Street
+          ''
+        ),
+        city: createFieldFromReference(
+          13,
+          'form1[0].section13_4[0].TextField11[3]', // Maps to sect13A.4Entry1_City
+          ''
+        ),
+        state: {
+          ...createFieldFromReference(
+            13,
+            'form1[0].section13_4[0].School6_State[0]', // Maps to state dropdown
+            ''
+          ),
+          options: []
+        },
+        zipCode: createFieldFromReference(
+          13,
+          'form1[0].section13_4[0].TextField11[4]', // Maps to sect13A.4Entry1_Zip
+          ''
+        ),
+        country: {
+          ...createFieldFromReference(
+            13,
+            'form1[0].section13_4[0].DropDownList18[0]', // Maps to country dropdown
+            ''
+          ),
+          options: []
+        }
+      },
+      phone: {
+        number: createFieldFromReference(
+          13,
+          'form1[0].section13_4[0].p3-t68[0]', // Maps to sect13A.4Entry1_Phone
+          ''
+        ),
+        extension: createFieldFromReference(
+          13,
+          'form1[0].section13_4[0].TextField11[5]', // Maps to sect13A.4Entry1_Ext
+          ''
+        ),
+        isDSN: createFieldFromReference(
+          13,
+          'form1[0].section13_4[0].#field[26]', // Maps to DSN checkbox
+          false
+        ),
+        isDay: createFieldFromReference(
+          13,
+          'form1[0].section13_4[0].#field[27]', // Maps to Day checkbox
+          false
+        ),
+        isNight: createFieldFromReference(
+          13,
+          'form1[0].section13_4[0].#field[28]', // Maps to Night checkbox
+          false
+        )
+      }
+    },
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+};
+
+export const createDefaultFederalEmploymentInfo = (): FederalEmploymentInfo => ({
+  hasFederalEmployment: createFieldFromReference(
+    13,
+    'form1[0].section13_5[0].RadioButtonList[0]', // Maps to sect13A.5Entry1HasFederalEmployment
+    "NO" as "YES" | "NO"
+  ),
+  securityClearance: createFieldFromReference(
+    13,
+    'form1[0].section13_5[0].RadioButtonList[1]', // Maps to sect13A.5Entry1SecurityClearance
+    "NO" as "YES" | "NO"
+  ),
+  clearanceLevel: createFieldFromReference(
+    13,
+    'form1[0].section13_5[0].TextField11[3]', // Maps to sect13A.5Entry1ClearanceLevel - CORRECTED
+    ''
+  ),
+  clearanceDate: createFieldFromReference(
+    13,
+    'form1[0].section13_5[0].From_Datefield_Name_2[2]', // Maps to sect13A.5Entry1ClearanceDate - CORRECTED
+    ''
+  ),
+  investigationDate: createFieldFromReference(
+    13,
+    'form1[0].section13_5[0].From_Datefield_Name_2[3]', // Maps to sect13A.5Entry1InvestigationDate - CORRECTED
+    ''
+  ),
+  polygraphDate: createFieldFromReference(
+    13,
+    'form1[0].section13_5[0].From_Datefield_Name_2[4]', // Maps to sect13A.5Entry1PolygraphDate - CORRECTED
+    ''
+  ),
+  accessToClassified: createFieldFromReference(
+    13,
+    'form1[0].section13_5[0].#field[22]', // Maps to sect13A.5Entry1AccessToClassified - CORRECTED
+    "NO" as "YES" | "NO"
+  ),
+  classificationLevel: createFieldFromReference(
+    13,
+    'form1[0].section13_5[0].TextField11[4]', // Maps to sect13A.5Entry1ClassificationLevel - CORRECTED
+    ''
+  )
+});
+
+export const createDefaultSection13 = (includeInitialEntry: boolean = false): Section13 => {
+  // Validate field count against sections-references
+  validateSectionFieldCount(13);
+
+  const defaultSection: Section13 = {
+    _id: 13,
+    section13: {
+      // Employment type selection
+      employmentType: {
+        ...createFieldFromReference(
+          13,
+          'form1[0].section_13_1-2[0].RadioButtonList[0]', // Maps to employment type radio group
+          'Other' as EmploymentType
+        ),
+        options: EMPLOYMENT_TYPE_OPTIONS
+      },
+
+      // Subsection structures
+      militaryEmployment: {
+        entries: [] as MilitaryEmploymentEntry[]
+      },
+      nonFederalEmployment: {
+        entries: [] as NonFederalEmploymentEntry[]
+      },
+      selfEmployment: {
+        entries: [] as SelfEmploymentEntry[]
+      },
+      unemployment: {
+        entries: [] as UnemploymentEntry[]
+      },
+
+      // Generic entries (for backward compatibility)
+      entries: [] as EmploymentEntry[],
+
+      // Employment record issues (Section 13A.5)
+      employmentRecordIssues: {
+        wasFired: createFieldFromReference(
+          13,
+          'form1[0].section13_4[0].RadioButtonList[0]', // Maps to fired question
+          false
+        ),
+        quitAfterBeingTold: createFieldFromReference(
+          13,
+          'form1[0].section13_4[0].RadioButtonList[1]', // Maps to quit question
+          false
+        ),
+        leftByMutualAgreement: createFieldFromReference(
+          13,
+          'form1[0].section13_4[0].RadioButtonList[2]', // Maps to mutual agreement question
+          false
+        )
+      },
+
+      // Disciplinary actions (Section 13A.6)
+      disciplinaryActions: {
+        receivedWrittenWarning: createFieldFromReference(
+          13,
+          'form1[0].section13_4[0].RadioButtonList[2]', // Maps to written warning question - FIXED: RadioButtonList[3] does not exist, using RadioButtonList[2]
+          false
+        ),
+        warningDates: [],
+        warningReasons: []
+      },
+
+      // Federal employment information
+      federalInfo: createDefaultFederalEmploymentInfo(),
+
+    }
+  };
+
+  // Add initial entries if requested for all employment types
+  if (includeInitialEntry) {
+    // Add initial entries for all employment types to support the 1086 field mappings
+    defaultSection.section13.militaryEmployment.entries.push(
+      createDefaultMilitaryEmploymentEntry(Date.now())
+    );
+    
+    defaultSection.section13.nonFederalEmployment.entries.push(
+      createDefaultNonFederalEmploymentEntry(Date.now() + 1)
+    );
+    
+    defaultSection.section13.selfEmployment.entries.push(
+      createDefaultSelfEmploymentEntry(Date.now() + 2)
+    );
+    
+    defaultSection.section13.unemployment.entries.push(
+      createDefaultUnemploymentEntry(Date.now() + 3)
+    );
+  }
+
+  return defaultSection;
+};
+
+export const validateEmploymentDates = (
+  dateRange: EmploymentDateRange,
+  context: Section13ValidationContext
+): EmploymentValidationResult => {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  // Check if from date is provided
+  if (!dateRange.fromDate.value) {
+    errors.push("Employment start date is required");
+  }
+
+  // Check if to date is provided when not currently employed
+  if (!dateRange.present.value && !dateRange.toDate.value) {
+    errors.push("Employment end date is required when not currently employed");
+  }
+
+  // Validate date format and logic
+  if (dateRange.fromDate.value && dateRange.toDate.value) {
+    const fromDate = new Date(dateRange.fromDate.value);
+    const toDate = new Date(dateRange.toDate.value);
+    
+    if (fromDate > toDate) {
+      errors.push("Employment start date cannot be after end date");
+    }
+    
+    if (toDate > context.currentDate) {
+      warnings.push("Employment end date is in the future");
+    }
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings
+  };
+};
+
+export const formatEmploymentDate = (date: string, format: 'MM/YYYY' | 'MM/DD/YYYY' = 'MM/YYYY'): string => {
+  if (!date) return '';
+  
+  try {
+    const dateObj = new Date(date);
+    if (format === 'MM/YYYY') {
+      return dateObj.toLocaleDateString('en-US', { month: '2-digit', year: 'numeric' });
+    } else {
+      return dateObj.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+    }
+  } catch {
+    return date;
+  }
+};
+
+export const calculateEmploymentDuration = (fromDate: string, toDate: string): number => {
+  if (!fromDate || !toDate) return 0;
+
+  try {
+    const from = new Date(fromDate);
+    const to = new Date(toDate);
+    const diffTime = Math.abs(to.getTime() - from.getTime());
+    const diffMonths = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 30.44)); // Average days per month
+    return diffMonths;
+  } catch {
+    return 0;
+  }
+};
+
+
+import {
+  initializeAllSection13Fields,
+  getRequiredEntryIndices,
+  ensurePathExists,
+  validateFieldCoverage
+} from '../../../utils/section13-field-initializer';
 
 // ============================================================================
 // CONTEXT INTERFACE
@@ -41,6 +1035,25 @@ export interface Section13ContextType {
   // Basic Actions
   updateEmploymentInfo: (fieldPath: string, value: string) => void;
   updateFieldValue: (path: string, value: any) => void;
+  getFieldValue: (path: string) => any;
+
+  // Enhanced Field Mapping Actions
+  mapPdfFieldToUi: (pdfFieldId: string) => string | undefined;
+  updateFieldByPdfId: (pdfFieldId: string, value: any) => void;
+  validateFieldMapping: (fieldPath: string) => boolean;
+  getFieldMetadata: (fieldPath: string) => FieldMetadata | undefined;
+  getFieldMappings: () => FieldMapping[];
+
+  // Enhanced Coverage Analysis
+  getFieldCoverageReport: () => Promise<{
+    total: number;
+    implemented: number;
+    missing: number;
+    coverage: number;
+    missingFields: string[];
+  }>;
+  getEmploymentTypeStats: () => Promise<Record<string, number>>;
+  initializeEnhancedSupport: () => Promise<void>;
 
   // Validation
   validateSection: () => ValidationResult;
@@ -52,12 +1065,186 @@ export interface Section13ContextType {
 }
 
 // ============================================================================
+// HELPER FUNCTIONS - MOVED FROM INTERFACE TO CONTEXT
+// ============================================================================
+
+/**
+ * Parse a field path into segments
+ * @param fieldPath The field path to parse
+ * @returns Array of path segments
+ */
+const parseFieldPath = (fieldPath: string): string[] => {
+  return fieldPath.split('.');
+};
+
+/**
+ * Parse an array segment like "entries[0]" into name and index
+ * Extracts array name and numeric index from notation
+ * @param segment - The array segment to parse
+ * @returns Object with name and index properties
+ */
+const parseArraySegment = (segment: string): { name: string; index: number } => {
+  const [name, indexStr] = segment.split('[');
+  const index = parseInt(indexStr.replace(']', ''), 10);
+  return { name, index };
+};
+
+/**
+ * Type guard to check if a value is a Field<T> type
+ * Used for runtime type checking of field values
+ * @param value - The value to check
+ * @returns True if the value has Field<T> structure
+ */
+const isFieldType = (value: any): boolean => {
+  return value && typeof value === 'object' && 'value' in value;
+};
+
+/**
+ * Updates a specific field in the Section 13 data structure
+ * Uses lodash for safe deep cloning and path-based updates
+ * Handles nested structures and Field<T> types automatically
+ * @param section13Data - The current Section 13 data
+ * @param update - The field update to apply
+ * @returns Updated Section 13 data with changes applied
+ */
+const updateSection13Field = (
+  section13Data: Section13,
+  update: Section13FieldUpdate
+): Section13 => {
+  const { fieldPath, newValue } = update;
+  
+  // Use lodash cloneDeep for proper deep cloning
+  const newData = cloneDeep(section13Data);
+  
+  // Parse the field path to handle nested structures and Field<T> types
+  const pathSegments = parseFieldPath(fieldPath);
+  let current: any = newData;
+  
+  // Navigate to the parent of the field to update
+  for (let i = 0; i < pathSegments.length - 1; i++) {
+    const segment = pathSegments[i];
+    
+    // Handle array indices like entries[0]
+    if (segment.includes('[')) {
+      const { name, index } = parseArraySegment(segment);
+      
+      if (!current[name]) {
+        current[name] = [];
+      }
+      if (!current[name][index]) {
+        current[name][index] = {};
+      }
+      current = current[name][index];
+    } else {
+      if (!current[segment]) {
+        current[segment] = {};
+      }
+      current = current[segment];
+    }
+  }
+  
+  // Set the final value
+  const finalSegment = pathSegments[pathSegments.length - 1];
+  
+  // Handle Field<T> structure
+  if (isFieldType(current[finalSegment])) {
+    current[finalSegment].value = newValue;
+  } else if (finalSegment.includes('[')) {
+    // Handle array assignment
+    const { name, index } = parseArraySegment(finalSegment);
+    if (!current[name]) {
+      current[name] = [];
+    }
+    current[name][index] = newValue;
+  } else {
+    // Direct assignment for simple fields or creating new Field<T>
+    if (typeof newValue === 'object' && newValue !== null && 'value' in newValue) {
+      current[finalSegment] = newValue;
+    } else {
+      // Create Field<T> structure if needed
+      current[finalSegment] = {
+        id: `section13.${fieldPath}`,
+        value: newValue,
+        label: '',
+        name: finalSegment,
+        type: 'PDFTextField',
+        required: false,
+        section: 13,
+        rect: { x: 0, y: 0, width: 0, height: 0 }
+      };
+    }
+  }
+  
+  return newData;
+};
+
+
+// ============================================================================
 // INITIAL STATE CREATION
 // ============================================================================
 
-// Use the DRY approach with sections-references instead of hardcoded values
+/**
+ * Creates the initial Section 13 state with proper entry initialization
+ * Includes all required entries for full field coverage (1086 fields)
+ */
 const createInitialSection13State = (): Section13 => {
-  return createDefaultSection13();
+  const section = createDefaultSection13(true); // Include initial entries for full field coverage
+  
+  // Get required entry indices from field mappings
+  const requiredIndices = getRequiredEntryIndices();
+  
+  // Ensure we have enough entries for each type based on field mappings
+  Object.entries(requiredIndices).forEach(([type, maxIndex]) => {
+    if (maxIndex >= 0) {
+      const targetPath = `section13.${type}.entries`;
+      
+      // Create entries array if it doesn't exist
+      ensurePathExists(section, targetPath);
+      
+      // Get current entries array
+      let entries = get(section, targetPath) || [];
+      
+      // Add missing entries
+      while (entries.length <= maxIndex) {
+        const entryId = `${type}-${entries.length}-${Date.now()}`;
+        
+        // Create appropriate entry based on type
+        switch (type) {
+          case 'militaryEmployment':
+            entries.push(createDefaultMilitaryEmploymentEntry(entryId));
+            break;
+          case 'nonFederalEmployment':
+            entries.push(createDefaultNonFederalEmploymentEntry(entryId));
+            break;
+          case 'selfEmployment':
+            entries.push(createDefaultSelfEmploymentEntry(entryId));
+            break;
+          case 'unemployment':
+            break;
+          default:
+            // Create a basic entry structure
+            entries.push({ _id: entryId });
+            break;
+        }
+      }
+      
+      // Set the entries back
+      set(section, targetPath, entries);
+    }
+  });
+  
+  // Initialize all fields from the mapping file
+  // This ensures all 1086 fields have proper Field<T> structures
+  const fullyInitializedSection = initializeAllSection13Fields(section);
+  
+  // Validate field coverage
+  const coverage = validateFieldCoverage(fullyInitializedSection);
+  console.log(`✅ Section 13 initialized with ${coverage.found}/${coverage.total} fields`);
+  if (coverage.missing.length > 0) {
+    console.warn(`⚠️ Missing ${coverage.missing.length} fields:`, coverage.missing.slice(0, 10));
+  }
+  
+  return fullyInitializedSection;
 };
 
 // ============================================================================
@@ -123,25 +1310,151 @@ export const Section13Provider: React.FC<Section13ProviderProps> = ({ children }
     const validationErrors: ValidationError[] = [];
     const validationWarnings: ValidationError[] = [];
 
-    // Basic validation for employment questions
-    if (!section13Data.section13?.hasEmployment?.value) {
+    // Validate employment type selection
+    if (!section13Data.section13?.employmentType?.value) {
       validationErrors.push({
-        field: 'hasEmployment',
-        message: 'Please indicate if you have employment history',
-        code: 'VALIDATION_ERROR',
-        severity: 'error'
+        field: 'section13.employmentType',
+        message: 'Employment type selection is required',
+        code: 'EMPLOYMENT_TYPE_REQUIRED'
       });
     }
 
-    // If has gaps, require explanation
-    if (section13Data.section13?.hasGaps?.value === 'YES' && 
-        !section13Data.section13?.gapExplanation?.value?.trim()) {
-      validationErrors.push({
-        field: 'gapExplanation',
-        message: 'Please provide an explanation for employment gaps',
-        code: 'VALIDATION_ERROR',
-        severity: 'error'
+    // Validate employment entries based on type
+    const employmentType = section13Data.section13?.employmentType?.value;
+    
+    if (employmentType === 'Military Service') {
+      const militaryEntries = section13Data.section13?.militaryEmployment?.entries || [];
+      if (militaryEntries.length === 0) {
+        validationWarnings.push({
+          field: 'section13.militaryEmployment.entries',
+          message: 'At least one military employment entry is recommended',
+          code: 'MILITARY_ENTRY_RECOMMENDED'
+        });
+      }
+      
+      // Validate military entry completeness
+      militaryEntries.forEach((entry, index) => {
+        if (!entry.employmentDates?.fromDate?.value) {
+          validationErrors.push({
+            field: `section13.militaryEmployment.entries[${index}].employmentDates.fromDate`,
+            message: 'Employment start date is required',
+            code: 'FROM_DATE_REQUIRED'
+          });
+        }
+        
+        if (!entry.rankTitle?.value) {
+          validationWarnings.push({
+            field: `section13.militaryEmployment.entries[${index}].rankTitle`,
+            message: 'Rank/title is recommended for military employment',
+            code: 'RANK_TITLE_RECOMMENDED'
+          });
+        }
+        
+        if (!entry.supervisor?.name?.value) {
+          validationWarnings.push({
+            field: `section13.militaryEmployment.entries[${index}].supervisor.name`,
+            message: 'Supervisor name is recommended',
+            code: 'SUPERVISOR_NAME_RECOMMENDED'
+          });
+        }
       });
+    }
+
+    // Validate non-federal employment entries
+    if (['Private Company', 'State Government', 'Local Government', 'Non-Profit Organization', 'Contract Work', 'Consulting'].includes(employmentType || '')) {
+      const nonFederalEntries = section13Data.section13?.nonFederalEmployment?.entries || [];
+      if (nonFederalEntries.length === 0) {
+        validationWarnings.push({
+          field: 'section13.nonFederalEmployment.entries',
+          message: 'At least one non-federal employment entry is recommended',
+          code: 'NON_FEDERAL_ENTRY_RECOMMENDED'
+        });
+      }
+      
+      // Validate non-federal entry completeness
+      nonFederalEntries.forEach((entry, index) => {
+        if (!entry.employerName?.value) {
+          validationErrors.push({
+            field: `section13.nonFederalEmployment.entries[${index}].employerName`,
+            message: 'Employer name is required',
+            code: 'EMPLOYER_NAME_REQUIRED'
+          });
+        }
+        
+        if (!entry.positionTitle?.value) {
+          validationWarnings.push({
+            field: `section13.nonFederalEmployment.entries[${index}].positionTitle`,
+            message: 'Position title is recommended',
+            code: 'POSITION_TITLE_RECOMMENDED'
+          });
+        }
+      });
+    }
+
+    // Validate self-employment entries
+    if (employmentType === 'Self-Employment') {
+      const selfEmploymentEntries = section13Data.section13?.selfEmployment?.entries || [];
+      if (selfEmploymentEntries.length === 0) {
+        validationWarnings.push({
+          field: 'section13.selfEmployment.entries',
+          message: 'At least one self-employment entry is recommended',
+          code: 'SELF_EMPLOYMENT_ENTRY_RECOMMENDED'
+        });
+      }
+      
+      // Validate self-employment entry completeness
+      selfEmploymentEntries.forEach((entry, index) => {
+        if (!entry.businessName?.value) {
+          validationErrors.push({
+            field: `section13.selfEmployment.entries[${index}].businessName`,
+            message: 'Business name is required',
+            code: 'BUSINESS_NAME_REQUIRED'
+          });
+        }
+        
+        if (!entry.verifierFirstName?.value || !entry.verifierLastName?.value) {
+          validationWarnings.push({
+            field: `section13.selfEmployment.entries[${index}].verifier`,
+            message: 'Verifier contact information is recommended',
+            code: 'VERIFIER_CONTACT_RECOMMENDED'
+          });
+        }
+      });
+    }
+
+    // Validate unemployment entries
+    if (employmentType === 'Unemployment') {
+      const unemploymentEntries = section13Data.section13?.unemployment?.entries || [];
+      if (unemploymentEntries.length === 0) {
+        validationWarnings.push({
+          field: 'section13.unemployment.entries',
+          message: 'At least one unemployment period entry is recommended',
+          code: 'UNEMPLOYMENT_ENTRY_RECOMMENDED'
+        });
+      }
+      
+      // Validate unemployment entry completeness
+      unemploymentEntries.forEach((entry, index) => {
+        if (!entry.reference?.firstName?.value || !entry.reference?.lastName?.value) {
+          validationWarnings.push({
+            field: `section13.unemployment.entries[${index}].reference`,
+            message: 'Reference contact information is recommended',
+            code: 'REFERENCE_CONTACT_RECOMMENDED'
+          });
+        }
+      });
+    }
+
+    // Validate employment record issues if any issues are indicated
+    const recordIssues = section13Data.section13?.employmentRecordIssues;
+    if (recordIssues?.wasFired?.value || recordIssues?.quitAfterBeingTold?.value || recordIssues?.leftByMutualAgreement?.value) {
+      if (!recordIssues.employmentDates?.fromDate?.value) {
+        validationErrors.push({
+          field: 'section13.employmentRecordIssues.employmentDates.fromDate',
+          message: 'Employment dates are required when reporting employment issues',
+          code: 'EMPLOYMENT_ISSUE_DATES_REQUIRED'
+        });
+      }
     }
 
     return {
@@ -150,6 +1463,45 @@ export const Section13Provider: React.FC<Section13ProviderProps> = ({ children }
       warnings: validationWarnings
     };
   }, [section13Data]);
+
+/**
+ * Adds a new employment entry of the specified type
+ */
+const addEmploymentEntry = useCallback((type: EmploymentType) => {
+  const newData = cloneDeep(section13Data);
+  const entryId = Date.now();
+  
+  switch(type) {
+    case 'Military Service':
+      newData.section13.militaryEmployment.entries.push(
+        createDefaultMilitaryEmploymentEntry(entryId)
+      );
+      break;
+    case 'Private Company':
+    case 'Non-Profit Organization':
+    case 'State Government':
+    case 'Local Government':
+      newData.section13.nonFederalEmployment.entries.push(
+        createDefaultNonFederalEmploymentEntry(entryId)
+      );
+      break;
+    case 'Self-Employment':
+    case 'Consulting':
+    case 'Contract Work':
+      newData.section13.selfEmployment.entries.push(
+        createDefaultSelfEmploymentEntry(entryId)
+      );
+      break;
+    case 'Unemployment':
+      newData.section13.unemployment.entries.push(
+        createDefaultUnemploymentEntry(entryId)
+      );
+      break;
+  }
+  
+  setSection13Data(newData);
+}, [section13Data]);
+
 
   // Update errors when section data changes (but not during initial render)
   useEffect(() => {
@@ -163,17 +1515,17 @@ export const Section13Provider: React.FC<Section13ProviderProps> = ({ children }
       newErrors[error.field] = error.message;
     });
 
-    // Only update errors if they actually changed
-    const currentErrorKeys = Object.keys(errors);
-    const newErrorKeys = Object.keys(newErrors);
-    const errorsChanged =
-      currentErrorKeys.length !== newErrorKeys.length ||
-      currentErrorKeys.some(key => errors[key] !== newErrors[key]);
+    // Only update errors if they actually changed (using previous errors via state updater)
+    setErrors(prevErrors => {
+      const currentErrorKeys = Object.keys(prevErrors);
+      const newErrorKeys = Object.keys(newErrors);
+      const errorsChanged =
+        currentErrorKeys.length !== newErrorKeys.length ||
+        currentErrorKeys.some(key => prevErrors[key] !== newErrors[key]);
 
-    if (errorsChanged) {
-      setErrors(newErrors);
-    }
-  }, [section13Data, isInitialized, errors]);
+      return errorsChanged ? newErrors : prevErrors;
+    });
+  }, [section13Data, isInitialized]);
 
   // ============================================================================
   // CRUD OPERATIONS
@@ -190,11 +1542,237 @@ export const Section13Provider: React.FC<Section13ProviderProps> = ({ children }
   /**
    * Generic field update function for integration compatibility
    * Maps generic field paths to Section 13 specific update functions
+   * Now enhanced to support PDF field ID resolution
    */
   const updateFieldValue = useCallback((path: string, value: any) => {
+    // Check if path is a PDF field ID and resolve to UI path
+    const resolvedPath = mapPdfFieldToUiPath(path) || path;
+    
     setSection13Data(prevData => {
-      return updateSection13Field(prevData, { fieldPath: path, newValue: value });
+      return updateSection13Field(prevData, { fieldPath: resolvedPath, newValue: value });
     });
+  }, []);
+
+  /**
+   * Get field value by path
+   * @param path The field path (UI or PDF field ID)
+   * @returns The current field value
+   */
+  const getFieldValue = useCallback((path: string) => {
+    // Check if path is a PDF field ID and resolve to UI path
+    const resolvedPath = mapPdfFieldToUiPath(path) || path;
+    
+    // Use lodash get to safely retrieve nested values
+    return get(section13Data, resolvedPath);
+  }, [section13Data]);
+
+  /**
+   * Update field by PDF field ID
+   * @param pdfFieldId The PDF field identifier
+   * @param value The value to set
+   */
+  const updateFieldByPdfId = useCallback((pdfFieldId: string, value: any) => {
+    const uiPath = mapPdfFieldToUiPath(pdfFieldId);
+    
+    if (!uiPath) {
+      console.warn(`No UI path mapping found for PDF field: ${pdfFieldId}`);
+      return;
+    }
+    
+    updateFieldValue(uiPath, value);
+  }, [updateFieldValue]);
+
+  /**
+   * Map PDF field ID to UI path
+   * @param pdfFieldId The PDF field identifier
+   * @returns The corresponding UI path or undefined
+   */
+  const mapPdfFieldToUi = useCallback((pdfFieldId: string): string | undefined => {
+    return mapPdfFieldToUiPath(pdfFieldId);
+  }, []);
+
+  /**
+   * Validate if a field mapping exists
+   * @param fieldPath Either a UI path or PDF field ID
+   * @returns True if the field mapping exists
+   */
+  const validateFieldMapping = useCallback((fieldPath: string): boolean => {
+    return isValidFieldMapping(fieldPath);
+  }, []);
+
+  /**
+   * Get field metadata for a given path
+   * @param fieldPath Either a UI path or PDF field ID
+   * @returns Field metadata or undefined
+   */
+  const getFieldMetadataWrapper = useCallback((fieldPath: string): FieldMetadata | undefined => {
+    return getFieldMetadata(fieldPath);
+  }, []);
+
+  /**
+   * Get all field mappings for Section 13
+   * @returns Array of field mappings
+   */
+  const getFieldMappings = useCallback((): FieldMapping[] => {
+    return getCachedFieldMapping();
+  }, []);
+
+  /**
+   * Get comprehensive field coverage report with enhanced field discovery
+   */
+  const getFieldCoverageReport = useCallback(async () => {
+    // Extract currently implemented UI paths from the section13Data
+    const implementedFields: string[] = [];
+    
+    // Add implemented fields based on current section13Data structure
+    if (section13Data.section13?.employmentType?.value) {
+      implementedFields.push('section13.employmentType');
+    }
+    if (section13Data.section13?.otherExplanation?.value) {
+      implementedFields.push('section13.otherExplanation');
+    }
+    
+    // Comprehensive employment entry field discovery
+    const employmentTypes = ['militaryEmployment', 'nonFederalEmployment', 'selfEmployment', 'unemployment'];
+    
+    employmentTypes.forEach(type => {
+      const entries = section13Data.section13?.[type]?.entries || [];
+      entries.forEach((entry: any, index: number) => {
+        // Standard employment fields
+        if (entry.employerName?.value) implementedFields.push(`section13.${type}.entries[${index}].employerName`);
+        if (entry.positionTitle?.value) implementedFields.push(`section13.${type}.entries[${index}].positionTitle`);
+        if (entry.businessName?.value) implementedFields.push(`section13.${type}.entries[${index}].businessName`);
+        if (entry.businessType?.value) implementedFields.push(`section13.${type}.entries[${index}].businessType`);
+        if (entry.rankTitle?.value) implementedFields.push(`section13.${type}.entries[${index}].rankTitle`);
+        
+        // Employment dates
+        if (entry.employmentDates?.fromDate?.value) implementedFields.push(`section13.${type}.entries[${index}].employmentDates.fromDate`);
+        if (entry.employmentDates?.toDate?.value) implementedFields.push(`section13.${type}.entries[${index}].employmentDates.toDate`);
+        if (entry.employmentDates?.present?.value) implementedFields.push(`section13.${type}.entries[${index}].employmentDates.present`);
+        if (entry.employmentDates?.fromEstimated?.value) implementedFields.push(`section13.${type}.entries[${index}].employmentDates.fromEstimated`);
+        if (entry.employmentDates?.toEstimated?.value) implementedFields.push(`section13.${type}.entries[${index}].employmentDates.toEstimated`);
+        
+        // Unemployment dates (different structure)
+        if (entry.unemploymentDates?.fromDate?.value) implementedFields.push(`section13.${type}.entries[${index}].unemploymentDates.fromDate`);
+        if (entry.unemploymentDates?.toDate?.value) implementedFields.push(`section13.${type}.entries[${index}].unemploymentDates.toDate`);
+        
+        // Address information
+        if (entry.employerAddress?.street?.value) implementedFields.push(`section13.${type}.entries[${index}].employerAddress.street`);
+        if (entry.employerAddress?.city?.value) implementedFields.push(`section13.${type}.entries[${index}].employerAddress.city`);
+        if (entry.employerAddress?.state?.value) implementedFields.push(`section13.${type}.entries[${index}].employerAddress.state`);
+        if (entry.employerAddress?.zipCode?.value) implementedFields.push(`section13.${type}.entries[${index}].employerAddress.zipCode`);
+        if (entry.employerAddress?.country?.value) implementedFields.push(`section13.${type}.entries[${index}].employerAddress.country`);
+        
+        // Business address (for self-employment)
+        if (entry.businessAddress?.street?.value) implementedFields.push(`section13.${type}.entries[${index}].businessAddress.street`);
+        if (entry.businessAddress?.city?.value) implementedFields.push(`section13.${type}.entries[${index}].businessAddress.city`);
+        if (entry.businessAddress?.state?.value) implementedFields.push(`section13.${type}.entries[${index}].businessAddress.state`);
+        if (entry.businessAddress?.zipCode?.value) implementedFields.push(`section13.${type}.entries[${index}].businessAddress.zipCode`);
+        if (entry.businessAddress?.country?.value) implementedFields.push(`section13.${type}.entries[${index}].businessAddress.country`);
+        
+        // Duty station (for military)
+        if (entry.dutyStation?.dutyStation?.value) implementedFields.push(`section13.${type}.entries[${index}].dutyStation.dutyStation`);
+        if (entry.dutyStation?.street?.value) implementedFields.push(`section13.${type}.entries[${index}].dutyStation.street`);
+        if (entry.dutyStation?.city?.value) implementedFields.push(`section13.${type}.entries[${index}].dutyStation.city`);
+        if (entry.dutyStation?.state?.value) implementedFields.push(`section13.${type}.entries[${index}].dutyStation.state`);
+        if (entry.dutyStation?.zipCode?.value) implementedFields.push(`section13.${type}.entries[${index}].dutyStation.zipCode`);
+        if (entry.dutyStation?.country?.value) implementedFields.push(`section13.${type}.entries[${index}].dutyStation.country`);
+        
+        // Phone information
+        if (entry.phone?.number?.value) implementedFields.push(`section13.${type}.entries[${index}].phone.number`);
+        if (entry.phone?.extension?.value) implementedFields.push(`section13.${type}.entries[${index}].phone.extension`);
+        if (entry.phone?.isDSN?.value) implementedFields.push(`section13.${type}.entries[${index}].phone.isDSN`);
+        if (entry.phone?.isDay?.value) implementedFields.push(`section13.${type}.entries[${index}].phone.isDay`);
+        if (entry.phone?.isNight?.value) implementedFields.push(`section13.${type}.entries[${index}].phone.isNight`);
+        
+        // Supervisor information
+        if (entry.supervisor?.name?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.name`);
+        if (entry.supervisor?.title?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.title`);
+        if (entry.supervisor?.email?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.email`);
+        if (entry.supervisor?.emailUnknown?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.emailUnknown`);
+        if (entry.supervisor?.canContact?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.canContact`);
+        if (entry.supervisor?.contactRestrictions?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.contactRestrictions`);
+        
+        // Supervisor phone
+        if (entry.supervisor?.phone?.number?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.phone.number`);
+        if (entry.supervisor?.phone?.extension?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.phone.extension`);
+        
+        // Supervisor work location
+        if (entry.supervisor?.workLocation?.street?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.workLocation.street`);
+        if (entry.supervisor?.workLocation?.city?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.workLocation.city`);
+        if (entry.supervisor?.workLocation?.state?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.workLocation.state`);
+        if (entry.supervisor?.workLocation?.zipCode?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.workLocation.zipCode`);
+        if (entry.supervisor?.workLocation?.country?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.workLocation.country`);
+        
+        // Verifier information (for self-employment)
+        if (entry.verifierFirstName?.value) implementedFields.push(`section13.${type}.entries[${index}].verifierFirstName`);
+        if (entry.verifierLastName?.value) implementedFields.push(`section13.${type}.entries[${index}].verifierLastName`);
+        if (entry.verifierAddress?.street?.value) implementedFields.push(`section13.${type}.entries[${index}].verifierAddress.street`);
+        if (entry.verifierAddress?.city?.value) implementedFields.push(`section13.${type}.entries[${index}].verifierAddress.city`);
+        if (entry.verifierAddress?.state?.value) implementedFields.push(`section13.${type}.entries[${index}].verifierAddress.state`);
+        if (entry.verifierAddress?.zipCode?.value) implementedFields.push(`section13.${type}.entries[${index}].verifierAddress.zipCode`);
+        if (entry.verifierAddress?.country?.value) implementedFields.push(`section13.${type}.entries[${index}].verifierAddress.country`);
+        if (entry.verifierPhone?.number?.value) implementedFields.push(`section13.${type}.entries[${index}].verifierPhone.number`);
+        if (entry.verifierPhone?.extension?.value) implementedFields.push(`section13.${type}.entries[${index}].verifierPhone.extension`);
+        
+        // Reference information (for unemployment)
+        if (entry.reference?.firstName?.value) implementedFields.push(`section13.${type}.entries[${index}].reference.firstName`);
+        if (entry.reference?.lastName?.value) implementedFields.push(`section13.${type}.entries[${index}].reference.lastName`);
+        if (entry.reference?.address?.street?.value) implementedFields.push(`section13.${type}.entries[${index}].reference.address.street`);
+        if (entry.reference?.address?.city?.value) implementedFields.push(`section13.${type}.entries[${index}].reference.address.city`);
+        if (entry.reference?.address?.state?.value) implementedFields.push(`section13.${type}.entries[${index}].reference.address.state`);
+        if (entry.reference?.address?.zipCode?.value) implementedFields.push(`section13.${type}.entries[${index}].reference.address.zipCode`);
+        if (entry.reference?.address?.country?.value) implementedFields.push(`section13.${type}.entries[${index}].reference.address.country`);
+        if (entry.reference?.phone?.number?.value) implementedFields.push(`section13.${type}.entries[${index}].reference.phone.number`);
+        if (entry.reference?.phone?.extension?.value) implementedFields.push(`section13.${type}.entries[${index}].reference.phone.extension`);
+        
+        // Employment status
+        if (entry.employmentStatus?.value) implementedFields.push(`section13.${type}.entries[${index}].employmentStatus`);
+      });
+    });
+    
+    // Employment record issues
+    const recordIssues = section13Data.section13?.employmentRecordIssues;
+    if (recordIssues?.wasFired?.value !== undefined) implementedFields.push('section13.employmentRecordIssues.wasFired');
+    if (recordIssues?.quitAfterBeingTold?.value !== undefined) implementedFields.push('section13.employmentRecordIssues.quitAfterBeingTold');
+    if (recordIssues?.leftByMutualAgreement?.value !== undefined) implementedFields.push('section13.employmentRecordIssues.leftByMutualAgreement');
+    if (recordIssues?.hasChargesOrAllegations?.value !== undefined) implementedFields.push('section13.employmentRecordIssues.hasChargesOrAllegations');
+    if (recordIssues?.hasUnsatisfactoryPerformance?.value !== undefined) implementedFields.push('section13.employmentRecordIssues.hasUnsatisfactoryPerformance');
+    if (recordIssues?.employmentDates?.fromDate?.value) implementedFields.push('section13.employmentRecordIssues.employmentDates.fromDate');
+    if (recordIssues?.employmentDates?.toDate?.value) implementedFields.push('section13.employmentRecordIssues.employmentDates.toDate');
+    
+    // Disciplinary actions
+    const disciplinary = section13Data.section13?.disciplinaryActions;
+    if (disciplinary?.receivedWrittenWarning?.value !== undefined) implementedFields.push('section13.disciplinaryActions.receivedWrittenWarning');
+    if (disciplinary?.warningDates?.length) implementedFields.push('section13.disciplinaryActions.warningDates');
+    if (disciplinary?.warningReasons?.length) implementedFields.push('section13.disciplinaryActions.warningReasons');
+    
+    // Federal employment info
+    const federalInfo = section13Data.section13?.federalInfo;
+    if (federalInfo?.hasFederalEmployment?.value) implementedFields.push('section13.federalInfo.hasFederalEmployment');
+    if (federalInfo?.securityClearance?.value) implementedFields.push('section13.federalInfo.securityClearance');
+    if (federalInfo?.clearanceLevel?.value) implementedFields.push('section13.federalInfo.clearanceLevel');
+    if (federalInfo?.clearanceDate?.value) implementedFields.push('section13.federalInfo.clearanceDate');
+    if (federalInfo?.investigationDate?.value) implementedFields.push('section13.federalInfo.investigationDate');
+    if (federalInfo?.polygraphDate?.value) implementedFields.push('section13.federalInfo.polygraphDate');
+    if (federalInfo?.accessToClassified?.value) implementedFields.push('section13.federalInfo.accessToClassified');
+    if (federalInfo?.classificationLevel?.value) implementedFields.push('section13.federalInfo.classificationLevel');
+    
+    return await validateImplementationCoverage(implementedFields);
+  }, [section13Data]);
+
+  /**
+   * Get employment type statistics
+   */
+  const getEmploymentTypeStats = useCallback(async () => {
+    return await getEmploymentTypeStatistics();
+  }, []);
+
+  /**
+   * Initialize enhanced field mapping support
+   */
+  const initializeEnhancedSupport = useCallback(async () => {
+    await initializeEnhancedIntegration();
   }, []);
 
   // ============================================================================
@@ -233,23 +1811,27 @@ export const Section13Provider: React.FC<Section13ProviderProps> = ({ children }
   // Access SF86FormContext to sync with loaded data
   const sf86Form = useSF86Form();
 
-  // Sync with SF86FormContext when data is loaded
+  // Sync with SF86FormContext when data is loaded (only on initial load)
+  const [hasSyncedWithForm, setHasSyncedWithForm] = useState(false);
+  
   useEffect(() => {
     const isDebugMode = typeof window !== 'undefined' && window.location.search.includes('debug=true');
 
-    if (sf86Form.formData.section13 && sf86Form.formData.section13 !== section13Data) {
+    // Only sync once when form data becomes available
+    if (!hasSyncedWithForm && sf86Form.formData.section13) {
       if (isDebugMode) {
         console.log('🔄 Section13: Syncing with SF86FormContext loaded data');
       }
 
       // Load the data from SF86FormContext
       loadSection(sf86Form.formData.section13);
+      setHasSyncedWithForm(true);
 
       if (isDebugMode) {
         console.log('✅ Section13: Data sync complete');
       }
     }
-  }, [sf86Form.formData.section13, loadSection]);
+  }, [sf86Form.formData.section13, loadSection, hasSyncedWithForm]);
 
   // ============================================================================
   // CONTEXT VALUE
@@ -265,6 +1847,19 @@ export const Section13Provider: React.FC<Section13ProviderProps> = ({ children }
     // Basic Actions
     updateEmploymentInfo,
     updateFieldValue,
+    getFieldValue,
+
+    // Enhanced Field Mapping Actions
+    mapPdfFieldToUi,
+    updateFieldByPdfId,
+    validateFieldMapping,
+    getFieldMetadata: getFieldMetadataWrapper,
+    getFieldMappings,
+
+    // Enhanced Coverage Analysis
+    getFieldCoverageReport,
+    getEmploymentTypeStats,
+    initializeEnhancedSupport,
 
     // Validation
     validateSection,

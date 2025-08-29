@@ -1,0 +1,581 @@
+{
+  "metadata": {
+    "pdfPath": "../pdf/clean.pdf",
+    "section": 29,
+    "timestamp": "2025-08-19T00:55:55.649Z",
+    "version": "0.1.0"
+  },
+  "summary": {
+    "totalMappings": 141,
+    "averageConfidence": 1,
+    "highConfidenceMappings": 141,
+    "lowConfidenceMappings": 0,
+    "validatedMappings": 141
+  },
+  "mappings": [
+    {
+      "uiPath": "section29.overthrowActivities.entries[0].activityDescription",
+      "pdfFieldId": "form1[0].Section29_5[0].TextField11[0]"
+    },
+    {
+      "uiPath": "section29.overthrowActivities.entries[0].dateRange.from.date",
+      "pdfFieldId": "form1[0].Section29_5[0].From_Datefield_Name_2[0]"
+    },
+    {
+      "uiPath": "section29.overthrowActivities.entries[0].dateRange.from.estimated",
+      "pdfFieldId": "form1[0].Section29_5[0].#field[7]"
+    },
+    {
+      "uiPath": "section29.overthrowActivities.entries[0].dateRange.present",
+      "pdfFieldId": "form1[0].Section29_5[0].#field[5]"
+    },
+    {
+      "uiPath": "section29.overthrowActivities.entries[0].dateRange.to.date",
+      "pdfFieldId": "form1[0].Section29_5[0].From_Datefield_Name_2[1]"
+    },
+    {
+      "uiPath": "section29.overthrowActivities.entries[0].dateRange.to.estimated",
+      "pdfFieldId": "form1[0].Section29_5[0].#field[9]"
+    },
+    {
+      "uiPath": "section29.overthrowActivities.entries[1].activityDescription",
+      "pdfFieldId": "form1[0].Section29_5[0].TextField11[3]"
+    },
+    {
+      "uiPath": "section29.overthrowActivities.entries[1].dateRange.from.date",
+      "pdfFieldId": "form1[0].Section29_5[0].From_Datefield_Name_2[2]"
+    },
+    {
+      "uiPath": "section29.overthrowActivities.entries[1].dateRange.from.estimated",
+      "pdfFieldId": "form1[0].Section29_5[0].#field[13]"
+    },
+    {
+      "uiPath": "section29.overthrowActivities.entries[1].dateRange.present",
+      "pdfFieldId": "form1[0].Section29_5[0].#field[11]"
+    },
+    {
+      "uiPath": "section29.overthrowActivities.entries[1].dateRange.to.date",
+      "pdfFieldId": "form1[0].Section29_5[0].From_Datefield_Name_2[3]"
+    },
+    {
+      "uiPath": "section29.overthrowActivities.entries[1].dateRange.to.estimated",
+      "pdfFieldId": "form1[0].Section29_5[0].#field[15]"
+    },
+    {
+      "uiPath": "section29.overthrowActivities.hasActivity",
+      "pdfFieldId": "form1[0].Section29_5[0].RadioButtonList[0]"
+    },
+    {
+      "uiPath": "section29.terrorismActivities.entries[0].activityDescription",
+      "pdfFieldId": "form1[0].Section29_2[0].TextField11[0]"
+    },
+    {
+      "uiPath": "section29.terrorismActivities.entries[0].dateRange.from.date",
+      "pdfFieldId": "form1[0].Section29_2[0].From_Datefield_Name_2[0]"
+    },
+    {
+      "uiPath": "section29.terrorismActivities.entries[0].dateRange.from.estimated",
+      "pdfFieldId": "form1[0].Section29_2[0].#field[17]"
+    },
+    {
+      "uiPath": "section29.terrorismActivities.entries[0].dateRange.present",
+      "pdfFieldId": "form1[0].Section29_2[0].#field[21]"
+    },
+    {
+      "uiPath": "section29.terrorismActivities.entries[0].dateRange.to.date",
+      "pdfFieldId": "form1[0].Section29_2[0].From_Datefield_Name_2[1]"
+    },
+    {
+      "uiPath": "section29.terrorismActivities.entries[0].dateRange.to.estimated",
+      "pdfFieldId": "form1[0].Section29_2[0].#field[19]"
+    },
+    {
+      "uiPath": "section29.terrorismActivities.entries[1].activityDescription",
+      "pdfFieldId": "form1[0].Section29_2[0].TextField11[3]"
+    },
+    {
+      "uiPath": "section29.terrorismActivities.entries[1].dateRange.from.date",
+      "pdfFieldId": "form1[0].Section29_2[0].From_Datefield_Name_2[6]"
+    },
+    {
+      "uiPath": "section29.terrorismActivities.entries[1].dateRange.from.estimated",
+      "pdfFieldId": "form1[0].Section29_2[0].#field[23]"
+    },
+    {
+      "uiPath": "section29.terrorismActivities.entries[1].dateRange.present",
+      "pdfFieldId": "form1[0].Section29_2[0].#field[11]"
+    },
+    {
+      "uiPath": "section29.terrorismActivities.entries[1].dateRange.to.date",
+      "pdfFieldId": "form1[0].Section29_2[0].From_Datefield_Name_2[7]"
+    },
+    {
+      "uiPath": "section29.terrorismActivities.entries[1].dateRange.to.estimated",
+      "pdfFieldId": "form1[0].Section29_2[0].#field[25]"
+    },
+    {
+      "uiPath": "section29.terrorismActivities.hasActivity",
+      "pdfFieldId": "form1[0].Section29_2[0].RadioButtonList[0]"
+    },
+    {
+      "uiPath": "section29.terrorismAdvocacy.entries[0].advocacyReason",
+      "pdfFieldId": "form1[0].Section29_2[0].TextField11[1]"
+    },
+    {
+      "uiPath": "section29.terrorismAdvocacy.entries[0].dateRange.from.date",
+      "pdfFieldId": "form1[0].Section29_2[0].From_Datefield_Name_2[0]"
+    },
+    {
+      "uiPath": "section29.terrorismAdvocacy.entries[0].dateRange.from.estimated",
+      "pdfFieldId": "form1[0].Section29_2[0].#field[17]"
+    },
+    {
+      "uiPath": "section29.terrorismAdvocacy.entries[0].dateRange.present",
+      "pdfFieldId": "form1[0].Section29_2[0].#field[21]"
+    },
+    {
+      "uiPath": "section29.terrorismAdvocacy.entries[0].dateRange.to.date",
+      "pdfFieldId": "form1[0].Section29_2[0].From_Datefield_Name_2[1]"
+    },
+    {
+      "uiPath": "section29.terrorismAdvocacy.entries[0].dateRange.to.estimated",
+      "pdfFieldId": "form1[0].Section29_2[0].#field[19]"
+    },
+    {
+      "uiPath": "section29.terrorismAdvocacy.entries[1].advocacyReason",
+      "pdfFieldId": "form1[0].Section29_2[0].TextField11[2]"
+    },
+    {
+      "uiPath": "section29.terrorismAdvocacy.entries[1].dateRange.from.date",
+      "pdfFieldId": "form1[0].Section29_2[0].From_Datefield_Name_2[6]"
+    },
+    {
+      "uiPath": "section29.terrorismAdvocacy.entries[1].dateRange.from.estimated",
+      "pdfFieldId": "form1[0].Section29_2[0].#field[23]"
+    },
+    {
+      "uiPath": "section29.terrorismAdvocacy.entries[1].dateRange.present",
+      "pdfFieldId": "form1[0].Section29_2[0].#field[11]"
+    },
+    {
+      "uiPath": "section29.terrorismAdvocacy.entries[1].dateRange.to.date",
+      "pdfFieldId": "form1[0].Section29_2[0].From_Datefield_Name_2[7]"
+    },
+    {
+      "uiPath": "section29.terrorismAdvocacy.entries[1].dateRange.to.estimated",
+      "pdfFieldId": "form1[0].Section29_2[0].#field[25]"
+    },
+    {
+      "uiPath": "section29.terrorismAdvocacy.hasActivity",
+      "pdfFieldId": "form1[0].Section29_2[0].RadioButtonList[0]"
+    },
+    {
+      "uiPath": "section29.terrorismAssociations.entries[0].explanation",
+      "pdfFieldId": "form1[0].Section29_5[0].TextField11[1]"
+    },
+    {
+      "uiPath": "section29.terrorismAssociations.entries[1].explanation",
+      "pdfFieldId": "form1[0].Section29_5[0].TextField11[2]"
+    },
+    {
+      "uiPath": "section29.terrorismAssociations.hasAssociation",
+      "pdfFieldId": "form1[0].Section29_5[0].RadioButtonList[1]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[0].address.city",
+      "pdfFieldId": "form1[0].Section29[0].#area[1].TextField11[5]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[0].address.country",
+      "pdfFieldId": "form1[0].Section29[0].#area[1].DropDownList6[0]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[0].address.state",
+      "pdfFieldId": "form1[0].Section29[0].#area[1].School6_State[0]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[0].address.street",
+      "pdfFieldId": "form1[0].Section29[0].#area[1].TextField11[4]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[0].address.zipCode",
+      "pdfFieldId": "form1[0].Section29[0].#area[1].TextField11[6]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[0].contributions.description",
+      "pdfFieldId": "form1[0].Section29[0].TextField11[2]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[0].contributions.noContributionsMade",
+      "pdfFieldId": "form1[0].Section29[0].#field[7]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[0].dateRange.from.date",
+      "pdfFieldId": "form1[0].Section29[0].From_Datefield_Name_2[0]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[0].dateRange.from.estimated",
+      "pdfFieldId": "form1[0].Section29[0].#field[15]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[0].dateRange.present",
+      "pdfFieldId": "form1[0].Section29[0].#field[13]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[0].dateRange.to.date",
+      "pdfFieldId": "form1[0].Section29[0].From_Datefield_Name_2[1]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[0].dateRange.to.estimated",
+      "pdfFieldId": "form1[0].Section29[0].#field[17]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[0].involvementDescription",
+      "pdfFieldId": "form1[0].Section29[0].TextField11[3]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[0].organizationName",
+      "pdfFieldId": "form1[0].Section29[0].TextField11[1]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[0].positions.description",
+      "pdfFieldId": "form1[0].Section29[0].TextField11[0]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[0].positions.noPositionsHeld",
+      "pdfFieldId": "form1[0].Section29[0].#field[6]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[1].address.city",
+      "pdfFieldId": "form1[0].Section29[0].#area[3].TextField11[12]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[1].address.country",
+      "pdfFieldId": "form1[0].Section29[0].#area[3].DropDownList5[0]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[1].address.state",
+      "pdfFieldId": "form1[0].Section29[0].#area[3].School6_State[1]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[1].address.street",
+      "pdfFieldId": "form1[0].Section29[0].#area[3].TextField11[11]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[1].address.zipCode",
+      "pdfFieldId": "form1[0].Section29[0].#area[3].TextField11[13]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[1].contributions.description",
+      "pdfFieldId": "form1[0].Section29[0].TextField11[9]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[1].contributions.noContributionsMade",
+      "pdfFieldId": "form1[0].Section29[0].#field[23]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[1].dateRange.from.date",
+      "pdfFieldId": "form1[0].Section29[0].From_Datefield_Name_2[2]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[1].dateRange.from.estimated",
+      "pdfFieldId": "form1[0].Section29[0].#field[31]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[1].dateRange.present",
+      "pdfFieldId": "form1[0].Section29[0].#field[29]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[1].dateRange.to.date",
+      "pdfFieldId": "form1[0].Section29[0].From_Datefield_Name_2[3]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[1].dateRange.to.estimated",
+      "pdfFieldId": "form1[0].Section29[0].#field[33]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[1].involvementDescription",
+      "pdfFieldId": "form1[0].Section29[0].TextField11[10]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[1].organizationName",
+      "pdfFieldId": "form1[0].Section29[0].TextField11[8]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[1].positions.description",
+      "pdfFieldId": "form1[0].Section29[0].TextField11[7]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.entries[1].positions.noPositionsHeld",
+      "pdfFieldId": "form1[0].Section29[0].#field[22]"
+    },
+    {
+      "uiPath": "section29.terrorismOrganizations.hasAssociation",
+      "pdfFieldId": "form1[0].Section29[0].RadioButtonList[0]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[0].address.city",
+      "pdfFieldId": "form1[0].Section29_4[0].#area[1].TextField11[5]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[0].address.country",
+      "pdfFieldId": "form1[0].Section29_4[0].#area[1].DropDownList2[0]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[0].address.state",
+      "pdfFieldId": "form1[0].Section29_4[0].#area[1].School6_State[0]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[0].address.street",
+      "pdfFieldId": "form1[0].Section29_4[0].#area[1].TextField11[4]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[0].address.zipCode",
+      "pdfFieldId": "form1[0].Section29_4[0].#area[1].TextField11[6]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[0].contributions.description",
+      "pdfFieldId": "form1[0].Section29_4[0].TextField11[2]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[0].contributions.noContributionsMade",
+      "pdfFieldId": "form1[0].Section29_4[0].#field[7]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[0].dateRange.from.date",
+      "pdfFieldId": "form1[0].Section29_4[0].From_Datefield_Name_2[0]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[0].dateRange.from.estimated",
+      "pdfFieldId": "form1[0].Section29_4[0].#field[15]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[0].dateRange.present",
+      "pdfFieldId": "form1[0].Section29_4[0].#field[13]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[0].dateRange.to.date",
+      "pdfFieldId": "form1[0].Section29_4[0].From_Datefield_Name_2[1]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[0].dateRange.to.estimated",
+      "pdfFieldId": "form1[0].Section29_4[0].#field[17]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[0].involvementDescription",
+      "pdfFieldId": "form1[0].Section29_4[0].TextField11[3]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[0].organizationName",
+      "pdfFieldId": "form1[0].Section29_4[0].TextField11[1]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[0].positions.description",
+      "pdfFieldId": "form1[0].Section29_4[0].TextField11[0]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[0].positions.noPositionsHeld",
+      "pdfFieldId": "form1[0].Section29_4[0].#field[6]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[1].address.city",
+      "pdfFieldId": "form1[0].Section29_4[0].#area[3].TextField11[12]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[1].address.country",
+      "pdfFieldId": "form1[0].Section29_4[0].#area[3].DropDownList1[0]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[1].address.state",
+      "pdfFieldId": "form1[0].Section29_4[0].#area[3].School6_State[1]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[1].address.street",
+      "pdfFieldId": "form1[0].Section29_4[0].#area[3].TextField11[11]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[1].address.zipCode",
+      "pdfFieldId": "form1[0].Section29_4[0].#area[3].TextField11[13]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[1].contributions.description",
+      "pdfFieldId": "form1[0].Section29_4[0].TextField11[9]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[1].contributions.noContributionsMade",
+      "pdfFieldId": "form1[0].Section29_4[0].#field[23]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[1].dateRange.from.date",
+      "pdfFieldId": "form1[0].Section29_4[0].From_Datefield_Name_2[2]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[1].dateRange.from.estimated",
+      "pdfFieldId": "form1[0].Section29_4[0].#field[31]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[1].dateRange.present",
+      "pdfFieldId": "form1[0].Section29_4[0].#field[29]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[1].dateRange.to.date",
+      "pdfFieldId": "form1[0].Section29_4[0].From_Datefield_Name_2[3]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[1].dateRange.to.estimated",
+      "pdfFieldId": "form1[0].Section29_4[0].#field[33]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[1].involvementDescription",
+      "pdfFieldId": "form1[0].Section29_4[0].TextField11[10]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[1].organizationName",
+      "pdfFieldId": "form1[0].Section29_4[0].TextField11[8]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[1].positions.description",
+      "pdfFieldId": "form1[0].Section29_4[0].TextField11[7]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.entries[1].positions.noPositionsHeld",
+      "pdfFieldId": "form1[0].Section29_4[0].#field[22]"
+    },
+    {
+      "uiPath": "section29.violenceForceOrganizations.hasAssociation",
+      "pdfFieldId": "form1[0].Section29_4[0].RadioButtonList[0]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[0].address.city",
+      "pdfFieldId": "form1[0].Section29_3[0].#area[1].TextField11[5]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[0].address.country",
+      "pdfFieldId": "form1[0].Section29_3[0].#area[1].DropDownList4[0]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[0].address.state",
+      "pdfFieldId": "form1[0].Section29_3[0].#area[1].School6_State[0]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[0].address.street",
+      "pdfFieldId": "form1[0].Section29_3[0].#area[1].TextField11[4]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[0].address.zipCode",
+      "pdfFieldId": "form1[0].Section29_3[0].#area[1].TextField11[6]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[0].contributions.description",
+      "pdfFieldId": "form1[0].Section29_3[0].TextField11[2]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[0].contributions.noContributionsMade",
+      "pdfFieldId": "form1[0].Section29_3[0].#field[7]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[0].dateRange.from.date",
+      "pdfFieldId": "form1[0].Section29_3[0].From_Datefield_Name_2[0]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[0].dateRange.from.estimated",
+      "pdfFieldId": "form1[0].Section29_3[0].#field[15]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[0].dateRange.present",
+      "pdfFieldId": "form1[0].Section29_3[0].#field[13]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[0].dateRange.to.date",
+      "pdfFieldId": "form1[0].Section29_3[0].From_Datefield_Name_2[1]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[0].dateRange.to.estimated",
+      "pdfFieldId": "form1[0].Section29_3[0].#field[17]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[0].involvementDescription",
+      "pdfFieldId": "form1[0].Section29_3[0].TextField11[3]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[0].organizationName",
+      "pdfFieldId": "form1[0].Section29_3[0].TextField11[1]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[0].positions.description",
+      "pdfFieldId": "form1[0].Section29_3[0].TextField11[0]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[0].positions.noPositionsHeld",
+      "pdfFieldId": "form1[0].Section29_3[0].#field[6]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[1].address.city",
+      "pdfFieldId": "form1[0].Section29_3[0].#area[3].TextField11[12]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[1].address.country",
+      "pdfFieldId": "form1[0].Section29_3[0].#area[3].DropDownList3[0]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[1].address.state",
+      "pdfFieldId": "form1[0].Section29_3[0].#area[3].School6_State[1]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[1].address.street",
+      "pdfFieldId": "form1[0].Section29_3[0].#area[3].TextField11[11]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[1].address.zipCode",
+      "pdfFieldId": "form1[0].Section29_3[0].#area[3].TextField11[13]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[1].contributions.description",
+      "pdfFieldId": "form1[0].Section29_3[0].TextField11[9]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[1].contributions.noContributionsMade",
+      "pdfFieldId": "form1[0].Section29_3[0].#field[23]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[1].dateRange.from.date",
+      "pdfFieldId": "form1[0].Section29_3[0].From_Datefield_Name_2[2]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[1].dateRange.from.estimated",
+      "pdfFieldId": "form1[0].Section29_3[0].#field[31]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[1].dateRange.present",
+      "pdfFieldId": "form1[0].Section29_3[0].#field[29]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[1].dateRange.to.date",
+      "pdfFieldId": "form1[0].Section29_3[0].From_Datefield_Name_2[3]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[1].dateRange.to.estimated",
+      "pdfFieldId": "form1[0].Section29_3[0].#field[33]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[1].involvementDescription",
+      "pdfFieldId": "form1[0].Section29_3[0].TextField11[10]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[1].organizationName",
+      "pdfFieldId": "form1[0].Section29_3[0].TextField11[8]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[1].positions.description",
+      "pdfFieldId": "form1[0].Section29_3[0].TextField11[7]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.entries[1].positions.noPositionsHeld",
+      "pdfFieldId": "form1[0].Section29_3[0].#field[22]"
+    },
+    {
+      "uiPath": "section29.violentOverthrowOrganizations.hasAssociation",
+      "pdfFieldId": "form1[0].Section29_3[0].RadioButtonList[0]"
+    }
+  ]
+}

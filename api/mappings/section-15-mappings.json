@@ -1,0 +1,258 @@
+{
+  "metadata": {
+    "pdfPath": "../pdf/clean.pdf",
+    "section": 15,
+    "timestamp": "2025-08-17T03:29:36.133Z",
+    "version": "0.1.0"
+  },
+  "summary": {
+    "totalMappings": 58,
+    "averageConfidence": 0.8646551724137933,
+    "highConfidenceMappings": 49,
+    "lowConfidenceMappings": 9,
+    "validatedMappings": 49
+  },
+  "mappings": [
+    {
+      "uiPath": "section15.hasServed",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].RadioButtonList[0]",
+    },
+    {
+      "uiPath": "section15.militaryService[0].serviceNumber",
+      "pdfFieldId": "form1[0].#subform[71].TextField11[72]",
+    },
+    {
+      "uiPath": "section15.militaryService[0].dates.from",
+      "pdfFieldId": "form1[0].#subform[74].From_Datefield_Name_2[16]",
+    },
+    {
+      "uiPath": "section15.militaryService[0].dates.to",
+      "pdfFieldId": "form1[0].#subform[74].From_Datefield_Name_2[17]",
+    },
+    {
+      "uiPath": "section15.militaryService[0].rank.initial",
+      "pdfFieldId": "form1[0].#subform[71].TextField11[73]",
+    },
+    {
+      "uiPath": "section15.militaryService[0].rank.final",
+      "pdfFieldId": "form1[0].#subform[72].TextField11[74]",
+    },
+    {
+      "uiPath": "section15.militaryService[0].militaryOccupation",
+      "pdfFieldId": "form1[0].#subform[72].TextField11[75]",
+    },
+    {
+      "uiPath": "section15.militaryService[0].discharge.date",
+      "pdfFieldId": "form1[0].#subform[77].#area[17].From_Datefield_Name_2[18]",
+    },
+    {
+      "uiPath": "section15.militaryService[0].disciplinaryAction.hasAction",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].RadioButtonList[5]",
+    },
+    {
+      "uiPath": "section15.militaryService[0].disciplinaryAction.details",
+      "pdfFieldId": "form1[0].#subform[72].TextField11[76]",
+    },
+    {
+      "uiPath": "section15.militaryService[1].serviceNumber",
+      "pdfFieldId": "form1[0].#subform[71].TextField11[72]",
+    },
+    {
+      "uiPath": "section15.militaryService[1].dates.from",
+      "pdfFieldId": "form1[0].#subform[74].From_Datefield_Name_2[16]",
+    },
+    {
+      "uiPath": "section15.militaryService[1].dates.to",
+      "pdfFieldId": "form1[0].#subform[74].From_Datefield_Name_2[17]",
+    },
+    {
+      "uiPath": "section15.militaryService[1].rank.initial",
+      "pdfFieldId": "form1[0].#subform[71].TextField11[73]",
+    },
+    {
+      "uiPath": "section15.militaryService[1].rank.final",
+      "pdfFieldId": "form1[0].#subform[72].TextField11[74]",
+    },
+    {
+      "uiPath": "section15.militaryService[1].militaryOccupation",
+      "pdfFieldId": "form1[0].#subform[72].TextField11[75]",
+    },
+    {
+      "uiPath": "section15.militaryService[1].discharge.date",
+      "pdfFieldId": "form1[0].#subform[77].#area[17].From_Datefield_Name_2[18]",
+    },
+    {
+      "uiPath": "section15.militaryService[1].disciplinaryAction.hasAction",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].RadioButtonList[5]",
+    },
+    {
+      "uiPath": "section15.militaryService[1].disciplinaryAction.details",
+      "pdfFieldId": "form1[0].#subform[72].TextField11[76]",
+    },
+    {
+      "uiPath": "section15.militaryService[2].serviceNumber",
+      "pdfFieldId": "form1[0].#subform[71].TextField11[72]",
+    },
+    {
+      "uiPath": "section15.militaryService[2].dates.from",
+      "pdfFieldId": "form1[0].#subform[74].From_Datefield_Name_2[16]",
+    },
+    {
+      "uiPath": "section15.militaryService[2].dates.to",
+      "pdfFieldId": "form1[0].#subform[74].From_Datefield_Name_2[17]",
+    },
+    {
+      "uiPath": "section15.militaryService[2].rank.initial",
+      "pdfFieldId": "form1[0].#subform[71].TextField11[73]",
+    },
+    {
+      "uiPath": "section15.militaryService[2].rank.final",
+      "pdfFieldId": "form1[0].#subform[72].TextField11[74]",
+    },
+    {
+      "uiPath": "section15.militaryService[2].militaryOccupation",
+      "pdfFieldId": "form1[0].#subform[72].TextField11[75]",
+    },
+    {
+      "uiPath": "section15.militaryService[2].discharge.date",
+      "pdfFieldId": "form1[0].#subform[77].#area[17].From_Datefield_Name_2[18]",
+    },
+    {
+      "uiPath": "section15.militaryService[2].disciplinaryAction.hasAction",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].RadioButtonList[5]",
+    },
+    {
+      "uiPath": "section15.militaryService[2].disciplinaryAction.details",
+      "pdfFieldId": "form1[0].#subform[72].TextField11[76]",
+    },
+    {
+      "uiPath": "section15.militaryService[3].serviceNumber",
+      "pdfFieldId": "form1[0].#subform[71].TextField11[72]",
+    },
+    {
+      "uiPath": "section15.militaryService[3].dates.from",
+      "pdfFieldId": "form1[0].#subform[74].From_Datefield_Name_2[16]",
+    },
+    {
+      "uiPath": "section15.militaryService[3].dates.to",
+      "pdfFieldId": "form1[0].#subform[74].From_Datefield_Name_2[17]",
+    },
+    {
+      "uiPath": "section15.militaryService[3].rank.initial",
+      "pdfFieldId": "form1[0].#subform[71].TextField11[73]",
+    },
+    {
+      "uiPath": "section15.militaryService[3].rank.final",
+      "pdfFieldId": "form1[0].#subform[72].TextField11[74]",
+    },
+    {
+      "uiPath": "section15.militaryService[3].militaryOccupation",
+      "pdfFieldId": "form1[0].#subform[72].TextField11[75]",
+    },
+    {
+      "uiPath": "section15.militaryService[3].discharge.date",
+      "pdfFieldId": "form1[0].#subform[77].#area[17].From_Datefield_Name_2[18]",
+    },
+    {
+      "uiPath": "section15.militaryService[3].disciplinaryAction.hasAction",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].RadioButtonList[5]",
+    },
+    {
+      "uiPath": "section15.militaryService[3].disciplinaryAction.details",
+      "pdfFieldId": "form1[0].#subform[72].TextField11[76]",
+    },
+    {
+      "uiPath": "section15.militaryService[4].serviceNumber",
+      "pdfFieldId": "form1[0].#subform[71].TextField11[72]",
+    },
+    {
+      "uiPath": "section15.militaryService[4].dates.from",
+      "pdfFieldId": "form1[0].#subform[74].From_Datefield_Name_2[16]",
+    },
+    {
+      "uiPath": "section15.militaryService[4].dates.to",
+      "pdfFieldId": "form1[0].#subform[74].From_Datefield_Name_2[17]",
+    },
+    {
+      "uiPath": "section15.militaryService[4].rank.initial",
+      "pdfFieldId": "form1[0].#subform[71].TextField11[73]",
+    },
+    {
+      "uiPath": "section15.militaryService[4].rank.final",
+      "pdfFieldId": "form1[0].#subform[72].TextField11[74]",
+    },
+    {
+      "uiPath": "section15.militaryService[4].militaryOccupation",
+      "pdfFieldId": "form1[0].#subform[72].TextField11[75]",
+    },
+    {
+      "uiPath": "section15.militaryService[4].discharge.date",
+      "pdfFieldId": "form1[0].#subform[77].#area[17].From_Datefield_Name_2[18]",
+    },
+    {
+      "uiPath": "section15.militaryService[4].disciplinaryAction.hasAction",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].RadioButtonList[5]",
+    },
+    {
+      "uiPath": "section15.militaryService[4].disciplinaryAction.details",
+      "pdfFieldId": "form1[0].#subform[72].TextField11[76]",
+    },
+    {
+      "uiPath": "section15.courtMartial.hasCourtMartial",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].RadioButtonList[6]",
+    },
+    {
+      "uiPath": "section15.courtMartial.details",
+      "pdfFieldId": "form1[0].#subform[74].TextField11[90]",
+    },
+    {
+      "uiPath": "section15.courtMartial.date",
+      "pdfFieldId": "form1[0].#subform[77].#area[19].From_Datefield_Name_2[20]",
+    },
+    {
+      "uiPath": "section15.militaryService[0].branch",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].TextField11[0]",
+      "confidence": 0.4
+    },
+    {
+      "uiPath": "section15.militaryService[0].component",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].TextField11[1]",
+      "confidence": 0.4
+    },
+    {
+      "uiPath": "section15.militaryService[0].officer",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].TextField11[2]",
+      "confidence": 0.4
+    },
+    {
+      "uiPath": "section15.militaryService[0].enlisted",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].TextField11[3]",
+      "confidence": 0.4
+    },
+    {
+      "uiPath": "section15.militaryService[0].dates.estimated",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].#area[0].From_Datefield_Name_2[0]",
+      "confidence": 0.4
+    },
+    {
+      "uiPath": "section15.militaryService[0].discharge.type",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].#area[0].To_Datefield_Name_2[0]",
+      "confidence": 0.4
+    },
+    {
+      "uiPath": "section15.militaryService[0].discharge.dateEstimated",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].suffix[0]",
+      "confidence": 0.4
+    },
+    {
+      "uiPath": "section15.militaryService[0].foreignService",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].#field[7]",
+      "confidence": 0.4
+    },
+    {
+      "uiPath": "section15.militaryService[0].combatDuty",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].#field[8]",
+      "confidence": 0.4
+    }
+  ]
+}

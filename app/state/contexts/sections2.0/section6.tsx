@@ -26,13 +26,13 @@ import type {
   Sex,
   HeightFeet,
   HeightInches
-} from '../../../../api/interfaces/sections2.0/section6';
+} from '../../../../api/interfaces/section-interfaces/section6';
 import {
   createDefaultSection6,
   updateSection6Field,
   calculateTotalHeightInches,
   formatHeight
-} from '../../../../api/interfaces/sections2.0/section6';
+} from '../../../../api/interfaces/section-interfaces/section6';
 
 import type { ValidationResult, ValidationError, SectionId } from '../shared/base-interfaces';
 

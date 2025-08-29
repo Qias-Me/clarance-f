@@ -7,8 +7,8 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { useSection11 } from '../../state/contexts/sections2.0/section11';
-import type { ResidenceEntry } from '../../../api/interfaces/sections2.0/section11';
-import { getResidenceTypeLabel } from '../../../api/interfaces/sections2.0/section11';
+import type { ResidenceEntry } from '../../../api/interfaces/section-interfaces/section11';
+import { getResidenceTypeLabel } from '../../../api/interfaces/section-interfaces/section11';
 import { useSF86Form } from '~/state/contexts/sections2.0/SF86FormContext';
 
 // ============================================================================

@@ -304,7 +304,9 @@ function SF86FormContent() {
 
   // Get current section component
   const getCurrentSectionComponent = useCallback(() => {
+    console.log(`getCurrentSectionComponent called with currentSection: ${currentSection}`);
     const section = availableSections.find((s) => s.id === currentSection);
+    console.log(`Found section:`, section);
     if (!section) {
       return (
         <div className="bg-white rounded-lg shadow-lg p-6">

@@ -21,8 +21,8 @@ import type {
   NaturalizedCitizenInfo,
   DerivedCitizenInfo,
   NonUSCitizenInfo
-} from '../../../../api/interfaces/sections2.0/section9';
-import { createDefaultSection9 } from '../../../../api/interfaces/sections2.0/section9';
+} from '../../../../api/interfaces/section-interfaces/section9';
+import { createDefaultSection9 } from '../../../../api/interfaces/section-interfaces/section9';
 import type {
   ValidationResult,
   ValidationError,

@@ -9,7 +9,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSection14 } from '~/state/contexts/sections2.0/section14';
 import { useSF86Form } from '~/state/contexts/sections2.0/SF86FormContext';
-import { BORN_MALE_AFTER_1959_OPTIONS, REGISTRATION_STATUS_OPTIONS } from '../../../api/interfaces/sections2.0/section14';
+import { BORN_MALE_AFTER_1959_OPTIONS, REGISTRATION_STATUS_OPTIONS } from '../../../api/interfaces/section-interfaces/section14';
 
 interface Section14ComponentProps {
   className?: string;

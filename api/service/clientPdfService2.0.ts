@@ -18,7 +18,9 @@ import {
 import type { ApplicantFormValues, Field } from '../interfaces/formDefinition2.0';
 
 // URLs for fetching the SF86 PDF template
-const SF86_PDF_TEMPLATE_URL = '/api/generate-pdf'; // Our API route that serves the base PDF template
+const SF86_PDF_TEMPLATE_URL = typeof window !== 'undefined' 
+  ? `${window.location.origin}/api/generate-pdf`
+  : 'http://localhost:5173/api/generate-pdf'; // Our API route that serves the base PDF template
 
 // Interface for field metadata
 interface FieldMetadata {

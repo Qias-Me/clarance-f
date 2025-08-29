@@ -19,7 +19,7 @@ import {
   type HeightFeet,
   type HeightInches,
   type Sex
-} from '../../../api/interfaces/sections2.0/section6';
+} from '../../../api/interfaces/section-interfaces/section6';
 
 interface Section6ComponentProps {
   className?: string;
@@ -100,13 +100,13 @@ export const Section6Component: React.FC<Section6ComponentProps> = ({
   };
 
 
-  // Get current values
-  const getHeightFeet = (): HeightFeet => section6Data.section6.heightFeet.value as HeightFeet || '';
-  const getHeightInches = (): HeightInches => section6Data.section6.heightInches.value as HeightInches || '';
+  // Get current values with proper type safety
+  const getHeightFeet = (): HeightFeet | '' => section6Data.section6.heightFeet.value || '';
+  const getHeightInches = (): HeightInches | '' => section6Data.section6.heightInches.value || '';
   const getWeight = (): string => section6Data.section6.weight.value || '';
-  const getHairColor = (): HairColor => section6Data.section6.hairColor.value|| '';
-  const getEyeColor = (): EyeColor => section6Data.section6.eyeColor.value|| '';
-  const getSex = (): Sex => section6Data.section6.sex.value|| '';
+  const getHairColor = (): HairColor | '' => section6Data.section6.hairColor.value || '';
+  const getEyeColor = (): EyeColor | '' => section6Data.section6.eyeColor.value || '';
+  const getSex = (): Sex | '' => section6Data.section6.sex.value || '';
 
   // Validation helpers
   const validateWeight = (weight: string): { isValid: boolean; error?: string } => {
@@ -159,6 +159,7 @@ export const Section6Component: React.FC<Section6ComponentProps> = ({
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
             >
+              <option value="">Select feet</option>
               {HEIGHT_FEET_OPTIONS.map((feet) => (
                 <option key={feet} value={feet}>
                   {feet}
@@ -182,6 +183,7 @@ export const Section6Component: React.FC<Section6ComponentProps> = ({
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               required
             >
+              <option value="">Select inches</option>
               {HEIGHT_INCHES_OPTIONS.map((inches) => (
                 <option key={inches} value={inches}>
                   {inches}

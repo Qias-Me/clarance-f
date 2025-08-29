@@ -20,11 +20,11 @@ import type {
   PhoneNumberUpdate,
   ContactInformation,
   PhoneNumber
-} from '../../../../api/interfaces/sections2.0/section7';
+} from '../../../../api/interfaces/section-interfaces/section7';
 import {
   createDefaultSection7,
   updateSection7Field
-} from '../../../../api/interfaces/sections2.0/section7';
+} from '../../../../api/interfaces/section-interfaces/section7';
 import type { ValidationResult, ValidationError } from '../shared/base-interfaces';
 
 // ============================================================================
@@ -45,9 +45,8 @@ export interface Section7ContextType {
   updateContactField: (update: Section7FieldUpdate) => void;
   updateFieldValue: (path: string, value: any) => void;
 
-  // Phone Number CRUD (for compatibility with component)
-  addPhoneNumber: () => void;
-  removePhoneNumber: (index: number) => void;
+  // Phone Number Updates (fixed 3 entries - no add/remove)
+  // addPhoneNumber and removePhoneNumber removed - PDF has fixed 3 entries
   phoneNumbers: Array<{
     number: {value: string},
     extension: {value: string},
@@ -56,16 +55,8 @@ export interface Section7ContextType {
     isInternational: {value: boolean}
   }>;
 
-  // Email Address CRUD (for compatibility with component)
-  addEmailAddress: () => void;
-  removeEmailAddress: (index: number) => void;
-  emailAddresses: Array<{address: {value: string}}>;
-
-  // Social Media CRUD (for compatibility with component)
-  addSocialMedia: () => void;
-  removeSocialMedia: (index: number) => void;
-  updateSocialMedia: (index: number, fieldType: string, value: any) => void;
-  socialMedia: Array<{platform: {value: string}, username: {value: string}, url?: {value: string}}>;
+  // Email fields are fixed (homeEmail and workEmail only)
+  // No additional email addresses or social media - not in PDF
 
   // Validation
   validateSection: () => ValidationResult;
@@ -83,7 +74,39 @@ export interface Section7ContextType {
 // INITIAL STATE CREATION
 // ============================================================================
 
-const createInitialSection7State = (): Section7 => createDefaultSection7();
+const createInitialSection7State = (): Section7 => {
+  const defaultSection = createDefaultSection7();
+  // Ensure we always have exactly 3 phone entries as per PDF structure
+  if (!defaultSection.section7.entries || defaultSection.section7.entries.length !== 3) {
+    defaultSection.section7.entries = [
+      // Home phone (entry 0)
+      {
+        number: { id: 'section7-phone-0-number', value: '' },
+        extension: { id: 'section7-phone-0-extension', value: '' },
+        dayTime: { id: 'section7-phone-0-dayTime', value: false },
+        nightTime: { id: 'section7-phone-0-nightTime', value: false },
+        isInternational: { id: 'section7-phone-0-isInternational', value: false }
+      },
+      // Work phone (entry 1)
+      {
+        number: { id: 'section7-phone-1-number', value: '' },
+        extension: { id: 'section7-phone-1-extension', value: '' },
+        dayTime: { id: 'section7-phone-1-dayTime', value: false },
+        nightTime: { id: 'section7-phone-1-nightTime', value: false },
+        isInternational: { id: 'section7-phone-1-isInternational', value: false }
+      },
+      // Mobile phone (entry 2)
+      {
+        number: { id: 'section7-phone-2-number', value: '' },
+        extension: { id: 'section7-phone-2-extension', value: '' },
+        dayTime: { id: 'section7-phone-2-dayTime', value: false },
+        nightTime: { id: 'section7-phone-2-nightTime', value: false },
+        isInternational: { id: 'section7-phone-2-isInternational', value: false }
+      }
+    ];
+  }
+  return defaultSection;
+};
 
 // ============================================================================
 // CONTEXT CREATION
@@ -110,7 +133,7 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [initialData] = useState<Section7>(createInitialSection7State());
   
-  // Additional state for dynamic arrays (for component compatibility)
+  // Fixed state for exactly 3 phone entries (matching PDF structure)
   const [dynamicPhoneNumbers, setDynamicPhoneNumbers] = useState<Array<{
     number: {value: string},
     extension: {value: string},
@@ -118,7 +141,21 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
     nightTime: {value: boolean},
     isInternational: {value: boolean}
   }>>([
-    // Initialize with 1 default phone entry
+    // Initialize with exactly 3 phone entries as per PDF (Home, Work, Mobile)
+    {
+      number: { value: '' },
+      extension: { value: '' },
+      dayTime: { value: false },
+      nightTime: { value: false },
+      isInternational: { value: false }
+    },
+    {
+      number: { value: '' },
+      extension: { value: '' },
+      dayTime: { value: false },
+      nightTime: { value: false },
+      isInternational: { value: false }
+    },
     {
       number: { value: '' },
       extension: { value: '' },
@@ -127,8 +164,8 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
       isInternational: { value: false }
     }
   ]);
-  const [dynamicEmailAddresses, setDynamicEmailAddresses] = useState<Array<{address: {value: string}}>>([]);
-  const [dynamicSocialMedia, setDynamicSocialMedia] = useState<Array<{platform: {value: string}, username: {value: string}, url?: {value: string}}>>([]);
+  // No dynamic email addresses - only homeEmail and workEmail as per PDF
+  // No social media fields - not present in PDF
 
   // ============================================================================
   // SYNCHRONIZATION EFFECTS
@@ -234,17 +271,7 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
       }
     });
 
-    // Validate dynamic email addresses
-    dynamicEmailAddresses.forEach((email, index) => {
-      if (email.address.value && !validateEmail(email.address.value)) {
-        validationErrors.push({
-          field: `emailAddresses[${index}].address`,
-          message: 'Please enter a valid email address',
-          code: 'INVALID_EMAIL',
-          severity: 'error'
-        });
-      }
-    });
+    // No dynamic email addresses - only homeEmail and workEmail are validated above
 
     // Update local errors
     const newErrors: Record<string, string> = {};
@@ -258,7 +285,7 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
       errors: validationErrors,
       warnings: validationWarnings
     };
-  }, [draftData, dynamicPhoneNumbers, dynamicEmailAddresses, validateEmail, validatePhoneNumber]);
+  }, [draftData, dynamicPhoneNumbers, validateEmail, validatePhoneNumber]);
 
   const getChanges = useCallback(() => {
     const changes: Record<string, any> = {};
@@ -396,45 +423,26 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
     });
   }, []);
 
+  // No additional email addresses or social media - not in PDF
   const addEmailAddress = useCallback(() => {
-    const newEmail = {
-      address: { value: '' }
-    };
-    setDynamicEmailAddresses(prev => [...prev, newEmail]);
+    console.warn('Cannot add email addresses - Section 7 only has homeEmail and workEmail per PDF');
   }, []);
 
   const removeEmailAddress = useCallback((index: number) => {
-    setDynamicEmailAddresses(prev => prev.filter((_, i) => i !== index));
+    console.warn(`Cannot remove email ${index} - Section 7 only has homeEmail and workEmail per PDF`);
   }, []);
 
+  // Social media not in PDF - stub functions for compatibility
   const addSocialMedia = useCallback(() => {
-    const newSocialMedia = {
-      platform: { value: '' },
-      username: { value: '' },
-      url: { value: '' }
-    };
-    setDynamicSocialMedia(prev => [...prev, newSocialMedia]);
+    console.warn('Social media not supported - not present in PDF form');
   }, []);
 
   const removeSocialMedia = useCallback((index: number) => {
-    setDynamicSocialMedia(prev => prev.filter((_, i) => i !== index));
+    console.warn(`Social media not supported - not present in PDF form`);
   }, []);
 
   const updateSocialMedia = useCallback((index: number, fieldType: string, value: any) => {
-    setDynamicSocialMedia(prev => {
-      const newArray = cloneDeep(prev);
-      if (index < newArray.length) {
-        if (fieldType === 'platform') {
-          newArray[index].platform.value = value;
-        } else if (fieldType === 'username') {
-          newArray[index].username.value = value;
-        } else if (fieldType === 'url') {
-          newArray[index].url = newArray[index].url || { value: '' };
-          newArray[index].url!.value = value;
-        }
-      }
-      return newArray;
-    });
+    console.warn('Social media not supported - not present in PDF form');
   }, []);
 
   // ============================================================================
@@ -594,13 +602,13 @@ export const Section7Provider: React.FC<Section7ProviderProps> = ({ children }) 
     // Email Address CRUD
     addEmailAddress,
     removeEmailAddress,
-    emailAddresses: dynamicEmailAddresses,
+    emailAddresses: [], // No dynamic emails - only homeEmail and workEmail
 
     // Social Media CRUD
     addSocialMedia,
     removeSocialMedia,
     updateSocialMedia,
-    socialMedia: dynamicSocialMedia,
+    socialMedia: [], // No social media in PDF
 
     // Validation
     validateSection,

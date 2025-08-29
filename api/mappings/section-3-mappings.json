@@ -1,0 +1,37 @@
+{
+  "metadata": {
+    "pdfPath": "../pdf/clean.pdf",
+    "section": 3,
+    "timestamp": "2025-08-17T03:27:58.296Z",
+    "version": "0.1.0"
+  },
+  "summary": {
+    "totalMappings": 4,
+    "averageConfidence": 1,
+    "highConfidenceMappings": 4,
+    "lowConfidenceMappings": 0,
+    "validatedMappings": 4
+  },
+  "mappings": [
+    {
+      "uiPath": "section3.city",
+      "pdfFieldId": "form1[0].Sections1-6[0].TextField11[3]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section3.state",
+      "pdfFieldId": "form1[0].Sections1-6[0].School6_State[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section3.country",
+      "pdfFieldId": "form1[0].Sections1-6[0].DropDownList1[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section3.county",
+      "pdfFieldId": "form1[0].Sections1-6[0].TextField11[4]",
+      "confidence": 1
+    }
+  ]
+}

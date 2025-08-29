@@ -1,0 +1,301 @@
+{
+  "metadata": {
+    "sectionId": 17,
+    "sectionName": "Marital Status",
+    "totalFields": 332,
+    "pageRange": [
+      38,
+      45
+    ],
+    "description": "Marital status history and relationship information including spouse details, previous marriages, and cohabitation history"
+  },
+  "fieldsByEntry": {
+    "1": [
+      {
+        "id": "17001 0 R",
+        "name": "form1[0].Section17_1[0].MaritalStatus[0]",
+        "value": "Single",
+        "page": 38,
+        "label": "MaritalStatus",
+        "type": "PDFRadioGroup",
+        "maxLength": 0,
+        "options": ["Single", "Married", "Separated", "Divorced", "Widowed", "Cohabiting"]
+      },
+      {
+        "id": "17002 0 R", 
+        "name": "form1[0].Section17_1[0].SpouseName_First[0]",
+        "value": "",
+        "page": 38,
+        "label": "SpouseName_First",
+        "type": "PDFTextField",
+        "maxLength": 30
+      },
+      {
+        "id": "17003 0 R",
+        "name": "form1[0].Section17_1[0].SpouseName_Middle[0]", 
+        "value": "",
+        "page": 38,
+        "label": "SpouseName_Middle",
+        "type": "PDFTextField",
+        "maxLength": 30
+      },
+      {
+        "id": "17004 0 R",
+        "name": "form1[0].Section17_1[0].SpouseName_Last[0]",
+        "value": "",
+        "page": 38,
+        "label": "SpouseName_Last", 
+        "type": "PDFTextField",
+        "maxLength": 30
+      },
+      {
+        "id": "17005 0 R",
+        "name": "form1[0].Section17_1[0].SpouseBirthDate[0]",
+        "value": "",
+        "page": 38,
+        "label": "SpouseBirthDate",
+        "type": "PDFTextField",
+        "maxLength": 10
+      },
+      {
+        "id": "17006 0 R",
+        "name": "form1[0].Section17_1[0].SpouseBirthPlace_City[0]",
+        "value": "",
+        "page": 38,
+        "label": "SpouseBirthPlace_City",
+        "type": "PDFTextField", 
+        "maxLength": 30
+      },
+      {
+        "id": "17007 0 R",
+        "name": "form1[0].Section17_1[0].SpouseBirthPlace_State[0]",
+        "value": "",
+        "page": 38,
+        "label": "SpouseBirthPlace_State",
+        "type": "PDFDropDown",
+        "maxLength": 2
+      },
+      {
+        "id": "17008 0 R",
+        "name": "form1[0].Section17_1[0].SpouseBirthPlace_Country[0]",
+        "value": "",
+        "page": 38,
+        "label": "SpouseBirthPlace_Country",
+        "type": "PDFTextField",
+        "maxLength": 30
+      },
+      {
+        "id": "17009 0 R", 
+        "name": "form1[0].Section17_1[0].SpouseCitizenship[0]",
+        "value": "",
+        "page": 38,
+        "label": "SpouseCitizenship",
+        "type": "PDFRadioGroup",
+        "maxLength": 0,
+        "options": ["U.S. Citizen", "Dual Citizenship", "Foreign National"]
+      },
+      {
+        "id": "17010 0 R",
+        "name": "form1[0].Section17_1[0].SpouseSSN[0]",
+        "value": "",
+        "page": 38,
+        "label": "SpouseSSN",
+        "type": "PDFTextField",
+        "maxLength": 11
+      },
+      {
+        "id": "17011 0 R",
+        "name": "form1[0].Section17_1[0].MarriageDate[0]",
+        "value": "",
+        "page": 38,
+        "label": "MarriageDate",
+        "type": "PDFTextField",
+        "maxLength": 10
+      },
+      {
+        "id": "17012 0 R",
+        "name": "form1[0].Section17_1[0].MarriageLocation_City[0]",
+        "value": "",
+        "page": 38,
+        "label": "MarriageLocation_City",
+        "type": "PDFTextField",
+        "maxLength": 30
+      },
+      {
+        "id": "17013 0 R",
+        "name": "form1[0].Section17_1[0].MarriageLocation_State[0]",
+        "value": "",
+        "page": 38,
+        "label": "MarriageLocation_State", 
+        "type": "PDFDropDown",
+        "maxLength": 2
+      },
+      {
+        "id": "17014 0 R",
+        "name": "form1[0].Section17_1[0].MarriageLocation_Country[0]",
+        "value": "",
+        "page": 38,
+        "label": "MarriageLocation_Country",
+        "type": "PDFTextField",
+        "maxLength": 30
+      },
+      {
+        "id": "17015 0 R",
+        "name": "form1[0].Section17_1[0].SeparationDate[0]",
+        "value": "",
+        "page": 38,
+        "label": "SeparationDate",
+        "type": "PDFTextField",
+        "maxLength": 10
+      },
+      {
+        "id": "17016 0 R",
+        "name": "form1[0].Section17_1[0].DivorceDate[0]",
+        "value": "",
+        "page": 38,
+        "label": "DivorceDate",
+        "type": "PDFTextField",
+        "maxLength": 10
+      },
+      {
+        "id": "17017 0 R",
+        "name": "form1[0].Section17_1[0].DivorceLocation_City[0]",
+        "value": "",
+        "page": 38,
+        "label": "DivorceLocation_City",
+        "type": "PDFTextField",
+        "maxLength": 30
+      },
+      {
+        "id": "17018 0 R",
+        "name": "form1[0].Section17_1[0].DivorceLocation_State[0]",
+        "value": "",
+        "page": 38,
+        "label": "DivorceLocation_State",
+        "type": "PDFDropDown",
+        "maxLength": 2
+      },
+      {
+        "id": "17019 0 R",
+        "name": "form1[0].Section17_1[0].DivorceLocation_Country[0]",
+        "value": "",
+        "page": 38,
+        "label": "DivorceLocation_Country",
+        "type": "PDFTextField",
+        "maxLength": 30
+      },
+      {
+        "id": "17020 0 R",
+        "name": "form1[0].Section17_1[0].HasPreviousMarriages[0]",
+        "value": "No",
+        "page": 38,
+        "label": "HasPreviousMarriages",
+        "type": "PDFRadioGroup",
+        "maxLength": 0,
+        "options": ["Yes", "No"]
+      }
+    ]
+  },
+  "fields": {
+    "form1[0].Section17_1[0].MaritalStatus[0]": {
+      "type": "PDFRadioGroup",
+      "page": 38,
+      "options": ["Single", "Married", "Separated", "Divorced", "Widowed", "Cohabiting"]
+    },
+    "form1[0].Section17_1[0].SpouseName_First[0]": {
+      "type": "PDFTextField", 
+      "page": 38,
+      "maxLength": 30
+    },
+    "form1[0].Section17_1[0].SpouseName_Middle[0]": {
+      "type": "PDFTextField",
+      "page": 38,
+      "maxLength": 30
+    },
+    "form1[0].Section17_1[0].SpouseName_Last[0]": {
+      "type": "PDFTextField",
+      "page": 38,
+      "maxLength": 30
+    },
+    "form1[0].Section17_1[0].SpouseBirthDate[0]": {
+      "type": "PDFTextField",
+      "page": 38,
+      "maxLength": 10
+    },
+    "form1[0].Section17_1[0].SpouseBirthPlace_City[0]": {
+      "type": "PDFTextField",
+      "page": 38,
+      "maxLength": 30
+    },
+    "form1[0].Section17_1[0].SpouseBirthPlace_State[0]": {
+      "type": "PDFDropDown",
+      "page": 38,
+      "maxLength": 2
+    },
+    "form1[0].Section17_1[0].SpouseBirthPlace_Country[0]": {
+      "type": "PDFTextField",
+      "page": 38,
+      "maxLength": 30
+    },
+    "form1[0].Section17_1[0].SpouseCitizenship[0]": {
+      "type": "PDFRadioGroup",
+      "page": 38,
+      "options": ["U.S. Citizen", "Dual Citizenship", "Foreign National"]
+    },
+    "form1[0].Section17_1[0].SpouseSSN[0]": {
+      "type": "PDFTextField",
+      "page": 38,
+      "maxLength": 11
+    },
+    "form1[0].Section17_1[0].MarriageDate[0]": {
+      "type": "PDFTextField",
+      "page": 38,
+      "maxLength": 10
+    },
+    "form1[0].Section17_1[0].MarriageLocation_City[0]": {
+      "type": "PDFTextField",
+      "page": 38,
+      "maxLength": 30
+    },
+    "form1[0].Section17_1[0].MarriageLocation_State[0]": {
+      "type": "PDFDropDown",
+      "page": 38,
+      "maxLength": 2
+    },
+    "form1[0].Section17_1[0].MarriageLocation_Country[0]": {
+      "type": "PDFTextField",
+      "page": 38,
+      "maxLength": 30
+    },
+    "form1[0].Section17_1[0].SeparationDate[0]": {
+      "type": "PDFTextField",
+      "page": 38,
+      "maxLength": 10
+    },
+    "form1[0].Section17_1[0].DivorceDate[0]": {
+      "type": "PDFTextField",
+      "page": 38,
+      "maxLength": 10
+    },
+    "form1[0].Section17_1[0].DivorceLocation_City[0]": {
+      "type": "PDFTextField",
+      "page": 38,
+      "maxLength": 30
+    },
+    "form1[0].Section17_1[0].DivorceLocation_State[0]": {
+      "type": "PDFDropDown",
+      "page": 38,
+      "maxLength": 2
+    },
+    "form1[0].Section17_1[0].DivorceLocation_Country[0]": {
+      "type": "PDFTextField",
+      "page": 38,
+      "maxLength": 30
+    },
+    "form1[0].Section17_1[0].HasPreviousMarriages[0]": {
+      "type": "PDFRadioGroup",
+      "page": 38,
+      "options": ["Yes", "No"]
+    }
+  }
+}

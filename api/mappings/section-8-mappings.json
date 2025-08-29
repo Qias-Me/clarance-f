@@ -1,0 +1,67 @@
+{
+  "metadata": {
+    "pdfPath": "../pdf/clean.pdf",
+    "section": 8,
+    "timestamp": "2025-08-17T16:24:26.927Z",
+    "version": "0.1.0"
+  },
+  "summary": {
+    "totalMappings": 10,
+    "averageConfidence": 1,
+    "highConfidenceMappings": 10,
+    "lowConfidenceMappings": 0,
+    "validatedMappings": 10
+  },
+  "mappings": [
+    {
+  "uiPath": "section8.hasPassport",
+      "pdfFieldId": "form1[0].Sections7-9[0].RadioButtonList[0]",
+      "confidence": 1
+    },
+    {
+  "uiPath": "section8.passportNumber",
+      "pdfFieldId": "form1[0].Sections7-9[0].p3-t68[0]",
+      "confidence": 1
+    },
+    {
+  "uiPath": "section8.nameOnPassport.lastName",
+      "pdfFieldId": "form1[0].Sections7-9[0].TextField11[1]",
+      "confidence": 1
+    },
+    {
+  "uiPath": "section8.nameOnPassport.firstName",
+      "pdfFieldId": "form1[0].Sections7-9[0].TextField11[2]",
+      "confidence": 1
+    },
+    {
+  "uiPath": "section8.nameOnPassport.middleName",
+      "pdfFieldId": "form1[0].Sections7-9[0].TextField11[0]",
+      "confidence": 1
+    },
+    {
+  "uiPath": "section8.nameOnPassport.suffix",
+      "pdfFieldId": "form1[0].Sections7-9[0].suffix[0]",
+      "confidence": 1
+    },
+    {
+  "uiPath": "section8.dates.issueDate.date",
+      "pdfFieldId": "form1[0].Sections7-9[0].#area[0].From_Datefield_Name_2[0]",
+      "confidence": 1
+    },
+    {
+  "uiPath": "section8.dates.issueDate.estimated",
+  "pdfFieldId": "form1[0].Sections7-9[0].#area[0].#field[4]",
+      "confidence": 1
+    },
+    {
+  "uiPath": "section8.dates.expirationDate.date",
+      "pdfFieldId": "form1[0].Sections7-9[0].#area[0].To_Datefield_Name_2[0]",
+      "confidence": 1
+    },
+    {
+  "uiPath": "section8.dates.expirationDate.estimated",
+  "pdfFieldId": "form1[0].Sections7-9[0].#field[23]",
+      "confidence": 1
+    }
+  ]
+}

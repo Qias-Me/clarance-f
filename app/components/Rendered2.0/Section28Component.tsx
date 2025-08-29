@@ -1,4 +1,4 @@
-import type { CourtActionEntry } from "api/interfaces/sections2.0/section28";
+import type { CourtActionEntry } from "api/interfaces/section-interfaces/section28";
 import React, { useState, useEffect, useCallback, memo } from "react";
 import { useSection28 } from "~/state/contexts/sections2.0/section28";
 import { useSF86Form } from "~/state/contexts/sections2.0/SF86FormContext";

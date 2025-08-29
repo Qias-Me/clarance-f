@@ -25,13 +25,13 @@ import type {
   ForeignMilitaryServiceEntry,
   Section15FieldUpdate,
   MilitaryServiceEntry
-} from '../../../../api/interfaces/sections2.0/section15';
+} from '../../../../api/interfaces/section-interfaces/section15';
 import {
   createDefaultSection15,
   createDefaultMilitaryServiceEntry,
   createDefaultDisciplinaryEntry,
   createDefaultForeignMilitaryEntry
-} from '../../../../api/interfaces/sections2.0/section15';
+} from '../../../../api/interfaces/section-interfaces/section15';
 
 import type { ValidationResult, ValidationError, ChangeSet } from '../shared/base-interfaces';
 import {

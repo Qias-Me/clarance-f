@@ -1,0 +1,707 @@
+{
+  "metadata": {
+    "pdfPath": "../pdf/clean.pdf",
+    "section": 4,
+    "timestamp": "2025-08-18T00:05:00.000Z",
+    "version": "1.0.0"
+  },
+  "summary": {
+    "totalMappings": 138,
+    "averageConfidence": 1,
+    "highConfidenceMappings": 138,
+    "lowConfidenceMappings": 0,
+    "validatedMappings": 138
+  },
+  "mappings": [
+    {
+      "uiPath": "section4.ssn[0]",
+      "pdfFieldId": "form1[0].Sections1-6[0].SSN[1]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[1]",
+      "pdfFieldId": "form1[0].continuation4[0].SSN[1]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[2]",
+      "pdfFieldId": "form1[0].Sections1-6[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[3]",
+      "pdfFieldId": "form1[0].Sections7-9[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[4]",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[5]",
+      "pdfFieldId": "form1[0].Section10\\.1-10\\.2[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[6]",
+      "pdfFieldId": "form1[0].Section10-2[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[7]",
+      "pdfFieldId": "form1[0].Section11[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[8]",
+      "pdfFieldId": "form1[0].Section11-2[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[9]",
+      "pdfFieldId": "form1[0].Section11-3[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[10]",
+      "pdfFieldId": "form1[0].Section11-4[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[11]",
+      "pdfFieldId": "form1[0].section_12[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[12]",
+      "pdfFieldId": "form1[0].section_12_2[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[13]",
+      "pdfFieldId": "form1[0].section_12_3[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[14]",
+      "pdfFieldId": "form1[0].section_13_1-2[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[15]",
+      "pdfFieldId": "form1[0].section13_2-2[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[16]",
+      "pdfFieldId": "form1[0].section13_3-2[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[17]",
+      "pdfFieldId": "form1[0].section13_4[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[18]",
+      "pdfFieldId": "form1[0].section_13_1[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[19]",
+      "pdfFieldId": "form1[0].section13_2[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[20]",
+      "pdfFieldId": "form1[0].section13_3[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[21]",
+      "pdfFieldId": "form1[0].section13_4[1].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[22]",
+      "pdfFieldId": "form1[0].section_13_1[1].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[23]",
+      "pdfFieldId": "form1[0].section13_2[1].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[24]",
+      "pdfFieldId": "form1[0].section13_3[1].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[25]",
+      "pdfFieldId": "form1[0].section13_4[2].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[26]",
+      "pdfFieldId": "form1[0].section_13_1[2].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[27]",
+      "pdfFieldId": "form1[0].section13_2[2].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[28]",
+      "pdfFieldId": "form1[0].section13_3[2].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[29]",
+      "pdfFieldId": "form1[0].section13_4[3].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[30]",
+      "pdfFieldId": "form1[0].section13_5[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[31]",
+      "pdfFieldId": "form1[0].Section14_1[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[32]",
+      "pdfFieldId": "form1[0].Section15_2[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[33]",
+      "pdfFieldId": "form1[0].Section15_3[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[34]",
+      "pdfFieldId": "form1[0].Section16_1[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[35]",
+      "pdfFieldId": "form1[0].Section16_3[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[36]",
+      "pdfFieldId": "form1[0].Section17_1[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[37]",
+      "pdfFieldId": "form1[0].Section17_1_2[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[38]",
+      "pdfFieldId": "form1[0].Section17_2[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[39]",
+      "pdfFieldId": "form1[0].Section17_2_2[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[40]",
+      "pdfFieldId": "form1[0].Section17_3[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[41]",
+      "pdfFieldId": "form1[0].Section17_3_2[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[42]",
+      "pdfFieldId": "form1[0].Section18_1[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[43]",
+      "pdfFieldId": "form1[0].Section18_2[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[44]",
+      "pdfFieldId": "form1[0].Section18_3[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[45]",
+      "pdfFieldId": "form1[0].Section18_1_1[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[46]",
+      "pdfFieldId": "form1[0].Section18_2[1].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[47]",
+      "pdfFieldId": "form1[0].Section18_3[1].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[48]",
+      "pdfFieldId": "form1[0].Section18_1_1[1].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[49]",
+      "pdfFieldId": "form1[0].Section18_2[2].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[50]",
+      "pdfFieldId": "form1[0].Section18_3[2].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[51]",
+      "pdfFieldId": "form1[0].Section18_1_1[2].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[52]",
+      "pdfFieldId": "form1[0].Section18_2[3].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[53]",
+      "pdfFieldId": "form1[0].Section18_3[3].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[54]",
+      "pdfFieldId": "form1[0].Section18_1_1[3].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[55]",
+      "pdfFieldId": "form1[0].Section18_2[4].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[56]",
+      "pdfFieldId": "form1[0].Section18_3[4].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[57]",
+      "pdfFieldId": "form1[0].Section18_1_1[4].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[58]",
+      "pdfFieldId": "form1[0].Section18_2[5].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[59]",
+      "pdfFieldId": "form1[0].Section18_3[5].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[60]",
+      "pdfFieldId": "form1[0].Section19_1[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[61]",
+      "pdfFieldId": "form1[0].Section19_2[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[62]",
+      "pdfFieldId": "form1[0].Section19_3[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[63]",
+      "pdfFieldId": "form1[0].Section19_4[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[64]",
+      "pdfFieldId": "form1[0].Section20a[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[65]",
+      "pdfFieldId": "form1[0].Section20a2[0].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[66]",
+      "pdfFieldId": "form1[0].#subform[68].SSN[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[67]",
+      "pdfFieldId": "form1[0].#subform[69].SSN[1]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[68]",
+      "pdfFieldId": "form1[0].#subform[70].SSN[2]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[69]",
+      "pdfFieldId": "form1[0].#subform[71].SSN[3]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[70]",
+      "pdfFieldId": "form1[0].#subform[72].SSN[4]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[71]",
+      "pdfFieldId": "form1[0].#subform[74].SSN[5]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[72]",
+      "pdfFieldId": "form1[0].#subform[76].SSN[6]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[73]",
+      "pdfFieldId": "form1[0].#subform[77].SSN[7]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[74]",
+      "pdfFieldId": "form1[0].#subform[78].SSN[8]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[75]",
+      "pdfFieldId": "form1[0].#subform[79].SSN[9]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[76]",
+      "pdfFieldId": "form1[0].#subform[80].SSN[10]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[77]",
+      "pdfFieldId": "form1[0].#subform[81].SSN[11]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[78]",
+      "pdfFieldId": "form1[0].#subform[82].SSN[12]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[79]",
+      "pdfFieldId": "form1[0].#subform[83].SSN[13]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[80]",
+      "pdfFieldId": "form1[0].#subform[84].SSN[14]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[81]",
+      "pdfFieldId": "form1[0].#subform[85].SSN[15]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[82]",
+      "pdfFieldId": "form1[0].#subform[86].SSN[16]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[83]",
+      "pdfFieldId": "form1[0].#subform[87].SSN[17]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[84]",
+      "pdfFieldId": "form1[0].#subform[88].SSN[18]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[85]",
+      "pdfFieldId": "form1[0].#subform[89].SSN[19]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[86]",
+      "pdfFieldId": "form1[0].#subform[90].SSN[20]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[87]",
+      "pdfFieldId": "form1[0].#subform[91].SSN[21]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[88]",
+      "pdfFieldId": "form1[0].#subform[92].SSN[22]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[89]",
+      "pdfFieldId": "form1[0].#subform[93].SSN[23]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[90]",
+      "pdfFieldId": "form1[0].#subform[94].SSN[24]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[91]",
+      "pdfFieldId": "form1[0].#subform[95].SSN[25]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[92]",
+      "pdfFieldId": "form1[0].#subform[96].SSN[26]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[93]",
+      "pdfFieldId": "form1[0].#subform[97].SSN[27]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[94]",
+      "pdfFieldId": "form1[0].#subform[98].SSN[28]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[95]",
+      "pdfFieldId": "form1[0].#subform[99].SSN[29]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[96]",
+      "pdfFieldId": "form1[0].#subform[100].SSN[30]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[97]",
+      "pdfFieldId": "form1[0].#subform[101].SSN[31]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[98]",
+      "pdfFieldId": "form1[0].#subform[102].SSN[32]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[99]",
+      "pdfFieldId": "form1[0].#subform[103].SSN[33]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[100]",
+      "pdfFieldId": "form1[0].#subform[104].SSN[34]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[101]",
+      "pdfFieldId": "form1[0].#subform[105].SSN[35]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[102]",
+      "pdfFieldId": "form1[0].#subform[106].SSN[36]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[103]",
+      "pdfFieldId": "form1[0].#subform[107].SSN[37]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[104]",
+      "pdfFieldId": "form1[0].#subform[108].SSN[38]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[105]",
+      "pdfFieldId": "form1[0].#subform[109].SSN[39]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[106]",
+      "pdfFieldId": "form1[0].#subform[110].SSN[40]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[107]",
+      "pdfFieldId": "form1[0].#subform[111].SSN[41]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[108]",
+      "pdfFieldId": "form1[0].#subform[112].SSN[42]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[109]",
+      "pdfFieldId": "form1[0].#subform[113].SSN[43]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[110]",
+      "pdfFieldId": "form1[0].#subform[114].SSN[44]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[111]",
+      "pdfFieldId": "form1[0].#subform[115].SSN[45]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[112]",
+      "pdfFieldId": "form1[0].#subform[116].SSN[46]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[113]",
+      "pdfFieldId": "form1[0].#subform[117].SSN[47]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[114]",
+      "pdfFieldId": "form1[0].#subform[118].SSN[48]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[115]",
+      "pdfFieldId": "form1[0].#subform[119].SSN[49]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[116]",
+      "pdfFieldId": "form1[0].#subform[120].SSN[50]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[117]",
+      "pdfFieldId": "form1[0].#subform[121].SSN[51]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[118]",
+      "pdfFieldId": "form1[0].#subform[122].SSN[52]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[119]",
+      "pdfFieldId": "form1[0].#subform[123].SSN[53]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[120]",
+      "pdfFieldId": "form1[0].#subform[124].SSN[54]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[121]",
+      "pdfFieldId": "form1[0].#subform[125].SSN[55]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[122]",
+      "pdfFieldId": "form1[0].#subform[126].SSN[56]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[123]",
+      "pdfFieldId": "form1[0].#subform[127].SSN[57]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[124]",
+      "pdfFieldId": "form1[0].#subform[128].SSN[58]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[125]",
+      "pdfFieldId": "form1[0].#subform[129].SSN[59]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[126]",
+      "pdfFieldId": "form1[0].#subform[130].SSN[60]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[127]",
+      "pdfFieldId": "form1[0].#subform[131].SSN[61]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[128]",
+      "pdfFieldId": "form1[0].#subform[132].SSN[62]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[129]",
+      "pdfFieldId": "form1[0].#subform[133].SSN[63]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[130]",
+      "pdfFieldId": "form1[0].#subform[134].SSN[64]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[131]",
+      "pdfFieldId": "form1[0].#subform[135].SSN[65]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[132]",
+      "pdfFieldId": "form1[0].#subform[136].SSN[66]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[133]",
+      "pdfFieldId": "form1[0].#subform[137].SSN[67]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[134]",
+      "pdfFieldId": "form1[0].#subform[138].SSN[68]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[135]",
+      "pdfFieldId": "form1[0].#subform[139].SSN[69]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[136]",
+      "pdfFieldId": "form1[0].#subform[140].SSN[70]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section4.ssn[137]",
+      "pdfFieldId": "form1[0].continuation4[0].SSN[0]",
+      "confidence": 1
+    }
+  ]
+}

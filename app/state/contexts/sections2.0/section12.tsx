@@ -36,7 +36,7 @@ import type {
   SchoolEntryOperation,
   DegreeEntry,
   ContactPerson
-} from '../../../../api/interfaces/sections2.0/section12';
+} from '../../../../api/interfaces/section-interfaces/section12';
 import {
   createDefaultSection12,
   validateSection12,
@@ -50,7 +50,7 @@ import {
   DEGREE_TYPE_OPTIONS,
   createDefaultDegreeEntry,
   createDefaultContactPerson
-} from '../../../../api/interfaces/sections2.0/section12';
+} from '../../../../api/interfaces/section-interfaces/section12';
 import type { ValidationResult, ValidationError } from '../shared/base-interfaces';
 import { validateSection12FieldMappings } from './section12-field-mapping';
 import { validateFieldGeneration } from './section12-field-generator';

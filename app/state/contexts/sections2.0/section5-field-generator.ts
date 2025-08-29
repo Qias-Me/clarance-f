@@ -16,7 +16,7 @@ import {
   getPdfFieldByName,
   getNumericFieldId
 } from './section5-field-mapping';
-import { SECTION5_FIELD_IDS, SECTION5_FIELD_NAMES } from '../../../../api/interfaces/sections2.0/section5';
+import { SECTION5_FIELD_IDS, SECTION5_FIELD_NAMES } from '../../../../api/interfaces/section-interfaces/section5';
 import type { Field } from 'api/interfaces/formDefinition2.0';
 
 // ============================================================================

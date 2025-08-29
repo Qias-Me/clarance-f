@@ -18,7 +18,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useSection29 } from '~/state/contexts/sections2.0/section29';
 import { useSF86Form } from '~/state/contexts/sections2.0/SF86FormContext';
-import { getUSStateOptions, getCountryOptions } from '../../../api/interfaces/sections2.0/base';
+import { getUSStateOptions, getCountryOptions } from '../../../api/interfaces/section-interfaces/base';
 import type {
   SubsectionKey,
   OrganizationSubsectionKey,

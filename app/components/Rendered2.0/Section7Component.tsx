@@ -102,20 +102,10 @@ export const Section7Component: React.FC<Section7ComponentProps> = ({
   const renderPhoneEntry = (phone: any, index: number) => {
     return (
       <div key={`phone-${index}`} className="border rounded-lg p-4 mb-4 bg-gray-50">
-        <div className="flex justify-between items-center mb-4">
-          <h4 className="text-lg font-medium text-gray-900">Phone #{index + 1}</h4>
-          {phoneNumbers.length > 1 && (
-            <button
-              type="button"
-              onClick={() => removePhoneNumber(index)}
-              className="text-red-500 hover:text-red-700"
-              aria-label={`Remove phone ${index + 1}`}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-          )}
+        <div className="mb-4">
+          <h4 className="text-lg font-medium text-gray-900">
+            {index === 0 ? 'Home Phone' : index === 1 ? 'Work Phone' : 'Mobile Phone'}
+          </h4>
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -253,16 +243,9 @@ export const Section7Component: React.FC<Section7ComponentProps> = ({
 
         {/* Phone Numbers Section */}
         <div className="border rounded-lg p-5 bg-gray-50">
-          <div className="flex justify-between items-center mb-4">
+          <div className="mb-4">
             <h3 className="text-lg font-semibold">Phone Numbers</h3>
-            <button
-              type="button"
-              onClick={addPhoneNumber}
-              className="px-3 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors text-sm"
-              data-testid="add-phone-button"
-            >
-              Add Phone
-            </button>
+            <p className="text-sm text-gray-600 mt-1">Please provide up to 3 phone numbers (Home, Work, Mobile)</p>
           </div>
 
           {phoneNumbers && phoneNumbers.length > 0 ? (

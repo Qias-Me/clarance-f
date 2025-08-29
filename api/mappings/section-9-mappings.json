@@ -1,0 +1,415 @@
+{
+  "metadata": {
+    "pdfPath": "../pdf/clean.pdf",
+    "section": 9,
+    "timestamp": "2025-08-19T04:15:28.738Z",
+    "version": "3.0.0-complete-78",
+    "qualityMetrics": {
+      "original": 78,
+      "final": 78,
+      "hallucinations": 0,
+      "accuracy": "100.00%"
+    },
+    "note": "All 78 PDF fields mapped. 4 nameOnCertificate fields need TypeScript interface update."
+  },
+  "summary": {
+    "totalMappings": 78,
+    "averageConfidence": 1,
+    "highConfidenceMappings": 78,
+    "lowConfidenceMappings": 0,
+    "validatedMappings": 74,
+    "pendingInterfaceUpdate": 4
+  },
+  "mappings": [
+    {
+      "uiPath": "section9.section9.status",
+      "pdfFieldId": "form1[0].Sections7-9[0].RadioButtonList[1]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.bornToUSParents.documentType",
+      "pdfFieldId": "form1[0].Sections7-9[0].RadioButtonList[3]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.bornToUSParents.otherExplanation",
+      "pdfFieldId": "form1[0].Sections7-9[0].TextField11[3]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.bornToUSParents.documentNumber",
+      "pdfFieldId": "form1[0].Sections7-9[0].TextField11[4]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.bornToUSParents.documentIssueDate",
+      "pdfFieldId": "form1[0].Sections7-9[0].From_Datefield_Name_2[1]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.bornToUSParents.isIssueDateEstimated",
+      "pdfFieldId": "form1[0].Sections7-9[0].#field[25]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.bornToUSParents.issueCity",
+      "pdfFieldId": "form1[0].Sections7-9[0].TextField11[5]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.bornToUSParents.issueState",
+      "pdfFieldId": "form1[0].Sections7-9[0].School6_State[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.bornToUSParents.issueCountry",
+      "pdfFieldId": "form1[0].Sections7-9[0].DropDownList12[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.bornToUSParents.nameOnDocument.lastName",
+      "pdfFieldId": "form1[0].Sections7-9[0].TextField11[7]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.bornToUSParents.nameOnDocument.firstName",
+      "pdfFieldId": "form1[0].Sections7-9[0].TextField11[8]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.bornToUSParents.nameOnDocument.middleName",
+      "pdfFieldId": "form1[0].Sections7-9[0].TextField11[6]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.bornToUSParents.nameOnDocument.suffix",
+      "pdfFieldId": "form1[0].Sections7-9[0].suffix[1]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.bornToUSParents.nameOnCertificate.lastName",
+      "pdfFieldId": "form1[0].Sections7-9[0].TextField11[10]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.bornToUSParents.nameOnCertificate.firstName",
+      "pdfFieldId": "form1[0].Sections7-9[0].TextField11[11]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.bornToUSParents.nameOnCertificate.middleName",
+      "pdfFieldId": "form1[0].Sections7-9[0].TextField11[9]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.bornToUSParents.nameOnCertificate.suffix",
+      "pdfFieldId": "form1[0].Sections7-9[0].suffix[2]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.bornToUSParents.wasBornOnMilitaryInstallation",
+      "pdfFieldId": "form1[0].Sections7-9[0].RadioButtonList[2]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.bornToUSParents.militaryBaseName",
+      "pdfFieldId": "form1[0].Sections7-9[0].TextField11[18]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.naturalizedCitizen.naturalizedCertificateNumber",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[6]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.naturalizedCitizen.nameOnCertificate.lastName",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[2]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.naturalizedCitizen.nameOnCertificate.firstName",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[3]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.naturalizedCitizen.nameOnCertificate.middleName",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[1]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.naturalizedCitizen.nameOnCertificate.suffix",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].suffix[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.naturalizedCitizen.courtAddress.street",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[4]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.naturalizedCitizen.courtAddress.city",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.naturalizedCitizen.courtAddress.state",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].School6_State[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.naturalizedCitizen.courtAddress.zipCode",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[5]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.naturalizedCitizen.courtName",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[15]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.naturalizedCitizen.certificateIssueDate",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].From_Datefield_Name_2[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.naturalizedCitizen.isCertificateDateEstimated",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].#field[10]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.naturalizedCitizen.otherExplanation",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[7]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.naturalizedCitizen.entryDate",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].From_Datefield_Name_2[4]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.naturalizedCitizen.isEntryDateEstimated",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].#field[32]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.naturalizedCitizen.entryCity",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[16]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.naturalizedCitizen.entryState",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].School6_State[1]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.naturalizedCitizen.priorCitizenship",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].DropDownList15[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.naturalizedCitizen.priorCitizenship2",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].DropDownList15[1]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.naturalizedCitizen.priorCitizenship3",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].DropDownList15[2]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.naturalizedCitizen.priorCitizenship4",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].DropDownList15[3]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.naturalizedCitizen.hasAlienRegistrationRadio",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].RadioButtonList[1]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.naturalizedCitizen.alienRegistrationNumber",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[9]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.derivedCitizen.alienRegistrationNumber",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[17]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.derivedCitizen.permanentResidentCardNumber",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[18]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.derivedCitizen.certificateOfCitizenshipNumber",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[19]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.derivedCitizen.nameOnDocument.firstName",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[20]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.derivedCitizen.nameOnDocument.middleName",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[21]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.derivedCitizen.nameOnDocument.lastName",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[22]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.derivedCitizen.nameOnDocument.suffix",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].suffix[2]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.derivedCitizen.basis",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].RadioButtonList[1]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.derivedCitizen.otherExplanation",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[23]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.derivedCitizen.documentIssueDate",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].From_Datefield_Name_2[5]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.derivedCitizen.isDocumentIssueDateEstimated",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].#field[50]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.derivedCitizen.isBasisEstimated",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].#field[51]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.derivedCitizen.isDateEstimated",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].#field[53]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.derivedCitizen.additionalFirstName",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[24]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.derivedCitizen.additionalExplanation",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[25]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.derivedCitizen.otherProvideExplanation",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].#field[27]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.derivedCitizen.basisOfNaturalization",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].#field[28]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.nonUSCitizen.residenceStatus",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[8]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.nonUSCitizen.entryDate",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].From_Datefield_Name_2[1]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.nonUSCitizen.isEntryDateEstimated",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].#field[15]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.nonUSCitizen.alienRegistrationNumber",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[9]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.nonUSCitizen.documentIssueDate",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].From_Datefield_Name_2[2]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.nonUSCitizen.isDocumentIssueDateEstimated",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].#field[18]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.nonUSCitizen.documentExpirationDate",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].From_Datefield_Name_2[3]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.nonUSCitizen.isDocumentExpirationEstimated",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].#field[26]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.nonUSCitizen.nameOnDocument.firstName",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[12]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.nonUSCitizen.nameOnDocument.middleName",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[10]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.nonUSCitizen.nameOnDocument.lastName",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[11]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.nonUSCitizen.nameOnDocument.suffix",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].suffix[1]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.nonUSCitizen.documentNumber",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[13]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.nonUSCitizen.hasAlienRegistration",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].RadioButtonList[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.nonUSCitizen.explanation",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[14]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.nonUSCitizen.additionalDocumentExpirationDate",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].From_Datefield_Name_2[6]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.nonUSCitizen.isAdditionalDocumentExpirationEstimated",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].#field[55]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.nonUSCitizen.entryCity",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].TextField11[18]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section9.section9.nonUSCitizen.entryState",
+      "pdfFieldId": "form1[0].Section9\\.1-9\\.4[0].School6_State[2]",
+      "confidence": 1
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "metadata": {
+    "pdfPath": "../pdf/clean.pdf",
+    "section": 7,
+    "timestamp": "2025-08-17T03:28:24.280Z",
+    "version": "0.1.0"
+  },
+  "summary": {
+    "totalMappings": 17,
+    "averageConfidence": 1,
+    "highConfidenceMappings": 17,
+    "lowConfidenceMappings": 0,
+    "validatedMappings": 17
+  },
+  "mappings": [
+    {
+  "uiPath": "section7.homeEmail",
+      "pdfFieldId": "form1[0].Sections7-9[0].TextField11[13]",
+      "confidence": 1
+    },
+    {
+  "uiPath": "section7.workEmail",
+      "pdfFieldId": "form1[0].Sections7-9[0].TextField11[14]",
+      "confidence": 1
+    },
+    {
+  "uiPath": "section7.entries[0].number",
+      "pdfFieldId": "form1[0].Sections7-9[0].p3-t68[1]",
+      "confidence": 1
+    },
+    {
+  "uiPath": "section7.entries[0].extension",
+      "pdfFieldId": "form1[0].Sections7-9[0].TextField11[15]",
+      "confidence": 1
+    },
+    {
+  "uiPath": "section7.entries[0].isInternational",
+      "pdfFieldId": "form1[0].Sections7-9[0].#field[33]",
+      "confidence": 1
+    },
+    {
+  "uiPath": "section7.entries[0].nightTime",
+      "pdfFieldId": "form1[0].Sections7-9[0].#field[34]",
+      "confidence": 1
+    },
+    {
+  "uiPath": "section7.entries[0].dayTime",
+      "pdfFieldId": "form1[0].Sections7-9[0].#field[35]",
+      "confidence": 1
+    },
+    {
+  "uiPath": "section7.entries[1].number",
+      "pdfFieldId": "form1[0].Sections7-9[0].p3-t68[2]",
+      "confidence": 1
+    },
+    {
+  "uiPath": "section7.entries[1].extension",
+      "pdfFieldId": "form1[0].Sections7-9[0].TextField11[16]",
+      "confidence": 1
+    },
+    {
+  "uiPath": "section7.entries[1].isInternational",
+      "pdfFieldId": "form1[0].Sections7-9[0].#field[38]",
+      "confidence": 1
+    },
+    {
+  "uiPath": "section7.entries[1].nightTime",
+      "pdfFieldId": "form1[0].Sections7-9[0].#field[39]",
+      "confidence": 1
+    },
+    {
+  "uiPath": "section7.entries[1].dayTime",
+      "pdfFieldId": "form1[0].Sections7-9[0].#field[40]",
+      "confidence": 1
+    },
+    {
+  "uiPath": "section7.entries[2].number",
+      "pdfFieldId": "form1[0].Sections7-9[0].p3-t68[3]",
+      "confidence": 1
+    },
+    {
+  "uiPath": "section7.entries[2].extension",
+      "pdfFieldId": "form1[0].Sections7-9[0].TextField11[17]",
+      "confidence": 1
+    },
+    {
+  "uiPath": "section7.entries[2].isInternational",
+      "pdfFieldId": "form1[0].Sections7-9[0].#field[43]",
+      "confidence": 1
+    },
+    {
+  "uiPath": "section7.entries[2].nightTime",
+      "pdfFieldId": "form1[0].Sections7-9[0].#field[44]",
+      "confidence": 1
+    },
+    {
+  "uiPath": "section7.entries[2].dayTime",
+      "pdfFieldId": "form1[0].Sections7-9[0].#field[45]",
+      "confidence": 1
+    }
+  ]
+}

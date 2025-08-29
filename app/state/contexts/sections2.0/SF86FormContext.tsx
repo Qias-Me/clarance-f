@@ -195,17 +195,13 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
       typeof window !== "undefined" &&
       window.location.search.includes("debug=true");
 
-    if (isDebugMode) {
-      console.log(`🔄 SF86FormContext: updateSectionData called for ${sectionId}`);
-    }
+    // Update section data for the given section ID
 
     setFormData((prevData) => {
       const newData = cloneDeep(prevData);
       set(newData, sectionId, data);
 
-      if (isDebugMode) {
-        console.log(`✅ SF86FormContext: Updated ${sectionId} data`);
-      }
+      // Section data updated successfully
 
       return newData;
     });
@@ -225,12 +221,8 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
       // Use provided data or current formData state
       const dataForSaving = dataToSave || formData;
 
-      if (isDebugMode) {
-        console.log("🚀 SF86FormContext: Starting form save process...");
-        console.log("📊 SF86FormContext: Data size:", JSON.stringify(dataForSaving).length, "bytes");
-        const activeSections = Object.keys(dataForSaving).filter(k => dataForSaving[k as keyof ApplicantFormValues] !== undefined);
-        console.log("📋 SF86FormContext: Active sections:", activeSections.length, "-", activeSections.join(', '));
-      }
+      // Starting form save process
+      const activeSections = Object.keys(dataForSaving).filter(k => dataForSaving[k as keyof ApplicantFormValues] !== undefined);
 
       // Save complete form data to IndexedDB
       const saveResult = await dynamicService.saveUserFormData(
@@ -248,9 +240,7 @@ export const SF86FormProvider: React.FC<{ children: React.ReactNode }> = ({
       setInitialFormData(cloneDeep(dataForSaving));
       setLastSaved(saveResult.timestamp || new Date());
 
-      if (isDebugMode) {
-        console.log("✅ SF86FormContext: Form data saved successfully to IndexedDB");
-      }
+      // Form data saved successfully to IndexedDB
     } catch (error) {
       console.error("❌ SF86FormContext: Failed to save form:", error);
       throw error;

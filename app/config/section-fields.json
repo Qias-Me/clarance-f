@@ -1,0 +1,111 @@
+{
+  "section1": {
+    "title": "Personal Information",
+    "fields": [
+      {
+        "name": "lastName",
+        "type": "text",
+        "label": "Last Name",
+        "required": true,
+        "maxLength": 50,
+        "validation": ["required", "maxLength"]
+      },
+      {
+        "name": "firstName", 
+        "type": "text",
+        "label": "First Name",
+        "required": true,
+        "maxLength": 50,
+        "validation": ["required", "maxLength"]
+      },
+      {
+        "name": "middleName",
+        "type": "text", 
+        "label": "Middle Name",
+        "required": false,
+        "maxLength": 50
+      },
+      {
+        "name": "dateOfBirth",
+        "type": "date",
+        "label": "Date of Birth",
+        "required": true,
+        "validation": ["required", "date", "pastDate"]
+      },
+      {
+        "name": "placeOfBirth",
+        "type": "location",
+        "label": "Place of Birth",
+        "required": true,
+        "fields": ["city", "state", "country"]
+      }
+    ]
+  },
+  "section2": {
+    "title": "Citizenship",
+    "fields": [
+      {
+        "name": "citizenship",
+        "type": "select",
+        "label": "Are you a U.S. citizen?",
+        "required": true,
+        "options": [
+          { "value": "yes", "label": "Yes" },
+          { "value": "no", "label": "No" },
+          { "value": "dual", "label": "Dual Citizen" }
+        ]
+      }
+    ]
+  },
+  "section3": {
+    "title": "Military History",
+    "fields": [
+      {
+        "name": "militaryService",
+        "type": "select",
+        "label": "Have you ever served in the U.S. military?",
+        "required": true,
+        "options": [
+          { "value": "yes", "label": "Yes" },
+          { "value": "no", "label": "No" }
+        ],
+        "conditionalFields": {
+          "yes": [
+            {
+              "name": "serviceHistory",
+              "type": "repeating",
+              "label": "Military Service History",
+              "fields": [
+                {
+                  "name": "branch",
+                  "type": "select",
+                  "label": "Branch of Service",
+                  "required": true,
+                  "options": [
+                    { "value": "army", "label": "Army" },
+                    { "value": "navy", "label": "Navy" },
+                    { "value": "airforce", "label": "Air Force" },
+                    { "value": "marines", "label": "Marines" },
+                    { "value": "coastguard", "label": "Coast Guard" }
+                  ]
+                },
+                {
+                  "name": "serviceFrom",
+                  "type": "date", 
+                  "label": "Service From",
+                  "required": true
+                },
+                {
+                  "name": "serviceTo",
+                  "type": "date",
+                  "label": "Service To", 
+                  "required": true
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

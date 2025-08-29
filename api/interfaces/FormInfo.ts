@@ -1,4 +1,4 @@
-import { type Field } from "./formDefinition";
+import { type Field } from "./formDefinition2.0";
 
 export enum SuffixOptions {
   None = "None",

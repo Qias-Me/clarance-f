@@ -19,8 +19,8 @@ import type {
   Section8ValidationContext,
   Section8ValidationRules,
   PassportValidationResult
-} from '../../../../api/interfaces/sections2.0/section8';
-import { createDefaultSection8 } from '../../../../api/interfaces/sections2.0/section8';
+} from '../../../../api/interfaces/section-interfaces/section8';
+import { createDefaultSection8 } from '../../../../api/interfaces/section-interfaces/section8';
 import type {
   ValidationResult,
   ValidationError,

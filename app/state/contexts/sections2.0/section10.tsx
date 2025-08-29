@@ -13,13 +13,13 @@ import type {
   DualCitizenshipEntry,
   ForeignPassportEntry,
   TravelCountryEntry,  // NEW: Added travel country support
-} from '../../../../api/interfaces/sections2.0/section10';
+} from '../../../../api/interfaces/section-interfaces/section10';
 import {
   createDefaultSection10,
   createDualCitizenshipEntry,
   createForeignPassportEntry,
   createTravelCountryEntry
-} from '../../../../api/interfaces/sections2.0/section10';
+} from '../../../../api/interfaces/section-interfaces/section10';
 import type { ValidationResult, ValidationError, ChangeSet } from '../shared/base-interfaces';
 // NEW: Import field mapping and generation systems
 import { validateSection10FieldMappings, mapLogicalFieldToPdfField } from './section10-field-mapping';

@@ -8,20 +8,38 @@
 import type { ActionFunctionArgs } from "react-router";
 import type { ApplicantFormValues } from "../../../api/interfaces/formDefinition2.0";
 import { clientPdfService2 } from "api/service/clientPdfService2.0";
+import { logger } from "../../services/Logger";
+import { AppError } from "../../utils/error-handler";
+import { rateLimitMiddleware } from "../../../api/middleware/rateLimiter";
+import { getCorsHeaders } from "../../../api/middleware/cors";
 
 export async function action({ request }: ActionFunctionArgs) {
+  // Apply rate limiting
+  const rateLimitResponse = await rateLimitMiddleware(request, {
+    windowMs: 60 * 1000,
+    maxRequests: 50 // 50 validation requests per minute
+  });
+  
+  if (rateLimitResponse) {
+    return rateLimitResponse;
+  }
+
   if (request.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: { "Content-Type": "application/json" },
-    });
+    throw new AppError(
+      'Method not allowed',
+      'METHOD_NOT_ALLOWED',
+      405
+    );
   }
 
   try {
     // Parse the form data from the request
     const formData: ApplicantFormValues = await request.json();
 
-    console.log("Validating PDF field mapping for SF-86 form data...");
+    logger.info('Validating PDF field mapping', 'ValidatePDF', {
+      requestId: crypto.randomUUID(),
+      dataSize: JSON.stringify(formData).length
+    });
 
     // Validate field mapping using our PDF service
     const validationResults = await clientPdfService2.validateFieldMapping(formData);
@@ -56,26 +74,36 @@ export async function action({ request }: ActionFunctionArgs) {
       recommendations: generateRecommendations(invalidFields, stats)
     };
 
+    const corsHeaders = getCorsHeaders(request);
+    
     return new Response(JSON.stringify(response), {
       status: 200,
       headers: {
+        ...corsHeaders,
         "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
+        "X-Request-ID": crypto.randomUUID(),
+        "Cache-Control": "private, no-cache"
       },
     });
   } catch (error) {
-    console.error("Error validating PDF mapping:", error);
+    logger.error('PDF validation failed', error as Error, 'ValidatePDF');
 
     return new Response(
       JSON.stringify({
         success: false,
-        error: `PDF validation failed: ${
-          error instanceof Error ? error.message : String(error)
-        }`,
+        error: {
+          message: error instanceof AppError ? error.message : 'An error occurred during validation',
+          code: error instanceof AppError ? error.code : 'VALIDATION_ERROR',
+          requestId: crypto.randomUUID()
+        },
+        timestamp: new Date().toISOString()
       }),
       {
-        status: 500,
-        headers: { "Content-Type": "application/json" },
+        status: error instanceof AppError ? error.statusCode : 500,
+        headers: {
+          ...getCorsHeaders(request),
+          "Content-Type": "application/json"
+        },
       }
     );
   }
@@ -84,7 +112,22 @@ export async function action({ request }: ActionFunctionArgs) {
 /**
  * Generate recommendations based on validation results
  */
-function generateRecommendations(invalidFields: any[], stats: any): string[] {
+interface ValidationResult {
+  fieldName: string;
+  fieldId: string;
+  isValid: boolean;
+  expectedValue?: unknown;
+  actualValue?: unknown;
+  error?: string;
+}
+
+interface FieldMappingStats {
+  totalFields: number;
+  mappedFields: number;
+  unmappedFields: number;
+}
+
+function generateRecommendations(invalidFields: ValidationResult[], stats: FieldMappingStats): string[] {
   const recommendations: string[] = [];
 
   if (invalidFields.length > 0) {
@@ -108,13 +151,11 @@ function generateRecommendations(invalidFields: any[], stats: any): string[] {
 }
 
 // Handle OPTIONS requests for CORS
-export async function options() {
+export async function options({ request }: ActionFunctionArgs) {
+  const corsHeaders = getCorsHeaders(request);
+  
   return new Response(null, {
     status: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type",
-    },
+    headers: corsHeaders
   });
 }

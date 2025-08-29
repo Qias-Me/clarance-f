@@ -1,0 +1,109 @@
+{
+    "metadata": {
+        "pdfPath": "../pdf/clean.pdf",
+        "section": 28,
+        "timestamp": "",
+        "version": "0.1.0"
+    },
+    "summary": {
+        "totalMappings": 23,
+        "averageConfidence": 1,
+        "highConfidenceMappings": 23,
+        "lowConfidenceMappings": 0,
+        "validatedMappings": 23
+    },
+    "mappings": [
+        {
+            "uiPath": "section28.hasCourtActions",
+            "pdfFieldId": "form1[0].Section28[0].RadioButtonList[0]"
+        },
+        {
+            "uiPath": "section28.courtActionEntries[0].dateOfAction.date",
+            "pdfFieldId": "form1[0].Section28[0].From_Datefield_Name_2[0]"
+        },
+        {
+            "uiPath": "section28.courtActionEntries[0].dateOfAction.estimated",
+            "pdfFieldId": "form1[0].Section28[0].#field[12]"
+        },
+        {
+            "uiPath": "section28.courtActionEntries[0].courtName",
+            "pdfFieldId": "form1[0].Section28[0].TextField11[1]"
+        },
+        {
+            "uiPath": "section28.courtActionEntries[0].natureOfAction",
+            "pdfFieldId": "form1[0].Section28[0].TextField11[0]"
+        },
+        {
+            "uiPath": "section28.courtActionEntries[0].resultsDescription",
+            "pdfFieldId": "form1[0].Section28[0].TextField11[2]",
+        },
+        {
+            "uiPath": "section28.courtActionEntries[0].principalParties",
+            "pdfFieldId": "form1[0].Section28[0].TextField11[3]",
+        },
+        {
+            "uiPath": "section28.courtActionEntries[0].courtAddress.street",
+            "pdfFieldId": "form1[0].Section28[0].TextField11[4]",
+        },
+        {
+            "uiPath": "section28.courtActionEntries[0].courtAddress.city",
+            "pdfFieldId": "form1[0].Section28[0].TextField11[5]",
+        },
+        {
+            "uiPath": "section28.courtActionEntries[0].courtAddress.state",
+            "pdfFieldId": "form1[0].Section28[0].School6_State[0]",
+        },
+        {
+            "uiPath": "section28.courtActionEntries[0].courtAddress.zipCode",
+            "pdfFieldId": "form1[0].Section28[0].TextField11[6]",
+        },
+        {
+            "uiPath": "section28.courtActionEntries[0].courtAddress.country",
+            "pdfFieldId": "form1[0].Section28[0].DropDownList142[0]",
+        },
+        {
+            "uiPath": "section28.courtActionEntries[1].dateOfAction.date",
+            "pdfFieldId": "form1[0].Section28[0].From_Datefield_Name_2[1]",
+        },
+        {
+            "uiPath": "section28.courtActionEntries[1].dateOfAction.estimated",
+            "pdfFieldId": "form1[0].Section28[0].#field[23]",
+        },
+        {
+            "uiPath": "section28.courtActionEntries[1].courtName",
+            "pdfFieldId": "form1[0].Section28[0].TextField11[8]",
+        },
+        {
+            "uiPath": "section28.courtActionEntries[1].natureOfAction",
+            "pdfFieldId": "form1[0].Section28[0].TextField11[7]",
+        },
+        {
+            "uiPath": "section28.courtActionEntries[1].resultsDescription",
+            "pdfFieldId": "form1[0].Section28[0].TextField11[9]",
+        },
+        {
+            "uiPath": "section28.courtActionEntries[1].principalParties",
+            "pdfFieldId": "form1[0].Section28[0].TextField11[10]",
+        },
+        {
+            "uiPath": "section28.courtActionEntries[1].courtAddress.street",
+            "pdfFieldId": "form1[0].Section28[0].TextField11[11]",
+        },
+        {
+            "uiPath": "section28.courtActionEntries[1].courtAddress.city",
+            "pdfFieldId": "form1[0].Section28[0].TextField11[12]",
+        },
+        {
+            "uiPath": "section28.courtActionEntries[1].courtAddress.state",
+            "pdfFieldId": "form1[0].Section28[0].School6_State[1]",
+        },
+        {
+            "uiPath": "section28.courtActionEntries[1].courtAddress.zipCode",
+            "pdfFieldId": "form1[0].Section28[0].TextField11[13]",
+        },
+        {
+            "uiPath": "section28.courtActionEntries[1].courtAddress.country",
+            "pdfFieldId": "form1[0].Section28[0].DropDownList7[0]",
+        }
+    ]
+}

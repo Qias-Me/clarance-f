@@ -27,14 +27,14 @@ import type {
   Section4ValidationRules,
   Section4ValidationContext,
   SSNValidationResult
-} from '../../../../api/interfaces/sections2.0/section4';
+} from '../../../../api/interfaces/section-interfaces/section4';
 import {
   createDefaultSection4,
   validateSSN,
   updateSection4Field,
   updateMainSSNAndPropagate,
   propagateSSNToAllFields as propagateSSNHelper
-} from '../../../../api/interfaces/sections2.0/section4';
+} from '../../../../api/interfaces/section-interfaces/section4';
 
 import type { ValidationResult, ValidationError } from '../shared/base-interfaces';
 

@@ -1,0 +1,242 @@
+{
+  "metadata": {
+    "pdfPath": "../pdf/clean.pdf",
+    "section": 5,
+    "timestamp": "2025-08-18T00:00:00.000Z",
+    "version": "0.2.0"
+  },
+  "summary": {
+    "totalMappings": 45,
+    "averageConfidence": 1,
+    "highConfidenceMappings": 45,
+    "lowConfidenceMappings": 0,
+    "validatedMappings": 45
+  },
+  "mappings": [
+    {
+      "uiPath": "section5.hasOtherNames",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].RadioButtonList[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[0].lastName",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].TextField11[2]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[0].firstName",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].TextField11[1]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[0].middleName",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].TextField11[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[0].suffix",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].suffix[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[0].from",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].#area[0].From_Datefield_Name_2[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[0].fromEstimate",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].#field[7]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[0].to",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].#area[0].To_Datefield_Name_2[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[0].toEstimate",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].#field[8]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[0].reasonChanged",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].TextField11[3]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[0].present",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].#field[9]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[0].isMaidenName",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].RadioButtonList[2]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[1].lastName",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].TextField11[6]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[1].firstName",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].TextField11[5]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[1].middleName",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].TextField11[4]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[1].suffix",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].suffix[1]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[1].from",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].#area[1].From_Datefield_Name_2[1]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[1].fromEstimate",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].#field[17]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[1].to",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].#area[1].To_Datefield_Name_2[1]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[1].toEstimate",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].#field[18]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[1].reasonChanged",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].TextField11[7]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[1].present",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].#field[19]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[1].isMaidenName",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].RadioButtonList[3]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[2].lastName",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].TextField11[10]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[2].firstName",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].TextField11[9]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[2].middleName",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].TextField11[8]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[2].suffix",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].suffix[2]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[2].from",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].#area[2].From_Datefield_Name_2[2]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[2].fromEstimate",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].#field[27]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[2].to",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].#area[2].To_Datefield_Name_2[2]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[2].toEstimate",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].#field[28]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[2].reasonChanged",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].TextField11[11]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[2].present",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].#field[29]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[2].isMaidenName",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].RadioButtonList[4]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[3].lastName",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].TextField11[14]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[3].firstName",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].TextField11[13]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[3].middleName",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].TextField11[12]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[3].suffix",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].suffix[3]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[3].from",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].#area[3].From_Datefield_Name_2[3]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[3].fromEstimate",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].#field[37]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[3].to",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].#area[3].To_Datefield_Name_2[3]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[3].toEstimate",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].#field[38]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[3].reasonChanged",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].TextField11[15]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames[3].present",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].#field[39]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section5.otherNames.3.isMaidenName",
+      "pdfFieldId": "form1[0].Sections1-6[0].section5[0].RadioButtonList[4]",
+      "confidence": 1
+    }
+  ]
+}

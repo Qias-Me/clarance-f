@@ -9,7 +9,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSection8 } from '~/state/contexts/sections2.0/section8';
 import { useSF86Form } from '~/state/contexts/sections2.0/SF86FormContext';
-import { getSuffixOptions } from '../../../api/interfaces/sections2.0/base';
+import { getSuffixOptions } from '../../../api/interfaces/section-interfaces/base';
 
 interface Section8ComponentProps {
   className?: string;
@@ -300,6 +300,18 @@ export const Section8Component: React.FC<Section8ComponentProps> = ({
                   placeholder="MM/DD/YYYY"
                   required
                 />
+                <div className="mt-2">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="checkbox"
+                      data-testid="passport-issue-date-estimated"
+                      checked={section8Data.section8.dates.issueDate.estimated.value || false}
+                      onChange={(e) => updatePassportDate('issueDate', section8Data.section8.dates.issueDate.date.value, e.target.checked)}
+                      className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                    />
+                    <span className="ml-2 text-sm text-gray-600">Estimated</span>
+                  </label>
+                </div>
                 {errors['section8.dates.issueDate'] && (
                   <p className="mt-1 text-sm text-red-600">{errors['section8.dates.issueDate']}</p>
                 )}
@@ -323,6 +335,18 @@ export const Section8Component: React.FC<Section8ComponentProps> = ({
                   placeholder="MM/DD/YYYY"
                   required
                 />
+                <div className="mt-2">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="checkbox"
+                      data-testid="passport-expiration-date-estimated"
+                      checked={section8Data.section8.dates.expirationDate.estimated.value || false}
+                      onChange={(e) => updatePassportDate('expirationDate', section8Data.section8.dates.expirationDate.date.value, e.target.checked)}
+                      className="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                    />
+                    <span className="ml-2 text-sm text-gray-600">Estimated</span>
+                  </label>
+                </div>
                 {errors['section8.dates.expirationDate'] && (
                   <p className="mt-1 text-sm text-red-600">{errors['section8.dates.expirationDate']}</p>
                 )}

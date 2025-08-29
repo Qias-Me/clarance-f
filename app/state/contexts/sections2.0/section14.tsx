@@ -22,7 +22,7 @@ import type {
   Section14ValidationRules,
   Section14ValidationContext,
   SelectiveServiceValidationResult
-} from '../../../../api/interfaces/sections2.0/section14';
+} from '../../../../api/interfaces/section-interfaces/section14';
 import {
   createDefaultSection14,
   validateSelectiveService,
@@ -30,7 +30,7 @@ import {
   DEFAULT_SECTION14_VALIDATION_RULES,
   isSection14Complete,
   getActiveExplanationField
-} from '../../../../api/interfaces/sections2.0/section14';
+} from '../../../../api/interfaces/section-interfaces/section14';
 
 import type { ValidationResult, ValidationError, ChangeSet } from '../shared/base-interfaces';
 

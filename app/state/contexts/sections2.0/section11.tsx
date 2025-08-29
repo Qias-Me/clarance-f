@@ -24,12 +24,12 @@ import type {
   Section11ValidationContext,
   Section11ValidationRules,
   ResidenceValidationResult
-} from '../../../../api/interfaces/sections2.0/section11';
+} from '../../../../api/interfaces/section-interfaces/section11';
 import {
   createDefaultSection11 as createDefaultSection11Impl,
   createAPOFPOPhysicalAddressFromReference,
   createResidenceEntryFromReference
-} from '../../../../api/interfaces/sections2.0/section11';
+} from '../../../../api/interfaces/section-interfaces/section11';
 import { debugAllEntries, validateSection11FieldMappings, createFieldMappingChecklist } from './section11-field-mapping';
 import type {
   ValidationResult,

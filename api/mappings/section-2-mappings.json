@@ -1,0 +1,27 @@
+{
+  "metadata": {
+    "pdfPath": "../pdf/clean.pdf",
+    "section": 2,
+    "timestamp": "2025-08-17T03:27:53.243Z",
+    "version": "0.1.0"
+  },
+  "summary": {
+    "totalMappings": 2,
+    "averageConfidence": 1,
+    "highConfidenceMappings": 2,
+    "lowConfidenceMappings": 0,
+    "validatedMappings": 2
+  },
+  "mappings": [
+    {
+      "uiPath": "section2.date",
+      "pdfFieldId": "form1[0].Sections1-6[0].From_Datefield_Name_2[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section2.isEstimated",
+      "pdfFieldId": "form1[0].Sections1-6[0].#field[18]",
+      "confidence": 1
+    }
+  ]
+}

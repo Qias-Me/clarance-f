@@ -16,8 +16,8 @@ import {
   MILITARY_BRANCH_OPTIONS,
   SERVICE_STATUS_OPTIONS,
   DISCHARGE_TYPE_OPTIONS
-} from '../../../api/interfaces/sections2.0/section15';
-import { getCountryOptions } from '../../../api/interfaces/sections2.0/base';
+} from '../../../api/interfaces/section-interfaces/section15';
+import { getCountryOptions } from '../../../api/interfaces/section-interfaces/base';
 
 // Maximum number of entries allowed for each subsection
 const MAX_MILITARY_SERVICE_ENTRIES = 2;

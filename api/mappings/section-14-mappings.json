@@ -1,0 +1,37 @@
+{
+    "metadata": {
+        "pdfPath": "../pdf/clean.pdf",
+        "section": 14,
+        "timestamp": "",
+        "version": "0.1.0"
+    },
+    "summary": {
+        "totalMappings": 5,
+        "averageConfidence": 1,
+        "highConfidenceMappings": 5,
+        "lowConfidenceMappings": 0,
+        "validatedMappings": 5
+    },
+    "mappings": [
+        {
+            "uiPath": "section14.bornMaleAfter1959",
+            "pdfFieldId": "form1[0].Section14_1[0].#area[0].RadioButtonList[0]",
+        },
+        {
+            "uiPath": "section14.registrationStatus",
+            "pdfFieldId": "form1[0].Section14_1[0].#area[17].RadioButtonList[10]",
+        },
+        {
+            "uiPath": "section14.registrationNumber",
+            "pdfFieldId": "form1[0].Section14_1[0].TextField11[0]",
+        },
+        {
+            "uiPath": "section14.noRegistrationExplanation",
+            "pdfFieldId": "form1[0].Section14_1[0].TextField11[1]",
+        },
+        {
+            "uiPath": "section14.unknownStatusExplanation",
+            "pdfFieldId": "form1[0].Section14_1[0].TextField11[2]",
+        }
+    ]
+}

@@ -20,13 +20,13 @@ import type {
   Section5,
   OtherNameEntry,
   Section5FieldUpdate
-} from '../../../../api/interfaces/sections2.0/section5';
+} from '../../../../api/interfaces/section-interfaces/section5';
 import {
   createDefaultSection5 as createDefaultSection5Impl,
   updateSection5Field as updateSection5FieldImpl,
   addOtherNameEntry as addOtherNameEntryImpl,
   removeOtherNameEntry as removeOtherNameEntryImpl
-} from '../../../../api/interfaces/sections2.0/section5';
+} from '../../../../api/interfaces/section-interfaces/section5';
 import type {
   ValidationResult,
   ValidationError,
@@ -293,10 +293,8 @@ interface Section5ProviderProps {
           newData.section5.hasOtherNames.value = "NO";
         }
 
-        // If setting to false, clear all entries
-        if (!value && newData.section5.otherNames) {
-          newData.section5.otherNames = [];
-        }
+        // Keep all 4 entries even when setting to false (PDF has fixed structure)
+        // Entries remain but will be disabled in UI when hasOtherNames is "NO"
       } else {
         // Handle flattened structure or create new structure
         if (!newData.section5) {
@@ -313,10 +311,8 @@ interface Section5ProviderProps {
           newData.section5.hasOtherNames.value = "NO";
         }
 
-        // If setting to false, clear all entries
-        if (!value) {
-          newData.section5.otherNames = [];
-        }
+        // Keep all 4 entries even when setting to false (PDF has fixed structure)
+        // Entries remain but will be disabled in UI when hasOtherNames is "NO"
       }
 
       return newData;
@@ -332,32 +328,13 @@ interface Section5ProviderProps {
   const lastOperationRef = useRef<{ count: number; timestamp: number }>({ count: 0, timestamp: 0 });
 
   const addOtherNameEntry = useCallback((caller?: string) => {
-    setSection5Data(prevData => {
-      // Check if we're at the maximum limit
-      if (prevData.section5.otherNames.length >= MAX_OTHER_NAME_ENTRIES) {
-        return prevData;
-      }
-
-      // IMPORTANT: Prevent React Strict Mode double execution
-      // Use a combination of count and timestamp to detect rapid duplicate calls
-      const currentCount = prevData.section5.otherNames.length;
-      const now = Date.now();
-      const lastOp = lastOperationRef.current;
-
-      // If this is a duplicate call within 50ms with the same count, skip it
-      if (now - lastOp.timestamp < 50 && currentCount === lastOp.count) {
-        return prevData;
-      }
-
-      // Update the last operation tracking
-      lastOperationRef.current = { count: currentCount + 1, timestamp: now };
-
-      return addOtherNameEntryImpl(prevData);
-    });
+    // Section 5 has exactly 4 fixed entries per PDF structure - cannot add more
+    console.warn('Section 5: Cannot add entries - PDF has exactly 4 fixed entries');
   }, []);
 
   const removeOtherNameEntry = useCallback((index: number) => {
-    setSection5Data(prevData => removeOtherNameEntryImpl(prevData, index));
+    // Section 5 has exactly 4 fixed entries per PDF structure - cannot remove
+    console.warn('Section 5: Cannot remove entries - PDF has exactly 4 fixed entries');
   }, []);
 
   const updateFieldValue = useCallback((fieldPath: string, value: any, index?: number) => {

@@ -7,26 +7,26 @@
  */
 
 // Import all sections-references JSON files (relative to api/utils)
-import section1Data from '../sections-references/section-1.json';
-import section2Data from '../sections-references/section-2.json';
-import section4Data from '../sections-references/section-4.json';
-import section3Data from '../sections-references/section-3.json';
-import section5Data from '../sections-references/section-5.json';
-import section6Data from '../sections-references/section-6.json';
-import section7Data from '../sections-references/section-7.json';
-import section8Data from '../sections-references/section-8.json';
-import section9Data from '../sections-references/section-9.json';
-import section10Data from '../sections-references/section-10.json';
-import section11Data from '../sections-references/section-11.json';
-import section12Data from '../sections-references/section-12.json';
-import section13Data from '../sections-references/section-13.json';
-import section14Data from '../sections-references/section-14.json';
-import section15Data from '../sections-references/section-15.json';
+import section1Data from '../interfaces/sections-references/section-1.json';
+import section2Data from '../interfaces/sections-references/section-2.json';
+import section4Data from '../interfaces/sections-references/section-4.json';
+import section3Data from '../interfaces/sections-references/section-3.json';
+import section5Data from '../interfaces/sections-references/section-5.json';
+import section6Data from '../interfaces/sections-references/section-6.json';
+import section7Data from '../interfaces/sections-references/section-7.json';
+import section8Data from '../interfaces/sections-references/section-8.json';
+import section9Data from '../interfaces/sections-references/section-9.json';
+import section10Data from '../interfaces/sections-references/section-10.json';
+import section11Data from '../interfaces/sections-references/section-11.json';
+import section12Data from '../interfaces/sections-references/section-12.json';
+import section13Data from '../interfaces/sections-references/section-13.json';
+import section14Data from '../interfaces/sections-references/section-14.json';
+import section15Data from '../interfaces/sections-references/section-15.json';
 
-import section27Data from '../sections-references/section-27.json';
-import section28Data from '../sections-references/section-28.json';
-import section29Data from '../sections-references/section-29.json';
-import section30Data from '../sections-references/section-30.json';
+import section27Data from '../interfaces/sections-references/section-27.json';
+import section28Data from '../interfaces/sections-references/section-28.json';
+import section29Data from '../interfaces/sections-references/section-29.json';
+import section30Data from '../interfaces/sections-references/section-30.json';
 
 // ============================================================================
 // TYPES
@@ -181,6 +181,7 @@ export function findFieldByUniqueId(sectionId: number, uniqueId: string): FieldR
 
 /**
  * Create a Field<T> object from sections-references data
+ * Fixed to match Field<T> interface requirements
  */
 export function createFieldFromReference<T = any>(
   sectionId: number,
@@ -192,6 +193,8 @@ export function createFieldFromReference<T = any>(
   type: string;
   label: string;
   value: T;
+  required: boolean;
+  section: number;
   rect: { x: number; y: number; width: number; height: number };
 } {
   // Try to find field by ID first, then by name, then by unique ID
@@ -201,13 +204,15 @@ export function createFieldFromReference<T = any>(
 
   if (!fieldRef) {
     console.warn(`Field not found in section ${sectionId}: ${fieldIdentifier}`);
-    // Return a default field structure with proper defaults
+    // Return a default field structure with proper Field<T> compliance
     return {
       id: fieldIdentifier, // Use the identifier as fallback ID
       name: fieldIdentifier, // Use the identifier as fallback name
       type: "PDFTextField", // Default type
       label: `Field ${fieldIdentifier}`, // Default label
       value: defaultValue,
+      required: false, // Default to not required
+      section: sectionId, // Set the section number
       rect: { x: 0, y: 0, width: 0, height: 0 } // Default rect
     };
   }
@@ -218,6 +223,8 @@ export function createFieldFromReference<T = any>(
     type: fieldRef.type,
     label: fieldRef.label,
     value: defaultValue,
+    required: false, // Add required field (default false)
+    section: sectionId, // Add section field
     rect: fieldRef.rect
   };
 }
@@ -306,49 +313,3 @@ export function validateAllSectionFieldCounts(): Record<number, boolean> {
 
   return results;
 }
-
-// ============================================================================
-// SECTION-SPECIFIC UTILITIES
-// ============================================================================
-
-/**
- * Get Section 2 field references (Date of Birth)
- */
-export function getSection2FieldReferences() {
-  const fields = getSectionFields(2);
-  return {
-    dateField: fields.find(f => f.name.includes('From_Datefield_Name_2')),
-    estimatedField: fields.find(f => f.name.includes('#field[18]'))
-  };
-}
-
-/**
- * Get Section 29 field references by subsection
- */
-export function getSection29FieldReferences() {
-  const fields = getSectionFields(29);
-
-  return {
-    // 29.1: Terrorism Organizations
-    terrorismOrganizations: fields.find(f => f.name === 'form1[0].Section29[0].RadioButtonList[0]'),
-
-    // 29.2: Terrorism Activities
-    terrorismActivities: fields.find(f => f.name === 'form1[0].Section29_2[0].RadioButtonList[0]'),
-
-    // 29.3: Terrorism Advocacy
-    terrorismAdvocacy: fields.find(f => f.name === 'form1[0].Section29_2[0].RadioButtonList[1]'),
-
-    // 29.4: Violent Overthrow Organizations
-    violentOverthrowOrganizations: fields.find(f => f.name === 'form1[0].Section29_3[0].RadioButtonList[0]'),
-
-    // 29.5: Violence/Force Organizations
-    violenceForceOrganizations: fields.find(f => f.name === 'form1[0].Section29_4[0].RadioButtonList[0]'),
-
-    // 29.6: Overthrow Activities
-    overthrowActivities: fields.find(f => f.name === 'form1[0].Section29_5[0].RadioButtonList[0]'),
-
-    // 29.7: Terrorism Associations
-    terrorismAssociations: fields.find(f => f.name === 'form1[0].Section29_5[0].RadioButtonList[1]')
-  };
-}
-

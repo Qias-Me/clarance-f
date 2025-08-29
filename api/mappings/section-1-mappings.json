@@ -1,0 +1,37 @@
+{
+  "metadata": {
+    "pdfPath": "../pdf/clean.pdf",
+    "section": 1,
+    "timestamp": "2025-08-18T12:53:41.807Z",
+    "version": "0.1.0"
+  },
+  "summary": {
+    "totalMappings": 4,
+    "averageConfidence": 1,
+    "highConfidenceMappings": 4,
+    "lowConfidenceMappings": 0,
+    "validatedMappings": 4
+  },
+  "mappings": [
+    {
+      "uiPath": "section1.lastName",
+      "pdfFieldId": "form1[0].Sections1-6[0].TextField11[0]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section1.firstName",
+      "pdfFieldId": "form1[0].Sections1-6[0].TextField11[1]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section1.middleName",
+      "pdfFieldId": "form1[0].Sections1-6[0].TextField11[2]",
+      "confidence": 1
+    },
+    {
+      "uiPath": "section1.suffix",
+      "pdfFieldId": "form1[0].Sections1-6[0].suffix[0]",
+      "confidence": 1
+    }
+  ]
+}
