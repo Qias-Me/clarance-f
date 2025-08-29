@@ -24,6 +24,13 @@ export interface PdfGenerationOptions {
   useEnhancedSection1Integration?: boolean; // New option for enhanced integration
 }
 
+export interface PdfValidationConfig {
+  targetPage: number;
+  sectionReference: string;
+  expectedFields?: any[];
+  inMemoryValidation?: boolean;
+}
+
 export interface PdfGenerationResult {
   success: boolean;
   filename: string;
@@ -37,9 +44,19 @@ export interface PdfGenerationResult {
     totalFormFields: number;
     applicationSuccessRate: number;
   };
+<<<<<<< HEAD
   // Enhanced Section 1 integration data
   section1Statistics?: any;
   section1Validation?: any;
+=======
+  validation?: {
+    success: boolean;
+    fieldsFound: any[];
+    fieldsMatched: number;
+    fieldsMissing: any[];
+    errors: string[];
+  };
+>>>>>>> dee206932ac43994f42ae910b9869d54d7fa3b02
 }
 
 /**
@@ -80,6 +97,7 @@ export async function generateAndDownloadPdf(
     }
     onProgress?.("Starting PDF generation...");
 
+<<<<<<< HEAD
     // Use the enhanced client PDF service
     // Generate PDF using enhanced service with Section 1 integration or legacy service
     let pdfResult;
@@ -114,6 +132,15 @@ export async function generateAndDownloadPdf(
       }
       pdfResult = await clientPdfService2.generatePdfClientAction(formData);
     }
+=======
+    // Use the enhanced client PDF service with validation
+    const pdfResult = await clientPdfService2.generatePdfWithValidation(formData, {
+      targetPages: [17], // Default to Section 13 page 17
+      enableValidation: true,
+      enableCorrection: true,
+      generateImages: true
+    });
+>>>>>>> dee206932ac43994f42ae910b9869d54d7fa3b02
 
     // Update result with PDF service response
     result.success = pdfResult.success;
@@ -127,6 +154,21 @@ export async function generateAndDownloadPdf(
       totalFormFields: pdfResult.stats.totalFormFields,
       applicationSuccessRate: pdfResult.stats.applicationSuccessRate
     };
+
+    // Log validation results if available
+    if (pdfResult.validationReport) {
+      if (showConsoleOutput) {
+        console.info('🔍 PDF Validation Results:');
+        console.info(`   📊 Total Fields: ${pdfResult.validationReport.totalFields}`);
+        console.info(`   ✅ Valid Fields: ${pdfResult.validationReport.validFields}`);
+        console.info(`   ❌ Invalid Fields: ${pdfResult.validationReport.invalidFields}`);
+        console.info(`   📈 Success Rate: ${pdfResult.validationReport.totalFields > 0 ? ((pdfResult.validationReport.validFields / pdfResult.validationReport.totalFields) * 100).toFixed(2) : 0}%`);
+
+        if (pdfResult.validationReport.invalidFields > 0) {
+          console.warn('⚠️ Some fields failed validation. Check console for details.');
+        }
+      }
+    }
 
     if (pdfResult.success && pdfResult.pdfBytes) {
       if (showConsoleOutput) {
@@ -150,7 +192,9 @@ export async function generateAndDownloadPdf(
         }
       }
 
-      // Use the service's enhanced download method with mobile compatibility
+      // ENABLED: Automatic PDF download for validation workflow
+      console.log('✅ PDF download ENABLED for validation workflow');
+      console.log(`📄 Downloading: ${filename} (${pdfResult.pdfBytes.length} bytes)`);
       clientPdfService2.downloadPdf(pdfResult.pdfBytes, filename);
 
       if (showConsoleOutput) {
@@ -208,6 +252,177 @@ export async function generateAndDownloadPdf(
   }
 
   return result;
+}
+
+/**
+ * Generate and save PDF to project directory for analysis
+ */
+export async function generateAndSavePdfForAnalysis(
+  formData: ApplicantFormValues,
+  options: PdfGenerationOptions = {}
+): Promise<PdfGenerationResult> {
+  const {
+    filename = `SF86_Analysis_${new Date().toISOString().split("T")[0]}.pdf`,
+    showConsoleOutput = true,
+    onProgress,
+    onError,
+    onSuccess
+  } = options;
+
+  const result: PdfGenerationResult = {
+    success: false,
+    filename,
+    fieldsMapped: 0,
+    fieldsApplied: 0,
+    errors: [],
+    warnings: []
+  };
+
+  try {
+    if (showConsoleOutput) {
+      console.log("🔬 Starting PDF generation for analysis...");
+    }
+    onProgress?.("Generating PDF for analysis...");
+
+    // Create form data for the server action
+    const actionFormData = new FormData();
+    actionFormData.append("data", JSON.stringify(formData));
+    actionFormData.append("actionType", "generatePDFForAnalysis");
+
+    // Submit to the server action via startForm route
+    const response = await fetch("/startForm", {
+      method: "POST",
+      body: actionFormData,
+    });
+
+    const serverResult = await response.json();
+
+    if (serverResult.success) {
+      result.success = true;
+      result.fieldsMapped = serverResult.fieldsMapped || 0;
+      result.fieldsApplied = serverResult.fieldsApplied || 0;
+      result.savedPath = serverResult.savedPath;
+
+      if (showConsoleOutput) {
+        console.log(`✅ PDF saved for analysis at: ${result.savedPath}`);
+        console.log(`📊 Fields mapped: ${result.fieldsMapped}, Fields applied: ${result.fieldsApplied}`);
+      }
+
+      onSuccess?.(result);
+    } else {
+      result.errors = serverResult.errors || ["Server PDF generation failed"];
+      if (showConsoleOutput) {
+        console.error("❌ Server PDF generation failed:", result.errors);
+      }
+      onError?.(result.errors[0]);
+    }
+
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    result.errors = [errorMessage];
+
+    if (showConsoleOutput) {
+      console.error("💥 Error during server PDF generation:", error);
+    }
+    onError?.(errorMessage);
+  }
+
+  return result;
+}
+
+/**
+ * Generate PDF with immediate validation workflow
+ */
+export async function generateAndValidatePdf(
+  formData: ApplicantFormValues,
+  validationConfig: PdfValidationConfig,
+  options: PdfGenerationOptions = {}
+): Promise<PdfGenerationResult> {
+  const {
+    filename = `SF86_Validated_${new Date().toISOString().split("T")[0]}.pdf`,
+    showConsoleOutput = true,
+    onProgress,
+    onError,
+    onSuccess
+  } = options;
+
+  const result: PdfGenerationResult = {
+    success: false,
+    filename,
+    fieldsMapped: 0,
+    fieldsApplied: 0,
+    errors: [],
+    warnings: []
+  };
+
+  try {
+    onProgress?.("Generating PDF with validation...");
+
+    // Load expected fields from section reference if not provided
+    let expectedFields = validationConfig.expectedFields;
+    if (!expectedFields && validationConfig.sectionReference) {
+      try {
+        const response = await fetch(`/api/sections-references/${validationConfig.sectionReference}.json`);
+        const sectionData = await response.json();
+        expectedFields = sectionData.fields?.filter((field: any) => field.page === validationConfig.targetPage) || [];
+      } catch (error) {
+        console.warn(`Could not load section reference: ${validationConfig.sectionReference}`);
+        expectedFields = [];
+      }
+    }
+
+    // Generate PDF with immediate validation
+    const pdfResult = await clientPdfService2.generatePdfClientActionWithValidation(formData, {
+      targetPage: validationConfig.targetPage,
+      expectedFields: expectedFields || [],
+      sectionReference: validationConfig.sectionReference
+    });
+
+    // Update result with PDF service response
+    result.success = pdfResult.success;
+    result.pdfBytes = pdfResult.pdfBytes;
+    result.fieldsMapped = pdfResult.fieldsMapped;
+    result.fieldsApplied = pdfResult.fieldsApplied;
+    result.errors = pdfResult.errors;
+    result.warnings = pdfResult.warnings;
+    result.validation = pdfResult.validation;
+    result.stats = {
+      totalPdfFields: pdfResult.stats.totalPdfFields,
+      totalFormFields: pdfResult.stats.totalFormFields,
+      applicationSuccessRate: pdfResult.stats.applicationSuccessRate
+    };
+
+    if (pdfResult.success && pdfResult.pdfBytes) {
+      // Download PDF for manual inspection unless in-memory only mode
+      if (!validationConfig.inMemoryValidation) {
+        clientPdfService2.downloadPdf(pdfResult.pdfBytes, filename);
+      }
+
+      if (showConsoleOutput && result.validation) {
+        console.info("\n🔍 PDF VALIDATION RESULTS");
+        console.info("=".repeat(50));
+        console.info(`📄 Target Page: ${validationConfig.targetPage}`);
+        console.info(`📊 Fields Found: ${result.validation.fieldsFound.length}`);
+        console.info(`✅ Fields Matched: ${result.validation.fieldsMatched}`);
+        console.info(`❌ Fields Missing: ${result.validation.fieldsMissing.length}`);
+
+        if (result.validation.fieldsMissing.length > 0) {
+          console.warn("Missing fields:", result.validation.fieldsMissing.map((f: any) => f.name));
+        }
+        console.info("=".repeat(50));
+      }
+
+      onSuccess?.(result);
+    }
+
+    return result;
+
+  } catch (error: any) {
+    const errorMsg = `PDF generation with validation failed: ${error.message}`;
+    result.errors.push(errorMsg);
+    onError?.(errorMsg);
+    throw error;
+  }
 }
 
 /**

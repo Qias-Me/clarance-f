@@ -313,3 +313,100 @@ export function validateAllSectionFieldCounts(): Record<number, boolean> {
 
   return results;
 }
+<<<<<<< HEAD
+=======
+
+// ============================================================================
+// SECTION-SPECIFIC UTILITIES
+// ============================================================================
+
+/**
+ * Get Section 2 field references (Date of Birth)
+ */
+export function getSection2FieldReferences() {
+  const fields = getSectionFields(2);
+  return {
+    dateField: fields.find(f => f.name.includes('From_Datefield_Name_2')),
+    estimatedField: fields.find(f => f.name.includes('#field[18]'))
+  };
+}
+
+// ============================================================================
+// ADDITIONAL HELPER UTILITIES (used by Section 13 generator and validators)
+// ============================================================================
+
+/**
+ * Validate that a field exists in a section by id/name/uniqueId
+ */
+export function validateFieldExists(identifier: string, sectionId: number = 13): boolean {
+  const byId = findFieldById(sectionId, identifier);
+  if (byId) return true;
+  const byName = findFieldByName(sectionId, identifier);
+  if (byName) return true;
+  const byUnique = findFieldByUniqueId(sectionId, identifier);
+  return !!byUnique;
+}
+
+/**
+ * Get field metadata (FieldReference) by id/name/uniqueId if found
+ */
+export function getFieldMetadata(identifier: string, sectionId: number = 13) {
+  return (
+    findFieldById(sectionId, identifier) ||
+    findFieldByName(sectionId, identifier) ||
+    findFieldByUniqueId(sectionId, identifier)
+  );
+}
+
+/**
+ * Find similar field names (basic substring search) to assist mapping fixes
+ */
+export function findSimilarFieldNames(identifier: string, limit: number = 3, sectionId: number = 13): string[] {
+  const fields = getSectionFields(sectionId);
+  const needle = identifier.toLowerCase();
+  const candidates = fields
+    .map(f => f.name)
+    .filter(name => name.toLowerCase().includes(needle) || needle.includes(name.toLowerCase()))
+    .slice(0, limit);
+  return candidates;
+}
+
+/**
+ * Get the numeric field ID for an identifier if it exists in the section
+ */
+export function getNumericFieldId(identifier: string, sectionId: number = 13): string | undefined {
+  const ref = getFieldMetadata(identifier, sectionId);
+  return ref?.id?.replace(' 0 R', '');
+}
+
+/**
+ * Get Section 29 field references by subsection
+ */
+export function getSection29FieldReferences() {
+  const fields = getSectionFields(29);
+
+  return {
+    // 29.1: Terrorism Organizations
+    terrorismOrganizations: fields.find(f => f.name === 'form1[0].Section29[0].RadioButtonList[0]'),
+
+    // 29.2: Terrorism Activities
+    terrorismActivities: fields.find(f => f.name === 'form1[0].Section29_2[0].RadioButtonList[0]'),
+
+    // 29.3: Terrorism Advocacy
+    terrorismAdvocacy: fields.find(f => f.name === 'form1[0].Section29_2[0].RadioButtonList[1]'),
+
+    // 29.4: Violent Overthrow Organizations
+    violentOverthrowOrganizations: fields.find(f => f.name === 'form1[0].Section29_3[0].RadioButtonList[0]'),
+
+    // 29.5: Violence/Force Organizations
+    violenceForceOrganizations: fields.find(f => f.name === 'form1[0].Section29_4[0].RadioButtonList[0]'),
+
+    // 29.6: Overthrow Activities
+    overthrowActivities: fields.find(f => f.name === 'form1[0].Section29_5[0].RadioButtonList[0]'),
+
+    // 29.7: Terrorism Associations
+    terrorismAssociations: fields.find(f => f.name === 'form1[0].Section29_5[0].RadioButtonList[1]')
+  };
+}
+
+>>>>>>> dee206932ac43994f42ae910b9869d54d7fa3b02

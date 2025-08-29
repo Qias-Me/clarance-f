@@ -16,6 +16,8 @@ import {
   PDFTextField
 } from 'pdf-lib';
 import type { ApplicantFormValues, Field } from '../interfaces/formDefinition2.0';
+import { integratedValidationService, type IntegratedValidationResult } from './integratedValidationService.js';
+import { mappingValidationService, buildExpectedByPage, type FullMappingReport } from './mappingValidationService.js';
 
 // URLs for fetching the SF86 PDF template
 const SF86_PDF_TEMPLATE_URL = typeof window !== 'undefined' 
@@ -90,6 +92,93 @@ export class ClientPdfService2 {
   private pdfDoc: PDFDocument | null = null;
   private fieldMapping: FieldMetadata[] = [];
   private isLoaded = false;
+
+  constructor() {
+    // Using the integrated validation service singleton
+  }
+
+  /**
+   * Enhanced PDF Generation with Validation and Field Correction
+   *
+   * This method generates a PDF and immediately validates it in memory,
+   * providing field correction suggestions and validation reports.
+   */
+  async generatePdfWithValidation(
+    formData: ApplicantFormValues,
+    options: {
+      targetPages?: number[];
+      enableValidation?: boolean;
+      enableCorrection?: boolean;
+    generateImages?: boolean;
+    enableMappingCheck?: boolean;
+    } = {}
+  ): Promise<ClientPdfResult & { validationReport?: IntegratedValidationResult; mappingReport?: FullMappingReport }> {
+    console.log('🚀 Starting enhanced PDF generation with validation...');
+
+    // Step 1: Generate PDF using existing method
+    const pdfResult = await this.generatePdfClientAction(formData);
+
+    if (!pdfResult.success || !pdfResult.pdfBytes) {
+      console.error('❌ PDF generation failed, skipping validation');
+      return pdfResult;
+    }
+
+    // Step 2: Validate PDF in memory if enabled
+  let validationReport: IntegratedValidationResult | undefined;
+  let mappingReport: FullMappingReport | undefined;
+
+    if (options.enableValidation !== false) {
+      try {
+        console.log('🔍 Starting PDF validation...');
+
+        validationReport = await integratedValidationService.validateSection13Inputs(
+          pdfResult.pdfBytes,
+          {
+            clearData: true,
+            generateImages: options.generateImages !== false,
+            extractFields: true,
+            targetPage: options.targetPages?.[0] || 17 // Default to page 17 for Section 13
+          }
+        );
+
+  console.log('✅ PDF validation completed');
+        console.log(`📊 Validation results: ${validationReport.fieldsWithValues}/${validationReport.totalFields} fields with values`);
+
+        // Log validation summary
+        console.log(`📋 Page ${validationReport.targetPage}: ${validationReport.fieldsWithValues} fields with values, ${validationReport.fieldsEmpty} empty fields`);
+
+      } catch (error) {
+        console.error('❌ PDF validation failed:', error);
+        pdfResult.warnings.push(`PDF validation failed: ${error instanceof Error ? error.message : String(error)}`);
+      }
+    }
+
+    // Step 3: Optional mapping validation (page-by-page, Section 13 default)
+    if (options.enableMappingCheck) {
+      try {
+        const pages = options.targetPages && options.targetPages.length > 0 ? options.targetPages : [17];
+        const sectionId = 13; // default section for current flow; make configurable later if needed
+        const expectedByPage = buildExpectedByPage(sectionId, pages);
+
+        mappingReport = await mappingValidationService.validateAcrossPages(
+          pdfResult.pdfBytes!,
+          pages,
+          expectedByPage,
+          sectionId
+        );
+
+        console.log('🧭 Mapping validation completed for pages:', pages.join(', '));
+      } catch (err) {
+        console.warn('⚠️ Mapping validation skipped due to error:', err instanceof Error ? err.message : String(err));
+      }
+    }
+
+    return {
+      ...pdfResult,
+      validationReport,
+      mappingReport
+    };
+  }
 
   /**
    * Enhanced Client-side PDF Generation Action - Matches Server-side Logic
@@ -1332,14 +1421,159 @@ export class ClientPdfService2 {
   }
 
   /**
+   * Enhanced PDF validation service for in-memory PDF analysis
+   */
+  async validatePdfInMemory(
+    pdfBytes: Uint8Array,
+    targetPage: number,
+    expectedFields: any[]
+  ): Promise<{
+    success: boolean;
+    fieldsFound: any[];
+    fieldsMatched: number;
+    fieldsMissing: any[];
+    errors: string[];
+  }> {
+    const result: {
+      success: boolean;
+      fieldsFound: any[];
+      fieldsMatched: number;
+      fieldsMissing: any[];
+      errors: string[];
+    } = {
+      success: false,
+      fieldsFound: [],
+      fieldsMatched: 0,
+      fieldsMissing: [],
+      errors: []
+    };
+
+    try {
+      // Load PDF from bytes for validation
+      const validationDoc = await PDFDocument.load(pdfBytes);
+      const form = validationDoc.getForm();
+      const pages = validationDoc.getPages();
+
+      if (targetPage > pages.length) {
+        result.errors.push(`Target page ${targetPage} exceeds PDF page count ${pages.length}`);
+        return result;
+      }
+
+      // Extract all fields from the target page
+      const allFields = form.getFields();
+      const pageFields: any[] = [];
+
+      for (const field of allFields) {
+        const fieldName = field.getName();
+
+        // Get field value and basic info
+        const fieldInfo = {
+          name: fieldName,
+          value: this.getFieldValue(field),
+          page: targetPage,
+          type: field.constructor.name,
+          rect: {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 0
+          }
+        };
+
+        // Try to get position information if available
+        try {
+          const widgets = (field as any).acroField?.getWidgets?.() || [];
+          if (widgets.length > 0) {
+            const widget = widgets[0];
+            const rect = widget.getRectangle?.() || { x: 0, y: 0, width: 0, height: 0 };
+            fieldInfo.rect = {
+              x: rect.x || 0,
+              y: rect.y || 0,
+              width: rect.width || 0,
+              height: rect.height || 0
+            };
+          }
+        } catch (e) {
+          // Continue without position info if not available
+        }
+
+        pageFields.push(fieldInfo);
+      }
+
+      result.fieldsFound = pageFields;
+
+      // Match against expected fields
+      for (const expectedField of expectedFields) {
+        const found = pageFields.find(f => f.name === expectedField.name);
+        if (found && found.value) {
+          result.fieldsMatched++;
+        } else {
+          result.fieldsMissing.push(expectedField);
+        }
+      }
+
+      result.success = true;
+      return result;
+
+    } catch (error: any) {
+      result.errors.push(`PDF validation failed: ${error.message || 'Unknown error'}`);
+      return result;
+    }
+  }
+
+  private getFieldValue(field: any): string {
+    try {
+      if (field.constructor.name === 'PDFTextField') {
+        return field.getText() || '';
+      } else if (field.constructor.name === 'PDFCheckBox') {
+        return field.isChecked() ? 'true' : 'false';
+      } else if (field.constructor.name === 'PDFRadioGroup') {
+        return field.getSelected() || '';
+      }
+      return '';
+    } catch {
+      return '';
+    }
+  }
+
+  /**
+   * Enhanced client action with immediate validation
+   */
+  async generatePdfClientActionWithValidation(
+    formData: ApplicantFormValues,
+    validationConfig?: {
+      targetPage?: number;
+      expectedFields?: any[];
+      sectionReference?: string;
+    }
+  ): Promise<ClientPdfResult & { validation?: any }> {
+    // Generate PDF as normal
+    const result = await this.generatePdfClientAction(formData);
+
+    if (result.success && result.pdfBytes && validationConfig) {
+      // Perform immediate validation without downloading
+      const validation = await this.validatePdfInMemory(
+        result.pdfBytes,
+        validationConfig.targetPage || 33,
+        validationConfig.expectedFields || []
+      );
+
+      return { ...result, validation };
+    }
+
+    return result;
+  }
+
+  /**
    * Download the generated PDF - Enhanced mobile compatibility (Fixed)
    */
   downloadPdf(pdfBytes: Uint8Array, filename = 'SF86-filled.pdf'): void {
     try {
       // console.log(`📱 Starting PDF download: ${filename}, size: ${pdfBytes.length} bytes`);
 
-      // Create blob with PDF data
-      const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+  // Create blob with PDF data (ensure ArrayBuffer backing to satisfy TS types)
+  const pdfArray = new Uint8Array(pdfBytes); // rebuffer to standard ArrayBuffer
+  const blob = new Blob([pdfArray.buffer], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
 
       // Enhanced mobile detection

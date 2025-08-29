@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev:*)",
+      "Bash(npx playwright test:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm run test:section15:headed:*)",
+      "Bash(ls:*)",
+      "Bash(curl:*)",
+      "Bash(pkill:*)",
+      "Bash(true)",
+      "mcp__playwright__browser_navigate",
+      "Bash(start /B npm run dev)",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_close",
+      "mcp__playwright__browser_take_screenshot",
+      "Bash(taskkill:*)"
+    ],
+    "deny": []
+  }
+}

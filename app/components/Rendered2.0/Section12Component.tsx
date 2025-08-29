@@ -9,9 +9,14 @@
 import React, { useState, useCallback, useEffect, useRef, memo } from "react";
 import { useSection12 } from "~/state/contexts/sections2.0/section12";
 import { useSF86Form } from "~/state/contexts/sections2.0/SF86FormContext";
+<<<<<<< HEAD
 import { getUSStateOptions, getCountryOptions } from "../../../api/interfaces/section-interfaces/base";
 import type { SchoolEntry, Section12 } from "../../../api/interfaces/section-interfaces/section12";
 import { cloneDeep, set } from "lodash";
+=======
+import { getUSStateOptions, getCountryOptions } from "../../../api/interfaces/sections2.0/base";
+import type { SchoolEntry, Section12 } from "../../../api/interfaces/sections2.0/section12";
+>>>>>>> dee206932ac43994f42ae910b9869d54d7fa3b02
 import {
   mapLogicalFieldToPdfField,
   getFieldMetadata,
@@ -127,39 +132,26 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
     getHighestDegree,
     getSchoolTypeOptions,
     getDegreeTypeOptions,
+    updateSchoolTypeCheckbox,
     submitSectionData,
     hasPendingChanges,
   } = useSection12();
 
   // ============================================================================
-  // LOCAL STATE FOR PERFORMANCE OPTIMIZATION (Section 1 Gold Standard Pattern)
+  // FIXED: Use context data directly for proper data flow
   // ============================================================================
 
-  // Use local state for field changes to prevent context updates on every onChange
-  const [localSectionData, setLocalSectionData] = useState<Section12>(contextData);
-  const [hasLocalChanges, setHasLocalChanges] = useState(false);
-
-  // Sync local state when context data changes (on initial load or external updates)
-  useEffect(() => {
-    // console.log('🔍 Section12Component: Context data changed, syncing to local state:', {
-    //   contextEntries: contextData.section12.entries.length,
-    //   contextData: contextData.section12.entries
-    // });
-    setLocalSectionData(contextData);
-    setHasLocalChanges(false);
-  }, [contextData]);
-
-  // Use local data for rendering, context data for validation
-  const sectionData = localSectionData;
+  // Use context data directly instead of local state to ensure proper data flow
+  const sectionData = contextData;
 
 
   // SF86 Form Context for data persistence
   const sf86Form = useSF86Form();
 
-  // Validate current local state (not stale context data)
+  // Validate current context data
   const validateCurrentState = () => {
     const errors: string[] = [];
-    const currentData = localSectionData;
+    const currentData = contextData;
 
     // Check if education questions are answered
     const hasEducation = currentData.section12?.hasAttendedSchool?.value;
@@ -190,16 +182,16 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
     console.log('🚀 Section12Component: handleSubmit called!');
     e.preventDefault();
 
-    // Validate current local state instead of stale context data
+    // Validate current context data
     const result = validateCurrentState();
     onValidationChange?.(result.isValid);
 
     console.log('🔍 Section 12 validation result:', result);
-    console.log('📊 Section 12 local data before submission:', {
-      hasAttendedSchool: localSectionData?.section12?.hasAttendedSchool?.value,
-      hasAttendedSchoolOutsideUS: localSectionData?.section12?.hasAttendedSchoolOutsideUS?.value,
-      entriesCount: localSectionData?.section12?.entries?.length || 0,
-      entries: localSectionData?.section12?.entries?.map((entry, idx) => ({
+    console.log('📊 Section 12 context data before submission:', {
+      hasAttendedSchool: contextData?.section12?.hasAttendedSchool?.value,
+      hasAttendedSchoolOutsideUS: contextData?.section12?.hasAttendedSchoolOutsideUS?.value,
+      entriesCount: contextData?.section12?.entries?.length || 0,
+      entries: contextData?.section12?.entries?.map((entry, idx) => ({
         index: idx,
         schoolName: entry.schoolName?.value,
         fromDate: entry.fromDate?.value,
@@ -209,92 +201,13 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
     });
 
     if (result.isValid) {
-      try {
-        console.log('🔄 Section 12: Starting data synchronization...');
-
-        // SIMPLIFIED APPROACH: Directly update the context's section data with local state
-        // This bypasses the complex field-by-field sync and ensures complete data transfer
-
-        // Step 1: Update global flags
-        console.log('📝 Section 12: Updating global flags...');
-        updateAttendedSchoolFlag(localSectionData.section12.hasAttendedSchool.value);
-        updateAttendedSchoolOutsideUSFlag(localSectionData.section12.hasAttendedSchoolOutsideUS.value);
-
-        // Step 2: Clear existing entries in context and rebuild from local state
-        console.log(`🧹 Section 12: Clearing ${getSchoolEntryCount()} existing entries...`);
-        while (getSchoolEntryCount() > 0) {
-          removeSchoolEntry(0);
-        }
-
-        // Step 3: Add all entries from local state to context
-        console.log(`📚 Section 12: Adding ${localSectionData.section12.entries.length} entries to context...`);
-        for (let i = 0; i < localSectionData.section12.entries.length; i++) {
-          const entry = localSectionData.section12.entries[i];
-          console.log(`📝 Section 12: Processing entry ${i}:`, {
-            schoolName: entry.schoolName?.value,
-            degreesCount: entry.degrees?.length || 0
-          });
-
-          // Add entry to context
-          addSchoolEntry();
-
-          // Update all entry fields
-          Object.entries(entry).forEach(([fieldKey, fieldValue]) => {
-            if (fieldKey !== '_id' && fieldKey !== 'createdAt' && fieldKey !== 'updatedAt' && fieldKey !== 'degrees') {
-              const fieldPath = `section12.entries[${i}].${fieldKey}.value`;
-              updateField(fieldPath, (fieldValue as any).value);
-            }
-          });
-
-          // Add degrees for this entry
-          console.log(`🎓 Section 12: Adding ${entry.degrees.length} degrees for entry ${i}...`);
-          for (let j = 0; j < entry.degrees.length; j++) {
-            const degree = entry.degrees[j];
-
-            // Add degree to context
-            addDegreeEntry(i);
-
-            // Update degree fields
-            Object.entries(degree).forEach(([degreeKey, degreeValue]) => {
-              const degreePath = `section12.entries[${i}].degrees[${j}].${degreeKey}.value`;
-              updateField(degreePath, (degreeValue as any).value);
-            });
-          }
-        }
-
-        console.log('✅ Section 12: Data synchronization to context complete');
-
-        // console.log('✅ Section 12: Local state synced to context, calling submitSectionData...');
-
-        // Step 4: Use context's submit mechanism (this handles SF86FormContext sync)
-        console.log('🔄 Section 12: Calling submitSectionData...');
-        const submitResult = await submitSectionData();
-        console.log('📋 Section 12: Submit result:', submitResult);
-
-        if (submitResult && submitResult.success) {
-          console.log('✅ Section 12 data saved successfully via context');
-          // Clear local changes flag
-          setHasLocalChanges(false);
-
-          // Show success message
-          alert('Section 12 data saved successfully!');
-        } else {
-          const errorMessage = submitResult?.error || 'Submit failed - no error details provided';
-          console.error('❌ Section 12: Submit failed:', errorMessage);
-          throw new Error(errorMessage);
-        }
-
-      } catch (error) {
-        console.error('❌ Failed to save Section 12 data:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-
-        // Show detailed error message to user
-        alert(`Failed to save Section 12 data: ${errorMessage}\n\nPlease check the console for more details and try again.`);
-      }
+      console.log('🔄 Section 12: Starting data submission...');
+      // Temporarily simplified for debugging
+      alert('Section 12 data would be saved here');
     } else {
       // Show validation errors to user
       setGlobalErrors(result.errors);
-      // console.log('❌ Section 12 validation failed:', result.errors);
+      console.log('❌ Section 12 validation failed:', result.errors);
     }
   };
 
@@ -338,8 +251,8 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
     // }
   }, [sectionData, expandedEntries, validationErrors, isDebugMode]);
 
-  // Initialize with default entry if needed and clear entries when question 12.b is NO
-  // FIXED: Use refs to prevent infinite recursion and focus on question 12.b
+  // Enhanced logic to automatically manage school entries based on Yes/No answers
+  // FIXED: Use refs to prevent infinite recursion and implement automatic entry management
   useEffect(() => {
     const hasEducationFlag = sectionData?.section12?.hasAttendedSchool?.value === "YES"; // Question 12.a
     const hasOtherEducationFlag = sectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "YES"; // Question 12.b
@@ -349,8 +262,8 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
     const educationFlagChanged = lastEducationFlagRef.current !== sectionData?.section12?.hasAttendedSchool?.value;
     const otherEducationFlagChanged = lastHighSchoolFlagRef.current !== sectionData?.section12?.hasAttendedSchoolOutsideUS?.value;
 
-    // Only proceed if question 12.b flag has actually changed (this is what controls entry visibility)
-    if (!otherEducationFlagChanged) {
+    // Only proceed if either flag has actually changed
+    if (!educationFlagChanged && !otherEducationFlagChanged) {
       return; // No relevant flag changes, skip processing
     }
 
@@ -366,15 +279,55 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
       lastEducationFlagRef.current = sectionData?.section12?.hasAttendedSchool?.value;
       lastHighSchoolFlagRef.current = sectionData?.section12?.hasAttendedSchoolOutsideUS?.value;
 
-      // Clear entries if question 12.b is NO (since entries are only shown when 12.b is YES)
-      if (!hasOtherEducationFlag && entriesCount > 0) {
-        // Clear all entries when question 12.b is NO
-        while (getSchoolEntryCount() > 0) {
-          removeSchoolEntry(0);
-        }
-        setExpandedEntries(new Set());
+      if (isDebugMode) {
+        console.log('🎯 Section12: Processing flag changes', {
+          hasEducationFlag,
+          hasOtherEducationFlag,
+          entriesCount,
+          educationFlagChanged,
+          otherEducationFlagChanged
+        });
       }
-      // Note: Removed automatic entry addition - users can now add entries manually with the "Add School Entry" button
+
+      // Logic for automatic entry management:
+      // 1. If 12.a = YES and 12.b = NO: Clear all entries (no additional education)
+      // 2. If 12.a = YES and 12.b = YES: Add one entry automatically if none exist
+      // 3. If 12.a = NO and 12.b = NO: Clear all entries (no education at all)
+      // 4. If 12.a = NO and 12.b = YES: Add one entry automatically if none exist
+
+      if (hasEducationFlag && !hasOtherEducationFlag) {
+        // Case 1: YES to high school, NO to other education - clear all entries
+        if (entriesCount > 0) {
+          if (isDebugMode) {
+            console.log('🧹 Section12: Clearing entries (YES high school, NO other education)');
+          }
+          while (getSchoolEntryCount() > 0) {
+            removeSchoolEntry(0);
+          }
+          setExpandedEntries(new Set());
+        }
+      } else if (!hasEducationFlag && !hasOtherEducationFlag) {
+        // Case 2: NO to both questions - clear all entries
+        if (entriesCount > 0) {
+          if (isDebugMode) {
+            console.log('🧹 Section12: Clearing entries (NO to both questions)');
+          }
+          while (getSchoolEntryCount() > 0) {
+            removeSchoolEntry(0);
+          }
+          setExpandedEntries(new Set());
+        }
+      } else if (hasOtherEducationFlag) {
+        // Case 3 & 4: YES to other education (regardless of high school answer) - ensure at least one entry
+        if (entriesCount === 0) {
+          if (isDebugMode) {
+            console.log('➕ Section12: Adding automatic entry (YES to other education)');
+          }
+          addSchoolEntry();
+          // Expand the first entry when automatically added
+          setExpandedEntries(new Set([0]));
+        }
+      }
     } finally {
       // Reset processing flag after a delay to allow state updates to complete
       setTimeout(() => {
@@ -406,76 +359,37 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
     return null;
   };
 
-  // Enhanced field update with validation - PERFORMANCE OPTIMIZED (Section 1 Gold Standard)
-  // Updates local state only, context sync happens on submit
+  // Enhanced field update with validation - FIXED: Use context updateField method
   const handleFieldUpdate = useCallback((index: number, fieldPath: string, value: any) => {
     if (isDebugMode) {
-      // console.log('🔧 Updating field locally:', { index, fieldPath, value });
+      console.log('🔧 Section12: Updating field via context:', { index, fieldPath, value });
     }
 
-    // Update local state instead of context to prevent performance issues
-    setLocalSectionData(prev => {
-      const updated = cloneDeep(prev);
-      const fullFieldPath = `section12.entries[${index}].${fieldPath}`;
-      set(updated, fullFieldPath, value);
+    // Use context's updateField method for proper data flow
+    const fullFieldPath = `section12.entries[${index}].${fieldPath}`;
+    updateField(fullFieldPath, value);
 
-      // Auto-create first degree entry when user selects "YES" for receivedDegree
-      if (fieldPath === "receivedDegree.value" && value === "YES") {
-        const schoolEntry = updated.section12.entries[index];
-        if (schoolEntry && schoolEntry.degrees.length === 0) {
-          // Create a new default degree entry
-          const newDegree = {
-            degreeType: {
-              id: "",
-              name: "",
-              type: 'PDFDropdown' as const,
-              label: 'Degree Type',
-              value: "High School Diploma" as const,
-              options: ["High School Diploma", "Associate's", "Bachelor's", "Master's", "Doctorate", "Professional Degree (e.g. M D, D V M, J D)", "Other"],
-              rect: { x: 0, y: 0, width: 0, height: 0 }
-            },
-            otherDegree: {
-              id: "",
-              name: "",
-              type: 'PDFTextField' as const,
-              label: 'Other Degree',
-              value: '',
-              rect: { x: 0, y: 0, width: 0, height: 0 }
-            },
-            dateAwarded: {
-              id: "",
-              name: "",
-              type: 'PDFTextField' as const,
-              label: 'Date Awarded',
-              value: '',
-              rect: { x: 0, y: 0, width: 0, height: 0 }
-            },
-            dateAwardedEstimate: {
-              id: "",
-              name: "",
-              type: 'PDFCheckBox' as const,
-              label: 'Date Awarded Estimate',
-              value: false,
-              rect: { x: 0, y: 0, width: 0, height: 0 }
-            }
-          };
-          schoolEntry.degrees.push(newDegree);
-          // console.log(`✅ Auto-added first degree when receivedDegree set to YES for school ${index}`);
+    // Handle special cases for degree management
+    if (fieldPath === "receivedDegree.value") {
+      if (value === "YES") {
+        // Auto-add first degree entry if none exist
+        const currentEntry = contextData.section12.entries[index];
+        if (currentEntry && currentEntry.degrees.length === 0) {
+          addDegreeEntry(index);
+          console.log(`✅ Auto-added first degree when receivedDegree set to YES for school ${index}`);
         }
-      } else if (fieldPath === "receivedDegree.value" && value === "NO") {
-        // Clear degrees when user selects "NO" for receivedDegree
-        const schoolEntry = updated.section12.entries[index];
-        if (schoolEntry) {
-          schoolEntry.degrees = [];
-          // console.log(`🧹 Cleared degrees when receivedDegree set to NO for school ${index}`);
+      } else if (value === "NO") {
+        // Clear all degrees when user selects "NO"
+        const currentEntry = contextData.section12.entries[index];
+        if (currentEntry && currentEntry.degrees.length > 0) {
+          // Remove all degrees for this entry
+          for (let i = currentEntry.degrees.length - 1; i >= 0; i--) {
+            removeDegreeEntry(index, i);
+          }
+          console.log(`🧹 Cleared degrees when receivedDegree set to NO for school ${index}`);
         }
       }
-
-      return updated;
-    });
-
-    // Mark that we have local changes
-    setHasLocalChanges(true);
+    }
 
     // Real-time validation for date fields
     if (fieldPath.includes('Date') && typeof value === 'string') {
@@ -515,294 +429,156 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
   const handleAddEntry = useCallback(() => {
     // Prevent React Strict Mode double execution
     if (isAddingEntryRef.current) {
-      // console.log('🚫 Section12Component: handleAddEntry blocked - already in progress (React Strict Mode protection)');
       return;
     }
 
     isAddingEntryRef.current = true;
-    // console.log('🎯 Section12Component: handleAddEntry called (local state mode)');
+    console.log('🎯 Section12Component: handleAddEntry called');
 
     try {
-      // PERFORMANCE OPTIMIZATION: Add entry to local state instead of context
-      // This prevents the context update from overwriting our local flag changes
-      setLocalSectionData(prev => {
-        const updated = cloneDeep(prev);
-        const entryIndex = updated.section12.entries.length;
-
-        // Limit to 4 entries as per PDF structure
-        // Allow indices 0, 1, 2, 3 (total of 4 entries)
-        if (entryIndex > 3) {
-          console.warn('⚠️ Section12Component: Maximum of 4 school entries allowed (indices 0-3)');
-          return prev;
-        }
-
-        // Create a new default entry (matching SchoolEntry interface)
-        const newEntry = {
-          _id: Date.now(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          fromDate: { value: "" },
-          toDate: { value: "" },
-          fromDateEstimate: { value: false },
-          toDateEstimate: { value: false },
-          isPresent: { value: false },
-          schoolType: { value: "High School" },
-          schoolName: { value: "" },
-          schoolAddress: { value: "" },
-          schoolCity: { value: "" },
-          schoolState: { value: "" },
-          schoolZipCode: { value: "" },
-          schoolCountry: { value: "United States" },
-          receivedDegree: { value: "NO" },
-          degrees: []
-        };
-
-        updated.section12.entries.push(newEntry);
-        // console.log(`✅ Section12Component: Added entry #${entryIndex + 1} to local state. Total entries: ${updated.section12.entries.length}`);
-        return updated;
-      });
-
-      // Mark that we have local changes
-      setHasLocalChanges(true);
+      // Use context's addSchoolEntry method for proper data flow
+      addSchoolEntry();
 
       // Expand the new entry
-      const newIndex = localSectionData.section12.entries.length;
+      const newIndex = contextData.section12.entries.length;
       setExpandedEntries(prev => new Set([...prev, newIndex]));
-      // console.log(`✅ Section12Component: Expanded entry #${newIndex}`);
+      console.log(`✅ Section12Component: Added and expanded entry #${newIndex}`);
     } finally {
       // Reset the flag after a short delay to allow for state updates
       setTimeout(() => {
         isAddingEntryRef.current = false;
-        // console.log('🔄 Section12Component: handleAddEntry flag reset');
       }, 100);
     }
-  }, [localSectionData]);
+  }, [addSchoolEntry, contextData.section12.entries.length]);
 
   const handleRemoveEntry = useCallback((index: number) => {
-    const hasEducationFlag = sectionData?.section12?.hasAttendedSchool?.value === "YES"; // Question 12.a
     const hasOtherEducationFlag = sectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "YES"; // Question 12.b
+    const entriesCount = getSchoolEntryCount();
 
-    // Allow removal if question 12.b is NO, or if there are multiple entries
-    // Since entries are only shown when 12.b is YES, we focus on that flag
-    if (!hasOtherEducationFlag || getSchoolEntryCount() > 1) {
-      if (window.confirm("Are you sure you want to remove this education entry?")) {
-        removeSchoolEntry(index);
-        setExpandedEntries(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(index);
-          // Shift indices down for remaining entries
-          const shiftedSet = new Set<number>();
-          for (const expandedIndex of newSet) {
-            if (expandedIndex > index) {
-              shiftedSet.add(expandedIndex - 1);
-            } else {
-              shiftedSet.add(expandedIndex);
-            }
-          }
-          return shiftedSet;
-        });
-      }
-    } else {
-      // console.log("You must have at least one education entry when question 12.b is set to YES. Please change the flag first or add another entry.");
+    if (isDebugMode) {
+      console.log('🗑️ Section12: Remove entry requested', {
+        index,
+        hasOtherEducationFlag,
+        entriesCount
+      });
     }
-  }, [removeSchoolEntry, getSchoolEntryCount, sectionData]);
 
-  // Degree management handlers with React Strict Mode protection
-  // PERFORMANCE OPTIMIZED (Section 1 Gold Standard) - Updates local state only
+    // Enhanced removal logic:
+    // - If question 12.b is YES and this is the last entry, warn user but allow removal
+    // - If question 12.b is NO, allow removal freely
+    // - Always confirm before removal
+
+    const isLastEntry = entriesCount === 1;
+    const willNeedNewEntry = hasOtherEducationFlag && isLastEntry;
+
+    let confirmMessage = "Are you sure you want to remove this education entry?";
+    if (willNeedNewEntry) {
+      confirmMessage += "\n\nNote: Since you answered YES to question 12.b, a new empty entry will be automatically added.";
+    }
+
+    if (window.confirm(confirmMessage)) {
+      if (isDebugMode) {
+        console.log('✅ Section12: User confirmed removal');
+      }
+
+      // Remove the entry
+      removeSchoolEntry(index);
+
+      // Update expanded entries
+      setExpandedEntries(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(index);
+        // Shift indices down for remaining entries
+        const shiftedSet = new Set<number>();
+        for (const expandedIndex of newSet) {
+          if (expandedIndex > index) {
+            shiftedSet.add(expandedIndex - 1);
+          } else {
+            shiftedSet.add(expandedIndex);
+          }
+        }
+        return shiftedSet;
+      });
+
+      // If this was the last entry and question 12.b is YES, add a new entry automatically
+      if (willNeedNewEntry) {
+        setTimeout(() => {
+          if (isDebugMode) {
+            console.log('➕ Section12: Adding replacement entry after removal');
+          }
+          addSchoolEntry();
+          setExpandedEntries(new Set([0])); // Expand the new entry
+        }, 100);
+      }
+    }
+  }, [removeSchoolEntry, addSchoolEntry, getSchoolEntryCount, setExpandedEntries, isDebugMode, sectionData?.section12?.hasAttendedSchoolOutsideUS?.value]);
+
+  // Degree management handlers - FIXED: Use context methods
   const handleAddDegree = useCallback((schoolIndex: number) => {
     // Prevent React Strict Mode double execution
     if (isAddingDegreeRef.current) {
-      // console.log('🚫 Section12Component: handleAddDegree blocked - already in progress (React Strict Mode protection)');
       return;
     }
 
     isAddingDegreeRef.current = true;
-    // console.log(`🎯 Section12Component: handleAddDegree called for school ${schoolIndex} (local state mode)`);
+    console.log(`🎯 Section12Component: handleAddDegree called for school ${schoolIndex}`);
 
     try {
-      // PERFORMANCE OPTIMIZATION: Update local state instead of context to prevent performance issues
-      setLocalSectionData(prev => {
-        const updated = cloneDeep(prev);
-        const schoolEntry = updated.section12.entries[schoolIndex];
-
-        if (!schoolEntry) {
-          // console.warn(`⚠️ Section12Component: School entry ${schoolIndex} not found`);
-          return prev;
-        }
-
-        // Limit to 2 degrees per school as per PDF structure
-        if (schoolEntry.degrees.length >= 2) {
-          // console.warn('⚠️ Section12Component: Maximum of 2 degrees per school allowed');
-          return prev;
-        }
-
-        // Create a new default degree entry (matching DegreeEntry interface)
-        const newDegree = {
-          degreeType: {
-            id: "",
-            name: "",
-            type: 'PDFDropdown' as const,
-            label: 'Degree Type',
-            value: "High School Diploma" as const,
-            options: ["High School Diploma", "Associate's", "Bachelor's", "Master's", "Doctorate", "Professional Degree (e.g. M D, D V M, J D)", "Other"],
-            rect: { x: 0, y: 0, width: 0, height: 0 }
-          },
-          otherDegree: {
-            id: "",
-            name: "",
-            type: 'PDFTextField' as const,
-            label: 'Other Degree',
-            value: '',
-            rect: { x: 0, y: 0, width: 0, height: 0 }
-          },
-          dateAwarded: {
-            id: "",
-            name: "",
-            type: 'PDFTextField' as const,
-            label: 'Date Awarded',
-            value: '',
-            rect: { x: 0, y: 0, width: 0, height: 0 }
-          },
-          dateAwardedEstimate: {
-            id: "",
-            name: "",
-            type: 'PDFCheckBox' as const,
-            label: 'Date Awarded Estimate',
-            value: false,
-            rect: { x: 0, y: 0, width: 0, height: 0 }
-          }
-        };
-
-        schoolEntry.degrees.push(newDegree);
-        // console.log(`✅ Section12Component: Added degree to school ${schoolIndex} in local state. Total degrees: ${schoolEntry.degrees.length}`);
-        return updated;
-      });
-
-      // Mark that we have local changes
-      setHasLocalChanges(true);
-      // console.log(`✅ Section12Component: Added degree to school ${schoolIndex} (local state updated)`);
+      // Use context's addDegreeEntry method for proper data flow
+      addDegreeEntry(schoolIndex);
+      console.log(`✅ Section12Component: Added degree to school ${schoolIndex}`);
     } finally {
       // Reset the flag after a short delay to allow for state updates
       setTimeout(() => {
         isAddingDegreeRef.current = false;
-        // console.log('🔄 Section12Component: handleAddDegree flag reset');
       }, 100);
     }
-  }, []);
+  }, [addDegreeEntry]);
 
   const handleRemoveDegree = useCallback((schoolIndex: number, degreeIndex: number) => {
     // Prevent React Strict Mode double execution
     if (isRemovingDegreeRef.current) {
-      // console.log('🚫 Section12Component: handleRemoveDegree blocked - already in progress (React Strict Mode protection)');
       return;
     }
 
     isRemovingDegreeRef.current = true;
-    // console.log(`🎯 Section12Component: handleRemoveDegree called for school ${schoolIndex}, degree ${degreeIndex} (local state mode)`);
+    console.log(`🎯 Section12Component: handleRemoveDegree called for school ${schoolIndex}, degree ${degreeIndex}`);
 
     try {
       if (window.confirm("Are you sure you want to remove this degree?")) {
-        // PERFORMANCE OPTIMIZATION: Update local state instead of context to prevent performance issues
-        setLocalSectionData(prev => {
-          const updated = cloneDeep(prev);
-          const schoolEntry = updated.section12.entries[schoolIndex];
-
-          if (!schoolEntry) {
-            // console.warn(`⚠️ Section12Component: School entry ${schoolIndex} not found`);
-            return prev;
-          }
-
-          if (degreeIndex < 0 || degreeIndex >= schoolEntry.degrees.length) {
-            // console.warn(`⚠️ Section12Component: Degree index ${degreeIndex} out of bounds`);
-            return prev;
-          }
-
-          schoolEntry.degrees.splice(degreeIndex, 1);
-          // console.log(`✅ Section12Component: Removed degree ${degreeIndex} from school ${schoolIndex} in local state. Remaining degrees: ${schoolEntry.degrees.length}`);
-          return updated;
-        });
-
-        // Mark that we have local changes
-        setHasLocalChanges(true);
-        // console.log(`✅ Section12Component: Removed degree ${degreeIndex} from school ${schoolIndex} (local state updated)`);
+        // Use context's removeDegreeEntry method for proper data flow
+        removeDegreeEntry(schoolIndex, degreeIndex);
+        console.log(`✅ Section12Component: Removed degree ${degreeIndex} from school ${schoolIndex}`);
       }
     } finally {
       // Reset the flag after a short delay to allow for state updates
       setTimeout(() => {
         isRemovingDegreeRef.current = false;
-        // console.log('🔄 Section12Component: handleRemoveDegree flag reset');
       }, 100);
     }
-  }, []);
+  }, [removeDegreeEntry]);
 
-  // Enhanced education flag change handler - PERFORMANCE OPTIMIZED (Section 1 Gold Standard)
-  // Updates local state only, context sync happens on submit
+  // Enhanced education flag change handler - FIXED: Use context method
   const handleEducationFlagChange = useCallback((value: "YES" | "NO") => {
     if (isDebugMode) {
-      // console.log('🎯 handleEducationFlagChange called (local update):', { value, currentValue: sectionData?.section12?.hasAttendedSchool?.value });
+      console.log('🎯 handleEducationFlagChange called:', { value, currentValue: sectionData?.section12?.hasAttendedSchool?.value });
     }
 
-    // Update local state instead of context to prevent performance issues
-    setLocalSectionData(prev => {
-      const updated = cloneDeep(prev);
-      updated.section12.hasAttendedSchool.value = value;
-      return updated;
-    });
-
-    // Mark that we have local changes
-    setHasLocalChanges(true);
+    // Use context's updateAttendedSchoolFlag method for proper data flow
+    updateAttendedSchoolFlag(value);
 
     if (isDebugMode) {
-      // console.log('✅ Education flag updated locally');
+      console.log('✅ Education flag updated via context');
     }
-
-    // Note: Removed automatic entry addition - users can now add entries manually with the "Add School Entry" button
-  }, [isDebugMode]);
+  }, [isDebugMode, updateAttendedSchoolFlag, sectionData?.section12?.hasAttendedSchool?.value]);
 
   const handleHighSchoolFlagChange = useCallback((value: "YES" | "NO") => {
     if (isDebugMode) {
-      // console.log('🎯 handleHighSchoolFlagChange called (local update):', { value, currentValue: sectionData?.section12?.hasAttendedSchoolOutsideUS?.value });
+      console.log('🎯 handleHighSchoolFlagChange called:', { value, currentValue: sectionData?.section12?.hasAttendedSchoolOutsideUS?.value });
     }
 
-    // Update local state instead of context to prevent performance issues
-    setLocalSectionData(prev => {
-      const updated = cloneDeep(prev);
-      updated.section12.hasAttendedSchoolOutsideUS.value = value;
-
-      if (value === "NO") {
-        // Clear entries when flag changes to "NO"
-        updated.section12.entries = [];
-        // console.log('🧹 Cleared local entries when question 12.b set to NO');
-      } else if (value === "YES" && updated.section12.entries.length === 0) {
-        // Automatically add first entry when flag changes to "YES"
-        const newEntry = {
-          _id: Date.now(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          fromDate: { value: "" },
-          toDate: { value: "" },
-          fromDateEstimate: { value: false },
-          toDateEstimate: { value: false },
-          isPresent: { value: false },
-          schoolType: { value: "High School" },
-          schoolName: { value: "" },
-          schoolAddress: { value: "" },
-          schoolCity: { value: "" },
-          schoolState: { value: "" },
-          schoolZipCode: { value: "" },
-          schoolCountry: { value: "United States" },
-          receivedDegree: { value: "NO" },
-          degrees: []
-        };
-        updated.section12.entries.push(newEntry);
-        // console.log('✅ Auto-added first entry when question 12.b set to YES');
-      }
-
-      return updated;
-    });
-
-    // Mark that we have local changes
-    setHasLocalChanges(true);
+    // Use context's updateAttendedSchoolOutsideUSFlag method for proper data flow
+    updateAttendedSchoolOutsideUSFlag(value);
 
     // Handle expanded entries
     if (value === "NO") {
@@ -813,9 +589,9 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
     }
 
     if (isDebugMode) {
-      // console.log('✅ High school flag updated locally');
+      console.log('✅ High school flag updated via context');
     }
-  }, [isDebugMode]);
+  }, [isDebugMode, updateAttendedSchoolOutsideUSFlag, sectionData?.section12?.hasAttendedSchoolOutsideUS?.value]);
 
   // Save function to update SF86 context
   // FIXED: Removed sectionData dependency to prevent infinite loops
@@ -1013,15 +789,14 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
             >
               {isExpanded ? "Collapse" : "Expand"}
             </button>
-            {getSchoolEntryCount() > 1 && (
-              <button
-                type="button"
-                onClick={() => handleRemoveEntry(index)}
-                className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
-              >
-                Remove
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => handleRemoveEntry(index)}
+              className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+              title="Remove this education entry"
+            >
+              Remove
+            </button>
           </div>
         </div>
 
@@ -1078,14 +853,57 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
               </div>
             </div>
 
-            {/* School Information - Enhanced with Field Mapping */}
-            {renderFormField({
-              type: 'select',
-              label: 'School Type',
-              fieldPath: 'schoolType',
-              value: entry.schoolType.value,
-              options: getSchoolTypeOptions()
-            }, entry, index, entryErrors)}
+            {/* School Type Checkboxes - Match Official SF-86 Form */}
+            <div className="space-y-4">
+              <h5 className="text-md font-medium text-gray-800">
+                Select the most appropriate code to describe your school
+                <span className="text-red-500 ml-1">*</span>
+              </h5>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={entry.schoolTypes?.highSchool?.value || false}
+                    onChange={(e) => updateSchoolTypeCheckbox(index, 'highSchool', e.target.checked)}
+                    className="mr-2"
+                  />
+                  <span className="text-sm">High School</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={entry.schoolTypes?.vocationalTechnicalTrade?.value || false}
+                    onChange={(e) => updateSchoolTypeCheckbox(index, 'vocationalTechnicalTrade', e.target.checked)}
+                    className="mr-2"
+                  />
+                  <span className="text-sm">Vocational/Technical/Trade School</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={entry.schoolTypes?.collegeUniversityMilitary?.value || false}
+                    onChange={(e) => updateSchoolTypeCheckbox(index, 'collegeUniversityMilitary', e.target.checked)}
+                    className="mr-2"
+                  />
+                  <span className="text-sm">College/University/Military College</span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={entry.schoolTypes?.correspondenceDistanceOnline?.value || false}
+                    onChange={(e) => updateSchoolTypeCheckbox(index, 'correspondenceDistanceOnline', e.target.checked)}
+                    className="mr-2"
+                  />
+                  <span className="text-sm">Correspondence/Distance/Extension/Online School</span>
+                </label>
+              </div>
+              {/* Show validation error if no school type is selected */}
+              {entryErrors.some(error => error.includes('school type')) && (
+                <p className="text-sm text-red-600 mt-1">
+                  At least one school type must be selected
+                </p>
+              )}
+            </div>
 
             {renderFormField({
               type: 'text',
@@ -1468,9 +1286,10 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                   <div className="space-y-4">
                     <h6 className="text-sm font-medium text-gray-800">Contact Information</h6>
 
-                    {/* Phone number */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
+                    {/* Phone number, Extension, Day/Night, and Email - Inline Layout per SF-86 */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                      {/* Phone Number */}
+                      <div className="lg:col-span-3">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Phone Number
                         </label>
@@ -1483,32 +1302,10 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                           placeholder="Enter phone number"
                         />
-                        <div className="mt-2 space-y-2">
-                          <label className="flex items-center">
-                            <input
-                              type="checkbox"
-                              checked={entry.contactPerson?.isInternationalPhone?.value || false}
-                              onChange={(e) =>
-                                handleFieldUpdate(index, "contactPerson.isInternationalPhone.value", e.target.checked)
-                              }
-                              className="mr-2"
-                            />
-                            <span className="text-sm text-gray-600">International or DSN phone number</span>
-                          </label>
-                          <label className="flex items-center">
-                            <input
-                              type="checkbox"
-                              checked={entry.contactPerson?.unknownPhone?.value || false}
-                              onChange={(e) =>
-                                handleFieldUpdate(index, "contactPerson.unknownPhone.value", e.target.checked)
-                              }
-                              className="mr-2"
-                            />
-                            <span className="text-sm text-gray-600">I don't know the phone number</span>
-                          </label>
-                        </div>
                       </div>
-                      <div>
+
+                      {/* Extension */}
+                      <div className="lg:col-span-2">
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           Extension
                         </label>
@@ -1519,80 +1316,144 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
                             handleFieldUpdate(index, "contactPerson.phoneExtension.value", e.target.value)
                           }
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          placeholder="Enter extension"
+                          placeholder="Ext"
                         />
+                      </div>
+
+                      {/* Phone Options & Day/Night Attendance - Inline per SF-86 */}
+                      <div className="lg:col-span-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Phone Options & Attendance
+                        </label>
+                        <div className="space-y-1">
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={entry.contactPerson?.isInternationalPhone?.value || false}
+                              onChange={(e) =>
+                                handleFieldUpdate(index, "contactPerson.isInternationalPhone.value", e.target.checked)
+                              }
+                              className="mr-2"
+                            />
+                            <span className="text-xs text-gray-700">International or DSN phone number</span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={entry.dayAttendance?.value || false}
+                              onChange={(e) =>
+                                handleFieldUpdate(index, "dayAttendance.value", e.target.checked)
+                              }
+                              className="mr-2"
+                            />
+                            <span className="text-sm text-gray-700">Day</span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={entry.nightAttendance?.value || false}
+                              onChange={(e) =>
+                                handleFieldUpdate(index, "nightAttendance.value", e.target.checked)
+                              }
+                              className="mr-2"
+                            />
+                            <span className="text-sm text-gray-700">Night</span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={entry.contactPerson?.unknownPhone?.value || false}
+                              onChange={(e) =>
+                                handleFieldUpdate(index, "contactPerson.unknownPhone.value", e.target.checked)
+                              }
+                              className="mr-2"
+                            />
+                            <span className="text-xs text-gray-700">I don't know</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Email Address */}
+                      <div className="lg:col-span-3">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Email Address
+                        </label>
+                        <input
+                          type="email"
+                          value={entry.contactPerson?.email?.value || ""}
+                          onChange={(e) =>
+                            handleFieldUpdate(index, "contactPerson.email.value", e.target.value)
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Enter email address"
+                        />
+                      </div>
+
+                      {/* Email Options */}
+                      <div className="lg:col-span-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Email Options
+                        </label>
+                        <div className="space-y-1">
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={entry.contactPerson?.unknownEmail?.value || false}
+                              onChange={(e) =>
+                                handleFieldUpdate(index, "contactPerson.unknownEmail.value", e.target.checked)
+                              }
+                              className="mr-2"
+                            />
+                            <span className="text-xs text-gray-700">I don't know</span>
+                          </label>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Email */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Email Address
-                      </label>
-                      <input
-                        type="email"
-                        value={entry.contactPerson?.email?.value || ""}
-                        onChange={(e) =>
-                          handleFieldUpdate(index, "contactPerson.email.value", e.target.value)
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="Enter email address"
-                      />
-                      <div className="mt-2">
-                        <label className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={entry.contactPerson?.unknownEmail?.value || false}
-                            onChange={(e) =>
-                              handleFieldUpdate(index, "contactPerson.unknownEmail.value", e.target.checked)
-                            }
-                            className="mr-2"
-                          />
-                          <span className="text-sm text-gray-600">I don't know the email address</span>
-                        </label>
-                      </div>
-                    </div>
+
                   </div>
                 </div>
               )}
               </div>
             )}
 
-            {/* Day/Night Attendance */}
-            <div className="space-y-4">
-              <h5 className="text-md font-medium text-gray-800">Attendance Schedule</h5>
-              <p className="text-sm text-gray-600">
-                Indicate when you attended this school.
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={entry.dayAttendance?.value || false}
-                      onChange={(e) =>
-                        handleFieldUpdate(index, "dayAttendance.value", e.target.checked)
-                      }
-                      className="mr-2"
-                    />
-                    <span className="text-sm text-gray-700">Day</span>
-                  </label>
-                </div>
-                <div>
-                  <label className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={entry.nightAttendance?.value || false}
-                      onChange={(e) =>
-                        handleFieldUpdate(index, "nightAttendance.value", e.target.checked)
-                      }
-                      className="mr-2"
-                    />
-                    <span className="text-sm text-gray-700">Night</span>
-                  </label>
+            {/* Day/Night Attendance for entries without contact person - Compact inline format */}
+            {!shouldShowField('contactPersonFields', entry, index, globalFlags) && (
+              <div className="space-y-4 border-t pt-4">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+                  <div className="lg:col-span-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Attendance Schedule
+                    </label>
+                    <div className="flex space-x-4">
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={entry.dayAttendance?.value || false}
+                          onChange={(e) =>
+                            handleFieldUpdate(index, "dayAttendance.value", e.target.checked)
+                          }
+                          className="mr-2"
+                        />
+                        <span className="text-sm text-gray-700">Day</span>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={entry.nightAttendance?.value || false}
+                          onChange={(e) =>
+                            handleFieldUpdate(index, "nightAttendance.value", e.target.checked)
+                          }
+                          className="mr-2"
+                        />
+                        <span className="text-sm text-gray-700">Night</span>
+                      </label>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
+
           </div>
         )}
       </div>
@@ -1630,7 +1491,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
               <input
                 type="radio"
                 name="hasEducation"
-                checked={localSectionData?.section12?.hasAttendedSchool?.value === "YES"}
+                checked={sectionData?.section12?.hasAttendedSchool?.value === "YES"}
                 onChange={() => handleEducationFlagChange("YES")}
                 className="mr-2"
               />
@@ -1640,7 +1501,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
               <input
                 type="radio"
                 name="hasEducation"
-                checked={localSectionData?.section12?.hasAttendedSchool?.value === "NO"}
+                checked={sectionData?.section12?.hasAttendedSchool?.value === "NO"}
                 onChange={() => handleEducationFlagChange("NO")}
                 className="mr-2"
               />
@@ -1658,7 +1519,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
               <input
                 type="radio"
                 name="hasHighSchool"
-                checked={localSectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "YES"}
+                checked={sectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "YES"}
                 onChange={() => handleHighSchoolFlagChange("YES")}
                 className="mr-2"
               />
@@ -1668,7 +1529,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
               <input
                 type="radio"
                 name="hasHighSchool"
-                checked={localSectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "NO"}
+                checked={sectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "NO"}
                 onChange={() => handleHighSchoolFlagChange("NO")}
                 className="mr-2"
               />
@@ -1679,7 +1540,7 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
       </div>
 
       {/* Education Entries - Only show when question 12.b (hasAttendedSchoolOutsideUS) is YES */}
-      {localSectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "YES" && (
+      {sectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "YES" && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-medium text-gray-900">
@@ -1688,20 +1549,20 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
               <button
                 type="button"
                 onClick={handleAddEntry}
-                disabled={localSectionData.section12.entries.length >= 4}
+                disabled={sectionData.section12.entries.length >= 4}
                 className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                title={localSectionData.section12.entries.length >= 4 ? "Maximum of 4 school entries allowed" : "Add new school entry"}
+                title={sectionData.section12.entries.length >= 4 ? "Maximum of 4 school entries allowed" : "Add new school entry"}
               >
                 Add School Entry
-                {localSectionData.section12.entries.length >= 4 && (
+                {sectionData.section12.entries.length >= 4 && (
                   <span className="ml-1 text-xs">(Max: 4)</span>
                 )}
               </button>
             </div>
 
             {/* Show entries or helpful message */}
-            {localSectionData?.section12?.entries && localSectionData.section12.entries.length > 0 ? (
-              localSectionData.section12.entries.map((entry, index) =>
+            {sectionData?.section12?.entries && sectionData.section12.entries.length > 0 ? (
+              sectionData.section12.entries.map((entry, index) =>
                 renderSchoolEntry(entry, index)
               )
             ) : (
@@ -1759,8 +1620,8 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
           </div>
         )}
 
-      {/* Local Changes Indicator - Performance Optimization Feature */}
-      {(hasLocalChanges || hasPendingChanges()) && (
+      {/* Pending Changes Indicator */}
+      {hasPendingChanges() && (
         <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3 mb-4">
           <div className="flex items-center">
             <div className="flex-shrink-0">
@@ -1804,18 +1665,18 @@ const Section12Component: React.FC<Section12ComponentProps> = ({
         type="button"
         onClick={handleSubmit}
         className={`px-4 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-          (hasLocalChanges || hasPendingChanges())
+          hasPendingChanges()
             ? 'bg-orange-500 text-white hover:bg-orange-600 focus:ring-orange-500'
             : 'bg-blue-500 text-white hover:bg-blue-600 focus:ring-blue-500'
         }`}
         disabled={isLoading}
       >
-        {isLoading ? 'Saving...' : (hasLocalChanges || hasPendingChanges()) ? 'Save Changes & Continue' : 'Save & Continue'}
+        {isLoading ? 'Saving...' : hasPendingChanges() ? 'Save Changes & Continue' : 'Save & Continue'}
       </button>
 
       {/* Show instruction when no education flags are selected */}
-      {localSectionData?.section12?.hasAttendedSchool?.value === "NO" &&
-        localSectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "NO" && (
+      {sectionData?.section12?.hasAttendedSchool?.value === "NO" &&
+        sectionData?.section12?.hasAttendedSchoolOutsideUS?.value === "NO" && (
           <div className="text-center py-8 bg-green-50 rounded-lg border border-green-200 mt-6">
             <div className="flex justify-center mb-3">
               <svg className="h-8 w-8 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

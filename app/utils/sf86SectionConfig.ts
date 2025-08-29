@@ -144,6 +144,9 @@ export const getImplementedSectionIds = (): string[] => {
 export type SF86ActionType =
   | "generatePDF"
   | "generatePDFServer"
+  | "generatePDFForAnalysis"
+  | "savePdfToWorkspace"
+  | "moveAndValidatePdf"
   | "generateJSON"
   | "showAllFormFields"
   | "saveForm"
@@ -170,6 +173,9 @@ export interface SF86Config {
 export const DEFAULT_SF86_ACTIONS: SF86ActionType[] = [
   "generatePDF",
   "generatePDFServer",
+  "generatePDFForAnalysis",
+  "savePdfToWorkspace",
+  "moveAndValidatePdf",
   "generateJSON",
   "showAllFormFields",
   "saveForm",

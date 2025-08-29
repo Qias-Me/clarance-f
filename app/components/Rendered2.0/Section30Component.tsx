@@ -129,6 +129,24 @@ export const Section30Component: React.FC<Section30ComponentProps> = ({
               placeholder="Use the space below to continue answers or provide additional information. Include your name and SSN at the top. Before each answer, identify the number of the item and attempt to maintain sequential order and question format."
             />
           </div>
+
+          {/* Date Signed Page 1 */}
+          <div className="mb-6">
+            <label
+              htmlFor="dateSignedPage1"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Date Signed (Page 1)
+            </label>
+            <input
+              type="date"
+              id="dateSignedPage1"
+              data-testid="dateSignedPage1"
+              value={section30Data.section30?.dateSignedPage1?.value || ''}
+              onChange={(e) => updateFieldValue('section30.dateSignedPage1.value', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
         </div>
 
         {/* Personal Information */}

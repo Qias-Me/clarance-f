@@ -10,6 +10,7 @@
 		"preview": "npm run build && vite preview",
 		"typecheck": "npm run cf-typegen && react-router typegen && tsc -b",
 		"wrangler:update": "npm install wrangler@latest",
+<<<<<<< HEAD
 		"test:section13": "tsx tests/section13-comprehensive.test.js",
 		"test:unit": "tsx tests/section13-comprehensive.test.js",
 		"migrate:integration": "tsx app/commands/migrate-integration.ts",
@@ -48,6 +49,17 @@
     "verify:section14": "tsx scripts/verify-section14-mapping.ts",
     "test:section14": "vitest run app/tests/sections/Section14PDFMapper.test.ts"
   },
+=======
+		"pdf-to-images": "node scripts/pdf-to-images.js",
+		"extract-pdf-fields": "node scripts/pdf-page-field-extractor.js",
+		"clear-data": "node scripts/clear-data.js",
+		"validate-pdf": "node scripts/validate-pdf-workflow.js",
+		"validate-mappings": "node scripts/validate-mappings.js",
+		"test:section15": "npx playwright test tests/section15/comprehensive-section15.test.ts --reporter=list",
+		"publish-validation": "node scripts/publish-validation-artifacts.js",
+		"test:section15:headed": "npx playwright test tests/section15/comprehensive-section15.test.ts --reporter=list --headed"
+	},
+>>>>>>> dee206932ac43994f42ae910b9869d54d7fa3b02
 	"dependencies": {
 		"@reduxjs/toolkit": "^2.7.0",
 		"@testing-library/jest-dom": "^6.8.0",
@@ -64,8 +76,13 @@
 		"lodash.set": "^4.3.2",
 		"ora": "^8.2.0",
 		"pdf-lib": "^1.17.1",
+<<<<<<< HEAD
 		"pdfreader": "^3.0.7",
 		"playwright": "^1.55.0",
+=======
+		"pdf-poppler": "^0.2.1",
+		"pdfjs-dist": "^5.3.93",
+>>>>>>> dee206932ac43994f42ae910b9869d54d7fa3b02
 		"react": "^19.1.0",
 		"react-dom": "^19.1.0",
 		"react-error-boundary": "^6.0.0",

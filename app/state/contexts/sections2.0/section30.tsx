@@ -161,15 +161,23 @@ const createInitialSection30State = (): Section30 => {
 
 /**
  * Create a new continuation entry with proper numeric field IDs
+ * Updated to match the new interface structure with all 25 fields
  */
 const createInitialContinuationInfo = (): any => {
   return {
-    _id: Date.now() + Math.random(),
-    remarks: createFieldFromReference(
+    // Page 133 fields
+    continuationSheet: createFieldFromReference(
       30,
       SECTION30_NUMERIC_FIELD_IDS.REMARKS,
       ""
     ),
+    dateSignedPage1: createFieldFromReference(
+      30,
+      "16258", // Date signed page 1
+      ""
+    ),
+
+    // Page 134 fields (existing)
     personalInfo: {
       fullName: createFieldFromReference(
         30,
@@ -197,7 +205,6 @@ const createInitialContinuationInfo = (): any => {
           SECTION30_NUMERIC_FIELD_IDS.STREET_ADDRESS_PAGE2,
           ""
         ),
-        // Note: No separate apartment field in reference data
         city: createFieldFromReference(
           30,
           SECTION30_NUMERIC_FIELD_IDS.CITY_PAGE2,
@@ -219,29 +226,90 @@ const createInitialContinuationInfo = (): any => {
           ""
         ),
       },
-      // Additional fields to reach 25 field count
-      additionalInfo: {
-        whatIsPrognosis: createFieldFromReference(
+    },
+
+    // Page 135 medical fields
+    medicalInfo: {
+      radioButtonOption: createFieldFromReference(
+        30,
+        "16424", // RadioButtonList
+        ""
+      ),
+      whatIsPrognosis: createFieldFromReference(
+        30,
+        "16283", // What is the prognosis?
+        ""
+      ),
+      natureOfCondition: createFieldFromReference(
+        30,
+        "16273", // Nature of condition
+        ""
+      ),
+      datesOfTreatment: createFieldFromReference(
+        30,
+        "16272", // Dates of treatment
+        ""
+      ),
+    },
+
+    // Page 135 personal info (duplicate set)
+    page3PersonalInfo: {
+      fullName: createFieldFromReference(
+        30,
+        "16282", // Full name page 3
+        ""
+      ),
+      dateSigned: createFieldFromReference(
+        30,
+        "16281", // Date signed page 3
+        ""
+      ),
+      otherNamesUsed: createFieldFromReference(
+        30,
+        "16279", // Other names page 3
+        ""
+      ),
+      currentAddress: {
+        street: createFieldFromReference(
           30,
-          SECTION30_NUMERIC_FIELD_IDS.WHAT_IS_PROGNOSIS,
+          "16278", // Street page 3
           ""
         ),
-        natureOfCondition: createFieldFromReference(
+        city: createFieldFromReference(
           30,
-          SECTION30_NUMERIC_FIELD_IDS.NATURE_OF_CONDITION,
+          "16277", // City page 3
           ""
         ),
-        datesOfTreatment: createFieldFromReference(
+        state: createFieldFromReference(
           30,
-          SECTION30_NUMERIC_FIELD_IDS.DATES_OF_TREATMENT,
+          "16276", // State page 3
           ""
         ),
-        dropdown: createFieldFromReference(
+        zipCode: createFieldFromReference(
           30,
-          SECTION30_NUMERIC_FIELD_IDS.STATE_DROPDOWN_PAGE2,
+          "16275", // ZIP page 3
+          ""
+        ),
+        telephoneNumber: createFieldFromReference(
+          30,
+          "16274", // Phone page 3
           ""
         ),
       },
+    },
+
+    // Page 136 fields
+    page4Info: {
+      printName: createFieldFromReference(
+        30,
+        "16289", // Print name
+        ""
+      ),
+      dateSigned: createFieldFromReference(
+        30,
+        "16288", // Date signed page 4
+        ""
+      ),
     },
   };
 };

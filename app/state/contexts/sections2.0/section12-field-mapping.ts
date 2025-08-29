@@ -78,7 +78,7 @@ export const SECTION12_FIELD_MAPPINGS = {
   'section12.entries[0].toDate': 'form1[0].section_12[0].From_Datefield_Name_2[1]',
   'section12.entries[0].toDateEstimate': 'form1[0].section_12[0].sec12_1_1[1]',
   'section12.entries[0].isPresent': 'form1[0].section_12[0].sec12_1_1[0]',
-  'section12.entries[0].schoolName': 'form1[0].section_12[0].TextField11[13]', // FIXED: was TextField11[2] (ZIP code)
+  'section12.entries[0].schoolName': 'form1[0].section_12[0].TextField11[3]', // FIXED: Correct field from validation (was TextField11[13])
   'section12.entries[0].schoolAddress': 'form1[0].section_12[0].TextField11[0]',
   'section12.entries[0].schoolCity': 'form1[0].section_12[0].TextField11[1]',
   'section12.entries[0].schoolState': 'form1[0].section_12[0].School6_State[0]',

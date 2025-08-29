@@ -1,0 +1,14 @@
+{
+  "pageNumber": 17,
+  "totalPdfFields": 51,
+  "expectedMappings": 50,
+  "foundInPdf": 50,
+  "foundInReferences": 50,
+  "missingInPdf": [],
+  "missingInReferences": [],
+  "extraPdfFields": [
+    {
+      "name": "form1[0].section_13_1-2[0].SSN[0]"
+    }
+  ]
+}
