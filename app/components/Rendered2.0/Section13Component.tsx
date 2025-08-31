@@ -18,32 +18,8 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useSection13 } from '~/state/contexts/sections2.0/section13';
 import { usePerformanceMonitor } from '../../utils/performance-monitor';
 import { useSF86Form } from '~/state/contexts/sections2.0/SF86FormContext';
-<<<<<<< HEAD
-import { EmploymentSection } from './EmploymentSection';
-import { DynamicFieldRenderer } from './DynamicFieldRenderer';
-import Section13FullRenderer from './Section13FullRenderer';
-import VirtualizedFields, { createFieldConfig, createFieldGroup, type FieldConfig, type FieldGroup } from './VirtualizedFields';
-import { cloneDeep } from 'lodash';
-import { 
-  EMPLOYMENT_TYPES,
-  NON_FEDERAL_EMPLOYMENT_TYPES,
-  MAX_EMPLOYMENT_ENTRIES,
-  VALIDATION_MESSAGES,
-  FIELD_TYPE_LABELS,
-  SECTION_13_TABS
-} from '~/constants/section13-constants';
-import {
-  createEmploymentEntry,
-  normalizeValue,
-  normalizeFieldPath,
-  getNestedFieldValue,
-  setNestedFieldValue,
-  validateEmploymentEntry
-} from '../../utils/section13-helpers';
-=======
 import { integratedValidationService, type IntegratedValidationResult } from '../../../api/service/integratedValidationService';
 import { FieldMappingValidator } from '../tools/FieldMappingValidator';
->>>>>>> dee206932ac43994f42ae910b9869d54d7fa3b02
 
 interface Section13ComponentProps {
   className?: string;
@@ -67,10 +43,6 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
     resetSection,
     isDirty,
     errors,
-<<<<<<< HEAD
-    initializeEnhancedSupport,
-    getEmploymentTypeStats
-=======
     // Employment Entry Management
     addMilitaryEmploymentEntry,
     removeMilitaryEmploymentEntry,
@@ -85,7 +57,6 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
     removeUnemploymentEntry,
     updateUnemploymentEntry,
     getEmploymentEntryCount
->>>>>>> dee206932ac43994f42ae910b9869d54d7fa3b02
   } = useSection13();
 
   // SF86 Form Context for data persistence
@@ -93,26 +64,10 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
 
   // Track validation state internally
   const [isValid, setIsValid] = useState(false);
-<<<<<<< HEAD
-  
-  // Toggle between legacy and virtualized field rendering
-  const [useVirtualizedRenderer, setUseVirtualizedRenderer] = useState(true);
-  
-  /**
-   * Get field value safely with improved path resolution
-   * @param {string} fieldPath - Path to the field value
-   * @returns {string | boolean} The field value or empty string if not found
-   */
-  const getFieldValue = useCallback((fieldPath: string): string | boolean => {
-    const normalizedPath = normalizeFieldPath(fieldPath);
-    return getNestedFieldValue(section13Data, normalizedPath);
-  }, [section13Data]);
-=======
   const [validationResult, setValidationResult] = useState<IntegratedValidationResult | null>(null);
   const [isValidating, setIsValidating] = useState(false);
   const [showFieldMappingValidator, setShowFieldMappingValidator] = useState(false);
   const [pdfBytesForValidation, setPdfBytesForValidation] = useState<Uint8Array | null>(null);
->>>>>>> dee206932ac43994f42ae910b9869d54d7fa3b02
 
   /**
    * Handle field updates with correct structure - Enhanced for complex nested objects
@@ -147,10 +102,10 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
     addFieldConfig('section13.employmentRecordIssues.wasFired.value', 'Were you ever fired from a job?', 'checkbox');
     addFieldConfig('section13.employmentRecordIssues.quitAfterBeingTold.value', 'Did you quit after being told you would be fired?', 'checkbox');
     addFieldConfig('section13.employmentRecordIssues.leftByMutualAgreement.value', 'Did you leave by mutual agreement?', 'checkbox');
-    addFieldConfig('section13.employmentRecordIssues.hasChargesOrAllegations.value', 'Do you have charges or allegations?', 'checkbox');
+    // removed unmapped: hasChargesOrAllegations
     
     // Disciplinary Actions
-    addFieldConfig('section13.disciplinaryActions.receivedWrittenWarning.value', 'Received written warning?', 'checkbox');
+    // removed unmapped: disciplinaryActions.receivedWrittenWarning
     
     return configs;
   }, [section13Data, getFieldValue, handleFieldChange]);
@@ -200,11 +155,6 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
     onValidationChange?.(validationResult.isValid);
   }, [validateSection, onValidationChange]);
 
-<<<<<<< HEAD
-  useEffect(() => {
-    handleValidationChange();
-  }, [handleValidationChange]);
-=======
   // Handle field updates with correct structure
   const handleFieldChange = (fieldPath: string, value: any) => {
     updateField(`section13.${fieldPath}.value`, value);
@@ -228,7 +178,6 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
         break;
     }
   };
->>>>>>> dee206932ac43994f42ae910b9869d54d7fa3b02
 
   // Handle submission with data persistence
   const handleSubmit = async (e: React.FormEvent) => {
@@ -280,128 +229,6 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
   // Reset function
   const handleReset = useCallback(() => {
     resetSection();
-<<<<<<< HEAD
-  }, [resetSection]);
-
-  // Check if any employment record issues are true
-  const hasAnyEmploymentIssues = useMemo((): boolean => {
-    const issues = section13Data.section13?.employmentRecordIssues;
-    if (!issues) return false;
-    return Boolean(
-      issues.wasFired?.value || 
-      issues.quitAfterBeingTold?.value || 
-      issues.leftByMutualAgreement?.value || 
-      issues.hasChargesOrAllegations?.value
-    );
-  }, [
-    section13Data.section13?.employmentRecordIssues?.wasFired?.value,
-    section13Data.section13?.employmentRecordIssues?.quitAfterBeingTold?.value,
-    section13Data.section13?.employmentRecordIssues?.leftByMutualAgreement?.value,
-    section13Data.section13?.employmentRecordIssues?.hasChargesOrAllegations?.value
-  ]);
-
-  // Check if any disciplinary actions are true
-  const hasAnyDisciplinaryActions = useMemo((): boolean => {
-    const actions = section13Data.section13?.disciplinaryActions;
-    if (!actions) return false;
-    return Boolean(actions.receivedWrittenWarning?.value);
-  }, [section13Data.section13?.disciplinaryActions?.receivedWrittenWarning?.value]);
-
-  // Employment entry management functions
-  const addEmploymentEntry = (entryType: string) => {
-    // Create a new entry with the proper Field<T> structure
-    const createField = (value: any, id: string) => ({
-      id,
-      value,
-      label: '',
-      name: id,
-      type: 'PDFTextField',
-      required: false,
-      section: 13,
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    });
-
-    const newEntry = {
-      _id: `${entryType}-${Date.now()}`,
-      employerName: createField('', `${entryType}EmployerName`),
-      positionTitle: createField('', `${entryType}PositionTitle`),
-      employmentDates: {
-        fromDate: createField('', `${entryType}FromDate`),
-        toDate: createField('', `${entryType}ToDate`),
-        present: createField(false, `${entryType}Present`)
-      },
-      address: {
-        street: createField('', `${entryType}Street`),
-        city: createField('', `${entryType}City`),
-        state: createField('', `${entryType}State`),
-        zipCode: createField('', `${entryType}ZipCode`),
-        country: createField('United States', `${entryType}Country`)
-      },
-      supervisor: {
-        name: createField('', `${entryType}SupervisorName`),
-        title: createField('', `${entryType}SupervisorTitle`),
-        email: createField('', `${entryType}SupervisorEmail`),
-        phone: {
-          number: createField('', `${entryType}SupervisorPhone`),
-          extension: createField('', `${entryType}SupervisorExtension`)
-        }
-      },
-      reasonForLeaving: createField('', `${entryType}ReasonForLeaving`),
-      additionalComments: createField('', `${entryType}AdditionalComments`)
-    };
-
-    // Get current entries and add the new one
-    const currentEntries = section13Data.section13?.[entryType]?.entries || [];
-    const updatedSection = {
-      ...section13Data.section13?.[entryType],
-      entries: [...currentEntries, newEntry]
-    };
-    
-    updateFieldValue(`section13.${entryType}`, updatedSection);
-  };
-
-  const updateEmploymentEntry = (entryType: string, index: number, field: string, value: string) => {
-    const currentEntries = section13Data.section13?.[entryType]?.entries || [];
-    const updatedEntries = cloneDeep(currentEntries);
-    
-    if (updatedEntries[index]) {
-      // Handle nested field updates for Field<T> structure
-      if (field.includes('.')) {
-        const fieldParts = field.split('.');
-        let current = updatedEntries[index];
-        
-        // Navigate to the nested object
-        for (let i = 0; i < fieldParts.length - 1; i++) {
-          if (!current[fieldParts[i]]) {
-            current[fieldParts[i]] = {};
-          }
-          current = current[fieldParts[i]];
-        }
-        
-        // Set the final value in the Field<T> structure
-        const finalField = fieldParts[fieldParts.length - 1];
-        if (current[finalField] && typeof current[finalField] === 'object' && 'value' in current[finalField]) {
-          current[finalField].value = value;
-        } else {
-          current[finalField] = { value, id: `${entryType}${field}`, label: '', name: `${entryType}${field}`, type: 'PDFTextField', required: false, section: 13, rect: { x: 0, y: 0, width: 0, height: 0 } };
-        }
-      } else {
-        // Direct field update
-        if (updatedEntries[index][field] && typeof updatedEntries[index][field] === 'object' && 'value' in updatedEntries[index][field]) {
-          updatedEntries[index][field].value = value;
-        } else {
-          updatedEntries[index][field] = { value, id: `${entryType}${field}`, label: '', name: `${entryType}${field}`, type: 'PDFTextField', required: false, section: 13, rect: { x: 0, y: 0, width: 0, height: 0 } };
-        }
-      }
-      
-      // Update the entire employment section
-      const updatedSection = {
-        ...section13Data.section13?.[entryType],
-        entries: updatedEntries
-      };
-      
-      updateFieldValue(`section13.${entryType}`, updatedSection);
-=======
     setValidationResult(null);
   };
 
@@ -568,7 +395,6 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
       return section13Data.section13?.gapExplanation?.value || '';
     } else if (fieldPath === 'employmentType') {
       return section13Data.section13?.employmentType?.value || 'Other';
->>>>>>> dee206932ac43994f42ae910b9869d54d7fa3b02
     }
   };
 
@@ -598,39 +424,6 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
           {useVirtualizedRenderer ? 'Using Virtual Scrolling (Recommended)' : 'Using Legacy Renderer'}
         </span>
       </div>
-<<<<<<< HEAD
-      
-      {/* Conditional rendering based on toggle */}
-      {useVirtualizedRenderer ? (
-        <VirtualizedFields
-          groups={fieldGroups}
-          maxVisibleHeight={600}
-          itemHeight={80}
-          overscanCount={5}
-          onFieldChange={handleFieldChange}
-        />
-      ) : (
-        <Section13FullRenderer onValidationChange={onValidationChange} />
-      )}
-      
-      {/* Form submission buttons */}
-      <div className="mt-8 flex justify-between">
-        <button
-          type="button"
-          onClick={handleReset}
-          className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-        >
-          Reset
-        </button>
-        <button
-          type="button"
-          onClick={handleSubmit}
-          className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        >
-          Save & Continue
-        </button>
-      </div>
-=======
 
       {/* Employment Information Form */}
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -2271,7 +2064,6 @@ export const Section13Component: React.FC<Section13ComponentProps> = ({
           </div>
         </div>
       )}
->>>>>>> dee206932ac43994f42ae910b9869d54d7fa3b02
     </div>
   );
 };

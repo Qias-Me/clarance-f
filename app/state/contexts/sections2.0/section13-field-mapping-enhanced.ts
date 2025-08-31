@@ -22,28 +22,7 @@ export interface FieldMappingEntry {
 
 // Page 17 Complete Field Mappings
 export const PAGE_17_FIELD_MAPPINGS: FieldMappingEntry[] = [
-  // Main Employment Questions
-  {
-    uiPath: 'section13.hasEmployment',
-    pdfFieldName: 'form1[0].section_13_1-2[0].RadioButtonList[1]',
-    fieldType: 'radio',
-    page: 17,
-    validation: { required: true }
-  },
-  {
-    uiPath: 'section13.hasGaps',
-    pdfFieldName: 'form1[0].section_13_1-2[0].RadioButtonList[0]',
-    fieldType: 'radio',
-    page: 17,
-    validation: { required: true }
-  },
-  {
-    uiPath: 'section13.gapExplanation',
-    pdfFieldName: 'form1[0].section_13_1-2[0].#field[0]',
-    fieldType: 'text',
-    page: 17,
-    validation: { required: false, maxLength: 500 }
-  },
+  // Main Employment Questions (deprecated in canonical mapping)
   
   // Employment Type Selection
   {

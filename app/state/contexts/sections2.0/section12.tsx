@@ -35,25 +35,14 @@ import type {
   SchoolEntry,
   SchoolEntryOperation,
   DegreeEntry,
-<<<<<<< HEAD
-  ContactPerson
-} from '../../../../api/interfaces/section-interfaces/section12';
-=======
   ContactPerson,
   SchoolTypes
 } from '../../../../api/interfaces/sections2.0/section12';
->>>>>>> dee206932ac43994f42ae910b9869d54d7fa3b02
 import {
   SCHOOL_TYPE_OPTIONS,
   DEGREE_TYPE_OPTIONS,
-<<<<<<< HEAD
-  createDefaultDegreeEntry,
-  createDefaultContactPerson
-} from '../../../../api/interfaces/section-interfaces/section12';
-=======
   EDUCATION_DATE_VALIDATION
 } from '../../../../api/interfaces/sections2.0/section12';
->>>>>>> dee206932ac43994f42ae910b9869d54d7fa3b02
 import type { ValidationResult, ValidationError } from '../shared/base-interfaces';
 import { validateSection12FieldMappings } from './section12-field-mapping';
 import { validateFieldGeneration, generateSection12Field, generateGlobalFields } from './section12-field-generator';

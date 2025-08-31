@@ -270,53 +270,6 @@ import {
 
 
 
-<<<<<<< HEAD:api/interfaces/section-interfaces/section12.ts
-/**
- * Creates a default degree entry
- */
-export const createDefaultDegreeEntry = (): DegreeEntry => {
-  return {
-    degreeType: {
-      id: "",
-      name: "",
-      type: 'PDFDropdown',
-      label: 'Degree Type',
-      value: "High School Diploma",
-      options: ["High School Diploma", "Associate's", "Bachelor's", "Master's", "Doctorate", "Professional Degree (e.g. M D, D V M, J D)", "Other"],
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    otherDegree: {
-      id: "",
-      name: "",
-      type: 'PDFTextField',
-      label: 'Other Degree',
-      value: '',
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    dateAwarded: {
-      id: "",
-      name: "",
-      type: 'PDFTextField',
-      label: 'Date Awarded',
-      value: '',
-      required: false,
-      section: 12,
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    },
-    dateAwardedEstimate: {
-      id: "",
-      name: "",
-      type: 'PDFCheckBox',
-      label: 'Estimate',
-      value: false,
-      required: false,
-      section: 12,
-      rect: { x: 0, y: 0, width: 0, height: 0 }
-    }
-  };
-};
-=======
->>>>>>> dee206932ac43994f42ae910b9869d54d7fa3b02:api/interfaces/sections2.0/section12.ts
 
 
 

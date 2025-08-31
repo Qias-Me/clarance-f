@@ -9,14 +9,8 @@
 import React, { useState, useCallback, useEffect, useRef, memo } from "react";
 import { useSection12 } from "~/state/contexts/sections2.0/section12";
 import { useSF86Form } from "~/state/contexts/sections2.0/SF86FormContext";
-<<<<<<< HEAD
-import { getUSStateOptions, getCountryOptions } from "../../../api/interfaces/section-interfaces/base";
-import type { SchoolEntry, Section12 } from "../../../api/interfaces/section-interfaces/section12";
-import { cloneDeep, set } from "lodash";
-=======
 import { getUSStateOptions, getCountryOptions } from "../../../api/interfaces/sections2.0/base";
 import type { SchoolEntry, Section12 } from "../../../api/interfaces/sections2.0/section12";
->>>>>>> dee206932ac43994f42ae910b9869d54d7fa3b02
 import {
   mapLogicalFieldToPdfField,
   getFieldMetadata,

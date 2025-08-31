@@ -44,11 +44,6 @@ export interface PdfGenerationResult {
     totalFormFields: number;
     applicationSuccessRate: number;
   };
-<<<<<<< HEAD
-  // Enhanced Section 1 integration data
-  section1Statistics?: any;
-  section1Validation?: any;
-=======
   validation?: {
     success: boolean;
     fieldsFound: any[];
@@ -56,7 +51,6 @@ export interface PdfGenerationResult {
     fieldsMissing: any[];
     errors: string[];
   };
->>>>>>> dee206932ac43994f42ae910b9869d54d7fa3b02
 }
 
 /**
@@ -97,42 +91,6 @@ export async function generateAndDownloadPdf(
     }
     onProgress?.("Starting PDF generation...");
 
-<<<<<<< HEAD
-    // Use the enhanced client PDF service
-    // Generate PDF using enhanced service with Section 1 integration or legacy service
-    let pdfResult;
-    if (useEnhancedSection1Integration) {
-      if (showConsoleOutput) {
-        console.info("🔗 Using Enhanced PDF Service with Section 1 Integration");
-      }
-      onProgress?.("Applying enhanced Section 1 field mappings...");
-      
-      try {
-        pdfResult = await enhancedPdfService.generateEnhancedPdf(formData);
-        
-        if (showConsoleOutput && pdfResult.section1Statistics) {
-          console.info("📊 Section 1 Integration Statistics:");
-          console.info(`   🎯 Section 1 Fields Processed: ${pdfResult.section1Statistics.totalSection1Fields || 0}`);
-          console.info(`   ✅ Successful Mappings: ${pdfResult.section1Statistics.successfulMappings || 0}`);
-          console.info(`   ❌ Failed Mappings: ${pdfResult.section1Statistics.failedMappings || 0}`);
-          console.info(`   📈 Mapping Success Rate: ${((pdfResult.section1Statistics.mappingSuccessRate || 0) * 100).toFixed(1)}%`);
-          console.info(`   🔗 Integration Mappings: ${pdfResult.section1Statistics.integrationMappings || 0}`);
-          console.info(`   🔄 Legacy Mappings: ${pdfResult.section1Statistics.legacyMappings || 0}`);
-        }
-      } catch (enhancedError) {
-        if (showConsoleOutput) {
-          console.warn("⚠️ Enhanced PDF Service failed, falling back to legacy service:", enhancedError);
-        }
-        onProgress?.("Enhanced service failed, using legacy PDF generation...");
-        pdfResult = await clientPdfService2.generatePdfClientAction(formData);
-      }
-    } else {
-      if (showConsoleOutput) {
-        console.info("🔄 Using Legacy PDF Service");
-      }
-      pdfResult = await clientPdfService2.generatePdfClientAction(formData);
-    }
-=======
     // Use the enhanced client PDF service with validation
     const pdfResult = await clientPdfService2.generatePdfWithValidation(formData, {
       targetPages: [17], // Default to Section 13 page 17
@@ -140,7 +98,6 @@ export async function generateAndDownloadPdf(
       enableCorrection: true,
       generateImages: true
     });
->>>>>>> dee206932ac43994f42ae910b9869d54d7fa3b02
 
     // Update result with PDF service response
     result.success = pdfResult.success;

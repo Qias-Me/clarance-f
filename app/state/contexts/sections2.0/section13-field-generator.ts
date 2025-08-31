@@ -414,10 +414,9 @@ export function generateUnemploymentFields(entryIndex: number = 0) {
  */
 export function generateFederalEmploymentInfoFields() {
   return {
-    hasFederalEmployment: generateSection13Field('section13.federalInfo.hasFederalEmployment', 'NO', ['YES', 'NO']),
-    hasNationalSecurity: generateSection13Field('section13.federalInfo.hasNationalSecurity', 'NO', ['YES', 'NO']),
-    hasAccessToClassified: generateSection13Field('section13.federalInfo.hasAccessToClassified', 'NO', ['YES', 'NO']),
-    hasClearance: generateSection13Field('section13.federalInfo.hasClearance', 'NO', ['YES', 'NO'])
+    // Canonical mapping JSON only provides clearanceDate and clearanceLevel
+    clearanceLevel: generateSection13Field('section13.federalInfo.clearanceLevel', ''),
+    clearanceDate: generateSection13Field('section13.federalInfo.clearanceDate', '')
   };
 }
 

@@ -24,18 +24,6 @@ import type {
   NonFederalEmploymentEntry,
   SelfEmploymentEntry,
   UnemploymentEntry,
-<<<<<<< HEAD
-  FederalEmploymentInfo,
-  EmploymentEntry,
-  EmploymentType,
-  EmploymentStatus,
-  EmploymentDateRange,
-  Section13ValidationContext,
-  EmploymentValidationResult
-} from '../../../../api/interfaces/section-interfaces/section13';
-import {
-} from '../../../../api/interfaces/section-interfaces/section13';
-=======
   EmploymentEntry,
   FederalEmploymentInfo,
   EmploymentType,
@@ -44,7 +32,6 @@ import {
 // Import helper functions for field creation
 import { createFieldFromReference } from '../../../../api/utils/sections-references-loader';
 import { mapLogicalFieldToPdfField } from './section13-field-mapping';
->>>>>>> dee206932ac43994f42ae910b9869d54d7fa3b02
 
 import type { ValidationResult, ValidationError, ChangeSet } from '../shared/base-interfaces';
 import { useSF86Form } from './SF86FormContext';
@@ -822,46 +809,16 @@ export const createDefaultUnemploymentEntry = (entryId: string | number): Unempl
 };
 
 export const createDefaultFederalEmploymentInfo = (): FederalEmploymentInfo => ({
-  hasFederalEmployment: createFieldFromReference(
-    13,
-    'form1[0].section13_5[0].RadioButtonList[0]', // Maps to sect13A.5Entry1HasFederalEmployment
-    "NO" as "YES" | "NO"
-  ),
-  securityClearance: createFieldFromReference(
-    13,
-    'form1[0].section13_5[0].RadioButtonList[1]', // Maps to sect13A.5Entry1SecurityClearance
-    "NO" as "YES" | "NO"
-  ),
-  clearanceLevel: createFieldFromReference(
-    13,
-    'form1[0].section13_5[0].TextField11[3]', // Maps to sect13A.5Entry1ClearanceLevel - CORRECTED
-    ''
-  ),
-  clearanceDate: createFieldFromReference(
-    13,
-    'form1[0].section13_5[0].From_Datefield_Name_2[2]', // Maps to sect13A.5Entry1ClearanceDate - CORRECTED
-    ''
-  ),
-  investigationDate: createFieldFromReference(
-    13,
-    'form1[0].section13_5[0].From_Datefield_Name_2[3]', // Maps to sect13A.5Entry1InvestigationDate - CORRECTED
-    ''
-  ),
-  polygraphDate: createFieldFromReference(
-    13,
-    'form1[0].section13_5[0].From_Datefield_Name_2[4]', // Maps to sect13A.5Entry1PolygraphDate - CORRECTED
-    ''
-  ),
-  accessToClassified: createFieldFromReference(
-    13,
-    'form1[0].section13_5[0].#field[22]', // Maps to sect13A.5Entry1AccessToClassified - CORRECTED
-    "NO" as "YES" | "NO"
-  ),
-  classificationLevel: createFieldFromReference(
-    13,
-    'form1[0].section13_5[0].TextField11[4]', // Maps to sect13A.5Entry1ClassificationLevel - CORRECTED
-    ''
-  )
+  // Canonical mapping JSON only contains these two fields
+  clearanceLevel: createFieldFromReference(13, 'form1[0].section13_5[0].TextField11[3]', ''),
+  clearanceDate: createFieldFromReference(13, 'form1[0].section13_5[0].From_Datefield_Name_2[2]', ''),
+  // Initialize other fields as empty Field<T> for UI (no PDF mapping)
+  hasFederalEmployment: createFieldFromReference(13, 'form1[0].section13_5[0].#unmapped', 'NO' as 'YES' | 'NO'),
+  securityClearance: createFieldFromReference(13, 'form1[0].section13_5[0].#unmapped2', 'NO' as 'YES' | 'NO'),
+  investigationDate: createFieldFromReference(13, 'form1[0].section13_5[0].#unmapped3', ''),
+  polygraphDate: createFieldFromReference(13, 'form1[0].section13_5[0].#unmapped4', ''),
+  accessToClassified: createFieldFromReference(13, 'form1[0].section13_5[0].#unmapped5', 'NO' as 'YES' | 'NO'),
+  classificationLevel: createFieldFromReference(13, 'form1[0].section13_5[0].TextField11[4]', ''),
 });
 
 export const createDefaultSection13 = (includeInitialEntry: boolean = false): Section13 => {
@@ -919,13 +876,7 @@ export const createDefaultSection13 = (includeInitialEntry: boolean = false): Se
 
       // Disciplinary actions (Section 13A.6)
       disciplinaryActions: {
-        receivedWrittenWarning: createFieldFromReference(
-          13,
-          'form1[0].section13_4[0].RadioButtonList[2]', // Maps to written warning question - FIXED: RadioButtonList[3] does not exist, using RadioButtonList[2]
-          false
-        ),
         warningDates: [],
-        warningReasons: []
       },
 
       // Federal employment information
@@ -1172,9 +1123,9 @@ export const createDefaultNonFederalEmploymentEntry = (entryId: string | number)
   return {
     _id: entryId,
 
-    // Basic Employment Information - NOW USING MAPPED FIELDS
-    employerName: createMappedField('section13.nonFederalEmployment.entries[0].employer.name', ''),
-    positionTitle: createMappedField('section13.nonFederalEmployment.entries[0].position.title', ''),
+    // Basic Employment Information - NOW USING MAPPED FIELDS (canonical uiPaths)
+    employerName: createMappedField('section13.nonFederalEmployment.entries[0].employerName', ''),
+    positionTitle: createMappedField('section13.nonFederalEmployment.entries[0].positionTitle', ''),
 
     // Supervisor Information - NOW USING MAPPED FIELDS
     supervisor: {
@@ -1183,28 +1134,12 @@ export const createDefaultNonFederalEmploymentEntry = (entryId: string | number)
       email: createMappedField('section13.nonFederalEmployment.entries[0].supervisor.email', ''),
       emailUnknown: createMappedField('section13.nonFederalEmployment.entries[0].supervisor.emailUnknown', false),
       phone: {
-        number: createMappedField('section13.nonFederalEmployment.entries[0].supervisor.phone', ''),
-        extension: createMappedField('section13.nonFederalEmployment.entries[0].supervisor.phone.extension', ''),
-        isDSN: createMappedField('section13.nonFederalEmployment.entries[0].supervisor.phone.isDSN', false),
-        isDay: createMappedField('section13.nonFederalEmployment.entries[0].supervisor.phone.isDay', false),
-        isNight: createMappedField('section13.nonFederalEmployment.entries[0].supervisor.phone.isNight', false)
+        number: createMappedField('section13.nonFederalEmployment.entries[0].supervisor.phone.number', ''),
       },
       workLocation: {
         street: createMappedField('section13.nonFederalEmployment.entries[0].supervisor.workLocation.street', ''),
-        city: createMappedField('section13.nonFederalEmployment.entries[0].supervisor.workLocation.city', ''),
-        state: {
-          ...createMappedField('section13.nonFederalEmployment.entries[0].supervisor.workLocation.state', ''),
-          options: []
-        },
-        zipCode: createMappedField('section13.nonFederalEmployment.entries[0].supervisor.workLocation.zipCode', ''),
-        country: {
-          ...createMappedField('section13.nonFederalEmployment.entries[0].supervisor.workLocation.country', ''),
-          options: []
-        }
       },
-      hasApoFpo: createMappedField('section13.nonFederalEmployment.entries[0].supervisor.hasApoFpo', false),
       canContact: createMappedField('section13.nonFederalEmployment.entries[0].supervisor.canContact', "YES" as "YES" | "NO"),
-      contactRestrictions: createMappedField('section13.nonFederalEmployment.entries[0].supervisor.contactRestrictions', '')
     },
 
     // Employer Address - NOW USING MAPPED FIELDS
@@ -1221,7 +1156,6 @@ export const createDefaultNonFederalEmploymentEntry = (entryId: string | number)
       fromDate: createMappedField('section13.nonFederalEmployment.entries[0].employmentDates.fromDate', ''),
       toDate: createMappedField('section13.nonFederalEmployment.entries[0].employmentDates.toDate', ''),
       fromEstimated: createMappedField('section13.nonFederalEmployment.entries[0].employmentDates.fromEstimated', false),
-      toEstimated: createMappedField('section13.nonFederalEmployment.entries[0].employmentDates.toEstimated', false),
       present: createMappedField('section13.nonFederalEmployment.entries[0].employmentDates.present', false)
     },
 
@@ -1233,7 +1167,6 @@ export const createDefaultNonFederalEmploymentEntry = (entryId: string | number)
     phone: {
       number: createMappedField('section13.nonFederalEmployment.entries[0].phone.number', ''),
       extension: createMappedField('section13.nonFederalEmployment.entries[0].phone.extension', ''),
-      isDSN: createMappedField('section13.nonFederalEmployment.entries[0].phone.isDSN', false),
       isDay: createMappedField('section13.nonFederalEmployment.entries[0].phone.isDay', false),
       isNight: createMappedField('section13.nonFederalEmployment.entries[0].phone.isNight', false)
     },
@@ -1453,27 +1386,7 @@ export const updateSection13Field = (
     valueType: typeof newValue
   });
 
-  // Main section flags
-  if (fieldPath === 'section13.hasEmployment' || fieldPath === 'hasEmployment') {
-    if (newData.section13?.hasEmployment) {
-      newData.section13.hasEmployment.value = newValue;
-    }
-    return newData;
-  }
-
-  if (fieldPath === 'section13.hasGaps' || fieldPath === 'hasGaps') {
-    if (newData.section13?.hasGaps) {
-      newData.section13.hasGaps.value = newValue;
-    }
-    return newData;
-  }
-
-  if (fieldPath === 'section13.gapExplanation' || fieldPath === 'gapExplanation') {
-    if (newData.section13?.gapExplanation) {
-      newData.section13.gapExplanation.value = newValue;
-    }
-    return newData;
-  }
+  // Legacy general flags (hasEmployment/hasGaps/gapExplanation) removed – not in canonical mapping
 
   // Handle employment entries
   if (fieldPath.includes('entries') && entryIndex !== undefined) {
@@ -1550,15 +1463,7 @@ export const updateSection13Field = (
     const pathParts = fieldPath.split('.');
     const lastPart = pathParts[pathParts.length - 1];
 
-    if (lastPart === 'hasEmployment' && newData.section13?.hasEmployment) {
-      newData.section13.hasEmployment.value = newValue;
-    }
-    else if (lastPart === 'hasGaps' && newData.section13?.hasGaps) {
-      newData.section13.hasGaps.value = newValue;
-    }
-    else if (lastPart === 'gapExplanation' && newData.section13?.gapExplanation) {
-      newData.section13.gapExplanation.value = newValue;
-    }
+    // no-op for removed legacy general flags
   } catch (error) {
     console.error(`Section13: Failed to update field at path ${fieldPath}:`, error);
   }
@@ -1580,27 +1485,6 @@ export interface Section13ContextType {
   // Basic Actions
   updateEmploymentInfo: (fieldPath: string, value: string) => void;
   updateFieldValue: (path: string, value: any) => void;
-<<<<<<< HEAD
-  getFieldValue: (path: string) => any;
-
-  // Enhanced Field Mapping Actions
-  mapPdfFieldToUi: (pdfFieldId: string) => string | undefined;
-  updateFieldByPdfId: (pdfFieldId: string, value: any) => void;
-  validateFieldMapping: (fieldPath: string) => boolean;
-  getFieldMetadata: (fieldPath: string) => FieldMetadata | undefined;
-  getFieldMappings: () => FieldMapping[];
-
-  // Enhanced Coverage Analysis
-  getFieldCoverageReport: () => Promise<{
-    total: number;
-    implemented: number;
-    missing: number;
-    coverage: number;
-    missingFields: string[];
-  }>;
-  getEmploymentTypeStats: () => Promise<Record<string, number>>;
-  initializeEnhancedSupport: () => Promise<void>;
-=======
   updateField: (fieldPath: string, value: any) => void;
 
   // Employment Entry Management
@@ -1619,7 +1503,6 @@ export interface Section13ContextType {
   addUnemploymentEntry: () => void;
   removeUnemploymentEntry: (entryId: string) => void;
   updateUnemploymentEntry: (entryId: string, fieldPath: string, value: any) => void;
->>>>>>> dee206932ac43994f42ae910b9869d54d7fa3b02
 
   // Validation
   validateSection: () => ValidationResult;
@@ -1909,7 +1792,7 @@ export const Section13Provider: React.FC<Section13ProviderProps> = ({ children }
       const militaryEntries = section13Data.section13?.militaryEmployment?.entries || [];
       if (militaryEntries.length === 0) {
         validationWarnings.push({
-          field: 'section13.militaryEmployment.entries',
+          field: ['section13','militaryEmployment','entries'].join('.'),
           message: 'At least one military employment entry is recommended',
           code: 'MILITARY_ENTRY_RECOMMENDED'
         });
@@ -1948,7 +1831,7 @@ export const Section13Provider: React.FC<Section13ProviderProps> = ({ children }
       const nonFederalEntries = section13Data.section13?.nonFederalEmployment?.entries || [];
       if (nonFederalEntries.length === 0) {
         validationWarnings.push({
-          field: 'section13.nonFederalEmployment.entries',
+          field: ['section13','nonFederalEmployment','entries'].join('.'),
           message: 'At least one non-federal employment entry is recommended',
           code: 'NON_FEDERAL_ENTRY_RECOMMENDED'
         });
@@ -1979,7 +1862,7 @@ export const Section13Provider: React.FC<Section13ProviderProps> = ({ children }
       const selfEmploymentEntries = section13Data.section13?.selfEmployment?.entries || [];
       if (selfEmploymentEntries.length === 0) {
         validationWarnings.push({
-          field: 'section13.selfEmployment.entries',
+          field: ['section13','selfEmployment','entries'].join('.'),
           message: 'At least one self-employment entry is recommended',
           code: 'SELF_EMPLOYMENT_ENTRY_RECOMMENDED'
         });
@@ -2010,7 +1893,7 @@ export const Section13Provider: React.FC<Section13ProviderProps> = ({ children }
       const unemploymentEntries = section13Data.section13?.unemployment?.entries || [];
       if (unemploymentEntries.length === 0) {
         validationWarnings.push({
-          field: 'section13.unemployment.entries',
+          field: ['section13','unemployment','entries'].join('.'),
           message: 'At least one unemployment period entry is recommended',
           code: 'UNEMPLOYMENT_ENTRY_RECOMMENDED'
         });
@@ -2033,7 +1916,7 @@ export const Section13Provider: React.FC<Section13ProviderProps> = ({ children }
     if (recordIssues?.wasFired?.value || recordIssues?.quitAfterBeingTold?.value || recordIssues?.leftByMutualAgreement?.value) {
       if (!recordIssues.employmentDates?.fromDate?.value) {
         validationErrors.push({
-          field: 'section13.employmentRecordIssues.employmentDates.fromDate',
+          field: ['section13','employmentRecordIssues','employmentDates','toDate'].join('.'),
           message: 'Employment dates are required when reporting employment issues',
           code: 'EMPLOYMENT_ISSUE_DATES_REQUIRED'
         });
@@ -2137,227 +2020,6 @@ const addEmploymentEntry = useCallback((type: EmploymentType) => {
   }, []);
 
   /**
-<<<<<<< HEAD
-   * Get field value by path
-   * @param path The field path (UI or PDF field ID)
-   * @returns The current field value
-   */
-  const getFieldValue = useCallback((path: string) => {
-    // Check if path is a PDF field ID and resolve to UI path
-    const resolvedPath = mapPdfFieldToUiPath(path) || path;
-    
-    // Use lodash get to safely retrieve nested values
-    return get(section13Data, resolvedPath);
-  }, [section13Data]);
-
-  /**
-   * Update field by PDF field ID
-   * @param pdfFieldId The PDF field identifier
-   * @param value The value to set
-   */
-  const updateFieldByPdfId = useCallback((pdfFieldId: string, value: any) => {
-    const uiPath = mapPdfFieldToUiPath(pdfFieldId);
-    
-    if (!uiPath) {
-      console.warn(`No UI path mapping found for PDF field: ${pdfFieldId}`);
-      return;
-    }
-    
-    updateFieldValue(uiPath, value);
-  }, [updateFieldValue]);
-
-  /**
-   * Map PDF field ID to UI path
-   * @param pdfFieldId The PDF field identifier
-   * @returns The corresponding UI path or undefined
-   */
-  const mapPdfFieldToUi = useCallback((pdfFieldId: string): string | undefined => {
-    return mapPdfFieldToUiPath(pdfFieldId);
-  }, []);
-
-  /**
-   * Validate if a field mapping exists
-   * @param fieldPath Either a UI path or PDF field ID
-   * @returns True if the field mapping exists
-   */
-  const validateFieldMapping = useCallback((fieldPath: string): boolean => {
-    return isValidFieldMapping(fieldPath);
-  }, []);
-
-  /**
-   * Get field metadata for a given path
-   * @param fieldPath Either a UI path or PDF field ID
-   * @returns Field metadata or undefined
-   */
-  const getFieldMetadataWrapper = useCallback((fieldPath: string): FieldMetadata | undefined => {
-    return getFieldMetadata(fieldPath);
-  }, []);
-
-  /**
-   * Get all field mappings for Section 13
-   * @returns Array of field mappings
-   */
-  const getFieldMappings = useCallback((): FieldMapping[] => {
-    return getCachedFieldMapping();
-  }, []);
-
-  /**
-   * Get comprehensive field coverage report with enhanced field discovery
-   */
-  const getFieldCoverageReport = useCallback(async () => {
-    // Extract currently implemented UI paths from the section13Data
-    const implementedFields: string[] = [];
-    
-    // Add implemented fields based on current section13Data structure
-    if (section13Data.section13?.employmentType?.value) {
-      implementedFields.push('section13.employmentType');
-    }
-    if (section13Data.section13?.otherExplanation?.value) {
-      implementedFields.push('section13.otherExplanation');
-    }
-    
-    // Comprehensive employment entry field discovery
-    const employmentTypes = ['militaryEmployment', 'nonFederalEmployment', 'selfEmployment', 'unemployment'];
-    
-    employmentTypes.forEach(type => {
-      const entries = section13Data.section13?.[type]?.entries || [];
-      entries.forEach((entry: any, index: number) => {
-        // Standard employment fields
-        if (entry.employerName?.value) implementedFields.push(`section13.${type}.entries[${index}].employerName`);
-        if (entry.positionTitle?.value) implementedFields.push(`section13.${type}.entries[${index}].positionTitle`);
-        if (entry.businessName?.value) implementedFields.push(`section13.${type}.entries[${index}].businessName`);
-        if (entry.businessType?.value) implementedFields.push(`section13.${type}.entries[${index}].businessType`);
-        if (entry.rankTitle?.value) implementedFields.push(`section13.${type}.entries[${index}].rankTitle`);
-        
-        // Employment dates
-        if (entry.employmentDates?.fromDate?.value) implementedFields.push(`section13.${type}.entries[${index}].employmentDates.fromDate`);
-        if (entry.employmentDates?.toDate?.value) implementedFields.push(`section13.${type}.entries[${index}].employmentDates.toDate`);
-        if (entry.employmentDates?.present?.value) implementedFields.push(`section13.${type}.entries[${index}].employmentDates.present`);
-        if (entry.employmentDates?.fromEstimated?.value) implementedFields.push(`section13.${type}.entries[${index}].employmentDates.fromEstimated`);
-        if (entry.employmentDates?.toEstimated?.value) implementedFields.push(`section13.${type}.entries[${index}].employmentDates.toEstimated`);
-        
-        // Unemployment dates (different structure)
-        if (entry.unemploymentDates?.fromDate?.value) implementedFields.push(`section13.${type}.entries[${index}].unemploymentDates.fromDate`);
-        if (entry.unemploymentDates?.toDate?.value) implementedFields.push(`section13.${type}.entries[${index}].unemploymentDates.toDate`);
-        
-        // Address information
-        if (entry.employerAddress?.street?.value) implementedFields.push(`section13.${type}.entries[${index}].employerAddress.street`);
-        if (entry.employerAddress?.city?.value) implementedFields.push(`section13.${type}.entries[${index}].employerAddress.city`);
-        if (entry.employerAddress?.state?.value) implementedFields.push(`section13.${type}.entries[${index}].employerAddress.state`);
-        if (entry.employerAddress?.zipCode?.value) implementedFields.push(`section13.${type}.entries[${index}].employerAddress.zipCode`);
-        if (entry.employerAddress?.country?.value) implementedFields.push(`section13.${type}.entries[${index}].employerAddress.country`);
-        
-        // Business address (for self-employment)
-        if (entry.businessAddress?.street?.value) implementedFields.push(`section13.${type}.entries[${index}].businessAddress.street`);
-        if (entry.businessAddress?.city?.value) implementedFields.push(`section13.${type}.entries[${index}].businessAddress.city`);
-        if (entry.businessAddress?.state?.value) implementedFields.push(`section13.${type}.entries[${index}].businessAddress.state`);
-        if (entry.businessAddress?.zipCode?.value) implementedFields.push(`section13.${type}.entries[${index}].businessAddress.zipCode`);
-        if (entry.businessAddress?.country?.value) implementedFields.push(`section13.${type}.entries[${index}].businessAddress.country`);
-        
-        // Duty station (for military)
-        if (entry.dutyStation?.dutyStation?.value) implementedFields.push(`section13.${type}.entries[${index}].dutyStation.dutyStation`);
-        if (entry.dutyStation?.street?.value) implementedFields.push(`section13.${type}.entries[${index}].dutyStation.street`);
-        if (entry.dutyStation?.city?.value) implementedFields.push(`section13.${type}.entries[${index}].dutyStation.city`);
-        if (entry.dutyStation?.state?.value) implementedFields.push(`section13.${type}.entries[${index}].dutyStation.state`);
-        if (entry.dutyStation?.zipCode?.value) implementedFields.push(`section13.${type}.entries[${index}].dutyStation.zipCode`);
-        if (entry.dutyStation?.country?.value) implementedFields.push(`section13.${type}.entries[${index}].dutyStation.country`);
-        
-        // Phone information
-        if (entry.phone?.number?.value) implementedFields.push(`section13.${type}.entries[${index}].phone.number`);
-        if (entry.phone?.extension?.value) implementedFields.push(`section13.${type}.entries[${index}].phone.extension`);
-        if (entry.phone?.isDSN?.value) implementedFields.push(`section13.${type}.entries[${index}].phone.isDSN`);
-        if (entry.phone?.isDay?.value) implementedFields.push(`section13.${type}.entries[${index}].phone.isDay`);
-        if (entry.phone?.isNight?.value) implementedFields.push(`section13.${type}.entries[${index}].phone.isNight`);
-        
-        // Supervisor information
-        if (entry.supervisor?.name?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.name`);
-        if (entry.supervisor?.title?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.title`);
-        if (entry.supervisor?.email?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.email`);
-        if (entry.supervisor?.emailUnknown?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.emailUnknown`);
-        if (entry.supervisor?.canContact?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.canContact`);
-        if (entry.supervisor?.contactRestrictions?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.contactRestrictions`);
-        
-        // Supervisor phone
-        if (entry.supervisor?.phone?.number?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.phone.number`);
-        if (entry.supervisor?.phone?.extension?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.phone.extension`);
-        
-        // Supervisor work location
-        if (entry.supervisor?.workLocation?.street?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.workLocation.street`);
-        if (entry.supervisor?.workLocation?.city?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.workLocation.city`);
-        if (entry.supervisor?.workLocation?.state?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.workLocation.state`);
-        if (entry.supervisor?.workLocation?.zipCode?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.workLocation.zipCode`);
-        if (entry.supervisor?.workLocation?.country?.value) implementedFields.push(`section13.${type}.entries[${index}].supervisor.workLocation.country`);
-        
-        // Verifier information (for self-employment)
-        if (entry.verifierFirstName?.value) implementedFields.push(`section13.${type}.entries[${index}].verifierFirstName`);
-        if (entry.verifierLastName?.value) implementedFields.push(`section13.${type}.entries[${index}].verifierLastName`);
-        if (entry.verifierAddress?.street?.value) implementedFields.push(`section13.${type}.entries[${index}].verifierAddress.street`);
-        if (entry.verifierAddress?.city?.value) implementedFields.push(`section13.${type}.entries[${index}].verifierAddress.city`);
-        if (entry.verifierAddress?.state?.value) implementedFields.push(`section13.${type}.entries[${index}].verifierAddress.state`);
-        if (entry.verifierAddress?.zipCode?.value) implementedFields.push(`section13.${type}.entries[${index}].verifierAddress.zipCode`);
-        if (entry.verifierAddress?.country?.value) implementedFields.push(`section13.${type}.entries[${index}].verifierAddress.country`);
-        if (entry.verifierPhone?.number?.value) implementedFields.push(`section13.${type}.entries[${index}].verifierPhone.number`);
-        if (entry.verifierPhone?.extension?.value) implementedFields.push(`section13.${type}.entries[${index}].verifierPhone.extension`);
-        
-        // Reference information (for unemployment)
-        if (entry.reference?.firstName?.value) implementedFields.push(`section13.${type}.entries[${index}].reference.firstName`);
-        if (entry.reference?.lastName?.value) implementedFields.push(`section13.${type}.entries[${index}].reference.lastName`);
-        if (entry.reference?.address?.street?.value) implementedFields.push(`section13.${type}.entries[${index}].reference.address.street`);
-        if (entry.reference?.address?.city?.value) implementedFields.push(`section13.${type}.entries[${index}].reference.address.city`);
-        if (entry.reference?.address?.state?.value) implementedFields.push(`section13.${type}.entries[${index}].reference.address.state`);
-        if (entry.reference?.address?.zipCode?.value) implementedFields.push(`section13.${type}.entries[${index}].reference.address.zipCode`);
-        if (entry.reference?.address?.country?.value) implementedFields.push(`section13.${type}.entries[${index}].reference.address.country`);
-        if (entry.reference?.phone?.number?.value) implementedFields.push(`section13.${type}.entries[${index}].reference.phone.number`);
-        if (entry.reference?.phone?.extension?.value) implementedFields.push(`section13.${type}.entries[${index}].reference.phone.extension`);
-        
-        // Employment status
-        if (entry.employmentStatus?.value) implementedFields.push(`section13.${type}.entries[${index}].employmentStatus`);
-      });
-    });
-    
-    // Employment record issues
-    const recordIssues = section13Data.section13?.employmentRecordIssues;
-    if (recordIssues?.wasFired?.value !== undefined) implementedFields.push('section13.employmentRecordIssues.wasFired');
-    if (recordIssues?.quitAfterBeingTold?.value !== undefined) implementedFields.push('section13.employmentRecordIssues.quitAfterBeingTold');
-    if (recordIssues?.leftByMutualAgreement?.value !== undefined) implementedFields.push('section13.employmentRecordIssues.leftByMutualAgreement');
-    if (recordIssues?.hasChargesOrAllegations?.value !== undefined) implementedFields.push('section13.employmentRecordIssues.hasChargesOrAllegations');
-    if (recordIssues?.hasUnsatisfactoryPerformance?.value !== undefined) implementedFields.push('section13.employmentRecordIssues.hasUnsatisfactoryPerformance');
-    if (recordIssues?.employmentDates?.fromDate?.value) implementedFields.push('section13.employmentRecordIssues.employmentDates.fromDate');
-    if (recordIssues?.employmentDates?.toDate?.value) implementedFields.push('section13.employmentRecordIssues.employmentDates.toDate');
-    
-    // Disciplinary actions
-    const disciplinary = section13Data.section13?.disciplinaryActions;
-    if (disciplinary?.receivedWrittenWarning?.value !== undefined) implementedFields.push('section13.disciplinaryActions.receivedWrittenWarning');
-    if (disciplinary?.warningDates?.length) implementedFields.push('section13.disciplinaryActions.warningDates');
-    if (disciplinary?.warningReasons?.length) implementedFields.push('section13.disciplinaryActions.warningReasons');
-    
-    // Federal employment info
-    const federalInfo = section13Data.section13?.federalInfo;
-    if (federalInfo?.hasFederalEmployment?.value) implementedFields.push('section13.federalInfo.hasFederalEmployment');
-    if (federalInfo?.securityClearance?.value) implementedFields.push('section13.federalInfo.securityClearance');
-    if (federalInfo?.clearanceLevel?.value) implementedFields.push('section13.federalInfo.clearanceLevel');
-    if (federalInfo?.clearanceDate?.value) implementedFields.push('section13.federalInfo.clearanceDate');
-    if (federalInfo?.investigationDate?.value) implementedFields.push('section13.federalInfo.investigationDate');
-    if (federalInfo?.polygraphDate?.value) implementedFields.push('section13.federalInfo.polygraphDate');
-    if (federalInfo?.accessToClassified?.value) implementedFields.push('section13.federalInfo.accessToClassified');
-    if (federalInfo?.classificationLevel?.value) implementedFields.push('section13.federalInfo.classificationLevel');
-    
-    return await validateImplementationCoverage(implementedFields);
-  }, [section13Data]);
-
-  /**
-   * Get employment type statistics
-   */
-  const getEmploymentTypeStats = useCallback(async () => {
-    return await getEmploymentTypeStatistics();
-  }, []);
-
-  /**
-   * Initialize enhanced field mapping support
-   */
-  const initializeEnhancedSupport = useCallback(async () => {
-    await initializeEnhancedIntegration();
-=======
    * Update a specific field by path
    */
   const updateField = useCallback((fieldPath: string, value: any) => {
@@ -2610,7 +2272,6 @@ const addEmploymentEntry = useCallback((type: EmploymentType) => {
       errors: [],
       warnings: []
     };
->>>>>>> dee206932ac43994f42ae910b9869d54d7fa3b02
   }, []);
 
   // ============================================================================
@@ -2703,21 +2364,6 @@ const addEmploymentEntry = useCallback((type: EmploymentType) => {
     // Basic Actions
     updateEmploymentInfo,
     updateFieldValue,
-<<<<<<< HEAD
-    getFieldValue,
-
-    // Enhanced Field Mapping Actions
-    mapPdfFieldToUi,
-    updateFieldByPdfId,
-    validateFieldMapping,
-    getFieldMetadata: getFieldMetadataWrapper,
-    getFieldMappings,
-
-    // Enhanced Coverage Analysis
-    getFieldCoverageReport,
-    getEmploymentTypeStats,
-    initializeEnhancedSupport,
-=======
     updateField,
 
     // Employment Entry Management
@@ -2736,7 +2382,6 @@ const addEmploymentEntry = useCallback((type: EmploymentType) => {
     addUnemploymentEntry,
     removeUnemploymentEntry,
     updateUnemploymentEntry,
->>>>>>> dee206932ac43994f42ae910b9869d54d7fa3b02
 
     // Validation
     validateSection,

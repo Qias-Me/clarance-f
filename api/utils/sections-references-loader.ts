@@ -7,26 +7,25 @@
  */
 
 // Import all sections-references JSON files (relative to api/utils)
-import section1Data from '../interfaces/sections-references/section-1.json';
-import section2Data from '../interfaces/sections-references/section-2.json';
-import section4Data from '../interfaces/sections-references/section-4.json';
-import section3Data from '../interfaces/sections-references/section-3.json';
-import section5Data from '../interfaces/sections-references/section-5.json';
-import section6Data from '../interfaces/sections-references/section-6.json';
-import section7Data from '../interfaces/sections-references/section-7.json';
-import section8Data from '../interfaces/sections-references/section-8.json';
-import section9Data from '../interfaces/sections-references/section-9.json';
-import section10Data from '../interfaces/sections-references/section-10.json';
-import section11Data from '../interfaces/sections-references/section-11.json';
-import section12Data from '../interfaces/sections-references/section-12.json';
-import section13Data from '../interfaces/sections-references/section-13.json';
-import section14Data from '../interfaces/sections-references/section-14.json';
-import section15Data from '../interfaces/sections-references/section-15.json';
-
-import section27Data from '../interfaces/sections-references/section-27.json';
-import section28Data from '../interfaces/sections-references/section-28.json';
-import section29Data from '../interfaces/sections-references/section-29.json';
-import section30Data from '../interfaces/sections-references/section-30.json';
+import section1Data from '../sections-references/section-1.json';
+import section2Data from '../sections-references/section-2.json';
+import section4Data from '../sections-references/section-4.json';
+import section3Data from '../sections-references/section-3.json';
+import section5Data from '../sections-references/section-5.json';
+import section6Data from '../sections-references/section-6.json';
+import section7Data from '../sections-references/section-7.json';
+import section8Data from '../sections-references/section-8.json';
+import section9Data from '../sections-references/section-9.json';
+import section10Data from '../sections-references/section-10.json';
+import section11Data from '../sections-references/section-11.json';
+import section12Data from '../sections-references/section-12.json';
+import section13Data from '../sections-references/section-13.json';
+import section14Data from '../sections-references/section-14.json';
+import section15Data from '../sections-references/section-15.json';
+import section27Data from '../sections-references/section-27.json';
+import section28Data from '../sections-references/section-28.json';
+import section29Data from '../sections-references/section-29.json';
+import section30Data from '../sections-references/section-30.json';
 
 // ============================================================================
 // TYPES
@@ -313,8 +312,6 @@ export function validateAllSectionFieldCounts(): Record<number, boolean> {
 
   return results;
 }
-<<<<<<< HEAD
-=======
 
 // ============================================================================
 // SECTION-SPECIFIC UTILITIES
@@ -409,4 +406,3 @@ export function getSection29FieldReferences() {
   };
 }
 
->>>>>>> dee206932ac43994f42ae910b9869d54d7fa3b02
