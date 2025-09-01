@@ -5,7 +5,7 @@
  * component and the actual complex field names found in the sections-references JSON.
  */
 
-import section15Data from '../../../../api/interfaces/sections-references/section-15.json';
+import section15Data from '../../../../api/sections-references/section-15.json';
 
 // Type definitions for Section 15 field data
 interface Section15Field {

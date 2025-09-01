@@ -28,7 +28,7 @@ import type {
   FederalEmploymentInfo,
   EmploymentType,
   EmploymentStatus
-} from '../../../../api/interfaces/sections2.0/section13';
+} from '../../../../api/interfaces/section-interfaces/section13';
 // Import helper functions for field creation
 import { createFieldFromReference } from '../../../../api/utils/sections-references-loader';
 import { mapLogicalFieldToPdfField } from './section13-field-mapping';

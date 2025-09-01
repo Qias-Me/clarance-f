@@ -29,7 +29,7 @@ exports.isValidSection5Field = isValidSection5Field;
 exports.getAllLogicalFieldPaths = getAllLogicalFieldPaths;
 exports.generateEntryFieldPath = generateEntryFieldPath;
 exports.getEntryFieldName = getEntryFieldName;
-const section_5_json_1 = __importDefault(require("../../../../api/interfaces/sections-references/section-5.json"));
+const section_5_json_1 = __importDefault(require("../../../../api/sections-references/section-5.json"));
 // Load the actual field data
 const section5Fields = section_5_json_1.default.fields;
 // Create field name to data mapping

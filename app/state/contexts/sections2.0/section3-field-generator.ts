@@ -9,7 +9,7 @@ import { createFieldFromReference } from '../../../../api/utils/sections-referen
 import type { Field } from '../../../../api/interfaces/formDefinition2.0';
 
 // Import sections-references for Section 3
-import section3References from '../../../../api/interfaces/sections-references/section-3.json';
+import section3References from '../../../../api/sections-references/section-3.json';
 
 /**
  * Generate Section 3 fields using sections-references as source of truth

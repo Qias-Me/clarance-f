@@ -10,7 +10,7 @@
  * - Total: 78 fields across all subsections
  */
 
-import section9Data from '../../../../api/interfaces/sections-references/section-9.json';
+import section9Data from '../../../../api/sections-references/section-9.json';
 
 // Types for the JSON structure
 interface Section9Field {

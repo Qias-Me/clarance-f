@@ -10,7 +10,7 @@
  * - Total: 141 fields across all subsections
  */
 
-import section29Data from '../../../../api/interfaces/sections-references/section-29.json';
+import section29Data from '../../../../api/sections-references/section-29.json';
 import { SECTION29_RADIO_FIELD_IDS, SECTION29_RADIO_FIELD_NAMES } from '../../../../api/interfaces/section-interfaces/section29';
 
 // Types for the JSON structure

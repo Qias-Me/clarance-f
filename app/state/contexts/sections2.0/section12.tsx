@@ -37,12 +37,12 @@ import type {
   DegreeEntry,
   ContactPerson,
   SchoolTypes
-} from '../../../../api/interfaces/sections2.0/section12';
+} from '../../../../api/interfaces/section-interfaces/section12';
 import {
   SCHOOL_TYPE_OPTIONS,
   DEGREE_TYPE_OPTIONS,
   EDUCATION_DATE_VALIDATION
-} from '../../../../api/interfaces/sections2.0/section12';
+} from '../../../../api/interfaces/section-interfaces/section12';
 import type { ValidationResult, ValidationError } from '../shared/base-interfaces';
 import { validateSection12FieldMappings } from './section12-field-mapping';
 import { validateFieldGeneration, generateSection12Field, generateGlobalFields } from './section12-field-generator';

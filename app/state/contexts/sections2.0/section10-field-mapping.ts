@@ -6,7 +6,7 @@
  * comprehensive field mapping verification following the Section 29 pattern.
  */
 
-import section10Data from '../../../../api/interfaces/sections-references/section-10.json';
+import section10Data from '../../../../api/sections-references/section-10.json';
 
 // Types for the JSON structure
 interface Section10Field {

@@ -26,7 +26,7 @@ exports.getAvailableFieldTypes = getAvailableFieldTypes;
 exports.validateSection11FieldMappings = validateSection11FieldMappings;
 exports.debugAllEntries = debugAllEntries;
 exports.createFieldMappingChecklist = createFieldMappingChecklist;
-const section_11_json_1 = __importDefault(require("../../../../api/interfaces/sections-references/section-11.json"));
+const section_11_json_1 = __importDefault(require("../../../../api/sections-references/section-11.json"));
 // Load the actual field data
 const section11Fields = section_11_json_1.default.fields;
 // Create a mapping from field names to field data

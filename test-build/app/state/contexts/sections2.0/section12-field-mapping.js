@@ -22,7 +22,7 @@ exports.findSimilarFieldNames = findSimilarFieldNames;
 exports.getNumericFieldId = getNumericFieldId;
 exports.getEntryFieldMappings = getEntryFieldMappings;
 exports.validateSection12FieldMappings = validateSection12FieldMappings;
-const section_12_json_1 = __importDefault(require("../../../../api/interfaces/sections-references/section-12.json"));
+const section_12_json_1 = __importDefault(require("../../../../api/sections-references/section-12.json"));
 // Extract fields from the JSON data
 const section12Fields = section_12_json_1.default.fields;
 // Create mappings for quick lookup

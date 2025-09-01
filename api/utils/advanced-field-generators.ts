@@ -73,7 +73,9 @@ export function generateAdvancedField<T = any>(
       type: lookupResult.fieldData.type,
       label: lookupResult.fieldData.label,
       value: defaultValue,
-      rect: lookupResult.fieldData.rect
+      rect: lookupResult.fieldData.rect,
+      required: lookupResult.fieldData.required ?? false,
+      section: sectionId
     };
     
     if (options && options.length > 0) {
@@ -100,7 +102,9 @@ export function generateAdvancedField<T = any>(
     type: inferFieldType(fieldPath, defaultValue),
     label: generateFieldLabel(fieldPath, components),
     value: defaultValue,
-    rect: { x: 0, y: 0, width: 0, height: 0 }
+    rect: { x: 0, y: 0, width: 0, height: 0 },
+    required: false,
+    section: sectionId
   };
   
   console.log(`🔄 Advanced: Using enhanced fallback field for ${fieldPath}:`, fallbackField);
@@ -113,108 +117,6 @@ export function generateAdvancedField<T = any>(
   }
   
   return fallbackField;
-}
-
-/**
- * Generate Section 18 specific field patterns
- */
-export function generateSection18FieldPattern(
-  entryNumber: number,
-  subsection: '18_1' | '18_2' | '18_3',
-  fieldType: string,
-  fieldIndex?: number,
-  areaIndex?: number
-): string {
-  const pdfEntryIndex = entryNumber - 1; // Convert to 0-based
-  
-  const patterns = {
-    '18_1': {
-      // Basic relative information
-      firstName: `form1[0].Section18_1[${pdfEntryIndex}].TextField11[1]`,
-      middleName: `form1[0].Section18_1[${pdfEntryIndex}].TextField11[2]`,
-      lastName: `form1[0].Section18_1[${pdfEntryIndex}].TextField11[0]`,
-      suffix: `form1[0].Section18_1[${pdfEntryIndex}].suffix[0]`,
-      relationship: `form1[0].Section18_1[${pdfEntryIndex}].DropDownList15[0]`,
-      citizenship: `form1[0].Section18_1[${pdfEntryIndex}].DropDownList15[1]`,
-      birthDate: `form1[0].Section18_1[${pdfEntryIndex}].From_Datefield_Name_2[0]`,
-      birthDateEstimate: `form1[0].Section18_1[${pdfEntryIndex}].#field[1]`,
-      birthPlace: `form1[0].Section18_1[${pdfEntryIndex}].TextField11[3]`,
-      // Other names pattern with dynamic indices
-      otherNameFirstName: fieldIndex !== undefined ? 
-        `form1[0].Section18_1[${pdfEntryIndex}].TextField11[${[6,11,14,17][fieldIndex]}]` : 
-        `form1[0].Section18_1[${pdfEntryIndex}].TextField11[{fieldIndex}]`,
-      otherNameMiddleName: fieldIndex !== undefined ? 
-        `form1[0].Section18_1[${pdfEntryIndex}].TextField11[${[4,10,13,16][fieldIndex]}]` : 
-        `form1[0].Section18_1[${pdfEntryIndex}].TextField11[{fieldIndex}]`,
-      otherNameLastName: fieldIndex !== undefined ? 
-        `form1[0].Section18_1[${pdfEntryIndex}].TextField11[${[9,12,15,18][fieldIndex]}]` : 
-        `form1[0].Section18_1[${pdfEntryIndex}].TextField11[{fieldIndex}]`,
-      otherNameSuffix: fieldIndex !== undefined ? 
-        `form1[0].Section18_1[${pdfEntryIndex}].suffix[${[1,3,4,5][fieldIndex]}]` : 
-        `form1[0].Section18_1[${pdfEntryIndex}].suffix[{fieldIndex}]`,
-    },
-    '18_2': {
-      // Current address information
-      streetAddress: `form1[0].Section18_2[${pdfEntryIndex}].TextField11[0]`,
-      streetAddress2: `form1[0].Section18_2[${pdfEntryIndex}].TextField11[1]`,
-      city: `form1[0].Section18_2[${pdfEntryIndex}].TextField11[2]`,
-      state: `form1[0].Section18_2[${pdfEntryIndex}].School6_State[0]`,
-      zipCode: `form1[0].Section18_2[${pdfEntryIndex}].TextField11[3]`,
-      country: `form1[0].Section18_2[${pdfEntryIndex}].DropDownList15[0]`,
-      fromDate: `form1[0].Section18_2[${pdfEntryIndex}].From_Datefield_Name_2[0]`,
-      fromDateEstimate: `form1[0].Section18_2[${pdfEntryIndex}].#field[1]`,
-      toDate: `form1[0].Section18_2[${pdfEntryIndex}].To_Datefield_Name_2[0]`,
-      toDateEstimate: `form1[0].Section18_2[${pdfEntryIndex}].#field[2]`,
-      isPresent: `form1[0].Section18_2[${pdfEntryIndex}].#field[3]`,
-      // APO/FPO fields
-      apoFpoType: `form1[0].Section18_2[${pdfEntryIndex}].DropDownList15[1]`,
-      apoFpoCode: `form1[0].Section18_2[${pdfEntryIndex}].TextField11[4]`,
-    },
-    '18_3': {
-      // Contact and foreign relations (includes 18.4 and 18.5 functionality)
-      // Contact methods
-      contactInPerson: `form1[0].Section18_3[${pdfEntryIndex}].#field[4]`,
-      contactTelephone: `form1[0].Section18_3[${pdfEntryIndex}].#field[2]`,
-      contactElectronic: `form1[0].Section18_3[${pdfEntryIndex}].#field[3]`,
-      contactWritten: `form1[0].Section18_3[${pdfEntryIndex}].#field[5]`,
-      contactOther: `form1[0].Section18_3[${pdfEntryIndex}].#field[6]`,
-      contactOtherExplanation: `form1[0].Section18_3[${pdfEntryIndex}].TextField11[5]`,
-      // Contact frequency
-      frequencyDaily: `form1[0].Section18_3[${pdfEntryIndex}].#field[9]`,
-      frequencyWeekly: `form1[0].Section18_3[${pdfEntryIndex}].#field[10]`,
-      frequencyMonthly: `form1[0].Section18_3[${pdfEntryIndex}].#field[7]`,
-      frequencyQuarterly: `form1[0].Section18_3[${pdfEntryIndex}].#field[13]`,
-      frequencyAnnually: `form1[0].Section18_3[${pdfEntryIndex}].#field[8]`,
-      frequencyOther: `form1[0].Section18_3[${pdfEntryIndex}].#field[12]`,
-      frequencyOtherExplanation: `form1[0].Section18_3[${pdfEntryIndex}].TextField11[0]`,
-      // Documentation types (18.4 functionality)
-      docI551: `form1[0].Section18_3[${pdfEntryIndex}].#field[30]`,
-      docI766: `form1[0].Section18_3[${pdfEntryIndex}].#field[29]`,
-      docUSVisa: `form1[0].Section18_3[${pdfEntryIndex}].#field[32]`,
-      docI94: `form1[0].Section18_3[${pdfEntryIndex}].#field[35]`,
-      docI20: `form1[0].Section18_3[${pdfEntryIndex}].#field[33]`,
-      docDS2019: `form1[0].Section18_3[${pdfEntryIndex}].#field[34]`,
-      docOther: `form1[0].Section18_3[${pdfEntryIndex}].#field[31]`,
-      docNumber: `form1[0].Section18_3[${pdfEntryIndex}].TextField11[7]`,
-      docExpiration: `form1[0].Section18_3[${pdfEntryIndex}].From_Datefield_Name_2[4]`,
-      // Contact dates (18.5 functionality)
-      firstContactDate: areaIndex !== undefined ? 
-        `form1[0].Section18_3[${pdfEntryIndex}].#area[${areaIndex}].From_Datefield_Name_2[0]` :
-        `form1[0].Section18_3[${pdfEntryIndex}].#area[1].From_Datefield_Name_2[0]`,
-      lastContactDate: areaIndex !== undefined ? 
-        `form1[0].Section18_3[${pdfEntryIndex}].#area[${areaIndex}].From_Datefield_Name_2[1]` :
-        `form1[0].Section18_3[${pdfEntryIndex}].#area[1].From_Datefield_Name_2[1]`,
-    }
-  };
-  
-  const pattern = patterns[subsection][fieldType as keyof typeof patterns[typeof subsection]];
-  
-  if (!pattern) {
-    console.warn(`⚠️ Section18: Unknown field type "${fieldType}" for subsection ${subsection}`);
-    return `form1[0].Section${subsection}[${pdfEntryIndex}].UnknownField[${fieldType}]`;
-  }
-  
-  return pattern;
 }
 
 /**

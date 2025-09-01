@@ -11,7 +11,7 @@
  * - Entry 4: form1[0].Section11-4[0].*
  */
 
-import section11Data from '../../../../api/interfaces/sections-references/section-11.json';
+import section11Data from '../../../../api/sections-references/section-11.json';
 
 // Types for the JSON structure
 interface Section11Field {

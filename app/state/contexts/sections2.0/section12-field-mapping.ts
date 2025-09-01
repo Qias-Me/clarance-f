@@ -9,7 +9,7 @@
  * LAST UPDATED: Added missing components for complete field coverage
  */
 
-import section12Data from '../../../../api/interfaces/sections-references/section-12.json';
+import section12Data from '../../../../api/sections-references/section-12.json';
 
 // Types for the JSON structure
 interface Section12Field {
